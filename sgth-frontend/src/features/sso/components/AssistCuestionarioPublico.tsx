@@ -2,41 +2,75 @@
 
 import { useMemo, useState } from 'react'
 import {
-  Box, Container, Stack, Stepper, Title, Text, Checkbox, Group, Button,
-  Select, Skeleton, Alert, Paper, Divider,
+  Box, Container, Stack, Stepper, Title, Text, Group, Button,
+  Radio, Skeleton, Alert, Paper,
 } from '@mantine/core'
 import { IconAlertCircle, IconCircleCheck } from '@tabler/icons-react'
-import { useContainedInput } from '@/hooks/useContainedInput'
+import { Controller, useForm, useWatch, type Resolver } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useCuestionarioAssist, useEnviarRespuestaAssist } from '../hooks/useAssist'
+import { AssistSeleccionSustancias } from './AssistSeleccionSustancias'
 import { AssistSustanciaFormulario } from './AssistSustanciaFormulario'
+import {
+  cargaUtilAssist, esquemaCuestionarioAssist, VALORES_INICIALES_ASSIST,
+  type CuestionarioAssistFormData,
+} from '../schemas/cuestionarioAssist.schema'
 import { getApiErrorMessage } from '@/types/api'
-import type { RespuestaAssistPayload, RespuestaSustanciaAssist } from '../services/assistService'
 import { notificar } from '@/components/ui'
 
 interface Props {
   codigo: string
 }
 
+/**
+ * El tamizaje ASSIST que responde el personal, por enlace y sin sesión.
+ *
+ * Estaba capturado con cinco `useState` y validado a mano: «Debe responder
+ * todas las preguntas de esta sección» en una notificación, sin marcar cuál
+ * faltaba, sobre cinco o siete preguntas. Ahora es React Hook Form + Zod como
+ * el resto del sistema (regla 07), y el hueco se señala en su pregunta.
+ */
 export function AssistCuestionarioPublico({ codigo }: Props) {
-  const contained = useContainedInput()
   const { data: cuestionario, isLoading, isError, error } = useCuestionarioAssist(codigo)
   const enviar = useEnviarRespuestaAssist(codigo)
 
-  const [step, setStep] = useState(0)
-  const [seleccionadas, setSeleccionadas] = useState<string[]>([])
-  const [sinConsumo, setSinConsumo] = useState(false)
-  const [respuestas, setRespuestas] = useState<Record<string, Partial<RespuestaSustanciaAssist>>>({})
-  const [usoInyectable, setUsoInyectable] = useState<string | null>(null)
-  const [enviado, setEnviado] = useState(false)
+  const resolver = useMemo(
+    () => cuestionario
+      ? zodResolver(esquemaCuestionarioAssist(
+        cuestionario.sustancias,
+        Object.keys(cuestionario.opciones_frecuencia_3m),
+        Object.keys(cuestionario.opciones_frecuencia_vida),
+      )) as Resolver<CuestionarioAssistFormData>
+      : undefined,
+    [cuestionario],
+  )
+
+  const {
+    control, handleSubmit, setValue, trigger, formState: { errors, isSubmitSuccessful },
+  } = useForm<CuestionarioAssistFormData>({
+    resolver,
+    defaultValues: VALORES_INICIALES_ASSIST,
+  })
+
+  // `useWatch` y no `watch()`: el segundo devuelve una función que el
+  // compilador de React no puede memoizar, y ESLint lo rechaza.
+  const sinConsumo = useWatch({ control, name: 'sinConsumo' })
+  const seleccionadas = useWatch({ control, name: 'seleccionadas' })
+  const sustanciasRespondidas = useWatch({ control, name: 'sustancias' })
+
+  // El paso del asistente es navegación, no dato: `useState` es correcto
+  // aquí. La regla 08 prohíbe `useState` para lo que viene del API, y lo que
+  // se captura vive en React Hook Form.
+  const [paso, setPaso] = useState(0)
 
   const sustanciasOrdenadas = useMemo(
     () => (cuestionario ? Object.entries(cuestionario.sustancias) : []),
-    [cuestionario]
+    [cuestionario],
   )
 
-  const sustanciasSeleccionadasOrdenadas = useMemo(
-    () => sustanciasOrdenadas.filter(([key]) => seleccionadas.includes(key)),
-    [sustanciasOrdenadas, seleccionadas]
+  const elegidas = useMemo(
+    () => sustanciasOrdenadas.filter(([clave]) => seleccionadas.includes(clave)),
+    [sustanciasOrdenadas, seleccionadas],
   )
 
   if (isLoading) {
@@ -60,7 +94,7 @@ export function AssistCuestionarioPublico({ codigo }: Props) {
     )
   }
 
-  if (enviado) {
+  if (isSubmitSuccessful && enviar.isSuccess) {
     return (
       <Container size="sm" py="xl">
         <Paper withBorder radius="lg" p="xl">
@@ -77,186 +111,129 @@ export function AssistCuestionarioPublico({ codigo }: Props) {
     )
   }
 
-  const totalPasos = sustanciasSeleccionadasOrdenadas.length + 2 // P1 + una por sustancia + P8/envío
-  const esPasoP1 = step === 0
-  const esPasoInyectable = step === totalPasos - 1
-  const sustanciaActual = !esPasoP1 && !esPasoInyectable ? sustanciasSeleccionadasOrdenadas[step - 1] : null
+  const totalPasos = elegidas.length + 2 // P1 + una por sustancia + P8
+  const esPasoP1 = paso === 0
+  const esPasoInyectable = paso === totalPasos - 1
+  const sustanciaActual = !esPasoP1 && !esPasoInyectable ? elegidas[paso - 1] : null
 
-  const actualizarRespuestaSustancia = (key: string, valor: Partial<RespuestaSustanciaAssist>) => {
-    setRespuestas((r) => ({ ...r, [key]: valor }))
-  }
-
-  const validarPasoSustancia = (key: string): boolean => {
-    const [, info] = sustanciasOrdenadas.find(([k]) => k === key)!
-    const r = respuestas[key] ?? {}
-    if (!r.p2) return false
-    if (r.p2 !== 'nunca') {
-      if (!r.p3 || !r.p4) return false
-      if (info.incluye_pregunta_5 && !r.p5) return false
-    }
-    return !!r.p6 && !!r.p7
-  }
-
-  const siguiente = () => {
-    if (esPasoP1) {
-      if (seleccionadas.length === 0 && !sinConsumo) {
-        notificar.error(
-          'Falta una respuesta',
-          'Seleccione las sustancias que ha consumido, o marque "No he consumido ninguna de estas sustancias" antes de continuar.',
-        )
-        return
-      }
-      if (sinConsumo) {
-        // Manual ASSIST (Fig. 1): si la respuesta es negativa para todas las sustancias,
-        // se detiene la entrevista de inmediato — no se preguntan P2-P8.
-        enviarSinConsumo()
-        return
-      }
-      setStep(1)
-      return
-    }
-    if (sustanciaActual) {
-      const [key] = sustanciaActual
-      if (!validarPasoSustancia(key)) {
-        notificar.error(
-          'Faltan respuestas',
-          'Debe responder todas las preguntas de esta sección antes de continuar.',
-        )
-        return
-      }
-      setStep((s) => s + 1)
-    }
-  }
-
-  const anterior = () => setStep((s) => Math.max(s - 1, 0))
-
-  const enviarSinConsumo = () => {
-    enviar.mutate(
-      { sustancias: {} },
-      {
-        onSuccess: () => setEnviado(true),
-        onError: (err) => {
-          notificar.error('No se pudo enviar el cuestionario', getApiErrorMessage(err))
-        },
-      }
-    )
-  }
-
-  const handleEnviar = () => {
-    if (!usoInyectable) {
-      notificar.error(
-        'Falta una respuesta',
-        'Debe responder la última pregunta antes de enviar.',
-      )
-      return
-    }
-
-    const payload: RespuestaAssistPayload = {
-      sustancias: Object.fromEntries(
-        sustanciasSeleccionadasOrdenadas.map(([key]) => [key, respuestas[key] as RespuestaSustanciaAssist])
-      ),
-      uso_inyectable: usoInyectable,
-    }
-
-    enviar.mutate(payload, {
-      onSuccess: () => setEnviado(true),
-      onError: (err) => {
-        notificar.error('No se pudo enviar el cuestionario', getApiErrorMessage(err))
-      },
+  const enviarFormulario = (datos: CuestionarioAssistFormData) => {
+    enviar.mutate(cargaUtilAssist(datos), {
+      onError: (err) => notificar.error('No se pudo enviar el cuestionario', getApiErrorMessage(err)),
     })
   }
 
+  const siguiente = async () => {
+    if (esPasoP1) {
+      // Marcar «no he consumido ninguna» detiene la entrevista en el acto
+      // (manual ASSIST, Fig. 1): no se preguntan P2 a P8.
+      if (sinConsumo) return handleSubmit(enviarFormulario)()
+      if (!(await trigger('seleccionadas'))) return
+      setPaso(1)
+      return
+    }
+
+    if (sustanciaActual) {
+      // Solo las preguntas de ESTA sustancia: validar el formulario entero
+      // marcaría en rojo las sustancias que todavía no se han visto.
+      if (!(await trigger(`sustancias.${sustanciaActual[0]}`))) return
+      setPaso(paso + 1)
+    }
+  }
+
+  const atras = () => setPaso(Math.max(paso - 1, 0))
+
   return (
     <Container size="sm" py="xl">
-      <Stack gap="lg">
-        <Box>
-          <Title order={2}>Tamizaje de consumo de sustancias (ASSIST)</Title>
-          <Text size="sm" c="dimmed">
-            Cuestionario anónimo y confidencial — Organización Mundial de la Salud / OPS.
-            No se solicita nombre, cédula ni firma. Sea honesto: esta información se usa
-            únicamente para orientar el programa de prevención de la institución.
-          </Text>
-        </Box>
+      <form onSubmit={handleSubmit(enviarFormulario)} noValidate>
+        <Stack gap="lg">
+          <Box>
+            <Title order={2}>Tamizaje de consumo de sustancias (ASSIST)</Title>
+            <Text size="sm" c="dimmed">
+              Cuestionario anónimo y confidencial — Organización Mundial de la Salud / OPS.
+              No se solicita nombre, cédula ni firma. Sea honesto: esta información se usa
+              únicamente para orientar el programa de prevención de la institución.
+            </Text>
+          </Box>
 
-        <Stepper active={step} size="sm" iconSize={28} allowNextStepsSelect={false}>
-          <Stepper.Step label="Sustancias" />
-          {sustanciasSeleccionadasOrdenadas.map(([key, info]) => (
-            <Stepper.Step key={key} label={info.etiqueta} />
-          ))}
-          <Stepper.Step label="Uso inyectable" />
-        </Stepper>
+          <Stepper active={paso} size="sm" iconSize={28} allowNextStepsSelect={false}>
+            <Stepper.Step label="Sustancias" />
+            {elegidas.map(([clave, info]) => (
+              <Stepper.Step key={clave} label={info.etiqueta} />
+            ))}
+            <Stepper.Step label="Uso inyectable" />
+          </Stepper>
 
-        {esPasoP1 && (
-          <Stack gap="sm">
-            <Title order={4}>A lo largo de su vida, ¿cuáles de las siguientes sustancias ha consumido alguna vez?</Title>
-            <Text size="sm" c="dimmed">Solo las que consumió sin receta médica. Seleccione todas las que apliquen.</Text>
-            <Stack gap="xs">
-              {sustanciasOrdenadas.map(([key, info]) => (
-                <Checkbox
-                  key={key}
-                  label={`${info.etiqueta} (${info.ejemplos})`}
-                  disabled={sinConsumo}
-                  checked={seleccionadas.includes(key)}
-                  onChange={(e) => {
-                    const checked = e.currentTarget.checked
-                    setSeleccionadas((s) => (checked ? [...s, key] : s.filter((k) => k !== key)))
-                    if (checked) setSinConsumo(false)
-                  }}
-                />
-              ))}
-            </Stack>
-            <Divider my="xs" />
-            <Checkbox
-              label={<Text fw={600}>No he consumido ninguna de estas sustancias</Text>}
-              checked={sinConsumo}
-              onChange={(e) => {
-                const checked = e.currentTarget.checked
-                setSinConsumo(checked)
-                if (checked) setSeleccionadas([])
-              }}
+          {esPasoP1 && (
+            <AssistSeleccionSustancias
+              sustancias={sustanciasOrdenadas}
+              control={control}
+              errors={errors}
+              setValue={setValue}
+              seleccionadas={seleccionadas}
+              sinConsumo={sinConsumo}
             />
-          </Stack>
-        )}
-
-        {sustanciaActual && (
-          <AssistSustanciaFormulario
-            sustancia={sustanciaActual[1]}
-            opcionesFrecuencia3m={cuestionario.opciones_frecuencia_3m}
-            opcionesFrecuenciaVida={cuestionario.opciones_frecuencia_vida}
-            value={respuestas[sustanciaActual[0]] ?? {}}
-            onChange={(v) => actualizarRespuestaSustancia(sustanciaActual[0], v)}
-          />
-        )}
-
-        {esPasoInyectable && (
-          <Stack gap="sm">
-            <Title order={4}>Una última pregunta</Title>
-            <Select
-              label={cuestionario.pregunta_inyectable.texto}
-              data={Object.entries(cuestionario.opciones_frecuencia_vida).map(([v, label]) => ({ value: v, label }))}
-              required
-              {...contained}
-              value={usoInyectable}
-              onChange={setUsoInyectable}
-            />
-          </Stack>
-        )}
-
-        <Group justify="space-between" mt="md">
-          <Button variant="default" onClick={anterior} disabled={step === 0}>
-            Atrás
-          </Button>
-          {esPasoInyectable ? (
-            <Button loading={enviar.isPending} onClick={handleEnviar}>
-              Enviar tamizaje
-            </Button>
-          ) : (
-            <Button loading={esPasoP1 && sinConsumo && enviar.isPending} onClick={siguiente}>
-              Siguiente
-            </Button>
           )}
-        </Group>
-      </Stack>
+
+          {sustanciaActual && (
+            <AssistSustanciaFormulario
+              codigo={sustanciaActual[0]}
+              sustancia={sustanciaActual[1]}
+              opcionesFrecuencia3m={cuestionario.opciones_frecuencia_3m}
+              opcionesFrecuenciaVida={cuestionario.opciones_frecuencia_vida}
+              control={control}
+              errors={errors}
+              trigger={trigger}
+              p2={sustanciasRespondidas?.[sustanciaActual[0]]?.p2}
+            />
+          )}
+
+          {esPasoInyectable && (
+            <Stack gap="sm">
+              <Title order={4}>Una última pregunta</Title>
+              {/* En `Radio.Group` y no como etiqueta de un `Select`: la
+                  pregunta P8 del manual tiene 90 caracteres y el patrón
+                  contained dibuja la etiqueta dentro del control. */}
+              <Controller
+                name="uso_inyectable"
+                control={control}
+                render={({ field }) => (
+                  <Radio.Group
+                    label={cuestionario.pregunta_inyectable.texto}
+                    required
+                    value={field.value ?? ''}
+                    onChange={field.onChange}
+                    error={errors.uso_inyectable?.message}
+                  >
+                    <Stack gap={6} mt="xs">
+                      {Object.entries(cuestionario.opciones_frecuencia_vida).map(([valor, etiqueta]) => (
+                        <Radio key={valor} value={valor} label={etiqueta} />
+                      ))}
+                    </Stack>
+                  </Radio.Group>
+                )}
+              />
+            </Stack>
+          )}
+
+          <Group justify="space-between" mt="md">
+            <Button variant="default" onClick={atras} disabled={paso === 0}>
+              Atrás
+            </Button>
+            {esPasoInyectable ? (
+              <Button type="submit" loading={enviar.isPending}>
+                Enviar tamizaje
+              </Button>
+            ) : (
+              <Button
+                onClick={siguiente}
+                loading={esPasoP1 && sinConsumo && enviar.isPending}
+              >
+                Siguiente
+              </Button>
+            )}
+          </Group>
+        </Stack>
+      </form>
     </Container>
   )
 }
