@@ -78,8 +78,13 @@
 
         {{-- Sin `page-break-inside: avoid`: dompdf no parte el bloque, lo
              empuja entero a la hoja siguiente, y este certificado cabe de
-             sobra en una. --}}
-        .firma { margin-top: 24px; text-align: center; }
+             sobra en una.
+
+             El aire sobre la firma tiene techo: con un texto de restricciones
+             largo —el de la prueba, ~470 caracteres— a partir de unos 64px el
+             bloque se va a una segunda hoja y la firma queda sola. 48px da
+             separación de documento firmado y deja margen de sobra. --}}
+        .firma { margin-top: 48px; text-align: center; }
         .firma .linea { border-top: 1px solid #222222; width: 62%; margin: 0 auto 4px auto; }
         .firma .nombre { font-weight: bold; margin: 0; }
         .firma .cargo { font-size: 9pt; color: #555555; margin: 0; }
