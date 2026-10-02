@@ -17,6 +17,7 @@ import {
 } from '../schemas/factorRiesgo.schema'
 import { columnasFactorRiesgo } from './factorRiesgo.columns'
 import type { FactorRiesgoCatalogo } from '../services/tipos'
+import { erroresDeCampo } from '@/lib/erroresDeCampo'
 
 interface Props {
   opened: boolean
@@ -35,7 +36,7 @@ export function FactoresRiesgoModal({ opened, onClose }: Props) {
   const [editando, setEditando] = useState<FactorRiesgoCatalogo | null>(null)
 
   const {
-    register, control, handleSubmit, reset,
+    register, control, handleSubmit, reset, setError,
     formState: { errors },
   } = useForm<FactorRiesgoFormData>({
     resolver: zodResolver(factorRiesgoSchema) as Resolver<FactorRiesgoFormData>,
@@ -52,12 +53,23 @@ export function FactoresRiesgoModal({ opened, onClose }: Props) {
     reset({ nombre: '', categoria: 'fisico' })
   }
 
+  // El 422 del backend, en su campo. En un solo sitio porque lo usan las dos
+  // ramas del envío: dejarlo solo en el alta —que es donde estaba cuando se
+  // escribió este cambio— dejaría la edición notificando por encima.
+  const marcarErrores = (error: unknown) => {
+    const campos = erroresDeCampo(error)
+    if (!campos) return // el hook ya lo notificó
+    for (const [campo, mensaje] of Object.entries(campos)) {
+      setError(campo as keyof FactorRiesgoFormData, { message: mensaje })
+    }
+  }
+
   const onSubmit = (values: FactorRiesgoFormData) => {
     if (editando) {
-      editar.mutateAsync({ id: editando.id, ...values }).then(cancelarEdicion).catch(() => {})
+      editar.mutateAsync({ id: editando.id, ...values }).then(cancelarEdicion).catch(marcarErrores)
       return
     }
-    crear.mutateAsync(values).then(() => reset({ nombre: '', categoria: values.categoria })).catch(() => {})
+    crear.mutateAsync(values).then(() => reset({ nombre: '', categoria: values.categoria })).catch(marcarErrores)
   }
 
   const accionesDe = (f: FactorRiesgoCatalogo): TableAction[] => [

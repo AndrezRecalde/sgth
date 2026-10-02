@@ -21,6 +21,7 @@ import {
   NIVEL_INTERVENCION_LABELS, TONO_NIVEL_INTERVENCION, calcularNtp330,
 } from '../schemas/riesgoLaboral.schema'
 import type { RiesgoLaboral } from '../services/tipos'
+import { erroresDeCampo } from '@/lib/erroresDeCampo'
 
 interface Props {
   opened:  boolean
@@ -95,6 +96,7 @@ export function RiesgoLaboralModal({ opened, onClose, riesgo }: Props) {
     control,
     handleSubmit,
     reset,
+    setError,
     formState: { errors },
   } = useForm<RiesgoLaboralFormData>({
     resolver: zodResolver(riesgoLaboralSchema) as Resolver<RiesgoLaboralFormData>,
@@ -114,7 +116,13 @@ export function RiesgoLaboralModal({ opened, onClose, riesgo }: Props) {
     const mutation = isEditing
       ? editar.mutateAsync({ id: riesgo!.id, data: values })
       : crear.mutateAsync(values)
-    mutation.then(handleClose).catch(() => {})
+    mutation.then(handleClose).catch((error) => {
+      const campos = erroresDeCampo(error)
+      if (! campos) return // el hook ya lo notificó
+      for (const [campo, mensaje] of Object.entries(campos)) {
+        setError(campo as keyof RiesgoLaboralFormData, { message: mensaje })
+      }
+    })
   }
 
   const isPending = crear.isPending || editar.isPending

@@ -17,6 +17,7 @@ import {
 } from '../schemas/programaDrogas.schema'
 import { columnasActividadPrograma } from './actividadPrograma.columns'
 import type { ProgramaDrogaActividad } from '../services/programaDrogasService'
+import { erroresDeCampo } from '@/lib/erroresDeCampo'
 
 interface Props {
   opened: boolean
@@ -37,7 +38,7 @@ export function CatalogoActividadesProgramaModal({ opened, onClose }: Props) {
   const [editando, setEditando] = useState<ProgramaDrogaActividad | null>(null)
 
   const {
-    register, control, handleSubmit, reset,
+    register, control, handleSubmit, reset, setError,
     formState: { errors },
   } = useForm<ActividadProgramaFormData>({
     resolver: zodResolver(actividadProgramaSchema) as Resolver<ActividadProgramaFormData>,
@@ -58,12 +59,23 @@ export function CatalogoActividadesProgramaModal({ opened, onClose }: Props) {
     reset({ nombre: '', fase: 'fase_1_preparacion', descripcion: '' })
   }
 
+  // El 422 del backend, en su campo. En un solo sitio porque lo usan las dos
+  // ramas del envío: dejarlo solo en el alta —que es donde estaba cuando se
+  // escribió este cambio— dejaría la edición notificando por encima.
+  const marcarErrores = (error: unknown) => {
+    const campos = erroresDeCampo(error)
+    if (!campos) return // el hook ya lo notificó
+    for (const [campo, mensaje] of Object.entries(campos)) {
+      setError(campo as keyof ActividadProgramaFormData, { message: mensaje })
+    }
+  }
+
   const onSubmit = (values: ActividadProgramaFormData) => {
     if (editando) {
-      editarActividad.mutateAsync({ id: editando.id, ...values }).then(cancelarEdicion).catch(() => {})
+      editarActividad.mutateAsync({ id: editando.id, ...values }).then(cancelarEdicion).catch(marcarErrores)
       return
     }
-    crearActividad.mutateAsync(values).then(() => reset({ nombre: '', fase: values.fase, descripcion: '' })).catch(() => {})
+    crearActividad.mutateAsync(values).then(() => reset({ nombre: '', fase: values.fase, descripcion: '' })).catch(marcarErrores)
   }
 
   const accionesDe = (a: ProgramaDrogaActividad): TableAction[] => [
