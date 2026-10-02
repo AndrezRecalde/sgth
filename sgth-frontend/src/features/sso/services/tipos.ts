@@ -35,6 +35,19 @@ export type FactorRiesgoCatalogo   = Esquemas['FactorRiesgoCatalogo']
 export type NormativaLegalSso      = Esquemas['NormativaLegalSso']
 export type CumplimientoNormativa  = Esquemas['CumplimientoNormativa']
 
+// ── Lo que aceptan los endpoints de escritura ─
+
+/**
+ * Para escribir se usa el tipo de la **petición**, no el del recurso: no son
+ * la misma forma. El caso que lo deja claro es `duracion_horas`, que el
+ * `StoreCapacitacionSsoRequest` recibe como número y el recurso devuelve hoy
+ * como cadena, porque la columna es `decimal` y el modelo no la castea
+ * (lo arregla #248). Con `Partial<CapacitacionSso>` el formulario no habría
+ * compilado, y con un `as` habría compilado mintiendo.
+ */
+export type InspeccionPayload   = Esquemas['StoreInspeccionSsoRequest']
+export type CapacitacionPayload = Esquemas['StoreCapacitacionSsoRequest']
+
 // ── Enums del dominio ────────────────────────
 
 export type CategoriaFactorRiesgo = Esquemas['CategoriaFactorRiesgo']

@@ -55,6 +55,8 @@ export const ROUTES = {
     RIESGOS_LABORALES_ACCIDENTES: '/sgth/riesgos-laborales/accidentes',
     RIESGOS_LABORALES_EPP: '/sgth/riesgos-laborales/epp',
     RIESGOS_LABORALES_ENTREGAS_EPP: '/sgth/riesgos-laborales/entregas-epp',
+    RIESGOS_LABORALES_INSPECCIONES: '/sgth/riesgos-laborales/inspecciones',
+    RIESGOS_LABORALES_CAPACITACIONES: '/sgth/riesgos-laborales/capacitaciones',
     RIESGOS_LABORALES_INDICADORES: '/sgth/riesgos-laborales/indicadores',
     RIESGOS_LABORALES_CUMPLIMIENTO: '/sgth/riesgos-laborales/cumplimiento',
     RIESGOS_LABORALES_PSICOSOCIAL: '/sgth/riesgos-laborales/psicosocial',
