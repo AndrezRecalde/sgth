@@ -8,6 +8,22 @@ export const crearCampaniaAssistSchema = z.object({
   fecha_apertura: z.string().min(1, 'Requerido'),
   fecha_cierre: z.string().nullable().optional(),
 })
+  // El backend la exige (`after_or_equal:fecha_apertura`) y aquí no se
+  // comprobaba, así que una campaña con el cierre antes de la apertura
+  // viajaba al servidor y volvía como una notificación genérica, sin marcar
+  // el campo.
+  //
+  // `when: () => true`: en Zod v4 un refine sobre el objeto no corre si ya hay
+  // otro error, y entonces el aviso del rango no aparecía hasta arreglar lo
+  // demás y reintentar.
+  .refine(
+    (datos) => !datos.fecha_cierre || datos.fecha_cierre >= datos.fecha_apertura,
+    {
+      path: ['fecha_cierre'],
+      message: 'El cierre no puede ser anterior a la apertura',
+      when: () => true,
+    },
+  )
 
 export type CrearCampaniaAssistFormData = z.infer<typeof crearCampaniaAssistSchema>
 

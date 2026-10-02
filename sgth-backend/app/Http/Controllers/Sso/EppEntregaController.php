@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Sso;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Sso\EppEntregaResource;
 use App\Http\Responses\ApiResponse;
 use App\Enums\MotivoEntregaEpp;
+use App\Http\Requests\Sso\ListarEppEntregasRequest;
 use App\Services\Sso\EppService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,10 +18,14 @@ final class EppEntregaController extends Controller
         private readonly EppService $eppService,
     ) {}
 
-    public function index(Request $request): JsonResponse
+    public function index(ListarEppEntregasRequest $request): JsonResponse
     {
-        $entregas = $this->eppService->listarEntregas($request->all());
-        return ApiResponse::paginado($entregas, 'Entregas de EPP obtenidas exitosamente.');
+        $entregas = $this->eppService->listarEntregas($request->filtros());
+        return ApiResponse::paginadoDe(
+            $entregas,
+            EppEntregaResource::collection($entregas->items()),
+            'Entregas de EPP obtenidas exitosamente.',
+        );
     }
 
     public function store(Request $request): JsonResponse
@@ -63,13 +69,16 @@ final class EppEntregaController extends Controller
 
     public function reporte(Request $request): JsonResponse
     {
-        $request->validate([
+        // `validated()` y no `all()`: validaba y acto seguido pasaba la petición
+        // entera, así que lo validado y lo que llegaba al servicio no eran la
+        // misma cosa.
+        $validated = $request->validate([
             'fecha_inicio' => ['required', 'date'],
             'fecha_fin' => ['required', 'date', 'after_or_equal:fecha_inicio'],
             'puesto_id' => ['nullable', 'integer', 'exists:puestos,id'],
         ]);
 
-        $reporte = $this->eppService->reporteEntregas($request->all());
+        $reporte = $this->eppService->reporteEntregas($validated);
         return ApiResponse::ok($reporte, 'Reporte de EPP entregados generado exitosamente.');
     }
 }

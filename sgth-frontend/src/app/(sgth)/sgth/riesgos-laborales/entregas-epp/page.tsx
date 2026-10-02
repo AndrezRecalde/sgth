@@ -1,20 +1,11 @@
 import type { Metadata } from 'next'
-import { EntregasEppTab } from '@/features/sso/components/EntregasEppTab'
-import { PageHeader, PageShell } from '@/components/ui'
+import { EntregasEppView } from './EntregasEppView'
 
 export const metadata: Metadata = {
   title: 'Entregas de EPP',
-  description: 'Riesgos Laborales (SSO) — GAD Provincial de Esmeraldas',
+  description: 'Bitácora de entregas, devoluciones y reposiciones de equipo de protección',
 }
 
 export default function EntregasEppPage() {
-  return (
-    <PageShell>
-      <PageHeader
-        title="Entregas de EPP"
-        description="Riesgos Laborales (SSO) — GAD Provincial de Esmeraldas"
-      />
-      <EntregasEppTab />
-    </PageShell>
-  )
+  return <EntregasEppView />
 }

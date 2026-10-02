@@ -1,20 +1,11 @@
 import type { Metadata } from 'next'
-import { AusentismoTab } from '@/features/sso/components/AusentismoTab'
-import { PageHeader, PageShell } from '@/components/ui'
+import { AusentismoView } from './AusentismoView'
 
 export const metadata: Metadata = {
   title: 'Ausentismo por Enfermedad',
-  description: 'Riesgos Laborales (SSO) — GAD Provincial de Esmeraldas',
+  description: 'Consolidado de permisos médicos del período, como indicador reactivo',
 }
 
 export default function AusentismoPage() {
-  return (
-    <PageShell>
-      <PageHeader
-        title="Ausentismo por Enfermedad"
-        description="Riesgos Laborales (SSO) — GAD Provincial de Esmeraldas"
-      />
-      <AusentismoTab />
-    </PageShell>
-  )
+  return <AusentismoView />
 }

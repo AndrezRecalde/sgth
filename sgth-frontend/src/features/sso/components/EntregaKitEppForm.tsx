@@ -12,7 +12,7 @@ import { IconAlertTriangle, IconInfoCircle, IconPlus } from '@tabler/icons-react
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { BuscarServidorSelect } from '@/features/expediente/components/BuscarServidorSelect'
 import { useEppEntregaMutations, useKitEppServidor } from '../hooks/useEppEntregas'
-import { useEquiposProteccion } from '../hooks/useEquiposProteccion'
+import { useCatalogoEquiposProteccion } from '../hooks/useEquiposProteccion'
 import {
   entregaKitEppSchema, type EntregaKitEppFormData,
 } from '../schemas/entregaKitEpp.schema'
@@ -20,9 +20,9 @@ import { erroresDeCampo } from '@/lib/erroresDeCampo'
 import { toDateValue, fromDateValue } from '@/lib/fecha'
 import { tocaEntregar } from '../constants/kitEpp'
 import { columnasKitEpp } from './kitEpp.columns'
-import type { PuestoEpp } from '../services/tipos'
+import type { FilaKitEpp } from '../services/tipos'
 
-const KIT_EPP_VACIO: PuestoEpp[] = []
+const KIT_EPP_VACIO: FilaKitEpp[] = []
 
 const VALORES_INICIALES: EntregaKitEppFormData = {
   servidor_id: 0,
@@ -49,8 +49,8 @@ export function EntregaKitEppForm({ onListo, onCancelar }: Props) {
   const contained = useContainedInput()
   const { registrarKit } = useEppEntregaMutations()
 
-  const { data: equiposData, error: errorEquipos } = useEquiposProteccion({ estado: true })
-  const equipoOptions = (equiposData?.data ?? []).map(e => ({
+  const { data: catalogoEquipos = [], error: errorEquipos } = useCatalogoEquiposProteccion()
+  const equipoOptions = catalogoEquipos.map(e => ({
     value: String(e.id), label: `${e.codigo} — ${e.nombre}`,
   }))
 
