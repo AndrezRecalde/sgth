@@ -1,24 +1,13 @@
 'use client'
 
 import { confirmar, DataState } from '@/components/ui'
-import { useState } from 'react'
-import { Box, Stack, Group, Text, TextInput, Button, ActionIcon, Alert } from '@mantine/core'
-import { Dropzone } from '@mantine/dropzone'
-import { IconUpload, IconX, IconFile, IconDownload, IconTrash, IconAlertCircle } from '@tabler/icons-react'
+import { Box, Stack, Group, Text, ActionIcon, Alert } from '@mantine/core'
+import { IconDownload, IconTrash, IconAlertCircle } from '@tabler/icons-react'
 import { useAuth } from '@/hooks/useAuth'
-import { useContainedInput } from '@/hooks/useContainedInput'
 import { useDocumentosSso, useDocumentoSsoMutations } from '../hooks/useDocumentosSso'
 import { formatFecha } from '@/lib/fecha'
+import { SubirDocumentoSsoForm } from './SubirDocumentoSsoForm'
 import type { TipoDocumentableSso, DocumentoSso } from '../services/documentoSsoService'
-import { erroresDeCampo } from '@/lib/erroresDeCampo'
-
-const MIMES_ACEPTADOS = [
-  'application/pdf',
-  'image/jpeg',
-  'image/png',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-]
 
 function formatTamano(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
@@ -33,7 +22,6 @@ interface Props {
 
 /** Panel de adjuntos genérico (Fase 9): lista + sube evidencias/actas para un registro SSO. */
 export function DocumentosSsoPanel({ tipo, documentableId }: Props) {
-  const contained = useContainedInput()
   const { data: documentos = [], isLoading, error, refetch } = useDocumentosSso(tipo, documentableId)
   const { subir, eliminar, descargar } = useDocumentoSsoMutations(tipo, documentableId)
 
@@ -41,49 +29,12 @@ export function DocumentosSsoPanel({ tipo, documentableId }: Props) {
   const { hasPermiso } = useAuth()
   const puedeGestionar = hasPermiso('gestionar-sso')
 
-  const [archivo, setArchivo] = useState<File | null>(null)
-  const [nombre, setNombre] = useState('')
-  // Dos ranuras y no una: había un solo `archivoError` para los dos campos,
-  // así que un error del nombre se pintaba debajo de la zona de carga. Este
-  // panel todavia no usa React Hook Form —va en el PR que convierte las tres
-  // pantallas de `useState` del módulo—, pero el 422 del backend ya aterriza
-  // donde corresponde.
-  const [errorNombre, setErrorNombre] = useState('')
-  const [errorArchivo, setErrorArchivo] = useState('')
-
   if (!documentableId) {
     return (
       <Alert icon={<IconAlertCircle size={16} />} color="ocean" variant="light">
         Guarde el registro primero para poder adjuntar documentos de respaldo.
       </Alert>
     )
-  }
-
-  const handleSubir = () => {
-    setErrorNombre('')
-    setErrorArchivo('')
-
-    if (!archivo) {
-      setErrorArchivo('Seleccione un archivo para subir')
-      return
-    }
-    if (!nombre.trim()) {
-      setErrorNombre('Indique un nombre para el documento')
-      return
-    }
-    subir.mutateAsync({ nombre: nombre.trim(), archivo }).then(() => {
-      setArchivo(null)
-      setNombre('')
-    }).catch((error) => {
-      // El 422 del backend a su campo: rechaza por tipo de archivo, por tamano
-      // (10 MB) y por la longitud del nombre, y los tres salían como la misma
-      // notificación genérica.
-      const campos = erroresDeCampo(error)
-      if (! campos) return // el hook ya lo notificó
-      if (campos.nombre) setErrorNombre(campos.nombre)
-      const delArchivo = campos.archivo ?? campos.documentable_type ?? campos.documentable_id
-      if (delArchivo) setErrorArchivo(delArchivo)
-    })
   }
 
   return (
@@ -140,54 +91,7 @@ export function DocumentosSsoPanel({ tipo, documentableId }: Props) {
         ))}
       </DataState>
 
-      {puedeGestionar && (<>
-        <TextInput
-          label="Nombre del documento"
-          placeholder="Ej: Acta de socialización, evidencia fotográfica..."
-          size="xs"
-          {...contained}
-          value={nombre}
-          onChange={(e) => setNombre(e.currentTarget.value)}
-          error={errorNombre || undefined}
-        />
-
-        <Dropzone
-          onDrop={(files) => { setArchivo(files[0]); setErrorArchivo('') }}
-          // El motivo, no «Archivo no válido»: la zona rechaza por tipo y
-          // por tamaño, y sin decir cuál se prueba a ciegas.
-          onReject={() => setErrorArchivo(
-            'El archivo no es válido: solo PDF, DOC, JPG o PNG, y hasta 10 MB.',
-          )}
-          maxSize={10 * 1024 * 1024}
-          accept={MIMES_ACEPTADOS}
-        >
-          <Group justify="center" gap="md" mih={60}>
-            <Dropzone.Accept>
-              <IconUpload size={22} color="var(--mantine-color-emerald-6)" />
-            </Dropzone.Accept>
-            <Dropzone.Reject>
-              <IconX size={22} color="var(--mantine-color-red-6)" />
-            </Dropzone.Reject>
-            <Dropzone.Idle>
-              <IconFile size={22} color="var(--mantine-color-dimmed)" />
-            </Dropzone.Idle>
-            <Text size="xs" c={archivo ? 'emerald' : 'dimmed'}>
-              {archivo ? archivo.name : 'Arrastre el archivo aquí o haga clic (PDF, DOC, JPG, PNG — máx. 10MB)'}
-            </Text>
-          </Group>
-        </Dropzone>
-        {errorArchivo && <Text size="xs" c="red">{errorArchivo}</Text>}
-
-        <Button
-          size="xs"
-          variant="light"
-          leftSection={<IconUpload size={14} />}
-          loading={subir.isPending}
-          onClick={handleSubir}
-        >
-          Subir documento
-        </Button>
-      </>)}
+      {puedeGestionar && <SubirDocumentoSsoForm subir={subir} />}
     </Stack>
   )
 }
