@@ -39,6 +39,7 @@ export function useIniciarProceso() {
       qc.invalidateQueries({
         queryKey: ['solicitudes-certificacion'],
       })
+      qc.invalidateQueries({ queryKey: ['certificaciones-cobertura'] })
       // La incorporación se dispara también desde Reclutamiento Express, y
       // allí el aspirante pasa a «Incorporado».
       qc.invalidateQueries({ queryKey: ['express-aspirantes'] })
@@ -64,6 +65,7 @@ export function useCompletarSolicitud() {
       qc.invalidateQueries({
         queryKey: ['solicitudes-certificacion'],
       })
+      qc.invalidateQueries({ queryKey: ['certificaciones-cobertura'] })
     },
     onError: notificar.alFallar('No se pudo completar la solicitud'),
   })
@@ -89,6 +91,7 @@ export function useCrearSolicitudLote() {
       qc.invalidateQueries({
         queryKey: ['solicitudes-certificacion'],
       })
+      qc.invalidateQueries({ queryKey: ['certificaciones-cobertura'] })
     },
     onError: notificar.alFallar('No se pudieron generar las solicitudes'),
   })
@@ -105,6 +108,7 @@ export function useCancelarSolicitud() {
         'El servidor vuelve a quedar disponible para una solicitud nueva.',
       )
       qc.invalidateQueries({ queryKey: ['solicitudes-certificacion'] })
+      qc.invalidateQueries({ queryKey: ['certificaciones-cobertura'] })
     },
     onError: notificar.alFallar('No se pudo cancelar la solicitud'),
   })
