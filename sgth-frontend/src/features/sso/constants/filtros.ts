@@ -19,6 +19,11 @@ export const ESTADO_INVESTIGACION_OPTIONS = [
   { value: 'false', label: 'Cerrada' },
 ]
 
+export const ESTADO_SEGUIMIENTO_OPTIONS = [
+  { value: 'true', label: 'Abierto' },
+  { value: 'false', label: 'Cerrado' },
+]
+
 /** `undefined` cuando no hay filtro: así el parámetro no viaja en la URL. */
 export function aEstadoActivo(valor: string | null): boolean | undefined {
   if (valor === null) return undefined
