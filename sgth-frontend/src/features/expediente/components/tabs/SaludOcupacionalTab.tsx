@@ -7,7 +7,6 @@ import { IconStethoscope } from '@tabler/icons-react'
 import { DataState, PAGINACION_ES, SectionCard, SgthTable } from '@/components/ui'
 import { useAuth } from '@/hooks/useAuth'
 import { useSolicitudesCertificacion } from '@/features/dispensario/hooks/useSolicitudCertificacion'
-import { usePdfFemo } from '@/features/dispensario/hooks/usePdfFemo'
 import { getSaludOcupacionalColumns } from '../saludOcupacional.columns'
 import { AptitudVigentePanel } from '../AptitudVigentePanel'
 import { AusentismoSaludPanel } from '../AusentismoSaludPanel'
@@ -45,18 +44,7 @@ export function SaludOcupacionalTab({ servidor }: Props) {
   })
   const aptitud = aptitudVigente(ultimas?.data?.[0])
 
-  const { descargarFemo, loading: descargando } = usePdfFemo()
-  // El hook tiene un solo `loading`: sin saber qué fila lo pidió, giraban
-  // todos los botones de PDF a la vez.
-  const [descargandoId, setDescargandoId] = useState<number | null>(null)
-
-  const columns = getSaludOcupacionalColumns({
-    descargandoId: descargando ? descargandoId : null,
-    onDescargar: (s) => {
-      setDescargandoId(s.id)
-      descargarFemo(s.ficha_femo_id!, `femo-${s.cedula_paciente}-${s.id}.pdf`)
-    },
-  })
+  const columns = getSaludOcupacionalColumns()
 
   return (
     <Stack gap="md">
