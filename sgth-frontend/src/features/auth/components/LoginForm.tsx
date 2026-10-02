@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  TextInput,
-  PasswordInput,
-  Button,
-  Stack,
-  Checkbox,
-  Anchor,
-  Group,
-} from "@mantine/core";
+import { TextInput, PasswordInput, Button, Stack, Text } from "@mantine/core";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useContainedInput } from "@/hooks/useContainedInput";
@@ -31,9 +23,15 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit((v) => mutate(v))} noValidate>
       <Stack gap="md">
+        {/* `autoComplete` es lo que deja a los gestores de contraseñas
+            reconocer el formulario y ofrecer lo guardado. */}
         <TextInput
           label="Usuario"
-          placeholder="admin@fusetheme.com"
+          placeholder="Su usuario del sistema"
+          autoComplete="username"
+          autoCapitalize="none"
+          spellCheck={false}
+          autoFocus
           {...contained}
           {...register("usuario")}
           error={errors.usuario?.message}
@@ -41,24 +39,22 @@ export function LoginForm() {
         <PasswordInput
           label="Contraseña"
           placeholder="••••••••••••"
+          autoComplete="current-password"
           {...contained}
           {...register("contrasena")}
           error={errors.contrasena?.message}
         />
 
-        <Group justify="space-between" align="center">
-          <Checkbox label="Recordarme" size="sm" />
-          <Anchor
-            size="sm"
-            href="https://www.gadpe.gob.ec/webmail"
-            target="_blank"
-            c="dimmed"
-          >
-            ¿Olvidaste tu contraseña?
-          </Anchor>
-        </Group>
+        {/* Aquí había un «Recordarme» que no estaba conectado a nada —la
+            sesión dura lo mismo se marque o no— y un «¿Olvidaste tu
+            contraseña?» que abría el webmail, donde no se recupera nada. La
+            contraseña la restablece TI, y eso es lo que hay que decir. */}
+        <Text size="sm" c="dimmed">
+          ¿Olvidó su contraseña? Solicite a la Dirección de TI que la
+          restablezca.
+        </Text>
 
-        <Button type="submit" fullWidth mt="xs" loading={isPending} radius="xl">
+        <Button type="submit" fullWidth loading={isPending} radius="xl">
           Iniciar sesión
         </Button>
       </Stack>

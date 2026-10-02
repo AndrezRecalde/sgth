@@ -1,15 +1,9 @@
 .pageContainer {
-  height: 100vh;
-}
-
-.leftColumn {
-  /* Using mantine flex props for most of it, but we can keep it clean */
-}
-
-.formContainer {
-  max-width: 400px;
-  width: 100%;
-  margin: 0 auto;
+  /* Alto mínimo y no fijo: con `height: 100vh` el formulario quedaba cortado
+     en el teléfono al abrirse el teclado, o en pantallas bajas. `dvh` sigue
+     la barra del navegador móvil, que `vh` ignora. */
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .rightColumn {
@@ -53,4 +47,17 @@
 
 .welcomeText {
   line-height: 1.6;
+  /* Era `dimmed` —un gris pensado para fondo claro— sobre el verde: 2.3:1,
+     por debajo del 4.5:1 de AA. El blanco atenuado pasa de 6:1. */
+  color: var(--mantine-color-white);
+  opacity: 0.85;
+}
+
+.fondo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
 }
