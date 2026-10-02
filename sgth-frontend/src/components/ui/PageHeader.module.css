@@ -16,3 +16,17 @@
   flex: 1 1 20rem;
   min-width: 0;
 }
+
+/* Las acciones no se encogen —un botón con el texto partido en dos líneas es
+   peor que una fila más—, pero sí tienen que caber en el ancho de la pantalla.
+
+   Sin el tope, el grupo mide lo que miden sus botones en una sola línea y
+   `flex-shrink: 0` impide que baje de ahí, así que `wrap` nunca llega a
+   aplicarse: en un teléfono, dos botones de etiqueta larga —«Lista de EPP
+   entregados» y «Registrar movimiento»— sacaban 39 px de página a la derecha.
+   Con el tope, el grupo se queda en el ancho disponible y los botones se
+   reparten en las líneas que hagan falta. */
+.acciones {
+  flex-shrink: 0;
+  max-width: 100%;
+}

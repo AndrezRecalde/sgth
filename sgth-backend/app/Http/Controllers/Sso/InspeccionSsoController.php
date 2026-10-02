@@ -22,7 +22,11 @@ final class InspeccionSsoController extends Controller
     {
         $this->authorize('viewAny', InspeccionSso::class);
         $inspecciones = $this->ssoService->listarInspecciones($request->all());
-        return ApiResponse::paginado($inspecciones, 'Inspecciones SSO obtenidas exitosamente.');
+        return ApiResponse::paginadoDe(
+            $inspecciones,
+            InspeccionSsoResource::collection($inspecciones->items()),
+            'Inspecciones SSO obtenidas exitosamente.',
+        );
     }
 
     public function store(StoreInspeccionSsoRequest $request): JsonResponse

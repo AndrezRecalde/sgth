@@ -22,7 +22,11 @@ final class RiesgoLaboralController extends Controller
     {
         $this->authorize('viewAny', RiesgoLaboral::class);
         $riesgos = $this->ssoService->listarRiesgosLaborales($request->all());
-        return ApiResponse::paginado($riesgos, 'Riesgos laborales obtenidos exitosamente.');
+        return ApiResponse::paginadoDe(
+            $riesgos,
+            RiesgoLaboralResource::collection($riesgos->items()),
+            'Riesgos laborales obtenidos exitosamente.',
+        );
     }
 
     public function store(StoreRiesgoLaboralRequest $request): JsonResponse

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Sso;
 
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
+use App\Services\Sso\FiltroBooleanoSso;
 use App\Enums\FaseProgramaDrogas;
 use App\Services\Sso\ProgramaDrogasService;
 use Illuminate\Http\JsonResponse;
@@ -20,7 +21,7 @@ final class ProgramaDrogaActividadController extends Controller
     {
         $validated = $request->validate([
             'fase' => ['nullable', new Enum(FaseProgramaDrogas::class)],
-            'solo_activas' => ['nullable', 'boolean'],
+            'solo_activas' => FiltroBooleanoSso::reglas(),
         ]);
 
         $actividades = $this->programaDrogasService->listarActividades(
