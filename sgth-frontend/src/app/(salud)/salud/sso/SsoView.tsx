@@ -13,6 +13,7 @@ import {
 } from '@/features/dispensario/hooks/useSolicitudCertificacion'
 import { usePdfFemo } from '@/features/dispensario/hooks/usePdfFemo'
 import { getSolicitudesSsoColumns } from '@/features/dispensario/components/solicitudes-certificacion.columns'
+import { ESTADO_SOLICITUD_FILTRO_OPTIONS } from '@/features/dispensario/services/solicitudCertificacionService'
 import {
   DataState, PageHeader, PageShell, PAGINACION_ES, SgthTable, StatusBadge,
   Toolbar,
@@ -85,13 +86,7 @@ export function SsoView() {
         <Select
           label="Estado"
           placeholder="Todas"
-          data={[
-            { value: '',           label: 'Todas'       },
-            { value: 'pendiente',  label: 'Pendientes'  },
-            { value: 'en_proceso', label: 'En proceso'  },
-            { value: 'completada', label: 'Completadas' },
-            { value: 'cancelada',  label: 'Canceladas'  },
-          ]}
+          data={ESTADO_SOLICITUD_FILTRO_OPTIONS}
           style={{ minWidth: 200 }}
           {...contained}
           value={filtroEstado}

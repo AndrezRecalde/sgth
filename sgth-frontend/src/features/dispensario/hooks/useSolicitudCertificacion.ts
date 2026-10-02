@@ -94,6 +94,22 @@ export function useCrearSolicitudLote() {
   })
 }
 
+export function useCancelarSolicitud() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, motivo }: { id: number; motivo: string }) =>
+      solicitudCertificacionService.cancelar(id, motivo),
+    onSuccess: () => {
+      notificar.exito(
+        'Solicitud cancelada',
+        'El servidor vuelve a quedar disponible para una solicitud nueva.',
+      )
+      qc.invalidateQueries({ queryKey: ['solicitudes-certificacion'] })
+    },
+    onError: notificar.alFallar('No se pudo cancelar la solicitud'),
+  })
+}
+
 export function useConfirmarIncorporacion() {
   const qc = useQueryClient()
   return useMutation({

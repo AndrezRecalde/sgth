@@ -2,14 +2,25 @@
 
 import { useState } from 'react'
 import { Select } from '@mantine/core'
+import { useDisclosure } from '@mantine/hooks'
 import { IconClipboardHeart } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { useSolicitudesCertificacion } from '@/features/dispensario/hooks/useSolicitudCertificacion'
+import { useAuth } from '@/hooks/useAuth'
+import {
+  useCancelarSolicitud,
+  useSolicitudesCertificacion,
+} from '@/features/dispensario/hooks/useSolicitudCertificacion'
 import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
 import { getCertificacionesColumns } from '@/features/dispensario/components/solicitudes-certificacion.columns'
+import {
+  ESTADO_SOLICITUD_FILTRO_OPTIONS,
+  etiquetaTipoEvento,
+  type SolicitudCertificacion,
+} from '@/features/dispensario/services/solicitudCertificacionService'
 import type { UnidadConRelaciones } from '@/types/api'
 import {
-  DataState, PageHeader, PageShell, PAGINACION_ES, SgthTable, Toolbar,
+  DataState, MotivoModal, PageHeader, PageShell, PAGINACION_ES, SgthTable,
+  Toolbar,
 } from '@/components/ui'
 
 const ANIO_ACTUAL = new Date().getFullYear()
@@ -27,6 +38,7 @@ function generarOpcionesAnio(): { value: string; label: string }[] {
 
 export function CertificacionesMedicasView() {
   const contained = useContainedInput('sm')
+  const { hasPermiso } = useAuth()
 
   const [page, setPage] = useState(1)
   const [filtroEstado, setFiltroEstado] = useState<string>('')
@@ -52,6 +64,11 @@ export function CertificacionesMedicasView() {
 
   const solicitudes = data?.data ?? []
 
+  const cancelar = useCancelarSolicitud()
+  const [cancelando, setCancelando] = useState<SolicitudCertificacion | null>(null)
+  const [cancelarOpened, { open: abrirCancelar, close: cerrarCancelar }] =
+    useDisclosure(false)
+
   // Cambiar un filtro sin volver a la primera página consultaría esa misma
   // página del resultado ya filtrado —casi siempre vacía—, así que la tabla
   // saldría en blanco aunque hubiera coincidencias.
@@ -60,26 +77,31 @@ export function CertificacionesMedicasView() {
     setPage(1)
   }
 
-  const columns = getCertificacionesColumns()
+  const columns = getCertificacionesColumns({
+    puedeCancelar: hasPermiso('solicitar-certificacion-medica'),
+    onCancelar: (solicitud) => {
+      setCancelando(solicitud)
+      abrirCancelar()
+    },
+  })
+
+  const cerrarModal = () => {
+    cerrarCancelar()
+    setCancelando(null)
+  }
 
   return (
     <PageShell>
       <PageHeader
         title="Certificaciones médicas"
-        description="Vista de solo lectura de las solicitudes enviadas al Dispensario. La atención médica se gestiona desde allí."
+        description="Seguimiento de las solicitudes enviadas al Dispensario. La evaluación y el dictamen se hacen allí; desde aquí se retira una solicitud pedida por error."
       />
 
       <Toolbar>
         <Select
           label="Estado"
           placeholder="Todas"
-          data={[
-            { value: '',           label: 'Todas'       },
-            { value: 'pendiente',  label: 'Pendientes'  },
-            { value: 'en_proceso', label: 'En proceso'  },
-            { value: 'completada', label: 'Completadas' },
-            { value: 'cancelada',  label: 'Canceladas'  },
-          ]}
+          data={ESTADO_SOLICITUD_FILTRO_OPTIONS}
           style={{ minWidth: 180 }}
           {...contained}
           value={filtroEstado}
@@ -128,6 +150,33 @@ export function CertificacionesMedicasView() {
           minHeight={200}
         />
       </DataState>
+
+      <MotivoModal
+        opened={cancelarOpened}
+        onClose={cerrarModal}
+        title="Cancelar solicitud de certificación"
+        descripcion={
+          cancelando
+            ? (
+                <>
+                  Se retirará la evaluación <b>{etiquetaTipoEvento(cancelando.tipo_evento)}</b> de{' '}
+                  <b>{cancelando.nombres_paciente}</b>. Saldrá de la bandeja del
+                  Dispensario y el servidor volverá a admitir una solicitud nueva.
+                </>
+              )
+            : 'Se retirará la solicitud seleccionada.'
+        }
+        confirmLabel="Cancelar solicitud"
+        destructiva
+        cargando={cancelar.isPending}
+        onConfirm={(motivo) => {
+          if (!cancelando) return
+          cancelar.mutate(
+            { id: cancelando.id, motivo },
+            { onSuccess: cerrarModal },
+          )
+        }}
+      />
     </PageShell>
   )
 }

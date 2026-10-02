@@ -25,12 +25,14 @@ class SolicitudCertificacionMedica extends Model
         'fecha_limite', 'ficha_femo_id',
         'dictamen', 'observacion_medica',
         'observaciones',
+        'cancelada_en', 'cancelada_por', 'motivo_cancelacion',
     ];
 
     protected function casts(): array
     {
         return [
             'fecha_limite' => 'date',
+            'cancelada_en' => 'datetime',
         ];
     }
 
@@ -61,6 +63,12 @@ class SolicitudCertificacionMedica extends Model
     public function solicitadoPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'solicitado_por');
+    }
+
+    /** Quién retiró la solicitud, cuando se canceló. */
+    public function canceladaPor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'cancelada_por');
     }
 
     public function fichaSaludOcupacional(): BelongsTo

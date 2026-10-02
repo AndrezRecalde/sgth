@@ -1375,6 +1375,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->middleware('role:admin-uath|asistente-uath|analista-uath|admin-dispensario')
             ->group(function () {
                 Route::post('lote', [SolicitudCertificacionController::class, 'storeLote']);
+                // Quien la pidió la retira: cancelar no es un acto médico. El
+                // controlador comprueba `solicitar-certificacion-medica`.
+                Route::patch('{id}/cancelar', [SolicitudCertificacionController::class, 'cancelar']);
             });
 
         // Lectura del seguimiento: el médico trabaja sobre estas solicitudes y

@@ -2,13 +2,13 @@
 
 import { Stack, Text } from '@mantine/core'
 import {
-  IconDownload, IconFileText, IconPlayerPlay, IconUserCheck,
+  IconBan, IconDownload, IconFileText, IconPlayerPlay, IconUserCheck,
 } from '@tabler/icons-react'
 import { confirmar, StatusBadge, TableActions } from '@/components/ui'
 import {
   DICTAMEN_LABELS,
   ESTADO_SOLICITUD_LABELS,
-  TIPO_EVENTO_OPTIONS,
+  etiquetaTipoEvento,
   TONO_DICTAMEN,
   TONO_ESTADO_SOLICITUD,
 } from '../services/solicitudCertificacionService'
@@ -41,9 +41,6 @@ interface AccionesSso {
   onConfirmarIncorporacion: (id: number) => void
 }
 
-const etiquetaTipo = (tipo: string) =>
-  TIPO_EVENTO_OPTIONS.find((o) => o.value === tipo)?.label ?? tipo
-
 /** La unidad sale del servidor, o del puesto de la convocatoria si es candidato. */
 const unidadDe = (s: SolicitudCertificacion) =>
   s.servidor?.unidad_administrativa?.nombre
@@ -55,7 +52,7 @@ const tipoEvento: Columna = {
   title: 'Tipo de evaluación',
   width: 180,
   render: (s) => (
-    <StatusBadge>{etiquetaTipo(s.tipo_evento)}</StatusBadge>
+    <StatusBadge>{etiquetaTipoEvento(s.tipo_evento)}</StatusBadge>
   ),
 }
 
@@ -127,6 +124,11 @@ const estado: Columna = {
           {DICTAMEN_LABELS[s.dictamen] ?? s.dictamen}
         </StatusBadge>
       )}
+      {/* «Cancelada» sin el motivo no dice nada: quien evalúa ve desaparecer
+          una solicitud de su bandeja y no sabe por qué. */}
+      {s.motivo_cancelacion && (
+        <Text size="xs" c="dimmed" lineClamp={2}>{s.motivo_cancelacion}</Text>
+      )}
     </Stack>
   ),
 }
@@ -158,8 +160,16 @@ export function getSolicitudesSsoColumns(acciones: AccionesSso): Columna[] {
   ]
 }
 
-/** Certificaciones médicas: Talento Humano solo mira. */
-export function getCertificacionesColumns(): Columna[] {
+interface AccionesCertificaciones {
+  /** `false` oculta el menú entero: sin `solicitar-certificacion-medica`. */
+  puedeCancelar: boolean
+  onCancelar: (solicitud: SolicitudCertificacion) => void
+}
+
+/** Certificaciones médicas: el seguimiento de Talento Humano. */
+export function getCertificacionesColumns(
+  acciones: AccionesCertificaciones,
+): Columna[] {
   return [
     tipoEvento,
     paciente,
@@ -172,6 +182,24 @@ export function getCertificacionesColumns(): Columna[] {
     origen('Origen', 150, false),
     fechaLimite,
     estado,
+    {
+      accessor: 'acciones',
+      title: '',
+      width: 50,
+      render: (s) => (
+        <TableActions
+          actions={[{
+            label: 'Cancelar solicitud',
+            icon: <IconBan size={14} />,
+            color: 'red',
+            // Iniciada ya hay un FEMO en curso, y completada ya tiene
+            // dictamen: solo se retira lo que nadie ha tocado.
+            hidden: !acciones.puedeCancelar || s.estado !== 'pendiente',
+            onClick: () => acciones.onCancelar(s),
+          }]}
+        />
+      ),
+    },
   ]
 }
 
