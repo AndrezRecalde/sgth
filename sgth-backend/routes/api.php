@@ -9,6 +9,7 @@ use App\Http\Controllers\Asistencia\PeriodoVacacionController;
 use App\Http\Controllers\Asistencia\PermisoServidorController;
 use App\Http\Controllers\Asistencia\VacacionController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Autoservicio\AutoservicioController;
 use App\Http\Controllers\Bienestar\EncuestaClimaController;
 use App\Http\Controllers\Bienestar\PlanBienestarController;
@@ -213,6 +214,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::post('cambiar-contrasena',
             [AuthController::class, 'cambiarContrasenaInicial']
         );
+
+        // Cambio voluntario: pide la contraseña actual. El límite es por
+        // usuario y frena a quien, con una sesión ajena abierta, intente
+        // adivinarla.
+        Route::put('contrasena', [PasswordController::class, 'actualizar'])
+            ->middleware(['permission:cambiar-contrasena', 'throttle:5,1']);
     });
 
     // Rutas públicas de catálogo

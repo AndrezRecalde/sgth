@@ -1,6 +1,9 @@
 import api from '@/lib/axios'
 import type { LoginRequest, LoginResponse, ApiResponse } from '@/types/api'
-import type { CambiarPasswordPayload } from '../schemas/cambiarPassword.schema'
+import type {
+  ActualizarContrasenaPayload,
+  CambiarPasswordPayload,
+} from '../schemas/cambiarPassword.schema'
 
 export const authService = {
   login: (data: LoginRequest) =>
@@ -11,4 +14,7 @@ export const authService = {
 
   cambiarPassword: (data: CambiarPasswordPayload) =>
     api.post<ApiResponse<void>>('/auth/cambiar-contrasena', data).then(r => r.data.datos),
+
+  actualizarContrasena: (data: ActualizarContrasenaPayload) =>
+    api.put<ApiResponse<void>>('/auth/contrasena', data).then(r => r.data.datos),
 }
