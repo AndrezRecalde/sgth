@@ -1,5 +1,4 @@
-import { Button, Stack, Text } from '@mantine/core'
-import { IconDownload } from '@tabler/icons-react'
+import { Stack, Text } from '@mantine/core'
 import type { DataTableColumn } from 'mantine-datatable'
 import { StatusBadge } from '@/components/ui'
 import { formatFechaHora } from '@/lib/fecha'
@@ -12,18 +11,25 @@ import {
   type SolicitudCertificacion,
 } from '@/features/dispensario/services/solicitudCertificacionService'
 
-type Handlers = {
-  /** `null` cuando no hay ninguna descarga en curso. */
-  descargandoId: number | null
-  onDescargar: (solicitud: SolicitudCertificacion) => void
-}
-
 const etiquetaTipo = (tipo: string) =>
   TIPO_EVENTO_OPTIONS.find((o) => o.value === tipo)?.label ?? tipo
 
-export const getSaludOcupacionalColumns = (
-  { descargandoId, onDescargar }: Handlers,
-): DataTableColumn<SolicitudCertificacion>[] => [
+/*
+| El historial de evaluaciones tal como lo ve Talento Humano.
+|
+| Sin columna de descarga: el PDF de la ficha es el formulario 028 del MSP
+| completo —motivo de consulta, antecedentes, examen físico y diagnóstico
+| CIE-10—, y eso es historia clínica. Lo que el expediente administrativo
+| recibe es la aptitud y sus restricciones, que es el acuerdo con la UATH del
+| 2026-09-26 y lo que se pinta en la última columna.
+|
+| El botón existía y nunca funcionó: `fichas-sso/{id}/pdf` pide
+| `role:medico|admin-dispensario`, así que a Talento Humano le respondía 403 y
+| el `catch` del hook lo mostraba como «No se pudo generar el PDF». Quien
+| evalúa sigue teniéndolo en Salud Ocupacional y en el detalle de la ficha.
+*/
+export const getSaludOcupacionalColumns =
+  (): DataTableColumn<SolicitudCertificacion>[] => [
   {
     accessor: 'tipo_evento',
     title: 'Tipo de evaluación',
@@ -69,25 +75,5 @@ export const getSaludOcupacionalColumns = (
         </Stack>
       )
     },
-  },
-  {
-    accessor: 'acciones',
-    title: '',
-    width: 90,
-    render: (s) =>
-      s.ficha_femo_id ? (
-        <Button
-          size="xs"
-          variant="light"
-          leftSection={<IconDownload size={13} />}
-          loading={descargandoId === s.id}
-          disabled={descargandoId !== null && descargandoId !== s.id}
-          onClick={() => onDescargar(s)}
-        >
-          PDF
-        </Button>
-      ) : (
-        <Text size="xs" c="dimmed">—</Text>
-      ),
   },
 ]
