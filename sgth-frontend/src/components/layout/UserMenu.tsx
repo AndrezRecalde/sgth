@@ -7,6 +7,7 @@ import {
 import { IconLogout, IconMoon, IconSun } from '@tabler/icons-react'
 import { useAuth } from '@/hooks/useAuth'
 import { ROUTES } from '@/config/routes'
+import { authService } from '@/features/auth/services/authService'
 
 /** Iniciales para el avatar: primer nombre + primer apellido. */
 function iniciales(nombre: string): string {
@@ -31,7 +32,18 @@ export function UserMenu() {
   const iniciada = iniciales(nombre)
   const primerNombre = nombre.split(' ')[0]
 
-  const cerrarSesion = () => {
+  const cerrarSesion = async () => {
+    // Primero el servidor: revoca el token y deja al médico como no
+    // disponible en el Dispensario. Antes solo se borraba el estado local, y
+    // el token seguía valiendo hasta caducar mientras el médico aparecía
+    // disponible para recibir turnos. Si la llamada falla —sin red, token ya
+    // caducado— se sale igual: quedarse dentro no es una opción.
+    try {
+      await authService.logout()
+    } catch {
+      // Sin nada que hacer: la sesión local se cierra de todos modos.
+    }
+
     clearAuth()
     // Recarga completa a propósito: descarta la caché de TanStack Query, que
     // guarda datos del servidor del usuario que sale.
