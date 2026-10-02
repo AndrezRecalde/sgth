@@ -9,6 +9,7 @@ use App\Enums\TipoNombramiento;
 use App\Enums\TipoProcesoConvocatoria;
 use App\Exceptions\ReglaNegocioException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Dispensario\CancelarSolicitudCertificacionRequest;
 use App\Http\Requests\Dispensario\StoreSolicitudCertificacionLoteRequest;
 use App\Http\Requests\Dispensario\StoreSolicitudSignosVitalesRequest;
 use App\Http\Responses\ApiResponse;
@@ -149,6 +150,47 @@ final class SolicitudCertificacionController extends Controller
         return ApiResponse::ok(
             ['creadas' => $creadas, 'omitidas' => $omitidas],
             count($creadas).' solicitud(es) creada(s), '.count($omitidas).' omitida(s).'
+        );
+    }
+
+    /**
+     * Retira una solicitud pedida por error, sin borrarla.
+     *
+     * Solo una `pendiente`: en cuanto quien evalúa la inicia hay un FEMO en
+     * curso, y tirarlo desde Talento Humano lo dejaría huérfano. Es la misma
+     * frontera que `anular-permiso-pendiente` en Asistencia.
+     */
+    public function cancelar(
+        CancelarSolicitudCertificacionRequest $request,
+        int $id
+    ): JsonResponse {
+        if (! $request->user()->can(Permiso::SOLICITAR_CERTIFICACION_MEDICA->value)) {
+            return ApiResponse::error(
+                'No tiene permiso para cancelar solicitudes de certificación médica.',
+                null, 403
+            );
+        }
+
+        $solicitud = SolicitudCertificacionMedica::findOrFail($id);
+
+        if ($solicitud->estado !== 'pendiente') {
+            return ApiResponse::error(
+                $solicitud->estado === 'en_proceso'
+                    ? 'La evaluación ya está en curso: solo quien la atiende puede cerrarla con un dictamen.'
+                    : 'Solo se pueden cancelar solicitudes pendientes.',
+                null, 422
+            );
+        }
+
+        $solicitud->update([
+            'estado' => 'cancelada',
+            'cancelada_en' => now(),
+            'cancelada_por' => $request->user()->id,
+            'motivo_cancelacion' => $request->validated()['motivo'],
+        ]);
+
+        return ApiResponse::ok(
+            $solicitud, 'Solicitud cancelada. El servidor vuelve a quedar disponible para una nueva.'
         );
     }
 

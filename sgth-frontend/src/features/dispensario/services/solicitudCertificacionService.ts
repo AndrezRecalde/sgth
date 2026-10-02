@@ -70,6 +70,9 @@ export interface SolicitudCertificacion {
   ficha_femo_id?:      number | null
   dictamen?:           string | null
   observacion_medica?: string | null
+  /** Cuándo se retiró la solicitud, si se retiró. */
+  cancelada_en?:        string | null
+  motivo_cancelacion?:  string | null
   /**
    * La ficha que firmó quien evaluó. Solo llegan la aptitud, sus
    * restricciones y la fecha: `observaciones` es texto clínico y no viaja al
@@ -128,6 +131,10 @@ export const TIPO_EVENTO_OPTIONS = [
   { value: 'especial',   label: 'Especial'                  },
 ]
 
+/** La etiqueta del tipo de evaluación, o el valor crudo si llega uno nuevo. */
+export const etiquetaTipoEvento = (tipo: string) =>
+  TIPO_EVENTO_OPTIONS.find(o => o.value === tipo)?.label ?? tipo
+
 export const TONO_ESTADO_SOLICITUD: Record<string, SemanticTone> = {
   pendiente:   'warning',
   en_proceso:  'info',
@@ -157,6 +164,18 @@ export const ESTADO_SOLICITUD_LABELS: Record<string, string> = {
   completada:  'Completada',
   cancelada:   'Cancelada',
 }
+
+/**
+ * Las opciones del filtro de estado, que Salud Ocupacional y Certificaciones
+ * médicas comparten. Estaban escritas a mano e idénticas en las dos vistas.
+ */
+export const ESTADO_SOLICITUD_FILTRO_OPTIONS = [
+  { value: '',           label: 'Todas'       },
+  { value: 'pendiente',  label: 'Pendientes'  },
+  { value: 'en_proceso', label: 'En proceso'  },
+  { value: 'completada', label: 'Completadas' },
+  { value: 'cancelada',  label: 'Canceladas'  },
+]
 
 export interface CrearSolicitudLoteData {
   servidor_ids:   number[]
@@ -217,6 +236,11 @@ export const solicitudCertificacionService = {
     api.patch<ApiResponse<SolicitudCertificacion>>(
       `/dispensario/solicitudes-certificacion/${id}/completar`,
       data
+    ).then(r => r.data.datos),
+
+  cancelar: (id: number, motivo: string) =>
+    api.patch<ApiResponse<SolicitudCertificacion>>(
+      `/dispensario/solicitudes-certificacion/${id}/cancelar`, { motivo }
     ).then(r => r.data.datos),
 
   confirmarIncorporacion: (id: number) =>
