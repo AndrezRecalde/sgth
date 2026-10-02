@@ -83,7 +83,7 @@ export function PageHeader({
       </Group>
 
       {actions && (
-        <Group gap="sm" wrap="wrap" style={{ flexShrink: 0 }}>
+        <Group gap="sm" wrap="wrap" className={classes.acciones}>
           {actions}
         </Group>
       )}
