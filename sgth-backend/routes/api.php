@@ -139,8 +139,10 @@ use Illuminate\Support\Facades\Route;
 // ── Rutas públicas (sin autenticación) ────────────────────────────
 Route::prefix('v1')->group(function () {
     Route::prefix('auth')->group(function () {
-        Route::post('login', [AuthController::class, 'login'])
-            ->middleware('throttle:5,1');
+        // Sin `throttle` de ruta: contaba también los aciertos por IP, y con
+        // toda la institución detrás de una sola dejaba fuera a quien entrara
+        // sexto en el mismo minuto. Los fallos se limitan en AuthService.
+        Route::post('login', [AuthController::class, 'login']);
     });
 
     // El QR del permiso impreso ya no abre nada público: lo escanea Talento

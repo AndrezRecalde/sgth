@@ -11,9 +11,10 @@ interface AuthServiceInterface
      *
      * @param  string  $usuario  Nombre de usuario (usuario_ti)
      * @param  string  $contrasena  Contraseña del usuario
+     * @param  string  $ip  IP de quien lo intenta, para limitar los fallos
      * @return array Datos de respuesta incluyendo token y flag primer_login
      */
-    public function login(string $usuario, string $contrasena): array;
+    public function login(string $usuario, string $contrasena, string $ip): array;
 
     /**
      * Cambiar la contraseña inicial por defecto (cédula).
