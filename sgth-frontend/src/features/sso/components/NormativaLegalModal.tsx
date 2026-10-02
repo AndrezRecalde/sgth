@@ -19,6 +19,7 @@ import {
 import { columnasNormativaLegal } from './normativaLegal.columns'
 import { toDateValue, fromDateValue } from '@/lib/fecha'
 import type { NormativaLegalSso } from '../services/tipos'
+import { erroresDeCampo } from '@/lib/erroresDeCampo'
 
 interface Props {
   opened: boolean
@@ -36,7 +37,7 @@ export function NormativaLegalModal({ opened, onClose }: Props) {
   const [editando, setEditando] = useState<NormativaLegalSso | null>(null)
 
   const {
-    register, control, handleSubmit, reset,
+    register, control, handleSubmit, reset, setError,
     formState: { errors },
   } = useForm<NormativaLegalFormData>({
     resolver: zodResolver(normativaLegalSchema) as Resolver<NormativaLegalFormData>,
@@ -58,12 +59,23 @@ export function NormativaLegalModal({ opened, onClose }: Props) {
     reset({ nombre: '', tipo: 'reglamento', fecha_vigencia: '', descripcion: '' })
   }
 
+  // El 422 del backend, en su campo. En un solo sitio porque lo usan las dos
+  // ramas del envío: dejarlo solo en el alta —que es donde estaba cuando se
+  // escribió este cambio— dejaría la edición notificando por encima.
+  const marcarErrores = (error: unknown) => {
+    const campos = erroresDeCampo(error)
+    if (!campos) return // el hook ya lo notificó
+    for (const [campo, mensaje] of Object.entries(campos)) {
+      setError(campo as keyof NormativaLegalFormData, { message: mensaje })
+    }
+  }
+
   const onSubmit = (values: NormativaLegalFormData) => {
     if (editando) {
-      editar.mutateAsync({ id: editando.id, ...values }).then(cancelarEdicion).catch(() => {})
+      editar.mutateAsync({ id: editando.id, ...values }).then(cancelarEdicion).catch(marcarErrores)
       return
     }
-    crear.mutateAsync(values).then(() => reset({ nombre: '', tipo: values.tipo, fecha_vigencia: '', descripcion: '' })).catch(() => {})
+    crear.mutateAsync(values).then(() => reset({ nombre: '', tipo: values.tipo, fecha_vigencia: '', descripcion: '' })).catch(marcarErrores)
   }
 
   const accionesDe = (n: NormativaLegalSso): TableAction[] => [

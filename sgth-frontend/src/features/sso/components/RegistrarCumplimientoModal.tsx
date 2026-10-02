@@ -13,6 +13,7 @@ import {
   cumplimientoSchema, type CumplimientoFormData, ESTADO_CUMPLIMIENTO_OPTIONS,
 } from '../schemas/cumplimiento.schema'
 import type { FilaListaVerificacion } from '../services/tipos'
+import { erroresDeCampo } from '@/lib/erroresDeCampo'
 
 interface Props {
   opened: boolean
@@ -40,7 +41,7 @@ export function RegistrarCumplimientoModal({ opened, onClose, fila, periodo }: P
   }
 
   const {
-    register, control, handleSubmit, reset,
+    register, control, handleSubmit, reset, setError,
     formState: { errors },
   } = useForm<CumplimientoFormData>({
     resolver: zodResolver(cumplimientoSchema) as Resolver<CumplimientoFormData>,
@@ -70,7 +71,13 @@ export function RegistrarCumplimientoModal({ opened, onClose, fila, periodo }: P
       ...values,
     }).then((resultado) => {
       setCumplimientoId(resultado?.id ?? null)
-    }).catch(() => {})
+    }).catch((error) => {
+      const campos = erroresDeCampo(error)
+      if (! campos) return // el hook ya lo notificó
+      for (const [campo, mensaje] of Object.entries(campos)) {
+        setError(campo as keyof CumplimientoFormData, { message: mensaje })
+      }
+    })
   }
 
   return (

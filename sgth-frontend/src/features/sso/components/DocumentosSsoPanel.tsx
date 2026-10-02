@@ -10,6 +10,7 @@ import { useContainedInput } from '@/hooks/useContainedInput'
 import { useDocumentosSso, useDocumentoSsoMutations } from '../hooks/useDocumentosSso'
 import { formatFecha } from '@/lib/fecha'
 import type { TipoDocumentableSso, DocumentoSso } from '../services/documentoSsoService'
+import { erroresDeCampo } from '@/lib/erroresDeCampo'
 
 const MIMES_ACEPTADOS = [
   'application/pdf',
@@ -42,7 +43,13 @@ export function DocumentosSsoPanel({ tipo, documentableId }: Props) {
 
   const [archivo, setArchivo] = useState<File | null>(null)
   const [nombre, setNombre] = useState('')
-  const [archivoError, setArchivoError] = useState('')
+  // Dos ranuras y no una: había un solo `archivoError` para los dos campos,
+  // así que un error del nombre se pintaba debajo de la zona de carga. Este
+  // panel todavia no usa React Hook Form —va en el PR que convierte las tres
+  // pantallas de `useState` del módulo—, pero el 422 del backend ya aterriza
+  // donde corresponde.
+  const [errorNombre, setErrorNombre] = useState('')
+  const [errorArchivo, setErrorArchivo] = useState('')
 
   if (!documentableId) {
     return (
@@ -53,19 +60,30 @@ export function DocumentosSsoPanel({ tipo, documentableId }: Props) {
   }
 
   const handleSubir = () => {
+    setErrorNombre('')
+    setErrorArchivo('')
+
     if (!archivo) {
-      setArchivoError('Seleccione un archivo para subir')
+      setErrorArchivo('Seleccione un archivo para subir')
       return
     }
     if (!nombre.trim()) {
-      setArchivoError('Indique un nombre para el documento')
+      setErrorNombre('Indique un nombre para el documento')
       return
     }
     subir.mutateAsync({ nombre: nombre.trim(), archivo }).then(() => {
       setArchivo(null)
       setNombre('')
-      setArchivoError('')
-    }).catch(() => {})
+    }).catch((error) => {
+      // El 422 del backend a su campo: rechaza por tipo de archivo, por tamano
+      // (10 MB) y por la longitud del nombre, y los tres salían como la misma
+      // notificación genérica.
+      const campos = erroresDeCampo(error)
+      if (! campos) return // el hook ya lo notificó
+      if (campos.nombre) setErrorNombre(campos.nombre)
+      const delArchivo = campos.archivo ?? campos.documentable_type ?? campos.documentable_id
+      if (delArchivo) setErrorArchivo(delArchivo)
+    })
   }
 
   return (
@@ -130,11 +148,16 @@ export function DocumentosSsoPanel({ tipo, documentableId }: Props) {
           {...contained}
           value={nombre}
           onChange={(e) => setNombre(e.currentTarget.value)}
+          error={errorNombre || undefined}
         />
 
         <Dropzone
-          onDrop={(files) => { setArchivo(files[0]); setArchivoError('') }}
-          onReject={() => setArchivoError('Archivo no válido')}
+          onDrop={(files) => { setArchivo(files[0]); setErrorArchivo('') }}
+          // El motivo, no «Archivo no válido»: la zona rechaza por tipo y
+          // por tamaño, y sin decir cuál se prueba a ciegas.
+          onReject={() => setErrorArchivo(
+            'El archivo no es válido: solo PDF, DOC, JPG o PNG, y hasta 10 MB.',
+          )}
           maxSize={10 * 1024 * 1024}
           accept={MIMES_ACEPTADOS}
         >
@@ -153,7 +176,7 @@ export function DocumentosSsoPanel({ tipo, documentableId }: Props) {
             </Text>
           </Group>
         </Dropzone>
-        {archivoError && <Text size="xs" c="red">{archivoError}</Text>}
+        {errorArchivo && <Text size="xs" c="red">{errorArchivo}</Text>}
 
         <Button
           size="xs"

@@ -1,6 +1,6 @@
 'use client'
 
-import { confirmar, PageHeader, PageShell, Toolbar, type TableAction } from '@/components/ui'
+import { PAGINACION_ES, PageHeader, PageShell, Toolbar, confirmar, type TableAction } from '@/components/ui'
 import { useState } from 'react'
 import { Button, Select } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
@@ -158,6 +158,7 @@ export function EquiposProteccionView() {
         page={page}
       >
         <SgthTable
+          {...PAGINACION_ES}
           records={records}
           columns={columnasEquipoProteccion(accionesDe)}
           totalRecords={data?.total ?? 0}

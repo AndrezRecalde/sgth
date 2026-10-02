@@ -36,7 +36,7 @@ export function useInspeccionMutations() {
       notificar.exito('Inspección registrada', 'La inspección fue registrada correctamente.')
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo registrar la inspección'),
+    onError: notificar.alFallarSalvoCampos('No se pudo registrar la inspección'),
   })
 
   const editar = useMutation({
@@ -46,7 +46,7 @@ export function useInspeccionMutations() {
       notificar.exito('Inspección actualizada', 'Los datos fueron actualizados.')
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo actualizar la inspección'),
+    onError: notificar.alFallarSalvoCampos('No se pudo actualizar la inspección'),
   })
 
   const eliminar = useMutation({

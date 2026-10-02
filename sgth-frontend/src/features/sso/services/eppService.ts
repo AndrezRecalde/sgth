@@ -1,13 +1,27 @@
 import api from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
 import { mapPaginado, type PaginadoParams, type RespuestaPaginada } from './paginado'
-import type { EppEntrega, EquipoProteccion, PuestoEpp, ReporteEppEntregas } from './tipos'
+import type {
+  EppEntrega, EquipoProteccion, EquipoProteccionCatalogo, PuestoEpp, ReporteEppEntregas,
+} from './tipos'
 
 /** El catálogo de equipos de protección personal. */
 export const equiposProteccionService = {
   listar: (params?: PaginadoParams & { tipo?: string }) =>
     api.get<RespuestaPaginada<EquipoProteccion>>('/sso/equipos-proteccion', { params })
       .then(r => mapPaginado(r.data)),
+
+  /**
+   * Los equipos activos SIN paginar, para los desplegables.
+   *
+   * `listar` pagina de 15 en 15, y los tres formularios que eligen un equipo
+   * leían `datos` de la primera página: con dieciséis equipos activos, el
+   * decimosexto no se podía asignar ni entregar y el desplegable decía «Sin
+   * equipos en el catálogo».
+   */
+  catalogo: () =>
+    api.get<ApiResponse<EquipoProteccionCatalogo[]>>('/sso/catalogos/equipos-proteccion')
+      .then(r => r.data.datos ?? []),
 
   crear: (data: Partial<EquipoProteccion>) =>
     api.post<ApiResponse<EquipoProteccion>>('/sso/equipos-proteccion', data).then(r => r.data.datos),

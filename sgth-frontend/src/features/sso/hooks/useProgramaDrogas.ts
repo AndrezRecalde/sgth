@@ -45,7 +45,7 @@ export function useProgramaDrogasMutations() {
       )
       invalidarActividades()
     },
-    onError: notificar.alFallar('No se pudo registrar la actividad'),
+    onError: notificar.alFallarSalvoCampos('No se pudo registrar la actividad'),
   })
 
   // Corregir una actividad ya creada. El endpoint existe desde que existe el
@@ -60,7 +60,7 @@ export function useProgramaDrogasMutations() {
       notificar.exito('Actividad actualizada', 'Los cambios se aplican al seguimiento ya registrado.')
       invalidarActividades()
     },
-    onError: notificar.alFallar('No se pudo actualizar la actividad'),
+    onError: notificar.alFallarSalvoCampos('No se pudo actualizar la actividad'),
   })
 
   // Retirar una actividad de la matriz sin borrar su seguimiento: es lo que la
@@ -102,7 +102,7 @@ export function useProgramaDrogasMutations() {
       notificar.exito('Seguimiento registrado', 'El estado de la actividad fue actualizado.')
       invalidarSeguimiento()
     },
-    onError: notificar.alFallar('No se pudo registrar el seguimiento'),
+    onError: notificar.alFallarSalvoCampos('No se pudo registrar el seguimiento'),
   })
 
   return {

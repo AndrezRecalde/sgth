@@ -6,9 +6,7 @@ import { useDisclosure } from '@mantine/hooks'
 import { IconPlus, IconEdit, IconTrash, IconSchool } from '@tabler/icons-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import {
-  confirmar, DataState, PageHeader, PageShell, SgthTable, Toolbar, type TableAction,
-} from '@/components/ui'
+import { DataState, PAGINACION_ES, PageHeader, PageShell, SgthTable, Toolbar, confirmar, type TableAction } from '@/components/ui'
 import { useCapacitaciones, useCapacitacionMutations } from '@/features/sso/hooks/useCapacitaciones'
 import { CapacitacionSsoModal } from '@/features/sso/components/CapacitacionSsoModal'
 import { columnasCapacitacion } from '@/features/sso/components/capacitacion.columns'
@@ -121,6 +119,7 @@ export function CapacitacionesSsoView() {
         page={page}
       >
         <SgthTable
+          {...PAGINACION_ES}
           records={records}
           columns={columnasCapacitacion(accionesDe)}
           totalRecords={data?.total ?? 0}

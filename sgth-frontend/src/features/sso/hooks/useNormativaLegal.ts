@@ -29,7 +29,7 @@ export function useNormativaMutations() {
       notificar.exito('Normativa registrada', 'La normativa fue agregada al catálogo.')
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo registrar la normativa'),
+    onError: notificar.alFallarSalvoCampos('No se pudo registrar la normativa'),
   })
 
   // Corregir una normativa ya registrada. El endpoint existe desde que existe
@@ -45,7 +45,7 @@ export function useNormativaMutations() {
       notificar.exito('Normativa actualizada', 'Los cambios se aplican al cumplimiento ya registrado.')
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo actualizar la normativa'),
+    onError: notificar.alFallarSalvoCampos('No se pudo actualizar la normativa'),
   })
 
   // Retirar una normativa del catálogo sin borrar su historial: es lo que la

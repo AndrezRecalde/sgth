@@ -14,7 +14,7 @@ import { BuscarServidorSelect } from '@/features/expediente/components/BuscarSer
 import { useEquiposProteccion } from '@/features/sso/hooks/useEquiposProteccion'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { fromDateValue, toDateValue } from '@/lib/fecha'
-import { DataState, PageHeader, PageShell, SgthTable, Toolbar } from '@/components/ui'
+import { DataState, PAGINACION_ES, PageHeader, PageShell, SgthTable, Toolbar } from '@/components/ui'
 
 export function EntregasEppView() {
   const compacto = useContainedInput('sm')
@@ -165,6 +165,7 @@ export function EntregasEppView() {
         page={page}
       >
         <SgthTable
+          {...PAGINACION_ES}
           records={records}
           columns={columnasEppEntrega}
           totalRecords={data?.total ?? 0}

@@ -34,7 +34,7 @@ export function useCapacitacionMutations() {
       notificar.exito('Capacitación registrada', 'La capacitación fue registrada correctamente.')
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo registrar la capacitación'),
+    onError: notificar.alFallarSalvoCampos('No se pudo registrar la capacitación'),
   })
 
   const editar = useMutation({
@@ -44,7 +44,7 @@ export function useCapacitacionMutations() {
       notificar.exito('Capacitación actualizada', 'Los datos fueron actualizados.')
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo actualizar la capacitación'),
+    onError: notificar.alFallarSalvoCampos('No se pudo actualizar la capacitación'),
   })
 
   const eliminar = useMutation({
