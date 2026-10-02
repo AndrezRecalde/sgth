@@ -32,8 +32,11 @@ export function ResumenCoberturaTarjetas({ resumen, cargando }: Props) {
   const sobreTotal = (valor: number) =>
     total > 0 ? `${valor} de ${total} servidores` : undefined
 
+  // A 375px dos columnas dejan ~170px por tarjeta, y «SIN EVALUACIÓN» —la
+  // etiqueta más larga— parte en dos líneas y se mete debajo del icono. En
+  // teléfono va una por fila, como pide la regla 10.
   return (
-    <SimpleGrid cols={{ base: 2, sm: 3, lg: 5 }} spacing="md">
+    <SimpleGrid cols={{ base: 1, xs: 2, sm: 3, lg: 5 }} spacing="md">
       <StatCard
         label="Plantilla activa"
         value={total}
