@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { borrarCookie, escribirCookie, leerCookie } from '@/lib/cookies'
+import { borrarCookie, leerCookie } from '@/lib/cookies'
 
 export interface UsuarioAuth {
   id:               number
@@ -33,46 +33,57 @@ export interface UsuarioAuth {
   permisos: string[]
 }
 
+/**
+ * Sin token: vive en la cookie HttpOnly `sgth_token`, que pone Laravel y que
+ * el JavaScript de la página no puede leer. Aquí queda solo quién es la
+ * persona, para pintar la interfaz.
+ */
 interface AuthState {
-  token:           string | null
   usuario:         UsuarioAuth | null
   isAuthenticated: boolean
-  setAuth:         (token: string, usuario: UsuarioAuth) => void
+  setAuth:         (usuario: UsuarioAuth) => void
   clearAuth:       () => void
   hasRole:         (role: string) => boolean
   hasPermiso:      (permiso: string) => boolean
 }
 
 /**
- * Lo que dura una sesión, en días.
- *
- * Es la caducidad de la cookie `sgth_token`, y con ella la de la sesión
- * entera: `proxy.ts` decide con la cookie, así que cuando expira ya no se
- * puede abrir ninguna pantalla.
+ * Lo que dura una sesión, en días: la caducidad del token en Sanctum
+ * (`sanctum.expiration`), que es la de las cookies que pone el backend. Aquí
+ * solo la usa la cookie `sgth_primer_login`, que sigue escribiendo el
+ * navegador.
  */
 export const DURACION_SESION_DIAS = 1
+
+/**
+ * Hay sesión mientras exista `sgth_sesion`, la compañera legible de la cookie
+ * del token: caducan juntas y se borran juntas.
+ *
+ * `sgth_token` legible es la de antes de este cambio, cuando la escribía el
+ * navegador. Quien ya tenía sesión abierta al desplegar sigue dentro hasta
+ * que caduque, en vez de verse expulsado a media jornada.
+ */
+const haySesion = () => leerCookie('sgth_sesion') !== null || leerCookie('sgth_token') !== null
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
-      token:           null,
       usuario:         null,
       isAuthenticated: false,
 
-      setAuth: (token, usuario) => {
-        set({ token, usuario, isAuthenticated: true })
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('sgth_token', token)
-          escribirCookie('sgth_token', token, DURACION_SESION_DIAS)
-        }
-      },
+      setAuth: (usuario) => set({ usuario, isAuthenticated: true }),
 
+      // La cookie del token no se puede borrar desde aquí —es HttpOnly—: la
+      // borran el logout del backend y `proxy.ts` al llegar a
+      // `/login?logout=true`, que es adonde va siempre quien sale.
       clearAuth: () => {
-        set({ token: null, usuario: null, isAuthenticated: false })
+        set({ usuario: null, isAuthenticated: false })
         if (typeof window !== 'undefined') {
-          localStorage.removeItem('sgth_token')
-          borrarCookie('sgth_token')
+          borrarCookie('sgth_sesion')
           borrarCookie('sgth_primer_login')
+          // La de antes del cambio, que sí escribía el navegador. Sobre la
+          // HttpOnly actual esto no tiene efecto.
+          borrarCookie('sgth_token')
         }
       },
 
@@ -85,10 +96,22 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth-storage',
       partialize: (state) => ({
-        token:           state.token,
         usuario:         state.usuario,
         isAuthenticated: state.isAuthenticated,
       }),
+
+      // La versión 0 guardaba el token. Al migrar se descarta y se vuelve a
+      // escribir sin él, junto con la copia suelta de `sgth_token` que había
+      // en localStorage: no debe quedar en el navegador ni una vez.
+      version: 1,
+      migrate: (guardado) => {
+        if (typeof window !== 'undefined') localStorage.removeItem('sgth_token')
+
+        const { usuario = null, isAuthenticated = false } =
+          (guardado ?? {}) as Partial<Pick<AuthState, 'usuario' | 'isAuthenticated'>>
+
+        return { usuario, isAuthenticated }
+      },
 
       /**
        * La cookie manda: si caducó, la sesión guardada tampoco vale.
@@ -103,7 +126,7 @@ export const useAuthStore = create<AuthState>()(
        * Sin ella, esto limpia la sesión y `SGTHAppShell` lleva al login.
        */
       onRehydrateStorage: () => (state) => {
-        if (state?.isAuthenticated && !leerCookie('sgth_token')) {
+        if (state?.isAuthenticated && !haySesion()) {
           state.clearAuth()
         }
       },

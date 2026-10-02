@@ -51,8 +51,9 @@ export function useServidores(filtros: FiltrosServidor) {
 }
 ```
 
-**Siempre `axios` desde `@/lib/axios`**, nunca `fetch` nativo: ahí viven el
-token, la URL base y el manejo del 401.
+**Siempre `axios` desde `@/lib/axios`**, nunca `fetch` nativo: ahí viven la
+URL base, la cabecera `X-Requested-With` —sin ella el backend no acepta la
+cookie del token— y el manejo del 401.
 
 ## Claves de consulta
 
@@ -135,14 +136,18 @@ notificación (ver [07](07-formularios.md)).
 ## Autenticación
 
 ```
-1. POST /auth/login → { token, primer_login, usuario }
-2. El token se guarda en localStorage + cookie sgth_token + Zustand
+1. POST /auth/login → { primer_login, usuario }
+   y Set-Cookie: sgth_token (HttpOnly) + sgth_sesion (legible)
+2. Zustand guarda solo el usuario; el token nunca pasa por el JavaScript
 3. primer_login === true → /cambiar-password
-4. clearAuth() borra localStorage y las cookies sgth_token y sgth_primer_login
+4. Salir: POST /auth/logout (borra las dos cookies) → clearAuth()
+   → /login?logout=true (proxy.ts las borra también, por si el logout falló)
 ```
 
-`clearAuth()` que no borre las cookies deja al usuario a medio salir: el store
-está vacío pero la cookie sigue autenticando peticiones.
+El token no se guarda en `localStorage` ni en una cookie legible: lo que el
+JavaScript de la página puede leer, un XSS también. `clearAuth()` no puede
+borrar `sgth_token` —es HttpOnly—, por eso toda salida termina en
+`/login?logout=true`.
 
 Al cerrar sesión se recarga la página a propósito. Es la forma de descartar la
 caché de TanStack Query, que guarda datos del servidor del usuario que sale.

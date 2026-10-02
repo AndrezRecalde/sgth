@@ -35,7 +35,8 @@ export function useLogin() {
   return useMutation({
     mutationFn: authService.login,
     onSuccess: (data: LoginResponse) => {
-      setAuth(data.token, data.usuario)
+      // El token no llega aquí: lo dejó el backend en una cookie HttpOnly.
+      setAuth(data.usuario)
 
       if (data.primer_login) {
         escribirCookie('sgth_primer_login', 'true', DURACION_SESION_DIAS)

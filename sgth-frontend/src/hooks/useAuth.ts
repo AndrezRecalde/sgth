@@ -4,7 +4,6 @@ export function useAuth() {
   const store = useAuthStore()
   
   return {
-    token: store.token,
     usuario: store.usuario,
     isAuthenticated: store.isAuthenticated,
     setAuth: store.setAuth,

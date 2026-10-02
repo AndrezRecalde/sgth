@@ -43,7 +43,7 @@ test('un usuario activo sí puede iniciar sesión', function () {
         'contrasena' => 'secreta123',
     ])
         ->assertOk()
-        ->assertJsonStructure(['datos' => ['token']]);
+        ->assertCookie('sgth_token', null, false);
 });
 
 test('la contraseña se valida antes que el estado: una clave mala no revela la cuenta', function () {
@@ -54,10 +54,10 @@ test('la contraseña se valida antes que el estado: una clave mala no revela la 
 });
 
 test('el token de un usuario activo da acceso', function () {
-    $token = $this->postJson('/api/v1/auth/login', [
+    $token = tokenDelLogin($this->postJson('/api/v1/auth/login', [
         'usuario'    => 'vigente',
         'contrasena' => 'secreta123',
-    ])->json('datos.token');
+    ]));
 
     $this->withToken($token)
         ->getJson('/api/v1/auth/perfil')
@@ -65,10 +65,10 @@ test('el token de un usuario activo da acceso', function () {
 });
 
 test('un token emitido antes de la desactivación deja de servir', function () {
-    $token = $this->postJson('/api/v1/auth/login', [
+    $token = tokenDelLogin($this->postJson('/api/v1/auth/login', [
         'usuario'    => 'vigente',
         'contrasena' => 'secreta123',
-    ])->json('datos.token');
+    ]));
 
     // Desactivación por una vía que no revoca tokens (p. ej. un UPDATE directo
     // en base, o desvincular el servidor).

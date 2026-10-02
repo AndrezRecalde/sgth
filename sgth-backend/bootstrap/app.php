@@ -18,6 +18,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Antes que `auth:sanctum`: convierte la cookie HttpOnly del token
+        // en la cabecera Bearer que Sanctum espera.
+        $middleware->api(prepend: [
+            \App\Http\Middleware\TokenDesdeCookie::class,
+        ]);
+
         $middleware->alias([
             'role'       => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,

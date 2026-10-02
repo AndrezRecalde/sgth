@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Hash;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
 
-test('login exitoso devuelve token y flag primer_login', function () {
+test('login exitoso deja el token en la cookie y devuelve el flag primer_login', function () {
     $user = User::factory()->create([
         'usuario_ti'   => 'jperez',
         'password'     => Hash::make('1234567890'),
@@ -23,12 +23,12 @@ test('login exitoso devuelve token y flag primer_login', function () {
             'exito',
             'mensaje',
             'datos' => [
-                'token',
                 'primer_login',
                 'usuario'
             ]
         ])
-        ->assertJsonPath('datos.primer_login', true);
+        ->assertJsonPath('datos.primer_login', true)
+        ->assertCookie('sgth_token', null, false);
 });
 
 test('intentar acceder a endpoint protegido sin cambiar contraseña devuelve 403', function () {

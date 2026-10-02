@@ -49,7 +49,6 @@ export type LoginRequest = {
 // El login devuelve el mismo usuario que `auth/perfil`: es lo que se guarda en
 // el store tal cual.
 export type LoginResponse = {
-  token: string
   primer_login: boolean
   usuario: UsuarioAuth
 }

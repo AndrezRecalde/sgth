@@ -7,15 +7,11 @@ const api = axios.create({
   headers: {
     Accept: 'application/json',
     'Content-Type': 'application/json',
+    // El token va en una cookie HttpOnly que el navegador manda solo, y el
+    // backend solo la acepta con esta cabecera: un formulario de otro sitio
+    // no puede ponerla. Ver TokenDesdeCookie en el backend.
+    'X-Requested-With': 'XMLHttpRequest',
   },
-});
-
-api.interceptors.request.use((config) => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('sgth_token') : null;
-  if (token && config.headers) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
 });
 
 /**

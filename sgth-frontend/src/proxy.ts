@@ -46,7 +46,10 @@ export function proxy(request: NextRequest) {
   // Si se solicita cerrar sesión explícitamente, borrar las cookies en el servidor y dejar pasar
   if (pathname.startsWith('/login') && request.nextUrl.searchParams.get('logout') === 'true') {
     const response = NextResponse.next()
+    // Aquí se puede borrar la del token aunque sea HttpOnly: el navegador no
+    // puede, el servidor sí.
     response.cookies.set('sgth_token', '', { maxAge: 0, path: '/' })
+    response.cookies.set('sgth_sesion', '', { maxAge: 0, path: '/' })
     response.cookies.set('sgth_primer_login', '', { maxAge: 0, path: '/' })
     return response
   }

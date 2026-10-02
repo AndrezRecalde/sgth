@@ -23,8 +23,8 @@ decía que las rutas protegidas vivían ahí; nunca fue cierto.
 
 ## Protección de rutas — dos capas
 
-1. **`src/proxy.ts`** (middleware de Next). Lee la cookie `sgth_token` y
-   redirige antes de servir la página. Su `matcher` **excluye en vez de
+1. **`src/proxy.ts`** (middleware de Next). Lee la cookie `sgth_token` —es
+   HttpOnly: el navegador no la ve, el servidor sí— y redirige antes de servir la página. Su `matcher` **excluye en vez de
    enumerar**: cubre todo salvo `_next`, las rutas de API y los archivos
    estáticos. Antes era una lista de rutas de primer nivel que dejó de existir
    al mover las pantallas bajo `/sgth`, `/salud` y `/portal`, y con ella el
@@ -40,9 +40,18 @@ decía que las rutas protegidas vivían ahí; nunca fue cierto.
 2. **`SGTHAppShell`** en el cliente. Segunda capa, no la única: redirige
    cuando el store no tiene sesión (ver [04](04-shell-y-navegacion.md)).
 
-Las tres caducidades están alineadas en 24 horas: la cookie `sgth_token`, la
-sesión persistida —que al rehidratar se limpia sola si la cookie ya no está— y
-el token de Sanctum (`config/sanctum.php`).
+Las tres caducidades están alineadas en 24 horas: las cookies `sgth_token` y
+`sgth_sesion` —las pone Laravel con la caducidad del token—, la sesión
+persistida —que al rehidratar se limpia sola si `sgth_sesion` ya no está— y el
+token de Sanctum (`config/sanctum.php`).
+
+## El API va por el mismo dominio
+
+El navegador llama a `/api/v1` (y a `/storage`) en el dominio del frontend, y
+los `rewrites` de `next.config.ts` lo reenvían a Laravel (`BACKEND_URL`, que se
+lee al construir). No es comodidad: la cookie HttpOnly del token solo viaja al
+mismo sitio que la puso. **No se pone una URL absoluta de otro dominio en
+`NEXT_PUBLIC_API_URL`**: sin la cookie no hay sesión.
 
 ## Estructura de `src`
 

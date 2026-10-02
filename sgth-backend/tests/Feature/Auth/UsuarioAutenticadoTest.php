@@ -75,7 +75,6 @@ test('el login devuelve los roles y los permisos del usuario', function () {
     $respuesta->assertOk()
         ->assertJsonStructure([
             'datos' => [
-                'token',
                 'primer_login',
                 'usuario' => ['id', 'nombre_completo', 'email', 'usuario_ti', 'roles', 'permisos', 'servidor'],
             ],
