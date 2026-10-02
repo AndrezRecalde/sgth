@@ -55,6 +55,7 @@ export default function LoginPage() {
             component="a"
             href="https://www.gadpe.gob.ec/webmail"
             target="_blank"
+            rel="noopener noreferrer"
             variant="default"
             fullWidth
             radius="xl"
@@ -66,7 +67,7 @@ export default function LoginPage() {
           <Box mt={60}>
             <Text size="xs" c="dimmed">
               Estás navegando en{" "}
-              <Text span fw={700} c="dark">
+              <Text span fw={700} c="var(--sgth-text)">
                 GADPE
               </Text>
               . Solo para uso institucional.
@@ -79,15 +80,8 @@ export default function LoginPage() {
       <Box className={classes.rightColumn}>
         {/* Abstract SVG Background */}
         <svg
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            zIndex: 0,
-            pointerEvents: "none",
-          }}
+          className={classes.fondo}
+          aria-hidden
           viewBox="0 0 1000 1000"
           preserveAspectRatio="xMidYMid slice"
           xmlns="http://www.w3.org/2000/svg"
@@ -104,7 +98,7 @@ export default function LoginPage() {
           <Title order={2} className={classes.welcomeTitle}>
             Bienvenido a nuestra intranet
           </Title>
-          <Text c="dimmed" size="lg" mb="xl" className={classes.welcomeText}>
+          <Text size="lg" mb="xl" className={classes.welcomeText}>
             El Sistema de Gestión de Talento Humano ayuda a organizar de forma
             eficiente los procesos del GAD Provincial de Esmeraldas.
           </Text>
