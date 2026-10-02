@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Contracts\Auth\AuthServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\CambiarContrasenaRequest;
 use App\Http\Resources\Auth\UsuarioAutenticadoResource;
 use App\Http\Responses\ApiResponse;
-use App\Services\Auth\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Contracts\Dispensario\DisponibilidadServiceInterface;
@@ -15,7 +15,7 @@ use App\Contracts\Dispensario\DisponibilidadServiceInterface;
 final class AuthController extends Controller
 {
     public function __construct(
-        private readonly AuthService $authService,
+        private readonly AuthServiceInterface $authService,
         private readonly DisponibilidadServiceInterface $disponibilidadService,
     ) {}
 
@@ -24,6 +24,7 @@ final class AuthController extends Controller
         $resultado = $this->authService->login(
             $request->validated('usuario'),
             $request->validated('contrasena'),
+            $request->ip(),
         );
 
         // El servicio entrega el modelo; lo que viaja es la misma forma del
