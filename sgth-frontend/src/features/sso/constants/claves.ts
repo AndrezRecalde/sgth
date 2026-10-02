@@ -163,6 +163,18 @@ export const clavesSso = {
     },
   },
 
+  // ── Índices proactivos: lo que los alimenta ─────────────────────────
+
+  inspecciones: {
+    todas: ['sso', 'inspecciones'] as const,
+    lista: (params: Filtros) => ['sso', 'inspecciones', 'lista', params] as const,
+  },
+
+  capacitaciones: {
+    todas: ['sso', 'capacitaciones'] as const,
+    lista: (params: Filtros) => ['sso', 'capacitaciones', 'lista', params] as const,
+  },
+
   // ── Adjuntos y ausentismo ───────────────────────────────────────────
 
   documentos: {

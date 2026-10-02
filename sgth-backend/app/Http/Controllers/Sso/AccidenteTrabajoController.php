@@ -22,7 +22,11 @@ final class AccidenteTrabajoController extends Controller
     {
         $this->authorize('viewAny', AccidenteTrabajo::class);
         $accidentes = $this->ssoService->listarAccidentes($request->all());
-        return ApiResponse::paginado($accidentes, 'Accidentes de trabajo obtenidos exitosamente.');
+        return ApiResponse::paginadoDe(
+            $accidentes,
+            AccidenteTrabajoResource::collection($accidentes->items()),
+            'Accidentes de trabajo obtenidos exitosamente.',
+        );
     }
 
     public function store(StoreAccidenteTrabajoRequest $request): JsonResponse

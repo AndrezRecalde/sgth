@@ -22,7 +22,11 @@ final class EquipoProteccionController extends Controller
     {
         $this->authorize('viewAny', EquipoProteccion::class);
         $equipos = $this->ssoService->listarEquiposProteccion($request->all());
-        return ApiResponse::paginado($equipos, 'Equipos de protección obtenidos exitosamente.');
+        return ApiResponse::paginadoDe(
+            $equipos,
+            EquipoProteccionResource::collection($equipos->items()),
+            'Equipos de protección obtenidos exitosamente.',
+        );
     }
 
     /**

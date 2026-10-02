@@ -1,6 +1,6 @@
 'use client'
 
-import { DataState, SectionHeading, SgthModal, SgthTable, TableActions, confirmar } from '@/components/ui'
+import { DataState, SectionHeading, SgthModal, SgthTable, confirmar, type TableAction } from '@/components/ui'
 import { useState } from 'react'
 import {
   Stack, Grid, Select, NumberInput, Button,
@@ -13,9 +13,9 @@ import { BuscarPuestoSelect } from '@/features/estructura/components/BuscarPuest
 import { useEquiposPorPuesto, usePuestoEppMutations } from '../hooks/usePuestoEpp'
 import { useCatalogoEquiposProteccion } from '../hooks/useEquiposProteccion'
 import { puestoEppSchema, type PuestoEppFormData } from '../schemas/puestoEpp.schema'
+import { columnasPuestoEpp } from './puestoEpp.columns'
 import { erroresDeCampo } from '@/lib/erroresDeCampo'
 import type { PuestoEpp } from '../services/tipos'
-import type { DataTableColumn } from 'mantine-datatable'
 
 const VALORES_INICIALES: PuestoEppFormData = {
   equipo_proteccion_id: 0,
@@ -88,44 +88,22 @@ export function AsignarEppPuestoModal({ opened, onClose }: Props) {
       })
   }
 
-  const columns: DataTableColumn<PuestoEpp>[] = [
+  const accionesDe = (a: PuestoEpp): TableAction[] => [
     {
-      accessor: 'equipo_proteccion',
-      title: 'Equipo',
-      render: (a) => a.equipo_proteccion?.nombre ?? `Equipo ${a.equipo_proteccion_id}`,
-    },
-    { accessor: 'cantidad_requerida', title: 'Cantidad' },
-    {
-      accessor: 'frecuencia_reposicion_meses',
-      title: 'Reposición',
-      render: (a) => a.frecuencia_reposicion_meses ? `Cada ${a.frecuencia_reposicion_meses} meses` : '—',
-    },
-    {
-      accessor: 'acciones',
-      title: '',
-      width: 50,
-      render: (a) => (
-        <TableActions
-          actions={[
-            {
-              label: 'Quitar del kit',
-              icon: <IconTrash size={14} />,
-              color: 'red',
-              onClick: () => confirmar({
-                title:   'Eliminar asignación',
-                message: (
-                  <>
-                    Se quitará <b>{a.equipo_proteccion?.nombre ?? 'el equipo'}</b> del EPP
-                    requerido de este puesto. No se puede deshacer.
-                  </>
-                ),
-                destructiva: true,
-                onConfirm: () => eliminar.mutate(a.id),
-              }),
-            },
-          ]}
-        />
-      ),
+      label: 'Quitar del kit',
+      icon: <IconTrash size={14} />,
+      color: 'red',
+      onClick: () => confirmar({
+        title:   'Eliminar asignación',
+        message: (
+          <>
+            Se quitará <b>{a.equipo_proteccion?.nombre ?? 'el equipo'}</b> del EPP
+            requerido de este puesto. No se puede deshacer.
+          </>
+        ),
+        destructiva: true,
+        onConfirm: () => eliminar.mutate(a.id),
+      }),
     },
   ]
 
@@ -248,7 +226,7 @@ export function AsignarEppPuestoModal({ opened, onClose }: Props) {
             >
               <SgthTable
                 records={asignaciones}
-                columns={columns}
+                columns={columnasPuestoEpp(accionesDe)}
                 minHeight={120}
               />
             </DataState>

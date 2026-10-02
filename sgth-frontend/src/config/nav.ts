@@ -209,6 +209,16 @@ export const NAV_SGTH: NavGroup[] = [
             icon:  'IconTruckDelivery',
           },
           {
+            label: 'Inspecciones',
+            href:  ROUTES.SGTH.RIESGOS_LABORALES_INSPECCIONES,
+            icon:  'IconClipboardList',
+          },
+          {
+            label: 'Capacitaciones',
+            href:  ROUTES.SGTH.RIESGOS_LABORALES_CAPACITACIONES,
+            icon:  'IconSchool',
+          },
+          {
             label: 'Indicadores',
             href:  ROUTES.SGTH.RIESGOS_LABORALES_INDICADORES,
             icon:  'IconChartBar',

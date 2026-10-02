@@ -22,7 +22,11 @@ final class CapacitacionSsoController extends Controller
     {
         $this->authorize('viewAny', CapacitacionSso::class);
         $capacitaciones = $this->ssoService->listarCapacitaciones($request->all());
-        return ApiResponse::paginado($capacitaciones, 'Capacitaciones SSO obtenidas exitosamente.');
+        return ApiResponse::paginadoDe(
+            $capacitaciones,
+            CapacitacionSsoResource::collection($capacitaciones->items()),
+            'Capacitaciones SSO obtenidas exitosamente.',
+        );
     }
 
     public function store(StoreCapacitacionSsoRequest $request): JsonResponse
