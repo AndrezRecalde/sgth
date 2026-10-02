@@ -1,18 +1,24 @@
 'use client'
 
-import { confirmar, DataState, PageHeader, PageShell, SgthTable, type TableAction } from '@/components/ui'
+import { confirmar, DataState, PageHeader, PageShell, SgthTable, Toolbar, type TableAction } from '@/components/ui'
 import { useState } from 'react'
-import { Button } from '@mantine/core'
+import { Button, Select } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { useAuth } from '@/hooks/useAuth'
 import { IconPlus, IconEdit, IconTrash, IconAlertTriangle } from '@tabler/icons-react'
 import { useAccidentesTrabajo, useAccidenteTrabajoMutations } from '@/features/sso/hooks/useAccidentesTrabajo'
 import { AccidenteTrabajoModal } from '@/features/sso/components/AccidenteTrabajoModal'
 import { columnasAccidenteTrabajo } from '@/features/sso/components/accidenteTrabajo.columns'
+import { BuscarServidorSelect } from '@/features/expediente/components/BuscarServidorSelect'
+import { ESTADO_INVESTIGACION_OPTIONS, aEstadoActivo } from '@/features/sso/constants/filtros'
+import { useContainedInput } from '@/hooks/useContainedInput'
 import type { AccidenteTrabajo } from '@/features/sso/services/tipos'
 
 export function AccidentesTrabajoView() {
+  const compacto = useContainedInput('sm')
   const [page, setPage] = useState(1)
+  const [servidorId, setServidorId] = useState<number | null>(null)
+  const [estado, setEstado] = useState<string | null>(null)
   const [editAccidente, setEditAccidente] = useState<AccidenteTrabajo | null>(null)
   const [modalOpened, { open, close }] = useDisclosure(false)
 
@@ -23,8 +29,23 @@ export function AccidentesTrabajoView() {
   const puedeGestionar = hasPermiso('gestionar-sso')
 
   const { eliminar } = useAccidenteTrabajoMutations()
-  const { data, isLoading, error } = useAccidentesTrabajo({ page })
+  const { data, isLoading, error } = useAccidentesTrabajo({
+    page,
+    servidor_id: servidorId ?? undefined,
+    estado: aEstadoActivo(estado),
+  })
   const records = data?.data ?? []
+  const hayFiltros = Boolean(servidorId || estado)
+
+  // Cambiar un filtro sin volver a la primera página consultaría esa misma
+  // página del resultado ya filtrado —casi siempre vacía—, así que la tabla
+  // saldría en blanco aunque hubiera coincidencias.
+  const filtrar = (aplicar: () => void) => {
+    aplicar()
+    setPage(1)
+  }
+
+  const limpiar = () => filtrar(() => { setServidorId(null); setEstado(null) })
 
   const handleEdit = (accidente: AccidenteTrabajo) => {
     setEditAccidente(accidente)
@@ -77,11 +98,46 @@ export function AccidentesTrabajoView() {
         ) : undefined}
       />
 
+      {/* El backend filtra por servidor y por estado de la investigación desde
+          que existe, y la pantalla no ofrecía ninguno de los dos: «qué
+          investigaciones siguen abiertas» es lo que hay que poder preguntar
+          aquí, y era lo único que no se podía (regla 05). */}
+      <Toolbar
+        actions={hayFiltros ? (
+          <Button variant="subtle" onClick={limpiar}>Quitar los filtros</Button>
+        ) : undefined}
+      >
+        <BuscarServidorSelect
+          label="Servidor"
+          size="sm"
+          value={servidorId}
+          onChange={(id) => filtrar(() => setServidorId(id))}
+        />
+        <Select
+          label="Investigación"
+          placeholder="Todas"
+          data={ESTADO_INVESTIGACION_OPTIONS}
+          clearable
+          style={{ minWidth: 170 }}
+          {...compacto}
+          value={estado}
+          onChange={(v) => filtrar(() => setEstado(v))}
+        />
+      </Toolbar>
+
       <DataState
         loading={isLoading}
         error={error}
         empty={!records.length}
-        emptyProps={{
+        // Un vacío con filtros puestos no es el mismo vacío: decir que no hay
+        // accidentes registrados cuando lo que pasa es que el filtro no
+        // encuentra nada afirma de un servidor algo que no se ha consultado.
+        emptyProps={hayFiltros ? {
+          icon: IconAlertTriangle,
+          title: 'Ningún accidente coincide con el filtro',
+          description: 'Pruebe con otro servidor o con el otro estado de investigación.',
+          action: <Button variant="subtle" onClick={limpiar}>Quitar los filtros</Button>,
+        } : {
           icon: IconAlertTriangle,
           title: 'Sin accidentes registrados',
           description: 'No se han registrado accidentes ni incidentes de trabajo.',

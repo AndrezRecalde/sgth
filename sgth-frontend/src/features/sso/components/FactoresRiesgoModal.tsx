@@ -7,7 +7,9 @@ import {
 } from '@mantine/core'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { IconTrash, IconPlus, IconShieldCheck, IconEyeOff, IconEye } from '@tabler/icons-react'
+import {
+  IconTrash, IconPlus, IconShieldCheck, IconEyeOff, IconEye, IconEdit, IconDeviceFloppy,
+} from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useFactoresRiesgo, useFactorRiesgoMutations } from '../hooks/useFactoresRiesgo'
 import {
@@ -28,7 +30,9 @@ export function FactoresRiesgoModal({ opened, onClose }: Props) {
   const [verInactivos, setVerInactivos] = useState(false)
   const { data: factores = [], isLoading, error, refetch } =
     useFactoresRiesgo({ solo_activos: !verInactivos })
-  const { crear, cambiarActivo, eliminar } = useFactorRiesgoMutations()
+  const { crear, editar, cambiarActivo, eliminar } = useFactorRiesgoMutations()
+  // Null es «alta»; con un factor dentro, el mismo formulario edita ese.
+  const [editando, setEditando] = useState<FactorRiesgoCatalogo | null>(null)
 
   const {
     register, control, handleSubmit, reset,
@@ -38,11 +42,30 @@ export function FactoresRiesgoModal({ opened, onClose }: Props) {
     defaultValues: { nombre: '', categoria: 'fisico' },
   })
 
+  const empezarEdicion = (factor: FactorRiesgoCatalogo) => {
+    setEditando(factor)
+    reset({ nombre: factor.nombre, categoria: factor.categoria as FactorRiesgoFormData['categoria'] })
+  }
+
+  const cancelarEdicion = () => {
+    setEditando(null)
+    reset({ nombre: '', categoria: 'fisico' })
+  }
+
   const onSubmit = (values: FactorRiesgoFormData) => {
+    if (editando) {
+      editar.mutateAsync({ id: editando.id, ...values }).then(cancelarEdicion).catch(() => {})
+      return
+    }
     crear.mutateAsync(values).then(() => reset({ nombre: '', categoria: values.categoria })).catch(() => {})
   }
 
   const accionesDe = (f: FactorRiesgoCatalogo): TableAction[] => [
+    {
+      label: 'Editar factor',
+      icon: <IconEdit size={14} />,
+      onClick: () => empezarEdicion(f),
+    },
     {
       label: f.activo ? 'Desactivar' : 'Reactivar',
       icon: f.activo ? <IconEyeOff size={14} /> : <IconEye size={14} />,
@@ -108,16 +131,24 @@ export function FactoresRiesgoModal({ opened, onClose }: Props) {
                 type="submit"
                 h={48}
                 fullWidth
-                leftSection={<IconPlus size={16} />}
-                loading={crear.isPending}
+                leftSection={editando ? <IconDeviceFloppy size={16} /> : <IconPlus size={16} />}
+                loading={crear.isPending || editar.isPending}
               >
-                Agregar
+                {editando ? 'Guardar cambios' : 'Agregar'}
               </Button>
             </Grid.Col>
           </Grid>
         </form>
 
-        <Group justify="flex-end">
+        <Group justify="space-between">
+          {/* La salida de la edición: sin ella, el formulario se queda
+              apuntando a un factor y el siguiente «Guardar cambios» lo
+              pisa en vez de dar de alta uno nuevo. */}
+          {editando ? (
+            <Button variant="subtle" size="xs" onClick={cancelarEdicion}>
+              Cancelar la edición de «{editando.nombre}»
+            </Button>
+          ) : <span />}
           <Switch
             label="Ver inactivos"
             checked={verInactivos}
