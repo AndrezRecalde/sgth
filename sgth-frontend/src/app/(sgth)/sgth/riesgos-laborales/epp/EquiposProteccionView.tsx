@@ -1,8 +1,8 @@
 'use client'
 
-import { confirmar, PageHeader, PageShell, type TableAction } from '@/components/ui'
+import { confirmar, PageHeader, PageShell, Toolbar, type TableAction } from '@/components/ui'
 import { useState } from 'react'
-import { Button } from '@mantine/core'
+import { Button, Select } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { useAuth } from '@/hooks/useAuth'
 import { IconPlus, IconEdit, IconTrash, IconClipboardList, IconShieldCheck } from '@tabler/icons-react'
@@ -11,10 +11,16 @@ import { useEquiposProteccion, useEquipoProteccionMutations } from '@/features/s
 import { EquipoProteccionModal } from '@/features/sso/components/EquipoProteccionModal'
 import { AsignarEppPuestoModal } from '@/features/sso/components/AsignarEppPuestoModal'
 import { columnasEquipoProteccion } from '@/features/sso/components/equipoProteccion.columns'
+import { TIPO_EPP_OPTIONS } from '@/features/sso/schemas/equipoProteccion.schema'
+import { ESTADO_ACTIVO_OPTIONS, aEstadoActivo } from '@/features/sso/constants/filtros'
+import { useContainedInput } from '@/hooks/useContainedInput'
 import type { EquipoProteccion } from '@/features/sso/services/tipos'
 
 export function EquiposProteccionView() {
+  const compacto = useContainedInput('sm')
   const [page, setPage] = useState(1)
+  const [tipo, setTipo] = useState<string | null>(null)
+  const [estado, setEstado] = useState<string | null>(null)
   const [editEquipo, setEditEquipo] = useState<EquipoProteccion | null>(null)
   const [modalOpened, { open, close }] = useDisclosure(false)
   const [asignarOpened, { open: openAsignar, close: closeAsignar }] = useDisclosure(false)
@@ -26,8 +32,23 @@ export function EquiposProteccionView() {
   const puedeGestionar = hasPermiso('gestionar-sso')
 
   const { eliminar } = useEquipoProteccionMutations()
-  const { data, isLoading, error } = useEquiposProteccion({ page })
+  const { data, isLoading, error } = useEquiposProteccion({
+    page,
+    tipo: tipo ?? undefined,
+    estado: aEstadoActivo(estado),
+  })
   const records = data?.data ?? []
+  const hayFiltros = Boolean(tipo || estado)
+
+  // Cambiar un filtro sin volver a la primera página consultaría esa misma
+  // página del resultado ya filtrado —casi siempre vacía—, así que la tabla
+  // saldría en blanco aunque hubiera coincidencias.
+  const filtrar = (aplicar: () => void) => {
+    aplicar()
+    setPage(1)
+  }
+
+  const limpiar = () => filtrar(() => { setTipo(null); setEstado(null) })
 
   const handleEdit = (equipo: EquipoProteccion) => {
     setEditEquipo(equipo)
@@ -87,11 +108,49 @@ export function EquiposProteccionView() {
         ) : undefined}
       />
 
+      {/* El backend filtra este listado por tipo y por estado desde que existe;
+          la pantalla nunca ofreció ninguno de los dos, así que con el catálogo
+          crecido había que recorrer las páginas a ojo (regla 05). */}
+      <Toolbar
+        actions={hayFiltros ? (
+          <Button variant="subtle" onClick={limpiar}>Quitar los filtros</Button>
+        ) : undefined}
+      >
+        <Select
+          label="Tipo de equipo"
+          placeholder="Todos"
+          data={TIPO_EPP_OPTIONS}
+          clearable
+          style={{ minWidth: 220 }}
+          {...compacto}
+          value={tipo}
+          onChange={(v) => filtrar(() => setTipo(v))}
+        />
+        <Select
+          label="Estado"
+          placeholder="Todos"
+          data={ESTADO_ACTIVO_OPTIONS}
+          clearable
+          style={{ minWidth: 160 }}
+          {...compacto}
+          value={estado}
+          onChange={(v) => filtrar(() => setEstado(v))}
+        />
+      </Toolbar>
+
       <DataState
         loading={isLoading}
         error={error}
         empty={!records.length}
-        emptyProps={{
+        // Un vacío con filtros puestos no es el mismo vacío: ofrecer «registre
+        // el primero» cuando lo que pasa es que el filtro no encuentra nada
+        // manda a dar de alta un equipo que quizá ya está en el catálogo.
+        emptyProps={hayFiltros ? {
+          icon: IconShieldCheck,
+          title: 'Ningún equipo coincide con el filtro',
+          description: 'Pruebe con otro tipo de equipo o con el otro estado.',
+          action: <Button variant="subtle" onClick={limpiar}>Quitar los filtros</Button>,
+        } : {
           icon: IconShieldCheck,
           title: 'Sin equipos de protección',
           description: 'Aún no hay equipos registrados en el catálogo.',
