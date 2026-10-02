@@ -83,10 +83,12 @@ interface SsoServiceInterface
     /**
      * Carga las horas de un período. Rechaza el duplicado con una
      * ValidationException sobre `periodo`: no sobrescribe lo ya cargado.
+     *
+     * No hay `actualizar`: ese total es el denominador de los tres índices del
+     * CD 513 y pisarlo movía los tres sin dejar rastro. Para corregir un
+     * período cargado está el borrado.
      */
     public function registrarHorasTrabajadas(array $datos): HorasTrabajadasPeriodo;
-
-    public function actualizarHorasTrabajadas(int $id, array $datos): HorasTrabajadasPeriodo;
 
     public function eliminarHorasTrabajadas(int $id): void;
 

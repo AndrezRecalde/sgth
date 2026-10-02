@@ -125,21 +125,67 @@ final class SsoService implements SsoServiceInterface
 
     public function registrarAccidente(array $datos): AccidenteTrabajo
     {
+        $this->comprobarReposoYAtencion($datos);
+
         $datos['created_by'] = auth()->id();
         $accidente = AccidenteTrabajo::create($datos);
 
         // La ficha de salud ocupacional tipo accidente se generará automáticamente
         // interconectando con el módulo del dispensario
 
-        return $accidente;
+        // `fresh()`, como en `actualizarAccidente`: `dias_reposo_medico` es
+        // `NOT NULL DEFAULT 0`, así que cuando la clave no viene la fila queda
+        // en 0 y el modelo en memoria en null — y la respuesta del 201 decía
+        // null donde la fila dice 0.
+        return $accidente->fresh();
     }
 
     public function actualizarAccidente(int $id, array $datos): AccidenteTrabajo
     {
         $accidente = AccidenteTrabajo::findOrFail($id);
+        $this->comprobarReposoYAtencion($datos, $accidente);
+
         $datos['updated_by'] = auth()->id();
         $accidente->update($datos);
         return $accidente->fresh();
+    }
+
+    /**
+     * No hay días de reposo médico sin atención médica.
+     *
+     * Los dos campos se validaban por separado, así que
+     * `requirio_atencion_medica = false` con `dias_reposo_medico = 12` pasaba
+     * sin más. Los días de reposo los prescribe un médico: la pareja es
+     * contradictoria. Y no es una incoherencia inocua —esos días son el
+     * NUMERADOR del índice de gravedad del CD 513 que se reporta al IESS—,
+     * así que un accidente marcado «sin atención médica» podía estar
+     * aportando días perdidos al índice.
+     *
+     * Vive en el servicio y no en el FormRequest por el PATCH parcial: el
+     * formulario puede mandar solo `dias_reposo_medico`, y entonces el otro
+     * lado de la comprobación hay que leerlo del registro guardado. Es el
+     * mismo motivo por el que `calcularNtp330` recibe `$actual`.
+     *
+     * El error va en `dias_reposo_medico` y no suelto, porque el formulario
+     * reparte el 422 por campo.
+     */
+    private function comprobarReposoYAtencion(array $datos, ?AccidenteTrabajo $actual = null): void
+    {
+        $atencion = array_key_exists('requirio_atencion_medica', $datos)
+            ? (bool) $datos['requirio_atencion_medica']
+            : (bool) ($actual?->requirio_atencion_medica ?? false);
+
+        $dias = array_key_exists('dias_reposo_medico', $datos)
+            ? (int) ($datos['dias_reposo_medico'] ?? 0)
+            : (int) ($actual?->dias_reposo_medico ?? 0);
+
+        if ($dias > 0 && ! $atencion) {
+            throw ValidationException::withMessages([
+                'dias_reposo_medico' => 'Un reposo médico lo prescribe un médico: '
+                    . 'marque «requirió atención médica» o deje los días de reposo en cero. '
+                    . 'Estos días son el numerador del índice de gravedad del CD 513.',
+            ]);
+        }
     }
 
     public function eliminarAccidente(int $id): void
@@ -284,7 +330,16 @@ final class SsoService implements SsoServiceInterface
     public function listarHorasTrabajadas(array $filtros): LengthAwarePaginator
     {
         return HorasTrabajadasPeriodo::query()
-            ->with('unidadAdministrativa')
+            // `withTrashed()`: `UnidadAdministrativa` usa SoftDeletes, así que
+            // la relación se filtra con `deleted_at is null` y devolvía null
+            // para una unidad retirada. La pantalla pinta
+            // `unidad_administrativa?.nombre ?? 'Total institucional'`, de modo
+            // que las horas de una unidad retirada se leían como el total
+            // institucional — que es otra cosa, con su propio índice único
+            // parcial, y es lo que decide el ALCANCE del denominador de los
+            // índices. El cálculo nunca estuvo mal (la columna
+            // `unidad_administrativa_id` sigue ahí); mentía la pantalla.
+            ->with(['unidadAdministrativa' => fn ($q) => $q->withTrashed()])
             ->when(isset($filtros['periodo']), fn($q) => $q->where('periodo', $filtros['periodo']))
             ->when(isset($filtros['unidad_administrativa_id']), fn($q) => $q->where('unidad_administrativa_id', $filtros['unidad_administrativa_id']))
             ->orderByDesc('periodo')
@@ -334,14 +389,6 @@ final class SsoService implements SsoServiceInterface
             'total_horas' => $datos['total_horas'],
             'registrado_por' => auth()->id(),
         ]);
-    }
-
-    public function actualizarHorasTrabajadas(int $id, array $datos): HorasTrabajadasPeriodo
-    {
-        $registro = HorasTrabajadasPeriodo::findOrFail($id);
-        $datos['registrado_por'] = auth()->id();
-        $registro->update($datos);
-        return $registro->fresh();
     }
 
     public function eliminarHorasTrabajadas(int $id): void
