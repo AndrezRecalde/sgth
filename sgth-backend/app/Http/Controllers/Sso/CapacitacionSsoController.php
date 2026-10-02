@@ -3,14 +3,13 @@
 namespace App\Http\Controllers\Sso;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Sso\ListarCapacitacionesSsoRequest;
 use App\Http\Requests\Sso\StoreCapacitacionSsoRequest;
 use App\Http\Requests\Sso\UpdateCapacitacionSsoRequest;
 use App\Http\Resources\Sso\CapacitacionSsoResource;
 use App\Http\Responses\ApiResponse;
 use App\Contracts\Sso\SsoServiceInterface;
-use App\Models\Sso\CapacitacionSso;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 final class CapacitacionSsoController extends Controller
 {
@@ -18,10 +17,12 @@ final class CapacitacionSsoController extends Controller
         private readonly SsoServiceInterface $ssoService,
     ) {}
 
-    public function index(Request $request): JsonResponse
+    public function index(ListarCapacitacionesSsoRequest $request): JsonResponse
     {
-        $this->authorize('viewAny', CapacitacionSso::class);
-        $capacitaciones = $this->ssoService->listarCapacitaciones($request->all());
+        // La autorización vive en `ListarCapacitacionesSsoRequest::authorize()`, que Laravel
+        // ejecuta ANTES de validar: así un filtro inválido no delata el
+        // endpoint a quien no puede consultarlo (403 antes que 422).
+        $capacitaciones = $this->ssoService->listarCapacitaciones($request->filtros());
         return ApiResponse::paginadoDe(
             $capacitaciones,
             CapacitacionSsoResource::collection($capacitaciones->items()),

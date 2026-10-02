@@ -3,14 +3,13 @@
 namespace App\Http\Controllers\Sso;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Sso\ListarAccidentesTrabajoRequest;
 use App\Http\Requests\Sso\StoreAccidenteTrabajoRequest;
 use App\Http\Requests\Sso\UpdateAccidenteTrabajoRequest;
 use App\Http\Resources\Sso\AccidenteTrabajoResource;
 use App\Http\Responses\ApiResponse;
 use App\Contracts\Sso\SsoServiceInterface;
-use App\Models\Sso\AccidenteTrabajo;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 final class AccidenteTrabajoController extends Controller
 {
@@ -18,10 +17,12 @@ final class AccidenteTrabajoController extends Controller
         private readonly SsoServiceInterface $ssoService,
     ) {}
 
-    public function index(Request $request): JsonResponse
+    public function index(ListarAccidentesTrabajoRequest $request): JsonResponse
     {
-        $this->authorize('viewAny', AccidenteTrabajo::class);
-        $accidentes = $this->ssoService->listarAccidentes($request->all());
+        // La autorización vive en `ListarAccidentesTrabajoRequest::authorize()`, que Laravel
+        // ejecuta ANTES de validar: así un filtro inválido no delata el
+        // endpoint a quien no puede consultarlo (403 antes que 422).
+        $accidentes = $this->ssoService->listarAccidentes($request->filtros());
         return ApiResponse::paginadoDe(
             $accidentes,
             AccidenteTrabajoResource::collection($accidentes->items()),

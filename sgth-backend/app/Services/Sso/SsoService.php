@@ -3,6 +3,7 @@
 namespace App\Services\Sso;
 
 use App\Contracts\Sso\SsoServiceInterface;
+use App\Enums\AlcanceIndicadorSso;
 use App\Models\Sso\AccidenteTrabajo;
 use App\Models\Sso\RiesgoLaboral;
 use App\Models\Sso\EquipoProteccion;
@@ -19,6 +20,7 @@ use App\Enums\TipoEventoAccidente;
 use App\Exceptions\ReglaNegocioException;
 use App\Services\Sso\Indicadores\HorasTrabajadas;
 use App\Services\Sso\Indicadores\IndicesReactivos;
+use Carbon\CarbonInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Validation\ValidationException;
@@ -441,6 +443,18 @@ final class SsoService implements SsoServiceInterface
      * Índices proactivos: agregaciones simples sobre datos ya existentes (sin tabla nueva).
      * No existe en el sistema una distinción entre actividades "planificadas" y "realizadas"
      * para inspecciones/capacitaciones, por lo que se reportan los conteos reales del período.
+     *
+     * Cada indicador declara su ALCANCE, y ahí está el arreglo. El método
+     * aceptaba una unidad y solo `inspecciones_realizadas` la usaba: las
+     * capacitaciones y la cobertura de EPP salían institucionales y la
+     * respuesta se titulaba con la unidad igual. Un número que dice una cosa y
+     * vale otra, y que acaba en un informe al Ministerio.
+     *
+     * De los tres, dos sí pueden filtrar y ahora lo hacen —las inspecciones
+     * tienen unidad propia, y la cobertura de EPP llega a ella por
+     * `puestos.unidad_administrativa_id`—. Las capacitaciones NO pueden:
+     * `capacitaciones_sso` no tiene columna de unidad. Eso no se inventa; se
+     * declara, y la pantalla lo dice.
      */
     public function calcularIndicadoresProactivos(string $periodo, ?int $unidadAdministrativaId = null): array
     {
@@ -451,11 +465,64 @@ final class SsoService implements SsoServiceInterface
             ->when($unidadAdministrativaId, fn($q) => $q->where('unidad_administrativa_id', $unidadAdministrativaId))
             ->count();
 
+        // Sin filtro de unidad, y es a propósito: ver el alcance declarado
+        // abajo. `capacitaciones_sso` no sabe de unidades.
         $capacitaciones = CapacitacionSso::query()
             ->whereBetween('fecha', [$inicio, $fin])
             ->get();
 
-        $puestosConEppIds = PuestoEpp::query()->distinct()->pluck('puesto_id');
+        $cobertura = $this->coberturaEpp($inicio, $fin, $unidadAdministrativaId);
+
+        return [
+            'periodo' => $periodo,
+            'unidad_administrativa_id' => $unidadAdministrativaId,
+            'inspecciones_realizadas' => $inspecciones,
+            'capacitaciones_realizadas' => $capacitaciones->count(),
+            'horas_capacitacion_total' => (float) $capacitaciones->sum('duracion_horas'),
+            'cobertura_epp' => $cobertura,
+            'alcances' => [
+                'inspecciones' => AlcanceIndicadorSso::segunUnidad($unidadAdministrativaId)
+                    ->comoRespuesta(),
+                'capacitaciones' => AlcanceIndicadorSso::INSTITUCIONAL->comoRespuesta(
+                    $unidadAdministrativaId !== null
+                        ? 'Las capacitaciones no se registran por unidad administrativa, '
+                            . 'así que esta cifra es de toda la institución.'
+                        : null,
+                ),
+                'cobertura_epp' => AlcanceIndicadorSso::segunUnidad($unidadAdministrativaId)
+                    ->comoRespuesta(),
+            ],
+        ];
+    }
+
+    /**
+     * Cobertura de EPP del período: qué proporción de los puestos que requieren
+     * equipo recibió al menos una entrega.
+     *
+     * Filtra por unidad a través de `puestos.unidad_administrativa_id`, en el
+     * numerador Y en el denominador. Filtrar solo uno de los dos daría un
+     * porcentaje sin sentido —los puestos de una unidad sobre los puestos de
+     * toda la institución— y es justo el error que invita a cometer una
+     * cobertura calculada a medias.
+     *
+     * @return array{total_puestos_con_epp_requerido: int, puestos_con_entrega_en_periodo: int, porcentaje: ?float}
+     */
+    private function coberturaEpp(
+        CarbonInterface $inicio,
+        CarbonInterface $fin,
+        ?int $unidadAdministrativaId,
+    ): array {
+        $puestosConEppIds = PuestoEpp::query()
+            ->when(
+                $unidadAdministrativaId,
+                fn($q) => $q->whereHas(
+                    'puesto',
+                    fn($sq) => $sq->where('unidad_administrativa_id', $unidadAdministrativaId),
+                ),
+            )
+            ->distinct()
+            ->pluck('puesto_id');
+
         $totalPuestosConEpp = $puestosConEppIds->count();
 
         $puestosConEntregaEnPeriodo = $totalPuestosConEpp > 0
@@ -468,20 +535,12 @@ final class SsoService implements SsoServiceInterface
                 ->count('servidores.puesto_id')
             : 0;
 
-        $coberturaEpp = $totalPuestosConEpp > 0
-            ? round(($puestosConEntregaEnPeriodo / $totalPuestosConEpp) * 100, 1)
-            : null;
-
         return [
-            'periodo' => $periodo,
-            'inspecciones_realizadas' => $inspecciones,
-            'capacitaciones_realizadas' => $capacitaciones->count(),
-            'horas_capacitacion_total' => (float) $capacitaciones->sum('duracion_horas'),
-            'cobertura_epp' => [
-                'total_puestos_con_epp_requerido' => $totalPuestosConEpp,
-                'puestos_con_entrega_en_periodo' => $puestosConEntregaEnPeriodo,
-                'porcentaje' => $coberturaEpp,
-            ],
+            'total_puestos_con_epp_requerido' => $totalPuestosConEpp,
+            'puestos_con_entrega_en_periodo' => $puestosConEntregaEnPeriodo,
+            'porcentaje' => $totalPuestosConEpp > 0
+                ? round(($puestosConEntregaEnPeriodo / $totalPuestosConEpp) * 100, 1)
+                : null,
         ];
     }
 }
