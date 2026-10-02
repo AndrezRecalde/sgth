@@ -10,6 +10,7 @@ use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\PersonalAccessToken;
 
 final class AuthService implements AuthServiceInterface
 {
@@ -75,16 +76,33 @@ final class AuthService implements AuthServiceInterface
 
     public function cambiarContrasenaInicial(User $user, string $nuevaContrasena): void
     {
-        $user->password = Hash::make($nuevaContrasena);
         $user->primer_login = false;
+
+        $this->cambiarContrasena($user, $nuevaContrasena);
+    }
+
+    /**
+     * Guarda la contraseña y cierra las demás sesiones.
+     *
+     * La sesión desde la que se cambia sigue abierta; las otras se revocan,
+     * que es justo lo que busca quien cambia su clave porque sospecha que
+     * alguien más la conoce.
+     */
+    public function cambiarContrasena(User $user, string $nuevaContrasena): void
+    {
+        $user->password = Hash::make($nuevaContrasena);
         $user->save();
 
-        // Revocar todos los tokens excepto el actual (si ya estaba autenticado)
-        if ($user->currentAccessToken()) {
-            $user->tokens()->where('id', '!=', $user->currentAccessToken()->id)->delete();
-        } else {
-            $user->tokens()->delete();
-        }
+        $actual = $user->currentAccessToken();
+
+        // Con `actingAs` en las pruebas el token es transitorio, no está en
+        // la base, y entonces se revocan todos.
+        $user->tokens()
+            ->when(
+                $actual instanceof PersonalAccessToken,
+                fn ($tokens) => $tokens->whereKeyNot($actual->getKey()),
+            )
+            ->delete();
     }
 
     /**
