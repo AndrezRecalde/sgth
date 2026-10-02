@@ -3,14 +3,18 @@
 namespace App\Http\Controllers\Sso;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Sso\ListarEquiposProteccionRequest;
 use App\Http\Requests\Sso\StoreEquipoProteccionRequest;
 use App\Http\Requests\Sso\UpdateEquipoProteccionRequest;
 use App\Http\Resources\Sso\EquipoProteccionResource;
 use App\Http\Responses\ApiResponse;
 use App\Contracts\Sso\SsoServiceInterface;
+// Lo usa `catalogo()` en su `authorize()`. Sin el import, `EquipoProteccion::class`
+// se resuelve contra ESTE namespace y apunta a una clase que no existe: la
+// policy no se encuentra, `authorize()` deniega y el catálogo responde 403.
+// `php -l` no lo ve, porque `::class` no exige que la clase exista.
 use App\Models\Sso\EquipoProteccion;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 final class EquipoProteccionController extends Controller
 {
@@ -18,11 +22,34 @@ final class EquipoProteccionController extends Controller
         private readonly SsoServiceInterface $ssoService,
     ) {}
 
-    public function index(Request $request): JsonResponse
+    public function index(ListarEquiposProteccionRequest $request): JsonResponse
+    {
+        // La autorización vive en `ListarEquiposProteccionRequest::authorize()`, que Laravel
+        // ejecuta ANTES de validar: así un filtro inválido no delata el
+        // endpoint a quien no puede consultarlo (403 antes que 422).
+        $equipos = $this->ssoService->listarEquiposProteccion($request->filtros());
+        return ApiResponse::paginadoDe(
+            $equipos,
+            EquipoProteccionResource::collection($equipos->items()),
+            'Equipos de protección obtenidos exitosamente.',
+        );
+    }
+
+    /**
+     * El catálogo completo de equipos activos, para los desplegables.
+     *
+     * Va en su propia ruta y no como un parámetro de `index` porque `index`
+     * pagina y esto no: los tres formularios que eligen un equipo necesitan
+     * ofrecerlos todos, y leyendo la primera página se quedaban con quince.
+     */
+    public function catalogo(): JsonResponse
     {
         $this->authorize('viewAny', EquipoProteccion::class);
-        $equipos = $this->ssoService->listarEquiposProteccion($request->all());
-        return ApiResponse::paginado($equipos, 'Equipos de protección obtenidos exitosamente.');
+
+        return ApiResponse::ok(
+            $this->ssoService->catalogoEquiposProteccion(),
+            'Catálogo de equipos de protección obtenido exitosamente.',
+        );
     }
 
     public function store(StoreEquipoProteccionRequest $request): JsonResponse

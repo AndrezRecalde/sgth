@@ -1,20 +1,11 @@
 import type { Metadata } from 'next'
-import { DashboardSsoTab } from '@/features/sso/components/DashboardSsoTab'
-import { PageHeader, PageShell } from '@/components/ui'
+import { DashboardSsoView } from './DashboardSsoView'
 
 export const metadata: Metadata = {
   title: 'Riesgos Laborales (SSO)',
-  description: 'Dashboard consolidado — GAD Provincial de Esmeraldas',
+  description: 'Resumen del período: riesgos, accidentes, índices del CD 513, cumplimiento y tamizajes',
 }
 
 export default function RiesgosLaboralesIndexPage() {
-  return (
-    <PageShell>
-      <PageHeader
-        title="Riesgos Laborales (SSO)"
-        description="Dashboard consolidado — GAD Provincial de Esmeraldas"
-      />
-      <DashboardSsoTab />
-    </PageShell>
-  )
+  return <DashboardSsoView />
 }

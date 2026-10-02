@@ -1,6 +1,6 @@
 'use client'
 
-import { confirmar, DataState, PAGINACION_ES, SgthModal, SgthTable, TableActions } from '@/components/ui'
+import { confirmar, DataState, PAGINACION_ES, SgthModal, SgthTable, type TableAction } from '@/components/ui'
 import { useState } from 'react'
 import {
   Stack, Grid, Group, TextInput, NumberInput, Button, Text, Select, Alert,
@@ -16,9 +16,9 @@ import {
 } from '../schemas/horasTrabajadas.schema'
 import { EJEMPLO_PERIODO } from '../constants/periodo'
 import { erroresDeCampo } from '@/lib/erroresDeCampo'
+import { columnasHorasTrabajadas } from './horasTrabajadas.columns'
 import type { UnidadConRelaciones } from '@/types/api'
 import type { HorasTrabajadasPeriodo } from '../services/tipos'
-import type { DataTableColumn } from 'mantine-datatable'
 
 const VALORES_INICIALES: HorasTrabajadasFormData = {
   periodo: '',
@@ -81,45 +81,22 @@ export function GestionarHorasTrabajadasModal({ opened, onClose }: Props) {
       })
   }
 
-  const columns: DataTableColumn<HorasTrabajadasPeriodo>[] = [
-    { accessor: 'periodo', title: 'Período', width: 110 },
+  const accionesDe = (r: HorasTrabajadasPeriodo): TableAction[] => [
     {
-      accessor: 'unidad_administrativa',
-      title: 'Unidad',
-      render: (r) => r.unidad_administrativa?.nombre ?? 'Total institucional',
-    },
-    {
-      accessor: 'total_horas',
-      title: 'Horas',
-      width: 110,
-      render: (r) => r.total_horas.toLocaleString(),
-    },
-    {
-      accessor: 'acciones',
-      title: '',
-      width: 50,
-      render: (r) => (
-        <TableActions
-          actions={[
-            {
-              label: 'Eliminar registro',
-              icon: <IconTrash size={14} />,
-              color: 'red',
-              onClick: () => confirmar({
-                title:   'Eliminar registro de horas',
-                message: (
-                  <>
-                    Se eliminará el registro de <b>{r.periodo}</b>. Los índices CD 513 de ese
-                    período se quedan sin denominador hasta que se vuelva a cargar.
-                  </>
-                ),
-                destructiva: true,
-                onConfirm: () => eliminar.mutate(r.id),
-              }),
-            },
-          ]}
-        />
-      ),
+      label: 'Eliminar registro',
+      icon: <IconTrash size={14} />,
+      color: 'red',
+      onClick: () => confirmar({
+        title:   'Eliminar registro de horas',
+        message: (
+          <>
+            Se eliminará el registro de <b>{r.periodo}</b>. Los índices CD 513 de ese
+            período se quedan sin denominador hasta que se vuelva a cargar.
+          </>
+        ),
+        destructiva: true,
+        onConfirm: () => eliminar.mutate(r.id),
+      }),
     },
   ]
 
@@ -234,7 +211,7 @@ export function GestionarHorasTrabajadasModal({ opened, onClose }: Props) {
           <SgthTable
             {...PAGINACION_ES}
             records={registros}
-            columns={columns}
+            columns={columnasHorasTrabajadas(accionesDe)}
             totalRecords={data?.total ?? 0}
             recordsPerPage={15}
             page={page}

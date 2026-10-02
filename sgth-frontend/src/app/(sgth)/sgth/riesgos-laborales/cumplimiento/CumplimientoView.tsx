@@ -1,27 +1,27 @@
 'use client'
 
 import { useState } from 'react'
-import {
-  Group, TextInput, Button, Text, Stack, Alert,
-} from '@mantine/core'
+import { Group, TextInput, Button, Text, Alert } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { useAuth } from '@/hooks/useAuth'
 import {
-  IconSearch, IconList, IconAlertCircle, IconEdit, IconClipboardCheck,
+  IconSearch, IconList, IconAlertCircle, IconClipboardCheck,
 } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { DataState, SgthTable, StatusBadge, Toolbar } from '@/components/ui'
-import { useListaVerificacion } from '../hooks/useCumplimiento'
-import { NormativaLegalModal } from './NormativaLegalModal'
-import { RegistrarCumplimientoModal } from './RegistrarCumplimientoModal'
-import { TIPO_NORMATIVA_OPTIONS } from '../schemas/normativaLegal.schema'
-import { AYUDA_PERIODO, EJEMPLO_PERIODO, esPeriodoValido } from '../constants/periodo'
-import { TONO_ESTADO_CUMPLIMIENTO, ESTADO_CUMPLIMIENTO_LABELS } from '../schemas/cumplimiento.schema'
-import type { FilaListaVerificacion } from '../services/tipos'
-import type { DataTableColumn } from 'mantine-datatable'
+import { DataState, PageHeader, PageShell, SgthTable, Toolbar } from '@/components/ui'
+import { useListaVerificacion } from '@/features/sso/hooks/useCumplimiento'
+import { NormativaLegalModal } from '@/features/sso/components/NormativaLegalModal'
+import { RegistrarCumplimientoModal } from '@/features/sso/components/RegistrarCumplimientoModal'
+import { columnasListaVerificacion } from '@/features/sso/components/listaVerificacion.columns'
+import { TONO_ESTADO_CUMPLIMIENTO } from '@/features/sso/schemas/cumplimiento.schema'
+import { SEMANTIC_COLOR } from '@/config/design.tokens'
+import { AYUDA_PERIODO, EJEMPLO_PERIODO, esPeriodoValido } from '@/features/sso/constants/periodo'
+import type { FilaListaVerificacion } from '@/features/sso/services/tipos'
 
-export function CumplimientoTab() {
-  const contained = useContainedInput()
+export function CumplimientoView() {
+  // La variante compacta de 40 px: es una barra de filtros, no un formulario
+  // de captura (regla 06).
+  const contained = useContainedInput('sm')
   const [periodoInput, setPeriodoInput] = useState('')
   const [periodo, setPeriodo] = useState<string | null>(null)
   const [normativasOpened, { open: openNormativas, close: closeNormativas }] = useDisclosure(false)
@@ -36,9 +36,6 @@ export function CumplimientoTab() {
 
   const { data: lista, isLoading, error, refetch } = useListaVerificacion(periodo)
 
-  const getTipoLabel = (valor: string) =>
-    TIPO_NORMATIVA_OPTIONS.find(o => o.value === valor)?.label ?? valor
-
   const handleConsultar = () => {
     if (esPeriodoValido(periodoInput)) {
       setPeriodo(periodoInput)
@@ -50,59 +47,30 @@ export function CumplimientoTab() {
     openCumplimiento()
   }
 
-  const columns: DataTableColumn<FilaListaVerificacion>[] = [
-    { accessor: 'normativa.nombre', title: 'Normativa' },
-    {
-      accessor: 'normativa.tipo',
-      title: 'Tipo',
-      render: (fila) => (
-        <StatusBadge>{getTipoLabel(fila.normativa.tipo)}</StatusBadge>
-      ),
-    },
-    {
-      accessor: 'estado',
-      title: 'Estado',
-      render: (fila) => (
-        <StatusBadge tone={TONO_ESTADO_CUMPLIMIENTO[fila.estado] ?? 'neutral'}>
-          {ESTADO_CUMPLIMIENTO_LABELS[fila.estado] ?? fila.estado}
-        </StatusBadge>
-      ),
-    },
-    {
-      accessor: 'acciones',
-      title: '',
-      width: 120,
-      render: (fila) => puedeGestionar ? (
-        <Button
-          size="xs"
-          variant="subtle"
-          leftSection={<IconEdit size={14} />}
-          onClick={() => handleEditar(fila)}
-        >
-          Registrar
-        </Button>
-      ) : null,
-    },
-  ]
-
   return (
-    <Stack gap="md">
+    <PageShell>
+      <PageHeader
+        title="Cumplimiento Normativo"
+        description="Lista de verificación de la normativa legal de seguridad y salud por período"
+        // El catálogo sale de la `Toolbar`: las acciones de la barra son las
+        // ligadas al filtro —aquí, Consultar—, y abrir el catálogo es la
+        // acción principal de la pantalla (regla 06).
+        actions={puedeGestionar ? (
+          <Button leftSection={<IconList size={16} />} variant="light" onClick={openNormativas}>
+            Catálogo de normativas
+          </Button>
+        ) : undefined}
+      />
+
       <Toolbar
         actions={
-          <>
-            <Button
-              leftSection={<IconSearch size={16} />}
-              onClick={handleConsultar}
-              disabled={!esPeriodoValido(periodoInput)}
-            >
-              Consultar
-            </Button>
-            {puedeGestionar && (
-              <Button leftSection={<IconList size={16} />} variant="default" onClick={openNormativas}>
-                Catálogo de normativas
-              </Button>
-            )}
-          </>
+          <Button
+            leftSection={<IconSearch size={16} />}
+            onClick={handleConsultar}
+            disabled={!esPeriodoValido(periodoInput)}
+          >
+            Consultar
+          </Button>
         }
       >
           <TextInput
@@ -142,17 +110,27 @@ export function CumplimientoTab() {
         >
           {lista && (
             <>
+              {/* El color de cada total sale del mismo mapa que la insignia de
+                  su fila (regla 06): escritos a mano, «En proceso» era `amber.7`
+                  aquí y el ámbar del sistema tres centímetros más abajo, en la
+                  tabla. */}
               <Group gap="lg" mb="sm">
                 <Text size="sm">Total: <Text span fw={600}>{lista.totales.total}</Text></Text>
-                <Text size="sm" c="emerald">Cumple: <Text span fw={600}>{lista.totales.cumple}</Text></Text>
-                <Text size="sm" c="red">No cumple: <Text span fw={600}>{lista.totales.no_cumple}</Text></Text>
-                <Text size="sm" c="amber.7">En proceso: <Text span fw={600}>{lista.totales.en_proceso}</Text></Text>
+                <Text size="sm" c={SEMANTIC_COLOR[TONO_ESTADO_CUMPLIMIENTO.cumple]}>
+                  Cumple: <Text span fw={600}>{lista.totales.cumple}</Text>
+                </Text>
+                <Text size="sm" c={SEMANTIC_COLOR[TONO_ESTADO_CUMPLIMIENTO.no_cumple]}>
+                  No cumple: <Text span fw={600}>{lista.totales.no_cumple}</Text>
+                </Text>
+                <Text size="sm" c={SEMANTIC_COLOR[TONO_ESTADO_CUMPLIMIENTO.en_proceso]}>
+                  En proceso: <Text span fw={600}>{lista.totales.en_proceso}</Text>
+                </Text>
                 <Text size="sm" c="dimmed">Sin registrar: <Text span fw={600}>{lista.totales.no_registrado}</Text></Text>
               </Group>
 
               <SgthTable
                 records={lista.filas}
-                columns={columns}
+                columns={columnasListaVerificacion(puedeGestionar ? handleEditar : undefined)}
                 idAccessor="normativa.id"
                 minHeight={150}
               />
@@ -168,6 +146,6 @@ export function CumplimientoTab() {
         fila={filaSeleccionada}
         periodo={periodo ?? ''}
       />
-    </Stack>
+    </PageShell>
   )
 }

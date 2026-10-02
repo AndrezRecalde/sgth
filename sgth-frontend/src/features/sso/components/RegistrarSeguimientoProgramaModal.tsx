@@ -15,6 +15,7 @@ import {
 } from '../schemas/programaDrogas.schema'
 import { toDateValue, fromDateValue } from '@/lib/fecha'
 import type { FilaSeguimientoPrograma } from '../services/programaDrogasService'
+import { erroresDeCampo } from '@/lib/erroresDeCampo'
 
 interface Props {
   opened: boolean
@@ -42,7 +43,7 @@ export function RegistrarSeguimientoProgramaModal({ opened, onClose, fila, perio
   }
 
   const {
-    register, control, handleSubmit, reset,
+    register, control, handleSubmit, reset, setError,
     formState: { errors },
   } = useForm<SeguimientoProgramaFormData>({
     resolver: zodResolver(seguimientoProgramaSchema) as Resolver<SeguimientoProgramaFormData>,
@@ -74,7 +75,13 @@ export function RegistrarSeguimientoProgramaModal({ opened, onClose, fila, perio
       ...values,
     }).then((resultado) => {
       setSeguimientoId(resultado?.id ?? null)
-    }).catch(() => {})
+    }).catch((error) => {
+      const campos = erroresDeCampo(error)
+      if (! campos) return // el hook ya lo notificó
+      for (const [campo, mensaje] of Object.entries(campos)) {
+        setError(campo as keyof SeguimientoProgramaFormData, { message: mensaje })
+      }
+    })
   }
 
   return (

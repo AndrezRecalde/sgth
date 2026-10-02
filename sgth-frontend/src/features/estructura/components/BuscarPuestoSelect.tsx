@@ -7,7 +7,7 @@ import {
   Text, Stack, Loader, Group,
 } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
-import { useContainedInput } from '@/hooks/useContainedInput'
+import { useContainedInput, type ContainedSize } from '@/hooks/useContainedInput'
 import api from '@/lib/axios'
 import { StatusBadge } from '@/components/ui'
 
@@ -31,12 +31,14 @@ interface Props {
   required?:   boolean
   error?:      string
   description?: string
+  /** `sm` para la variante compacta de una barra de filtros (regla 06). */
+  size?:       ContainedSize
 }
 
 export function BuscarPuestoSelect({
-  label, value, onChange, required, error, description,
+  label, value, onChange, required, error, description, size = 'md',
 }: Props) {
-  const contained  = useContainedInput()
+  const contained  = useContainedInput(size)
   const combobox   = useCombobox()
   const queryClient = useQueryClient()
   // `null` significa que el usuario no ha escrito nada: entonces el campo

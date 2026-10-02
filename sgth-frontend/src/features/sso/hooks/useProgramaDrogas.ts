@@ -45,7 +45,22 @@ export function useProgramaDrogasMutations() {
       )
       invalidarActividades()
     },
-    onError: notificar.alFallar('No se pudo registrar la actividad'),
+    onError: notificar.alFallarSalvoCampos('No se pudo registrar la actividad'),
+  })
+
+  // Corregir una actividad ya creada. El endpoint existe desde que existe el
+  // catálogo; sin esto, una actividad mal escrita o puesta en la fase que no
+  // era solo se podía desactivar y volver a crear, y el seguimiento ya
+  // registrado se quedaba colgando de la vieja.
+  const editarActividad = useMutation({
+    mutationFn: ({ id, ...data }: {
+      id: number; fase: string; nombre: string; descripcion?: string
+    }) => programaDrogasService.actualizarActividad(id, data),
+    onSuccess: () => {
+      notificar.exito('Actividad actualizada', 'Los cambios se aplican al seguimiento ya registrado.')
+      invalidarActividades()
+    },
+    onError: notificar.alFallarSalvoCampos('No se pudo actualizar la actividad'),
   })
 
   // Retirar una actividad de la matriz sin borrar su seguimiento: es lo que la
@@ -87,8 +102,11 @@ export function useProgramaDrogasMutations() {
       notificar.exito('Seguimiento registrado', 'El estado de la actividad fue actualizado.')
       invalidarSeguimiento()
     },
-    onError: notificar.alFallar('No se pudo registrar el seguimiento'),
+    onError: notificar.alFallarSalvoCampos('No se pudo registrar el seguimiento'),
   })
 
-  return { crearActividad, cambiarActivoActividad, eliminarActividad, registrarSeguimiento }
+  return {
+    crearActividad, editarActividad, cambiarActivoActividad,
+    eliminarActividad, registrarSeguimiento,
+  }
 }
