@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Sso;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Sso\PuestoEppResource;
 use App\Http\Responses\ApiResponse;
 use App\Services\Sso\EppService;
 use Illuminate\Http\JsonResponse;
@@ -17,7 +18,10 @@ final class PuestoEppController extends Controller
     public function index(int $puestoId): JsonResponse
     {
         $equipos = $this->eppService->listarEquiposPorPuesto($puestoId);
-        return ApiResponse::ok($equipos, 'Equipos de protección requeridos obtenidos exitosamente.');
+        return ApiResponse::ok(
+            PuestoEppResource::collection($equipos),
+            'Equipos de protección requeridos obtenidos exitosamente.',
+        );
     }
 
     public function store(Request $request, int $puestoId): JsonResponse
@@ -30,7 +34,10 @@ final class PuestoEppController extends Controller
         $validated['puesto_id'] = $puestoId;
 
         $asignacion = $this->eppService->asignarEquipoAPuesto($validated);
-        return ApiResponse::created($asignacion, 'Equipo de protección asignado al puesto exitosamente.');
+        return ApiResponse::created(
+            new PuestoEppResource($asignacion),
+            'Equipo de protección asignado al puesto exitosamente.',
+        );
     }
 
     public function destroy(int $puestoId, int $id): JsonResponse
