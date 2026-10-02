@@ -26,6 +26,19 @@ class InspeccionSsoResource extends JsonResource
             'recomendaciones'          => $this->recomendaciones,
             'estado'                   => $this->estado,
             'inspector_id'             => $this->inspector_id,
+
+            // Las dos relaciones que el listado ya trae cargadas.
+            'unidad_administrativa' => $this->whenLoaded('unidadAdministrativa', fn () => [
+                'id'     => $this->unidadAdministrativa->id,
+                'nombre' => $this->unidadAdministrativa->nombre,
+            ]),
+
+            'inspector' => $this->whenLoaded('inspector', fn () => [
+                'id'              => $this->inspector->id,
+                'usuario_ti'      => $this->inspector->usuario_ti,
+                'nombre_completo' => $this->inspector->nombre_completo,
+            ]),
+
             'created_by'               => $this->created_by,
             'updated_by'               => $this->updated_by,
             'created_at'               => $this->created_at,
