@@ -32,10 +32,9 @@ function getLabelTipo(tipo: string): string {
   return TIPO_RESULTADO_OPTIONS.find(o => o.value === tipo)?.label ?? tipo
 }
 
+// En el mismo dominio, como el API: `next.config.ts` lo reenvía a Laravel.
 function getArchivoUrl(ruta: string): string {
-  const base = (process.env.NEXT_PUBLIC_API_URL ?? 'http://sgth.test/api/v1')
-    .replace('/api/v1', '')
-  return `${base}/storage/${ruta}`
+  return `/storage/${ruta}`
 }
 
 export function TabResultados({

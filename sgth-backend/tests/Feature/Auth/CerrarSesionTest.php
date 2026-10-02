@@ -15,10 +15,10 @@ uses(Tests\TestCase::class, RefreshDatabase::class);
 
 function tokenDeSesionParaCerrar(User $usuario): string
 {
-    return test()->postJson('/api/v1/auth/login', [
+    return tokenDelLogin(test()->postJson('/api/v1/auth/login', [
         'usuario'    => $usuario->usuario_ti,
         'contrasena' => 'ClaveSegura123',
-    ])->json('datos.token');
+    ]));
 }
 
 beforeEach(function () {

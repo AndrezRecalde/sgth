@@ -10,7 +10,7 @@ import { PerfilServidorCard } from './PerfilServidorCard'
 import { NoticiasCard } from './NoticiasCard'
 
 export function PortalHomeView() {
-  const { usuario, token, setAuth } = useAuth()
+  const { usuario, isAuthenticated, setAuth } = useAuth()
 
   // Al entrar al portal se refresca el perfil guardado en sesión: los datos
   // del servidor (cargo, unidad) cambian sin que el usuario vuelva a entrar.
@@ -19,12 +19,10 @@ export function PortalHomeView() {
     queryFn: async () => {
       const res = await api.get<{ datos: UsuarioAuth }>('/auth/perfil')
       const data = res.data.datos
-      if (data && token) {
-        setAuth(token, data)
-      }
+      if (data) setAuth(data)
       return data
     },
-    enabled: !!token,
+    enabled: isAuthenticated,
     staleTime: 1000 * 60 * 5,
   })
 

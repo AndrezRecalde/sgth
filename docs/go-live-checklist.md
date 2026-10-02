@@ -57,6 +57,19 @@
   anotado para que se revise, no para darlo por correcto. Si algún
   día se decide quitarlo, es una línea de config/cors.php.
 □ Rate limiting activo en endpoint de login
+□ El API se sirve en el MISMO dominio que el frontend (/api y /storage)
+  El token de sesión va en una cookie HttpOnly que solo viaja al sitio
+  que la puso. Si el navegador llama a la API en otro dominio, el login
+  responde 200 y la siguiente petición da 401: nadie puede entrar.
+  Dos formas, cualquiera sirve:
+  · nginx manda /api y /storage del dominio del frontend a Laravel, o
+  · Next lo reenvía: BACKEND_URL (sgth-frontend) apuntando a Laravel
+    ANTES de `next build` — se lee al construir, no al arrancar
+  NEXT_PUBLIC_API_URL sin definir (o relativa, /api/v1). Una URL
+  absoluta a otro dominio rompe el inicio de sesión.
+□ SESSION_SECURE_COOKIE=true en el .env de Laravel
+  Marca la cookie del token como Secure. Con nginx terminando TLS,
+  Laravel recibe http y sin esta variable la cookie saldría sin Secure.
 □ HTTPS forzado en Nginx (redirigir HTTP a HTTPS)
 □ APP_DEBUG=false verificado
 □ Sentry DSN configurado y test enviado
@@ -111,6 +124,10 @@
 Dos cambios del 2026-09-30 alteran lo que la gente ya daba por sabido.
 Ninguno es un fallo: los dos los pidió Talento Humano. Pero si nadie
 los anuncia, el primer día se leen como si el sistema se hubiera roto.
+
+□ Quien tenga sesión abierta del sistema anterior sigue dentro hasta
+  que le caduque (24 h). Si alguien ve el login de golpe tras el
+  despliegue, es esto: basta con volver a entrar.
 
 □ Los obreros del Código del Trabajo empiezan a consumir saldo de
   vacaciones con sus permisos personales (#225)

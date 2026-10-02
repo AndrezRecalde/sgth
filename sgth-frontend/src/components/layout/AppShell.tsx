@@ -44,14 +44,17 @@ export function SGTHAppShell({ children }: { children: React.ReactNode }) {
   const isDesktop = useMediaQuery('(min-width: 62em)')
   const pathname = usePathname()
   const router = useRouter()
-  const { token, isAuthenticated } = useAuth()
+  const { isAuthenticated } = useAuth()
   const hydrated = useHydrated()
 
   const subsistema = getSubsistema(pathname)
-  const sinSesion = hydrated && (!isAuthenticated || !token)
+  const sinSesion = hydrated && !isAuthenticated
 
   useEffect(() => {
-    if (sinSesion) router.replace(ROUTES.AUTH.LOGIN)
+    // Con `logout=true` el proxy borra la cookie del token. Sin eso, una
+    // cookie todavía presente devolvía al proxy de /login a esta pantalla, y
+    // esta otra vez a /login.
+    if (sinSesion) router.replace(`${ROUTES.AUTH.LOGIN}?logout=true`)
   }, [sinSesion, router])
 
   // También en <html>: modales, drawers y menús se montan en un portal fuera
@@ -71,7 +74,7 @@ export function SGTHAppShell({ children }: { children: React.ReactNode }) {
 
   // Mientras no sepamos si hay sesión, nada de contenido ni de redirección:
   // pintar el shell y quitarlo produce un parpadeo en cada carga.
-  if (!hydrated || !isAuthenticated || !token) {
+  if (!hydrated || !isAuthenticated) {
     return (
       <Center h="100dvh" bg="var(--sgth-canvas)">
         <Loader color="emerald" size="lg" type="dots" />

@@ -1,16 +1,17 @@
 /**
- * Las cookies de sesión que lee `proxy.ts`: `sgth_token` y `sgth_primer_login`.
+ * Las cookies de sesión que el navegador sí puede tocar.
+ *
+ * La del token (`sgth_token`) ya no está aquí: la pone Laravel como HttpOnly
+ * al iniciar sesión y la borra al cerrarla, y el JavaScript de la página no
+ * puede ni leerla. Desde el navegador quedan `sgth_sesion` —su compañera
+ * legible, que dice si hay sesión sin decir cuál— y `sgth_primer_login`.
  *
  * Estaban escritas tres veces —el store, el login y el cambio de contraseña—,
- * y no de la misma forma: solo el store sabía borrarlas también con dominio.
- * Ninguna llevaba `SameSite` ni `Secure`, así que viajaban en peticiones
- * iniciadas desde otros sitios y, fuera de HTTPS, en claro.
+ * y no de la misma forma. Ninguna llevaba `SameSite` ni `Secure`.
  *
  * `SameSite=Lax` y no `Strict`: el QR del permiso y los enlaces de correo
  * abren el sistema desde fuera, y con `Strict` el proxy no vería la cookie en
  * esa primera navegación y mandaría al login a quien ya tiene sesión.
- *
- * No pueden ser `HttpOnly` porque las escribe el navegador.
  */
 
 const atributos = (): string => {

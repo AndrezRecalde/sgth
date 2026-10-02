@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 */
 require_once __DIR__.'/Support/EstructuraFixtures.php';
 require_once __DIR__.'/Support/ViaticoFixtures.php';
+require_once __DIR__.'/Support/SesionFixtures.php';
 
 /*
 |--------------------------------------------------------------------------
