@@ -1,6 +1,6 @@
 'use client'
 
-import { confirmar, DataState, PageHeader, PageShell, SgthTable, Toolbar, type TableAction } from '@/components/ui'
+import { DataState, PAGINACION_ES, PageHeader, PageShell, SgthTable, Toolbar, confirmar, type TableAction } from '@/components/ui'
 import { useState } from 'react'
 import { Button, Select } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
@@ -145,6 +145,7 @@ export function AccidentesTrabajoView() {
         page={page}
       >
         <SgthTable
+          {...PAGINACION_ES}
           records={records}
           columns={columnasAccidenteTrabajo(accionesDe)}
           totalRecords={data?.total ?? 0}
