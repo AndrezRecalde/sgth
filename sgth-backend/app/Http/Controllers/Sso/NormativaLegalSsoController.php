@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Sso;
 
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
+use App\Services\Sso\FiltroBooleanoSso;
 use App\Enums\TipoNormativaLegal;
 use App\Services\Sso\CumplimientoService;
 use Illuminate\Http\JsonResponse;
@@ -20,7 +21,7 @@ final class NormativaLegalSsoController extends Controller
     {
         $validated = $request->validate([
             'tipo' => ['nullable', new Enum(TipoNormativaLegal::class)],
-            'solo_activas' => ['nullable', 'boolean'],
+            'solo_activas' => FiltroBooleanoSso::reglas(),
         ]);
 
         $normativas = $this->cumplimientoService->listarNormativas(

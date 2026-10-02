@@ -12,6 +12,7 @@ import {
   crearCampaniaAssistSchema, type CrearCampaniaAssistFormData,
 } from '../schemas/assist.schema'
 import { toDateValue, fromDateValue } from '@/lib/fecha'
+import { erroresDeCampo } from '@/lib/erroresDeCampo'
 
 interface Props {
   opened: boolean
@@ -24,7 +25,7 @@ export function CrearCampaniaAssistModal({ opened, onClose }: Props) {
   const { data: unidades = [], error: errorUnidades } = useTodasUnidades()
 
   const {
-    register, control, handleSubmit, reset,
+    register, control, handleSubmit, reset, setError,
     formState: { errors },
   } = useForm<CrearCampaniaAssistFormData>({
     resolver: zodResolver(crearCampaniaAssistSchema) as Resolver<CrearCampaniaAssistFormData>,
@@ -37,7 +38,13 @@ export function CrearCampaniaAssistModal({ opened, onClose }: Props) {
   }
 
   const onSubmit = (values: CrearCampaniaAssistFormData) => {
-    crearCampania.mutateAsync(values).then(handleClose).catch(() => {})
+    crearCampania.mutateAsync(values).then(handleClose).catch((error) => {
+      const campos = erroresDeCampo(error)
+      if (! campos) return // el hook ya lo notificó
+      for (const [campo, mensaje] of Object.entries(campos)) {
+        setError(campo as keyof CrearCampaniaAssistFormData, { message: mensaje })
+      }
+    })
   }
 
   return (

@@ -268,6 +268,81 @@ test('el ausentismo suma las horas de los permisos por enfermedad', function () 
     expect($ausentismo['total_dias'])->toBe(1.5);
 });
 
+test('un permiso rechazado o una falta injustificada no son ausentismo', function () {
+    // El filtro estaba escrito en negativo —«todos menos anulado y
+    // pendiente»— y estos dos pasaban: un permiso rechazado y una falta
+    // injustificada son exactamente los que NO se concedieron, y sumaban días
+    // al indicador que se reporta como ausentismo institucional.
+    $permiso = fn(string $fecha, EstadoPermiso $estado) => PermisoServidor::create([
+        'servidor_id' => $this->servidor->id,
+        'tipo' => TipoPermiso::ENFERMEDAD,
+        'fecha' => $fecha,
+        'hora_inicio' => '08:00:00',
+        'hora_fin' => '16:00:00',
+        'observacion' => 'Prueba',
+        'estado' => $estado,
+        'vence_en' => "{$fecha} 23:59:59",
+    ]);
+
+    $permiso('2026-05-04', EstadoPermiso::RECHAZADO);
+    $permiso('2026-05-05', EstadoPermiso::FALTA_INJUSTIFICADA);
+
+    $ausentismo = resumenDelTablero()['ausentismo'];
+
+    expect($ausentismo['total_permisos'])->toBe(0);
+    expect($ausentismo['servidores_afectados'])->toBe(0);
+    expect($ausentismo['total_dias'])->toBe(0.0);
+});
+
+test('el validado por Trabajo Social sí cuenta como ausentismo', function () {
+    // El otro lado de la misma moneda: la forma positiva tiene que incluir los
+    // dos estados concedidos, no solo `activo`.
+    PermisoServidor::create([
+        'servidor_id' => $this->servidor->id,
+        'tipo' => TipoPermiso::ENFERMEDAD,
+        'fecha' => '2026-06-01',
+        'hora_inicio' => '08:00:00',
+        'hora_fin' => '16:00:00',
+        'observacion' => 'Prueba',
+        'estado' => EstadoPermiso::VALIDADO_TRABAJO_SOCIAL,
+        'vence_en' => '2026-06-01 23:59:59',
+    ]);
+
+    expect(resumenDelTablero()['ausentismo']['total_dias'])->toBe(1.0);
+});
+
+test('el tablero y el consolidado de permisos cuentan los mismos permisos', function () {
+    // Las dos pantallas del módulo —el tablero y «Ausentismo por enfermedad»—
+    // leen de sitios distintos: el tablero tiene su propia consulta y la
+    // pantalla consume el consolidado de Asistencia. Cuando los filtros de
+    // estado estaban escritos por separado no coincidían. Esta prueba es la
+    // que impide que vuelvan a separarse.
+    $permiso = fn(string $fecha, EstadoPermiso $estado) => PermisoServidor::create([
+        'servidor_id' => $this->servidor->id,
+        'tipo' => TipoPermiso::ENFERMEDAD,
+        'fecha' => $fecha,
+        'hora_inicio' => '08:00:00',
+        'hora_fin' => '16:00:00',
+        'observacion' => 'Prueba',
+        'estado' => $estado,
+        'vence_en' => "{$fecha} 23:59:59",
+    ]);
+
+    foreach (EstadoPermiso::cases() as $indice => $estado) {
+        $permiso('2026-07-' . str_pad((string) ($indice + 1), 2, '0', STR_PAD_LEFT), $estado);
+    }
+
+    $consolidado = app(\App\Services\Asistencia\ConsolidadoPermisoService::class)
+        ->generar('2026-07-01', '2026-07-31', TipoPermiso::ENFERMEDAD->value);
+
+    $tablero = resumenDelTablero('2026-07')['ausentismo'];
+
+    expect($tablero['total_permisos'])->toBe((int) $consolidado['totales']['total_permisos']);
+    expect($tablero['total_dias'])->toBe($consolidado['totales']['total_dias']);
+    // Y son los dos concedidos de los seis estados del enum.
+    expect($tablero['total_permisos'])->toBe(2);
+});
+
 test('sin permisos por enfermedad el ausentismo es cero', function () {
     $ausentismo = resumenDelTablero()['ausentismo'];
 

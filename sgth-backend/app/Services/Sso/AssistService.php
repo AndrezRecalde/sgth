@@ -4,6 +4,7 @@ namespace App\Services\Sso;
 
 use App\Enums\NivelRiesgoAssist;
 use App\Enums\SustanciaAssist;
+use App\Enums\EstadoCampaniaSso;
 use App\Models\Sso\EvaluacionAssist;
 use App\Models\Sso\RespuestaAssist;
 use App\Services\Sso\Assist\CuestionarioAssistData;
@@ -180,13 +181,37 @@ final class AssistService
 
     // ── Helpers ────────────────────────────────────────────────────
 
+    /**
+     * La campaña del código, solo si su ventana admite respuestas.
+     *
+     * Mismo arreglo que en `PsicosocialService`, y por el mismo motivo: aquí
+     * se comprobaba `activa` y `fecha_cierre` y nunca `fecha_apertura`, y el
+     * cierre se comparaba con `isPast()` sobre una columna casteada a `date`,
+     * de modo que el día de cierre entero quedaba fuera. El cálculo de la
+     * ventana es compartido, en `EstadoCampaniaSso`.
+     */
     private function campaniaAbiertaPorCodigo(string $codigoAcceso): EvaluacionAssist
     {
         $campania = EvaluacionAssist::where('codigo_acceso', $codigoAcceso)->first();
 
-        if (! $campania || ! $campania->activa || ($campania->fecha_cierre && $campania->fecha_cierre->isPast())) {
+        if (! $campania) {
             throw ValidationException::withMessages([
-                'codigo_acceso' => 'Este tamizaje no está disponible o ya fue cerrado.',
+                'codigo_acceso' => 'No encontramos este tamizaje. Revise el enlace que recibió.',
+            ]);
+        }
+
+        $estado = EstadoCampaniaSso::desde(
+            (bool) $campania->activa,
+            $campania->fecha_apertura,
+            $campania->fecha_cierre,
+        );
+
+        if (! $estado->admiteRespuestas()) {
+            throw ValidationException::withMessages([
+                'codigo_acceso' => $estado === EstadoCampaniaSso::PROGRAMADA
+                    ? 'Este tamizaje abre el '.$campania->fecha_apertura->format('d/m/Y')
+                        .'. Vuelva a entrar con este mismo enlace a partir de esa fecha.'
+                    : 'Este tamizaje ya fue cerrado y no admite más respuestas.',
             ]);
         }
 

@@ -34,6 +34,24 @@ class RiesgoLaboralResource extends JsonResource
             'nivel_intervencion'  => $this->nivel_intervencion,
 
             'estado'     => $this->estado,
+
+            // Las dos relaciones que el listado ya trae cargadas. Sin
+            // declararlas, pasar el `index` por este recurso habría vaciado
+            // las columnas Puesto y Factor de riesgo de la matriz.
+            'puesto' => $this->whenLoaded('puesto', fn () => [
+                'id'    => $this->puesto->id,
+                'cargo' => $this->puesto->relationLoaded('cargo') && $this->puesto->cargo
+                    ? ['id' => $this->puesto->cargo->id, 'nombre' => $this->puesto->cargo->nombre]
+                    : null,
+            ]),
+
+            'factor_riesgo' => $this->whenLoaded('factorRiesgo', fn () => [
+                'id'        => $this->factorRiesgo->id,
+                'nombre'    => $this->factorRiesgo->nombre,
+                'categoria' => $this->factorRiesgo->categoria,
+                'activo'    => $this->factorRiesgo->activo,
+            ]),
+
             'created_by' => $this->created_by,
             'updated_by' => $this->updated_by,
             'created_at' => $this->created_at,

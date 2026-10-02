@@ -32,6 +32,23 @@ class AccidenteTrabajoResource extends JsonResource
             'medidas_correctivas'      => $this->medidas_correctivas,
             'estado'                   => $this->estado,
             'investigado_por'          => $this->investigado_por,
+
+            // Las dos relaciones que el listado ya trae cargadas. Sin
+            // declararlas, pasar el `index` por este recurso habría dejado la
+            // columna Servidor con el id en vez del nombre.
+            'servidor' => $this->whenLoaded('servidor', fn () => [
+                'id'       => $this->servidor->id,
+                'cedula'   => $this->servidor->cedula,
+                'nombre'   => $this->servidor->nombre,
+                'apellido' => $this->servidor->apellido,
+            ]),
+
+            'investigador' => $this->whenLoaded('investigador', fn () => [
+                'id'              => $this->investigador->id,
+                'usuario_ti'      => $this->investigador->usuario_ti,
+                'nombre_completo' => $this->investigador->nombre_completo,
+            ]),
+
             'created_by'               => $this->created_by,
             'updated_by'               => $this->updated_by,
             'created_at'               => $this->created_at,

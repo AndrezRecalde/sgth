@@ -39,7 +39,7 @@ export function useAssistMutations() {
       )
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo crear la campaña ASSIST'),
+    onError: notificar.alFallarSalvoCampos('No se pudo crear la campaña ASSIST'),
   })
 
   const cerrarCampania = useMutation({

@@ -38,9 +38,9 @@
                                             "const": "Accidentes de trabajo obtenidos exitosamente."
                                         },
                                         "datos": {
-                                            "type": "object",
-                                            "additionalProperties": {
-                                                "type": "string"
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/AccidenteTrabajoResource"
                                             }
                                         },
                                         "meta": {
@@ -5433,9 +5433,9 @@
                                             "const": "Capacitaciones SSO obtenidas exitosamente."
                                         },
                                         "datos": {
-                                            "type": "object",
-                                            "additionalProperties": {
-                                                "type": "string"
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/CapacitacionSsoResource"
                                             }
                                         },
                                         "meta": {
@@ -7922,7 +7922,11 @@
                                                             "type": "string"
                                                         },
                                                         "total_minutos": {
-                                                            "type": "string"
+                                                            "type": "integer"
+                                                        },
+                                                        "tiempo_total": {
+                                                            "type": "string",
+                                                            "description": "El pie de la columna \u00abTiempo\u00bb era un guion, en la tabla y en\nel PDF, teniendo los minutos justo al lado. Es la cifra que\nTalento Humano lee al cerrar el mes: cu\u00e1ntas horas de\nausencia suma el per\u00edodo."
                                                         },
                                                         "total_dias": {
                                                             "type": "number"
@@ -7931,6 +7935,7 @@
                                                     "required": [
                                                         "total_permisos",
                                                         "total_minutos",
+                                                        "tiempo_total",
                                                         "total_dias"
                                                     ]
                                                 },
@@ -7945,12 +7950,20 @@
                                                         },
                                                         "tipo": {
                                                             "type": "string"
+                                                        },
+                                                        "servidor_id": {
+                                                            "type": "string"
+                                                        },
+                                                        "unidad_administrativa_id": {
+                                                            "type": "string"
                                                         }
                                                     },
                                                     "required": [
                                                         "fecha_inicio",
                                                         "fecha_fin",
-                                                        "tipo"
+                                                        "tipo",
+                                                        "servidor_id",
+                                                        "unidad_administrativa_id"
                                                     ]
                                                 }
                                             },
@@ -11805,7 +11818,7 @@
                                                         },
                                                         "total_dias": {
                                                             "type": "number",
-                                                            "description": "480 minutos es la jornada de ocho horas."
+                                                            "description": "La jornada vive en `JornadaLaboral`; aqu\u00ed se presenta con dos\ndecimales y no con cuatro, que es lo que pide un consolidado."
                                                         }
                                                     },
                                                     "required": [
@@ -13135,7 +13148,7 @@
                         "in": "query",
                         "schema": {
                             "type": "integer",
-                            "default": 20
+                            "default": 15
                         }
                     }
                 ],
@@ -13537,9 +13550,6 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 }
             }
@@ -15818,9 +15828,9 @@
                                             "const": "Entregas de EPP obtenidas exitosamente."
                                         },
                                         "datos": {
-                                            "type": "object",
-                                            "additionalProperties": {
-                                                "type": "string"
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/EppEntregaResource"
                                             }
                                         },
                                         "meta": {
@@ -16156,9 +16166,9 @@
                                             "const": "Equipos de protecci\u00f3n obtenidos exitosamente."
                                         },
                                         "datos": {
-                                            "type": "object",
-                                            "additionalProperties": {
-                                                "type": "string"
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/EquipoProteccionResource"
                                             }
                                         },
                                         "meta": {
@@ -17379,8 +17389,14 @@
                         "in": "query",
                         "schema": {
                             "type": [
-                                "boolean",
+                                "string",
                                 "null"
+                            ],
+                            "enum": [
+                                "1",
+                                "0",
+                                "true",
+                                "false"
                             ]
                         }
                     }
@@ -19579,9 +19595,9 @@
                                             "const": "Horas trabajadas obtenidas exitosamente."
                                         },
                                         "datos": {
-                                            "type": "object",
-                                            "additionalProperties": {
-                                                "type": "string"
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/HorasTrabajadasPeriodoResource"
                                             }
                                         },
                                         "meta": {
@@ -20123,9 +20139,9 @@
                                             "const": "Inspecciones SSO obtenidas exitosamente."
                                         },
                                         "datos": {
-                                            "type": "object",
-                                            "additionalProperties": {
-                                                "type": "string"
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/InspeccionSsoResource"
                                             }
                                         },
                                         "meta": {
@@ -23113,8 +23129,14 @@
                         "in": "query",
                         "schema": {
                             "type": [
-                                "boolean",
+                                "string",
                                 "null"
+                            ],
+                            "enum": [
+                                "1",
+                                "0",
+                                "true",
+                                "false"
                             ]
                         }
                     }
@@ -24432,20 +24454,6 @@
                         }
                     }
                 ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "anio": {
-                                        "type": "string"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -24766,20 +24774,6 @@
                 "tags": [
                     "PeriodoVacacion"
                 ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "anio": {
-                                        "type": "string"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -24798,8 +24792,7 @@
                                             "type": "object",
                                             "properties": {
                                                 "generados": {
-                                                    "type": "integer",
-                                                    "minimum": 0
+                                                    "type": "integer"
                                                 }
                                             },
                                             "required": [
@@ -27911,8 +27904,14 @@
                         "in": "query",
                         "schema": {
                             "type": [
-                                "boolean",
+                                "string",
                                 "null"
+                            ],
+                            "enum": [
+                                "1",
+                                "0",
+                                "true",
+                                "false"
                             ]
                         }
                     }
@@ -29145,7 +29144,7 @@
                                         "datos": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/PuestoEpp"
+                                                "$ref": "#/components/schemas/PuestoEppResource"
                                             }
                                         },
                                         "meta": {
@@ -29230,7 +29229,7 @@
                                             "const": "Equipo de protecci\u00f3n asignado al puesto exitosamente."
                                         },
                                         "datos": {
-                                            "$ref": "#/components/schemas/PuestoEpp"
+                                            "$ref": "#/components/schemas/PuestoEppResource"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -32321,9 +32320,9 @@
                                             "const": "Riesgos laborales obtenidos exitosamente."
                                         },
                                         "datos": {
-                                            "type": "object",
-                                            "additionalProperties": {
-                                                "type": "string"
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/RiesgoLaboralResource"
                                             }
                                         },
                                         "meta": {
@@ -39502,7 +39501,7 @@
                         "in": "query",
                         "schema": {
                             "type": "integer",
-                            "default": 20
+                            "default": 15
                         }
                     }
                 ],
@@ -39913,6 +39912,52 @@
                         "type": [
                             "integer",
                             "null"
+                        ]
+                    },
+                    "servidor": {
+                        "type": "object",
+                        "description": "Las dos relaciones que el listado ya trae cargadas. Sin\ndeclararlas, pasar el `index` por este recurso habr\u00eda dejado la\ncolumna Servidor con el id en vez del nombre.",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "cedula": {
+                                "type": "string"
+                            },
+                            "nombre": {
+                                "type": "string"
+                            },
+                            "apellido": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "cedula",
+                            "nombre",
+                            "apellido"
+                        ]
+                    },
+                    "investigador": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "usuario_ti": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "nombre_completo": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "usuario_ti",
+                            "nombre_completo"
                         ]
                     },
                     "created_by": {
@@ -41381,7 +41426,7 @@
                         "format": "date-time"
                     },
                     "duracion_horas": {
-                        "type": "integer"
+                        "type": "string"
                     },
                     "instructor": {
                         "type": "string"
@@ -43866,6 +43911,135 @@
                 ],
                 "title": "EppEntrega"
             },
+            "EppEntregaResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "servidor_id": {
+                        "type": "integer"
+                    },
+                    "equipo_proteccion_id": {
+                        "type": "integer"
+                    },
+                    "fecha_entrega": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "cantidad": {
+                        "type": "integer"
+                    },
+                    "motivo": {
+                        "$ref": "#/components/schemas/MotivoEntregaEpp"
+                    },
+                    "entregado_por": {
+                        "type": "integer"
+                    },
+                    "observaciones": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "servidor": {
+                        "type": "object",
+                        "description": "Las tres relaciones que el listado ya trae cargadas.",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "cedula": {
+                                "type": "string"
+                            },
+                            "nombre": {
+                                "type": "string"
+                            },
+                            "apellido": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "cedula",
+                            "nombre",
+                            "apellido"
+                        ]
+                    },
+                    "equipo_proteccion": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "codigo": {
+                                "type": "string"
+                            },
+                            "nombre": {
+                                "type": "string"
+                            },
+                            "tipo": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "codigo",
+                            "nombre",
+                            "tipo"
+                        ]
+                    },
+                    "entregador": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "usuario_ti": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "nombre_completo": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "usuario_ti",
+                            "nombre_completo"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "servidor_id",
+                    "equipo_proteccion_id",
+                    "fecha_entrega",
+                    "cantidad",
+                    "motivo",
+                    "entregado_por",
+                    "observaciones",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "EppEntregaResource"
+            },
             "EquipoProteccionResource": {
                 "type": "object",
                 "properties": {
@@ -44069,6 +44243,7 @@
             },
             "EstadoSumario": {
                 "type": "string",
+                "description": "Estados del sumario administrativo (LOSEP). A diferencia del visto bueno, lo resuelve la autoridad nominadora de la instituci\u00f3n, y cada estado deja la fecha de su hito para que se puedan vigilar los plazos procesales.\n",
                 "enum": [
                     "abierto",
                     "en_instruccion",
@@ -45232,6 +45407,69 @@
                 ],
                 "title": "HorasTrabajadasPeriodo"
             },
+            "HorasTrabajadasPeriodoResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "periodo": {
+                        "type": "string"
+                    },
+                    "unidad_administrativa_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "total_horas": {
+                        "type": "integer"
+                    },
+                    "registrado_por": {
+                        "type": "integer"
+                    },
+                    "unidad_administrativa": {
+                        "type": "object",
+                        "description": "La unidad que el listado ya trae cargada. La tabla la pinta como\n\u00abTotal institucional\u00bb cuando no viene, que es lo que significa\nuna fila sin unidad.",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "nombre": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "nombre"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "periodo",
+                    "unidad_administrativa_id",
+                    "total_horas",
+                    "registrado_por",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "HorasTrabajadasPeriodoResource"
+            },
             "InformeActividad": {
                 "type": "object",
                 "properties": {
@@ -45383,6 +45621,44 @@
                     },
                     "inspector_id": {
                         "type": "integer"
+                    },
+                    "unidad_administrativa": {
+                        "type": "object",
+                        "description": "Las dos relaciones que el listado ya trae cargadas.",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "nombre": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "nombre"
+                        ]
+                    },
+                    "inspector": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "usuario_ti": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "nombre_completo": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "usuario_ti",
+                            "nombre_completo"
+                        ]
                     },
                     "created_by": {
                         "type": [
@@ -47177,9 +47453,6 @@
                     "estado": {
                         "type": "string"
                     },
-                    "alerta_enviada": {
-                        "type": "boolean"
-                    },
                     "created_at": {
                         "type": [
                             "string",
@@ -47211,7 +47484,6 @@
                     "dias_saldo",
                     "saldo_acumulado",
                     "estado",
-                    "alerta_enviada",
                     "created_at",
                     "updated_at",
                     "dias_vencidos"
@@ -48133,6 +48405,83 @@
                 ],
                 "title": "PuestoEpp"
             },
+            "PuestoEppResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "puesto_id": {
+                        "type": "integer"
+                    },
+                    "equipo_proteccion_id": {
+                        "type": "integer"
+                    },
+                    "cantidad_requerida": {
+                        "type": "integer"
+                    },
+                    "frecuencia_reposicion_meses": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "equipo_proteccion": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "codigo": {
+                                "type": "string"
+                            },
+                            "nombre": {
+                                "type": "string"
+                            },
+                            "tipo": {
+                                "type": "string"
+                            },
+                            "vida_util_meses": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "codigo",
+                            "nombre",
+                            "tipo",
+                            "vida_util_meses"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "puesto_id",
+                    "equipo_proteccion_id",
+                    "cantidad_requerida",
+                    "frecuencia_reposicion_meses",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "PuestoEppResource"
+            },
             "PuestoResource": {
                 "type": "object",
                 "properties": {
@@ -48601,22 +48950,10 @@
                 "type": "object",
                 "properties": {
                     "tipo_falta": {
-                        "type": "string",
-                        "enum": [
-                            "leve",
-                            "grave",
-                            "muy_grave"
-                        ]
+                        "$ref": "#/components/schemas/TipoFalta"
                     },
                     "tipo_sancion": {
-                        "type": "string",
-                        "enum": [
-                            "amonestacion_verbal",
-                            "amonestacion_escrita",
-                            "multa",
-                            "suspension",
-                            "destitucion"
-                        ]
+                        "$ref": "#/components/schemas/TipoSancion"
                     },
                     "porcentaje_multa": {
                         "type": [
@@ -48631,7 +48968,6 @@
                             "integer",
                             "null"
                         ],
-                        "description": "LOSEP max 10%",
                         "minimum": 1,
                         "maximum": 30
                     },
@@ -48640,8 +48976,7 @@
                             "string",
                             "null"
                         ],
-                        "format": "date-time",
-                        "description": "LOSEP max 30 d\u00edas"
+                        "format": "date-time"
                     },
                     "observaciones": {
                         "type": [
@@ -49025,6 +49360,60 @@
                     },
                     "estado": {
                         "type": "boolean"
+                    },
+                    "puesto": {
+                        "type": "object",
+                        "description": "Las dos relaciones que el listado ya trae cargadas. Sin\ndeclararlas, pasar el `index` por este recurso habr\u00eda vaciado\nlas columnas Puesto y Factor de riesgo de la matriz.",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "cargo": {
+                                "type": [
+                                    "object",
+                                    "null"
+                                ],
+                                "properties": {
+                                    "id": {
+                                        "type": "integer"
+                                    },
+                                    "nombre": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "id",
+                                    "nombre"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "cargo"
+                        ]
+                    },
+                    "factor_riesgo": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "nombre": {
+                                "type": "string"
+                            },
+                            "categoria": {
+                                "$ref": "#/components/schemas/CategoriaFactorRiesgo"
+                            },
+                            "activo": {
+                                "type": "boolean"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "nombre",
+                            "categoria",
+                            "activo"
+                        ]
                     },
                     "created_by": {
                         "type": [
@@ -52887,7 +53276,8 @@
                             "string",
                             "null"
                         ],
-                        "format": "date-time"
+                        "format": "date-time",
+                        "description": "Un sumario no se abre en el futuro, y si se abriera, el l\u00edmite\nde notificaci\u00f3n quedar\u00eda tambi\u00e9n en el futuro y\n`controlarPlazosLegales()` no lo ver\u00eda caducar nunca."
                     }
                 },
                 "required": [
@@ -53130,12 +53520,6 @@
                         ]
                     },
                     "persona_reemplaza_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    },
-                    "periodo_vacacion_id": {
                         "type": [
                             "integer",
                             "null"
@@ -53400,7 +53784,8 @@
                     },
                     "fecha_solicitud": {
                         "type": "string",
-                        "format": "date-time"
+                        "format": "date-time",
+                        "description": "La solicitud se presenta y luego se registra, nunca al\ncontrario: con una fecha futura el plazo del Art. 183 se contar\u00eda\ndesde un d\u00eda que no ha llegado y el tr\u00e1mite no aparecer\u00eda jam\u00e1s\nen las alertas."
                     },
                     "numero_tramite_mdt": {
                         "type": [
@@ -53886,6 +54271,16 @@
                 ],
                 "title": "TipoExamenFemo"
             },
+            "TipoFalta": {
+                "type": "string",
+                "description": "Gravedad de la falta disciplinaria \u2014 Art. 42 de la LOSEP.\n",
+                "enum": [
+                    "leve",
+                    "grave",
+                    "muy_grave"
+                ],
+                "title": "TipoFalta"
+            },
             "TipoFichaFemo": {
                 "type": "string",
                 "enum": [
@@ -53970,6 +54365,18 @@
                     "express"
                 ],
                 "title": "TipoProcesoConvocatoria"
+            },
+            "TipoSancion": {
+                "type": "string",
+                "description": "Sanciones disciplinarias del Art. 43 de la LOSEP, en orden de gravedad. La destituci\u00f3n es la \u00fanica que termina el v\u00ednculo, y por eso es la \u00fanica que genera una Cesaci\u00f3n de Funciones.\n",
+                "enum": [
+                    "amonestacion_verbal",
+                    "amonestacion_escrita",
+                    "multa",
+                    "suspension",
+                    "destitucion"
+                ],
+                "title": "TipoSancion"
             },
             "TipoSubrogacion": {
                 "type": "string",
@@ -56644,12 +57051,6 @@
                             "null"
                         ]
                     },
-                    "periodo_vacacion_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    },
                     "anulado_por": {
                         "type": [
                             "integer",
@@ -56697,7 +57098,6 @@
                     "creado_por",
                     "unidad_administrativa_id",
                     "persona_reemplaza_id",
-                    "periodo_vacacion_id",
                     "anulado_por",
                     "anulado_en",
                     "motivo_anulacion",
