@@ -3,6 +3,7 @@
 namespace App\Services\Sso;
 
 use App\Enums\NivelRiesgoPsicosocial;
+use App\Enums\EstadoCampaniaSso;
 use App\Models\Sso\EvaluacionPsicosocial;
 use App\Models\Sso\RespuestaPsicosocial;
 use App\Services\Sso\Psicosocial\CuestionarioPsicosocialData;
@@ -183,13 +184,44 @@ final class PsicosocialService
 
     // ── Helpers ────────────────────────────────────────────────────
 
+    /**
+     * La campaña del código, solo si su ventana admite respuestas.
+     *
+     * Comprobaba `activa` y `fecha_cierre`, nunca `fecha_apertura`: una
+     * campaña creada con apertura el mes que viene se respondía hoy con su
+     * enlace, y con eso el campo era decorativo. Y la comparación del cierre
+     * era `isPast()` sobre una columna casteada a `date`, así que a las 00:00
+     * del día de cierre ya era pasado: el último día de toda campaña era
+     * inservible.
+     *
+     * Las tres condiciones viven ahora en `EstadoCampaniaSso`, el mismo
+     * cálculo que la pantalla enseña en su columna Estado. Y el mensaje
+     * distingue los dos motivos: a quien abre el enlace de una campaña
+     * programada, decirle «ya fue cerrada» lo manda a reportar un error que no
+     * existe.
+     */
     private function campaniaAbiertaPorCodigo(string $codigoAcceso): EvaluacionPsicosocial
     {
         $campania = EvaluacionPsicosocial::where('codigo_acceso', $codigoAcceso)->first();
 
-        if (! $campania || ! $campania->activa || ($campania->fecha_cierre && $campania->fecha_cierre->isPast())) {
+        if (! $campania) {
             throw ValidationException::withMessages([
-                'codigo_acceso' => 'Esta evaluación no está disponible o ya fue cerrada.',
+                'codigo_acceso' => 'No encontramos esta evaluación. Revise el enlace que recibió.',
+            ]);
+        }
+
+        $estado = EstadoCampaniaSso::desde(
+            (bool) $campania->activa,
+            $campania->fecha_apertura,
+            $campania->fecha_cierre,
+        );
+
+        if (! $estado->admiteRespuestas()) {
+            throw ValidationException::withMessages([
+                'codigo_acceso' => $estado === EstadoCampaniaSso::PROGRAMADA
+                    ? 'Esta evaluación abre el '.$campania->fecha_apertura->format('d/m/Y')
+                        .'. Vuelva a entrar con este mismo enlace a partir de esa fecha.'
+                    : 'Esta evaluación ya fue cerrada y no admite más respuestas.',
             ]);
         }
 
