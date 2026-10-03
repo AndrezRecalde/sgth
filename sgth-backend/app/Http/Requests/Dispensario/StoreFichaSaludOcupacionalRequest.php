@@ -15,6 +15,8 @@ use Illuminate\Validation\Rule;
 
 class StoreFichaSaludOcupacionalRequest extends FormRequest
 {
+    use ValidaCoherenciaFemo;
+
     public function authorize(): bool
     {
         return true;
@@ -32,7 +34,7 @@ class StoreFichaSaludOcupacionalRequest extends FormRequest
             'ficha.puesto_id' => ['nullable', 'integer', 'exists:puestos,id'],
             'ficha.accidente_trabajo_id' => ['nullable', 'integer', 'exists:accidentes_trabajo,id'],
             'ficha.numero_archivo' => ['nullable', 'string', 'max:50'],
-            'ficha.fecha_evaluacion' => ['required', 'date'],
+            'ficha.fecha_evaluacion' => ['required', 'date', 'before_or_equal:today'],
             'ficha.tipo_ficha' => ['nullable', Rule::enum(TipoFichaFemo::class)],
             'ficha.puesto_trabajo' => ['nullable', 'string', 'max:200'],
             'ficha.puesto_trabajo_ciuo' => ['nullable', 'string', 'max:20'],
@@ -67,25 +69,17 @@ class StoreFichaSaludOcupacionalRequest extends FormRequest
             'ficha.medicacion_habitual_cual' => ['nullable', 'string', 'max:200'],
             'ficha.medicacion_habitual_cantidad' => ['nullable', 'string', 'max:100'],
 
-            'constantes_vitales' => ['nullable', 'array'],
-            'constantes_vitales.temperatura_c' => ['nullable', 'numeric'],
-            'constantes_vitales.presion_sistolica' => ['nullable', 'integer'],
-            'constantes_vitales.presion_diastolica' => ['nullable', 'integer'],
-            'constantes_vitales.frecuencia_cardiaca' => ['nullable', 'integer'],
-            'constantes_vitales.frecuencia_respiratoria' => ['nullable', 'integer'],
-            'constantes_vitales.saturacion_oxigeno' => ['nullable', 'numeric'],
-            'constantes_vitales.peso_kg' => ['nullable', 'numeric'],
-            'constantes_vitales.talla_cm' => ['nullable', 'numeric'],
-            'constantes_vitales.perimetro_abdominal_cm' => ['nullable', 'numeric'],
-            'constantes_vitales.imc' => ['nullable', 'numeric'],
-            'constantes_vitales.glucosa' => ['nullable', 'numeric'],
+            // Sin constantes vitales: las tomó Enfermería en el triaje y el
+            // servidor las copia de ahí (FemoService::registrar). Antes las
+            // mandaba el navegador, sin rangos, y el IMC no se recalculaba.
 
             'antecedentes' => ['nullable', 'array'],
             'antecedentes.*.tipo' => ['required', Rule::enum(TipoAntecedenteFemo::class)],
             'antecedentes.*.descripcion' => ['required', 'string'],
             'antecedentes.*.fecha_aproximada' => ['nullable', 'integer'],
 
-            'actividades' => ['nullable', 'array'],
+            // El impreso tiene siete columnas de actividades.
+            'actividades' => ['nullable', 'array', 'max:7'],
             'actividades.*.puesto_actividad_id' => ['nullable', 'integer', 'exists:puesto_actividades,id'],
             'actividades.*.actividad' => ['required', 'string', 'max:200'],
             'actividades.*.medida_preventiva' => ['nullable', 'string'],
@@ -101,9 +95,9 @@ class StoreFichaSaludOcupacionalRequest extends FormRequest
             'factores_riesgo.*.actividad_index' => ['nullable', 'integer', 'min:0'],
 
             'diagnosticos' => ['nullable', 'array', 'max:6'],
-            'diagnosticos.*.diagnostico_cie10_id' => ['required', 'integer', 'exists:diagnosticos_cie10,id'],
+            'diagnosticos.*.diagnostico_cie10_id' => ['required', 'integer', 'distinct', 'exists:diagnosticos_cie10,id'],
             'diagnosticos.*.tipo' => ['required', Rule::in(['presuntivo', 'definitivo'])],
-            'diagnosticos.*.orden' => ['required', 'integer', 'min:1', 'max:6'],
+            'diagnosticos.*.orden' => ['required', 'integer', 'distinct', 'min:1', 'max:6'],
 
             'examenes' => ['nullable', 'array'],
             'examenes.*.nombre_examen' => ['required', 'string', 'max:200'],
@@ -156,6 +150,10 @@ class StoreFichaSaludOcupacionalRequest extends FormRequest
             'required' => 'El campo :attribute es obligatorio.',
             'exists' => 'El valor seleccionado para :attribute no es válido.',
             'diagnosticos.max' => 'Máximo 6 diagnósticos.',
+            'actividades.max' => 'El formulario admite hasta 7 actividades.',
+            'diagnosticos.*.diagnostico_cie10_id.distinct' => 'Ese diagnóstico ya está en la lista.',
+            'diagnosticos.*.orden.distinct' => 'Dos diagnósticos no pueden tener el mismo número.',
+            'ficha.fecha_evaluacion.before_or_equal' => 'La fecha de atención no puede ser futura.',
             // Sin esto el médico vería literalmente «validation.in».
             'factores_riesgo.*.factor.in' => 'Ese factor de riesgo no existe en el formulario del MSP.',
         ];

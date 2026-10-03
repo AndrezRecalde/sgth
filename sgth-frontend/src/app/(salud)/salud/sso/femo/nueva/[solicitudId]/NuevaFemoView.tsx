@@ -43,6 +43,13 @@ const TIPO_FICHA_POR_EVENTO: Record<string, FichaBaseForm['tipo_ficha']> = {
   especial:  'especial',
 }
 
+/**
+ * Las columnas decimales del triaje llegan como texto («72.50»): el cast
+ * `decimal:2` de Laravel las serializa así aunque el tipo diga número.
+ */
+const aNumero = (v: number | string | null | undefined): number | null =>
+  v === null || v === undefined || v === '' ? null : Number(v)
+
 const TIPO_EVENTO_LABELS: Record<string, string> = {
   ingreso:   'Ingreso / Pre-ocupacional',
   reintegro: 'Reintegro',
@@ -125,16 +132,17 @@ export function NuevaFemoView({ solicitudId }: Props) {
     if (solicitudDetalle.constantes_vitales) {
       const cv = solicitudDetalle.constantes_vitales
       wizard.setConstantesData({
-        temperatura_c:           cv.temperatura_c ?? null,
-        presion_sistolica:       cv.presion_sistolica ?? null,
-        presion_diastolica:      cv.presion_diastolica ?? null,
-        frecuencia_cardiaca:     cv.frecuencia_cardiaca ?? null,
-        frecuencia_respiratoria: cv.frecuencia_respiratoria ?? null,
-        saturacion_oxigeno:      cv.saturacion_oxigeno ?? null,
-        peso_kg:                 cv.peso_kg ?? null,
-        talla_cm:                cv.talla_cm ?? null,
-        imc:                     cv.imc ?? null,
-        glucosa:                 cv.glucosa ?? null,
+        temperatura_c:           aNumero(cv.temperatura_c),
+        presion_sistolica:       aNumero(cv.presion_sistolica),
+        presion_diastolica:      aNumero(cv.presion_diastolica),
+        frecuencia_cardiaca:     aNumero(cv.frecuencia_cardiaca),
+        frecuencia_respiratoria: aNumero(cv.frecuencia_respiratoria),
+        saturacion_oxigeno:      aNumero(cv.saturacion_oxigeno),
+        peso_kg:                 aNumero(cv.peso_kg),
+        talla_cm:                aNumero(cv.talla_cm),
+        perimetro_abdominal_cm:  aNumero(cv.perimetro_abdominal_cm),
+        imc:                     aNumero(cv.imc),
+        glucosa:                 aNumero(cv.glucosa),
       })
     }
 

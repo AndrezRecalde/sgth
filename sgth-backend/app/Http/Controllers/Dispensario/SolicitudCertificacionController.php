@@ -43,7 +43,7 @@ final class SolicitudCertificacionController extends Controller
             'convocatoria.puesto.unidadAdministrativa:id,nombre',
             'solicitadoPor:id,usuario_ti,email,servidor_id',
             'solicitadoPor.servidor:id,nombre,apellido',
-            'constantesVitales',
+            $this->constantesVisiblesPara($request),
             // La aptitud y sus restricciones son lo que el Expediente necesita
             // para ubicar a alguien en su puesto, y hasta ahora no viajaban.
             // Se enumeran las columnas a propósito: `observaciones` es el texto
@@ -200,7 +200,24 @@ final class SolicitudCertificacionController extends Controller
         });
     }
 
-    public function show(int $id): JsonResponse
+    /**
+     * Qué ve cada quien del triaje de enfermería.
+     *
+     * Al Dispensario, todo. A Talento Humano, solo que se tomaron y cuándo: la
+     * presión, la glucosa y las observaciones de la enfermera son datos
+     * clínicos, y la UATH acordó el 2026-09-26 que no entran al expediente
+     * administrativo. La bandeja solo necesita saber si ya están.
+     */
+    private function constantesVisiblesPara(Request $request): string
+    {
+        $clinico = $request->user()?->hasAnyRole(['medico', 'enfermera', 'admin-dispensario']);
+
+        return $clinico
+            ? 'constantesVitales'
+            : 'constantesVitales:id,solicitud_id,registrado_en';
+    }
+
+    public function show(Request $request, int $id): JsonResponse
     {
         // El puesto que se evalúa puede venir de tres sitios, y el más
         // específico manda: el propio aspirante (reclutamiento express, donde
@@ -218,7 +235,7 @@ final class SolicitudCertificacionController extends Controller
             'convocatoria.puesto.cargo:id,nombre,codigo_ciuo',
             'convocatoria.puesto.unidadAdministrativa:id,nombre',
             'solicitadoPor.servidor:id,nombre,apellido',
-            'constantesVitales',
+            $this->constantesVisiblesPara($request),
         ])->findOrFail($id);
 
         return ApiResponse::ok($solicitud);
@@ -250,6 +267,16 @@ final class SolicitudCertificacionController extends Controller
         int $id
     ): JsonResponse {
         $solicitud = SolicitudCertificacionMedica::findOrFail($id);
+
+        // Los signos se corrigen mientras la solicitud espera al médico. Una
+        // vez iniciada, el FEMO ya los copió: reescribirlos dejaba el triaje
+        // distinto de la ficha, y sin rastro de quién lo cambió.
+        if ($solicitud->estado !== 'pendiente') {
+            return ApiResponse::error(
+                'Los signos vitales solo se registran o corrigen antes de que el médico inicie la evaluación.',
+                null, 422
+            );
+        }
 
         $datos = $request->validated();
 

@@ -87,6 +87,7 @@ export function useFemoWizardState(fichaInicial?: Partial<FichaBaseForm>) {
       saturacion_oxigeno:      cv.saturacion_oxigeno ?? null,
       peso_kg:                 cv.peso_kg ?? null,
       talla_cm:                cv.talla_cm ?? null,
+      perimetro_abdominal_cm:  cv.perimetro_abdominal_cm ?? null,
       imc:                     cv.imc ?? null,
       glucosa:                 cv.glucosa ?? null,
     })
@@ -132,7 +133,6 @@ export function useFemoWizardState(fichaInicial?: Partial<FichaBaseForm>) {
       return null
     }
 
-    const hayConstantes = Object.values(constantesData).some(v => v !== null && v !== undefined)
     const hayReproductivo = Object.values(antecedenteReproductivo).some(v => v !== null && v !== undefined && v !== '')
 
     return {
@@ -175,9 +175,7 @@ export function useFemoWizardState(fichaInicial?: Partial<FichaBaseForm>) {
         medicacion_habitual_cual: fichaData.medicacion_habitual_cual ?? null,
         medicacion_habitual_cantidad: fichaData.medicacion_habitual_cantidad ?? null,
       },
-      constantes_vitales: hayConstantes
-        ? constantesData as CrearFemoData['constantes_vitales']
-        : null,
+      // Sin constantes vitales: el servidor las copia del triaje de Enfermería.
       antecedentes,
       antecedente_reproductivo: hayReproductivo ? antecedenteReproductivo : null,
       consumo_sustancias: consumoSustancias,

@@ -59,6 +59,8 @@ beforeEach(function () {
             'tipo_ficha' => 'retiro',
             'aptitud' => 'apto',
             'lateralidad' => 'izquierda',
+            // Es un retiro: la fecha de reintegro no aplica y el servicio la
+            // descarta (FemoValidacionServidorTest).
             'fecha_reintegro' => '2026-03-01',
             'fecha_ultimo_dia_laboral' => '2026-08-15',
             'grupo_enfermedad_catastrofica' => true,
@@ -124,7 +126,7 @@ test('la vista del formulario recibe todos los campos nuevos', function () {
         ->toContain('E. Catastrófica: SI')
         ->toContain('Lactancia: NO')
         ->toContain('Fecha de Reintegro')
-        ->toContain('01/03/2026')
+        ->not->toContain('01/03/2026')
         ->toContain('Último Día Laboral')
         ->toContain('15/08/2026')
         ->toContain('Perím. Abd.')

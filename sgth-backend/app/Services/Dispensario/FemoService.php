@@ -150,6 +150,51 @@ final class FemoService
      * Sin `solicitud_id` (solo llamadas internas y pruebas) se respeta lo que
      * venga en la ficha.
      */
+    /**
+     * Las constantes vitales de la sección E, tal como las tomó Enfermería.
+     *
+     * Las copia el servidor: antes viajaban en el navegador, que podía mandar
+     * otras, y el IMC llegaba del cliente sin recalcular. El triaje ya lo
+     * calculó al registrarse.
+     */
+    private function constantesDelTriaje(SolicitudCertificacionMedica $solicitud): ?array
+    {
+        $triaje = $solicitud->constantesVitales;
+        if (! $triaje) {
+            return null;
+        }
+
+        return $triaje->only([
+            'temperatura_c', 'presion_sistolica', 'presion_diastolica',
+            'frecuencia_cardiaca', 'frecuencia_respiratoria', 'saturacion_oxigeno',
+            'peso_kg', 'talla_cm', 'perimetro_abdominal_cm', 'imc', 'glucosa',
+        ]);
+    }
+
+    /**
+     * Quita los datos que el tipo de evaluación no admite.
+     *
+     * La sección N y el último día laboral son del retiro; la fecha de
+     * reintegro, del reintegro. Se guardaban con cualquier tipo y el PDF no
+     * los imprimía: datos invisibles que contradecían la ficha.
+     */
+    private function limpiarCamposDeOtroTipo(array $campos, string $tipo): array
+    {
+        if ($tipo !== 'retiro') {
+            foreach (['fecha_ultimo_dia_laboral', 'se_realiza_evaluacion_retiro',
+                'condicion_relacionada_trabajo', 'observacion_retiro'] as $campo) {
+                if (array_key_exists($campo, $campos)) {
+                    $campos[$campo] = null;
+                }
+            }
+        }
+        if ($tipo !== 'reintegro' && array_key_exists('fecha_reintegro', $campos)) {
+            $campos['fecha_reintegro'] = null;
+        }
+
+        return $campos;
+    }
+
     public function registrar(array $datos, int $evaluadorId): FichaSaludOcupacional
     {
         return DB::transaction(function () use ($datos, $evaluadorId) {
@@ -172,7 +217,12 @@ final class FemoService
                 $datos['ficha']['servidor_id'] = $solicitud->servidor_id;
                 $datos['ficha']['postulante_id'] = $solicitud->postulante_id;
                 $datos['ficha']['tipo_ficha'] = $solicitud->tipo_evento;
+                $datos['constantes_vitales'] = $this->constantesDelTriaje($solicitud);
             }
+
+            $datos['ficha'] = $this->limpiarCamposDeOtroTipo(
+                $datos['ficha'], (string) ($datos['ficha']['tipo_ficha'] ?? '')
+            );
 
             $genero = ! empty($datos['ficha']['servidor_id'])
                 ? Servidor::whereKey($datos['ficha']['servidor_id'])->value('genero')
@@ -290,6 +340,7 @@ final class FemoService
             // manda; dejar los dos en nulo rompía el CHECK `chk_ficha_persona`.
             $campos = $datos['ficha'] ?? [];
             unset($campos['servidor_id'], $campos['postulante_id'], $campos['tipo_ficha']);
+            $campos = $this->limpiarCamposDeOtroTipo($campos, $ficha->tipo_ficha->value);
 
             $this->validarGruposPorSexo(
                 $campos,
@@ -300,13 +351,6 @@ final class FemoService
                 ...$this->sellarPuesto($campos),
                 'updated_by' => $usuarioId,
             ]);
-
-            if (! empty($datos['constantes_vitales'])) {
-                $ficha->constantesVitales()->updateOrCreate(
-                    ['ficha_id' => $ficha->id],
-                    $datos['constantes_vitales']
-                );
-            }
 
             if (array_key_exists('antecedentes', $datos)) {
                 $ficha->antecedentes()->delete();

@@ -77,7 +77,9 @@ function camposAntesPerdidosFemo(): array
         'autoriza_transfusion' => false,
         'tratamiento_hormonal' => true,
         'tratamiento_hormonal_cual' => 'Levotiroxina',
-        'fecha_reintegro' => '2026-09-01',
+        // La solicitud de estas pruebas es de retiro: el último día laboral
+        // aplica; la fecha de reintegro se prueba con su propio tipo en
+        // FemoPuestoTest.
         'fecha_ultimo_dia_laboral' => '2026-09-30',
     ];
 }
@@ -108,7 +110,6 @@ test('la ficha guarda los campos de A, B y C que antes se perdían', function ()
         ->and($ficha->autoriza_transfusion)->toBeFalse()
         ->and($ficha->tratamiento_hormonal)->toBeTrue()
         ->and($ficha->tratamiento_hormonal_cual)->toBe('Levotiroxina')
-        ->and($ficha->fecha_reintegro->toDateString())->toBe('2026-09-01')
         ->and($ficha->fecha_ultimo_dia_laboral->toDateString())->toBe('2026-09-30');
 });
 

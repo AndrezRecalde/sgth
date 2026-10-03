@@ -88,6 +88,7 @@ export function FemoAntecedentesReproductivosSection({ data, onChange, sexo }: P
         <NumberInput
           label="Hace cuánto (años)"
           min={0}
+          allowDecimal={false}
           {...contained}
           value={data.examenes_tiempo_anios ?? undefined}
           onChange={(v) => set({ examenes_tiempo_anios: v !== '' ? Number(v) : null })}
@@ -155,6 +156,7 @@ export function FemoAntecedentesReproductivosSection({ data, onChange, sexo }: P
                 <NumberInput
                   label={etiqueta}
                   min={0}
+                  allowDecimal={false}
                   {...contained}
                   value={data[campo] ?? undefined}
                   onChange={(v) => set({ [campo]: v !== '' ? Number(v) : null })}

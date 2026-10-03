@@ -6,6 +6,7 @@ export interface SolicitudConstantesVitales {
   id?:                       number
   peso_kg?:                  number | null
   talla_cm?:                 number | null
+  perimetro_abdominal_cm?:   number | null
   imc?:                      number | null
   temperatura_c?:            number | null
   presion_sistolica?:        number | null

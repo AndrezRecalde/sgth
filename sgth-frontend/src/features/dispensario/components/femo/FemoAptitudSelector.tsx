@@ -12,6 +12,13 @@ interface Props {
   onFichaChange: (data: Partial<FichaBaseForm>) => void
 }
 
+/** Qué se le pide al médico según la aptitud (sección L, «Observaciones»). */
+const ETIQUETA_OBSERVACION: Record<string, string> = {
+  apto_con_restricciones: 'Restricciones para el puesto',
+  en_observacion:         'Observaciones',
+  no_apto:                'Motivo de la no aptitud',
+}
+
 const colorDe = (aptitud: string) => SEMANTIC_COLOR[TONO_APTITUD[aptitud] ?? 'neutral']
 
 export function FemoAptitudSelector({ fichaData, onFichaChange }: Props) {
@@ -38,6 +45,9 @@ export function FemoAptitudSelector({ fichaData, onFichaChange }: Props) {
                 onClick={() => onFichaChange({
                   ...fichaData,
                   aptitud: opt.value as FichaBaseForm['aptitud'],
+                  // «Apto» no lleva observación: si quedara la de otra opción,
+                  // el certificado de un apto imprimiría restricciones.
+                  ...(opt.value === 'apto' ? { restricciones: null } : {}),
                 })}
               >
                 <Stack gap={4} align="center">
@@ -61,13 +71,14 @@ export function FemoAptitudSelector({ fichaData, onFichaChange }: Props) {
         })}
       </Grid>
 
-      {(fichaData.aptitud === 'apto_con_restricciones' ||
-        fichaData.aptitud === 'no_apto') && (
+      {fichaData.aptitud && fichaData.aptitud !== 'apto' && (
         <Textarea
-          label="Restricciones"
-          placeholder="Detalle las restricciones para el puesto de trabajo"
+          label={ETIQUETA_OBSERVACION[fichaData.aptitud] ?? 'Observaciones'}
+          placeholder="Llega a Talento Humano junto con el dictamen"
           autosize
           minRows={2}
+          // Con restricciones o no apto, el dictamen no se emite sin esto.
+          required={fichaData.aptitud !== 'en_observacion'}
           {...contained}
           value={fichaData.restricciones ?? ''}
           onChange={(e) => onFichaChange({
