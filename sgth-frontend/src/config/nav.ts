@@ -330,6 +330,9 @@ export const NAV_SALUD: NavGroup[] = [
             label: 'Atención SSO',
             href:  ROUTES.SALUD.ENFERMERIA_SSO,
             icon:  'IconShieldCheck',
+            // El triaje previo al FEMO lo registra Enfermería; el API
+            // (`pendientes-triaje`) responde 403 al resto.
+            roles: ['enfermera', 'admin-dispensario'],
           },
         ],
       },
@@ -359,17 +362,22 @@ export const NAV_SALUD: NavGroup[] = [
         ],
       },
       {
-        label:    'SSO',
+        // «Salud ocupacional» y no «SSO»: en SGTH ya existe «Riesgos laborales
+        // (SSO)», que es otro módulo, de Talento Humano. Este es el del médico
+        // ocupacional, y el API lo reserva a estos dos roles.
+        label:    'Salud ocupacional',
         href:     ROUTES.SALUD.SSO,
         icon:     'IconShieldCheck',
+        roles:    ['medico', 'admin-dispensario'],
         children: [
           {
-            label: 'Dashboard',
+            // No es un tablero: es la bandeja de solicitudes de Talento Humano.
+            label: 'Solicitudes',
             href:  ROUTES.SALUD.SSO,
-            icon:  'IconShieldCheck',
+            icon:  'IconInbox',
           },
           {
-            label: 'FEMO',
+            label: 'Fichas FEMO',
             href:  ROUTES.SALUD.FEMO,
             icon:  'IconClipboardHeart',
           },

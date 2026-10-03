@@ -47,6 +47,9 @@ export function useActualizarFemo() {
       notificar.exito('Ficha guardada', 'Los cambios fueron guardados.')
       qc.invalidateQueries({ queryKey: ['femos'] })
       qc.invalidateQueries({ queryKey: ['femo', id] })
+      // La bandeja y la cobertura muestran la aptitud de la ficha.
+      qc.invalidateQueries({ queryKey: ['solicitudes-certificacion'] })
+      qc.invalidateQueries({ queryKey: ['certificaciones-cobertura'] })
     },
     onError: notificar.alFallar('No se pudo guardar la ficha'),
   })

@@ -56,8 +56,29 @@ final class SolicitudCertificacionController extends Controller
             ->orderBy('created_at', 'desc')
             ->orderBy('id', 'desc');
 
-        if ($request->filled('estado')) {
+        // «activas» es la bandeja de quien evalúa: lo pendiente y lo que ya
+        // empezó. Arrancar en «pendiente» escondía justo las evaluaciones en
+        // curso, que son las que hay que continuar.
+        if ($request->input('estado') === 'activas') {
+            $query->whereIn('estado', ['pendiente', 'en_proceso']);
+        } elseif ($request->filled('estado')) {
             $query->where('estado', $request->input('estado'));
+        }
+
+        if ($request->filled('buscar')) {
+            $termino = '%'.mb_strtolower(trim((string) $request->input('buscar'))).'%';
+            $query->where(fn ($q) => $q
+                ->where('cedula_paciente', 'like', $termino)
+                ->orWhereRaw('LOWER(nombres_paciente) LIKE ?', [$termino]));
+        }
+
+        // La bandeja se ordena por lo que vence primero; los demás listados,
+        // por lo más reciente.
+        if ($request->input('orden') === 'fecha_limite') {
+            $query->reorder()
+                ->orderByRaw('fecha_limite IS NULL')
+                ->orderBy('fecha_limite')
+                ->orderBy('id');
         }
 
         if ($request->filled('tipo_evento')) {
@@ -81,11 +102,13 @@ final class SolicitudCertificacionController extends Controller
         }
 
         if ($request->filled('anio')) {
-            $query->whereYear('created_at', $request->integer('anio'));
+            // Un rango y no `whereYear`, que no aprovecha el índice.
+            $anio = $request->integer('anio');
+            $query->whereBetween('created_at', ["{$anio}-01-01 00:00:00", "{$anio}-12-31 23:59:59"]);
         }
 
         return ApiResponse::ok($query->paginate(
-            $request->integer('per_page', 20)
+            min(max($request->integer('per_page', 20), 1), 100)
         ));
     }
 

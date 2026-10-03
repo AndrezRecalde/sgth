@@ -3,7 +3,7 @@ import { EnfermeriaSsoTriajeView } from '@/features/dispensario/components/Enfer
 import { PageHeader, PageShell } from '@/components/ui'
 
 export const metadata: Metadata = {
-  title: 'Enfermería SSO',
+  title: 'Atención SSO',
   description: 'Atención SSO — signos vitales previos al FEMO',
 }
 
@@ -11,8 +11,8 @@ export default function EnfermeriaSsoPage() {
   return (
     <PageShell>
       <PageHeader
-        title="Enfermería"
-        description="Atención SSO — signos vitales previos al FEMO"
+        title="Atención SSO"
+        description="Signos vitales previos a la evaluación médica ocupacional"
       />
       <EnfermeriaSsoTriajeView />
     </PageShell>
