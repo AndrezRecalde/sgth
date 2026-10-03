@@ -47,7 +47,7 @@ export function getCoberturaColumns(acciones: AccionesCobertura): Columna[] {
     {
       accessor: 'unidad',
       title: 'Unidad y cargo',
-      width: 220,
+      width: 190,
       render: (f) => (
         <Stack gap={0}>
           <Text size="sm">{f.unidad ?? 'Sin unidad asignada'}</Text>
@@ -58,12 +58,16 @@ export function getCoberturaColumns(acciones: AccionesCobertura): Columna[] {
     {
       accessor: 'ultima_evaluacion',
       title: 'Última evaluación',
-      width: 200,
+      width: 170,
+      // El vencimiento va aquí y no en su propia columna: es un dato de la
+      // misma evaluación, y con siete columnas la tabla no cabía en la
+      // pantalla y el estado se cortaba en el borde.
       render: (f) => {
         if (!f.fecha_evaluacion) {
           return <Text size="sm" c="dimmed">Nunca evaluado</Text>
         }
 
+        const vencida = f.estado_cobertura === 'vencida'
         return (
           <Stack gap={4}>
             <Text size="sm">{formatFechaMes(f.fecha_evaluacion)}</Text>
@@ -71,6 +75,11 @@ export function getCoberturaColumns(acciones: AccionesCobertura): Columna[] {
               <StatusBadge size="xs" tone={TONO_DICTAMEN[f.ultimo_dictamen] ?? 'neutral'}>
                 {DICTAMEN_LABELS[f.ultimo_dictamen] ?? f.ultimo_dictamen}
               </StatusBadge>
+            )}
+            {f.vence_el && (
+              <Text size="xs" c={vencida ? 'red' : 'dimmed'} fw={vencida ? 600 : undefined}>
+                {vencida ? 'Venció' : 'Vence'} el {formatFechaMes(f.vence_el)}
+              </Text>
             )}
             {/* Las restricciones condicionan el puesto: es el dato
                 administrativo que el Dispensario sí entrega a RRHH. */}
@@ -82,54 +91,31 @@ export function getCoberturaColumns(acciones: AccionesCobertura): Columna[] {
       },
     },
     {
-      accessor: 'vence_el',
-      title: 'Vence',
-      width: 110,
-      render: (f) =>
-        f.vence_el
-          ? (
-              <Text
-                size="sm"
-                c={f.estado_cobertura === 'vencida' ? 'red' : undefined}
-                fw={f.estado_cobertura === 'vencida' ? 600 : undefined}
-              >
-                {formatFechaMes(f.vence_el)}
-              </Text>
-            )
-          : <Text size="sm" c="dimmed">—</Text>,
-    },
-    {
       accessor: 'estado_cobertura',
       title: 'Estado',
-      width: 140,
+      width: 150,
       render: (f) => (
-        <StatusBadge tone={TONO_ESTADO_COBERTURA[f.estado_cobertura]}>
-          {ESTADO_COBERTURA_LABELS[f.estado_cobertura]}
-        </StatusBadge>
+        <Stack gap={4}>
+          <StatusBadge tone={TONO_ESTADO_COBERTURA[f.estado_cobertura]}>
+            {ESTADO_COBERTURA_LABELS[f.estado_cobertura]}
+          </StatusBadge>
+          {/* Sin esto, una fila vencida invita a pedir una evaluación que ya
+              está pedida, y `storeLote` la omitiría en silencio. */}
+          {f.solicitud_activa_estado && (
+            <>
+              <StatusBadge size="xs" tone="info">
+                Solicitada · {ESTADO_SOLICITUD_LABELS[f.solicitud_activa_estado]
+                  ?? f.solicitud_activa_estado}
+              </StatusBadge>
+              {f.solicitud_activa_fecha_limite && (
+                <Text size="xs" c="dimmed">
+                  hasta {formatFechaMes(f.solicitud_activa_fecha_limite)}
+                </Text>
+              )}
+            </>
+          )}
+        </Stack>
       ),
-    },
-    {
-      accessor: 'solicitud_activa',
-      title: 'Ya solicitada',
-      width: 130,
-      // Sin esta columna, una fila vencida invita a pedir una evaluación que
-      // ya está pedida, y `storeLote` la omitiría en silencio.
-      render: (f) =>
-        f.solicitud_activa_estado
-          ? (
-              <Stack gap={0}>
-                <StatusBadge size="xs" tone="info">
-                  {ESTADO_SOLICITUD_LABELS[f.solicitud_activa_estado]
-                    ?? f.solicitud_activa_estado}
-                </StatusBadge>
-                {f.solicitud_activa_fecha_limite && (
-                  <Text size="xs" c="dimmed">
-                    hasta {formatFechaMes(f.solicitud_activa_fecha_limite)}
-                  </Text>
-                )}
-              </Stack>
-            )
-          : <Text size="sm" c="dimmed">—</Text>,
     },
     {
       accessor: 'acciones',

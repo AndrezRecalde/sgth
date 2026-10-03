@@ -29,6 +29,7 @@
 }
 
 .valor {
+  margin: 0;
   font-size: var(--mantine-font-size-lg);
   font-weight: 600;
   line-height: 1.2;

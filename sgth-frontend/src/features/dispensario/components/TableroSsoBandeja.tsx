@@ -2,7 +2,7 @@
 
 import { Group, Progress, SimpleGrid, Stack, Text } from '@mantine/core'
 import {
-  IconCalendarOff, IconHeartbeat, IconInbox, IconLogout, IconPlayerPlay,
+  IconCalendarOff, IconHeartbeat, IconInbox, IconLogout,
 } from '@tabler/icons-react'
 import { SectionCard, StatCard, StatusBadge } from '@/components/ui'
 import type { TableroSaludOcupacional } from '../services/tableroSaludOcupacionalService'
@@ -33,15 +33,15 @@ export function TableroSsoBandeja({ datos, cargando }: Props) {
 
   return (
     <Stack gap="md">
-      <SimpleGrid cols={{ base: 1, xs: 2, md: 5 }} spacing="md">
+      {/* Cuatro tarjetas: con cinco, la quinta quedaba sola en su fila en
+          cualquier ancho intermedio. «En curso» ya va dentro de «Por atender». */}
+      <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }} spacing="md">
         <StatCard label="Por atender" value={abiertas} icon={IconInbox} loading={cargando}
           hint={`${b?.pendientes ?? 0} pendientes · ${b?.en_proceso ?? 0} en curso`} />
         <StatCard label="Vencidas" value={b?.vencidas ?? 0} icon={IconCalendarOff} loading={cargando}
           tone={b?.vencidas ? 'danger' : undefined} hint="Pasada la fecha límite" />
         <StatCard label="Esperan triaje" value={b?.sin_triaje ?? 0} icon={IconHeartbeat} loading={cargando}
           tone={b?.sin_triaje ? 'warning' : undefined} hint="Enfermería aún no toma los signos" />
-        <StatCard label="En curso" value={b?.en_proceso ?? 0} icon={IconPlayerPlay} loading={cargando}
-          hint="Ficha FEMO abierta" />
         <StatCard label="Retiros por evaluar" value={b?.retiros ?? 0} icon={IconLogout} loading={cargando}
           tone={b?.retiros ? 'warning' : undefined} hint="Llegan solos del cese" />
       </SimpleGrid>

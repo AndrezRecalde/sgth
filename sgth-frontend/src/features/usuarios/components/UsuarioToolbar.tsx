@@ -1,7 +1,7 @@
 'use client'
 
 import { TextInput, Select, Group, Stack, ActionIcon } from '@mantine/core'
-import { IconSearch, IconX } from '@tabler/icons-react'
+import { IconX } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useMobileBreakpoint } from '@/hooks/useMobileBreakpoint'
 import { useRoles } from '../hooks/useRoles'
@@ -48,7 +48,6 @@ export function UsuarioToolbar({
         placeholder="Nombre, cédula, correo o usuario"
         value={search}
         onChange={(e) => onSearch(e.currentTarget.value)}
-        leftSection={<IconSearch size={14} />}
         rightSection={
           search ? (
             <ActionIcon

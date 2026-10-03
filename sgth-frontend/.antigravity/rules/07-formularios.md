@@ -136,6 +136,11 @@ Si el campo necesita señalar que es un buscador, dilo en el marcador de
 posición («Buscar código o descripción…») o pon el icono en el botón contiguo,
 que sí puede llevarlo.
 
+Lo comprueba ESLint (`no-restricted-syntax`, en `eslint.config.mjs`) desde el
+2026-10-03: hasta entonces solo lo decía esta regla, y tres buscadores
+—la cobertura de evaluaciones y dos de Usuarios— llevaban la lupa encima de la
+etiqueta.
+
 Lo mismo vale para las flechas de `NumberInput`: se solapan con etiquetas
 largas. En campos estrechos va `hideControls` y el número se teclea.
 

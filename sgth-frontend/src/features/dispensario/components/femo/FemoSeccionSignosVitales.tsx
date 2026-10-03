@@ -67,7 +67,6 @@ export function FemoSeccionSignosVitales({ constantesData }: Props) {
                   <dt className={classes.etiqueta}>{etiqueta}</dt>
                   <dd
                     className={`${classes.valor} ${vacio ? classes.sinDato : ''}`}
-                    style={{ margin: 0 }}
                   >
                     {vacio ? '—' : valor}
                     {!vacio && unidad && (

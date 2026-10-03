@@ -137,7 +137,7 @@ export function FemoMatrizRiesgos({
             return (
               <Accordion.Item key={index} value={String(index)}>
                 <Group wrap="nowrap" gap={0}>
-                  <Accordion.Control style={{ flex: 1 }}>
+                  <Accordion.Control flex={1}>
                     <Group justify="space-between" pr="sm">
                       <Text size="sm" fw={500}>{act.actividad}</Text>
                       {factoresActividad.length > 0 && (
