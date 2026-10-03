@@ -79,6 +79,14 @@ Schedule::command('sgth:vacaciones:marcar-gozadas')
     ->dailyAt('05:45')
     ->onOneServer();
 
+// Turnos del Dispensario que quedaron esperando el día anterior: pasan a «no
+// se presentó». Nada los cerraba y se quedaban en la cola para siempre. Pasada
+// la medianoche, para que la cola del día empiece limpia; los que quedaron «en
+// consulta» no se tocan.
+Schedule::command('sgth:dispensario:cerrar-turnos-vencidos')
+    ->dailyAt('00:10')
+    ->onOneServer();
+
 // Tarea 8: Backup Automático Diario
 Schedule::command('backup:base-datos')
     ->dailyAt('02:00')

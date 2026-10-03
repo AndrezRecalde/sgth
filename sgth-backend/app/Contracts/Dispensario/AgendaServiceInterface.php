@@ -29,6 +29,9 @@ interface AgendaServiceInterface
 
     public function marcarEnConsulta(int $id): AgendaMedica;
 
+    /** @return array{cerrados: int, fecha: string} */
+    public function cerrarVencidos(?string $fecha = null): array;
+
     public function marcarAtendido(int $id): AgendaMedica;
 
     public function obtenerPorFolio(

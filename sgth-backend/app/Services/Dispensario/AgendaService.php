@@ -261,6 +261,38 @@ final class AgendaService implements AgendaServiceInterface
     }
 
     /**
+     * Cierra los turnos de días anteriores que quedaron esperando.
+     *
+     * Nada cerraba un turno que nadie atendió ni canceló: se quedaba «en
+     * espera» o «listo para pasar» para siempre, y en desarrollo había turnos
+     * de agosto abiertos un mes después. Pasan a «no se presentó», el estado
+     * que ya existe para quien no llegó a pasar, sin usuario que lo marque:
+     * así se distingue del que marca a mano el profesional. Reactivarlos no
+     * se puede, porque solo se reactiva un turno de hoy.
+     *
+     * Los que quedaron «en consulta» no se tocan: el médico abrió la ficha y
+     * puede haber una consulta en borrador. Cerrarlos ocultaría trabajo
+     * clínico sin terminar (decisión del Dispensario, 2026-10-03).
+     *
+     * @return array{cerrados: int, fecha: string}
+     */
+    public function cerrarVencidos(?string $fecha = null): array
+    {
+        $corte = $fecha ? Carbon::parse($fecha)->toDateString() : today()->toDateString();
+
+        $cerrados = AgendaMedica::query()
+            ->where('fecha', '<', $corte)
+            ->whereIn('estado', self::ABIERTOS)
+            ->update([
+                'estado'                    => 'no_presentado',
+                'marcado_no_presentado_en'  => now(),
+                'marcado_no_presentado_por' => null,
+            ]);
+
+        return ['cerrados' => $cerrados, 'fecha' => $corte];
+    }
+
+    /**
      * El médico abre la ficha del turno. Volver a abrirla es inocuo; lo que no
      * se puede es «entrar» a un turno cerrado.
      */
