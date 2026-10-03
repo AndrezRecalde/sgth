@@ -7,6 +7,7 @@ import type {
 } from '../schemas/femo.schema'
 import type { CrearFemoData, FichaSaludOcupacional } from '../services/femoService'
 import { hoyIso } from '@/lib/fecha'
+import { constantesDe, fichaAFormulario, fichaAPayload, riesgosDe } from './femoMapeo'
 
 export function useFemoWizardState(fichaInicial?: Partial<FichaBaseForm>) {
   const [active, setActive] = useState(0)
@@ -36,94 +37,14 @@ export function useFemoWizardState(fichaInicial?: Partial<FichaBaseForm>) {
   const [diagnosticos, setDiagnosticos] = useState<DiagnosticoFemoForm[]>([])
 
   const cargarDesdeFicha = (ficha: FichaSaludOcupacional) => {
-    setFichaData({
-      servidor_id: ficha.servidor_id ?? null,
-      postulante_id: ficha.postulante_id ?? null,
-      accidente_trabajo_id: ficha.accidente_trabajo_id ?? null,
-      numero_archivo: ficha.numero_archivo ?? null,
-      fecha_evaluacion: ficha.fecha_evaluacion,
-      tipo_ficha: ficha.tipo_ficha as FichaBaseForm['tipo_ficha'],
-      puesto_id: ficha.puesto_id ?? null,
-      puesto_trabajo: ficha.puesto_trabajo ?? null,
-      puesto_trabajo_ciuo: ficha.puesto_trabajo_ciuo ?? null,
-      fecha_ingreso_trabajo: ficha.fecha_ingreso_trabajo ?? null,
-      fecha_reintegro: ficha.fecha_reintegro ?? null,
-      fecha_ultimo_dia_laboral: ficha.fecha_ultimo_dia_laboral ?? null,
-      grupo_embarazada: ficha.grupo_embarazada ?? false,
-      grupo_discapacidad: ficha.grupo_discapacidad ?? false,
-      grupo_enfermedad_catastrofica: ficha.grupo_enfermedad_catastrofica ?? false,
-      grupo_lactancia: ficha.grupo_lactancia ?? false,
-      grupo_adulto_mayor: ficha.grupo_adulto_mayor ?? false,
-      porcentaje_discapacidad: ficha.porcentaje_discapacidad ?? null,
-      lateralidad: ficha.lateralidad ?? null,
-      aptitud: ficha.aptitud as FichaBaseForm['aptitud'],
-      restricciones: ficha.restricciones ?? null,
-      observaciones: ficha.observaciones ?? null,
-      enfermedad_actual: ficha.enfermedad_actual ?? null,
-      autoriza_transfusion: ficha.autoriza_transfusion ?? null,
-      tratamiento_hormonal: ficha.tratamiento_hormonal ?? null,
-      tratamiento_hormonal_cual: ficha.tratamiento_hormonal_cual ?? null,
-      recomendaciones: ficha.recomendaciones ?? null,
-      tratamiento: ficha.tratamiento ?? null,
-      condicion_relacionada_trabajo: ficha.condicion_relacionada_trabajo ?? null,
-      observacion_retiro: ficha.observacion_retiro ?? null,
-      actividad_extralaboral_descripcion: ficha.actividad_extralaboral_descripcion ?? null,
-      actividad_extralaboral_fecha: ficha.actividad_extralaboral_fecha ?? null,
-      se_realiza_evaluacion_retiro: ficha.se_realiza_evaluacion_retiro ?? null,
-      actividad_fisica_cual: ficha.actividad_fisica_cual ?? null,
-      actividad_fisica_tiempo: ficha.actividad_fisica_tiempo ?? null,
-      medicacion_habitual_cual: ficha.medicacion_habitual_cual ?? null,
-      medicacion_habitual_cantidad: ficha.medicacion_habitual_cantidad ?? null,
-      observacion_antecedentes: ficha.observacion_antecedentes ?? null,
-      observacion_examen_fisico: ficha.observacion_examen_fisico ?? null,
-      observacion_examenes: ficha.observacion_examenes ?? null,
-    })
-    // Solo las medidas: la fila trae además `id`, `ficha_id` y sus fechas, que
-    // no son constantes vitales.
-    const cv = ficha.constantes_vitales ?? {}
-    setConstantesData({
-      temperatura_c:           cv.temperatura_c ?? null,
-      presion_sistolica:       cv.presion_sistolica ?? null,
-      presion_diastolica:      cv.presion_diastolica ?? null,
-      frecuencia_cardiaca:     cv.frecuencia_cardiaca ?? null,
-      frecuencia_respiratoria: cv.frecuencia_respiratoria ?? null,
-      saturacion_oxigeno:      cv.saturacion_oxigeno ?? null,
-      peso_kg:                 cv.peso_kg ?? null,
-      talla_cm:                cv.talla_cm ?? null,
-      perimetro_abdominal_cm:  cv.perimetro_abdominal_cm ?? null,
-      imc:                     cv.imc ?? null,
-      glucosa:                 cv.glucosa ?? null,
-    })
+    setFichaData(fichaAFormulario(ficha))
+    setConstantesData(constantesDe(ficha))
     setAntecedentes(ficha.antecedentes ?? [])
     setAntecedenteReproductivo(ficha.antecedente_reproductivo ?? {})
     setConsumoSustancias((ficha.consumo_sustancias ?? []) as ConsumoSustanciaForm[])
-
-    const actividadesOrdenadas = ficha.actividades ?? []
-    setActividadesRiesgo(actividadesOrdenadas.map(a => ({
-      puesto_actividad_id: a.puesto_actividad_id ?? null,
-      actividad: a.actividad,
-      medida_preventiva: a.medida_preventiva ?? null,
-      orden: a.orden ?? null,
-    })))
-    const factoresConIndice: FactorRiesgoForm[] = actividadesOrdenadas.flatMap((a, index) =>
-      (a.factores_riesgo ?? []).map(f => ({
-        categoria: f.categoria,
-        factor: f.factor,
-        presente: f.presente,
-        medida_preventiva: f.medida_preventiva ?? null,
-        actividad_index: index,
-      }))
-    )
-    const factoresHuerfanos: FactorRiesgoForm[] = (ficha.factores_riesgo ?? [])
-      .filter(f => !f.ficha_actividad_id)
-      .map(f => ({
-        categoria: f.categoria,
-        factor: f.factor,
-        presente: f.presente,
-        medida_preventiva: f.medida_preventiva ?? null,
-      }))
-    setFactoresRiesgo([...factoresConIndice, ...factoresHuerfanos])
-
+    const riesgos = riesgosDe(ficha)
+    setActividadesRiesgo(riesgos.actividades)
+    setFactoresRiesgo(riesgos.factores)
     setEmpleosAnteriores((ficha.empleos_anteriores ?? []) as EmpleoAnteriorForm[])
     setExamenFisico((ficha.examen_fisico ?? []) as ExamenFisicoItemForm[])
     setExamenes(ficha.examenes ?? [])
@@ -136,51 +57,11 @@ export function useFemoWizardState(fichaInicial?: Partial<FichaBaseForm>) {
       return null
     }
 
-    const hayReproductivo = Object.values(antecedenteReproductivo).some(v => v !== null && v !== undefined && v !== '')
+    const hayReproductivo = Object.values(antecedenteReproductivo)
+      .some(v => v !== null && v !== undefined && v !== '')
 
     return {
-      ficha: {
-        servidor_id:       fichaData.servidor_id ?? null,
-        postulante_id:     fichaData.postulante_id ?? null,
-        accidente_trabajo_id: fichaData.accidente_trabajo_id ?? null,
-        numero_archivo:    fichaData.numero_archivo ?? null,
-        fecha_evaluacion:  fichaData.fecha_evaluacion,
-        tipo_ficha:        fichaData.tipo_ficha,
-        aptitud:           fichaData.aptitud ?? null,
-        puesto_id:         fichaData.puesto_id ?? null,
-        puesto_trabajo:    fichaData.puesto_trabajo ?? null,
-        puesto_trabajo_ciuo: fichaData.puesto_trabajo_ciuo ?? null,
-        fecha_ingreso_trabajo: fichaData.fecha_ingreso_trabajo ?? null,
-        fecha_reintegro:   fichaData.fecha_reintegro ?? null,
-        fecha_ultimo_dia_laboral: fichaData.fecha_ultimo_dia_laboral ?? null,
-        grupo_embarazada:  fichaData.grupo_embarazada ?? false,
-        grupo_discapacidad: fichaData.grupo_discapacidad ?? false,
-        grupo_enfermedad_catastrofica: fichaData.grupo_enfermedad_catastrofica ?? false,
-        grupo_lactancia:   fichaData.grupo_lactancia ?? false,
-        grupo_adulto_mayor: fichaData.grupo_adulto_mayor ?? false,
-        porcentaje_discapacidad: fichaData.porcentaje_discapacidad ?? null,
-        lateralidad:       fichaData.lateralidad ?? null,
-        restricciones:     fichaData.restricciones ?? null,
-        observaciones:     fichaData.observaciones ?? null,
-        enfermedad_actual: fichaData.enfermedad_actual ?? null,
-        autoriza_transfusion: fichaData.autoriza_transfusion ?? null,
-        tratamiento_hormonal: fichaData.tratamiento_hormonal ?? null,
-        tratamiento_hormonal_cual: fichaData.tratamiento_hormonal_cual ?? null,
-        recomendaciones:   fichaData.recomendaciones ?? null,
-        tratamiento:       fichaData.tratamiento ?? null,
-        condicion_relacionada_trabajo: fichaData.condicion_relacionada_trabajo ?? null,
-        observacion_retiro: fichaData.observacion_retiro ?? null,
-        actividad_extralaboral_descripcion: fichaData.actividad_extralaboral_descripcion ?? null,
-        actividad_extralaboral_fecha: fichaData.actividad_extralaboral_fecha ?? null,
-        se_realiza_evaluacion_retiro: fichaData.se_realiza_evaluacion_retiro ?? null,
-        actividad_fisica_cual: fichaData.actividad_fisica_cual ?? null,
-        actividad_fisica_tiempo: fichaData.actividad_fisica_tiempo ?? null,
-        medicacion_habitual_cual: fichaData.medicacion_habitual_cual ?? null,
-        medicacion_habitual_cantidad: fichaData.medicacion_habitual_cantidad ?? null,
-        observacion_antecedentes: fichaData.observacion_antecedentes ?? null,
-        observacion_examen_fisico: fichaData.observacion_examen_fisico ?? null,
-        observacion_examenes: fichaData.observacion_examenes ?? null,
-      },
+      ficha: fichaAPayload(fichaData, fichaData.fecha_evaluacion, fichaData.tipo_ficha),
       // Sin constantes vitales: el servidor las copia del triaje de Enfermería.
       antecedentes,
       antecedente_reproductivo: hayReproductivo ? antecedenteReproductivo : null,

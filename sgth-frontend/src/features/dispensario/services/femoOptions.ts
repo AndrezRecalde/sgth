@@ -36,6 +36,16 @@ export const TIPO_ANTECEDENTE_OPTIONS = [
   { value: 'otro',                  label: 'Otro'                        },
 ]
 
+/**
+ * Los tipos que se ofrecen al registrar un antecedente. Transfusión y
+ * tratamiento hormonal tienen ya su propia pregunta SÍ/NO en la sección C:
+ * ofrecerlos también aquí daba dos sitios donde registrar lo mismo. Siguen en
+ * la lista completa para nombrar los antecedentes antiguos.
+ */
+export const TIPO_ANTECEDENTE_SELECCIONABLES = TIPO_ANTECEDENTE_OPTIONS.filter(
+  o => o.value !== 'transfusion' && o.value !== 'tratamiento_hormonal',
+)
+
 export const TIPO_EVENTO_LABORAL_OPTIONS = [
   { value: 'ninguno',                 label: 'Ninguno'                 },
   { value: 'incidente',               label: 'Incidente'               },

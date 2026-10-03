@@ -197,3 +197,20 @@ test('tras cancelar, el servidor vuelve a admitir una solicitud nueva', function
         SolicitudCertificacionMedica::where('servidor_id', $servidor->id)->count()
     )->toBe(2);
 });
+
+test('el lote omite a un servidor inactivo', function () {
+    $usuario = usuarioRrhhCancelacion();
+    $activo = servidorCancelacion('0803344561');
+    $inactivo = servidorCancelacion('0803344562');
+    $inactivo->update(['estado' => false]);
+
+    $this->actingAs($usuario, 'sanctum')
+        ->postJson('/api/v1/dispensario/solicitudes-certificacion/lote', [
+            'servidor_ids' => [$activo->id, $inactivo->id],
+            'tipo_evento' => 'periodica',
+        ])
+        ->assertStatus(200)
+        ->assertJsonCount(1, 'datos.creadas')
+        ->assertJsonPath('datos.omitidas.0.servidor_id', $inactivo->id)
+        ->assertJsonPath('datos.omitidas.0.motivo', 'El servidor no está activo.');
+});
