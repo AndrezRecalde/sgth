@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import ReactECharts from 'echarts-for-react'
+import { useMediaQuery } from '@mantine/hooks'
 import { Text } from '@mantine/core'
 import { SectionCard } from '@/components/ui'
 import { useEChartsColors } from '@/hooks/useEChartsColors'
@@ -27,7 +28,8 @@ function mesCorto(mes: string): string {
  * mínimo legal, así que odontología lleva además línea discontinua y otro
  * marcador, y cada línea su etiqueta al final. Si las dos terminan en el
  * mismo punto las etiquetas se encimarían sin distinguir nada: entonces
- * basta la leyenda.
+ * basta la leyenda. En un teléfono también: sus 96 px se comían un tercio de
+ * la gráfica.
  */
 export function TableroTendencia({ tendencia }: Props) {
   const c = useEChartsColors()
@@ -35,7 +37,8 @@ export function TableroTendencia({ tendencia }: Props) {
   const verde = c.serie[0]
   const total = (tendencia ?? []).reduce((n, t) => n + t.medicina_general + t.odontologia, 0)
   const ultimo = tendencia?.at(-1)
-  const etiquetas = !!ultimo && ultimo.medicina_general !== ultimo.odontologia
+  const estrecho = useMediaQuery('(max-width: 36em)')
+  const etiquetas = !estrecho && !!ultimo && ultimo.medicina_general !== ultimo.odontologia
 
   const option = useMemo(() => ({
     backgroundColor: 'transparent',
