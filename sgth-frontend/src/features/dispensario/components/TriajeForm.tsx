@@ -1,9 +1,9 @@
 'use client'
 
-import { Stack, Group, Text, Card, Avatar } from '@mantine/core'
+import { Stack, Group, Text, Card, Avatar, Skeleton } from '@mantine/core'
 import { IconUser, IconUsers } from '@tabler/icons-react'
 import { StatusBadge } from '@/components/ui'
-import { useRegistrarTriaje } from '../hooks/useTriaje'
+import { useHistorialTriaje, useRegistrarTriaje } from '../hooks/useTriaje'
 import { UltimoTriajeReferencia } from './UltimoTriajeReferencia'
 import { TomasPreviasTriaje } from './TomasPreviasTriaje'
 import { FormularioSignosVitales } from './FormularioSignosVitales'
@@ -15,11 +15,35 @@ interface Props {
   turno:      AgendaMedica
   onCreado:   (triaje: Triaje) => void
   onCancelar: () => void
+  /** «Cancelar» no cancela el turno: donde el paciente sigue en la cola se dice. */
+  textoCancelar?: string
+}
+
+/**
+ * Rehacer una toma arranca con las cifras de la vigente: para corregir una
+ * mal tecleada había que volver a escribir las ocho. Los decimales llegan
+ * del backend como cadena («70.50»), de ahí el `Number`.
+ */
+function desdeToma(toma: Triaje | undefined) {
+  if (!toma) return undefined
+  return {
+    peso_kg:                 Number(toma.peso_kg),
+    talla_cm:                Number(toma.talla_cm),
+    presion_sistolica:       Number(toma.presion_sistolica),
+    presion_diastolica:      Number(toma.presion_diastolica),
+    frecuencia_cardiaca:     Number(toma.frecuencia_cardiaca),
+    frecuencia_respiratoria: Number(toma.frecuencia_respiratoria),
+    temperatura_c:           Number(toma.temperatura_c),
+    saturacion_oxigeno:      Number(toma.saturacion_oxigeno),
+    glucosa:                 toma.glucosa == null ? null : Number(toma.glucosa),
+    observaciones_enfermera: '',
+  }
 }
 
 /** El triaje de un turno: signos vitales antes de pasar con el profesional. */
-export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
+export function TriajeForm({ turno, onCreado, onCancelar, textoCancelar = 'Cancelar' }: Props) {
   const registrar = useRegistrarTriaje()
+  const historial = useHistorialTriaje(turno.id)
 
   const esServidor = !!turno.servidor_id
   const nombrePaciente = esServidor
@@ -62,6 +86,10 @@ export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
     </Card>
   )
 
+  // Hasta saber si hay una toma previa: los valores iniciales de un
+  // formulario se fijan al montarlo.
+  if (historial.isLoading) return <Skeleton height={480} radius="lg" />
+
   return (
     <FormularioSignosVitales
       encabezado={encabezado}
@@ -77,7 +105,8 @@ export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
         atencion: 'El turno quedará marcado en la cola para que el profesional lo vea.',
       }}
       textoEnviar="Registrar triaje"
-      textoCancelar="Cancelar"
+      valoresIniciales={desdeToma(historial.data?.at(-1))}
+      textoCancelar={textoCancelar}
       enviando={registrar.isPending}
       enviar={(data) =>
         registrar.mutateAsync({ agendaId: turno.id, data }).then(onCreado)

@@ -34,10 +34,11 @@ export function useAnularAtencionEnfermeria() {
     mutationFn: ({ id, motivo }: { id: number; motivo: string }) =>
       atencionEnfermeriaService.anular(id, motivo),
     onSuccess: (data) => {
-      notificar.exito('Atención anulada', `${data.folio} quedó anulada con su motivo.`)
+      notificar.exito('Servicio anulado', `${data.folio} quedó anulado con su motivo.`)
       qc.invalidateQueries({ queryKey: ['atenciones-enfermeria'] })
+      qc.invalidateQueries({ queryKey: ['dispensario', 'mi-jornada'] })
     },
-    onError: notificar.alFallar('No se pudo anular la atención'),
+    onError: notificar.alFallar('No se pudo anular el servicio'),
   })
 }
 
@@ -48,9 +49,10 @@ export function useRegistrarAtencionEnfermeria() {
     mutationFn: (data: CrearAtencionEnfermeriaData) =>
       atencionEnfermeriaService.crear(data),
     onSuccess: (data) => {
-      notificar.exito('Atención registrada', `Folio ${data.folio} registrado correctamente.`)
+      notificar.exito('Servicio registrado', `Folio ${data.folio} registrado correctamente.`)
       qc.invalidateQueries({ queryKey: ['atenciones-enfermeria'] })
+      qc.invalidateQueries({ queryKey: ['dispensario', 'mi-jornada'] })
     },
-    onError: notificar.alFallar('No se pudo registrar la atención'),
+    onError: notificar.alFallar('No se pudo registrar el servicio'),
   })
 }

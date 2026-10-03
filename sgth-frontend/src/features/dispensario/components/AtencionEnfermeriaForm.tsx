@@ -9,6 +9,7 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconCheck, IconUser, IconUsers } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
+import { erroresDeCampo } from '@/lib/erroresDeCampo'
 import {
   useCatalogoServicios,
   useRegistrarAtencionEnfermeria,
@@ -40,11 +41,11 @@ export function AtencionEnfermeriaForm({
   paciente, onCreado, onCancelar,
 }: Props) {
   const contained = useContainedInput()
-  const { data: catalogo = [] } = useCatalogoServicios()
+  const { data: catalogo = [], isLoading: cargandoCatalogo, error: errorCatalogo } = useCatalogoServicios()
   const registrar = useRegistrarAtencionEnfermeria()
 
   const {
-    control, handleSubmit,
+    control, handleSubmit, setError,
     formState: { errors },
   } = useForm<AtencionEnfermeriaFormData>({
     resolver: zodResolver(atencionEnfermeriaSchema),
@@ -56,8 +57,8 @@ export function AtencionEnfermeriaForm({
     label: c.nombre,
   }))
 
-  const onSubmit = (values: AtencionEnfermeriaFormData) => {
-    registrar.mutate(
+  const onSubmit = (values: AtencionEnfermeriaFormData) =>
+    registrar.mutateAsync(
       {
         catalogo_servicio_id: values.catalogo_servicio_id,
         descripcion: values.descripcion || null,
@@ -65,9 +66,12 @@ export function AtencionEnfermeriaForm({
           ? { servidor_id: paciente.id }
           : { carga_familiar_id: paciente.id }),
       },
-      { onSuccess: (atencion) => onCreado(atencion) }
-    )
-  }
+    ).then(onCreado).catch((error: unknown) => {
+      // El 422 a su campo (regla 07); el resto ya lo notifica la mutación.
+      const campos = erroresDeCampo(error)
+      if (campos?.catalogo_servicio_id) setError('catalogo_servicio_id', { message: campos.catalogo_servicio_id })
+      if (campos?.descripcion) setError('descripcion', { message: campos.descripcion })
+    })
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -101,13 +105,17 @@ export function AtencionEnfermeriaForm({
           render={({ field }) => (
             <Select
               label="Servicio realizado"
-              placeholder="Seleccione el servicio"
+              // Si el catálogo no llega, que se diga: el desplegable salía
+              // vacío sin ninguna explicación.
+              placeholder={cargandoCatalogo ? 'Cargando servicios…' : 'Seleccione el servicio'}
+              disabled={cargandoCatalogo || !!errorCatalogo}
               data={catalogoOptions}
               searchable
               {...contained}
               value={field.value ? String(field.value) : null}
               onChange={(v) => field.onChange(v ? Number(v) : undefined)}
-              error={errors.catalogo_servicio_id?.message}
+              error={errors.catalogo_servicio_id?.message
+                ?? (errorCatalogo ? 'No se pudo cargar el catálogo de servicios. Recargue la página.' : undefined)}
             />
           )}
         />
@@ -124,6 +132,7 @@ export function AtencionEnfermeriaForm({
               {...contained}
               value={field.value ?? ''}
               onChange={(e) => field.onChange(e.currentTarget.value)}
+              error={errors.descripcion?.message}
             />
           )}
         />
@@ -137,7 +146,7 @@ export function AtencionEnfermeriaForm({
             leftSection={<IconCheck size={14} />}
             loading={registrar.isPending}
           >
-            Registrar atención
+            Registrar servicio
           </Button>
         </Group>
       </Stack>

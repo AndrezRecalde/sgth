@@ -2,17 +2,22 @@
 
 import { Stack, Card, Text, Group, Button, Alert } from '@mantine/core'
 import { IconCheck, IconClipboardCheck } from '@tabler/icons-react'
+import { usePuedeTriar } from '../hooks/usePuedeTriar'
 import type { AgendaMedica } from '../services/agendaService'
 
 interface Props {
-  agenda:           AgendaMedica
-  onTomarTriaje:    () => void
-  onMasTarde:       () => void
+  agenda:        AgendaMedica
+  onTomarTriaje: () => void
+  /** El paciente queda en la cola: sin triaje, o con el triaje para después. */
+  onTerminar:    () => void
 }
 
 export function OfrecerTriajeInmediato({
-  agenda, onTomarTriaje, onMasTarde,
+  agenda, onTomarTriaje, onTerminar,
 }: Props) {
+  const puedeTriar = usePuedeTriar()
+  const ofrecerTriaje = agenda.requiere_triaje && puedeTriar
+
   return (
     <Card withBorder radius="lg" p="lg">
       <Stack gap="md" align="center">
@@ -27,32 +32,29 @@ export function OfrecerTriajeInmediato({
           </Text>
         </Alert>
 
-        {agenda.requiere_triaje ? (
-          <>
-            <Text size="sm" ta="center">
-              Este turno requiere triaje.
-              ¿Deseas tomar los signos vitales
-              ahora mismo?
-            </Text>
-            <Group>
-              <Button variant="default" onClick={onMasTarde}>
-                Más tarde
-              </Button>
-              <Button
-                leftSection={<IconClipboardCheck size={14} />}
-                onClick={onTomarTriaje}
-              >
-                Tomar triaje ahora
-              </Button>
-            </Group>
-          </>
-        ) : (
-          <Text size="sm" c="dimmed" ta="center">
-            Este turno no requiere triaje.
-            El paciente puede esperar a ser
-            llamado por el profesional.
-          </Text>
-        )}
+        <Text size="sm" ta="center" maw={420}>
+          {ofrecerTriaje
+            ? '¿Toma los signos vitales ahora? Si no, el turno queda en «Pendientes de triaje».'
+            : agenda.requiere_triaje
+              ? 'Enfermería le tomará el triaje desde la cola.'
+              : 'Este turno no requiere triaje: el paciente espera a que lo llame el profesional.'}
+        </Text>
+
+        {/* Sin triaje solo había un texto, sin un solo botón: la persona
+            tenía que salir por el menú para atender al siguiente. */}
+        <Group>
+          <Button variant={ofrecerTriaje ? 'default' : 'filled'} onClick={onTerminar}>
+            {ofrecerTriaje ? 'Más tarde' : 'Terminar'}
+          </Button>
+          {ofrecerTriaje && (
+            <Button
+              leftSection={<IconClipboardCheck size={14} />}
+              onClick={onTomarTriaje}
+            >
+              Tomar triaje ahora
+            </Button>
+          )}
+        </Group>
       </Stack>
     </Card>
   )

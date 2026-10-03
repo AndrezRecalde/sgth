@@ -37,7 +37,9 @@ export const TONO_TURNO: Record<string, SemanticTone> = {
 /** Cómo se lee cada estado. Sin esto la pantalla enseña el valor crudo del enum. */
 export const ESTADO_TURNO_LABELS: Record<string, string> = {
   en_espera:     'En espera',
-  en_sala:       'En sala / Triaje',
+  // Ya tiene el triaje y espera al profesional: «En sala / Triaje» se leía
+  // como si aún le faltara. «Mi jornada» lo llama igual.
+  en_sala:       'Listo para pasar',
   en_consulta:   'En consulta',
   atendido:      'Atendido',
   atendida:      'Atendido',
@@ -69,3 +71,6 @@ export function turnoCerrado(estado: string): boolean {
  * consulta (`AgendaService::ABIERTOS`).
  */
 export const TURNO_PENDIENTE: readonly string[] = ['en_espera', 'en_sala']
+
+/** Recién llegado: aún sin triaje. Es el único estado desde el que se cancela desde la cola. */
+export const EN_ESPERA = 'en_espera'

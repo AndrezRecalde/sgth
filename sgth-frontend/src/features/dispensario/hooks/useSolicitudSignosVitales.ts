@@ -23,9 +23,10 @@ export function useRegistrarSignosVitalesSolicitud() {
     onSuccess: () => {
       notificar.exito(
         'Signos vitales registrados',
-        'La atención SSO fue registrada correctamente.',
+        'El médico ya puede iniciar la evaluación ocupacional.',
       )
       qc.invalidateQueries({ queryKey: ['solicitudes-certificacion'] })
+      qc.invalidateQueries({ queryKey: ['dispensario', 'mi-jornada'] })
     },
     onError: notificar.alFallar('No se pudieron registrar los signos vitales'),
   })
