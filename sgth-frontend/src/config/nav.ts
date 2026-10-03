@@ -371,7 +371,13 @@ export const NAV_SALUD: NavGroup[] = [
         roles:    ['medico', 'admin-dispensario'],
         children: [
           {
-            // No es un tablero: es la bandeja de solicitudes de Talento Humano.
+            label: 'Tablero',
+            href:  ROUTES.SALUD.SSO_TABLERO,
+            icon:  'IconLayoutDashboard',
+          },
+          {
+            // La bandeja de solicitudes de Talento Humano; antes el menú la
+            // llamaba «Dashboard» sin que tuviera una sola cifra.
             label: 'Solicitudes',
             href:  ROUTES.SALUD.SSO,
             icon:  'IconInbox',
@@ -380,6 +386,13 @@ export const NAV_SALUD: NavGroup[] = [
             label: 'Fichas FEMO',
             href:  ROUTES.SALUD.FEMO,
             icon:  'IconClipboardHeart',
+          },
+          {
+            // A quién le toca la evaluación periódica y no la tiene: quien
+            // nunca tuvo una solicitud no aparece en las otras dos pantallas.
+            label: 'Cobertura',
+            href:  ROUTES.SALUD.SSO_COBERTURA,
+            icon:  'IconUsersGroup',
           },
         ],
       },

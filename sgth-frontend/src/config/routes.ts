@@ -106,6 +106,8 @@ export const ROUTES = {
     FARMACIA_ADQUISICIONES: '/salud/farmacia/adquisiciones',
     FARMACIA_DESPACHO:      '/salud/farmacia/despacho',
     SSO:          '/salud/sso',
+    SSO_TABLERO:  '/salud/sso/tablero',
+    SSO_COBERTURA: '/salud/sso/cobertura',
     FEMO:         '/salud/sso/femo',
     FEMO_DETALLE: (id: string | number) => `/salud/sso/femo/${id}`,
     /** La ficha nueva cuelga de la solicitud que la origina. */
