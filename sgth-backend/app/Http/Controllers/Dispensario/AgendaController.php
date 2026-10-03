@@ -17,7 +17,15 @@ final class AgendaController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $agenda = $this->agendaService->listar($request->all());
+        $filtros = $request->validate([
+            'fecha'         => ['nullable', 'date'],
+            'medico_id'     => ['nullable', 'integer'],
+            'estado'        => ['nullable', 'string', 'max:20'],
+            'tipo_atencion' => ['nullable', 'string', 'max:30'],
+            'per_page'      => ['nullable', 'integer', 'min:1', 'max:200'],
+        ]);
+
+        $agenda = $this->agendaService->listar($filtros);
 
         return ApiResponse::ok($agenda, 'Listado de agenda.');
     }

@@ -4,7 +4,6 @@ namespace App\Models\Dispensario;
 
 use App\Enums\NivelAlertaTriaje;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -53,50 +52,6 @@ class Triaje extends Model
         'hallazgos_alerta'        => 'array',
         'registrado_en'           => 'datetime',
     ];
-
-    /**
-     * Calcula automáticamente el IMC si hay peso y talla
-     */
-    protected function imcCalculado(): Attribute
-    {
-        return Attribute::make(
-            get: function () {
-                if ($this->peso_kg && $this->talla_cm) {
-                    $tallaMetros = $this->talla_cm / 100;
-                    if ($tallaMetros > 0) {
-                        return round($this->peso_kg / ($tallaMetros * $tallaMetros), 2);
-                    }
-                }
-                return null;
-            }
-        );
-    }
-
-    /**
-     * Clasificación del IMC
-     */
-    protected function clasificacionImc(): Attribute
-    {
-        return Attribute::make(
-            get: function () {
-                $imc = $this->imcCalculado;
-                
-                if (!$imc) {
-                    return null;
-                }
-
-                if ($imc < 18.5) {
-                    return 'Bajo peso';
-                } elseif ($imc >= 18.5 && $imc < 25) {
-                    return 'Normal';
-                } elseif ($imc >= 25 && $imc < 30) {
-                    return 'Sobrepeso';
-                } else {
-                    return 'Obesidad';
-                }
-            }
-        );
-    }
 
     public function agendaMedica(): BelongsTo
     {

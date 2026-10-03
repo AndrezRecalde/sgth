@@ -77,7 +77,7 @@ class TriajeController extends Controller
             'historia_clinica_id', $historiaClinicaId
         )
             ->where('agenda_medica_id', '!=', $agendaId)
-            ->orderBy('registrado_en', 'desc')
+            ->orderByDesc('registrado_en')->orderByDesc('id')
             ->first();
 
         return ApiResponse::ok($ultimoTriaje);
@@ -108,7 +108,8 @@ class TriajeController extends Controller
     public function pendientes(): JsonResponse
     {
         $turnos = AgendaMedica::with([
-            'medico', 'servidor', 'cargaFamiliar.servidor',
+            'medico:id,usuario_ti,email,servidor_id', 'medico.servidor:id,nombre,apellido',
+            'servidor', 'cargaFamiliar.servidor',
         ])->where('estado', 'en_espera')
           ->where('requiere_triaje', true)
           // Sobre `triajes` y no sobre `triaje`: el segundo es ahora una

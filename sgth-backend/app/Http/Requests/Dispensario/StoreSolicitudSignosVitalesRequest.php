@@ -17,7 +17,7 @@ class StoreSolicitudSignosVitalesRequest extends FormRequest
             'presion_sistolica' => ['required', 'integer', 'min:50', 'max:250'],
             'presion_diastolica' => ['required', 'integer', 'min:30', 'max:150', 'lt:presion_sistolica'],
             'frecuencia_cardiaca' => ['required', 'integer', 'min:30', 'max:200'],
-            'frecuencia_respiratoria' => ['required', 'integer', 'min:10', 'max:60'],
+            'frecuencia_respiratoria' => ['required', 'integer', 'min:4', 'max:60'],
             'temperatura_c' => ['required', 'numeric', 'min:34', 'max:42'],
             'saturacion_oxigeno' => ['required', 'numeric', 'min:50', 'max:100'],
             'peso_kg' => ['required', 'numeric', 'min:1', 'max:300'],

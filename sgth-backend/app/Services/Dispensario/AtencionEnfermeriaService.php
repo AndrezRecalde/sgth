@@ -10,15 +10,27 @@ use Illuminate\Support\Facades\DB;
 
 final class AtencionEnfermeriaService implements AtencionEnfermeriaServiceInterface
 {
+    /**
+     * Relaciones de cada fila. Enfermera y anulador van con su servidor y las
+     * columnas que pide `nombre_completo`: el accesor lee `servidor` y, sin
+     * cargarlo, hacía dos consultas más por fila del listado.
+     */
+    private const RELACIONES = [
+        'enfermera:id,usuario_ti,email,servidor_id',
+        'enfermera.servidor:id,nombre,apellido',
+        'anulador:id,usuario_ti,email,servidor_id',
+        'anulador.servidor:id,nombre,apellido',
+        'servidor', 'cargaFamiliar.servidor', 'catalogoServicio',
+    ];
+
     public function listar(array $filtros): LengthAwarePaginator
     {
         // Las anuladas siguen en la lista, marcadas: la trazabilidad es
         // precisamente poder ver que algo se registró y luego se anuló, y por
         // qué. Quien solo quiera las vigentes filtra por `solo_vigentes`.
-        $query = AtencionEnfermeria::with([
-            'enfermera', 'servidor', 'cargaFamiliar.servidor',
-            'catalogoServicio', 'anulador',
-        ])->orderBy('atendido_en', 'desc');
+        $query = AtencionEnfermeria::with(self::RELACIONES)
+            ->orderBy('atendido_en', 'desc')
+            ->orderBy('id', 'desc');
 
         if (!empty($filtros['solo_vigentes'])) {
             $query->whereNull('anulado_en');
@@ -29,7 +41,10 @@ final class AtencionEnfermeriaService implements AtencionEnfermeriaServiceInterf
         }
 
         if (!empty($filtros['fecha'])) {
-            $query->whereDate('atendido_en', $filtros['fecha']);
+            // Entre el inicio y el fin del día, no `whereDate`: envolver la
+            // columna en una función impide usar su índice.
+            $dia = \Carbon\Carbon::parse($filtros['fecha']);
+            $query->whereBetween('atendido_en', [$dia->copy()->startOfDay(), $dia->copy()->endOfDay()]);
         }
 
         return $query->paginate($filtros['per_page'] ?? 20);
@@ -50,10 +65,7 @@ final class AtencionEnfermeriaService implements AtencionEnfermeriaServiceInterf
                 'created_by'   => $enfermeraId,
             ]);
 
-            return $atencion->load([
-                'enfermera', 'servidor', 'cargaFamiliar.servidor',
-                'catalogoServicio',
-            ]);
+            return $atencion->load(self::RELACIONES);
         });
     }
 
@@ -64,18 +76,29 @@ final class AtencionEnfermeriaService implements AtencionEnfermeriaServiceInterf
      * que la fila se queda con quién la anuló, cuándo y por qué. Antes no había
      * forma de deshacer nada: una atención apuntada al paciente equivocado se
      * quedaba ahí para siempre.
+     *
+     * La anula quien la registró. La administración del Dispensario puede
+     * anular cualquiera; el resto no: antes cualquier usuario con sesión podía
+     * anular la atención de otra enfermera de hace meses.
      */
     public function anular(
         int $id,
         string $motivo,
-        int $anuladoPor
+        int $anuladoPor,
+        bool $puedeAnularAjenas = false,
     ): AtencionEnfermeria {
-        return DB::transaction(function () use ($id, $motivo, $anuladoPor) {
+        return DB::transaction(function () use ($id, $motivo, $anuladoPor, $puedeAnularAjenas) {
             $atencion = AtencionEnfermeria::lockForUpdate()->findOrFail($id);
 
             if ($atencion->estaAnulada()) {
                 throw new ReglaNegocioException(
                     "La atención {$atencion->folio} ya fue anulada."
+                );
+            }
+
+            if (!$puedeAnularAjenas && (int) $atencion->enfermera_id !== $anuladoPor) {
+                throw new ReglaNegocioException(
+                    'Solo quien registró la atención, o la administración del Dispensario, puede anularla.'
                 );
             }
 
@@ -85,10 +108,7 @@ final class AtencionEnfermeriaService implements AtencionEnfermeriaServiceInterf
                 'motivo_anulacion' => $motivo,
             ]);
 
-            return $atencion->load([
-                'enfermera', 'servidor', 'cargaFamiliar.servidor',
-                'catalogoServicio', 'anulador',
-            ]);
+            return $atencion->load(self::RELACIONES);
         });
     }
 
