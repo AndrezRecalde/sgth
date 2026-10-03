@@ -97,11 +97,18 @@ test('cada perfil ve su catálogo', function () {
     $claves = fn (User $u) => collect($this->actingAs($u, 'sanctum')
         ->getJson('/api/v1/dispensario/reportes')->assertOk()->json('datos.reportes'))->pluck('clave')->all();
 
-    expect($claves($this->admin))->toBe(['atenciones', 'morbilidad', 'produccion']);
+    expect($claves($this->admin))->toBe([
+        'atenciones', 'morbilidad', 'produccion', 'ausentismo',
+        'farmacia_movimiento', 'farmacia_existencias', 'enfermeria',
+    ]);
     // La autoridad, nada con nombres de pacientes.
-    expect($claves($this->autoridad))->toBe(['morbilidad', 'produccion']);
+    expect($claves($this->autoridad))->toBe([
+        'morbilidad', 'produccion', 'ausentismo',
+        'farmacia_movimiento', 'farmacia_existencias', 'enfermeria',
+    ]);
+    // Cada profesional, lo suyo: ni ausentismo por unidad ni farmacia.
     expect($claves($this->medico))->toBe(['atenciones', 'morbilidad', 'produccion']);
-    expect($claves($this->enfermera))->toBe(['produccion']);
+    expect($claves($this->enfermera))->toBe(['produccion', 'enfermeria']);
 
     $this->actingAs(usuarioDeReportes('nadierep', null), 'sanctum')
         ->getJson('/api/v1/dispensario/reportes')->assertForbidden();

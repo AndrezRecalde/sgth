@@ -30,11 +30,23 @@ interface ReporteDispensario
 
     /**
      * Los filtros que la pantalla debe ofrecer, además del período:
-     * `profesional`, `especialidad`, `tipo_paciente`, `unidad`, `agrupacion`.
+     * `profesional`, `especialidad`, `tipo_paciente`, `unidad`. La agrupación
+     * va aparte, en `agrupaciones()`.
      *
      * @return list<string>
      */
     public function filtros(): array;
+
+    /**
+     * Cómo se puede agrupar, valor => etiqueta, en el orden en que se
+     * ofrece. La primera es la de por defecto. Vacío si no agrupa.
+     *
+     * @return array<string, string>
+     */
+    public function agrupaciones(): array;
+
+    /** `false` en una foto de hoy (las existencias): no pide fechas. */
+    public function usaPeriodo(): bool;
 
     /** @return list<array{clave: string, titulo: string}> */
     public function columnas(FiltrosReporte $filtros): array;

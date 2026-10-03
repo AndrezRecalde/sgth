@@ -59,13 +59,17 @@ final class ReporteDispensarioController extends Controller
         return Excel::download(
             new ReporteDispensarioExport(
                 $reporte->titulo(),
-                $filtros->periodo(),
+                // Una foto de hoy no tiene período: decirlo evita que se lea
+                // como el stock de esas fechas.
+                $reporte->usaPeriodo() ? 'Período: ' . $filtros->periodo() : 'Existencias al ' . now()->format('d/m/Y'),
                 $alcance->descripcion(),
                 $request->user()->nombre_completo ?? $request->user()->usuario_ti,
                 $resultado['columnas'],
                 $resultado['filas'],
             ),
-            "{$clave}_{$filtros->desde->format('Ymd')}_{$filtros->hasta->format('Ymd')}.xlsx"
+            $reporte->usaPeriodo()
+                ? "{$clave}_{$filtros->desde->format('Ymd')}_{$filtros->hasta->format('Ymd')}.xlsx"
+                : "{$clave}_" . now()->format('Ymd') . '.xlsx'
         );
     }
 

@@ -28,7 +28,7 @@ class FiltrosReporteDispensarioRequest extends FormRequest
             'especialidad'             => ['nullable', Rule::enum(EspecialidadAtencion::class)],
             'tipo_paciente'            => ['nullable', 'in:servidor,familiar'],
             'unidad_administrativa_id' => ['nullable', 'integer'],
-            'agrupacion'               => ['nullable', 'in:profesional,dia'],
+            'agrupacion'               => ['nullable', 'in:profesional,dia,unidad,diagnostico'],
         ];
     }
 

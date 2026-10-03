@@ -36,7 +36,7 @@ class ReporteDispensarioExport implements FromArray, ShouldAutoSize, WithStyles,
         return [
             ['GAD Provincial de Esmeraldas — Dispensario Médico'],
             [$this->titulo],
-            ["Período: {$this->periodo}  ·  {$this->alcance}"],
+            ["{$this->periodo}  ·  {$this->alcance}"],
             ['Generado por ' . $this->generadoPor . ' el ' . now()->format('d/m/Y H:i')],
             // Una fila vacía de verdad: con `[]` el exportador la omite y la
             // cabecera sube un renglón.

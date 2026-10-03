@@ -17,7 +17,7 @@ import { ResultadoReporte } from './ResultadoReporte'
 /** Del primero del mes a hoy: lo que se pide casi siempre. */
 function filtrosIniciales(): FiltrosReporteDispensario {
   const hoy = hoyIso()
-  return { desde: `${hoy.slice(0, 8)}01`, hasta: hoy, agrupacion: 'profesional' }
+  return { desde: `${hoy.slice(0, 8)}01`, hasta: hoy }
 }
 
 const AVISOS = {
@@ -46,6 +46,9 @@ export function ReportesDispensarioView() {
   const elegir = (nueva: string) => {
     setElegido(nueva)
     setConsultados(null)
+    // Cada reporte agrupa a su manera: arranca con la primera suya.
+    const agrupaciones = reportes.find((r) => r.clave === nueva)?.agrupaciones ?? []
+    setFiltros((f) => ({ ...f, agrupacion: agrupaciones[0]?.value }))
   }
 
   const aviso = catalogo.data?.propio
@@ -77,7 +80,7 @@ export function ReportesDispensarioView() {
             {reporte && catalogo.data && (
               <FiltrosReporte
                 filtros={filtros}
-                disponibles={reporte.filtros}
+                reporte={reporte}
                 opciones={catalogo.data.opciones}
                 onCambiar={(cambio) => setFiltros((f) => ({ ...f, ...cambio }))}
                 onConsultar={() => setConsultados({ ...filtros })}
