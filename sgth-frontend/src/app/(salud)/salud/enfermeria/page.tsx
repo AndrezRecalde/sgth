@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { EnfermeriaAtenderPacienteView } from '@/features/dispensario/components/EnfermeriaAtenderPacienteView'
 import { PageHeader, PageShell } from '@/components/ui'
+import { MiJornadaFranja } from '@/features/dispensario/components/MiJornadaFranja'
 
 export const metadata: Metadata = {
   title: 'Enfermería',
@@ -14,6 +15,7 @@ export default function EnfermeriaPage() {
         title="Enfermería"
         description="Atender paciente — admisión y triaje"
       />
+      <MiJornadaFranja contexto="enfermeria" />
       <EnfermeriaAtenderPacienteView />
     </PageShell>
   )
