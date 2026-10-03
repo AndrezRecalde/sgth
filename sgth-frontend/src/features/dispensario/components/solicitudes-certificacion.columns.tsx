@@ -16,7 +16,7 @@ import {
 } from '../services/solicitudCertificacionService'
 import type { SolicitudCertificacion } from '../services/solicitudCertificacionService'
 import type { DataTableColumn } from 'mantine-datatable'
-import { formatFechaMes } from '@/lib/fecha'
+import { formatFechaMes, hoyIso } from '@/lib/fecha'
 
 /*
 | Las columnas de las solicitudes de certificación médica.
@@ -100,13 +100,16 @@ const fechaLimite: Columna = {
   render: (s) => {
     if (!s.fecha_limite) return <Text size="sm">—</Text>
 
-    const fecha = new Date(s.fecha_limite)
-    // Vencida y sin completar: es lo que hay que perseguir, y va en rojo.
-    const urgente = fecha <= new Date() && s.estado !== 'completada'
+    // Vencida y aún abierta: es lo que hay que perseguir, y va en rojo. Se
+    // compara la fecha (aaaa-mm-dd) con la de hoy en Ecuador: con `new Date()`
+    // salía vencida desde las 19:00 del día anterior, y también se pintaban
+    // las canceladas.
+    const abierta = s.estado === 'pendiente' || s.estado === 'en_proceso'
+    const urgente = abierta && s.fecha_limite.slice(0, 10) < hoyIso()
 
     return (
       <Text size="sm" c={urgente ? 'red' : undefined} fw={urgente ? 600 : undefined}>
-        {formatFechaMes(fecha.toISOString())}
+        {formatFechaMes(s.fecha_limite)}
       </Text>
     )
   },

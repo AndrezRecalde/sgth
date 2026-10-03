@@ -15,6 +15,10 @@ export function useSolicitudesCertificacion(
     unidad_administrativa_id?: number
     anio?:        number
     per_page?:    number
+    /** Cédula o nombre del paciente. */
+    buscar?:      string
+    /** `fecha_limite`: lo que vence primero, para la bandeja. */
+    orden?:       'fecha_limite'
   },
   /**
    * `enVivo` solo en Salud Ocupacional: ahí la lista es una bandeja de trabajo
@@ -55,10 +59,6 @@ export function useIniciarProceso() {
         queryKey: ['solicitudes-certificacion'],
       })
       qc.invalidateQueries({ queryKey: ['certificaciones-cobertura'] })
-      // La incorporación se dispara también desde Reclutamiento Express, y
-      // allí el aspirante pasa a «Incorporado».
-      qc.invalidateQueries({ queryKey: ['express-aspirantes'] })
-      qc.invalidateQueries({ queryKey: ['express-resumen'] })
     },
     onError: notificar.alFallar('No se pudo iniciar el proceso'),
   })
@@ -138,6 +138,12 @@ export function useConfirmarIncorporacion() {
       qc.invalidateQueries({
         queryKey: ['solicitudes-certificacion'],
       })
+      qc.invalidateQueries({ queryKey: ['certificaciones-cobertura'] })
+      // La incorporación se confirma también desde Reclutamiento Express, y
+      // allí el aspirante pasa a «Incorporado». Estas dos vivían en
+      // `useIniciarProceso`, que no incorpora a nadie.
+      qc.invalidateQueries({ queryKey: ['express-aspirantes'] })
+      qc.invalidateQueries({ queryKey: ['express-resumen'] })
     },
     onError: notificar.alFallar('No se pudo confirmar la incorporación'),
   })

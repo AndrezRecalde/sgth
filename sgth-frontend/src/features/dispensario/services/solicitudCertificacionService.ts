@@ -182,6 +182,7 @@ export const ESTADO_SOLICITUD_LABELS: Record<string, string> = {
  */
 export const ESTADO_SOLICITUD_FILTRO_OPTIONS = [
   { value: '',           label: 'Todas'       },
+  { value: 'activas',    label: 'Pendientes y en proceso' },
   { value: 'pendiente',  label: 'Pendientes'  },
   { value: 'en_proceso', label: 'En proceso'  },
   { value: 'completada', label: 'Completadas' },
