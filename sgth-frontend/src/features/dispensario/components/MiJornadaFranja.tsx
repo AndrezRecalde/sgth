@@ -13,7 +13,7 @@ import type { ContextoJornada } from '../services/miJornadaService'
 const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`
 
 interface Props {
-  /** La pantalla donde va: quien tiene dos roles ve aquí la jornada de esta. */
+  /** La pantalla donde va: quien tiene varios roles ve aquí la jornada de esta. */
   contexto: ContextoJornada
 }
 

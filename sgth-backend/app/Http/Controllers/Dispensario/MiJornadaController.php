@@ -18,7 +18,7 @@ class MiJornadaController extends Controller
     public function index(Request $request): JsonResponse
     {
         $datos = $request->validate([
-            'perfil' => ['nullable', 'in:clinico,enfermeria'],
+            'perfil' => ['nullable', 'in:medico,odontologo,enfermeria'],
         ]);
 
         return ApiResponse::ok($this->miJornada->resumen($request->user(), $datos['perfil'] ?? null));
