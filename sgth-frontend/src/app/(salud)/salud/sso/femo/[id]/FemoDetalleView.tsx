@@ -140,6 +140,8 @@ export function FemoDetalleView({ id }: Props) {
             <FemoPasoExamenFisico
               examenFisico={wizard.examenFisico}
               onChange={wizard.setExamenFisico}
+              fichaData={wizard.fichaData}
+              onFichaChange={wizard.setFichaData}
             />
           )}
           {wizard.active === 2 && (

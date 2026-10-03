@@ -1,6 +1,6 @@
 'use client'
 
-import { Grid, Select, TextInput } from '@mantine/core'
+import { Grid, Select, Textarea, TextInput } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { fromDateValue, fromDateValueOrNull, toDateValue } from '@/lib/fecha'
@@ -127,6 +127,19 @@ export function FemoSeccionMotivoConsulta({ fichaData, onFichaChange }: Props) {
             />
           </Grid.Col>
         )}
+
+        {/* La «Observación» de la sección B: el PDF la imprime aquí, y antes
+            se capturaba al final del formulario como «Observaciones generales». */}
+        <Grid.Col span={12}>
+          <Textarea
+            label="Observación"
+            autosize
+            minRows={2}
+            {...contained}
+            value={fichaData.observaciones ?? ''}
+            onChange={(e) => set({ observaciones: e.currentTarget.value })}
+          />
+        </Grid.Col>
       </Grid>
     </FemoSeccion>
   )

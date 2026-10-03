@@ -349,6 +349,8 @@ export function NuevaFemoView({ solicitudId }: Props) {
           <FemoPasoExamenFisico
             examenFisico={wizard.examenFisico}
             onChange={wizard.setExamenFisico}
+            fichaData={wizard.fichaData}
+            onFichaChange={wizard.setFichaData}
           />
         )}
         {active === 2 && (

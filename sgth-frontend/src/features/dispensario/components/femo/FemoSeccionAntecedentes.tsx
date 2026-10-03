@@ -15,6 +15,7 @@ import { SiNoSinRespuesta } from './SiNoSinRespuesta'
 import { FemoAntecedenteModal } from './FemoAntecedenteModal'
 import { FemoAntecedentesReproductivosSection } from './FemoAntecedentesReproductivosSection'
 import { FemoConsumoSustanciasTable } from './FemoConsumoSustanciasTable'
+import { FemoEstiloDeVidaSection } from './FemoEstiloDeVidaSection'
 
 interface Props {
   fichaData: Partial<FichaBaseForm>
@@ -144,51 +145,7 @@ export function FemoSeccionAntecedentes({
         onChange={onConsumoSustanciasChange}
       />
 
-      <Stack gap="xs">
-        <Text size="xs" fw={600} c="dimmed">
-          Estilo de vida y condición preexistente
-        </Text>
-
-        <Grid>
-          <Grid.Col span={{ base: 12, md: 8 }}>
-            <TextInput
-              label="Actividad física"
-              placeholder="Ej: caminata, fútbol"
-              {...contained}
-              value={fichaData.actividad_fisica_cual ?? ''}
-              onChange={(e) => set({ actividad_fisica_cual: e.currentTarget.value })}
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, md: 4 }}>
-            <TextInput
-              label="Con qué frecuencia"
-              placeholder="Ej: 3 veces por semana"
-              {...contained}
-              value={fichaData.actividad_fisica_tiempo ?? ''}
-              onChange={(e) => set({ actividad_fisica_tiempo: e.currentTarget.value })}
-            />
-          </Grid.Col>
-
-          <Grid.Col span={{ base: 12, md: 8 }}>
-            <TextInput
-              label="Medicación habitual"
-              placeholder="Ej: losartán"
-              {...contained}
-              value={fichaData.medicacion_habitual_cual ?? ''}
-              onChange={(e) => set({ medicacion_habitual_cual: e.currentTarget.value })}
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, md: 4 }}>
-            <TextInput
-              label="Dosis y frecuencia"
-              placeholder="Ej: 50 mg diarios"
-              {...contained}
-              value={fichaData.medicacion_habitual_cantidad ?? ''}
-              onChange={(e) => set({ medicacion_habitual_cantidad: e.currentTarget.value })}
-            />
-          </Grid.Col>
-        </Grid>
-      </Stack>
+      <FemoEstiloDeVidaSection fichaData={fichaData} onFichaChange={onFichaChange} />
 
       <FemoAntecedenteModal
         opened={modalAbierto}

@@ -66,19 +66,24 @@
     <table class="msp-table">
         <tr>
             {{-- «Trabajo» es la columna ANTERIOR / ACTUAL del impreso. --}}
-            <th>Centro de Trabajo</th><th>Actividades</th><th>Trabajo</th><th>Período</th>
+            <th>Centro de Trabajo</th><th>Actividades</th><th>Trabajo</th><th>Tiempo de Trabajo</th>
             <th>Tipo de Evento</th><th>Calif. IESS</th><th>Fecha</th><th>Especificar</th><th>Observaciones</th>
         </tr>
         @forelse($ficha->empleosAnteriores as $empleo)
             @php
                 $inicioEmpleo = optional($empleo->fecha_inicio)->format('Y/m/d');
                 $finEmpleo = $empleo->fecha_fin ? optional($empleo->fecha_fin)->format('Y/m/d') : 'Actual';
+                // «Tiempo de trabajo» del impreso, en meses, como lo escribe
+                // el Dispensario («192 M»). Sin fecha de fin, hasta la atención.
+                $mesesEmpleo = $empleo->fecha_inicio
+                    ? (int) $empleo->fecha_inicio->diffInMonths($empleo->fecha_fin ?? $ficha->fecha_evaluacion)
+                    : null;
             @endphp
             <tr>
                 <td>{{ $empleo->centro_trabajo }}</td>
                 <td class="small">{{ $empleo->actividades_desempenadas ?? '-' }}</td>
                 <td class="center small">{{ $empleo->es_trabajo_actual ? 'ACTUAL' : 'ANTERIOR' }}</td>
-                <td class="small">{{ $inicioEmpleo ? "{$inicioEmpleo} - {$finEmpleo}" : '-' }}</td>
+                <td class="small">{{ $mesesEmpleo !== null ? "{$mesesEmpleo} M" : '-' }}@if($inicioEmpleo)<br>{{ $inicioEmpleo }} - {{ $finEmpleo }}@endif</td>
                 <td class="center">{{ $empleo->tipo_evento_laboral->etiqueta() }}</td>
                 <td class="msp-check">{{ $empleo->calificado_iess === null ? '-' : ($empleo->calificado_iess ? 'SI' : 'NO') }}</td>
                 <td class="center">{{ optional($empleo->fecha_evento)->format('Y/m/d') ?? '-' }}</td>
@@ -93,7 +98,7 @@
     <div class="msp-section-title">I. ACTIVIDADES EXTRA LABORALES</div>
     <table class="msp-table">
         <tr>
-            <td style="width:75%"><span class="msp-label">Descripción</span><br><span class="msp-value">{{ $ficha->actividad_extralaboral_descripcion ?? '-' }}</span></td>
+            <td style="width:75%"><span class="msp-label">Tipo de Actividad</span><br><span class="msp-value">{{ $ficha->actividad_extralaboral_descripcion ?? '-' }}</span></td>
             <td style="width:25%"><span class="msp-label">Fecha</span><br><span class="msp-value">{{ optional($ficha->actividad_extralaboral_fecha)->format('Y/m/d') ?? '-' }}</span></td>
         </tr>
     </table>

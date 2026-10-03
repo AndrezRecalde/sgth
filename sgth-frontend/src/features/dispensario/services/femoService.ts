@@ -91,6 +91,7 @@ export interface FemoAntecedenteReproductivo {
   metodo_planificacion_cual?: string | null
   examenes_realizados?:       string | null
   examenes_tiempo_anios?:     number | null
+  examenes_resultado?:        string | null
 }
 
 export interface FemoConsumoSustancia {
@@ -143,6 +144,9 @@ export interface FichaSaludOcupacional {
   actividad_fisica_tiempo?:      string | null
   medicacion_habitual_cual?:     string | null
   medicacion_habitual_cantidad?: string | null
+  observacion_antecedentes?:     string | null
+  observacion_examen_fisico?:    string | null
+  observacion_examenes?:         string | null
   servidor?: {
     id:           number
     nombre:       string
@@ -221,6 +225,9 @@ export interface CrearFemoData {
     actividad_fisica_tiempo?: string | null
     medicacion_habitual_cual?: string | null
     medicacion_habitual_cantidad?: string | null
+    observacion_antecedentes?: string | null
+    observacion_examen_fisico?: string | null
+    observacion_examenes?:    string | null
   }
   antecedentes?:             Omit<FemoAntecedente, 'id'>[]
   factores_riesgo?:          Omit<FemoFactorRiesgo, 'id'>[]
