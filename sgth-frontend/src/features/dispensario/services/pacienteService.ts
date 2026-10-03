@@ -20,4 +20,11 @@ export const pacienteService = {
       '/dispensario/pacientes/buscar',
       { params: { cedula } }
     ).then(r => r.data.datos),
+
+  /** Por nombre o apellidos, en cualquier orden y sin importar tildes. */
+  buscarPorNombre: (q: string) =>
+    api.get<ApiResponse<PacienteEncontrado[]>>(
+      '/dispensario/pacientes/buscar-por-nombre',
+      { params: { q } }
+    ).then(r => r.data.datos),
 }

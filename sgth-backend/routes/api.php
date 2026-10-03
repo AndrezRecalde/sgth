@@ -1232,6 +1232,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         )->middleware('role:medico|odontologo|enfermera|admin-dispensario')
          ->name('dispensario.pacientes.buscar');
 
+        Route::get('pacientes/buscar-por-nombre',
+            [PacienteController::class, 'buscarPorNombre']
+        )->middleware('role:medico|odontologo|enfermera|admin-dispensario')
+         ->name('dispensario.pacientes.buscar-por-nombre');
+
         Route::get('atenciones-enfermeria',
             [AtencionEnfermeriaController::class, 'index']
         )->middleware('role:medico|odontologo|enfermera|admin-dispensario')
