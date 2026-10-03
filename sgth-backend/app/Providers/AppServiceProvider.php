@@ -10,6 +10,7 @@ use Dedoc\Scramble\Scramble;
 use Dedoc\Scramble\Support\Generator\OpenApi;
 use Dedoc\Scramble\Support\Generator\SecurityScheme;
 use App\Models\User;
+use App\Support\ProxiesDeConfianza;
 use App\Contracts\Auth\AuthServiceInterface;
 use App\Services\Auth\AuthService;
 use App\Contracts\Admin\UsuarioServiceInterface;
@@ -241,6 +242,7 @@ class AppServiceProvider extends ServiceProvider
         ]);
 
         $this->desviarCorreoFueraDeProduccion();
+        $this->confiarEnLosProxies();
 
         Gate::define('viewPulse', function (?User $user) {
             if (app()->environment('local')) {
@@ -286,6 +288,20 @@ class AppServiceProvider extends ServiceProvider
                     SecurityScheme::http('bearer')
                 );
             });
+    }
+
+    /**
+     * Los proxies delante de Laravel, de `app.trusted_proxies`.
+     *
+     * Va aquí y no en `bootstrap/app.php` porque allí se leería el entorno a
+     * pelo, y con `config:cache` en producción `env()` devuelve null fuera de
+     * los archivos de configuración: la variable quedaría ignorada en silencio
+     * justo donde hace falta. El middleware lee esto al atender cada petición.
+     * Las reglas —comas, comodines— viven en ProxiesDeConfianza.
+     */
+    private function confiarEnLosProxies(): void
+    {
+        ProxiesDeConfianza::aplicar(config('app.trusted_proxies'));
     }
 
     /**
