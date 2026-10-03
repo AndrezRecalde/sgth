@@ -172,9 +172,6 @@ Route::prefix('v1')->group(function () {
     Route::get('catalogos/provincias', [ProvinciaController::class, 'index']);
     Route::get('catalogos/provincias/{id}/cantones', [CantonController::class, 'porProvincia']);
 
-    // Dispensario Médico: Búsqueda pública CIE-10 para autocompletado
-    Route::get('dispensario/cie10/buscar', [DiagnosticoCie10Controller::class, 'buscar']);
-
     // SSO: cuestionario de evaluación de riesgo psicosocial — anónimo por diseño (sin
     // login de servidor), accesible únicamente por código de campaña.
     Route::get('sso/psicosocial/{codigo}/cuestionario', [RespuestaPsicosocialController::class, 'cuestionario']);
@@ -1199,9 +1196,21 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::get('mi-jornada', [MiJornadaController::class, 'index'])
             ->middleware('role:medico|odontologo|enfermera');
 
+        // El personal clínico del dispensario, con nombre: lo piden Farmacia
+        // (quién recetó) y la asignación de turnos. No es para cualquiera con
+        // sesión.
         Route::get('personal-medico',
             [PersonalMedicoController::class, 'index']
-        )->name('dispensario.personal-medico');
+        )->middleware('role:medico|odontologo|enfermera|admin-dispensario')
+         ->name('dispensario.personal-medico');
+
+        // Autocompletado del CIE-10 al diagnosticar (consulta, FEMO y
+        // certificado). Estaba entre las rutas públicas, sin sesión siquiera:
+        // el catálogo no es secreto, pero cada letra era una consulta de texto
+        // sobre 8918 filas que cualquiera podía lanzar desde fuera.
+        Route::get('cie10/buscar', [DiagnosticoCie10Controller::class, 'buscar'])
+            ->middleware('role:medico|odontologo|admin-dispensario')
+            ->name('dispensario.cie10.buscar');
 
         // A quién asignarle un turno. Lo pide Recepción, así que va con el
         // acceso general del dispensario y no con el rol clínico.
@@ -1328,18 +1337,24 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 Route::get('piezas/{piezaId}/historial', [OdontogramaController::class, 'historialPieza']);
             });
 
+        // Certificados médicos: dicen el diagnóstico y los días de reposo de
+        // un servidor, y solo «anular» pedía rol. Los emite quien atiende; los
+        // consulta y descarga también la administración del Dispensario.
         Route::get('certificados-medicos',
             [CertificadoMedicoController::class, 'index']
-        )->name('dispensario.certificados.index');
+        )->middleware('role:medico|odontologo|admin-dispensario')
+         ->name('dispensario.certificados.index');
 
         Route::post('certificados-medicos',
             [CertificadoMedicoController::class, 'store']
-        )->name('dispensario.certificados.store');
+        )->middleware('role:medico|odontologo')
+         ->name('dispensario.certificados.store');
 
         // Antes del comodín {id}, o los segmentos literales se leerían como id.
         Route::get('certificados-medicos/{id}/pdf',
             [CertificadoMedicoController::class, 'pdf']
-        )->name('dispensario.certificados.pdf');
+        )->middleware('role:medico|odontologo|admin-dispensario')
+         ->name('dispensario.certificados.pdf');
 
         Route::patch('certificados-medicos/{id}/anular',
             [CertificadoMedicoController::class, 'anular']
@@ -1348,7 +1363,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
 
         Route::get('certificados-medicos/{id}',
             [CertificadoMedicoController::class, 'show']
-        )->name('dispensario.certificados.show');
+        )->middleware('role:medico|odontologo|admin-dispensario')
+         ->name('dispensario.certificados.show');
 
         // Recetas — médicos emiten, enfermeras y admin despachan
         Route::prefix('recetas')->group(function () {

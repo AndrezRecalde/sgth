@@ -71,3 +71,34 @@ test('enfermería sí entra a lo suyo', function () {
     // Registrar sin datos ya no es un 403: pasa el rol y lo frena la validación.
     $this->postJson('/api/v1/dispensario/atenciones-enfermeria', [])->assertUnprocessable();
 });
+
+dataset('rutas_clinicas_restantes', [
+    'buscar CIE-10'            => ['get',  '/api/v1/dispensario/cie10/buscar?q=migra'],
+    'personal médico'          => ['get',  '/api/v1/dispensario/personal-medico'],
+    'listar certificados'      => ['get',  '/api/v1/dispensario/certificados-medicos'],
+    'emitir certificado'       => ['post', '/api/v1/dispensario/certificados-medicos'],
+    'ver certificado'          => ['get',  '/api/v1/dispensario/certificados-medicos/1'],
+    'descargar certificado'    => ['get',  '/api/v1/dispensario/certificados-medicos/1/pdf'],
+]);
+
+test('el CIE-10, el personal y los certificados tampoco se abren sin rol', function (string $metodo, string $uri) {
+    $this->actingAs(usuarioEnfermeriaAcceso('cualquiera2'), 'sanctum');
+
+    $this->json($metodo, $uri)->assertForbidden();
+})->with('rutas_clinicas_restantes');
+
+test('el CIE-10 ya no responde sin sesión', function () {
+    $this->getJson('/api/v1/dispensario/cie10/buscar?q=migra')->assertUnauthorized();
+});
+
+test('enfermería ve el personal pero no emite certificados', function () {
+    $this->actingAs(usuarioEnfermeriaAcceso('enfermera2', 'enfermera'), 'sanctum');
+    // El listado filtra por estos roles y Spatie falla si no existen.
+    foreach (['medico', 'odontologo'] as $rol) {
+        Role::firstOrCreate(['name' => $rol, 'guard_name' => 'sanctum']);
+    }
+
+    $this->getJson('/api/v1/dispensario/personal-medico')->assertOk();
+    $this->postJson('/api/v1/dispensario/certificados-medicos', [])->assertForbidden();
+    $this->getJson('/api/v1/dispensario/certificados-medicos')->assertForbidden();
+});
