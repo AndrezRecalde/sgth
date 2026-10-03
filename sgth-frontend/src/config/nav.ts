@@ -71,6 +71,9 @@ export const NAV_SGTH: NavGroup[] = [
             label: 'Puestos y cargos',
             href:  ROUTES.SGTH.ESTRUCTURA_PUESTOS,
             icon:  'IconBriefcase',
+            // El listado de puestos pide `ver-estructura`: sin él, la pantalla
+            // abría con un 403.
+            permiso: 'ver-estructura',
           },
           {
             label: 'Plantilla',

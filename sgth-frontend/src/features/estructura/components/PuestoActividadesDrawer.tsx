@@ -37,6 +37,8 @@ interface Props {
   opened:  boolean
   onClose: () => void
   puesto:  PuestoConRelaciones | null
+  /** Sin `gestionar-puestos`: se ven las actividades, no se tocan. */
+  soloLectura?: boolean
 }
 
 interface SortableItemProps {
@@ -44,10 +46,11 @@ interface SortableItemProps {
   index:       number
   onEliminar:  (id: number) => void
   onToggle:    (id: number, activo: boolean) => void
+  soloLectura: boolean
 }
 
 function SortableItem({
-  actividad, index, onEliminar, onToggle,
+  actividad, index, onEliminar, onToggle, soloLectura,
 }: SortableItemProps) {
   const {
     attributes, listeners, setNodeRef,
@@ -77,15 +80,17 @@ function SortableItem({
       >
         <Group justify="space-between" wrap="nowrap">
           <Group gap="sm" wrap="nowrap">
-            <ThemeIcon
-              size="xs"
-              variant="subtle"
-              style={{ cursor: 'grab', touchAction: 'none' }}
-              {...attributes}
-              {...listeners}
-            >
-              <IconGripVertical size={12} />
-            </ThemeIcon>
+            {!soloLectura && (
+              <ThemeIcon
+                size="xs"
+                variant="subtle"
+                style={{ cursor: 'grab', touchAction: 'none' }}
+                {...attributes}
+                {...listeners}
+              >
+                <IconGripVertical size={12} />
+              </ThemeIcon>
+            )}
             <Text
               size="xs"
               c="dimmed"
@@ -98,7 +103,7 @@ function SortableItem({
               {actividad.descripcion}
             </Text>
           </Group>
-          <Group gap="xs" wrap="nowrap">
+          {!soloLectura && <Group gap="xs" wrap="nowrap">
             <Switch
               size="xs"
               checked={actividad.activo}
@@ -119,7 +124,7 @@ function SortableItem({
             >
               <IconTrash size={13} />
             </ActionIcon>
-          </Group>
+          </Group>}
         </Group>
       </Card>
     </div>
@@ -127,7 +132,7 @@ function SortableItem({
 }
 
 export function PuestoActividadesDrawer({
-  opened, onClose, puesto,
+  opened, onClose, puesto, soloLectura = false,
 }: Props) {
   const contained     = useContainedInput()
   const [nueva, setNueva] = useState('')
@@ -238,12 +243,12 @@ export function PuestoActividadesDrawer({
           </Group>
 
           <Text size="xs" c="dimmed">
-            Arrastra las actividades para reordenarlas.
+            {soloLectura ? '' : 'Arrastra las actividades para reordenarlas. '}
             Se usan en el formulario FEMO para marcar
             los factores de riesgo del puesto.
           </Text>
 
-          <Group gap="xs">
+          {!soloLectura && <Group gap="xs">
             <TextInput
               placeholder="Ej: Mantenimiento eléctrico"
               style={{ flex: 1 }}
@@ -262,7 +267,7 @@ export function PuestoActividadesDrawer({
             >
               <IconPlus size={16} />
             </ActionIcon>
-          </Group>
+          </Group>}
 
           {isLoading ? (
             <Stack gap="xs">
@@ -297,6 +302,7 @@ export function PuestoActividadesDrawer({
                       onToggle={(id, activo) =>
                         actualizar.mutate({ id, data: { activo } })
                       }
+                      soloLectura={soloLectura}
                     />
                   ))}
                 </Stack>

@@ -9,10 +9,12 @@ type Handlers = {
   onEdit:        (puesto: PuestoConRelaciones) => void
   onDelete:      (puesto: PuestoConRelaciones) => void
   onActividades: (puesto: PuestoConRelaciones) => void
+  /** `gestionar-puestos`. Sin él, solo se consultan las actividades. */
+  puedeGestionar: boolean
 }
 
 export const getPuestoColumns = (
-  { onEdit, onDelete, onActividades }: Handlers
+  { onEdit, onDelete, onActividades, puedeGestionar }: Handlers
 ): DataTableColumn<PuestoConRelaciones>[] => [
   {
     accessor: 'cargo',
@@ -77,12 +79,14 @@ export const getPuestoColumns = (
         {
           label: 'Editar puesto',
           icon: <IconEdit size={14} />,
+          hidden: !puedeGestionar,
           onClick: () => onEdit(puesto),
         },
         {
           label: 'Eliminar puesto',
           icon: <IconTrash size={14} />,
           color: 'red',
+          hidden: !puedeGestionar,
           onClick: () => onDelete(puesto),
         },
       ]} />

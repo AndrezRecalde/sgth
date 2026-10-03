@@ -9,11 +9,21 @@ use App\Models\Estructura\PuestoActividad;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * Las actividades de un puesto: las columnas de la matriz de riesgos del FEMO.
+ *
+ * Ninguna de estas rutas comprobaba nada: cualquier usuario con sesión —un
+ * servidor desde el portal— podía crear, cambiar, reordenar o borrar las
+ * actividades de cualquier puesto. Ahora la lectura sigue a
+ * `PuestoPolicy::verActividades` y la escritura a `update` del puesto.
+ */
 final class PuestoActividadController extends Controller
 {
     public function index(int $puestoId): JsonResponse
     {
         $puesto = Puesto::findOrFail($puestoId);
+        $this->authorize('verActividades', $puesto);
+
         $actividades = $puesto->actividades()
             ->get();
 
@@ -29,7 +39,7 @@ final class PuestoActividadController extends Controller
             'orden'       => ['nullable', 'integer', 'min:1'],
         ]);
 
-        Puesto::findOrFail($puestoId);
+        $this->authorize('update', Puesto::findOrFail($puestoId));
 
         $ultimoOrden = PuestoActividad::where('puesto_id', $puestoId)
             ->max('orden') ?? 0;
@@ -57,6 +67,8 @@ final class PuestoActividadController extends Controller
             'activo'      => ['sometimes', 'boolean'],
         ]);
 
+        $this->authorize('update', Puesto::findOrFail($puestoId));
+
         $actividad = PuestoActividad::where('puesto_id', $puestoId)
             ->findOrFail($actividadId);
 
@@ -71,6 +83,8 @@ final class PuestoActividadController extends Controller
         int $puestoId,
         int $actividadId
     ): JsonResponse {
+        $this->authorize('update', Puesto::findOrFail($puestoId));
+
         $actividad = PuestoActividad::where('puesto_id', $puestoId)
             ->findOrFail($actividadId);
 
@@ -87,6 +101,8 @@ final class PuestoActividadController extends Controller
             'orden'    => ['required', 'array'],
             'orden.*'  => ['integer', 'exists:puesto_actividades,id'],
         ]);
+
+        $this->authorize('update', Puesto::findOrFail($puestoId));
 
         foreach ($request->input('orden') as $posicion => $id) {
             PuestoActividad::where('puesto_id', $puestoId)
