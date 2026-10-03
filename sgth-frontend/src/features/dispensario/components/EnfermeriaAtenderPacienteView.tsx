@@ -1,171 +1,122 @@
 'use client'
 
 import { useState } from 'react'
-import { Stack, Card, Alert, Text, Button, Box } from '@mantine/core'
-import {
-  FlujoStepper,
-  type PasoStepper,
-} from '@/features/dispensario/components/FlujoStepper'
-import { IconAlertTriangle, IconCheck } from '@tabler/icons-react'
-import { BuscarPacienteForm } from '@/features/dispensario/components/BuscarPacienteForm'
-import {
-  SeleccionarAccionPaciente,
-  type AccionPaciente,
-} from '@/features/dispensario/components/SeleccionarAccionPaciente'
-import { CrearTurnoForm } from '@/features/dispensario/components/CrearTurnoForm'
-import { AtencionEnfermeriaForm } from '@/features/dispensario/components/AtencionEnfermeriaForm'
-import { OfrecerTriajeInmediato } from '@/features/dispensario/components/OfrecerTriajeInmediato'
-import { TriajeForm } from '@/features/dispensario/components/TriajeForm'
-import type { PacienteEncontrado } from '@/features/dispensario/services/pacienteService'
-import type { AgendaMedica } from '@/features/dispensario/services/agendaService'
-import type { AtencionEnfermeria } from '@/features/dispensario/services/atencionEnfermeriaService'
-import type { Triaje } from '@/features/dispensario/services/triajeService'
+import { Grid, Stack } from '@mantine/core'
+import { BuscarPacienteForm } from './BuscarPacienteForm'
+import { CrearTurnoForm } from './CrearTurnoForm'
+import { AtencionEnfermeriaForm } from './AtencionEnfermeriaForm'
+import { OfrecerTriajeInmediato } from './OfrecerTriajeInmediato'
+import { TriajeForm } from './TriajeForm'
+import { CierreAtencion } from './CierreAtencion'
+import { HoyEnEnfermeria } from './HoyEnEnfermeria'
+import type { AccionPaciente } from './PacienteCard'
+import type { PacienteEncontrado } from '../services/pacienteService'
+import type { AgendaMedica } from '../services/agendaService'
+import type { AtencionEnfermeria } from '../services/atencionEnfermeriaService'
+import type { Triaje } from '../services/triajeService'
 
 type Paso =
-  | 'buscar'
-  | 'elegir_accion'
-  | 'crear_turno'
-  | 'servicio_enfermeria'
-  | 'ofrecer_triaje'
-  | 'tomar_triaje'
-  | 'finalizado'
+  | { tipo: 'buscar' }
+  | { tipo: 'crear_turno'; paciente: PacienteEncontrado }
+  | { tipo: 'servicio'; paciente: PacienteEncontrado }
+  | { tipo: 'ofrecer_triaje'; turno: AgendaMedica }
+  | { tipo: 'triaje'; turno: AgendaMedica; recienCreado: boolean }
+  | { tipo: 'fin'; mensaje: string; critico: boolean }
 
-function mapearPasoVisual(paso: Paso): PasoStepper {
-  if (paso === 'buscar') return 'buscar'
-  if (paso === 'elegir_accion') return 'elegir_accion'
-  if (paso === 'finalizado') return 'confirmacion'
-  return 'completar_datos'
-}
-
+/**
+ * Atender paciente: buscar, decidir y registrar, con lo que espera a
+ * Enfermería al lado.
+ *
+ * Dos columnas desde pantallas medianas. A la izquierda el flujo, con el
+ * mismo ancho de lectura que tenía y alineado con el título; a la derecha,
+ * donde antes había media pantalla vacía, los pendientes de triaje. En el
+ * teléfono el panel va debajo: lo primero sigue siendo buscar.
+ *
+ * Sin el indicador de pasos de antes: tenía cuatro pasos para dos o tres
+ * decisiones y «Completar datos» abarcaba cosas distintas. La cabecera del
+ * paciente en cada formulario ya dice dónde se está.
+ */
 export function EnfermeriaAtenderPacienteView() {
-  const [paso, setPaso] = useState<Paso>('buscar')
-  const [paciente, setPaciente] = useState<PacienteEncontrado | null>(null)
-  const [agendaCreada, setAgendaCreada] = useState<AgendaMedica | null>(null)
-  const [mensajeFinal, setMensajeFinal] = useState('')
-  const [critico, setCritico] = useState(false)
+  const [paso, setPaso] = useState<Paso>({ tipo: 'buscar' })
+  const reiniciar = () => setPaso({ tipo: 'buscar' })
 
-  const handleReiniciar = () => {
-    setPaso('buscar')
-    setPaciente(null)
-    setAgendaCreada(null)
-    setMensajeFinal('')
-    setCritico(false)
-  }
+  const elegir = (paciente: PacienteEncontrado, accion: AccionPaciente) =>
+    setPaso(accion === 'turno'
+      ? { tipo: 'crear_turno', paciente }
+      : { tipo: 'servicio', paciente })
 
-  const handleElegirAccion = (accion: AccionPaciente) => {
-    setPaso(accion === 'turno' ? 'crear_turno' : 'servicio_enfermeria')
-  }
+  const terminar = (mensaje: string, critico = false) =>
+    setPaso({ tipo: 'fin', mensaje, critico })
 
-  const handleTurnoCreado = (agenda: AgendaMedica) => {
-    setAgendaCreada(agenda)
-    setPaso('ofrecer_triaje')
-  }
-
-  const handleServicioCreado = (atencion: AtencionEnfermeria) => {
-    setMensajeFinal(`Atención ${atencion.folio} registrada`)
-    setPaso('finalizado')
-  }
-
-  // El resultado se dice al terminar: antes el mensaje era el mismo para un
-  // triaje normal que para uno crítico, que es justo el que hay que avisar.
-  const handleTriajeCreado = (triaje: Triaje) => {
+  // El resultado se dice al terminar: un triaje crítico es justo el que hay
+  // que avisar.
+  const triajeRegistrado = (turno: AgendaMedica, triaje: Triaje) => {
     const nivel = triaje.nivel_alerta
     const aviso = nivel === 'critico'
       ? ' — crítico: avise al profesional ahora'
       : nivel === 'atencion' ? ' — requiere atención' : ''
-    setMensajeFinal(`Turno ${agendaCreada?.folio}: triaje registrado${aviso}`)
-    setCritico(nivel === 'critico')
-    setPaso('finalizado')
+    terminar(`Turno ${turno.folio}: triaje registrado${aviso}`, nivel === 'critico')
   }
 
+  const tomarTriaje = (turno: AgendaMedica) =>
+    setPaso({ tipo: 'triaje', turno, recienCreado: false })
+
   return (
-    // El mismo ancho de lectura que tenía el `Container` (720px), pero
-    // alineado a la izquierda: así el formulario arranca donde arranca el
-    // título de la página, como en el resto del sistema.
-    <Box maw={720}>
-      <FlujoStepper pasoActual={mapearPasoVisual(paso)} />
+    <Grid gap="lg">
+      <Grid.Col span={{ base: 12, md: 7 }}>
+        <Stack gap="md" maw={720}>
+          {paso.tipo === 'buscar' && (
+            <BuscarPacienteForm onElegir={elegir} onTomarTriaje={tomarTriaje} />
+          )}
 
-      {paso === 'buscar' && (
-        <BuscarPacienteForm
-          onPacienteListo={(p) => {
-            setPaciente(p)
-            setPaso('elegir_accion')
-          }}
-        />
-      )}
+          {paso.tipo === 'crear_turno' && (
+            <CrearTurnoForm
+              paciente={paso.paciente}
+              onCreado={(turno) => setPaso({ tipo: 'ofrecer_triaje', turno })}
+              onCancelar={reiniciar}
+            />
+          )}
 
-      {paso === 'elegir_accion' && paciente && (
-        <SeleccionarAccionPaciente
-          paciente={paciente}
-          onElegir={handleElegirAccion}
-          onVolver={handleReiniciar}
-        />
-      )}
+          {paso.tipo === 'servicio' && (
+            <AtencionEnfermeriaForm
+              paciente={paso.paciente}
+              onCreado={(a: AtencionEnfermeria) => terminar(`Servicio ${a.folio} registrado`)}
+              onCancelar={reiniciar}
+            />
+          )}
 
-      {paso === 'crear_turno' && paciente && (
-        <CrearTurnoForm
-          paciente={paciente}
-          onCreado={handleTurnoCreado}
-          onCancelar={() => setPaso('elegir_accion')}
-        />
-      )}
+          {paso.tipo === 'ofrecer_triaje' && (
+            <OfrecerTriajeInmediato
+              agenda={paso.turno}
+              onTomarTriaje={() => setPaso({ tipo: 'triaje', turno: paso.turno, recienCreado: true })}
+              onTerminar={() => terminar(`Turno ${paso.turno.folio} en cola de espera`)}
+            />
+          )}
 
-      {paso === 'servicio_enfermeria' && paciente && (
-        <AtencionEnfermeriaForm
-          paciente={paciente}
-          onCreado={handleServicioCreado}
-          onCancelar={() => setPaso('elegir_accion')}
-        />
-      )}
+          {paso.tipo === 'triaje' && (
+            <TriajeForm
+              // Uno distinto por turno: los valores iniciales se fijan al montar.
+              key={paso.turno.id}
+              turno={paso.turno}
+              onCreado={(triaje) => triajeRegistrado(paso.turno, triaje)}
+              // El turno ya existe y sigue en la cola: «Cancelar» hacía pensar
+              // que se cancelaba.
+              textoCancelar={paso.recienCreado ? 'Tomar más tarde' : 'Volver'}
+              onCancelar={() => paso.recienCreado
+                ? terminar(`Turno ${paso.turno.folio} en cola de espera`)
+                : reiniciar()}
+            />
+          )}
 
-      {paso === 'ofrecer_triaje' && agendaCreada && (
-        <OfrecerTriajeInmediato
-          agenda={agendaCreada}
-          onTomarTriaje={() => setPaso('tomar_triaje')}
-          onTerminar={() => {
-            setMensajeFinal(`Turno ${agendaCreada.folio} en cola de espera`)
-            setPaso('finalizado')
-          }}
-        />
-      )}
+          {paso.tipo === 'fin' && (
+            <CierreAtencion mensaje={paso.mensaje} critico={paso.critico} onOtro={reiniciar} />
+          )}
+        </Stack>
+      </Grid.Col>
 
-      {paso === 'tomar_triaje' && agendaCreada && (
-        <TriajeForm
-          turno={agendaCreada}
-          onCreado={handleTriajeCreado}
-          // El turno ya existe y sigue en la cola: «Cancelar» hacía pensar que
-          // se cancelaba.
-          textoCancelar="Tomar más tarde"
-          onCancelar={() => {
-            setMensajeFinal(`Turno ${agendaCreada.folio} en cola de espera`)
-            setPaso('finalizado')
-          }}
-        />
-      )}
-
-      {paso === 'finalizado' && (
-        <Card withBorder radius="lg" p="lg">
-          <Stack gap="md" align="center">
-            <Alert
-              icon={critico ? <IconAlertTriangle size={16} /> : <IconCheck size={16} />}
-              color={critico ? 'red' : 'emerald'}
-              variant="light"
-              w="100%"
-            >
-              <Text size="sm" fw={600} ta="center">
-                {mensajeFinal}
-              </Text>
-            </Alert>
-            {/* Era un `Card.Section` con `onClick` y `cursor: pointer`: se
-                veía como un enlace pero no recibía el foco del teclado ni se
-                anunciaba como algo pulsable. Una acción terciaria dentro de
-                una tarjeta es `Button variant="subtle"` (regla 06). */}
-            <Button variant="subtle" onClick={handleReiniciar}>
-              Atender otro paciente
-            </Button>
-          </Stack>
-        </Card>
-      )}
-    </Box>
+      <Grid.Col span={{ base: 12, md: 5 }}>
+        <HoyEnEnfermeria onTomarTriaje={tomarTriaje} />
+      </Grid.Col>
+    </Grid>
   )
 }
