@@ -197,8 +197,16 @@ final class FemoService
     ): FichaSaludOcupacional {
         return DB::transaction(function () use ($id, $datos, $usuarioId) {
             $ficha = FichaSaludOcupacional::findOrFail($id);
+
+            // La ficha es de una persona y no cambia de dueño al editarla: el
+            // PATCH ya no declara `servidor_id` ni `postulante_id`, así que no
+            // llegan validados. Se quitan también aquí por si otro llamador los
+            // manda; dejar los dos en nulo rompía el CHECK `chk_ficha_persona`.
+            $campos = $datos['ficha'] ?? [];
+            unset($campos['servidor_id'], $campos['postulante_id']);
+
             $ficha->update([
-                ...$this->sellarPuesto($datos['ficha']),
+                ...$this->sellarPuesto($campos),
                 'updated_by' => $usuarioId,
             ]);
 
@@ -211,7 +219,7 @@ final class FemoService
 
             if (array_key_exists('antecedentes', $datos)) {
                 $ficha->antecedentes()->delete();
-                foreach ($datos['antecedentes'] as $ant) {
+                foreach ($datos['antecedentes'] ?? [] as $ant) {
                     FemoAntecedente::create([
                         ...$ant, 'ficha_id' => $ficha->id,
                     ]);
@@ -245,7 +253,7 @@ final class FemoService
 
             if (array_key_exists('diagnosticos', $datos)) {
                 $ficha->diagnosticos()->delete();
-                foreach ($datos['diagnosticos'] as $diag) {
+                foreach ($datos['diagnosticos'] ?? [] as $diag) {
                     FemoDiagnostico::create([
                         ...$diag, 'ficha_id' => $ficha->id,
                     ]);
@@ -254,7 +262,7 @@ final class FemoService
 
             if (array_key_exists('examenes', $datos)) {
                 $ficha->examenes()->delete();
-                foreach ($datos['examenes'] as $exam) {
+                foreach ($datos['examenes'] ?? [] as $exam) {
                     FemoExamen::create([
                         ...$exam, 'ficha_id' => $ficha->id,
                     ]);
@@ -263,7 +271,7 @@ final class FemoService
 
             if (array_key_exists('empleos_anteriores', $datos)) {
                 $ficha->empleosAnteriores()->delete();
-                foreach ($datos['empleos_anteriores'] as $emp) {
+                foreach ($datos['empleos_anteriores'] ?? [] as $emp) {
                     FemoEmpleoAnterior::create([
                         ...$emp, 'ficha_id' => $ficha->id,
                     ]);
@@ -272,7 +280,7 @@ final class FemoService
 
             if (array_key_exists('examen_fisico', $datos)) {
                 $ficha->examenFisico()->delete();
-                foreach ($datos['examen_fisico'] as $item) {
+                foreach ($datos['examen_fisico'] ?? [] as $item) {
                     FemoExamenFisico::create([
                         ...$item, 'ficha_id' => $ficha->id,
                     ]);
@@ -280,15 +288,21 @@ final class FemoService
             }
 
             if (array_key_exists('antecedente_reproductivo', $datos)) {
-                $ficha->antecedenteReproductivo()->updateOrCreate(
-                    ['ficha_id' => $ficha->id],
-                    $datos['antecedente_reproductivo']
-                );
+                // Llega nulo cuando el médico vació el bloque: se borra, no se
+                // actualiza (`updateOrCreate` con nulo es un TypeError).
+                if (empty($datos['antecedente_reproductivo'])) {
+                    $ficha->antecedenteReproductivo()->delete();
+                } else {
+                    $ficha->antecedenteReproductivo()->updateOrCreate(
+                        ['ficha_id' => $ficha->id],
+                        $datos['antecedente_reproductivo']
+                    );
+                }
             }
 
             if (array_key_exists('consumo_sustancias', $datos)) {
                 $ficha->consumoSustancias()->delete();
-                foreach ($datos['consumo_sustancias'] as $consumo) {
+                foreach ($datos['consumo_sustancias'] ?? [] as $consumo) {
                     FemoConsumoSustancia::create([
                         ...$consumo, 'ficha_id' => $ficha->id,
                     ]);

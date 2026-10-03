@@ -1,5 +1,6 @@
 import api from '@/lib/axios'
 import type { ApiResponse, PaginatedResponse } from '@/types/api'
+import type { SexoPaciente } from './solicitudCertificacionService'
 
 export interface FemoConstantesVitales {
   temperatura_c?:        number | null
@@ -110,16 +111,25 @@ export interface FichaSaludOcupacional {
   numero_archivo?:               string | null
   fecha_evaluacion:              string
   tipo_ficha:                    string
+  puesto_id?:                    number | null
   puesto_trabajo?:               string | null
   puesto_trabajo_ciuo?:          string | null
   fecha_ingreso_trabajo?:        string | null
+  fecha_reintegro?:              string | null
+  fecha_ultimo_dia_laboral?:     string | null
   grupo_embarazada:              boolean
   grupo_discapacidad:            boolean
+  grupo_enfermedad_catastrofica?: boolean
+  grupo_adulto_mayor?:           boolean
   porcentaje_discapacidad?:      string | null
+  lateralidad?:                  'derecha' | 'izquierda' | null
   aptitud:                       string
   restricciones?:                string | null
   observaciones?:                string | null
   enfermedad_actual?:            string | null
+  autoriza_transfusion?:         boolean | null
+  tratamiento_hormonal?:         boolean | null
+  tratamiento_hormonal_cual?:    string | null
   recomendaciones?:              string | null
   tratamiento?:                  string | null
   condicion_relacionada_trabajo?: boolean | null
@@ -132,16 +142,20 @@ export interface FichaSaludOcupacional {
   medicacion_habitual_cual?:     string | null
   medicacion_habitual_cantidad?: string | null
   servidor?: {
-    id:       number
-    nombre:   string
-    apellido: string
-    cedula?:  string
+    id:           number
+    nombre:       string
+    apellido:     string
+    cedula?:      string
+    genero?:      SexoPaciente
+    tipo_sangre?: string | null
   }
   postulante?: {
-    id:        number
-    cedula:    string
-    nombres:   string
-    apellidos: string
+    id:           number
+    cedula:       string
+    nombres:      string
+    apellidos:    string
+    genero?:      SexoPaciente
+    tipo_sangre?: string | null
   }
   evaluador?: {
     servidor?: { nombre: string; apellido: string }
@@ -167,15 +181,24 @@ export interface CrearFemoData {
     fecha_evaluacion:         string
     tipo_ficha:               string
     aptitud:                  string
+    puesto_id?:               number | null
     puesto_trabajo?:          string | null
     puesto_trabajo_ciuo?:     string | null
     fecha_ingreso_trabajo?:   string | null
+    fecha_reintegro?:         string | null
+    fecha_ultimo_dia_laboral?: string | null
     grupo_embarazada?:        boolean
     grupo_discapacidad?:      boolean
+    grupo_enfermedad_catastrofica?: boolean
+    grupo_adulto_mayor?:      boolean
     porcentaje_discapacidad?: string | null
+    lateralidad?:             'derecha' | 'izquierda' | null
     restricciones?:           string | null
     observaciones?:           string | null
     enfermedad_actual?:       string | null
+    autoriza_transfusion?:    boolean | null
+    tratamiento_hormonal?:    boolean | null
+    tratamiento_hormonal_cual?: string | null
     recomendaciones?:         string | null
     tratamiento?:             string | null
     condicion_relacionada_trabajo?: boolean | null

@@ -40,7 +40,7 @@ const TIPO_FICHA_POR_EVENTO: Record<string, FichaBaseForm['tipo_ficha']> = {
   reintegro: 'reintegro',
   periodica: 'periodica',
   retiro:    'retiro',
-  especial:  'ingreso',
+  especial:  'especial',
 }
 
 const TIPO_EVENTO_LABELS: Record<string, string> = {
