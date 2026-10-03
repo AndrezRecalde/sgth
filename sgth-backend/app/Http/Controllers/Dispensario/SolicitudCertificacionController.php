@@ -20,6 +20,7 @@ use App\Models\Dispensario\SolicitudConstantesVitales;
 use App\Models\Expediente\Servidor;
 use App\Models\Seleccion\Convocatoria;
 use App\Models\Seleccion\Onboarding;
+use App\Services\Dispensario\TriajeService;
 use App\Services\Expediente\MovimientoPersonalService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -281,7 +282,10 @@ final class SolicitudCertificacionController extends Controller
             'servidor:id,nombre,apellido,cedula',
             'postulante:id,nombres,apellidos,cedula',
         ])
-            ->whereIn('estado', ['pendiente', 'en_proceso'])
+            // Solo las pendientes: a una `en_proceso` el registro la rechaza
+            // con 422, así que ofrecerla aquí era mandar a la enfermera a
+            // llenar un formulario que no se iba a guardar.
+            ->where('estado', 'pendiente')
             ->whereDoesntHave('constantesVitales')
             ->orderBy('fecha_limite')
             ->get();
@@ -297,39 +301,41 @@ final class SolicitudCertificacionController extends Controller
         StoreSolicitudSignosVitalesRequest $request,
         int $id
     ): JsonResponse {
-        $solicitud = SolicitudCertificacionMedica::findOrFail($id);
-
-        // Los signos se corrigen mientras la solicitud espera al médico. Una
-        // vez iniciada, el FEMO ya los copió: reescribirlos dejaba el triaje
-        // distinto de la ficha, y sin rastro de quién lo cambió.
-        if ($solicitud->estado !== 'pendiente') {
-            return ApiResponse::error(
-                'Los signos vitales solo se registran o corrigen antes de que el médico inicie la evaluación.',
-                null, 422
-            );
-        }
-
         $datos = $request->validated();
 
-        $tallaMetros = $datos['talla_cm'] / 100;
-        $imc = $tallaMetros > 0
-            ? round($datos['peso_kg'] / ($tallaMetros ** 2), 2)
-            : null;
+        // Con la solicitud bloqueada, igual que `iniciarProceso`: sin el
+        // bloqueo, el médico podía iniciar el FEMO entre la comprobación del
+        // estado y la escritura, y la ficha copiaba unos signos que acto
+        // seguido se reescribían.
+        [$constantes, $esNueva] = DB::transaction(function () use ($id, $datos, $request) {
+            $solicitud = SolicitudCertificacionMedica::lockForUpdate()->findOrFail($id);
 
-        $constantes = SolicitudConstantesVitales::updateOrCreate(
-            ['solicitud_id' => $solicitud->id],
-            [
-                ...$datos,
-                'solicitud_id' => $solicitud->id,
-                'enfermera_id' => $request->user()->id,
-                'imc' => $imc,
-                'registrado_en' => now(),
-            ]
-        );
+            // Los signos se corrigen mientras la solicitud espera al médico.
+            // Una vez iniciada, el FEMO ya los copió.
+            if ($solicitud->estado !== 'pendiente') {
+                throw new ReglaNegocioException(
+                    'Los signos vitales solo se registran o corrigen antes de que el médico inicie la evaluación.'
+                );
+            }
 
-        return ApiResponse::created(
-            $constantes, 'Signos vitales registrados exitosamente.'
-        );
+            $constantes = SolicitudConstantesVitales::updateOrCreate(
+                ['solicitud_id' => $solicitud->id],
+                [
+                    ...$datos,
+                    'solicitud_id' => $solicitud->id,
+                    'enfermera_id' => $request->user()->id,
+                    'imc' => TriajeService::imc($datos['peso_kg'], $datos['talla_cm']),
+                    'registrado_en' => now(),
+                ]
+            );
+
+            return [$constantes, $constantes->wasRecentlyCreated];
+        });
+
+        // Corregir no es crear: 200 con su propio mensaje.
+        return $esNueva
+            ? ApiResponse::created($constantes, 'Signos vitales registrados exitosamente.')
+            : ApiResponse::ok($constantes, 'Signos vitales corregidos.');
     }
 
     public function iniciarProceso(

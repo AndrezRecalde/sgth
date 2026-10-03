@@ -5,6 +5,8 @@ namespace App\Services\Dispensario;
 use App\Contracts\Dispensario\AgendaServiceInterface;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Dispensario\AgendaMedica;
+use App\Models\Dispensario\HistoriaClinica;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -20,6 +22,15 @@ final class AgendaService implements AgendaServiceInterface
      */
     private const ABIERTOS = ['en_espera', 'en_sala'];
 
+    /**
+     * El profesional con lo que pide `nombre_completo`: sin el servidor
+     * cargado, el accesor hacía una consulta más por cada fila de la cola.
+     */
+    private const MEDICO = [
+        'medico:id,usuario_ti,email,servidor_id',
+        'medico.servidor:id,nombre,apellido',
+    ];
+
     /** Horas durante las que un «no se presentó» se puede deshacer. */
     private const HORAS_PARA_REACTIVAR = 6;
 
@@ -30,7 +41,7 @@ final class AgendaService implements AgendaServiceInterface
         // que más llevaban esperando. El id desempata dos registros del mismo
         // segundo, que sin él cambian de sitio entre una recarga y otra.
         $query = AgendaMedica::with([
-            'medico', 'servidor', 'cargaFamiliar.servidor', 'triaje',
+            ...self::MEDICO, 'servidor', 'cargaFamiliar.servidor', 'triaje',
         ])->orderBy('registrado_en')->orderBy('id');
 
         if (!empty($filtros['medico_id'])) {
@@ -54,7 +65,7 @@ final class AgendaService implements AgendaServiceInterface
     public function obtener(int $id): AgendaMedica
     {
         return AgendaMedica::with([
-            'medico', 'servidor', 'cargaFamiliar.servidor', 'triaje',
+            ...self::MEDICO, 'servidor', 'cargaFamiliar.servidor', 'triaje',
         ])->findOrFail($id);
     }
 
@@ -81,7 +92,7 @@ final class AgendaService implements AgendaServiceInterface
 
             // Quien lo crea pasa directo a tomarle el triaje, y esa pantalla
             // muestra el nombre del paciente: sin las relaciones salía «—».
-            return $agenda->load(['medico', 'servidor', 'cargaFamiliar.servidor']);
+            return $agenda->load([...self::MEDICO, 'servidor', 'cargaFamiliar.servidor']);
         });
     }
 
@@ -139,7 +150,7 @@ final class AgendaService implements AgendaServiceInterface
 
     public function listosParaConsulta(
         int $medicoId
-    ): \Illuminate\Database\Eloquent\Collection {
+    ): Collection {
         $turnos = AgendaMedica::with([
             'servidor', 'cargaFamiliar.servidor', 'triaje',
         ])
@@ -152,15 +163,7 @@ final class AgendaService implements AgendaServiceInterface
             ->orderBy('registrado_en', 'asc')
             ->get();
 
-        $turnos->each(function (AgendaMedica $turno) {
-            $turno->historia_clinica_id = $turno->servidor_id
-                ? \App\Models\Dispensario\HistoriaClinica::where(
-                    'servidor_id', $turno->servidor_id
-                )->value('id')
-                : \App\Models\Dispensario\HistoriaClinica::where(
-                    'carga_familiar_id', $turno->carga_familiar_id
-                )->value('id');
-        });
+        $this->adjuntarHistoria($turnos);
 
         return $turnos;
     }
@@ -169,7 +172,7 @@ final class AgendaService implements AgendaServiceInterface
         int $medicoId,
         ?string $fechaDesde = null,
         ?string $fechaHasta = null
-    ): \Illuminate\Database\Eloquent\Collection {
+    ): Collection {
         $desde = $fechaDesde ? Carbon::parse($fechaDesde) : today();
         $hasta = $fechaHasta ? Carbon::parse($fechaHasta) : $desde;
 
@@ -193,15 +196,7 @@ final class AgendaService implements AgendaServiceInterface
             ")
             ->get();
 
-        $turnos->each(function (AgendaMedica $turno) {
-            $turno->historia_clinica_id = $turno->servidor_id
-                ? \App\Models\Dispensario\HistoriaClinica::where(
-                    'servidor_id', $turno->servidor_id
-                )->value('id')
-                : \App\Models\Dispensario\HistoriaClinica::where(
-                    'carga_familiar_id', $turno->carga_familiar_id
-                )->value('id');
-        });
+        $this->adjuntarHistoria($turnos);
 
         return $turnos;
     }
@@ -304,17 +299,29 @@ final class AgendaService implements AgendaServiceInterface
             ->where('medico_id', $medicoId)
             ->firstOrFail();
 
-        $turno->historia_clinica_id = $turno->servidor_id
-            ? \App\Models\Dispensario\HistoriaClinica::where(
-                'servidor_id', $turno->servidor_id
-            )->value('id')
-            : \App\Models\Dispensario\HistoriaClinica::where(
-                'carga_familiar_id', $turno->carga_familiar_id
-            )->value('id');
+        $this->adjuntarHistoria(new Collection([$turno]));
 
         return $turno;
     }
 
+
+    /**
+     * La historia clínica de cada turno en dos consultas, no en una por fila:
+     * la cola del médico la pedía turno por turno.
+     */
+    private function adjuntarHistoria(Collection $turnos): void
+    {
+        $porServidor = HistoriaClinica::whereIn('servidor_id', $turnos->pluck('servidor_id')->filter())
+            ->pluck('id', 'servidor_id');
+        $porCarga = HistoriaClinica::whereIn('carga_familiar_id', $turnos->pluck('carga_familiar_id')->filter())
+            ->pluck('id', 'carga_familiar_id');
+
+        $turnos->each(function (AgendaMedica $turno) use ($porServidor, $porCarga) {
+            $turno->historia_clinica_id = $turno->servidor_id
+                ? $porServidor->get($turno->servidor_id)
+                : $porCarga->get($turno->carga_familiar_id);
+        });
+    }
 
     /**
      * El folio sale del mayor ya emitido, no de contar filas.

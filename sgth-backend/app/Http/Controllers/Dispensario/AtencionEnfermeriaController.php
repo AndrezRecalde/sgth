@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dispensario;
 
 use App\Contracts\Dispensario\AtencionEnfermeriaServiceInterface;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Dispensario\AnularAtencionEnfermeriaRequest;
 use App\Http\Requests\Dispensario\StoreAtencionEnfermeriaRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\Dispensario\CatalogoServicioEnfermeria;
@@ -18,7 +19,16 @@ final class AtencionEnfermeriaController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $atenciones = $this->service->listar($request->all());
+        // Validados antes de llegar a la consulta: una fecha mal escrita
+        // acababa en un 500 de Postgres y `per_page` no tenía techo.
+        $filtros = $request->validate([
+            'fecha'         => ['nullable', 'date'],
+            'enfermera_id'  => ['nullable', 'integer'],
+            'solo_vigentes' => ['nullable', 'boolean'],
+            'per_page'      => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $atenciones = $this->service->listar($filtros);
 
         return ApiResponse::ok(
             $atenciones, 'Listado de atenciones de enfermería.'
@@ -38,16 +48,13 @@ final class AtencionEnfermeriaController extends Controller
         );
     }
 
-    public function anular(Request $request, int $id): JsonResponse
+    public function anular(AnularAtencionEnfermeriaRequest $request, int $id): JsonResponse
     {
-        $request->validate([
-            'motivo_anulacion' => ['required', 'string', 'max:255'],
-        ]);
-
         $atencion = $this->service->anular(
             $id,
             $request->string('motivo_anulacion')->value(),
-            $request->user()->id
+            $request->user()->id,
+            $request->user()->hasRole('admin-dispensario'),
         );
 
         return ApiResponse::ok(

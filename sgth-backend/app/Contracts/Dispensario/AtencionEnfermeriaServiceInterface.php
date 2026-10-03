@@ -14,6 +14,7 @@ interface AtencionEnfermeriaServiceInterface
     public function anular(
         int $id,
         string $motivo,
-        int $anuladoPor
+        int $anuladoPor,
+        bool $puedeAnularAjenas = false,
     ): AtencionEnfermeria;
 }
