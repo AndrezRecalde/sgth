@@ -246,20 +246,30 @@ test('las respuestas de urgencia distinguen «no» de «sin respuesta»', functi
         ->and($ficha->tratamiento_hormonal)->toBeNull();
 });
 
-test('se guardan lateralidad y las fechas de reintegro y salida', function () {
+test('se guardan lateralidad y la fecha de salida de un retiro', function () {
     $ficha = $this->servicio->registrar(
         ($this->datosFicha)([
             'tipo_ficha' => 'retiro',
             'lateralidad' => 'izquierda',
-            'fecha_reintegro' => '2026-03-01',
             'fecha_ultimo_dia_laboral' => '2026-08-15',
         ]),
         $this->medico->id,
     );
 
     expect($ficha->lateralidad)->toBe('izquierda')
-        ->and($ficha->fecha_reintegro->toDateString())->toBe('2026-03-01')
         ->and($ficha->fecha_ultimo_dia_laboral->toDateString())->toBe('2026-08-15');
+});
+
+test('se guarda la fecha de reintegro de un reintegro', function () {
+    $ficha = $this->servicio->registrar(
+        ($this->datosFicha)([
+            'tipo_ficha' => 'reintegro',
+            'fecha_reintegro' => '2026-03-01',
+        ]),
+        $this->medico->id,
+    );
+
+    expect($ficha->fecha_reintegro->toDateString())->toBe('2026-03-01');
 });
 
 test('se guardan el perímetro abdominal y la marca de trabajo actual', function () {
