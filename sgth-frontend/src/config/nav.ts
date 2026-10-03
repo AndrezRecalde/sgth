@@ -318,6 +318,10 @@ export const NAV_SALUD: NavGroup[] = [
         label:    'Enfermería',
         href:     ROUTES.SALUD.ENFERMERIA,
         icon:     'IconHeartbeat',
+        // Sin `roles` salía a todo el Dispensario —también a quien solo da
+        // soporte técnico—, y el API le respondía 403 al entrar. Médicos y
+        // odontólogos tienen su propia cola en Consultas y Odontología.
+        roles:    ['enfermera', 'admin-dispensario'],
         children: [
           {
             label: 'Atender paciente',

@@ -211,8 +211,8 @@ export function CrearTurnoForm({
           render={({ field }) => (
             <Switch
               label="Requiere triaje (signos vitales)"
-              description="Se configura automáticamente según
-                el tipo de atención"
+              // Decía «se configura automáticamente» y se podía cambiar a mano.
+              description="Se marca según el tipo de atención; puede cambiarlo."
               checked={field.value}
               onChange={(e) => field.onChange(e.currentTarget.checked)}
             />

@@ -6,7 +6,7 @@ import {
   FlujoStepper,
   type PasoStepper,
 } from '@/features/dispensario/components/FlujoStepper'
-import { IconCheck } from '@tabler/icons-react'
+import { IconAlertTriangle, IconCheck } from '@tabler/icons-react'
 import { BuscarPacienteForm } from '@/features/dispensario/components/BuscarPacienteForm'
 import {
   SeleccionarAccionPaciente,
@@ -42,12 +42,14 @@ export function EnfermeriaAtenderPacienteView() {
   const [paciente, setPaciente] = useState<PacienteEncontrado | null>(null)
   const [agendaCreada, setAgendaCreada] = useState<AgendaMedica | null>(null)
   const [mensajeFinal, setMensajeFinal] = useState('')
+  const [critico, setCritico] = useState(false)
 
   const handleReiniciar = () => {
     setPaso('buscar')
     setPaciente(null)
     setAgendaCreada(null)
     setMensajeFinal('')
+    setCritico(false)
   }
 
   const handleElegirAccion = (accion: AccionPaciente) => {
@@ -64,8 +66,15 @@ export function EnfermeriaAtenderPacienteView() {
     setPaso('finalizado')
   }
 
-  const handleTriajeCreado = (_triaje: Triaje) => {
-    setMensajeFinal(`Turno ${agendaCreada?.folio} — triaje registrado`)
+  // El resultado se dice al terminar: antes el mensaje era el mismo para un
+  // triaje normal que para uno crítico, que es justo el que hay que avisar.
+  const handleTriajeCreado = (triaje: Triaje) => {
+    const nivel = triaje.nivel_alerta
+    const aviso = nivel === 'critico'
+      ? ' — crítico: avise al profesional ahora'
+      : nivel === 'atencion' ? ' — requiere atención' : ''
+    setMensajeFinal(`Turno ${agendaCreada?.folio}: triaje registrado${aviso}`)
+    setCritico(nivel === 'critico')
     setPaso('finalizado')
   }
 
@@ -113,7 +122,7 @@ export function EnfermeriaAtenderPacienteView() {
         <OfrecerTriajeInmediato
           agenda={agendaCreada}
           onTomarTriaje={() => setPaso('tomar_triaje')}
-          onMasTarde={() => {
+          onTerminar={() => {
             setMensajeFinal(`Turno ${agendaCreada.folio} en cola de espera`)
             setPaso('finalizado')
           }}
@@ -124,6 +133,9 @@ export function EnfermeriaAtenderPacienteView() {
         <TriajeForm
           turno={agendaCreada}
           onCreado={handleTriajeCreado}
+          // El turno ya existe y sigue en la cola: «Cancelar» hacía pensar que
+          // se cancelaba.
+          textoCancelar="Tomar más tarde"
           onCancelar={() => {
             setMensajeFinal(`Turno ${agendaCreada.folio} en cola de espera`)
             setPaso('finalizado')
@@ -135,8 +147,8 @@ export function EnfermeriaAtenderPacienteView() {
         <Card withBorder radius="lg" p="lg">
           <Stack gap="md" align="center">
             <Alert
-              icon={<IconCheck size={16} />}
-              color="emerald"
+              icon={critico ? <IconAlertTriangle size={16} /> : <IconCheck size={16} />}
+              color={critico ? 'red' : 'emerald'}
               variant="light"
               w="100%"
             >

@@ -1,7 +1,7 @@
 'use client'
 
 import {
-  TONO_TURNO, ESTADO_TURNO_LABELS, turnoCerrado,
+  TONO_TURNO, ESTADO_TURNO_LABELS, TURNO_PENDIENTE, EN_ESPERA, turnoCerrado,
 } from '../constants/turnos'
 import { Text, Group, Stack } from '@mantine/core'
 import {
@@ -17,6 +17,15 @@ import { StatusBadge } from '@/components/ui'
 interface ColumnActions {
   onCancelar?:    (id: number) => void
   onTomarTriaje?: (turno: AgendaMedica) => void
+  /** Momento de la última carga: la espera se mide contra él. */
+  ahora:          number
+}
+
+/** «12 min», «1 h 05 min». */
+function duracion(ms: number): string {
+  const minutos = Math.max(0, Math.floor(ms / 60_000))
+  if (minutos < 60) return `${minutos} min`
+  return `${Math.floor(minutos / 60)} h ${String(minutos % 60).padStart(2, '0')} min`
 }
 
 export function getTurnosColumns(
@@ -70,7 +79,8 @@ export function getTurnosColumns(
     },
     {
       accessor: 'medico',
-      title:    'Médico asignado',
+      // «Profesional»: el turno puede ser de un odontólogo.
+      title:    'Profesional',
       render: (turno) => (
         <Group gap={6} wrap="nowrap">
           <IconStethoscope
@@ -86,29 +96,28 @@ export function getTurnosColumns(
     },
     {
       accessor: 'registrado_en',
-      title:    'Fecha y hora',
-      width:    130,
+      title:    'Llegada',
+      width:    120,
       render: (turno) => {
         if (!turno.registrado_en) {
           return <Text size="sm" c="dimmed">—</Text>
         }
-        const fecha = new Date(turno.registrado_en)
+        const llegada = new Date(turno.registrado_en)
+        const esperando = TURNO_PENDIENTE.includes(turno.estado)
         return (
           <Stack gap={0}>
             <Text size="sm" ff="monospace">
-              {fecha.toLocaleTimeString('es-EC', {
+              {llegada.toLocaleTimeString('es-EC', {
                 hour: '2-digit', minute: '2-digit',
               })}
             </Text>
-            {/* Aquí NO va `formatFechaMes`: esa lee en UTC, que es lo correcto
-                para un campo `date`, pero `registrado_en` es un instante y se
-                pinta junto a su propia hora. Un turno de las 20:00 saldría con
-                la fecha del día siguiente al lado de «08:00 p. m.». */}
-            <Text size="xs" c="dimmed">
-              {fecha.toLocaleDateString('es-EC', {
-                day: '2-digit', month: 'short', year: 'numeric',
-              })}
-            </Text>
+            {/* Cuánto lleva esperando quien aún no entra. La fecha que había
+                aquí repetía la del filtro; esto es lo que ayuda a decidir. */}
+            {esperando && (
+              <Text size="xs" c="dimmed">
+                espera {duracion(actions.ahora - llegada.getTime())}
+              </Text>
+            )}
           </Stack>
         )
       },
@@ -149,7 +158,7 @@ export function getTurnosColumns(
       width:    50,
       render: (turno) => {
         const tieneTriaje = !!turno.triaje
-        const yaNoEstaEnEspera = turno.estado !== 'en_espera'
+        const yaNoEstaEnEspera = turno.estado !== EN_ESPERA
 
         return (
           <TableActions actions={[

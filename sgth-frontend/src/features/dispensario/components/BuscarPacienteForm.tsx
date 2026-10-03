@@ -19,6 +19,7 @@ import {
   IconUserSearch,
 } from "@tabler/icons-react";
 import { useContainedInput } from "@/hooks/useContainedInput";
+import { getApiErrorMessage } from "@/types/api";
 import { useBuscarPaciente } from "../hooks/usePaciente";
 import { useCrearHistoriaClinica } from "../hooks/useHistoriaClinica";
 import { PacienteCard } from "./PacienteCard";
@@ -85,7 +86,7 @@ export function BuscarPacienteForm({ onPacienteListo }: Props) {
               Buscar paciente
             </Text>
             <Text size="xs" c="dimmed" ta="center" maw={320}>
-              Ingresa la cédula del servidor o de un familiar registrado como
+              Ingrese la cédula del servidor o de un familiar registrado como
               carga familiar
             </Text>
           </Stack>
@@ -96,7 +97,12 @@ export function BuscarPacienteForm({ onPacienteListo }: Props) {
           placeholder="Ej: 0801234567"
           {...contained}
           value={cedula}
-          onChange={(e) => setCedula(e.currentTarget.value)}
+          onChange={(e) => {
+            setCedula(e.currentTarget.value);
+            // La tarjeta del paciente anterior seguía a la vista, con su
+            // «Continuar», aunque la cédula ya fuese otra.
+            if (buscar.data || buscar.isError) buscar.reset();
+          }}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
@@ -109,12 +115,13 @@ export function BuscarPacienteForm({ onPacienteListo }: Props) {
               <ActionIcon
                 size="sm"
                 variant="subtle"
+                aria-label="Borrar la cédula"
                 onClick={() => {
                   setCedula("");
                   buscar.reset();
                 }}
               >
-                <IconX size={12} />
+                <IconX size={14} />
               </ActionIcon>
             ) : null
           }
@@ -134,9 +141,11 @@ export function BuscarPacienteForm({ onPacienteListo }: Props) {
             color="red"
             variant="light"
           >
+            {/* El mensaje del servidor: «no se encontró» cuando es eso, y el
+                motivo real cuando falla otra cosa. Antes un 403 o la red caída
+                también decían que el paciente no existía. */}
             <Text size="xs">
-              No se encontró ningún servidor o familiar registrado con esa
-              cédula.
+              {getApiErrorMessage(buscar.error, "No se pudo buscar al paciente.")}
             </Text>
           </Alert>
         )}

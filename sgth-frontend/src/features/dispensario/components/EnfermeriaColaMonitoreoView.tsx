@@ -2,10 +2,7 @@
 
 import { confirmar, Toolbar } from '@/components/ui'
 import { useState } from 'react'
-import {
-  Stack, Box, Chip,
-  Group, Button,
-} from '@mantine/core'
+import { Stack, Box, Chip, Group, Button } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { IconVaccine } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
@@ -14,33 +11,30 @@ import { TriajeForm } from '@/features/dispensario/components/TriajeForm'
 import { AtencionesEnfermeriaDrawer } from '@/features/dispensario/components/AtencionesEnfermeriaDrawer'
 import { ColaTurnosTable } from '@/features/dispensario/components/ColaTurnosTable'
 import { TriajePendientesList } from '@/features/dispensario/components/TriajePendientesList'
-import {
-  useColaTurnos,
-  useCancelarTurno,
-} from '@/features/dispensario/hooks/useAgenda'
+import { useColaTurnos, useCancelarTurno } from '@/features/dispensario/hooks/useAgenda'
 import { useTriajesPendientes } from '@/features/dispensario/hooks/useTriaje'
+import { usePuedeTriar } from '@/features/dispensario/hooks/usePuedeTriar'
 import type { AgendaMedica } from '@/features/dispensario/services/agendaService'
-import { fromDateValue } from '@/lib/fecha'
+import { fromDateValue, hoyIso } from '@/lib/fecha'
 
 type VistaMonitoreo = 'todos' | 'pendientes_triaje'
 
 export function EnfermeriaColaMonitoreoView() {
   const contained = useContainedInput('sm')
-  const [fecha, setFecha] = useState<Date | null>(new Date())
+  const [fecha, setFecha] = useState(hoyIso)
   const [vista, setVista] = useState<VistaMonitoreo>('todos')
   const [turnoTriaje, setTurnoTriaje] = useState<AgendaMedica | null>(null)
   const [soloAlertas, setSoloAlertas] = useState(false)
   const [drawerOpened, { open: abrirDrawer, close: cerrarDrawer }] =
     useDisclosure(false)
 
-  const fechaStr = fromDateValue(fecha ?? new Date())
+  const puedeTriar = usePuedeTriar()
 
-  const { data, isLoading } = useColaTurnos({ fecha: fechaStr })
+  const cola = useColaTurnos({ fecha, per_page: 200 })
   const { data: pendientesTriaje = [] } = useTriajesPendientes()
   const cancelar = useCancelarTurno()
 
-  const turnosDelDia = data?.data ?? []
-
+  const turnosDelDia = cola.data?.data ?? []
   const conAlerta = turnosDelDia.filter((t) =>
     t.triaje?.nivel_alerta === 'critico' ||
     t.triaje?.nivel_alerta === 'atencion'
@@ -51,11 +45,18 @@ export function EnfermeriaColaMonitoreoView() {
   // quede desplazado de la cola sin saber por qué.
   const turnos = soloAlertas ? conAlerta : turnosDelDia
 
-  // Si se eligió tomar el triaje de un turno
-  // desde la lista de pendientes
+  const pedirCancelacion = (id: number) => confirmar({
+    title:   'Cancelar turno',
+    message: 'Se cancelará este turno y el paciente saldrá de la cola.',
+    destructiva: true,
+    confirmLabel: 'Cancelar turno',
+    cancelLabel:  'Volver',
+    onConfirm: () => cancelar.mutate(id),
+  })
+
   if (turnoTriaje) {
     return (
-      // Mismo ancho de lectura que tenía el `Container`, alineado a la
+      // Mismo ancho de lectura que el resto de formularios, alineado a la
       // izquierda como el título. La cola sí ocupa todo el ancho.
       <Box maw={720}>
         <TriajeForm
@@ -80,10 +81,6 @@ export function EnfermeriaColaMonitoreoView() {
           </Button>
         }
       >
-        {/* Los tres chips salen del principal del subsistema: son el mismo
-            gesto —recortar la lista— y el color no distingue un filtro de
-            otro. Lo que está fuera de rango ya se ve en la columna «Estado»,
-            en rojo y con su icono. */}
         <Group gap="xs">
           <Chip
             checked={vista === 'todos'}
@@ -94,13 +91,17 @@ export function EnfermeriaColaMonitoreoView() {
           </Chip>
           <Chip
             checked={vista === 'pendientes_triaje'}
-            onChange={() => setVista('pendientes_triaje')}
+            onChange={() => { setVista('pendientes_triaje'); setSoloAlertas(false) }}
             size="sm"
           >
             Pendientes de triaje
             {pendientesTriaje.length > 0 ? ` (${pendientesTriaje.length})` : ''}
           </Chip>
-          {vista === 'todos' && conAlerta.length > 0 && (
+          {/* Se queda a la vista mientras esté activo aunque la cuenta baje a
+              cero: antes desaparecía con el filtro puesto —al cambiar de fecha
+              o al re-triar al único marcado— y la cola quedaba vacía sin forma
+              de quitarlo. */}
+          {vista === 'todos' && (conAlerta.length > 0 || soloAlertas) && (
             <Chip
               checked={soloAlertas}
               onChange={() => setSoloAlertas((v) => !v)}
@@ -116,15 +117,7 @@ export function EnfermeriaColaMonitoreoView() {
             label="Fecha"
             {...contained}
             value={fecha}
-            onChange={(v) => {
-              if (!v) {
-                setFecha(new Date())
-                return
-              }
-              const str = typeof v === 'string' ? v : String(v)
-              const [y, m, d] = str.slice(0, 10).split('-').map(Number)
-              setFecha(new Date(y, m - 1, d))
-            }}
+            onChange={(v) => setFecha(v ? fromDateValue(v) : hoyIso())}
             valueFormat="DD/MM/YYYY"
             maw={200}
           />
@@ -134,22 +127,22 @@ export function EnfermeriaColaMonitoreoView() {
       {vista === 'todos' && (
         <ColaTurnosTable
           turnos={turnos}
-          isLoading={isLoading}
-          onCancelar={(id) => confirmar({
-            title:   'Cancelar turno',
-            message: 'Se cancelará este turno y el paciente saldrá de la cola.',
-            destructiva: true,
-            confirmLabel: 'Cancelar turno',
-            cancelLabel:  'Volver',
-            onConfirm: () => cancelar.mutate(id),
-          })}
-          onTomarTriaje={(turno) => setTurnoTriaje(turno)}
+          isLoading={cola.isLoading}
+          error={cola.error}
+          onReintentar={() => cola.refetch()}
+          ahora={cola.dataUpdatedAt}
+          vacio={soloAlertas
+            ? { titulo: 'Sin turnos con alerta', descripcion: 'Ningún triaje de esta fecha quedó fuera de rango.' }
+            : { titulo: 'Sin turnos', descripcion: 'No hay turnos registrados en esta fecha.' }}
+          onCancelar={pedirCancelacion}
+          onTomarTriaje={puedeTriar ? setTurnoTriaje : undefined}
         />
       )}
 
       {vista === 'pendientes_triaje' && (
         <TriajePendientesList
-          onSeleccionar={(turno) => setTurnoTriaje(turno)}
+          onSeleccionar={puedeTriar ? setTurnoTriaje : undefined}
+          onCancelar={pedirCancelacion}
         />
       )}
 

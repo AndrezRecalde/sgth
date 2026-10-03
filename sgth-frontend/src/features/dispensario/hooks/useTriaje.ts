@@ -44,6 +44,7 @@ export function useRegistrarTriaje() {
       )
       qc.invalidateQueries({ queryKey: ['triaje'] })
       qc.invalidateQueries({ queryKey: ['agenda'] })
+      qc.invalidateQueries({ queryKey: ['dispensario', 'mi-jornada'] })
     },
     onError: notificar.alFallar('No se pudo registrar el triaje'),
   })

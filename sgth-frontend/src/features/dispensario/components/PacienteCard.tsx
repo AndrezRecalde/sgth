@@ -108,7 +108,7 @@ export function PacienteCard({
           <Button
             onClick={onContinuar}
           >
-            Continuar — Crear turno
+            Continuar
           </Button>
         )}
       </Stack>

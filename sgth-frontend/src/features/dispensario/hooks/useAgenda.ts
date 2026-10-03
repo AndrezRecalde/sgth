@@ -37,6 +37,8 @@ export function useColaTurnos(filtros: {
   medico_id?: number
   fecha?:     string
   estado?:    string
+  /** La cola de un día cabe entera: el backend acepta hasta 200. */
+  per_page?:  number
 }) {
   return useQuery({
     queryKey: ['agenda', 'cola', filtros],
@@ -55,6 +57,8 @@ export function useCrearTurno() {
     onSuccess: () => {
       notificar.exito('Turno creado', 'El turno fue registrado correctamente.')
       qc.invalidateQueries({ queryKey: ['agenda'] })
+      qc.invalidateQueries({ queryKey: ['triaje', 'pendientes'] })
+      qc.invalidateQueries({ queryKey: ['dispensario', 'mi-jornada'] })
     },
     onError: notificar.alFallar('No se pudo crear el turno'),
   })
@@ -68,6 +72,8 @@ export function useCancelarTurno() {
     onSuccess: () => {
       notificar.exito('Turno cancelado', 'El turno fue cancelado correctamente.')
       qc.invalidateQueries({ queryKey: ['agenda'] })
+      qc.invalidateQueries({ queryKey: ['triaje', 'pendientes'] })
+      qc.invalidateQueries({ queryKey: ['dispensario', 'mi-jornada'] })
     },
     onError: notificar.alFallar('No se pudo cancelar el turno'),
   })
@@ -97,8 +103,11 @@ export function useTurnosDelDia(params?: {
 export function useAccionesTurno() {
   const qc = useQueryClient()
 
+  // Cambiar el estado de un turno mueve las cifras de «Mi jornada»: sin
+  // invalidarla iban hasta un minuto por detrás.
   const invalidar = () => {
     qc.invalidateQueries({ queryKey: ['agenda'] })
+    qc.invalidateQueries({ queryKey: ['dispensario', 'mi-jornada'] })
   }
 
   const noPresentado = useMutation({
