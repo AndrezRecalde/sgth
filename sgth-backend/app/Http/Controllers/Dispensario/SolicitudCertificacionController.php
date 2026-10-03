@@ -136,6 +136,12 @@ final class SolicitudCertificacionController extends Controller
                 ->get()
                 ->keyBy('id');
 
+            // Una sola consulta para todo el lote; antes era una por servidor.
+            $conSolicitudActiva = SolicitudCertificacionMedica::whereIn('servidor_id', $datos['servidor_ids'])
+                ->whereIn('estado', ['pendiente', 'en_proceso'])
+                ->pluck('servidor_id')
+                ->flip();
+
             foreach ($datos['servidor_ids'] as $servidorId) {
                 $servidor = $servidores->get($servidorId);
 
@@ -145,11 +151,13 @@ final class SolicitudCertificacionController extends Controller
                     continue;
                 }
 
-                $tieneSolicitudActiva = SolicitudCertificacionMedica::where('servidor_id', $servidorId)
-                    ->whereIn('estado', ['pendiente', 'en_proceso'])
-                    ->exists();
+                if (! $servidor->estado) {
+                    $omitidas[] = ['servidor_id' => $servidorId, 'motivo' => 'El servidor no está activo.'];
 
-                if ($tieneSolicitudActiva) {
+                    continue;
+                }
+
+                if ($conSolicitudActiva->has($servidorId)) {
                     $omitidas[] = ['servidor_id' => $servidorId, 'motivo' => 'Ya tiene una solicitud activa.'];
 
                     continue;

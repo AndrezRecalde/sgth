@@ -17,9 +17,10 @@ import {
   type SolicitudSignosVitalesFormData,
 } from '../schemas/solicitudSignosVitales.schema'
 import { calcularImc, clasificacionImc } from '../constants/signosVitales'
-import { TIPO_EVENTO_OPTIONS } from '../services/solicitudCertificacionService'
+import { etiquetaTipoEvento } from '../services/solicitudCertificacionService'
 import type { SolicitudCertificacion } from '../services/solicitudCertificacionService'
 import { SectionCard, StatusBadge } from '@/components/ui'
+import { CamposSignosVitales } from './CamposSignosVitales'
 import { SEMANTIC_COLOR } from '@/config/design.tokens'
 
 interface Props {
@@ -42,9 +43,7 @@ export function SolicitudSignosVitalesForm({ solicitud, onCreado, onCancelar }: 
   const contained = useContainedInput()
   const registrar = useRegistrarSignosVitalesSolicitud()
 
-  const tipoLabel = TIPO_EVENTO_OPTIONS.find(
-    o => o.value === solicitud.tipo_evento
-  )?.label ?? solicitud.tipo_evento
+  const tipoLabel = etiquetaTipoEvento(solicitud.tipo_evento)
 
   const {
     control, handleSubmit,
@@ -162,126 +161,7 @@ export function SolicitudSignosVitalesForm({ solicitud, onCreado, onCancelar }: 
           </Stack>
         </SectionCard>
 
-        <SectionCard title="Signos vitales">
-          <Stack gap="md">
-            <SimpleGrid cols={{ base: 1, sm: 2 }}>
-              <Controller
-                name="presion_sistolica"
-                control={control}
-                render={({ field }) => (
-                  <NumberInput
-                    label="P. sistólica (mmHg)"
-                    description="Normal: 90–120 mmHg"
-                    hideControls
-                    {...contained}
-                    value={field.value}
-                    onChange={(v) => field.onChange(Number(v) || undefined)}
-                    error={errors.presion_sistolica?.message}
-                  />
-                )}
-              />
-              <Controller
-                name="presion_diastolica"
-                control={control}
-                render={({ field }) => (
-                  <NumberInput
-                    label="P. diastólica (mmHg)"
-                    description="Normal: 60–80 mmHg"
-                    hideControls
-                    {...contained}
-                    value={field.value}
-                    onChange={(v) => field.onChange(Number(v) || undefined)}
-                    error={errors.presion_diastolica?.message}
-                  />
-                )}
-              />
-            </SimpleGrid>
-
-            <SimpleGrid cols={{ base: 1, sm: 2 }}>
-              <Controller
-                name="frecuencia_cardiaca"
-                control={control}
-                render={({ field }) => (
-                  <NumberInput
-                    label="Frec. cardíaca (lpm)"
-                    description="Normal: 60–100 lpm"
-                    hideControls
-                    {...contained}
-                    value={field.value}
-                    onChange={(v) => field.onChange(Number(v) || undefined)}
-                    error={errors.frecuencia_cardiaca?.message}
-                  />
-                )}
-              />
-              <Controller
-                name="frecuencia_respiratoria"
-                control={control}
-                render={({ field }) => (
-                  <NumberInput
-                    label="Frec. respiratoria (rpm)"
-                    description="Normal: 12–20 rpm"
-                    hideControls
-                    {...contained}
-                    value={field.value}
-                    onChange={(v) => field.onChange(Number(v) || undefined)}
-                    error={errors.frecuencia_respiratoria?.message}
-                  />
-                )}
-              />
-            </SimpleGrid>
-
-            <SimpleGrid cols={{ base: 1, sm: 2 }}>
-              <Controller
-                name="temperatura_c"
-                control={control}
-                render={({ field }) => (
-                  <NumberInput
-                    label="Temperatura (°C)"
-                    decimalScale={1}
-                    description="Normal: 36.1–37.2 °C"
-                    hideControls
-                    {...contained}
-                    value={field.value}
-                    onChange={(v) => field.onChange(Number(v) || undefined)}
-                    error={errors.temperatura_c?.message}
-                  />
-                )}
-              />
-              <Controller
-                name="saturacion_oxigeno"
-                control={control}
-                render={({ field }) => (
-                  <NumberInput
-                    label="Sat. oxígeno (%)"
-                    decimalScale={1}
-                    description="Normal: 95–100 %"
-                    hideControls
-                    {...contained}
-                    value={field.value}
-                    onChange={(v) => field.onChange(Number(v) || undefined)}
-                    error={errors.saturacion_oxigeno?.message}
-                  />
-                )}
-              />
-            </SimpleGrid>
-
-            <Controller
-              name="glucosa"
-              control={control}
-              render={({ field }) => (
-                <NumberInput
-                  label="Glucosa (mg/dL)"
-                  decimalScale={1}
-                  description="Opcional. Normal en ayunas: 70–100 mg/dL"
-                  hideControls
-                  {...contained}
-                  value={field.value ?? undefined}
-                  onChange={(v) => field.onChange(v ? Number(v) : null)}
-                />
-              )}
-            />
-          </Stack>
-        </SectionCard>
+        <CamposSignosVitales control={control} errors={errors} />
 
         <SectionCard title="Observaciones">
           <Controller

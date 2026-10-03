@@ -3,16 +3,12 @@
 import { Text, Button } from '@mantine/core'
 import { IconHeartbeat } from '@tabler/icons-react'
 import { StatusBadge } from '@/components/ui'
-import { TIPO_EVENTO_OPTIONS } from '../services/solicitudCertificacionService'
+import { etiquetaTipoEvento } from '../services/solicitudCertificacionService'
 import type { SolicitudCertificacion } from '../services/solicitudCertificacionService'
 import type { DataTableColumn } from 'mantine-datatable'
 
 interface ColumnActions {
   onSeleccionar: (solicitud: SolicitudCertificacion) => void
-}
-
-function etiquetaTipo(valor: string): string {
-  return TIPO_EVENTO_OPTIONS.find(o => o.value === valor)?.label ?? valor
 }
 
 export function getSolicitudesTriajeColumns(
@@ -34,7 +30,7 @@ export function getSolicitudesTriajeColumns(
       title:    'Tipo de evaluación',
       width:    170,
       render: (s) => (
-        <StatusBadge>{etiquetaTipo(s.tipo_evento)}</StatusBadge>
+        <StatusBadge>{etiquetaTipoEvento(s.tipo_evento)}</StatusBadge>
       ),
     },
     {

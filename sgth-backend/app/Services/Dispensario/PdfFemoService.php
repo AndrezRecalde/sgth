@@ -131,7 +131,6 @@ final class PdfFemoService
                 'fecha_nacimiento' => $s->fecha_nacimiento,
                 'genero' => $s->genero,
                 'tipo_sangre' => $s->tipo_sangre,
-                'tiene_enfermedad_catastrofica' => $s->tiene_enfermedad_catastrofica,
                 'numero_historia' => $s->historiaClinica?->numero_historia,
             ];
         }
@@ -148,7 +147,6 @@ final class PdfFemoService
             'fecha_nacimiento' => $p?->fecha_nacimiento,
             'genero' => $p?->genero,
             'tipo_sangre' => $p?->tipo_sangre,
-            'tiene_enfermedad_catastrofica' => false,
             'numero_historia' => $historia?->numero_historia,
         ];
     }

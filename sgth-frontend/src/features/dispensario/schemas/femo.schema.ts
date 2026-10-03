@@ -48,20 +48,6 @@ export const fichaBaseSchema = z.object({
   observacion_examenes:          z.string().optional().nullable(),
 })
 
-export const constantesVitalesSchema = z.object({
-  temperatura_c:           z.number().optional().nullable(),
-  presion_sistolica:       z.number().optional().nullable(),
-  presion_diastolica:      z.number().optional().nullable(),
-  frecuencia_cardiaca:     z.number().optional().nullable(),
-  frecuencia_respiratoria: z.number().optional().nullable(),
-  saturacion_oxigeno:      z.number().optional().nullable(),
-  peso_kg:                 z.number().optional().nullable(),
-  talla_cm:                z.number().optional().nullable(),
-  perimetro_abdominal_cm:  z.number().optional().nullable(),
-  imc:                     z.number().optional().nullable(),
-  glucosa:                 z.number().optional().nullable(),
-})
-
 export const antecedenteSchema = z.object({
   tipo:             z.string().min(1),
   descripcion:      z.string().min(3, 'Mínimo 3 caracteres'),
@@ -143,7 +129,6 @@ export const consumoSustanciaSchema = z.object({
 })
 
 export type FichaBaseForm               = z.infer<typeof fichaBaseSchema>
-export type ConstantesVitalesForm       = z.infer<typeof constantesVitalesSchema>
 export type AntecedenteForm             = z.infer<typeof antecedenteSchema>
 export type FactorRiesgoForm            = z.infer<typeof factorRiesgoSchema>
 export type ActividadRiesgoForm         = z.infer<typeof actividadRiesgoSchema>

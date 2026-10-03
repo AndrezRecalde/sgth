@@ -77,7 +77,7 @@ final class FemoService
     public function obtener(int $id): FichaSaludOcupacional
     {
         return FichaSaludOcupacional::with([
-            'servidor:id,nombre,segundo_nombre,apellido,segundo_apellido,cedula,fecha_nacimiento,genero,tipo_sangre,tiene_discapacidad,tiene_enfermedad_catastrofica',
+            'servidor:id,nombre,segundo_nombre,apellido,segundo_apellido,cedula,fecha_nacimiento,genero,tipo_sangre',
             'servidor.historiaClinica:id,servidor_id,numero_historia',
             'postulante:id,cedula,nombres,segundo_nombre,apellidos,segundo_apellido,fecha_nacimiento,genero,tipo_sangre',
             'evaluador:id,usuario_ti,email,servidor_id',
@@ -211,6 +211,28 @@ final class FemoService
         return $campos;
     }
 
+    /**
+     * Los ítems del examen físico en un solo INSERT: son hasta treinta y uno
+     * por ficha, y uno por fila se notaba al guardar el borrador.
+     */
+    private function insertarExamenFisico(int $fichaId, array $items): void
+    {
+        if ($items === []) {
+            return;
+        }
+
+        $ahora = now();
+        FemoExamenFisico::insert(array_map(fn (array $item) => [
+            'ficha_id' => $fichaId,
+            'region' => $item['region'],
+            'item' => $item['item'],
+            'normal' => $item['normal'] ?? true,
+            'observacion' => $item['observacion'] ?? null,
+            'created_at' => $ahora,
+            'updated_at' => $ahora,
+        ], $items));
+    }
+
     public function registrar(array $datos, int $evaluadorId): FichaSaludOcupacional
     {
         return DB::transaction(function () use ($datos, $evaluadorId) {
@@ -305,11 +327,7 @@ final class FemoService
                 ]);
             }
 
-            foreach ($datos['examen_fisico'] ?? [] as $item) {
-                FemoExamenFisico::create([
-                    ...$item, 'ficha_id' => $ficha->id,
-                ]);
-            }
+            $this->insertarExamenFisico($ficha->id, $datos['examen_fisico'] ?? []);
 
             if (! empty($datos['antecedente_reproductivo'])) {
                 $ficha->antecedenteReproductivo()->create($datos['antecedente_reproductivo']);
@@ -431,11 +449,7 @@ final class FemoService
 
             if (array_key_exists('examen_fisico', $datos)) {
                 $ficha->examenFisico()->delete();
-                foreach ($datos['examen_fisico'] ?? [] as $item) {
-                    FemoExamenFisico::create([
-                        ...$item, 'ficha_id' => $ficha->id,
-                    ]);
-                }
+                $this->insertarExamenFisico($ficha->id, $datos['examen_fisico'] ?? []);
             }
 
             if (array_key_exists('antecedente_reproductivo', $datos)) {

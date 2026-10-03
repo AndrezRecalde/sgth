@@ -1,8 +1,7 @@
 'use client'
 
 import {
-  Accordion, ActionIcon, Alert, Card, Checkbox, Group,
-  Skeleton, Stack, Text, Textarea, TextInput,
+  Accordion, ActionIcon, Alert, Checkbox, Group, Skeleton, Stack, Text, Textarea,
 } from '@mantine/core'
 import { IconAlertTriangle, IconTrash } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -10,8 +9,8 @@ import { usePuestoActividades } from '@/features/estructura/hooks/usePuestoActiv
 import { useCatalogoRiesgos } from '../../hooks/useCatalogoRiesgos'
 import type { ActividadRiesgoForm, FactorRiesgoForm } from '../../schemas/femo.schema'
 import { FemoSeccion } from './FemoSeccion'
-import classes from './FemoMatrizRiesgos.module.css'
-import { confirmar, CountBadge, StatusBadge } from '@/components/ui'
+import { FemoCategoriaRiesgo } from './FemoCategoriaRiesgo'
+import { confirmar, StatusBadge } from '@/components/ui'
 
 interface Props {
   puestoId:            number | null
@@ -73,34 +72,20 @@ export function FemoMatrizRiesgos({
     )
   }
 
-  const getFactor = (index: number, categoria: string, factor: string) =>
-    factoresRiesgo.find(
-      f => f.actividad_index === index && f.categoria === categoria && f.factor === factor
-    )
+  /** ¿Es este el factor `factor` de la categoría, en la actividad `index`? */
+  const esEste = (index: number, categoria: string, factor: string) => (f: FactorRiesgoForm) =>
+    f.actividad_index === index && f.categoria === categoria && f.factor === factor
 
   const toggleFactor = (index: number, categoria: string, factor: string) => {
-    const existe = getFactor(index, categoria, factor)
-    if (existe) {
-      onFactoresChange(factoresRiesgo.filter(f => f !== existe))
-    } else {
-      onFactoresChange([
-        ...factoresRiesgo,
-        { categoria, factor, presente: true, medida_preventiva: null, actividad_index: index },
-      ])
-    }
+    const existe = factoresRiesgo.find(esEste(index, categoria, factor))
+    onFactoresChange(existe
+      ? factoresRiesgo.filter(f => f !== existe)
+      : [...factoresRiesgo, { categoria, factor, presente: true, medida_preventiva: null, actividad_index: index }])
   }
 
-  const setFactorMedida = (
-    index: number, categoria: string, factor: string, medida: string,
-  ) => {
-    onFactoresChange(
-      factoresRiesgo.map(f =>
-        f.actividad_index === index && f.categoria === categoria && f.factor === factor
-          ? { ...f, medida_preventiva: medida }
-          : f
-      )
-    )
-  }
+  const setFactorMedida = (index: number, categoria: string, factor: string, medida: string) =>
+    onFactoresChange(factoresRiesgo.map(f =>
+      esEste(index, categoria, factor)(f) ? { ...f, medida_preventiva: medida } : f))
 
   return (
     <FemoSeccion
@@ -184,69 +169,15 @@ export function FemoMatrizRiesgos({
                       onChange={(e) => setMedidaActividad(index, e.currentTarget.value)}
                     />
 
-                    {Object.entries(catalogo).map(([clave, cat]) => {
-                      const seleccionados = factoresActividad.filter(f => f.categoria === clave)
-
-                      return (
-                        <Card key={clave} withBorder radius="md" padding="sm">
-                          <Group gap="xs" mb="sm">
-                            <Text size="sm" fw={600}>{cat.etiqueta}</Text>
-                            {seleccionados.length > 0 && (
-                              <CountBadge size="xs">
-                                {seleccionados.length}
-                              </CountBadge>
-                            )}
-                          </Group>
-
-                          <Stack gap="sm">
-                            {cat.grupos.map((grupo, g) => (
-                              <div key={grupo.subcategoria ?? g}>
-                                {/* Solo «De seguridad» se subdivide; en el resto
-                                    los factores cuelgan directo de la categoría. */}
-                                {grupo.etiqueta && (
-                                  <Text component="div" className={classes.subcategoria}>
-                                    {grupo.etiqueta}
-                                  </Text>
-                                )}
-                                <div className={classes.factores}>
-                                  {grupo.factores.map((factor) => (
-                                    <Checkbox
-                                      key={factor}
-                                      label={factor}
-                                      size="sm"
-                                      checked={!!getFactor(index, clave, factor)}
-                                      onChange={() => toggleFactor(index, clave, factor)}
-                                    />
-                                  ))}
-                                </div>
-                              </div>
-                            ))}
-                          </Stack>
-
-                          {seleccionados.length > 0 && (
-                            <Stack gap="xs" mt="md">
-                              {seleccionados.map((f) => (
-                                <TextInput
-                                  key={f.factor}
-                                  label={f.factor === 'Otros' ? '¿Cuál? (Otros)' : `Detalle — ${f.factor}`}
-                                  placeholder={f.factor === 'Otros' ? 'Describa el factor' : 'Opcional'}
-                                  // «Otros ____» del impreso: sin el detalle no
-                                  // dice nada. El PDF lo imprime junto al factor.
-                                  required={f.factor === 'Otros'}
-                                  error={f.factor === 'Otros' && !f.medida_preventiva?.trim()
-                                    ? 'Indique cuál es el factor' : undefined}
-                                  {...contained}
-                                  value={f.medida_preventiva ?? ''}
-                                  onChange={(e) =>
-                                    setFactorMedida(index, clave, f.factor, e.currentTarget.value)
-                                  }
-                                />
-                              ))}
-                            </Stack>
-                          )}
-                        </Card>
-                      )
-                    })}
+                    {Object.entries(catalogo).map(([clave, cat]) => (
+                      <FemoCategoriaRiesgo
+                        key={clave}
+                        categoria={cat}
+                        seleccionados={factoresActividad.filter(f => f.categoria === clave)}
+                        onToggle={(factor) => toggleFactor(index, clave, factor)}
+                        onDetalle={(factor, detalle) => setFactorMedida(index, clave, factor, detalle)}
+                      />
+                    ))}
                   </Stack>
                 </Accordion.Panel>
               </Accordion.Item>

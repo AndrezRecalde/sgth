@@ -6,7 +6,7 @@ import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { antecedenteSchema, type AntecedenteForm } from '../../schemas/femo.schema'
-import { TIPO_ANTECEDENTE_OPTIONS } from '../../services/femoOptions'
+import { TIPO_ANTECEDENTE_SELECCIONABLES } from '../../services/femoOptions'
 
 interface Props {
   opened:  boolean
@@ -44,7 +44,7 @@ export function FemoAntecedenteModal({ opened, onClose, onAgregar }: Props) {
           render={({ field }) => (
             <Select
               label="Tipo"
-              data={TIPO_ANTECEDENTE_OPTIONS}
+              data={TIPO_ANTECEDENTE_SELECCIONABLES}
               required
               {...contained}
               value={field.value}
