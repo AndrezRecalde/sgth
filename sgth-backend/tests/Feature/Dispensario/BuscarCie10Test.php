@@ -1,11 +1,21 @@
 <?php
 
 use App\Models\Dispensario\DiagnosticoCie10;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
 
 beforeEach(function () {
+    // Buscar el CIE-10 pide sesión y rol clínico: estaba entre las rutas públicas.
+    $medico = User::forceCreate([
+        'email' => 'cie10@example.com', 'usuario_ti' => 'cie10',
+        'password' => bcrypt('123456'), 'primer_login' => false,
+    ]);
+    $medico->assignRole(Role::firstOrCreate(['name' => 'medico', 'guard_name' => 'sanctum']));
+    $this->actingAs($medico, 'sanctum');
+
     // Un puñado del catálogo real, con sus tildes y sus mayúsculas.
     collect([
         ['G430', 'MIGRAÑA SIN AURA'],
