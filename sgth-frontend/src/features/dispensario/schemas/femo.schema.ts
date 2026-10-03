@@ -16,6 +16,8 @@ export const fichaBaseSchema = z.object({
   grupo_embarazada:              z.boolean().optional().default(false),
   grupo_discapacidad:            z.boolean().optional().default(false),
   grupo_enfermedad_catastrofica: z.boolean().optional().default(false),
+  /** Quinto grupo del formato del GADPE; solo aplica a pacientes mujeres. */
+  grupo_lactancia:               z.boolean().optional().default(false),
   grupo_adulto_mayor:            z.boolean().optional().default(false),
   porcentaje_discapacidad:       z.string().optional().nullable(),
   /** Mano dominante. Observación clínica del formulario 028. */

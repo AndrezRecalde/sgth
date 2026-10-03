@@ -28,7 +28,7 @@ class FichaSaludOcupacional extends Model
         'tipo_ficha', 'puesto_trabajo', 'puesto_trabajo_ciuo',
         'fecha_ingreso_trabajo',
         'grupo_embarazada', 'grupo_discapacidad',
-        'grupo_enfermedad_catastrofica', 'grupo_adulto_mayor',
+        'grupo_enfermedad_catastrofica', 'grupo_lactancia', 'grupo_adulto_mayor',
         'porcentaje_discapacidad', 'lateralidad',
         'fecha_reintegro', 'fecha_ultimo_dia_laboral',
         'autoriza_transfusion', 'tratamiento_hormonal',
@@ -53,6 +53,7 @@ class FichaSaludOcupacional extends Model
             'grupo_embarazada' => 'boolean',
             'grupo_discapacidad' => 'boolean',
             'grupo_enfermedad_catastrofica' => 'boolean',
+            'grupo_lactancia' => 'boolean',
             'grupo_adulto_mayor' => 'boolean',
             // Aceptan nulo a propósito: en una historia clínica «no respondió»
             // no es lo mismo que «respondió que no».
