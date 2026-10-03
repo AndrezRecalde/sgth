@@ -30,36 +30,35 @@ export function getFemosColumns(a: Acciones): DataTableColumn<FichaSaludOcupacio
     {
       accessor: 'fecha_evaluacion',
       title:    'Fecha',
-      width:    120,
+      width:    110,
       render: (f) => <Text size="sm">{formatFechaMes(f.fecha_evaluacion)}</Text>,
     },
     {
       accessor: 'servidor',
       title:    'Servidor / Aspirante',
+      // El puesto va debajo, como en la bandeja de solicitudes: en su propia
+      // columna dejaba la tabla más ancha que la pantalla y escondía el menú
+      // de acciones.
       render: (f) => (
         <Stack gap={0}>
           <Text size="sm" fw={500}>{nombreDe(f)}</Text>
           <Text size="xs" c="dimmed" ff="monospace">
             {f.servidor?.cedula ?? f.postulante?.cedula ?? ''}
           </Text>
+          {f.puesto_trabajo && <Text size="xs" c="dimmed">{f.puesto_trabajo}</Text>}
         </Stack>
       ),
     },
     {
-      accessor: 'puesto_trabajo',
-      title:    'Puesto',
-      render: (f) => <Text size="sm">{f.puesto_trabajo ?? '—'}</Text>,
-    },
-    {
       accessor: 'tipo_ficha',
       title:    'Tipo',
-      width:    170,
+      width:    110,
       render: (f) => <StatusBadge>{etiquetaTipo(f.tipo_ficha)}</StatusBadge>,
     },
     {
       accessor: 'aptitud',
       title:    'Aptitud',
-      width:    170,
+      width:    160,
       render: (f) => (
         <StatusBadge tone={TONO_APTITUD[f.aptitud ?? ''] ?? 'neutral'}>
           {etiquetaAptitud(f.aptitud)}
@@ -69,7 +68,7 @@ export function getFemosColumns(a: Acciones): DataTableColumn<FichaSaludOcupacio
     {
       accessor: 'evaluador',
       title:    'Evaluador',
-      width:    180,
+      width:    150,
       render: (f) => {
         const ev = f.evaluador?.servidor
         // Sin «Dr.» delante: no todo evaluador es doctor, ni varón.

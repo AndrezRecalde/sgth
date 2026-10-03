@@ -70,7 +70,7 @@ export function FemoSeccionAntecedentes({
           {antecedentes.map((a, i) => (
             <Card key={i} withBorder radius="md" padding="sm">
               <Group justify="space-between" wrap="nowrap" gap="sm">
-                <Stack gap={0} style={{ minWidth: 0 }}>
+                <Stack gap={0} miw={0}>
                   <Text size="sm" fw={500}>
                     {TIPO_ANTECEDENTE_OPTIONS.find((o) => o.value === a.tipo)?.label ?? a.tipo}
                     {a.fecha_aproximada && ` — ${a.fecha_aproximada}`}

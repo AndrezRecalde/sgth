@@ -7,7 +7,9 @@ import type { SemanticTone } from '@/config/design.tokens'
 */
 
 export const TIPO_EVENTO_OPTIONS = [
-  { value: 'ingreso',    label: 'Ingreso / Pre-ocupacional' },
+  // «Ingreso», como el impreso del MSP. «Ingreso / Pre-ocupacional» no cabía
+  // en la insignia de las tablas y se salía de su columna.
+  { value: 'ingreso',    label: 'Ingreso' },
   { value: 'reintegro',  label: 'Reintegro'                 },
   { value: 'periodica',  label: 'Periódica'                 },
   { value: 'retiro',     label: 'Retiro'                    },

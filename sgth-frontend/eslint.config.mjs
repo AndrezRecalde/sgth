@@ -177,6 +177,18 @@ const SINTAXIS_TSX = [
     selector: 'JSXOpeningElement[name.name="Divider"] > JSXAttribute[name.name="label"]',
     message: "Un título de sección no va dentro de un `Divider`, que es un role=\"separator\": use SectionCard o SectionHeading de '@/components/ui' (regla 06). Un Divider sin etiqueta sigue valiendo.",
   },
+  // Un campo contained lleva la etiqueta dentro, arriba a la izquierda: justo
+  // donde Mantine dibuja el icono de `leftSection`. La lupa queda encima de
+  // «Buscar». La regla 07 lo decía y nada lo comprobaba; el buscador de la
+  // cobertura de evaluaciones lo hizo igual.
+  {
+    // Atributos hermanos del MISMO elemento, en cualquier orden. Con `:has`
+    // se colaban los de un JSX anidado (un Toolbar con un campo contained y
+    // un botón con icono dentro de `actions`).
+    selector:
+      'JSXSpreadAttribute[argument.name=/contained/i] ~ JSXAttribute[name.name="leftSection"], JSXAttribute[name.name="leftSection"] ~ JSXSpreadAttribute[argument.name=/contained/i]',
+    message: "Un campo contained no lleva `leftSection`: el icono se monta sobre la etiqueta. Dígalo en el placeholder («Buscar nombre o cédula…») o ponga el icono en un botón contiguo (regla 07).",
+  },
 ];
 
 const USE_CLIENT_EN_PAGINA = {

@@ -29,7 +29,7 @@ export function PuestoSellado({ nombre, ciuo }: Props) {
           <IconBriefcase size={18} stroke={1.7} />
         </span>
 
-        <Stack gap={2} style={{ minWidth: 0, flex: 1 }}>
+        <Stack gap={2} miw={0} flex={1}>
           <Text size="xs" fw={600} c="dimmed">
             Puesto de trabajo
           </Text>

@@ -2,7 +2,7 @@
 
 import { Button, Select, TextInput } from '@mantine/core'
 import {
-  IconFileSpreadsheet, IconSearch, IconStethoscope,
+  IconFileSpreadsheet, IconStethoscope,
 } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
@@ -74,9 +74,8 @@ export function CoberturaFiltros({
     >
       <TextInput
         label="Buscar"
-        placeholder="Nombre o cédula"
-        leftSection={<IconSearch size={16} />}
-        style={{ minWidth: 220 }}
+        placeholder="Buscar nombre o cédula…"
+        miw={220}
         {...contained}
         value={buscar}
         onChange={(e) => onBuscar(e.currentTarget.value)}
@@ -86,7 +85,7 @@ export function CoberturaFiltros({
         placeholder="Todas las unidades"
         data={unidadOptions}
         searchable
-        style={{ minWidth: 240 }}
+        miw={240}
         {...contained}
         value={unidad}
         onChange={(v) => onUnidad(v ?? '')}
@@ -95,7 +94,7 @@ export function CoberturaFiltros({
         label="Estado de cobertura"
         placeholder="Toda la plantilla"
         data={ESTADO_COBERTURA_FILTRO_OPTIONS}
-        style={{ minWidth: 190 }}
+        miw={190}
         {...contained}
         value={estado}
         onChange={(v) => onEstado(v ?? '')}

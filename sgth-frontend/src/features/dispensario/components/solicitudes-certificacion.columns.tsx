@@ -52,7 +52,10 @@ const unidadDe = (s: SolicitudCertificacion) =>
 const tipoEvento: Columna = {
   accessor: 'tipo_evento',
   title: 'Tipo de evaluación',
-  width: 180,
+  // Las etiquetas son de una palabra («Ingreso», «Periódica»…): con 180 y
+  // «Ingreso / Pre-ocupacional» la insignia se salía y el resto de anchos
+  // fijos aplastaban la columna del servidor.
+  width: 130,
   render: (s) => (
     <StatusBadge>{etiquetaTipoEvento(s.tipo_evento)}</StatusBadge>
   ),
@@ -143,19 +146,24 @@ export function getSolicitudesSsoColumns(acciones: AccionesSso): Columna[] {
   return [
     tipoEvento,
     paciente,
-    origen('Solicitado por', 160, true),
+    origen('Solicitado por', 150, true),
     fechaLimite,
     {
-      accessor: 'signos_vitales',
-      title: 'Signos vitales',
-      width: 150,
-      render: (s) => (
-        <StatusBadge tone={s.constantes_vitales ? 'success' : 'warning'}>
-          {s.constantes_vitales ? 'Tomados' : 'Pendiente'}
-        </StatusBadge>
+      ...estado,
+      // El triaje va con el estado y no en su propia columna: solo importa
+      // mientras la solicitud está abierta, y esa columna dejaba la tabla más
+      // ancha que la pantalla, con el menú de acciones fuera de la vista.
+      render: (s, i) => (
+        <Stack gap={4}>
+          {estado.render?.(s, i)}
+          {(s.estado === 'pendiente' || s.estado === 'en_proceso') && (
+            <StatusBadge size="xs" tone={s.constantes_vitales ? 'success' : 'warning'}>
+              {s.constantes_vitales ? 'Triaje hecho' : 'Sin triaje'}
+            </StatusBadge>
+          )}
+        </Stack>
       ),
     },
-    estado,
     {
       accessor: 'acciones',
       title: '',

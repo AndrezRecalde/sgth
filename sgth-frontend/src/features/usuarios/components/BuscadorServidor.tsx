@@ -6,7 +6,7 @@ import {
   Alert, Button, ActionIcon, Loader,
 } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
-import { IconSearch, IconX } from '@tabler/icons-react'
+import { IconX } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useServidoresSinUsuario } from '../hooks/useServidoresSinUsuario'
 
@@ -56,7 +56,6 @@ export function BuscadorServidor({
         {...contained}
         value={busqueda}
         onChange={(e) => setBusqueda(e.currentTarget.value)}
-        leftSection={<IconSearch size={14} />}
         rightSection={
           isFetching ? (
             <Loader size="xs" />
