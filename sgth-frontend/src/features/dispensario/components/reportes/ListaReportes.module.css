@@ -1,0 +1,22 @@
+/* Cada reporte del catálogo, a todo el ancho de la tarjeta. */
+.reporte {
+  display: block;
+  width: 100%;
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  border-top: 1px solid var(--sgth-border);
+  border-left: 3px solid transparent;
+}
+
+.reporte:first-child {
+  border-top: 0;
+}
+
+.reporte:hover {
+  background-color: var(--sgth-surface-hover);
+}
+
+/* El elegido: el acento del subsistema, como el ítem activo del menú. */
+.reporte[data-activo] {
+  background-color: var(--sgth-accent-light);
+  border-left-color: var(--mantine-color-primario-filled);
+}

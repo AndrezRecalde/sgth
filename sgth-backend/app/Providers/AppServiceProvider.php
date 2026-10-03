@@ -144,6 +144,10 @@ class AppServiceProvider extends ServiceProvider
             AtencionEnfermeriaService::class
         );
         $this->app->bind(
+            \App\Contracts\Dispensario\CatalogoReportesDispensarioInterface::class,
+            \App\Services\Dispensario\Reportes\CatalogoReportesDispensario::class
+        );
+        $this->app->bind(
             InventarioMedicinasServiceInterface::class,
             InventarioMedicinasService::class
         );
