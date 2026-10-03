@@ -1180,6 +1180,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // Dashboard Estadístico — SOLO admin-dispensario (y máxima autoridad)
         Route::get('dashboard/kpis', [DashboardDispensarioController::class, 'kpis'])
             ->middleware('role:admin-dispensario|maxima-autoridad');
+        Route::get('dashboard/panorama', [DashboardDispensarioController::class, 'panorama'])
+            ->middleware('role:admin-dispensario|maxima-autoridad');
 
         Route::get('personal-medico',
             [PersonalMedicoController::class, 'index']
