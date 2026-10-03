@@ -83,7 +83,7 @@ final class CoberturaCertificacionService
      * resumen se recalculara sobre lo filtrado, las otras tres cifras caerían
      * a cero y el tablero dejaría de poder leerse de un golpe.
      */
-    private function resumen(array $filtros): array
+    public function resumen(array $filtros = []): array
     {
         $conteos = DB::query()
             ->fromSub($this->consulta($filtros), 'cobertura')

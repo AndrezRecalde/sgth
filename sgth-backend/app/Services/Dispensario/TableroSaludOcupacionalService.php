@@ -47,7 +47,7 @@ final class TableroSaludOcupacionalService
         return SolicitudCertificacionMedica::query()->whereIn('estado', ['pendiente', 'en_proceso']);
     }
 
-    private function bandeja(): array
+    public function bandeja(): array
     {
         $hoy = Carbon::today()->toDateString();
 
