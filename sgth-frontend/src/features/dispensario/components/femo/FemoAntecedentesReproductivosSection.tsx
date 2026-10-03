@@ -8,6 +8,7 @@ import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 import { METODO_PLANIFICACION_OPTIONS } from '../../services/femoOptions'
 import type { SexoPaciente } from '../../services/solicitudCertificacionService'
 import type { AntecedenteReproductivoForm } from '../../schemas/femo.schema'
+import { SectionHeading } from '@/components/ui'
 
 interface Props {
   data: Partial<AntecedenteReproductivoForm>
@@ -65,7 +66,7 @@ export function FemoAntecedentesReproductivosSection({ data, onChange, sexo }: P
       </Grid.Col>
 
       {data.usa_metodo_planificacion === 'si' && (
-        <Grid.Col span={{ base: 12, md: 4 }}>
+        <Grid.Col span={{ base: 12, md: 8 }}>
           <TextInput
             label="¿Cuál?"
             {...contained}
@@ -75,7 +76,7 @@ export function FemoAntecedentesReproductivosSection({ data, onChange, sexo }: P
         </Grid.Col>
       )}
 
-      <Grid.Col span={{ base: 12, md: 5 }}>
+      <Grid.Col span={{ base: 12, md: 8 }}>
         <TextInput
           label="Exámenes realizados (¿cuál?)"
           {...contained}
@@ -84,11 +85,13 @@ export function FemoAntecedentesReproductivosSection({ data, onChange, sexo }: P
         />
       </Grid.Col>
 
-      <Grid.Col span={{ base: 12, md: 3 }}>
+      <Grid.Col span={{ base: 12, md: 4 }}>
         <NumberInput
           label="Hace cuánto (años)"
           min={0}
           allowDecimal={false}
+          // Sin flechas: en un campo estrecho se montaban sobre la etiqueta.
+          hideControls
           {...contained}
           value={data.examenes_tiempo_anios ?? undefined}
           onChange={(v) => set({ examenes_tiempo_anios: v !== '' ? Number(v) : null })}
@@ -110,13 +113,13 @@ export function FemoAntecedentesReproductivosSection({ data, onChange, sexo }: P
   return (
     <Stack gap="xs">
       <Group justify="space-between" align="baseline">
-        <Text size="xs" fw={600} c="dimmed">
-          {verGineco && verMasculino
+        <SectionHeading
+          title={verGineco && verMasculino
             ? 'Antecedentes reproductivos'
             : verGineco
               ? 'Antecedentes gineco-obstétricos'
               : 'Antecedentes reproductivos masculinos'}
-        </Text>
+        />
 
         {!sexoDesconocido && (
           <Anchor
@@ -167,6 +170,7 @@ export function FemoAntecedentesReproductivosSection({ data, onChange, sexo }: P
                   label={etiqueta}
                   min={0}
                   allowDecimal={false}
+                  hideControls
                   {...contained}
                   value={data[campo] ?? undefined}
                   onChange={(v) => set({ [campo]: v !== '' ? Number(v) : null })}

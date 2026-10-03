@@ -22,7 +22,7 @@ final class FichaSaludOcupacionalController extends Controller
         $fichas = $this->femoService->listar(
             $request->only([
                 'servidor_id', 'tipo_ficha', 'aptitud',
-                'fecha_desde', 'fecha_hasta', 'per_page',
+                'fecha_desde', 'fecha_hasta', 'per_page', 'buscar',
             ])
         );
 

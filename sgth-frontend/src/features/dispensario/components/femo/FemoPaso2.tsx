@@ -23,7 +23,7 @@ import { FemoMatrizRiesgos } from './FemoMatrizRiesgos'
 import { TIPO_EVENTO_LABORAL_OPTIONS } from '../../services/femoOptions'
 import { FemoSeccion } from './FemoSeccion'
 import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
-import { StatusBadge } from '@/components/ui'
+import { confirmar, StatusBadge } from '@/components/ui'
 
 interface Props {
   fichaData:            Partial<FichaBaseForm>
@@ -46,7 +46,13 @@ export function FemoPaso2({
     { open: abrirEmpleo, close: cerrarEmpleo }] = useDisclosure(false)
 
   const handleEliminarEmpleo = (idx: number) => {
-    onEmpleosChange(empleosAnteriores.filter((_, i) => i !== idx))
+    confirmar({
+      title: 'Quitar empleo',
+      message: <>Se quitará <b>{empleosAnteriores[idx].centro_trabajo}</b> de la sección H.</>,
+      confirmLabel: 'Quitar',
+      destructiva: true,
+      onConfirm: () => onEmpleosChange(empleosAnteriores.filter((_, i) => i !== idx)),
+    })
   }
 
   return (
@@ -111,6 +117,7 @@ export function FemoPaso2({
                     size="sm"
                     color="red"
                     variant="subtle"
+                    aria-label={`Quitar el empleo en ${emp.centro_trabajo}`}
                     onClick={() => handleEliminarEmpleo(i)}
                   >
                     <IconTrash size={13} />

@@ -1,11 +1,12 @@
 'use client'
 
-import { Checkbox, Grid, Group, Select, Stack, Text, TextInput } from '@mantine/core'
+import { Checkbox, Grid, Group, Select, Stack, TextInput } from '@mantine/core'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import type { FichaBaseForm } from '../../schemas/femo.schema'
 import type { SexoPaciente } from '../../services/solicitudCertificacionService'
 import { FemoSeccion } from './FemoSeccion'
 import classes from './FemoSeccionDatosUsuario.module.css'
+import { SectionHeading } from '@/components/ui'
 
 interface Props {
   fichaData: Partial<FichaBaseForm>
@@ -73,9 +74,7 @@ export function FemoSeccionDatosUsuario({
       </Grid>
 
       <Stack gap="xs">
-        <Text size="xs" fw={600} c="dimmed">
-          Grupo de atención prioritaria
-        </Text>
+        <SectionHeading title="Grupo de atención prioritaria" />
 
         {/* Los cuatro grupos del impreso del MSP más «lactancia», que el
             Dispensario del GADPE añade en su formato. */}

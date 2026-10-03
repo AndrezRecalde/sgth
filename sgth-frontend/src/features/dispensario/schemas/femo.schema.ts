@@ -87,6 +87,8 @@ export const diagnosticoFemoSchema = z.object({
   diagnostico_cie10_id: z.number(),
   tipo:                 z.enum(['presuntivo','definitivo']),
   orden:                z.number().min(1).max(6),
+  /** Solo para mostrar el código y la descripción; el servidor no lo lee. */
+  diagnostico:          z.object({ codigo: z.string(), descripcion: z.string() }).optional(),
 })
 
 export const examenSchema = z.object({
