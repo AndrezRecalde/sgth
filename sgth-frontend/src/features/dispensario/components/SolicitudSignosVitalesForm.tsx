@@ -97,7 +97,7 @@ export function SolicitudSignosVitalesForm({ solicitud, onCreado, onCancelar }: 
 
         <SectionCard title="Antropometría">
           <Stack gap="md">
-            <SimpleGrid cols={{ base: 1, sm: 2 }}>
+            <SimpleGrid cols={{ base: 1, sm: 3 }}>
               <Controller
                 name="peso_kg"
                 control={control}
@@ -125,6 +125,22 @@ export function SolicitudSignosVitalesForm({ solicitud, onCreado, onCancelar }: 
                     value={field.value}
                     onChange={(v) => field.onChange(Number(v) || undefined)}
                     error={errors.talla_cm?.message}
+                  />
+                )}
+              />
+              <Controller
+                name="perimetro_abdominal_cm"
+                control={control}
+                render={({ field }) => (
+                  <NumberInput
+                    label="Perímetro abdominal (cm)"
+                    description="Opcional"
+                    decimalScale={1}
+                    hideControls
+                    {...contained}
+                    value={field.value ?? undefined}
+                    onChange={(v) => field.onChange(v === '' ? null : Number(v))}
+                    error={errors.perimetro_abdominal_cm?.message}
                   />
                 )}
               />

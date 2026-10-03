@@ -65,6 +65,13 @@ export function FemoConsumoSustanciasTable({ data, onChange }: Props) {
                     checked={fila.no_consume ?? false}
                     onChange={(e) => setFila(opt.value, {
                       no_consume: e.currentTarget.checked,
+                      // Los campos de consumo se ocultan: si quedaran con
+                      // valor, la ficha diría a la vez que consume y que no.
+                      ...(e.currentTarget.checked ? {
+                        tiempo_consumo_meses:     null,
+                        ex_consumidor:            false,
+                        tiempo_abstinencia_meses: null,
+                      } : {}),
                     })}
                   />
                 </div>
@@ -74,6 +81,7 @@ export function FemoConsumoSustanciasTable({ data, onChange }: Props) {
                     <NumberInput
                       label="Consumo (meses)"
                       min={0}
+                      allowDecimal={false}
                       // Sin flechas: se teclea un número de meses, y los
                       // controles se montaban sobre la etiqueta interior.
                       hideControls
@@ -103,6 +111,7 @@ export function FemoConsumoSustanciasTable({ data, onChange }: Props) {
                       <NumberInput
                         label="Abstinencia (meses)"
                         min={0}
+                        allowDecimal={false}
                         hideControls
                         disabled={!fila.ex_consumidor}
                         {...contained}

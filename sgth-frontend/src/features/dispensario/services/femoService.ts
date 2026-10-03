@@ -11,6 +11,7 @@ export interface FemoConstantesVitales {
   saturacion_oxigeno?:  number | null
   peso_kg?:             number | null
   talla_cm?:            number | null
+  perimetro_abdominal_cm?: number | null
   imc?:                 number | null
   glucosa?:             number | null
 }
@@ -221,7 +222,6 @@ export interface CrearFemoData {
     medicacion_habitual_cual?: string | null
     medicacion_habitual_cantidad?: string | null
   }
-  constantes_vitales?:       FemoConstantesVitales | null
   antecedentes?:             Omit<FemoAntecedente, 'id'>[]
   factores_riesgo?:          Omit<FemoFactorRiesgo, 'id'>[]
   actividades?:              Omit<FemoFichaActividad, 'id' | 'factores_riesgo'>[]
