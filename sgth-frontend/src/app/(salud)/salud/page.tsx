@@ -3,7 +3,7 @@ import { SaludHomeView } from './SaludHomeView'
 
 export const metadata: Metadata = {
   title: 'Dispensario Médico',
-  description: 'Sistema de Salud Ambulatoria — GADPE',
+  description: 'Tablero del Dispensario Médico',
 }
 
 export default function SaludHomePage() {

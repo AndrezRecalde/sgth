@@ -1,14 +1,22 @@
 import api from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
+import type { PeriodoTablero } from '../utils/periodoTablero'
 
 export type Especialidad = 'medicina_general' | 'odontologia'
 
 export interface KpisDispensario {
-  atenciones_mes_actual: number
+  periodo:          PeriodoTablero
+  /** El mes anterior completo si se pidió un mes; si no, los mismos días antes. */
+  periodo_anterior: PeriodoTablero
+  atenciones:       number
+  atenciones_periodo_anterior: number
   atenciones_por_especialidad: Record<Especialidad, number>
-  pacientes_por_tipo: {
-    titulares:     number
-    beneficiarios: number
+  /** Personas distintas, no consultas. */
+  pacientes: {
+    distintos:      number
+    titulares:      number
+    carga_familiar: number
+    candidatos:     number
   }
   top_diagnosticos: Array<{
     codigo:       string
@@ -44,12 +52,20 @@ export interface KpisDispensario {
       fecha_caducidad: string
       dias_restantes:  number
     }>
+    /** Lotes ya vencidos con existencias: se retiran, no se vigilan. */
+    medicamentos_vencidos: Array<{
+      nombre:          string
+      lote:            string
+      stock:           number
+      fecha_caducidad: string
+      dias_restantes:  number
+    }>
   }
 }
 
 export const kpisService = {
-  obtener: () =>
-    api.get<ApiResponse<KpisDispensario>>('/dispensario/dashboard/kpis')
+  obtener: (periodo: PeriodoTablero) =>
+    api.get<ApiResponse<KpisDispensario>>('/dispensario/dashboard/kpis', { params: periodo })
       .then(r => r.data.datos),
 }
 

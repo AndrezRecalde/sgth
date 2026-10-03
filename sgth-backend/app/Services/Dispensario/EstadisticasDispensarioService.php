@@ -6,45 +6,70 @@ use App\Enums\EspecialidadAtencion;
 use App\Models\Dispensario\ConsultaMedica;
 use App\Models\Dispensario\InventarioMedicina;
 use App\Models\Dispensario\LoteMedicina;
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
+use Illuminate\Support\Facades\DB;
 
+/**
+ * Las cifras del tablero del Dispensario.
+ *
+ * Eran siempre «del mes en curso»: el día 1 el tablero salía en ceros y no
+ * había forma de mirar un mes cerrado. Ahora el período lo pide quien mira, y
+ * cada cifra se lee contra el período anterior del mismo largo.
+ */
 final class EstadisticasDispensarioService implements EstadisticasDispensarioServiceInterface
 {
-    public function obtenerKpisMensuales(): array
+    public function obtenerKpis(CarbonInterface $desde, CarbonInterface $hasta): array
     {
-        $inicioMes = Carbon::now()->startOfMonth();
-        $finMes = Carbon::now()->endOfMonth();
+        $inicio = Carbon::parse($desde)->startOfDay();
+        $fin = Carbon::parse($hasta)->endOfDay();
 
-        // 1. Atenciones mes actual, y de qué especialidad fueron
-        $atencionesMesActual = ConsultaMedica::whereBetween('created_at', [$inicioMes, $finMes])->count();
+        // El período anterior: si se pidió un mes completo, el mes anterior
+        // completo («septiembre contra agosto»); si no, el mismo número de días
+        // justo antes.
+        $anteriorHasta = $inicio->copy()->subDay()->endOfDay();
+        $esMesCompleto = $inicio->isSameDay($inicio->copy()->startOfMonth())
+            && $fin->isSameDay($inicio->copy()->endOfMonth());
+        $anteriorDesde = $esMesCompleto
+            ? $inicio->copy()->subMonthNoOverflow()->startOfMonth()
+            : $inicio->copy()->subDays((int) $inicio->diffInDays($fin) + 1)->startOfDay();
+
+        // 1. Atenciones del período, y de qué especialidad fueron
+        $atenciones = ConsultaMedica::whereBetween('created_at', [$inicio, $fin])->count();
+        $atencionesAnterior = ConsultaMedica::whereBetween('created_at', [$anteriorDesde, $anteriorHasta])->count();
 
         // El dato existe en la consulta desde que dejó de vivir solo en el
         // turno. Sin este desglose, medicina general y odontología iban en el
         // mismo número y ninguna de las dos podía justificar nada.
         $porEspecialidad = DB::table('consultas_medicas')
-            ->whereBetween('created_at', [$inicioMes, $finMes])
+            ->whereBetween('created_at', [$inicio, $fin])
             ->select('especialidad', DB::raw('COUNT(*) as total'))
             ->groupBy('especialidad')
             ->pluck('total', 'especialidad');
 
-        // 2. Pacientes por tipo (mes actual)
-        // Antes no filtraba por fecha: dentro de unos KPI mensuales, este
-        // contaba desde el principio de los tiempos, así que no cuadraba con
-        // las atenciones del mes que tenía al lado.
+        // 2. Pacientes DISTINTOS del período, por tipo.
+        // «Pacientes atendidos» contaba consultas: quien iba tres veces contaba
+        // tres. Y las dos condiciones no se excluían, así que la historia de un
+        // candidato (sin servidor ni carga familiar) contaba como titular Y
+        // como beneficiario.
         $pacientes = DB::table('consultas_medicas')
             ->join('historias_clinicas', 'consultas_medicas.historia_clinica_id', '=', 'historias_clinicas.id')
-            ->whereBetween('consultas_medicas.created_at', [$inicioMes, $finMes])
-            ->selectRaw("
-                SUM(CASE WHEN historias_clinicas.carga_familiar_id IS NULL THEN 1 ELSE 0 END) as titulares,
-                SUM(CASE WHEN historias_clinicas.servidor_id IS NULL THEN 1 ELSE 0 END) as beneficiarios
-            ")
+            ->whereBetween('consultas_medicas.created_at', [$inicio, $fin])
+            ->selectRaw('
+                COUNT(DISTINCT historias_clinicas.id) as distintos,
+                COUNT(DISTINCT CASE WHEN historias_clinicas.servidor_id IS NOT NULL
+                    AND historias_clinicas.carga_familiar_id IS NULL THEN historias_clinicas.id END) as titulares,
+                COUNT(DISTINCT CASE WHEN historias_clinicas.carga_familiar_id IS NOT NULL
+                    THEN historias_clinicas.id END) as carga_familiar,
+                COUNT(DISTINCT CASE WHEN historias_clinicas.servidor_id IS NULL
+                    AND historias_clinicas.carga_familiar_id IS NULL THEN historias_clinicas.id END) as candidatos
+            ')
             ->first();
 
         // 3. Top Diagnosticos CIE-10 (mes actual), con su especialidad
         $topDiagnosticos = DB::table('consultas_medicas')
             ->join('diagnosticos_cie10', 'consultas_medicas.diagnostico_cie10_id', '=', 'diagnosticos_cie10.id')
-            ->whereBetween('consultas_medicas.created_at', [$inicioMes, $finMes])
+            ->whereBetween('consultas_medicas.created_at', [$inicio, $fin])
             ->select(
                 'diagnosticos_cie10.codigo',
                 'diagnosticos_cie10.descripcion',
@@ -64,7 +89,7 @@ final class EstadisticasDispensarioService implements EstadisticasDispensarioSer
         // 4. Medicamentos más despachados (mes actual)
         $medicamentosDespachados = DB::table('items_receta')
             ->join('inventario_medicinas', 'items_receta.inventario_medicina_id', '=', 'inventario_medicinas.id')
-            ->whereBetween('items_receta.created_at', [$inicioMes, $finMes])
+            ->whereBetween('items_receta.created_at', [$inicio, $fin])
             ->select('inventario_medicinas.nombre', DB::raw('SUM(items_receta.cantidad_despachada) as total_despachado'))
             ->groupBy('inventario_medicinas.id', 'inventario_medicinas.nombre')
             ->having(DB::raw('SUM(items_receta.cantidad_despachada)'), '>', 0)
@@ -72,9 +97,10 @@ final class EstadisticasDispensarioService implements EstadisticasDispensarioSer
             ->limit(10)
             ->get();
 
-        // 5. Estado de Recetas
+        // 5. Estado de las recetas del período. Se calculaba y la pantalla no
+        // lo mostraba: las pendientes de despacho son el cuello de Farmacia.
         $recetasEstado = DB::table('recetas_medicas')
-            ->whereBetween('created_at', [$inicioMes, $finMes])
+            ->whereBetween('created_at', [$inicio, $fin])
             ->select('estado', DB::raw('COUNT(*) as total'))
             ->groupBy('estado')
             ->pluck('total', 'estado');
@@ -89,7 +115,7 @@ final class EstadisticasDispensarioService implements EstadisticasDispensarioSer
         $consultasPorMedico = DB::table('consultas_medicas')
             ->join('users', 'consultas_medicas.medico_id', '=', 'users.id')
             ->leftJoin('servidores', 'users.servidor_id', '=', 'servidores.id')
-            ->whereBetween('consultas_medicas.created_at', [$inicioMes, $finMes])
+            ->whereBetween('consultas_medicas.created_at', [$inicio, $fin])
             ->select(
                 DB::raw(
                     "COALESCE(
@@ -124,8 +150,11 @@ final class EstadisticasDispensarioService implements EstadisticasDispensarioSer
         // El aviso va por lote, que es lo que caduca. Antes salía una fila por
         // medicina con la fecha de la última entrada, así que un lote a punto
         // de vencer quedaba tapado por otro más reciente.
+        //
+        // Los vencidos van aparte: se mezclaban en «por caducar en 60 días»
+        // («vencido hace 43 días»), y lo vencido no se vigila, se retira.
         $limiteCaducidad = Carbon::now()->addDays(60);
-        $medicamentosPorCaducar = LoteMedicina::with('medicina:id,nombre')
+        $lotesPorCaducar = LoteMedicina::with('medicina:id,nombre')
             ->conStock()
             ->whereNotNull('fecha_caducidad')
             ->whereDate('fecha_caducidad', '<=', $limiteCaducidad)
@@ -140,8 +169,20 @@ final class EstadisticasDispensarioService implements EstadisticasDispensarioSer
                     ->diffInDays($lote->fecha_caducidad->startOfDay(), false),
             ]);
 
+        [$medicamentosVencidos, $medicamentosPorCaducar] = $lotesPorCaducar
+            ->partition(fn (array $lote) => $lote['dias_restantes'] < 0);
+
         return [
-            'atenciones_mes_actual' => $atencionesMesActual,
+            'periodo' => [
+                'desde' => $inicio->toDateString(),
+                'hasta' => $fin->toDateString(),
+            ],
+            'periodo_anterior' => [
+                'desde' => $anteriorDesde->toDateString(),
+                'hasta' => $anteriorHasta->toDateString(),
+            ],
+            'atenciones' => $atenciones,
+            'atenciones_periodo_anterior' => $atencionesAnterior,
             'atenciones_por_especialidad' => [
                 'medicina_general' => (int) $porEspecialidad->get(
                     EspecialidadAtencion::MEDICINA_GENERAL->value, 0
@@ -150,22 +191,25 @@ final class EstadisticasDispensarioService implements EstadisticasDispensarioSer
                     EspecialidadAtencion::ODONTOLOGIA->value, 0
                 ),
             ],
-            'pacientes_por_tipo' => [
+            'pacientes' => [
+                'distintos' => (int) ($pacientes->distintos ?? 0),
                 'titulares' => (int) ($pacientes->titulares ?? 0),
-                'beneficiarios' => (int) ($pacientes->beneficiarios ?? 0),
+                'carga_familiar' => (int) ($pacientes->carga_familiar ?? 0),
+                'candidatos' => (int) ($pacientes->candidatos ?? 0),
             ],
             'top_diagnosticos' => $topDiagnosticos,
             'medicamentos_mas_despachados' => $medicamentosDespachados,
             'recetas_estado' => [
-                'pendiente' => $recetasEstado->get('pendiente', 0),
-                'despachada_parcial' => $recetasEstado->get('despachada_parcial', 0),
-                'despachada_completa' => $recetasEstado->get('despachada_completa', 0),
-                'anulada' => $recetasEstado->get('anulada', 0),
+                'pendiente' => (int) $recetasEstado->get('pendiente', 0),
+                'despachada_parcial' => (int) $recetasEstado->get('despachada_parcial', 0),
+                'despachada_completa' => (int) $recetasEstado->get('despachada_completa', 0),
+                'anulada' => (int) $recetasEstado->get('anulada', 0),
             ],
             'consultas_por_medico' => $consultasPorMedico,
             'alertas_inventario' => [
                 'medicamentos_bajo_stock' => $medicamentosBajoStock,
-                'medicamentos_por_caducar' => $medicamentosPorCaducar,
+                'medicamentos_por_caducar' => $medicamentosPorCaducar->values(),
+                'medicamentos_vencidos' => $medicamentosVencidos->values(),
             ]
         ];
     }
