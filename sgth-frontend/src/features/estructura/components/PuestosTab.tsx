@@ -19,8 +19,14 @@ import { PuestoModal } from "./PuestoModal";
 import { PuestoActividadesDrawer } from "./PuestoActividadesDrawer";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import type { PuestoConRelaciones, UnidadConRelaciones } from "@/types/api";
+import { useAuth } from "@/hooks/useAuth";
 
 export function PuestosTab() {
+  // Crear, editar y borrar puestos y actividades pide `gestionar-puestos`;
+  // quien solo tiene `ver-estructura` (dirección, jefaturas, auditoría)
+  // consulta sin ver botones que el backend le negaría.
+  const { hasPermiso } = useAuth();
+  const puedeGestionar = hasPermiso("gestionar-puestos");
   const [page, setPage] = useState(1);
   const [unidadIds, setUnidadIds] = useState<string[]>([]);
   const [editPuesto, setEditPuesto] = useState<PuestoConRelaciones | null>(null);
@@ -82,7 +88,7 @@ export function PuestosTab() {
   return (
     <Stack gap="md">
       <Toolbar
-        actions={
+        actions={puedeGestionar && (
           <Button
             leftSection={<IconCubePlus size={16} />}
             variant="light"
@@ -93,7 +99,7 @@ export function PuestosTab() {
           >
             Nuevo puesto
           </Button>
-        }
+        )}
       >
         <Select
           label="Gestión"
@@ -134,6 +140,7 @@ export function PuestosTab() {
             onEdit: handleEdit,
             onDelete: handleDelete,
             onActividades: handleActividades,
+            puedeGestionar,
           })}
           totalRecords={data?.total || records.length || 0}
           recordsPerPage={15}
@@ -153,6 +160,7 @@ export function PuestosTab() {
         opened={drawerOpened}
         onClose={handleCerrarDrawer}
         puesto={actividadesPuesto}
+        soloLectura={!puedeGestionar}
       />
     </Stack>
   );

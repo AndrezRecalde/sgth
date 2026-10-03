@@ -1,14 +1,30 @@
 <?php
 namespace App\Http\Controllers\Estructura;
 
+use App\Enums\Permiso;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\Estructura\Cargo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * El catálogo de cargos institucionales.
+ *
+ * La lectura queda abierta a cualquier usuario autenticado: alimenta los
+ * selectores de Puestos. Crear, cambiar o borrar un cargo pide
+ * `gestionar-puestos`, igual que un puesto; antes no pedía nada, y el código
+ * CIUO del cargo es el que hereda la ficha médica ocupacional (FEMO).
+ */
 class CargoController extends Controller
 {
+    private function exigirGestion(Request $request): ?JsonResponse
+    {
+        return $request->user()->can(Permiso::GESTIONAR_PUESTOS->value)
+            ? null
+            : ApiResponse::error('No tiene permiso para gestionar cargos.', null, 403);
+    }
+
     public function index(Request $request): JsonResponse
     {
         $cargos = Cargo::query()
@@ -25,6 +41,10 @@ class CargoController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        if ($denegado = $this->exigirGestion($request)) {
+            return $denegado;
+        }
+
         $validated = $request->validate([
             'nombre'                 => ['required', 'string', 'max:200'],
             'denominacion_generica'  => ['nullable', 'string', 'max:100'],
@@ -40,6 +60,10 @@ class CargoController extends Controller
 
     public function update(Request $request, int $id): JsonResponse
     {
+        if ($denegado = $this->exigirGestion($request)) {
+            return $denegado;
+        }
+
         $cargo = Cargo::findOrFail($id);
         $validated = $request->validate([
             'nombre'                 => ['sometimes', 'string', 'max:200'],
@@ -55,8 +79,12 @@ class CargoController extends Controller
         return ApiResponse::ok($cargo, 'Cargo actualizado.');
     }
 
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
+        if ($denegado = $this->exigirGestion($request)) {
+            return $denegado;
+        }
+
         $cargo = Cargo::findOrFail($id);
 
         if ($cargo->puestos()->exists()) {

@@ -17,6 +17,7 @@ import { useCargos } from "../hooks/useCargos";
 import { useCargoMutations } from "../hooks/useCargoMutations";
 import { CargoModal } from "./CargoModal";
 import { useContainedInput } from "@/hooks/useContainedInput";
+import { useAuth } from "@/hooks/useAuth";
 import type { Cargo } from "@/types/api";
 import { Text } from "@mantine/core";
 import type { DataTableColumn } from "mantine-datatable";
@@ -26,6 +27,10 @@ import type { DataTableColumn } from "mantine-datatable";
 const RETARDO_BUSQUEDA_MS = 300;
 
 export function CargosTab() {
+  // El catálogo se consulta con sesión; crearlo o cambiarlo pide
+  // `gestionar-puestos`, igual que en el backend.
+  const { hasPermiso } = useAuth();
+  const puedeGestionar = hasPermiso("gestionar-puestos");
   const [search, setSearch] = useState("");
   const [editCargo, setEditCargo] = useState<Cargo | null>(null);
   const [modalOpened, { open, close }] = useDisclosure(false);
@@ -84,12 +89,14 @@ export function CargosTab() {
             {
               label: "Editar cargo",
               icon: <IconEdit size={14} />,
+              hidden: !puedeGestionar,
               onClick: () => handleEdit(cargo),
             },
             {
               label: "Eliminar cargo",
               icon: <IconTrash size={14} />,
               color: "red",
+              hidden: !puedeGestionar,
               onClick: () =>
                 confirmar({
                   title: "Eliminar cargo",
@@ -112,7 +119,7 @@ export function CargosTab() {
   return (
     <Stack gap="md">
       <Toolbar
-        actions={
+        actions={puedeGestionar && (
           <Button
             leftSection={<IconPlus size={16} />}
             variant="light"
@@ -123,7 +130,7 @@ export function CargosTab() {
           >
             Nuevo cargo
           </Button>
-        }
+        )}
       >
         <TextInput
           label="Cargo"

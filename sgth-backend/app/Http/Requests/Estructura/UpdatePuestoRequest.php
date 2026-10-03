@@ -13,7 +13,9 @@ final class UpdatePuestoRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        // Devolvía `true` sin más: crear un puesto pedía `gestionar-puestos`,
+        // pero editarlo no pedía nada.
+        return $this->user()->can('update', $this->route('puesto'));
     }
 
     public function rules(): array
