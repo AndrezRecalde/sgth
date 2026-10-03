@@ -59,6 +59,13 @@ beforeEach(function () {
     ]);
 });
 
+/** Las cifras del mes en curso, que es lo que el tablero pide sin período. */
+function kpisDelMesDispensario(): array
+{
+    return app(EstadisticasDispensarioService::class)
+        ->obtenerKpis(now()->startOfMonth(), now()->endOfMonth());
+}
+
 /** Una consulta de la especialidad y la fecha que se indiquen. */
 function consultaDe(
     int $historiaId,
@@ -96,9 +103,9 @@ test('los_kpis_desglosan_las_atenciones_del_mes_por_especialidad', function () {
         now()->subMonths(2)->toDateTimeString()
     );
 
-    $kpis = app(EstadisticasDispensarioService::class)->obtenerKpisMensuales();
+    $kpis = kpisDelMesDispensario();
 
-    expect($kpis['atenciones_mes_actual'])->toBe(3);
+    expect($kpis['atenciones'])->toBe(3);
     expect($kpis['atenciones_por_especialidad'])->toBe([
         'medicina_general' => 2,
         'odontologia'      => 1,
@@ -108,7 +115,7 @@ test('los_kpis_desglosan_las_atenciones_del_mes_por_especialidad', function () {
 test('el_desglose_dice_cero_y_no_se_calla_cuando_una_especialidad_no_atendio', function () {
     consultaDe($this->historia->id, $this->medico->id, 'medicina_general');
 
-    $kpis = app(EstadisticasDispensarioService::class)->obtenerKpisMensuales();
+    $kpis = kpisDelMesDispensario();
 
     // Que falte la clave y que valga cero no es lo mismo para quien lee el
     // tablero: lo primero parece un fallo, lo segundo es un dato.
@@ -123,7 +130,7 @@ test('las_consultas_por_medico_dicen_el_nombre_y_la_especialidad', function () {
     consultaDe($this->historia->id, $this->medico->id, 'medicina_general');
     consultaDe($this->historia->id, $this->medico->id, 'odontologia');
 
-    $kpis = app(EstadisticasDispensarioService::class)->obtenerKpisMensuales();
+    $kpis = kpisDelMesDispensario();
     $filas = collect($kpis['consultas_por_medico']);
 
     expect($filas)->toHaveCount(2);
@@ -145,13 +152,13 @@ test('un_medico_sin_servidor_sale_con_su_usuario_y_no_tumba_los_kpis', function 
 
     consultaDe($this->historia->id, $suplente->id, 'medicina_general');
 
-    $kpis = app(EstadisticasDispensarioService::class)->obtenerKpisMensuales();
+    $kpis = kpisDelMesDispensario();
 
     expect(collect($kpis['consultas_por_medico'])->first()->medico)
         ->toBe('suplente');
 });
 
-test('los_pacientes_por_tipo_cuentan_solo_el_mes_en_curso', function () {
+test('los_pacientes_por_tipo_cuentan_solo_el_periodo', function () {
     $familiar = CargaFamiliar::create([
         'servidor_id' => $this->paciente->id, 'cedula' => '0899000044',
         'nombres' => 'Luis', 'apellidos' => 'Mora', 'parentesco' => 'hijo',
@@ -173,14 +180,14 @@ test('los_pacientes_por_tipo_cuentan_solo_el_mes_en_curso', function () {
         now()->subMonths(1)->toDateTimeString()
     );
 
-    $kpis = app(EstadisticasDispensarioService::class)->obtenerKpisMensuales();
+    $kpis = kpisDelMesDispensario();
 
-    expect($kpis['pacientes_por_tipo'])->toBe([
-        'titulares'     => 1,
-        'beneficiarios' => 1,
+    expect($kpis['pacientes'])->toBe([
+        'distintos'      => 2,
+        'titulares'      => 1,
+        'carga_familiar' => 1,
+        'candidatos'     => 0,
     ]);
-    expect(array_sum($kpis['pacientes_por_tipo']))
-        ->toBe($kpis['atenciones_mes_actual']);
 });
 
 test('el_top_de_diagnosticos_dice_de_que_especialidad_es_cada_uno', function () {
@@ -193,7 +200,7 @@ test('el_top_de_diagnosticos_dice_de_que_especialidad_es_cada_uno', function () 
         $this->historia->id, $this->medico->id, 'odontologia', null, $cie10->id
     );
 
-    $kpis = app(EstadisticasDispensarioService::class)->obtenerKpisMensuales();
+    $kpis = kpisDelMesDispensario();
     $top  = collect($kpis['top_diagnosticos'])->first();
 
     expect($top->codigo)->toBe('K021');
@@ -340,4 +347,75 @@ test('el_tipo_de_atencion_tiene_que_ser_uno_de_los_dos', function () {
     $this->actingAs($this->medico, 'sanctum')
         ->getJson('/api/v1/dispensario/disponibilidad/personal?tipo_atencion=veterinaria')
         ->assertStatus(422);
+});
+
+// ── El tablero por período ─────────────────────────────────────────────
+
+test('el_tablero_mira_el_periodo_pedido_y_lo_compara_con_el_anterior', function () {
+    // Septiembre: dos. Agosto: una. Octubre (fuera): una.
+    consultaDe($this->historia->id, $this->medico->id, 'medicina_general', '2026-09-10 10:00:00');
+    consultaDe($this->historia->id, $this->medico->id, 'odontologia', '2026-09-28 10:00:00');
+    consultaDe($this->historia->id, $this->medico->id, 'medicina_general', '2026-08-20 10:00:00');
+    consultaDe($this->historia->id, $this->medico->id, 'medicina_general', '2026-10-01 10:00:00');
+
+    $datos = $this->actingAs($this->medico, 'sanctum')
+        ->getJson('/api/v1/dispensario/dashboard/kpis?desde=2026-09-01&hasta=2026-09-30')
+        ->assertOk()
+        ->json('datos');
+
+    expect($datos['atenciones'])->toBe(2)
+        ->and($datos['atenciones_periodo_anterior'])->toBe(1)
+        ->and($datos['periodo'])->toBe(['desde' => '2026-09-01', 'hasta' => '2026-09-30'])
+        ->and($datos['periodo_anterior'])->toBe(['desde' => '2026-08-01', 'hasta' => '2026-08-31']);
+});
+
+test('un_periodo_de_mas_de_un_anio_o_al_reves_se_rechaza', function () {
+    $this->actingAs($this->medico, 'sanctum')
+        ->getJson('/api/v1/dispensario/dashboard/kpis?desde=2020-01-01&hasta=2026-01-01')
+        ->assertStatus(422);
+    $this->actingAs($this->medico, 'sanctum')
+        ->getJson('/api/v1/dispensario/dashboard/kpis?desde=2026-09-30&hasta=2026-09-01')
+        ->assertStatus(422);
+});
+
+test('los_pacientes_son_personas_distintas_y_un_candidato_cuenta_una_vez', function () {
+    // Tres consultas de la misma persona: un paciente, no tres.
+    consultaDe($this->historia->id, $this->medico->id, 'medicina_general');
+    consultaDe($this->historia->id, $this->medico->id, 'medicina_general');
+    consultaDe($this->historia->id, $this->medico->id, 'odontologia');
+
+    // Un candidato: sin servidor ni carga familiar. Contaba como titular y
+    // como beneficiario a la vez.
+    $candidato = HistoriaClinica::create([
+        'numero_historia' => '0811111111', 'cedula_paciente' => '0811111111',
+        'tipo_paciente' => 'candidato', 'estado' => true,
+    ]);
+    consultaDe($candidato->id, $this->medico->id, 'medicina_general');
+
+    expect(kpisDelMesDispensario()['pacientes'])->toBe([
+        'distintos'      => 2,
+        'titulares'      => 1,
+        'carga_familiar' => 0,
+        'candidatos'     => 1,
+    ]);
+});
+
+test('lo_vencido_va_aparte_de_lo_que_esta_por_caducar', function () {
+    $medicina = \App\Models\Dispensario\InventarioMedicina::create([
+        'codigo' => 'LOR-01', 'nombre' => 'Loratadina', 'principio_activo' => 'loratadina',
+        'presentacion' => 'tableta', 'stock_actual' => 200, 'stock_minimo' => 0, 'estado' => true,
+    ]);
+    foreach ([['VENCIDO', now()->subDays(10)], ['PRONTO', now()->addDays(20)], ['LEJOS', now()->addYear()]] as [$codigo, $fecha]) {
+        \App\Models\Dispensario\LoteMedicina::create([
+            'inventario_medicina_id' => $medicina->id, 'codigo_lote' => $codigo,
+            'cantidad_ingresada' => 50, 'stock_actual' => 50, 'fecha_caducidad' => $fecha,
+        ]);
+    }
+
+    $alertas = kpisDelMesDispensario()['alertas_inventario'];
+
+    expect(collect($alertas['medicamentos_vencidos'])->pluck('dias_restantes')->every(fn ($d) => $d < 0))->toBeTrue()
+        ->and($alertas['medicamentos_vencidos'])->toHaveCount(1)
+        ->and($alertas['medicamentos_por_caducar'])->toHaveCount(1)
+        ->and($alertas['medicamentos_por_caducar'][0]['dias_restantes'])->toBeGreaterThanOrEqual(0);
 });

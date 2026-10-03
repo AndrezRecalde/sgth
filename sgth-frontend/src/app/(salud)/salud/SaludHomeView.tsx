@@ -1,12 +1,14 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Skeleton } from '@mantine/core'
+import { Select, Skeleton } from '@mantine/core'
 import { IconStethoscope } from '@tabler/icons-react'
 import { EmptyState, PageHeader, PageShell } from '@/components/ui'
 import { ROUTES } from '@/config/routes'
 import { useHydrated } from '@/hooks/useHydrated'
+import { useContainedInput } from '@/hooks/useContainedInput'
+import { mesActual, mesesRecientes, rangoDeMes } from '@/features/dispensario/utils/periodoTablero'
 import { useAuthStore } from '@/store/auth.store'
 import { TableroDispensario } from
   '@/features/dispensario/components/TableroDispensario'
@@ -39,9 +41,15 @@ const INICIO_POR_ROL: ReadonlyArray<readonly [string, string]> = [
   ['enfermera',  ROUTES.SALUD.ENFERMERIA],
 ]
 
+const MESES = mesesRecientes(12)
+
 export function SaludHomeView() {
   const router = useRouter()
   const hidratado = useHydrated()
+  const contained = useContainedInput('sm')
+  // El tablero mira un mes, el actual por defecto. Antes no había selector:
+  // el día 1 todo salía en ceros y un mes cerrado no se podía consultar.
+  const [mes, setMes] = useState(mesActual)
 
   // Se suscribe a los roles y no a `hasRole`: esa función es siempre la misma
   // instancia, así que seleccionarla no provoca un render cuando la sesión
@@ -93,9 +101,20 @@ export function SaludHomeView() {
     <PageShell>
       <PageHeader
         title="Dispensario Médico"
-        description="Sistema de Salud Ambulatoria — GADPE"
+        description="Atenciones, pacientes, farmacia e inventario del mes elegido"
+        actions={
+          <Select
+            label="Mes"
+            data={MESES}
+            allowDeselect={false}
+            w={200}
+            {...contained}
+            value={mes}
+            onChange={(v) => setMes(v ?? mesActual())}
+          />
+        }
       />
-      <TableroDispensario />
+      <TableroDispensario periodo={rangoDeMes(mes)} />
     </PageShell>
   )
 }
