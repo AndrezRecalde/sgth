@@ -1140,31 +1140,38 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
     // Módulo 11 — Dispensario Médico
     Route::prefix('dispensario')->group(function () {
 
-        // Agenda — accesible para todo el personal del dispensario
-        Route::get('agenda/listos-para-consulta',
-            [AgendaController::class, 'listosParaConsulta']
-        )->name('agenda.listosParaConsulta');
-        Route::get('agenda/turnos-del-dia',
-            [AgendaController::class, 'turnosDelDia']
-        )->name('agenda.turnosDelDia');
-        Route::patch('agenda/{agenda}/no-presentado',
-            [AgendaController::class, 'noPresentado']
-        )->name('agenda.noPresentado');
-        Route::patch('agenda/{agenda}/reactivar',
-            [AgendaController::class, 'reactivar']
-        )->name('agenda.reactivar');
-        Route::patch('agenda/{agenda}/en-consulta',
-            [AgendaController::class, 'marcarEnConsulta']
-        )->name('agenda.enConsulta');
-        Route::get('agenda/por-folio/{folio}',
-            [AgendaController::class, 'porFolio']
-        )->name('agenda.porFolio');
+        // Agenda — accesible para todo el personal del dispensario, y solo
+        // para él. El comentario lo decía, pero estas seis rutas no llevaban
+        // `role:` y cualquier servidor con sesión podía ver la cola o marcar
+        // a un paciente como no presentado.
+        Route::middleware('role:medico|odontologo|enfermera|admin-dispensario')
+            ->group(function () {
+                Route::get('agenda/listos-para-consulta',
+                    [AgendaController::class, 'listosParaConsulta']
+                )->name('agenda.listosParaConsulta');
+                Route::get('agenda/turnos-del-dia',
+                    [AgendaController::class, 'turnosDelDia']
+                )->name('agenda.turnosDelDia');
+                Route::patch('agenda/{agenda}/no-presentado',
+                    [AgendaController::class, 'noPresentado']
+                )->name('agenda.noPresentado');
+                Route::patch('agenda/{agenda}/reactivar',
+                    [AgendaController::class, 'reactivar']
+                )->name('agenda.reactivar');
+                Route::patch('agenda/{agenda}/en-consulta',
+                    [AgendaController::class, 'marcarEnConsulta']
+                )->name('agenda.enConsulta');
+                Route::get('agenda/por-folio/{folio}',
+                    [AgendaController::class, 'porFolio']
+                )->name('agenda.porFolio');
+
+                Route::get('triaje/pendientes',
+                    [TriajeController::class, 'pendientes']
+                )->name('dispensario.triaje.pendientes');
+            });
+
         Route::apiResource('agenda', AgendaController::class)
             ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
-
-        Route::get('triaje/pendientes',
-            [TriajeController::class, 'pendientes']
-        )->name('dispensario.triaje.pendientes');
 
         // Triaje
         Route::prefix('agenda/{agendaId}/triaje')->group(function () {
@@ -1214,25 +1221,33 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         )->middleware('role:medico|odontologo')
          ->name('dispensario.disponibilidad.alternar');
 
+        // Buscar por cédula revela si alguien es paciente del dispensario, y
+        // las atenciones de enfermería son datos de salud: ni una cosa ni la
+        // otra se abre a cualquier servidor con sesión.
         Route::get('pacientes/buscar',
             [PacienteController::class, 'buscar']
-        )->name('dispensario.pacientes.buscar');
+        )->middleware('role:medico|odontologo|enfermera|admin-dispensario')
+         ->name('dispensario.pacientes.buscar');
 
         Route::get('atenciones-enfermeria',
             [AtencionEnfermeriaController::class, 'index']
-        )->name('dispensario.atenciones-enfermeria.index');
+        )->middleware('role:medico|odontologo|enfermera|admin-dispensario')
+         ->name('dispensario.atenciones-enfermeria.index');
 
-        Route::post('atenciones-enfermeria',
-            [AtencionEnfermeriaController::class, 'store']
-        )->name('dispensario.atenciones-enfermeria.store');
+        // Registrar y anular un servicio es trabajo de Enfermería.
+        Route::middleware('role:enfermera|admin-dispensario')->group(function () {
+            Route::post('atenciones-enfermeria',
+                [AtencionEnfermeriaController::class, 'store']
+            )->name('dispensario.atenciones-enfermeria.store');
 
-        Route::patch('atenciones-enfermeria/{id}/anular',
-            [AtencionEnfermeriaController::class, 'anular']
-        )->name('dispensario.atenciones-enfermeria.anular');
+            Route::patch('atenciones-enfermeria/{id}/anular',
+                [AtencionEnfermeriaController::class, 'anular']
+            )->name('dispensario.atenciones-enfermeria.anular');
 
-        Route::get('catalogo-servicios-enfermeria',
-            [AtencionEnfermeriaController::class, 'catalogo']
-        )->name('dispensario.catalogo-servicios-enfermeria');
+            Route::get('catalogo-servicios-enfermeria',
+                [AtencionEnfermeriaController::class, 'catalogo']
+            )->name('dispensario.catalogo-servicios-enfermeria');
+        });
 
         // Historias clínicas — SOLO personal médico
         Route::prefix('historias-clinicas')
