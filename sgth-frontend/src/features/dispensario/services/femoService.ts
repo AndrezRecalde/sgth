@@ -120,6 +120,7 @@ export interface FichaSaludOcupacional {
   grupo_embarazada:              boolean
   grupo_discapacidad:            boolean
   grupo_enfermedad_catastrofica?: boolean
+  grupo_lactancia?:              boolean
   grupo_adulto_mayor?:           boolean
   porcentaje_discapacidad?:      string | null
   lateralidad?:                  'derecha' | 'izquierda' | null
@@ -190,6 +191,7 @@ export interface CrearFemoData {
     grupo_embarazada?:        boolean
     grupo_discapacidad?:      boolean
     grupo_enfermedad_catastrofica?: boolean
+    grupo_lactancia?:         boolean
     grupo_adulto_mayor?:      boolean
     porcentaje_discapacidad?: string | null
     lateralidad?:             'derecha' | 'izquierda' | null

@@ -37,6 +37,7 @@ class UpdateFichaSaludOcupacionalRequest extends FormRequest
             'ficha.grupo_embarazada' => ['nullable', 'boolean'],
             'ficha.grupo_discapacidad' => ['nullable', 'boolean'],
             'ficha.grupo_enfermedad_catastrofica' => ['nullable', 'boolean'],
+            'ficha.grupo_lactancia' => ['nullable', 'boolean'],
             'ficha.grupo_adulto_mayor' => ['nullable', 'boolean'],
             'ficha.porcentaje_discapacidad' => ['nullable', 'string', 'max:10'],
             'ficha.lateralidad' => ['nullable', Rule::in(['derecha', 'izquierda'])],

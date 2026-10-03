@@ -77,7 +77,8 @@ export function FemoSeccionDatosUsuario({
           Grupo de atención prioritaria
         </Text>
 
-        {/* Los cuatro grupos del formulario 028. */}
+        {/* Los cuatro grupos del impreso del MSP más «lactancia», que el
+            Dispensario del GADPE añade en su formato. */}
         <Group gap="lg">
           {/* No se ofrece a pacientes hombres. Se muestra cuando el sexo no
               está registrado, para no perder el dato por un expediente
@@ -104,6 +105,14 @@ export function FemoSeccionDatosUsuario({
             checked={fichaData.grupo_enfermedad_catastrofica ?? false}
             onChange={(e) => set({ grupo_enfermedad_catastrofica: e.currentTarget.checked })}
           />
+          {/* Igual que «Embarazada»: solo aplica a pacientes mujeres. */}
+          {sexo !== 'masculino' && (
+            <Checkbox
+              label="Lactancia"
+              checked={fichaData.grupo_lactancia ?? false}
+              onChange={(e) => set({ grupo_lactancia: e.currentTarget.checked })}
+            />
+          )}
           <Checkbox
             label="Adulto mayor"
             checked={fichaData.grupo_adulto_mayor ?? false}

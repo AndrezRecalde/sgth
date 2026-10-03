@@ -55,6 +55,7 @@
                     Embarazada: {{ $ficha->grupo_embarazada ? 'SI' : 'NO' }} |
                     Discapacidad: {{ $ficha->grupo_discapacidad ? 'SI' . ($ficha->porcentaje_discapacidad ? " ({$ficha->porcentaje_discapacidad}%)" : '') : 'NO' }} |
                     E. Catastrófica: {{ $ficha->grupo_enfermedad_catastrofica ? 'SI' : 'NO' }} |
+                    Lactancia: {{ $ficha->grupo_lactancia ? 'SI' : 'NO' }} |
                     Adulto Mayor: {{ $ficha->grupo_adulto_mayor ? 'SI' : 'NO' }}
                 </span>
             </td>

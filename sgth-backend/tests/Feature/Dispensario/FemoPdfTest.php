@@ -122,6 +122,7 @@ test('la vista del formulario recibe todos los campos nuevos', function () {
         ->toContain('Izquierda')
         ->toContain('Adulto Mayor: SI')
         ->toContain('E. Catastrófica: SI')
+        ->toContain('Lactancia: NO')
         ->toContain('Fecha de Reintegro')
         ->toContain('01/03/2026')
         ->toContain('Último Día Laboral')

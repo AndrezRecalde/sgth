@@ -13,8 +13,11 @@ use App\Models\Dispensario\FemoExamenFisico;
 use App\Models\Dispensario\FemoFactorRiesgo;
 use App\Models\Dispensario\FichaSaludOcupacional;
 use App\Models\Estructura\Puesto;
+use App\Models\Expediente\Servidor;
+use App\Models\Seleccion\Postulante;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 final class FemoService
 {
@@ -107,8 +110,39 @@ final class FemoService
         return $ficha;
     }
 
+    /**
+     * Embarazada y lactancia solo aplican a pacientes mujeres.
+     *
+     * El asistente ya no ofrece esas casillas a un hombre; esto cierra la
+     * puerta a quien llame a la API directamente. Con el sexo sin registrar
+     * se aceptan, igual que el asistente las muestra: un expediente
+     * incompleto no debe hacer perder el dato.
+     */
+    private function validarGruposPorSexo(array $campos, ?string $genero): void
+    {
+        if ($genero !== 'masculino') {
+            return;
+        }
+
+        $errores = [];
+        foreach (['grupo_embarazada' => 'embarazada', 'grupo_lactancia' => 'en lactancia'] as $campo => $texto) {
+            if (! empty($campos[$campo])) {
+                $errores["ficha.{$campo}"] = "Un paciente de sexo masculino no puede registrarse como {$texto}.";
+            }
+        }
+
+        if ($errores !== []) {
+            throw ValidationException::withMessages($errores);
+        }
+    }
+
     public function registrar(array $datos, int $evaluadorId): FichaSaludOcupacional
     {
+        $genero = ! empty($datos['ficha']['servidor_id'])
+            ? Servidor::whereKey($datos['ficha']['servidor_id'])->value('genero')
+            : Postulante::whereKey($datos['ficha']['postulante_id'] ?? null)->value('genero');
+        $this->validarGruposPorSexo($datos['ficha'], $genero);
+
         return DB::transaction(function () use ($datos, $evaluadorId) {
             $ficha = FichaSaludOcupacional::create([
                 ...$this->sellarPuesto($datos['ficha']),
@@ -204,6 +238,11 @@ final class FemoService
             // manda; dejar los dos en nulo rompía el CHECK `chk_ficha_persona`.
             $campos = $datos['ficha'] ?? [];
             unset($campos['servidor_id'], $campos['postulante_id']);
+
+            $this->validarGruposPorSexo(
+                $campos,
+                $ficha->servidor?->genero ?? $ficha->postulante?->genero,
+            );
 
             $ficha->update([
                 ...$this->sellarPuesto($campos),
