@@ -11,6 +11,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { empleoAnteriorSchema, type EmpleoAnteriorForm } from '../../schemas/femo.schema'
 import { TIPO_EVENTO_LABORAL_OPTIONS } from '../../services/femoOptions'
+import { SiNoSinRespuesta } from './SiNoSinRespuesta'
 import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 
 interface Props {
@@ -44,6 +45,7 @@ export function FemoEmpleoAnteriorModal({ opened, onClose, onAgregar }: Props) {
   const fechaFin       = useWatch({ control, name: 'fecha_fin' })
   const calificadoIess = useWatch({ control, name: 'calificado_iess' })
   const fechaEvento    = useWatch({ control, name: 'fecha_evento' })
+  const esActual       = useWatch({ control, name: 'es_trabajo_actual' })
 
   const handleSubmit = (values: EmpleoAnteriorForm) => {
     onAgregar(values)
@@ -86,12 +88,15 @@ export function FemoEmpleoAnteriorModal({ opened, onClose, onAgregar }: Props) {
               label="Es el trabajo actual"
               description="Déjalo sin marcar si es un empleo anterior"
               checked={field.value ?? false}
-              onChange={(e) => field.onChange(e.currentTarget.checked)}
+              onChange={(e) => {
+                field.onChange(e.currentTarget.checked)
+                if (e.currentTarget.checked) empleoForm.setValue('fecha_fin', null)
+              }}
             />
           )}
         />
         <Grid>
-          <Grid.Col span={6}>
+          <Grid.Col span={{ base: 12, sm: 6 }}>
             <DatePickerInput
               label="Fecha inicio"
               valueFormat="DD/MM/YYYY"
@@ -103,18 +108,22 @@ export function FemoEmpleoAnteriorModal({ opened, onClose, onAgregar }: Props) {
               }
             />
           </Grid.Col>
-          <Grid.Col span={6}>
-            <DatePickerInput
-              label="Fecha fin"
-              valueFormat="DD/MM/YYYY"
-              clearable
-              {...contained}
-              value={toDateValue(fechaFin)}
-              onChange={(d) =>
-                empleoForm.setValue('fecha_fin', fromDateValueOrNull(d))
-              }
-            />
-          </Grid.Col>
+          {/* El trabajo actual no tiene fecha de fin: el tiempo de trabajo
+              se cuenta hasta la atención. */}
+          {!esActual && (
+            <Grid.Col span={{ base: 12, sm: 6 }}>
+              <DatePickerInput
+                label="Fecha fin"
+                valueFormat="DD/MM/YYYY"
+                clearable
+                {...contained}
+                value={toDateValue(fechaFin)}
+                onChange={(d) =>
+                  empleoForm.setValue('fecha_fin', fromDateValueOrNull(d))
+                }
+              />
+            </Grid.Col>
+          )}
         </Grid>
         <Textarea
           label="Observaciones"
@@ -139,14 +148,14 @@ export function FemoEmpleoAnteriorModal({ opened, onClose, onAgregar }: Props) {
         />
         {tipoEvento !== 'ninguno' && (
           <>
+            {/* SÍ / NO del impreso, con «sin respuesta»: una casilla
+                desmarcada no distingue «no calificado» de «no se sabe». */}
+            <SiNoSinRespuesta
+              pregunta="¿Calificado por el IESS?"
+              valor={calificadoIess}
+              onChange={(v) => empleoForm.setValue('calificado_iess', v)}
+            />
             <Group grow>
-              <Checkbox
-                label="Calificado por IESS"
-                checked={calificadoIess ?? false}
-                onChange={(e) =>
-                  empleoForm.setValue('calificado_iess', e.currentTarget.checked)
-                }
-              />
               <DatePickerInput
                 label="Fecha del evento"
                 valueFormat="DD/MM/YYYY"

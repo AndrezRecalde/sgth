@@ -240,8 +240,19 @@ export interface CrearFemoData {
   consumo_sustancias?:       Omit<FemoConsumoSustancia, 'id'>[]
 }
 
+/** Filtros del listado de fichas (`GET /dispensario/fichas-sso`). */
+export interface FiltrosFemo {
+  page?:        number
+  per_page?:    number
+  tipo_ficha?:  string
+  aptitud?:     string
+  /** Cédula o apellido del servidor o aspirante. */
+  buscar?:      string
+  servidor_id?: number
+}
+
 export const femoService = {
-  listar: (params?: Record<string, unknown>) =>
+  listar: (params?: FiltrosFemo) =>
     api.get<ApiResponse<PaginatedResponse<FichaSaludOcupacional>>>(
       '/dispensario/fichas-sso', { params }
     ).then(r => r.data.datos),

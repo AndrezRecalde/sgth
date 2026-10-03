@@ -69,6 +69,8 @@ export function FemoAntecedenteModal({ opened, onClose, onAgregar }: Props) {
               placeholder="Ej: 2018"
               min={1900}
               max={new Date().getFullYear()}
+              allowDecimal={false}
+              hideControls
               {...contained}
               value={field.value ?? undefined}
               onChange={(v) => field.onChange(v ? Number(v) : null)}

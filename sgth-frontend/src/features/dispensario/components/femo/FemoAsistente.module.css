@@ -1,0 +1,12 @@
+/* La barra de navegación del asistente queda pegada al pie de la ventana.
+   Las secciones del FEMO son largas —la G puede tener cientos de casillas— y
+   con los botones al final de la página el médico tenía que bajar hasta el
+   fondo para pasar de paso o guardar. */
+.pie {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  padding: var(--mantine-spacing-sm) 0;
+  background: var(--mantine-color-body);
+  border-top: 1px solid var(--mantine-color-default-border);
+}

@@ -170,7 +170,7 @@ export function SolicitudSignosVitalesForm({ solicitud, onCreado, onCancelar }: 
                 control={control}
                 render={({ field }) => (
                   <NumberInput
-                    label="P. sistólica"
+                    label="P. sistólica (mmHg)"
                     description="Normal: 90–120 mmHg"
                     hideControls
                     {...contained}
@@ -185,7 +185,7 @@ export function SolicitudSignosVitalesForm({ solicitud, onCreado, onCancelar }: 
                 control={control}
                 render={({ field }) => (
                   <NumberInput
-                    label="P. diastólica"
+                    label="P. diastólica (mmHg)"
                     description="Normal: 60–80 mmHg"
                     hideControls
                     {...contained}
@@ -203,7 +203,7 @@ export function SolicitudSignosVitalesForm({ solicitud, onCreado, onCancelar }: 
                 control={control}
                 render={({ field }) => (
                   <NumberInput
-                    label="Frec. cardíaca"
+                    label="Frec. cardíaca (lpm)"
                     description="Normal: 60–100 lpm"
                     hideControls
                     {...contained}
@@ -218,7 +218,7 @@ export function SolicitudSignosVitalesForm({ solicitud, onCreado, onCancelar }: 
                 control={control}
                 render={({ field }) => (
                   <NumberInput
-                    label="Frec. respiratoria"
+                    label="Frec. respiratoria (rpm)"
                     description="Normal: 12–20 rpm"
                     hideControls
                     {...contained}
@@ -270,9 +270,9 @@ export function SolicitudSignosVitalesForm({ solicitud, onCreado, onCancelar }: 
               control={control}
               render={({ field }) => (
                 <NumberInput
-                  label="Glucosa (opcional)"
+                  label="Glucosa (mg/dL)"
                   decimalScale={1}
-                  description="Normal en ayunas: 70–100 mg/dL"
+                  description="Opcional. Normal en ayunas: 70–100 mg/dL"
                   hideControls
                   {...contained}
                   value={field.value ?? undefined}

@@ -1,9 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { femoService } from '../services/femoService'
-import type { CrearFemoData } from '../services/femoService'
+import type { CrearFemoData, FiltrosFemo } from '../services/femoService'
 import { notificar } from '@/components/ui'
 
-export function useFemos(params?: Record<string, unknown>) {
+export function useFemos(params?: FiltrosFemo) {
   return useQuery({
     queryKey: ['femos', params],
     queryFn:  () => femoService.listar(params),

@@ -11,7 +11,7 @@ import { useCatalogoRiesgos } from '../../hooks/useCatalogoRiesgos'
 import type { ActividadRiesgoForm, FactorRiesgoForm } from '../../schemas/femo.schema'
 import { FemoSeccion } from './FemoSeccion'
 import classes from './FemoMatrizRiesgos.module.css'
-import { CountBadge, StatusBadge } from '@/components/ui'
+import { confirmar, CountBadge, StatusBadge } from '@/components/ui'
 
 interface Props {
   puestoId:            number | null
@@ -29,7 +29,17 @@ export function FemoMatrizRiesgos({
   const { data: puestoActividades = [] } = usePuestoActividades(puestoId)
   const { data: catalogo, isLoading: cargandoCatalogo } = useCatalogoRiesgos()
 
-  const removerActividad = (index: number) => {
+  // Quitar una actividad borra también todos sus factores marcados: se
+  // confirma antes, porque deshacerlo es volver a marcarlos uno por uno.
+  const removerActividad = (index: number) => confirmar({
+    title: 'Quitar actividad',
+    message: <>Se quitará <b>{actividadesRiesgo[index].actividad}</b> y todos sus factores de riesgo marcados.</>,
+    confirmLabel: 'Quitar',
+    destructiva: true,
+    onConfirm: () => quitarActividad(index),
+  })
+
+  const quitarActividad = (index: number) => {
     onActividadesChange(actividadesRiesgo.filter((_, i) => i !== index))
     onFactoresChange(
       factoresRiesgo
@@ -218,8 +228,13 @@ export function FemoMatrizRiesgos({
                               {seleccionados.map((f) => (
                                 <TextInput
                                   key={f.factor}
-                                  label={`Detalle — ${f.factor}`}
-                                  placeholder="Opcional. Obligatorio si marcó «Otros»."
+                                  label={f.factor === 'Otros' ? '¿Cuál? (Otros)' : `Detalle — ${f.factor}`}
+                                  placeholder={f.factor === 'Otros' ? 'Describa el factor' : 'Opcional'}
+                                  // «Otros ____» del impreso: sin el detalle no
+                                  // dice nada. El PDF lo imprime junto al factor.
+                                  required={f.factor === 'Otros'}
+                                  error={f.factor === 'Otros' && !f.medida_preventiva?.trim()
+                                    ? 'Indique cuál es el factor' : undefined}
                                   {...contained}
                                   value={f.medida_preventiva ?? ''}
                                   onChange={(e) =>

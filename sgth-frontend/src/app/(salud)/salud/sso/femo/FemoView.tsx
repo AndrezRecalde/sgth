@@ -1,145 +1,112 @@
 'use client'
 
-import { Stack, Text } from '@mantine/core'
-import {
-  IconClipboardHeart, IconEye,
-} from '@tabler/icons-react'
-
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useFemos } from
-  '@/features/dispensario/hooks/useFemo'
+import { Select, TextInput } from '@mantine/core'
+import { useDebouncedValue } from '@mantine/hooks'
+import { IconClipboardHeart } from '@tabler/icons-react'
+import { useContainedInput } from '@/hooks/useContainedInput'
+import { useFemos } from '@/features/dispensario/hooks/useFemo'
+import { getFemosColumns } from '@/features/dispensario/components/femos.columns'
+import { APTITUD_OPTIONS, TIPO_FICHA_OPTIONS } from '@/features/dispensario/services/femoOptions'
 import {
-  TIPO_FICHA_OPTIONS,
-  APTITUD_OPTIONS,
-  TONO_APTITUD,
-} from '@/features/dispensario/services/femoService'
-import type { FichaSaludOcupacional } from
-  '@/features/dispensario/services/femoService'
-import type { DataTableColumn } from 'mantine-datatable'
-import { EmptyState, PageHeader, PageShell, SgthTable, StatusBadge, TableActions } from '@/components/ui'
+  DataState, PageHeader, PageShell, PAGINACION_ES, SgthTable, Toolbar,
+} from '@/components/ui'
 import { ROUTES } from '@/config/routes'
-import { formatFechaMes } from '@/lib/fecha'
+
+/** El mismo tamaño de página que el resto de los listados del sistema. */
+const POR_PAGINA = 15
 
 export function FemoView() {
-  const router = useRouter()
-  const { data, isLoading } = useFemos()
+  const router    = useRouter()
+  const contained = useContainedInput('sm')
+
+  const [page, setPage]       = useState(1)
+  const [tipo, setTipo]       = useState<string | null>(null)
+  const [aptitud, setAptitud] = useState<string | null>(null)
+  const [buscar, setBuscar]   = useState('')
+  const [buscarDebounced]     = useDebouncedValue(buscar.trim(), 300)
+
+  // Antes no se pasaba la página: el backend devolvía 20 fichas y a partir de
+  // la 21 no había manera de llegar a ellas.
+  const { data, isLoading, error } = useFemos({
+    page,
+    per_page:   POR_PAGINA,
+    tipo_ficha: tipo ?? undefined,
+    aptitud:    aptitud ?? undefined,
+    buscar:     buscarDebounced || undefined,
+  })
   const fichas = data?.data ?? []
 
-  const getLabelTipo = (v: string) =>
-    TIPO_FICHA_OPTIONS.find(o => o.value === v)?.label ?? v
+  // Cambiar un filtro sin volver a la primera página consultaría esa misma
+  // página del resultado filtrado, casi siempre vacía.
+  const filtrar = <T,>(set: (v: T) => void) => (v: T) => { set(v); setPage(1) }
 
-  // Sin aptitud es un borrador: la evaluación sigue en curso.
-  const getLabelAptitud = (v?: string | null) =>
-    v ? APTITUD_OPTIONS.find(o => o.value === v)?.label ?? v : 'Borrador'
+  const columns = getFemosColumns({
+    onVer: (id) => router.push(ROUTES.SALUD.FEMO_DETALLE(id)),
+  })
 
-  const columns: DataTableColumn<FichaSaludOcupacional>[] = [
-    {
-      accessor: 'fecha_evaluacion',
-      title:    'Fecha',
-      width:    120,
-      render: (f) => (
-        <Text size="sm">
-          {formatFechaMes(f.fecha_evaluacion)}
-        </Text>
-      ),
-    },
-    {
-      accessor: 'servidor',
-      title:    'Servidor / Aspirante',
-      render: (f) => (
-        <Stack gap={0}>
-          <Text size="sm" fw={500}>
-            {f.servidor
-              ? `${f.servidor.nombre} ${f.servidor.apellido}`
-              : f.postulante
-                ? `${f.postulante.nombres} ${f.postulante.apellidos}`
-                : '—'}
-          </Text>
-          <Text size="xs" c="dimmed" ff="monospace">
-            {f.servidor?.cedula ?? f.postulante?.cedula ?? ''}
-          </Text>
-        </Stack>
-      ),
-    },
-    {
-      accessor: 'puesto_trabajo',
-      title:    'Puesto',
-      render: (f) => (
-        <Text size="sm">{f.puesto_trabajo ?? '—'}</Text>
-      ),
-    },
-    {
-      accessor: 'tipo_ficha',
-      title:    'Tipo',
-      width:    150,
-      render: (f) => (
-        <StatusBadge>
-          {getLabelTipo(f.tipo_ficha)}
-        </StatusBadge>
-      ),
-    },
-    {
-      accessor: 'aptitud',
-      title:    'Aptitud',
-      width:    160,
-      render: (f) => (
-        <StatusBadge tone={TONO_APTITUD[f.aptitud ?? ''] ?? 'neutral'}>
-          {getLabelAptitud(f.aptitud)}
-        </StatusBadge>
-      ),
-    },
-    {
-      accessor: 'evaluador',
-      title:    'Evaluador',
-      width:    160,
-      render: (f) => {
-        const ev = f.evaluador?.servidor
-        return (
-          <Text size="sm">
-            {ev ? `Dr. ${ev.nombre} ${ev.apellido}` : '—'}
-          </Text>
-        )
-      },
-    },
-    {
-      accessor: 'acciones',
-      title:    '',
-      width:    50,
-      render: (f) => (
-        <TableActions actions={[
-          {
-            label:   'Ver detalle',
-            icon:    <IconEye size={14} />,
-            onClick: () => router.push(
-              ROUTES.SALUD.FEMO_DETALLE(f.id)
-            ),
-          },
-        ]} />
-      ),
-    },
-  ]
+  const hayFiltros = !!(tipo || aptitud || buscarDebounced)
 
   return (
     <PageShell>
       <PageHeader
-        title="Fichas de Salud Ocupacional"
-        description="FEMO — Evaluaciones médicas ocupacionales"
+        title="Fichas FEMO"
+        description="Evaluaciones médicas ocupacionales del Dispensario"
       />
 
-      {fichas.length === 0 && !isLoading ? (
-        <EmptyState
-          icon={IconClipboardHeart}
-          title="Sin fichas registradas"
-          description="No hay fichas FEMO registradas aún."
+      <Toolbar>
+        <TextInput
+          label="Buscar"
+          placeholder="Cédula o apellido"
+          {...contained}
+          value={buscar}
+          onChange={(e) => filtrar(setBuscar)(e.currentTarget.value)}
         />
-      ) : (
+        <Select
+          label="Tipo de evaluación"
+          placeholder="Todos"
+          data={TIPO_FICHA_OPTIONS}
+          clearable
+          {...contained}
+          value={tipo}
+          onChange={filtrar(setTipo)}
+        />
+        <Select
+          label="Aptitud"
+          placeholder="Todas"
+          data={APTITUD_OPTIONS}
+          clearable
+          {...contained}
+          value={aptitud}
+          onChange={filtrar(setAptitud)}
+        />
+      </Toolbar>
+
+      <DataState
+        loading={isLoading}
+        error={error}
+        empty={!fichas.length}
+        emptyProps={{
+          icon: IconClipboardHeart,
+          title: hayFiltros ? 'Sin coincidencias' : 'Sin fichas registradas',
+          description: hayFiltros
+            ? 'Ninguna ficha cumple los filtros elegidos.'
+            : 'Las fichas nacen al iniciar una solicitud desde la bandeja.',
+        }}
+        page={page}
+      >
         <SgthTable
+          {...PAGINACION_ES}
           records={fichas}
           columns={columns}
-          fetching={isLoading}
+          totalRecords={data?.total ?? fichas.length}
+          recordsPerPage={POR_PAGINA}
+          page={page}
+          onPageChange={setPage}
           minHeight={200}
         />
-      )}
+      </DataState>
     </PageShell>
   )
 }

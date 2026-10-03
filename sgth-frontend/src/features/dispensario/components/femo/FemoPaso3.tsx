@@ -21,7 +21,7 @@ import { FemoDiagnosticosCie10 } from './FemoDiagnosticosCie10'
 import { FemoAptitudSelector } from './FemoAptitudSelector'
 import { FemoRetiroSection } from './FemoRetiroSection'
 import { FemoSeccion } from './FemoSeccion'
-import { StatusBadge } from '@/components/ui'
+import { confirmar, StatusBadge } from '@/components/ui'
 import { formatFechaMes } from '@/lib/fecha'
 
 interface Props {
@@ -48,7 +48,13 @@ export function FemoPaso3({
     { open: abrirExamen, close: cerrarExamen }] = useDisclosure(false)
 
   const handleEliminarExamen = (idx: number) => {
-    onExamenesChange(examenes.filter((_, i) => i !== idx))
+    confirmar({
+      title: 'Quitar examen',
+      message: <>Se quitará <b>{examenes[idx].nombre_examen}</b> de la sección J.</>,
+      confirmLabel: 'Quitar',
+      destructiva: true,
+      onConfirm: () => onExamenesChange(examenes.filter((_, i) => i !== idx)),
+    })
   }
 
   return (
@@ -99,6 +105,7 @@ export function FemoPaso3({
                     size="sm"
                     color="red"
                     variant="subtle"
+                    aria-label={`Quitar el examen ${ex.nombre_examen}`}
                     onClick={() => handleEliminarExamen(i)}
                   >
                     <IconTrash size={13} />

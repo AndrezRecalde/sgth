@@ -1,30 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Stack, Skeleton, Text, Button, Group, Card, SimpleGrid, Stepper } from '@mantine/core'
-import {
-  IconStethoscope, IconDownload,
-  IconEdit, IconUser, IconStretching, IconBriefcase,
-  IconArrowLeft, IconArrowRight, IconCheck, IconX,
-} from '@tabler/icons-react'
-import { useFemoDetalle, useActualizarFemo } from
-  '@/features/dispensario/hooks/useFemo'
-import { useFemoWizardState } from
-  '@/features/dispensario/hooks/useFemoWizardState'
-import { usePdfFemo } from
-  '@/features/dispensario/hooks/usePdfFemo'
-import { FemoPaso1 } from
-  '@/features/dispensario/components/femo/FemoPaso1'
-import { FemoPasoExamenFisico } from
-  '@/features/dispensario/components/femo/FemoPasoExamenFisico'
-import { FemoPaso2 } from
-  '@/features/dispensario/components/femo/FemoPaso2'
-import { FemoPaso3 } from
-  '@/features/dispensario/components/femo/FemoPaso3'
-import {
-  TIPO_FICHA_OPTIONS, APTITUD_OPTIONS, TONO_APTITUD,
-} from '@/features/dispensario/services/femoOptions'
+import { Button, Group, Skeleton } from '@mantine/core'
+import { IconStethoscope, IconDownload, IconEdit } from '@tabler/icons-react'
+import { useFemoDetalle } from '@/features/dispensario/hooks/useFemo'
+import { usePdfFemo } from '@/features/dispensario/hooks/usePdfFemo'
+import { FemoResumen } from '@/features/dispensario/components/femo/FemoResumen'
+import { APTITUD_OPTIONS, TONO_APTITUD } from '@/features/dispensario/services/femoOptions'
 import { EmptyState, PageHeader, PageShell, StatusBadge } from '@/components/ui'
 import { ROUTES } from '@/config/routes'
 
@@ -32,25 +14,22 @@ interface Props {
   id: string
 }
 
+/**
+ * Una ficha FEMO en solo lectura.
+ *
+ * Ya no se edita aquí: el detalle tenía su propia copia del asistente, que se
+ * había quedado atrás (sin sexo, sin puesto, sin borrador). Un borrador se
+ * retoma en el mismo asistente de la bandeja; con el dictamen emitido, la
+ * ficha está cerrada.
+ */
 export function FemoDetalleView({ id }: Props) {
-  const femoId  = Number(id)
-  const router  = useRouter()
-
-  const [modo, setModo] = useState<'lectura' | 'edicion'>('lectura')
+  const femoId = Number(id)
+  const router = useRouter()
 
   const { data: ficha, isLoading, isError } = useFemoDetalle(femoId)
-  const actualizar = useActualizarFemo()
   const { descargarFemo, loading: descargando } = usePdfFemo()
 
-  const wizard = useFemoWizardState()
-
-  useEffect(() => {
-    if (ficha && modo === 'edicion') {
-      wizard.cargarDesdeFicha(ficha)
-      wizard.setActive(0)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ficha, modo])
+  const volver = () => router.push(ROUTES.SALUD.FEMO)
 
   if (isLoading) {
     return (
@@ -64,7 +43,7 @@ export function FemoDetalleView({ id }: Props) {
   if (isError || !ficha) {
     return (
       <PageShell>
-        <PageHeader title={`Ficha FEMO #${femoId}`} onBack={() => router.push(ROUTES.SALUD.FEMO)} />
+        <PageHeader title={`Ficha FEMO #${femoId}`} onBack={volver} />
         <EmptyState
           icon={IconStethoscope}
           title="Ficha no encontrada"
@@ -74,141 +53,22 @@ export function FemoDetalleView({ id }: Props) {
     )
   }
 
-  // Al editar, la sección A necesita el sexo (decide el bloque reproductivo),
-  // el grupo sanguíneo y la cédula, igual que al crear la ficha.
-  const persona = ficha.servidor ?? ficha.postulante ?? null
-
-  const tipoLabel = TIPO_FICHA_OPTIONS.find(o => o.value === ficha.tipo_ficha)?.label ?? ficha.tipo_ficha
-  const aptitudLabel = APTITUD_OPTIONS.find(o => o.value === ficha.aptitud)?.label ?? 'Sin definir'
-  // Solo el borrador de una evaluación en curso se edita: con el dictamen
-  // emitido la ficha es el respaldo de lo certificado (el backend lo exige).
-  const editable = ficha.solicitud?.estado === 'en_proceso'
-
-  const handleGuardar = () => {
-    const payload = wizard.construirPayload()
-    if (!payload) return
-
-    actualizar.mutate({ id: femoId, data: payload }, {
-      onSuccess: () => setModo('lectura'),
-    })
-  }
-
-  if (modo === 'edicion') {
-    const pasos = [
-      { label: 'Información del paciente', icon: <IconUser size={16} /> },
-      { label: 'Examen físico',             icon: <IconStretching size={16} /> },
-      { label: 'Evaluación laboral',        icon: <IconBriefcase size={16} /> },
-      { label: 'Diagnóstico y cierre',      icon: <IconStethoscope size={16} /> },
-    ]
-
-    return (
-      <PageShell>
-        <PageHeader
-          title={`Editar ficha FEMO #${femoId}`}
-          description="Ficha de evaluación médica ocupacional"
-          actions={
-            <Button variant="default" leftSection={<IconX size={14} />} onClick={() => setModo('lectura')}>
-              Cancelar edición
-            </Button>
-          }
-        />
-
-        <Stepper active={wizard.active} onStepClick={wizard.setActive} size="sm">
-          {pasos.map((paso, i) => (
-            <Stepper.Step key={i} label={paso.label} icon={paso.icon} />
-          ))}
-        </Stepper>
-
-        <Card withBorder radius="lg" p="lg">
-          {wizard.active === 0 && (
-            <FemoPaso1
-              fichaData={wizard.fichaData}
-              constantesData={wizard.constantesData}
-              antecedentes={wizard.antecedentes}
-              antecedenteReproductivo={wizard.antecedenteReproductivo}
-              consumoSustancias={wizard.consumoSustancias}
-              onFichaChange={wizard.setFichaData}
-              onAntecedentesChange={wizard.setAntecedentes}
-              onAntecedenteReproductivoChange={wizard.setAntecedenteReproductivo}
-              onConsumoSustanciasChange={wizard.setConsumoSustancias}
-              sexo={persona?.genero ?? null}
-              tipoSangre={persona?.tipo_sangre ?? null}
-              cedula={persona?.cedula}
-            />
-          )}
-          {wizard.active === 1 && (
-            <FemoPasoExamenFisico
-              examenFisico={wizard.examenFisico}
-              onChange={wizard.setExamenFisico}
-              fichaData={wizard.fichaData}
-              onFichaChange={wizard.setFichaData}
-            />
-          )}
-          {wizard.active === 2 && (
-            <FemoPaso2
-              fichaData={wizard.fichaData}
-              puestoId={ficha.puesto_id ?? null}
-              actividadesRiesgo={wizard.actividadesRiesgo}
-              factoresRiesgo={wizard.factoresRiesgo}
-              empleosAnteriores={wizard.empleosAnteriores}
-              onFichaChange={wizard.setFichaData}
-              onActividadesChange={wizard.setActividadesRiesgo}
-              onFactoresChange={wizard.setFactoresRiesgo}
-              onEmpleosChange={wizard.setEmpleosAnteriores}
-            />
-          )}
-          {wizard.active === 3 && (
-            <FemoPaso3
-              fichaData={wizard.fichaData}
-              examenes={wizard.examenes}
-              diagnosticos={wizard.diagnosticos}
-              onFichaChange={wizard.setFichaData}
-              onExamenesChange={wizard.setExamenes}
-              onDiagnosticosChange={wizard.setDiagnosticos}
-            />
-          )}
-        </Card>
-
-        <Group justify="space-between">
-          <Button
-            variant="default"
-            leftSection={<IconArrowLeft size={14} />}
-            disabled={wizard.active === 0}
-            onClick={() => wizard.setActive(a => a - 1)}
-          >
-            Anterior
-          </Button>
-          {wizard.active < 3 ? (
-            <Button
-              rightSection={<IconArrowRight size={14} />}
-              onClick={() => wizard.setActive(a => a + 1)}
-            >
-              Siguiente
-            </Button>
-          ) : (
-            <Button
-              leftSection={<IconCheck size={14} />}
-              loading={actualizar.isPending}
-              onClick={handleGuardar}
-            >
-              Guardar cambios
-            </Button>
-          )}
-        </Group>
-      </PageShell>
-    )
-  }
+  const persona = ficha.servidor
+    ? `${ficha.servidor.nombre} ${ficha.servidor.apellido}`
+    : ficha.postulante
+      ? `${ficha.postulante.nombres} ${ficha.postulante.apellidos}`
+      : undefined
+  const aptitud = APTITUD_OPTIONS.find(o => o.value === ficha.aptitud)?.label ?? 'Borrador'
+  const solicitudEnCurso = ficha.solicitud?.estado === 'en_proceso' ? ficha.solicitud : null
 
   return (
     <PageShell>
       <PageHeader
         title={`Ficha FEMO #${femoId}`}
-        description={
-          ficha.servidor
-            ? `${ficha.servidor.nombre} ${ficha.servidor.apellido}`
-            : ficha.postulante
-              ? `${ficha.postulante.nombres} ${ficha.postulante.apellidos}`
-              : undefined
+        description={persona}
+        onBack={volver}
+        estado={
+          <StatusBadge tone={TONO_APTITUD[ficha.aptitud ?? ''] ?? 'neutral'}>{aptitud}</StatusBadge>
         }
         actions={
           <Group>
@@ -220,126 +80,19 @@ export function FemoDetalleView({ id }: Props) {
             >
               Descargar PDF
             </Button>
-            {editable && (
+            {solicitudEnCurso && (
               <Button
                 leftSection={<IconEdit size={14} />}
-                onClick={() => setModo('edicion')}
+                onClick={() => router.push(ROUTES.SALUD.FEMO_NUEVA(solicitudEnCurso.id))}
               >
-                Editar
+                Continuar en el asistente
               </Button>
             )}
           </Group>
         }
       />
 
-      <SimpleGrid cols={{ base: 1, md: 3 }}>
-        <Card withBorder radius="md" p="md">
-          <Text size="xs" c="dimmed" tt="uppercase" fw={600}>Tipo de evaluación</Text>
-          <StatusBadge size="lg" mt={4}>{tipoLabel}</StatusBadge>
-        </Card>
-        <Card withBorder radius="md" p="md">
-          <Text size="xs" c="dimmed" tt="uppercase" fw={600}>Aptitud médica</Text>
-          <StatusBadge tone={TONO_APTITUD[ficha.aptitud ?? ''] ?? 'neutral'} size="lg" mt={4}>
-            {aptitudLabel}
-          </StatusBadge>
-        </Card>
-        <Card withBorder radius="md" p="md">
-          <Text size="xs" c="dimmed" tt="uppercase" fw={600}>Fecha de evaluación</Text>
-          <Text size="sm" fw={500} mt={4}>
-            {new Date(ficha.fecha_evaluacion).toLocaleDateString('es-EC', {
-              day: '2-digit', month: 'long', year: 'numeric',
-            })}
-          </Text>
-        </Card>
-      </SimpleGrid>
-
-      <Card withBorder radius="lg" p="lg">
-        <Stack gap="xs">
-          <Text size="xs" fw={600} c="dimmed" tt="uppercase">Puesto de trabajo</Text>
-          <Text size="sm">{ficha.puesto_trabajo ?? 'No registrado'}</Text>
-        </Stack>
-      </Card>
-
-      <SimpleGrid cols={{ base: 1, md: 2 }}>
-        <Card withBorder radius="lg" p="lg">
-          <Text size="xs" fw={600} c="dimmed" tt="uppercase" mb="xs">Antecedentes personales</Text>
-          {(ficha.antecedentes ?? []).length === 0 ? (
-            <Text size="sm" c="dimmed">Ninguno registrado.</Text>
-          ) : (
-            <Stack gap={4}>
-              {ficha.antecedentes!.map((a, i) => (
-                <Text key={i} size="sm">• {a.tipo}: {a.descripcion}</Text>
-              ))}
-            </Stack>
-          )}
-        </Card>
-
-        <Card withBorder radius="lg" p="lg">
-          <Text size="xs" fw={600} c="dimmed" tt="uppercase" mb="xs">Examen físico regional</Text>
-          <Text size="sm">
-            {(ficha.examen_fisico ?? []).filter(e => !e.normal).length} hallazgo(s) anormal(es) de{' '}
-            {(ficha.examen_fisico ?? []).length} ítems evaluados.
-          </Text>
-        </Card>
-
-        <Card withBorder radius="lg" p="lg">
-          <Text size="xs" fw={600} c="dimmed" tt="uppercase" mb="xs">Factores de riesgo laboral</Text>
-          {(ficha.factores_riesgo ?? []).length === 0 ? (
-            <Text size="sm" c="dimmed">Ninguno registrado.</Text>
-          ) : (
-            <Stack gap={4}>
-              {ficha.factores_riesgo!.map((f, i) => (
-                <Text key={i} size="sm">• [{f.categoria}] {f.factor}</Text>
-              ))}
-            </Stack>
-          )}
-        </Card>
-
-        <Card withBorder radius="lg" p="lg">
-          <Text size="xs" fw={600} c="dimmed" tt="uppercase" mb="xs">Diagnósticos CIE-10</Text>
-          {(ficha.diagnosticos ?? []).length === 0 ? (
-            <Text size="sm" c="dimmed">Ninguno registrado.</Text>
-          ) : (
-            <Stack gap={4}>
-              {ficha.diagnosticos!.map((d, i) => (
-                <Text key={i} size="sm">
-                  • {d.diagnostico?.codigo ?? '—'} — {d.diagnostico?.descripcion ?? ''} ({d.tipo})
-                </Text>
-              ))}
-            </Stack>
-          )}
-        </Card>
-      </SimpleGrid>
-
-      {ficha.restricciones && (
-        <Card withBorder radius="lg" p="lg">
-          <Text size="xs" fw={600} c="dimmed" tt="uppercase" mb="xs">Restricciones</Text>
-          <Text size="sm">{ficha.restricciones}</Text>
-        </Card>
-      )}
-
-      {ficha.recomendaciones && (
-        <Card withBorder radius="lg" p="lg">
-          <Text size="xs" fw={600} c="dimmed" tt="uppercase" mb="xs">Recomendaciones y tratamiento</Text>
-          <Text size="sm">{ficha.recomendaciones}</Text>
-          {ficha.tratamiento && <Text size="sm" mt={4}>{ficha.tratamiento}</Text>}
-        </Card>
-      )}
-
-      {ficha.tipo_ficha === 'retiro' && (
-        <Card withBorder radius="lg" p="lg">
-          <Text size="xs" fw={600} c="dimmed" tt="uppercase" mb="xs">N. Retiro (evaluación)</Text>
-          <Text size="sm">
-            Se realiza la evaluación: {ficha.se_realiza_evaluacion_retiro ? 'Sí' : 'No'} · Condición
-            relacionada con el trabajo: {ficha.condicion_relacionada_trabajo ? 'Sí' : 'No'}
-          </Text>
-          {ficha.observacion_retiro && <Text size="sm" mt={4}>{ficha.observacion_retiro}</Text>}
-        </Card>
-      )}
-
-      <Button variant="subtle" onClick={() => router.push(ROUTES.SALUD.FEMO)}>
-        Volver al listado
-      </Button>
+      <FemoResumen ficha={ficha} />
     </PageShell>
   )
 }

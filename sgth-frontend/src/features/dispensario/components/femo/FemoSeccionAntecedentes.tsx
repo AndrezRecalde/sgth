@@ -16,6 +16,7 @@ import { FemoAntecedenteModal } from './FemoAntecedenteModal'
 import { FemoAntecedentesReproductivosSection } from './FemoAntecedentesReproductivosSection'
 import { FemoConsumoSustanciasTable } from './FemoConsumoSustanciasTable'
 import { FemoEstiloDeVidaSection } from './FemoEstiloDeVidaSection'
+import { SectionHeading } from '@/components/ui'
 
 interface Props {
   fichaData: Partial<FichaBaseForm>
@@ -95,9 +96,7 @@ export function FemoSeccionAntecedentes({
           respondió» no es lo mismo que «respondió que no», y de ahí que el
           valor por defecto sea nulo y no falso. */}
       <Stack gap="xs">
-        <Text size="xs" fw={600} c="dimmed">
-          Condición especial para atenciones de urgencia
-        </Text>
+        <SectionHeading title="Condición especial para atenciones de urgencia" />
 
         <Grid>
           <Grid.Col span={{ base: 12, md: 6 }}>

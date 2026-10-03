@@ -1,10 +1,11 @@
 'use client'
 
-import { Card, Checkbox, NumberInput, Stack, Text, TextInput } from '@mantine/core'
+import { Card, Checkbox, NumberInput, Stack, TextInput } from '@mantine/core'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import type { ConsumoSustanciaForm } from '../../schemas/femo.schema'
 import { SUSTANCIA_OPTIONS } from '../../services/femoOptions'
 import classes from './FemoConsumoSustanciasTable.module.css'
+import { SectionHeading } from '@/components/ui'
 
 interface Props {
   data: ConsumoSustanciaForm[]
@@ -30,9 +31,7 @@ export function FemoConsumoSustanciasTable({ data, onChange }: Props) {
 
   return (
     <Stack gap="xs">
-      <Text size="xs" fw={600} c="dimmed">
-        Consumo de sustancias
-      </Text>
+      <SectionHeading title="Consumo de sustancias" />
 
       <Stack gap="sm">
         {SUSTANCIA_OPTIONS.map((opt) => {

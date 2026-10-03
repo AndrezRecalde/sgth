@@ -29,7 +29,22 @@ final class FemoService
             'postulante:id,nombres,apellidos,cedula',
             'evaluador:id,usuario_ti,email,servidor_id',
             'evaluador.servidor:id,nombre,apellido',
-        ])->orderBy('fecha_evaluacion', 'desc');
+        ])->orderBy('fecha_evaluacion', 'desc')
+            // `fecha_evaluacion` es una fecha: sin desempate, dos fichas del
+            // mismo día cambian de página entre una consulta y otra.
+            ->orderBy('id', 'desc');
+
+        if (! empty($filtros['buscar'])) {
+            $termino = '%'.mb_strtolower(trim((string) $filtros['buscar'])).'%';
+            $query->where(function ($q) use ($termino) {
+                $q->whereHas('servidor', fn ($s) => $s
+                    ->where('cedula', 'like', $termino)
+                    ->orWhereRaw('LOWER(apellido) LIKE ?', [$termino]))
+                    ->orWhereHas('postulante', fn ($p) => $p
+                        ->where('cedula', 'like', $termino)
+                        ->orWhereRaw('LOWER(apellidos) LIKE ?', [$termino]));
+            });
+        }
 
         if (! empty($filtros['servidor_id'])) {
             $query->where('servidor_id', $filtros['servidor_id']);
@@ -55,7 +70,8 @@ final class FemoService
             );
         }
 
-        return $query->paginate($filtros['per_page'] ?? 20);
+        // Con techo: `per_page` llega del cliente.
+        return $query->paginate(min(max((int) ($filtros['per_page'] ?? 15), 1), 100));
     }
 
     public function obtener(int $id): FichaSaludOcupacional
