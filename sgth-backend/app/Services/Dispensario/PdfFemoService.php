@@ -17,6 +17,27 @@ final class PdfFemoService
 
     public function generarContent(int $id): array
     {
+        $datos = $this->datosDeLaVista($id);
+        $ficha = $datos['ficha'];
+
+        $pdf = Pdf::loadView('pdf.dispensario.femo.formulario-028', $datos)
+            ->setPaper('a4', 'portrait');
+
+        return [
+            'content' => $pdf->output(),
+            'filename' => 'femo_'.($ficha->numero_archivo ?: $ficha->id).'.pdf',
+        ];
+    }
+
+    /**
+     * Lo que recibe la plantilla del formulario.
+     *
+     * Aparte de `generarContent` para poder comprobar el HTML de las tres
+     * páginas tal como se arma: rastrear texto dentro del PDF comprimido no
+     * es fiable.
+     */
+    public function datosDeLaVista(int $id): array
+    {
         $ficha = $this->femoService->obtener($id);
 
         $examenFisicoPorRegion = $ficha->examenFisico->groupBy(
@@ -36,6 +57,10 @@ final class PdfFemoService
                 ->groupBy('factor')
                 ->map(fn ($factoresFactor) => [
                     'subcategoria' => $factoresFactor->first()->subcategoria,
+                    // «Otros ____» del impreso: el detalle que escribió el
+                    // médico viaja en `medida_preventiva` del factor.
+                    'detalle' => $factoresFactor->pluck('medida_preventiva')
+                        ->filter()->unique()->implode('; '),
                     'actividades' => $factoresFactor
                         ->filter(fn ($f) => $f->presente)
                         ->pluck('ficha_actividad_id')
@@ -48,7 +73,7 @@ final class PdfFemoService
             fn ($antecedente) => $antecedente->tipo->value
         );
 
-        $pdf = Pdf::loadView('pdf.dispensario.femo.formulario-028', [
+        return [
             'ficha' => $ficha,
             'persona' => $this->normalizarPersona($ficha),
             'examenFisicoPorRegion' => $examenFisicoPorRegion,
@@ -61,11 +86,6 @@ final class PdfFemoService
             // tomadas del mismo catálogo que valida la ficha.
             'etiquetasSubcategoria' => $this->etiquetasSubcategoria(),
             'logo' => public_path('images/logo-gadpe.png'),
-        ])->setPaper('a4', 'portrait');
-
-        return [
-            'content' => $pdf->output(),
-            'filename' => 'femo_'.($ficha->numero_archivo ?: $ficha->id).'.pdf',
         ];
     }
 

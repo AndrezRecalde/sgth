@@ -40,7 +40,7 @@
                             @if($fila['subcategoria'])
                                 <strong>{{ $etiquetasSubcategoria[$fila['subcategoria']] ?? $fila['subcategoria'] }}</strong> —
                             @endif
-                            {{ $factor }}
+                            {{ $factor }}@if($fila['detalle'] ?? null): {{ $fila['detalle'] }}@endif
                         </td>
                         @foreach($actividadesRiesgo as $actividad)
                             <td class="msp-check">{{ $fila['actividades']->contains($actividad->id) ? 'X' : '' }}</td>
@@ -67,12 +67,12 @@
         <tr>
             {{-- «Trabajo» es la columna ANTERIOR / ACTUAL del impreso. --}}
             <th>Centro de Trabajo</th><th>Actividades</th><th>Trabajo</th><th>Período</th>
-            <th>Tipo de Evento</th><th>Calif. IESS</th><th>Fecha</th><th>Especificar</th>
+            <th>Tipo de Evento</th><th>Calif. IESS</th><th>Fecha</th><th>Especificar</th><th>Observaciones</th>
         </tr>
         @forelse($ficha->empleosAnteriores as $empleo)
             @php
-                $inicioEmpleo = optional($empleo->fecha_inicio)->format('d/m/Y');
-                $finEmpleo = $empleo->fecha_fin ? optional($empleo->fecha_fin)->format('d/m/Y') : 'Actual';
+                $inicioEmpleo = optional($empleo->fecha_inicio)->format('Y/m/d');
+                $finEmpleo = $empleo->fecha_fin ? optional($empleo->fecha_fin)->format('Y/m/d') : 'Actual';
             @endphp
             <tr>
                 <td>{{ $empleo->centro_trabajo }}</td>
@@ -81,11 +81,12 @@
                 <td class="small">{{ $inicioEmpleo ? "{$inicioEmpleo} - {$finEmpleo}" : '-' }}</td>
                 <td class="center">{{ $empleo->tipo_evento_laboral->etiqueta() }}</td>
                 <td class="msp-check">{{ $empleo->calificado_iess === null ? '-' : ($empleo->calificado_iess ? 'SI' : 'NO') }}</td>
-                <td class="center">{{ optional($empleo->fecha_evento)->format('d/m/Y') ?? '-' }}</td>
+                <td class="center">{{ optional($empleo->fecha_evento)->format('Y/m/d') ?? '-' }}</td>
                 <td class="small">{{ $empleo->especificar ?? '-' }}</td>
+                <td class="small">{{ $empleo->observaciones ?? '-' }}</td>
             </tr>
         @empty
-            <tr><td colspan="8" class="small center">Sin registros</td></tr>
+            <tr><td colspan="9" class="small center">Sin registros</td></tr>
         @endforelse
     </table>
 
@@ -93,7 +94,8 @@
     <table class="msp-table">
         <tr>
             <td style="width:75%"><span class="msp-label">Descripción</span><br><span class="msp-value">{{ $ficha->actividad_extralaboral_descripcion ?? '-' }}</span></td>
-            <td style="width:25%"><span class="msp-label">Fecha</span><br><span class="msp-value">{{ optional($ficha->actividad_extralaboral_fecha)->format('d/m/Y') ?? '-' }}</span></td>
+            <td style="width:25%"><span class="msp-label">Fecha</span><br><span class="msp-value">{{ optional($ficha->actividad_extralaboral_fecha)->format('Y/m/d') ?? '-' }}</span></td>
         </tr>
     </table>
+    <div class="msp-pie">SNS-MSP/HCU-form.123/2025 · Evaluación Médica Ocupacional · 2/3</div>
 </div>

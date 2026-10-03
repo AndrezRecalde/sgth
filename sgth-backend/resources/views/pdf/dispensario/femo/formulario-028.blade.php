@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Formulario 028 - Evaluación Médica Ocupacional</title>
+    <title>SNS-MSP/HCU-form.123/2025 - Evaluación Médica Ocupacional</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -43,6 +43,29 @@
         .msp-header .titulo-cell .subtitulo {
             font-weight: normal;
             font-size: 8px;
+        }
+        .msp-col-f {
+            width: 33.3%;
+            vertical-align: top;
+            padding: 0;
+        }
+        table.msp-f {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table.msp-f td {
+            border: 0.5px solid #999;
+            padding: 1px 3px;
+            font-size: 7px;
+        }
+        table.msp-f td.msp-check {
+            width: 14px;
+        }
+        .msp-pie {
+            margin-top: 4px;
+            font-size: 7px;
+            text-align: right;
+            color: #555;
         }
         .msp-section-title {
             background-color: #d9d9d9;

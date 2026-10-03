@@ -126,9 +126,9 @@ test('la vista del formulario recibe todos los campos nuevos', function () {
         ->toContain('E. Catastrófica: SI')
         ->toContain('Lactancia: NO')
         ->toContain('Fecha de Reintegro')
-        ->not->toContain('01/03/2026')
+        ->not->toContain('2026/03/01')
         ->toContain('Último Día Laboral')
-        ->toContain('15/08/2026')
+        ->toContain('2026/08/15')
         ->toContain('Perím. Abd.')
         ->toContain('94.5')
         // Respondió que NO, que no es lo mismo que no haber respondido.
