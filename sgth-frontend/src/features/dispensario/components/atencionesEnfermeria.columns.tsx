@@ -9,6 +9,8 @@ import type { AtencionEnfermeria } from '../services/atencionEnfermeriaService'
 
 interface ColumnActions {
   onAnular: (atencion: AtencionEnfermeria) => void
+  /** La anula quien la registró, o la administración (lo exige el backend). */
+  puedeAnular: (atencion: AtencionEnfermeria) => boolean
 }
 
 function nombrePaciente(atencion: AtencionEnfermeria): string {
@@ -90,6 +92,7 @@ export function getAtencionesEnfermeriaColumns(
       width:    50,
       render: (atencion) => {
         const anulada = !!atencion.anulado_en
+        const ajena = !anulada && !actions.puedeAnular(atencion)
 
         return (
           <TableActions actions={[
@@ -97,11 +100,13 @@ export function getAtencionesEnfermeriaColumns(
               // Una atención anulada no se anula dos veces, pero la acción se
               // deja a la vista inhabilitada: esconderla haría pensar que
               // faltan permisos (ver regla 06).
-              label:    anulada ? 'Ya está anulada' : 'Anular atención',
+              label:    anulada
+                ? 'Ya está anulado'
+                : ajena ? 'Solo quien lo registró puede anularlo' : 'Anular servicio',
               icon:     <IconBan size={14} />,
-              color:    anulada ? undefined : 'red',
+              color:    anulada || ajena ? undefined : 'red',
               onClick:  () => actions.onAnular(atencion),
-              disabled: anulada,
+              disabled: anulada || ajena,
             },
           ]} />
         )

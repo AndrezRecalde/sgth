@@ -1,8 +1,7 @@
 'use client'
 
-import { Stack, Group, Text, Card, Avatar, Skeleton } from '@mantine/core'
-import { IconUser, IconUsers } from '@tabler/icons-react'
-import { StatusBadge } from '@/components/ui'
+import { Text, Skeleton } from '@mantine/core'
+import { ResumenPaciente } from './ResumenPaciente'
 import { useHistorialTriaje, useRegistrarTriaje } from '../hooks/useTriaje'
 import { UltimoTriajeReferencia } from './UltimoTriajeReferencia'
 import { TomasPreviasTriaje } from './TomasPreviasTriaje'
@@ -54,36 +53,25 @@ export function TriajeForm({ turno, onCreado, onCancelar, textoCancelar = 'Cance
   )
 
   const encabezado = (
-    <Card withBorder radius="lg" padding="md">
-      <Stack gap="xs">
-        <Group justify="space-between" wrap="nowrap">
-          <Group gap="sm">
-            <Avatar radius="xl">
-              {esServidor ? <IconUser size={16} /> : <IconUsers size={16} />}
-            </Avatar>
-            <Stack gap={0}>
-              <Text size="sm" fw={600}>
-                {nombrePaciente.trim() || '—'}
-              </Text>
-              <Text size="xs" c="dimmed">
-                <Text span ff="monospace" inherit>{turno.folio}</Text>
-                {edad !== null && ` · ${edad} ${edad === 1 ? 'año' : 'años'}`}
-              </Text>
-            </Stack>
-          </Group>
-          <StatusBadge>
-            {turno.tipo_atencion === 'medicina_general' ? 'Medicina General' : 'Odontología'}
-          </StatusBadge>
-        </Group>
-        {/* Lo que se escribió al crear el turno: orienta qué mirar al medir. */}
-        {turno.motivo_solicitud && (
-          <Text size="xs">
-            <Text span c="dimmed" inherit>Motivo: </Text>
-            {turno.motivo_solicitud}
-          </Text>
-        )}
-      </Stack>
-    </Card>
+    <ResumenPaciente
+      nombre={nombrePaciente}
+      esServidor={esServidor}
+      etiqueta={turno.tipo_atencion === 'medicina_general' ? 'Medicina General' : 'Odontología'}
+      detalle={
+        <Text size="xs" c="dimmed">
+          <Text span ff="monospace" inherit>{turno.folio}</Text>
+          {edad !== null && ` · ${edad} ${edad === 1 ? 'año' : 'años'}`}
+        </Text>
+      }
+    >
+      {/* Lo que se escribió al crear el turno: orienta qué mirar al medir. */}
+      {turno.motivo_solicitud && (
+        <Text size="xs">
+          <Text span c="dimmed" inherit>Motivo: </Text>
+          {turno.motivo_solicitud}
+        </Text>
+      )}
+    </ResumenPaciente>
   )
 
   // Hasta saber si hay una toma previa: los valores iniciales de un

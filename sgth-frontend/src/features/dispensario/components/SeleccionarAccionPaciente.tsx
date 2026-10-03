@@ -1,15 +1,13 @@
 'use client'
 
 import {
-  Stack, Card, Group, Text, Avatar,
-  SimpleGrid, ThemeIcon, Button,
+  Stack, Card, Text, SimpleGrid, ThemeIcon, Button,
 } from '@mantine/core'
 import {
-  IconUser, IconUsers, IconStethoscope,
-  IconVaccine, IconArrowLeft,
+  IconStethoscope, IconVaccine, IconArrowLeft,
 } from '@tabler/icons-react'
 import type { PacienteEncontrado } from '../services/pacienteService'
-import { StatusBadge } from '@/components/ui'
+import { ResumenPaciente } from './ResumenPaciente'
 
 export type AccionPaciente = 'turno' | 'servicio_enfermeria'
 
@@ -26,38 +24,20 @@ export function SeleccionarAccionPaciente({
 
   return (
     <Stack gap="md">
-      <Card
-        withBorder radius="md" p="sm"
-        style={{ backgroundColor: 'var(--sgth-accent-light)' }}
-      >
-        <Group justify="space-between">
-          <Group gap="sm">
-            <Avatar
-              radius="xl"
-            >
-              {esServidor
-                ? <IconUser size={16} />
-                : <IconUsers size={16} />}
-            </Avatar>
-            <Stack gap={0}>
-              <Text size="sm" fw={600}>
-                {paciente.nombre_completo}
-              </Text>
-              <StatusBadge size="xs">
-                {esServidor ? 'Servidor' : 'Familiar'}
-              </StatusBadge>
-            </Stack>
-          </Group>
+      <ResumenPaciente
+        nombre={paciente.nombre_completo}
+        esServidor={esServidor}
+        accion={
           <Button
             size="xs"
             variant="subtle"
-            leftSection={<IconArrowLeft size={12} />}
+            leftSection={<IconArrowLeft size={14} />}
             onClick={onVolver}
           >
             Cambiar
           </Button>
-        </Group>
-      </Card>
+        }
+      />
 
       <Text size="sm" c="dimmed">
         ¿Qué necesita este paciente?

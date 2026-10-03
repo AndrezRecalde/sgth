@@ -51,10 +51,10 @@ export function MiJornadaFranja({ contexto }: Props) {
             tone={data.hoy.por_triar ? 'warning' : undefined} hint="Turnos de hoy esperando sus signos" />
           <StatCard label="Triaje de salud ocupacional" value={data.hoy.triaje_sso} icon={IconShieldCheck}
             loading={isLoading} hint="Evaluaciones que esperan a Enfermería" />
-          <StatCard label="Mis atenciones de hoy" value={data.hoy.mis_atenciones} icon={IconUserCheck} loading={isLoading} />
+          <StatCard label="Mis servicios de hoy" value={data.hoy.mis_atenciones} icon={IconUserCheck} loading={isLoading} />
         </SimpleGrid>
         <Text size="xs" c="dimmed">
-          Este mes: {plural(data.mes.atenciones, 'atención', 'atenciones')} y {plural(data.mes.triajes, 'triaje', 'triajes')}
+          Este mes: {plural(data.mes.atenciones, 'servicio', 'servicios')} y {plural(data.mes.triajes, 'triaje', 'triajes')}
           {data.mes.por_servicio[0] && ` · la más frecuente, ${data.mes.por_servicio[0].servicio.toLowerCase()}`}.
           {data.hoy.triaje_sso > 0 && (
             <> <Anchor size="xs" component={Link} href={ROUTES.SALUD.ENFERMERIA_SSO}>Ir a Atención SSO</Anchor></>

@@ -6,7 +6,7 @@ import { Stack } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { AtencionesEnfermeriaTable } from './AtencionesEnfermeriaTable'
-import { fromDateValue } from '@/lib/fecha'
+import { fromDateValue, hoyIso } from '@/lib/fecha'
 
 interface Props {
   opened:  boolean
@@ -17,9 +17,9 @@ export function AtencionesEnfermeriaDrawer({
   opened, onClose,
 }: Props) {
   const contained = useContainedInput('sm')
-  const [fecha, setFecha] = useState<Date | null>(new Date())
-
-  const fechaStr = fromDateValue(fecha ?? new Date())
+  // La fecha como `AAAA-MM-DD`, que es lo que devuelve el selector y lo que
+  // pide el API: el estado en `Date` obligaba a reparsear la cadena a mano.
+  const [fecha, setFecha] = useState(hoyIso)
 
   return (
     <SgthDrawer
@@ -32,16 +32,11 @@ export function AtencionesEnfermeriaDrawer({
           label="Fecha"
           {...contained}
           value={fecha}
-          onChange={(v) => {
-            if (!v) { setFecha(new Date()); return }
-            const str = typeof v === 'string' ? v : String(v)
-            const [y, m, d] = str.slice(0, 10).split('-').map(Number)
-            setFecha(new Date(y, m - 1, d))
-          }}
+          onChange={(v) => setFecha(v ? fromDateValue(v) : hoyIso())}
           valueFormat="DD/MM/YYYY"
         />
 
-        <AtencionesEnfermeriaTable fecha={fechaStr} />
+        <AtencionesEnfermeriaTable fecha={fecha} />
       </Stack>
     </SgthDrawer>
   )

@@ -1,24 +1,19 @@
 'use client'
 
-import { useEffect } from 'react'
-import {
-  Stack, Group, Select, Button,
-  Textarea, Switch, Text, Card,
-  Avatar, Alert,
-} from '@mantine/core'
+import { Stack, Group, Select, Button, Textarea, Switch } from '@mantine/core'
 import {
   useForm, Controller, useWatch, type DefaultValues,
 } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import {
-  IconCheck, IconUser, IconUsers, IconInfoCircle,
-} from '@tabler/icons-react'
+import { IconCheck } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { usePersonalDisponible, useCrearTurno } from '../hooks/useAgenda'
+import { erroresDeCampo } from '@/lib/erroresDeCampo'
+import { SelectorProfesional } from './SelectorProfesional'
+import { useCrearTurno } from '../hooks/useAgenda'
 import { agendaSchema, type AgendaFormData } from '../schemas/agenda.schema'
 import type { PacienteEncontrado } from '../services/pacienteService'
 import type { AgendaMedica } from '../services/agendaService'
-import { StatusBadge } from '@/components/ui'
+import { ResumenPaciente } from './ResumenPaciente'
 
 interface Props {
   paciente:    PacienteEncontrado
@@ -49,7 +44,7 @@ export function CrearTurnoForm({
   const crearTurno = useCrearTurno()
 
   const {
-    control, handleSubmit, setValue, resetField,
+    control, handleSubmit, setValue, resetField, setError,
     formState: { errors },
   } = useForm<AgendaFormData>({
     resolver: zodResolver(agendaSchema),
@@ -58,27 +53,19 @@ export function CrearTurnoForm({
 
   const tipoAtencion = useWatch({ control, name: 'tipo_atencion' })
 
-  const { data: resultadoPersonal, isLoading: cargandoPersonal } =
-    usePersonalDisponible(tipoAtencion)
-
-  const personal       = resultadoPersonal?.personal ?? []
-  const hayDisponibles = resultadoPersonal?.hayDisponibles ?? true
-
   // Odontología no requiere triaje, Medicina General sí. Al cambiar de
   // especialidad el profesional elegido deja de valer, así que el campo vuelve
-  // a su estado inicial: `resetField` lo vacía sin inventarle un valor.
-  useEffect(() => {
-    setValue('requiere_triaje', tipoAtencion === 'medicina_general')
+  // a su estado inicial: `resetField` lo vacía sin inventarle un valor. Va en
+  // el cambio del selector y no en un efecto: responde a lo que hace la
+  // persona, no a que cambie un valor (regla 08).
+  const cambiarTipo = (tipo: AgendaFormData['tipo_atencion']) => {
+    setValue('tipo_atencion', tipo)
+    setValue('requiere_triaje', tipo === 'medicina_general')
     resetField('medico_id')
-  }, [tipoAtencion, setValue, resetField])
-
-  const personalOptions = personal.map(p => ({
-    value: String(p.id),
-    label: p.nombre_completo,
-  }))
+  }
 
   const onSubmit = (values: AgendaFormData) => {
-    crearTurno.mutate(
+    crearTurno.mutateAsync(
       {
         medico_id:        values.medico_id,
         tipo_atencion:    values.tipo_atencion,
@@ -88,37 +75,22 @@ export function CrearTurnoForm({
           ? { servidor_id: paciente.id }
           : { carga_familiar_id: paciente.id }),
       },
-      {
-        onSuccess: (agenda) => onCreado(agenda),
-      }
-    )
+    ).then(onCreado).catch((error: unknown) => {
+      // El profesional que no atiende la especialidad vuelve a su campo; el
+      // turno duplicado no es de un campo y lo notifica la mutación.
+      const campos = erroresDeCampo(error)
+      if (campos?.medico_id) setError('medico_id', { message: campos.medico_id })
+      if (campos?.motivo_solicitud) setError('motivo_solicitud', { message: campos.motivo_solicitud })
+    })
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
       <Stack gap="md">
-        <Card
-          withBorder radius="md" p="sm"
-          style={{ backgroundColor: 'var(--sgth-accent-light)' }}
-        >
-          <Group gap="sm">
-            <Avatar
-              radius="xl"
-            >
-              {paciente.tipo === 'servidor'
-                ? <IconUser size={16} />
-                : <IconUsers size={16} />}
-            </Avatar>
-            <Stack gap={0}>
-              <Text size="sm" fw={600}>
-                {paciente.nombre_completo}
-              </Text>
-              <StatusBadge size="xs">
-                {paciente.tipo === 'servidor' ? 'Servidor' : 'Familiar'}
-              </StatusBadge>
-            </Stack>
-          </Group>
-        </Card>
+        <ResumenPaciente
+          nombre={paciente.nombre_completo}
+          esServidor={paciente.tipo === 'servidor'}
+        />
 
         <Controller
           name="tipo_atencion"
@@ -129,65 +101,13 @@ export function CrearTurnoForm({
               data={TIPO_ATENCION_OPTIONS}
               {...contained}
               value={field.value}
-              onChange={(v) =>
-                field.onChange(v ?? 'medicina_general')
-              }
+              onChange={(v) => cambiarTipo(v === 'odontologia' ? 'odontologia' : 'medicina_general')}
+              onBlur={field.onBlur}
             />
           )}
         />
 
-        <Controller
-          name="medico_id"
-          control={control}
-          render={({ field }) => (
-            <Select
-              label="Profesional disponible"
-              placeholder={
-                cargandoPersonal
-                  ? 'Cargando...'
-                  : personalOptions.length === 0
-                    ? 'Sin profesionales de esta especialidad'
-                    : 'Seleccione el profesional'
-              }
-              data={personalOptions}
-              searchable
-              disabled={cargandoPersonal}
-              {...contained}
-              value={field.value ? String(field.value) : null}
-              onChange={(v) => field.onChange(v ? Number(v) : undefined)}
-              error={errors.medico_id?.message}
-            />
-          )}
-        />
-
-        {/* El aviso decía «no hay profesionales marcados como disponibles»
-            cuando la lista salía vacía, pero la disponibilidad no se
-            consultaba nunca: la lista vacía solo significaba que no había
-            nadie con ese rol. Ahora cada caso dice lo suyo. */}
-        {!cargandoPersonal && personalOptions.length === 0 && (
-          <Alert
-            icon={<IconInfoCircle size={14} />}
-            color="amber"
-            variant="light"
-          >
-            <Text size="xs">
-              No hay ningún profesional registrado para este tipo de atención.
-            </Text>
-          </Alert>
-        )}
-
-        {!cargandoPersonal && personalOptions.length > 0 && !hayDisponibles && (
-          <Alert
-            icon={<IconInfoCircle size={14} />}
-            color="amber"
-            variant="light"
-          >
-            <Text size="xs">
-              Nadie se ha marcado disponible para este tipo de atención. Se
-              muestran todos los profesionales para no detener el turno.
-            </Text>
-          </Alert>
-        )}
+        <SelectorProfesional control={control} errors={errors} tipoAtencion={tipoAtencion} />
 
         <Controller
           name="motivo_solicitud"
@@ -201,6 +121,7 @@ export function CrearTurnoForm({
               {...contained}
               value={field.value ?? ''}
               onChange={(e) => field.onChange(e.currentTarget.value)}
+              error={errors.motivo_solicitud?.message}
             />
           )}
         />
