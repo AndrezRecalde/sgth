@@ -15,15 +15,23 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  */
 final class CatalogoReportesDispensario implements CatalogoReportesDispensarioInterface
 {
-    /** @var list<class-string<ReporteDispensario>> */
+    /**
+     * En el orden en que se ofrecen: agrupados por área, y dentro de cada una
+     * de lo más pedido a lo menos.
+     *
+     * @var list<class-string<ReporteDispensario>>
+     */
     private const REPORTES = [
         RegistroAtencionesReporte::class,
         MorbilidadReporte::class,
-        ProduccionReporte::class,
         AusentismoReporte::class,
+        EnfermeriaReporte::class,
         MovimientoMedicamentosReporte::class,
         ExistenciasReporte::class,
-        EnfermeriaReporte::class,
+        SaludOcupacionalReporte::class,
+        InformeDispensarioReporte::class,
+        ProduccionReporte::class,
+        GestionTurnosReporte::class,
     ];
 
     public function disponibles(AlcanceReporte $alcance): array
@@ -35,6 +43,8 @@ final class CatalogoReportesDispensario implements CatalogoReportesDispensarioIn
                 'clave'       => $r->clave(),
                 'titulo'      => $r->titulo(),
                 'descripcion' => $r->descripcion(),
+                'area'        => $r->area(),
+                'formatos'    => $r->formatos(),
                 'nominal'     => $r->nominal(),
                 'periodo'     => $r->usaPeriodo(),
                 'agrupaciones' => collect($r->agrupaciones())

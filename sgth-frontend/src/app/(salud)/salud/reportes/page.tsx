@@ -4,7 +4,7 @@ import { ReportesDispensarioView } from '@/features/dispensario/components/repor
 
 export const metadata: Metadata = {
   title: 'Reportes del Dispensario',
-  description: 'Atenciones, morbilidad y producción del Dispensario Médico',
+  description: 'Atención, enfermería, farmacia, salud ocupacional y gestión del Dispensario',
 }
 
 export default function ReportesDispensarioPage() {
@@ -12,7 +12,7 @@ export default function ReportesDispensarioPage() {
     <PageShell>
       <PageHeader
         title="Reportes"
-        description="Atenciones, morbilidad y producción del Dispensario Médico"
+        description="Atención, enfermería, farmacia, salud ocupacional y gestión del Dispensario"
       />
       <ReportesDispensarioView />
     </PageShell>

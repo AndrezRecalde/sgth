@@ -35,6 +35,8 @@ final class ProduccionReporte extends ReporteBase
 
     public function titulo(): string { return 'Producción por profesional'; }
 
+    public function area(): string { return 'Gestión'; }
+
     public function descripcion(): string
     {
         return 'Consultas, procedimientos, servicios y triajes de cada profesional, o día por día.';

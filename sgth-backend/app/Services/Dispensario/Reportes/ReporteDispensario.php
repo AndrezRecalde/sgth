@@ -17,6 +17,16 @@ interface ReporteDispensario
 
     public function descripcion(): string;
 
+    /** El grupo en que lo ordena el catálogo: «Atención clínica», «Farmacia»… */
+    public function area(): string;
+
+    /**
+     * En qué se descarga: `excel`, y además `pdf` el que se presenta firmado.
+     *
+     * @return list<string>
+     */
+    public function formatos(): array;
+
     /** Lleva nombres de pacientes con datos de salud: la autoridad no lo ve. */
     public function nominal(): bool;
 

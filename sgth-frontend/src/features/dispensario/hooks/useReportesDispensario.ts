@@ -4,6 +4,7 @@ import { guardarArchivo } from '@/lib/archivo'
 import {
   reportesDispensarioService,
   type FiltrosReporteDispensario,
+  type FormatoReporte,
 } from '../services/reportesDispensarioService'
 
 export function useCatalogoReportes() {
@@ -30,9 +31,13 @@ export function useReporte(clave: string | null, filtros: FiltrosReporteDispensa
 
 export function useDescargarReporte() {
   return useMutation({
-    mutationFn: ({ clave, filtros }: { clave: string; filtros: FiltrosReporteDispensario }) =>
-      reportesDispensarioService.excel(clave, filtros)
-        .then((blob) => guardarArchivo(blob, `${clave}_${filtros.desde}_${filtros.hasta}.xlsx`)),
+    mutationFn: ({ clave, filtros, formato }: {
+      clave: string; filtros: FiltrosReporteDispensario; formato: FormatoReporte
+    }) =>
+      reportesDispensarioService.descargar(clave, filtros, formato)
+        .then((blob) => guardarArchivo(
+          blob, `${clave}_${filtros.desde}_${filtros.hasta}.${formato === 'pdf' ? 'pdf' : 'xlsx'}`,
+        )),
     onError: notificar.alFallar('No se pudo descargar el reporte'),
   })
 }

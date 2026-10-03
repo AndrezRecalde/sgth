@@ -85,8 +85,8 @@ export function ReportesDispensarioView() {
                 onCambiar={(cambio) => setFiltros((f) => ({ ...f, ...cambio }))}
                 onConsultar={() => setConsultados({ ...filtros })}
                 consultando={resultado.isFetching}
-                onDescargar={() => clave && consultados && descargar.mutate({ clave, filtros: consultados })}
-                descargando={descargar.isPending}
+                onDescargar={(formato) => clave && consultados && descargar.mutate({ clave, filtros: consultados, formato })}
+                descargando={descargar.isPending ? descargar.variables?.formato ?? null : null}
                 puedeDescargar={!!consultados && !!resultado.data?.total}
               />
             )}

@@ -22,6 +22,8 @@ final class RegistroAtencionesReporte extends ReporteBase
 
     public function titulo(): string { return 'Registro de atenciones'; }
 
+    public function area(): string { return 'Atención clínica'; }
+
     public function descripcion(): string
     {
         return 'Cada consulta del período con su paciente, diagnósticos CIE-10 y profesional.';

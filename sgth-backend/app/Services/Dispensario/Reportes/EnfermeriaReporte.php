@@ -22,6 +22,8 @@ final class EnfermeriaReporte extends ReporteBase
 
     public function titulo(): string { return 'Enfermería'; }
 
+    public function area(): string { return 'Enfermería'; }
+
     public function descripcion(): string
     {
         return 'Servicios por tipo, triajes por nivel de alerta y signos vitales del FEMO.';

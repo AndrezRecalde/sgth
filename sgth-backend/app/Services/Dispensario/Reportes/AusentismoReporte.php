@@ -21,6 +21,8 @@ final class AusentismoReporte extends ReporteBase
 
     public function titulo(): string { return 'Ausentismo por enfermedad'; }
 
+    public function area(): string { return 'Atención clínica'; }
+
     public function descripcion(): string
     {
         return 'Certificados médicos y días de reposo de los servidores, por unidad o por diagnóstico.';

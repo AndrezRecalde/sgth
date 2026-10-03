@@ -2,12 +2,12 @@
 
 import { Button, Group, Select, SegmentedControl, Stack, Text } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import { IconFileSpreadsheet, IconSearch } from '@tabler/icons-react'
+import { IconFileSpreadsheet, IconFileTypePdf, IconSearch } from '@tabler/icons-react'
 import { Toolbar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { fromDateValue, toDateValue } from '@/lib/fecha'
 import type {
-  FiltrosReporteDispensario, OpcionReporte, ReporteDisponible,
+  FiltrosReporteDispensario, FormatoReporte, OpcionReporte, ReporteDisponible,
 } from '../../services/reportesDispensarioService'
 
 interface Props {
@@ -17,8 +17,9 @@ interface Props {
   onCambiar:    (cambio: Partial<FiltrosReporteDispensario>) => void
   onConsultar:  () => void
   consultando:  boolean
-  onDescargar:  () => void
-  descargando:  boolean
+  onDescargar:  (formato: FormatoReporte) => void
+  /** El formato que se está descargando, para girar solo su botón. */
+  descargando:  FormatoReporte | null
   /** No se descarga lo que no se ha consultado: se sabría qué sale. */
   puedeDescargar: boolean
 }
@@ -58,11 +59,22 @@ export function FiltrosReporte({
             variant="light"
             leftSection={<IconFileSpreadsheet size={16} />}
             disabled={!puedeDescargar}
-            loading={descargando}
-            onClick={onDescargar}
+            loading={descargando === 'excel'}
+            onClick={() => onDescargar('excel')}
           >
             Descargar Excel
           </Button>
+          {reporte.formatos.includes('pdf') && (
+            <Button
+              variant="light"
+              leftSection={<IconFileTypePdf size={16} />}
+              disabled={!puedeDescargar}
+              loading={descargando === 'pdf'}
+              onClick={() => onDescargar('pdf')}
+            >
+              Descargar PDF
+            </Button>
+          )}
         </>
       }
     >
