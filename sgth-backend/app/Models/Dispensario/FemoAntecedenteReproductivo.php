@@ -13,7 +13,7 @@ class FemoAntecedenteReproductivo extends Model
         'ficha_id', 'fecha_ultima_menstruacion',
         'gestas', 'partos', 'cesareas', 'abortos',
         'usa_metodo_planificacion', 'metodo_planificacion_cual',
-        'examenes_realizados', 'examenes_tiempo_anios',
+        'examenes_realizados', 'examenes_tiempo_anios', 'examenes_resultado',
     ];
 
     protected function casts(): array

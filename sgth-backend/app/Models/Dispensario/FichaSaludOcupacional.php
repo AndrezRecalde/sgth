@@ -40,6 +40,7 @@ class FichaSaludOcupacional extends Model
         'se_realiza_evaluacion_retiro',
         'actividad_fisica_cual', 'actividad_fisica_tiempo',
         'medicacion_habitual_cual', 'medicacion_habitual_cantidad',
+        'observacion_antecedentes', 'observacion_examen_fisico', 'observacion_examenes',
         'estado', 'created_by', 'updated_by',
     ];
 

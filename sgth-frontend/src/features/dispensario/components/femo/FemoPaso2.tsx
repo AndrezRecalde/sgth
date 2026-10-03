@@ -126,7 +126,7 @@ export function FemoPaso2({
         <Grid>
           <Grid.Col span={{ base: 12, md: 8 }}>
             <TextInput
-              label="Descripción"
+              label="Tipo de actividad"
               {...contained}
               value={fichaData.actividad_extralaboral_descripcion ?? ''}
               onChange={(e) => onFichaChange({

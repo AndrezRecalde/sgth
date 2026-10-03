@@ -61,6 +61,9 @@ class UpdateFichaSaludOcupacionalRequest extends FormRequest
             'ficha.actividad_fisica_tiempo' => ['nullable', 'string', 'max:50'],
             'ficha.medicacion_habitual_cual' => ['nullable', 'string', 'max:200'],
             'ficha.medicacion_habitual_cantidad' => ['nullable', 'string', 'max:100'],
+            'ficha.observacion_antecedentes' => ['nullable', 'string', 'max:2000'],
+            'ficha.observacion_examen_fisico' => ['nullable', 'string', 'max:2000'],
+            'ficha.observacion_examenes' => ['nullable', 'string', 'max:2000'],
 
             // Sin constantes vitales: las tomó Enfermería en el triaje y el
             // servidor las copia de ahí (FemoService::registrar). Antes las
@@ -126,6 +129,7 @@ class UpdateFichaSaludOcupacionalRequest extends FormRequest
             'antecedente_reproductivo.metodo_planificacion_cual' => ['nullable', 'string', 'max:200'],
             'antecedente_reproductivo.examenes_realizados' => ['nullable', 'string', 'max:300'],
             'antecedente_reproductivo.examenes_tiempo_anios' => ['nullable', 'integer', 'min:0'],
+            'antecedente_reproductivo.examenes_resultado' => ['nullable', 'string', 'max:500'],
 
             'consumo_sustancias' => ['nullable', 'array'],
             'consumo_sustancias.*.sustancia' => ['required', Rule::in(['tabaco', 'alcohol', 'otra'])],

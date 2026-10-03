@@ -74,6 +74,9 @@ export function useFemoWizardState(fichaInicial?: Partial<FichaBaseForm>) {
       actividad_fisica_tiempo: ficha.actividad_fisica_tiempo ?? null,
       medicacion_habitual_cual: ficha.medicacion_habitual_cual ?? null,
       medicacion_habitual_cantidad: ficha.medicacion_habitual_cantidad ?? null,
+      observacion_antecedentes: ficha.observacion_antecedentes ?? null,
+      observacion_examen_fisico: ficha.observacion_examen_fisico ?? null,
+      observacion_examenes: ficha.observacion_examenes ?? null,
     })
     // Solo las medidas: la fila trae además `id`, `ficha_id` y sus fechas, que
     // no son constantes vitales.
@@ -174,6 +177,9 @@ export function useFemoWizardState(fichaInicial?: Partial<FichaBaseForm>) {
         actividad_fisica_tiempo: fichaData.actividad_fisica_tiempo ?? null,
         medicacion_habitual_cual: fichaData.medicacion_habitual_cual ?? null,
         medicacion_habitual_cantidad: fichaData.medicacion_habitual_cantidad ?? null,
+        observacion_antecedentes: fichaData.observacion_antecedentes ?? null,
+        observacion_examen_fisico: fichaData.observacion_examen_fisico ?? null,
+        observacion_examenes: fichaData.observacion_examenes ?? null,
       },
       // Sin constantes vitales: el servidor las copia del triaje de Enfermería.
       antecedentes,

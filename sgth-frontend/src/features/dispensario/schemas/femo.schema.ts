@@ -42,6 +42,10 @@ export const fichaBaseSchema = z.object({
   actividad_fisica_tiempo:       z.string().optional().nullable(),
   medicacion_habitual_cual:      z.string().optional().nullable(),
   medicacion_habitual_cantidad:  z.string().optional().nullable(),
+  /** «Observación» al pie de las secciones C, F y J del impreso. */
+  observacion_antecedentes:      z.string().optional().nullable(),
+  observacion_examen_fisico:     z.string().optional().nullable(),
+  observacion_examenes:          z.string().optional().nullable(),
 })
 
 export const constantesVitalesSchema = z.object({
@@ -123,6 +127,8 @@ export const antecedenteReproductivoSchema = z.object({
   metodo_planificacion_cual: z.string().optional().nullable(),
   examenes_realizados:       z.string().optional().nullable(),
   examenes_tiempo_anios:     z.number().optional().nullable(),
+  /** Solo si interfiere con la actividad laboral y lo autoriza el titular. */
+  examenes_resultado:        z.string().optional().nullable(),
 })
 
 export const consumoSustanciaSchema = z.object({

@@ -16,7 +16,7 @@
         </tr>
     </table>
 
-    <div class="msp-section-title">J. RESULTADOS DE EXÁMENES GENERALES Y ESPECÍFICOS</div>
+    <div class="msp-section-title">J. RESULTADOS DE EXÁMENES GENERALES Y ESPECÍFICOS DE ACUERDO AL RIESGO Y PUESTO DE TRABAJO (IMAGEN, LABORATORIO Y OTROS)</div>
     <table class="msp-table">
         <tr><th style="width:35%">Nombre del Examen</th><th style="width:15%">Fecha</th><th style="width:15%">Tipo</th><th style="width:35%">Resultados</th></tr>
         @forelse($ficha->examenes as $examen)
@@ -29,6 +29,9 @@
         @empty
             <tr><td colspan="4" class="small center">Sin registros</td></tr>
         @endforelse
+        <tr>
+            <td colspan="4"><span class="msp-label">Observaciones</span><br><span class="msp-value">{{ $ficha->observacion_examenes ?? '-' }}</span></td>
+        </tr>
     </table>
 
     <div class="msp-section-title">K. DIAGNÓSTICO (PRE: PRESUNTIVO / DEF: DEFINITIVO)</div>

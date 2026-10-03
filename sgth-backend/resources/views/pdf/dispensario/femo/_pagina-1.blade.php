@@ -141,13 +141,15 @@
                     Método Planificación: {{ strtoupper($antReprod->usa_metodo_planificacion ?? '-') }}
                     @if($antReprod->metodo_planificacion_cual) ({{ $antReprod->metodo_planificacion_cual }})@endif
                     <br>Exámenes realizados: {{ $antReprod->examenes_realizados ?? '-' }} ({{ $antReprod->examenes_tiempo_anios ?? '-' }} años)
+                    @if($antReprod->examenes_resultado) | Resultado: {{ $antReprod->examenes_resultado }}@endif
                 </td>
             </tr>
         @elseif(!$esFemenino && $antReprod)
             <tr>
                 <td class="msp-label">Antecedentes Reproductivos Masculinos</td>
                 <td class="small">
-                    Exámenes: {{ $antReprod->examenes_realizados ?? '-' }} ({{ $antReprod->examenes_tiempo_anios ?? '-' }} años) |
+                    Exámenes: {{ $antReprod->examenes_realizados ?? '-' }} ({{ $antReprod->examenes_tiempo_anios ?? '-' }} años)
+                    @if($antReprod->examenes_resultado) — Resultado: {{ $antReprod->examenes_resultado }}@endif |
                     Método Planificación: {{ strtoupper($antReprod->usa_metodo_planificacion ?? '-') }}
                     @if($antReprod->metodo_planificacion_cual) ({{ $antReprod->metodo_planificacion_cual }})@endif
                 </td>
@@ -175,6 +177,10 @@
                 Actividad Física: {{ $ficha->actividad_fisica_cual ?? '-' }} ({{ $ficha->actividad_fisica_tiempo ?? '-' }}) |
                 Medicación Habitual: {{ $ficha->medicacion_habitual_cual ?? '-' }} ({{ $ficha->medicacion_habitual_cantidad ?? '-' }})
             </td>
+        </tr>
+        <tr>
+            <td class="msp-label">Observación</td>
+            <td class="small">{{ $ficha->observacion_antecedentes ?? '-' }}</td>
         </tr>
     </table>
 
@@ -250,8 +256,9 @@
                 @forelse($conPatologia as $linea)
                     {{ $linea }}<br>
                 @empty
-                    Sin evidencia de patología.
+                    Sin evidencia de patología.<br>
                 @endforelse
+                @if($ficha->observacion_examen_fisico){{ $ficha->observacion_examen_fisico }}@endif
             </td>
         </tr>
     </table>

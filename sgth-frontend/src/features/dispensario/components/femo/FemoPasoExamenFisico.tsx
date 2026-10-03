@@ -1,18 +1,25 @@
 'use client'
 
-import { Text, Accordion, Group } from '@mantine/core'
-import type { ExamenFisicoItemForm } from '../../schemas/femo.schema'
+import { Text, Accordion, Group, Textarea } from '@mantine/core'
+import { useContainedInput } from '@/hooks/useContainedInput'
+import type { ExamenFisicoItemForm, FichaBaseForm } from '../../schemas/femo.schema'
 import { REGIONES_EXAMEN_FISICO } from '../../services/femoOptions'
 import { ExamenFisicoRegionTable } from './ExamenFisicoRegionTable'
 import { FemoSeccion } from './FemoSeccion'
 import { StatusBadge } from '@/components/ui'
 
 interface Props {
-  examenFisico: ExamenFisicoItemForm[]
-  onChange:     (data: ExamenFisicoItemForm[]) => void
+  examenFisico:  ExamenFisicoItemForm[]
+  onChange:      (data: ExamenFisicoItemForm[]) => void
+  fichaData:     Partial<FichaBaseForm>
+  onFichaChange: (data: Partial<FichaBaseForm>) => void
 }
 
-export function FemoPasoExamenFisico({ examenFisico, onChange }: Props) {
+export function FemoPasoExamenFisico({
+  examenFisico, onChange, fichaData, onFichaChange,
+}: Props) {
+  const contained = useContainedInput()
+
   const contarAnormales = (region: string) =>
     examenFisico.filter(v => v.region === region && !v.normal).length
 
@@ -45,6 +52,18 @@ export function FemoPasoExamenFisico({ examenFisico, onChange }: Props) {
           )
         })}
       </Accordion>
+
+      <Textarea
+        label="Observación"
+        description="Observación de la sección F; los hallazgos de cada ítem ya van con su numeral"
+        autosize
+        minRows={2}
+        {...contained}
+        value={fichaData.observacion_examen_fisico ?? ''}
+        onChange={(e) => onFichaChange({
+          ...fichaData, observacion_examen_fisico: e.currentTarget.value,
+        })}
+      />
     </FemoSeccion>
   )
 }

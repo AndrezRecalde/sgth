@@ -94,6 +94,16 @@ export function FemoAntecedentesReproductivosSection({ data, onChange, sexo }: P
           onChange={(v) => set({ examenes_tiempo_anios: v !== '' ? Number(v) : null })}
         />
       </Grid.Col>
+
+      <Grid.Col span={12}>
+        <TextInput
+          label="Resultado"
+          description="Regístrelo únicamente si interfiere con la actividad laboral y con autorización del titular"
+          {...contained}
+          value={data.examenes_resultado ?? ''}
+          onChange={(e) => set({ examenes_resultado: e.currentTarget.value })}
+        />
+      </Grid.Col>
     </>
   )
 

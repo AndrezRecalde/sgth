@@ -108,6 +108,18 @@ export function FemoPaso3({
             ))}
           </Stack>
         )}
+
+        <Textarea
+          label="Observaciones"
+          description="Observaciones de la sección J (resultados de exámenes)"
+          autosize
+          minRows={2}
+          {...contained}
+          value={fichaData.observacion_examenes ?? ''}
+          onChange={(e) => onFichaChange({
+            ...fichaData, observacion_examenes: e.currentTarget.value,
+          })}
+        />
       </FemoSeccion>
 
       <FemoDiagnosticosCie10
@@ -138,16 +150,6 @@ export function FemoPaso3({
           value={fichaData.tratamiento ?? ''}
           onChange={(e) => onFichaChange({
             ...fichaData, tratamiento: e.currentTarget.value,
-          })}
-        />
-        <Textarea
-          label="Observaciones generales"
-          autosize
-          minRows={2}
-          {...contained}
-          value={fichaData.observaciones ?? ''}
-          onChange={(e) => onFichaChange({
-            ...fichaData, observaciones: e.currentTarget.value,
           })}
         />
       </FemoSeccion>
