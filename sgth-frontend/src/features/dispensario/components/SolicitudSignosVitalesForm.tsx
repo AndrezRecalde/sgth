@@ -1,8 +1,7 @@
 'use client'
 
-import { Stack, Group, Text, Card, Avatar } from '@mantine/core'
-import { IconUser } from '@tabler/icons-react'
-import { StatusBadge } from '@/components/ui'
+import { Text } from '@mantine/core'
+import { ResumenPaciente } from './ResumenPaciente'
 import { useRegistrarSignosVitalesSolicitud } from '../hooks/useSolicitudSignosVitales'
 import { etiquetaTipoEvento } from '../services/solicitudCertificacionService'
 import type { SolicitudCertificacion } from '../services/solicitudCertificacionService'
@@ -25,26 +24,16 @@ export function SolicitudSignosVitalesForm({ solicitud, onCreado, onCancelar }: 
   const registrar = useRegistrarSignosVitalesSolicitud()
 
   const encabezado = (
-    <Card withBorder radius="lg" padding="md">
-      <Group justify="space-between" wrap="nowrap">
-        <Group gap="sm">
-          <Avatar radius="xl">
-            <IconUser size={16} />
-          </Avatar>
-          <Stack gap={0}>
-            <Text size="sm" fw={600}>
-              {solicitud.nombres_paciente}
-            </Text>
-            <Text size="xs" c="dimmed" ff="monospace">
-              {solicitud.cedula_paciente}
-            </Text>
-          </Stack>
-        </Group>
-        <StatusBadge>
-          {etiquetaTipoEvento(solicitud.tipo_evento)}
-        </StatusBadge>
-      </Group>
-    </Card>
+    <ResumenPaciente
+      nombre={solicitud.nombres_paciente}
+      esServidor
+      etiqueta={etiquetaTipoEvento(solicitud.tipo_evento)}
+      detalle={
+        <Text size="xs" c="dimmed" ff="monospace">
+          {solicitud.cedula_paciente}
+        </Text>
+      }
+    />
   )
 
   return (

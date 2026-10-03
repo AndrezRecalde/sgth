@@ -1,13 +1,13 @@
 'use client'
 
 import {
-  Stack, Group, Select, Button,
-  Textarea, Text, Card, Avatar, } from '@mantine/core'
+  Stack, Group, Select, Button, Textarea,
+} from '@mantine/core'
 import {
   useForm, Controller, type DefaultValues,
 } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { IconCheck, IconUser, IconUsers } from '@tabler/icons-react'
+import { IconCheck } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { erroresDeCampo } from '@/lib/erroresDeCampo'
 import {
@@ -20,7 +20,7 @@ import {
 } from '../schemas/atencionEnfermeria.schema'
 import type { PacienteEncontrado } from '../services/pacienteService'
 import type { AtencionEnfermeria } from '../services/atencionEnfermeriaService'
-import { StatusBadge } from '@/components/ui'
+import { ResumenPaciente } from './ResumenPaciente'
 
 interface Props {
   paciente:   PacienteEncontrado
@@ -76,28 +76,10 @@ export function AtencionEnfermeriaForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
       <Stack gap="md">
-        <Card
-          withBorder radius="md" p="sm"
-          style={{ backgroundColor: 'var(--sgth-accent-light)' }}
-        >
-          <Group gap="sm">
-            <Avatar
-              radius="xl"
-            >
-              {paciente.tipo === 'servidor'
-                ? <IconUser size={16} />
-                : <IconUsers size={16} />}
-            </Avatar>
-            <Stack gap={0}>
-              <Text size="sm" fw={600}>
-                {paciente.nombre_completo}
-              </Text>
-              <StatusBadge size="xs">
-                {paciente.tipo === 'servidor' ? 'Servidor' : 'Familiar'}
-              </StatusBadge>
-            </Stack>
-          </Group>
-        </Card>
+        <ResumenPaciente
+          nombre={paciente.nombre_completo}
+          esServidor={paciente.tipo === 'servidor'}
+        />
 
         <Controller
           name="catalogo_servicio_id"

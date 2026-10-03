@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useAuthStore } from '@/store/auth.store'
 import { IconVaccine } from '@tabler/icons-react'
 import { DataState, PAGINACION_ES, SgthTable } from '@/components/ui'
 import {
@@ -21,6 +22,9 @@ const POR_PAGINA = 15
 export function AtencionesEnfermeriaTable({ fecha }: Props) {
   const [page, setPage] = useState(1)
   const anular = useAnularAtencionEnfermeria()
+  const usuario = useAuthStore((st) => st.usuario)
+  const esAdministracion = usuario?.roles?.includes('admin-dispensario') ?? false
+  const puedeAnular = (a: AtencionEnfermeria) => esAdministracion || a.enfermera_id === usuario?.id
   const [aAnular, setAAnular] = useState<AtencionEnfermeria | null>(null)
 
   // Al cambiar de día se vuelve a la primera página. Sin esto, quien estuviera
@@ -51,13 +55,13 @@ export function AtencionesEnfermeriaTable({ fecha }: Props) {
         emptyProps={{
           icon: IconVaccine,
           title: 'Sin servicios registrados',
-          description: 'No hay atenciones de enfermería para esta fecha.',
+          description: 'No hay servicios de enfermería en esta fecha.',
         }}
       >
         <SgthTable
           {...PAGINACION_ES}
           records={atenciones}
-          columns={getAtencionesEnfermeriaColumns({ onAnular: setAAnular })}
+          columns={getAtencionesEnfermeriaColumns({ onAnular: setAAnular, puedeAnular })}
           totalRecords={data?.total ?? atenciones.length}
           recordsPerPage={POR_PAGINA}
           page={page}
@@ -72,7 +76,7 @@ export function AtencionesEnfermeriaTable({ fecha }: Props) {
       <AnularRegistroModal
         opened={!!aAnular}
         onClose={() => setAAnular(null)}
-        titulo="Anular atención de enfermería"
+        titulo="Anular servicio de enfermería"
         descripcion={`Se anulará ${aAnular?.folio ?? ''}.`}
         motivos={MOTIVOS_ANULAR_ATENCION}
         loading={anular.isPending}
