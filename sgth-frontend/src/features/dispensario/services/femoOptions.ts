@@ -7,10 +7,14 @@ export const TIPO_FICHA_OPTIONS = [
   { value: 'especial',   label: 'Especial'                  },
 ]
 
+/**
+ * Sección L, con los literales y el orden del impreso del MSP. El valor
+ * `apto_con_restricciones` se conserva; lo que se lee es «limitaciones».
+ */
 export const APTITUD_OPTIONS = [
   { value: 'apto',                  label: 'Apto'                    },
-  { value: 'apto_con_restricciones',label: 'Apto con restricciones'  },
-  { value: 'en_observacion',        label: 'En observación'          },
+  { value: 'en_observacion',        label: 'Apto en observación'     },
+  { value: 'apto_con_restricciones',label: 'Apto con limitaciones'   },
   { value: 'no_apto',               label: 'No apto'                 },
 ]
 
@@ -61,20 +65,21 @@ export interface RegionExamenFisico {
   items: string[]
 }
 
-// Espejo del catálogo de secciones/sub-ítems del Formulario 028 (MSP),
-// alineado con el enum backend App\Enums\RegionExamenFisico.
+// Espejo de RegionExamenFisico::items() del backend: el PDF imprime esa lista
+// y busca lo registrado por nombre, y el backend rechaza un ítem que no esté.
+// Las etiquetas llevan el numeral del impreso (1 a 13).
 export const REGIONES_EXAMEN_FISICO: RegionExamenFisico[] = [
-  { value: 'piel',         label: 'Piel',         items: ['Cicatrices', 'Piel y Faneras'] },
-  { value: 'ojos',         label: 'Ojos',         items: ['Párpados', 'Conjuntivas', 'Pupilas', 'Córnea', 'Motilidad'] },
-  { value: 'oido',         label: 'Oído',         items: ['Conducto auditivo externo', 'Pabellón', 'Tímpanos'] },
-  { value: 'orofaringe',   label: 'Oro Faringe',  items: ['Labios', 'Lengua', 'Faringe', 'Amígdalas', 'Dentadura'] },
-  { value: 'nariz',        label: 'Nariz',        items: ['Tabique', 'Cornetes', 'Mucosas', 'Senos paranasales'] },
-  { value: 'cuello',       label: 'Cuello',       items: ['Tiroides / Masas', 'Movilidad'] },
-  { value: 'torax_1',      label: 'Tórax',        items: ['Mamas', 'Corazón'] },
-  { value: 'torax_2',      label: 'Tórax (Pulmones / Corazón / Parrilla Costal)', items: ['Pulmones', 'Corazón', 'Parrilla Costal'] },
-  { value: 'abdomen',      label: 'Abdomen',      items: ['Vísceras', 'Pared Abdominal'] },
-  { value: 'columna',      label: 'Columna',      items: ['Flexibilidad', 'Desviación', 'Dolor'] },
-  { value: 'pelvis',       label: 'Pelvis',       items: ['Pelvis', 'Genitales'] },
-  { value: 'extremidades', label: 'Extremidades', items: ['Vascular', 'Miembros Superiores', 'Miembros Inferiores'] },
-  { value: 'neurologico',  label: 'Neurológico',  items: ['Fuerza', 'Sensibilidad', 'Marcha', 'Reflejos'] },
+  { value: 'piel',         label: '1. Piel',      items: ['Cicatrices', 'Piel y Faneras'] },
+  { value: 'ojos',         label: '2. Ojos',         items: ['Párpados', 'Conjuntivas', 'Pupilas', 'Córnea', 'Motilidad'] },
+  { value: 'oido',         label: '3. Oído',         items: ['Conducto auditivo externo', 'Pabellón', 'Tímpanos'] },
+  { value: 'orofaringe',   label: '4. Oro Faringe',  items: ['Labios', 'Lengua', 'Faringe', 'Amígdalas', 'Dentadura'] },
+  { value: 'nariz',        label: '5. Nariz',        items: ['Tabique', 'Cornetes', 'Mucosas', 'Senos paranasales'] },
+  { value: 'cuello',       label: '6. Cuello',       items: ['Tiroides / Masas', 'Movilidad'] },
+  { value: 'torax_1',      label: '7. Tórax',     items: ['Mamas', 'Corazón'] },
+  { value: 'torax_2',      label: '8. Tórax', items: ['Pulmones', 'Corazón', 'Parrilla Costal'] },
+  { value: 'abdomen',      label: '9. Abdomen',      items: ['Vísceras', 'Pared Abdominal'] },
+  { value: 'columna',      label: '10. Columna',      items: ['Flexibilidad', 'Desviación', 'Dolor'] },
+  { value: 'pelvis',       label: '11. Pelvis',       items: ['Pelvis', 'Genitales'] },
+  { value: 'extremidades', label: '12. Extremidades', items: ['Vascular', 'Miembros Superiores', 'Miembros Inferiores'] },
+  { value: 'neurologico',  label: '13. Neurológico',  items: ['Fuerza', 'Sensibilidad', 'Marcha', 'Reflejos'] },
 ]

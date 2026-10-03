@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Dispensario;
 
 use App\Catalogos\FactoresRiesgoMsp;
+use App\Enums\RegionExamenFisico;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Support\Carbon;
 
@@ -24,6 +25,7 @@ trait ValidaCoherenciaFemo
             fn (Validator $v) => $this->validarFactoresDeRiesgo($v),
             fn (Validator $v) => $this->validarAntecedenteReproductivo($v),
             fn (Validator $v) => $this->validarEmpleosAnteriores($v),
+            fn (Validator $v) => $this->validarExamenFisico($v),
         ];
     }
 
@@ -122,6 +124,24 @@ trait ValidaCoherenciaFemo
                 $v->errors()->add(
                     "empleos_anteriores.{$i}.fecha_fin",
                     'La fecha de fin no puede ser anterior a la de inicio.'
+                );
+            }
+        }
+    }
+
+    /**
+     * Cada ítem del examen físico tiene que ser uno de su región en el
+     * impreso: el PDF imprime la lista oficial y busca lo registrado por
+     * nombre, así que un nombre libre no llegaría al papel.
+     */
+    private function validarExamenFisico(Validator $v): void
+    {
+        foreach ((array) $this->input('examen_fisico', []) as $i => $item) {
+            $region = RegionExamenFisico::tryFrom((string) ($item['region'] ?? ''));
+            if ($region && ! in_array($item['item'] ?? null, $region->items(), true)) {
+                $v->errors()->add(
+                    "examen_fisico.{$i}.item",
+                    'Ese ítem no pertenece a la región '.$region->numero().'. '.$region->etiqueta().' del formulario.'
                 );
             }
         }

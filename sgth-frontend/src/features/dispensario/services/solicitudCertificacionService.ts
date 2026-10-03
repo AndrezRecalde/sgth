@@ -156,7 +156,7 @@ export const TONO_DICTAMEN: Record<string, SemanticTone> = {
 
 export const DICTAMEN_LABELS: Record<string, string> = {
   apto:                   'Apto',
-  apto_con_restricciones: 'Apto c/restricciones',
+  apto_con_restricciones: 'Apto c/limitaciones',
   en_observacion:         'Apto en observación',
   no_apto:                'No apto',
 }

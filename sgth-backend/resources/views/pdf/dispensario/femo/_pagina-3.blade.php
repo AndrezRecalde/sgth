@@ -22,7 +22,7 @@
         @forelse($ficha->examenes as $examen)
             <tr>
                 <td>{{ $examen->nombre_examen }}</td>
-                <td class="center">{{ optional($examen->fecha_examen)->format('d/m/Y') ?? '-' }}</td>
+                <td class="center">{{ optional($examen->fecha_examen)->format('Y/m/d') ?? '-' }}</td>
                 <td class="center">{{ $examen->tipo->etiqueta() }}</td>
                 <td class="small">{{ $examen->resultado ?? '-' }}</td>
             </tr>
@@ -51,12 +51,12 @@
         <tr>
             @foreach(\App\Enums\AptitudMedica::cases() as $opcion)
                 <td class="center" style="width:25%">
-                    <span class="msp-check">{{ $ficha->aptitud === $opcion ? 'X' : '' }}</span> {{ $opcion->etiqueta() }}
+                    <span class="msp-check">{{ $ficha->aptitud === $opcion ? 'X' : '' }}</span> {{ mb_strtoupper($opcion->etiqueta()) }}
                 </td>
             @endforeach
         </tr>
         <tr>
-            <td colspan="4"><span class="msp-label">Observaciones / Restricciones</span><br><span class="msp-value">{{ $ficha->restricciones ?? '-' }}</span></td>
+            <td colspan="4"><span class="msp-label">Observaciones</span><br><span class="msp-value">{{ $ficha->restricciones ?? '-' }}</span></td>
         </tr>
     </table>
 
@@ -94,11 +94,12 @@
     <table class="footer-firma">
         <tr>
             <td>
-                <div class="firma-linea">Firma del Trabajador / Servidor</div>
+                <div class="firma-linea">Firma o Huella del Trabajador / Servidor</div>
             </td>
             <td>
                 <div class="firma-linea">{{ $evaluadorNombre }}<br>Firma y Sello del Profesional</div>
             </td>
         </tr>
     </table>
+    <div class="msp-pie">SNS-MSP/HCU-form.123/2025 · Evaluación Médica Ocupacional · 3/3</div>
 </div>

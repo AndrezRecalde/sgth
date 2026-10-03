@@ -1,5 +1,10 @@
 @php
-    $edad = $persona->fecha_nacimiento ? \Carbon\Carbon::parse($persona->fecha_nacimiento)->age : null;
+    // La edad a la fecha de la atención, no a la de impresión: reimprimir
+    // una ficha un año después no puede cambiarle la edad al paciente.
+    $edad = $persona->fecha_nacimiento && $ficha->fecha_evaluacion
+        ? \Carbon\Carbon::parse($persona->fecha_nacimiento)->diff($ficha->fecha_evaluacion)->y
+        : null;
+    $esMasculino = $persona->genero === 'masculino' || $persona->genero === 'M';
     $antReprod = $ficha->antecedenteReproductivo;
     $esFemenino = $persona->genero === 'femenino' || $persona->genero === 'F';
 @endphp
@@ -19,7 +24,7 @@
         <tr>
             <td class="small">N° Archivo: {{ $ficha->numero_archivo ?? '-' }}</td>
             <td class="small">N° H. Clínica: {{ $persona->numero_historia ?? '-' }}</td>
-            <td class="small">Fecha Atención: {{ optional($ficha->fecha_evaluacion)->format('d/m/Y') }}</td>
+            <td class="small">Fecha Atención: {{ optional($ficha->fecha_evaluacion)->format('Y/m/d') }}</td>
         </tr>
     </table>
 
@@ -39,18 +44,20 @@
         <tr>
             <td><span class="msp-label">Segundo Nombre</span><br><span class="msp-value">{{ $persona->segundo_nombre ?? '-' }}</span></td>
             <td><span class="msp-label">Cédula</span><br><span class="msp-value">{{ $persona->cedula ?? '-' }}</span></td>
-            <td><span class="msp-label">Sexo</span><br><span class="msp-value">{{ $persona->genero ?? '-' }}</span></td>
-            <td><span class="msp-label">Fecha Nacimiento / Edad</span><br><span class="msp-value">{{ optional($persona->fecha_nacimiento)->format('d/m/Y') }} @if($edad !== null)({{ $edad }} años)@endif</span></td>
+            {{-- Casillas Hombre / Mujer, como el impreso. --}}
+            <td><span class="msp-label">Sexo</span><br><span class="msp-value">Hombre [{{ $esMasculino ? 'X' : ' ' }}] &nbsp; Mujer [{{ $esFemenino ? 'X' : ' ' }}]</span></td>
+            <td><span class="msp-label">Fecha Nacimiento / Edad</span><br><span class="msp-value">{{ optional($persona->fecha_nacimiento)->format('Y/m/d') }} @if($edad !== null)({{ $edad }} años)@endif</span></td>
         </tr>
         <tr>
             <td><span class="msp-label">Grupo Sanguíneo</span><br><span class="msp-value">{{ $persona->tipo_sangre ?? '-' }}</span></td>
             <td><span class="msp-label">Lateralidad</span><br><span class="msp-value">{{ $ficha->lateralidad ? ucfirst($ficha->lateralidad) : '-' }}</span></td>
             <td colspan="2">
-                {{-- Los CUATRO grupos del impreso. Todos se leen de la ficha:
+                {{-- Los cuatro grupos del impreso más lactancia, que añade el
+                     formato del GADPE. Todos se leen de la ficha:
                      la enfermedad catastrófica salía del expediente del
                      servidor, así que lo que marcaba el médico aquí y lo que
                      se imprimía podían contradecirse. --}}
-                <span class="msp-label">Atención Prioritaria</span><br>
+                <span class="msp-label">Grupo de Atención Prioritaria</span><br>
                 <span class="msp-value small">
                     Embarazada: {{ $ficha->grupo_embarazada ? 'SI' : 'NO' }} |
                     Discapacidad: {{ $ficha->grupo_discapacidad ? 'SI' . ($ficha->porcentaje_discapacidad ? " ({$ficha->porcentaje_discapacidad}%)" : '') : 'NO' }} |
@@ -66,13 +73,13 @@
     <table class="msp-table">
         <tr>
             <td style="width:50%"><span class="msp-label">Puesto de Trabajo (CIUO)</span><br><span class="msp-value">{{ $ficha->puesto_trabajo ?? '-' }} @if($ficha->puesto_trabajo_ciuo)({{ $ficha->puesto_trabajo_ciuo }})@endif</span></td>
-            <td style="width:25%"><span class="msp-label">Fecha de Atención</span><br><span class="msp-value">{{ optional($ficha->fecha_evaluacion)->format('d/m/Y') ?? '-' }}</span></td>
+            <td style="width:25%"><span class="msp-label">Fecha de Atención</span><br><span class="msp-value">{{ optional($ficha->fecha_evaluacion)->format('Y/m/d') ?? '-' }}</span></td>
             <td style="width:25%"><span class="msp-label">Tipo de Evaluación</span><br><span class="msp-value">{{ $ficha->tipo_ficha->etiqueta() }}</span></td>
         </tr>
         <tr>
-            <td><span class="msp-label">Fecha de Ingreso al Trabajo</span><br><span class="msp-value">{{ optional($ficha->fecha_ingreso_trabajo)->format('d/m/Y') ?? '-' }}</span></td>
-            <td><span class="msp-label">Fecha de Reintegro</span><br><span class="msp-value">{{ optional($ficha->fecha_reintegro)->format('d/m/Y') ?? '-' }}</span></td>
-            <td><span class="msp-label">Último Día Laboral / Salida</span><br><span class="msp-value">{{ optional($ficha->fecha_ultimo_dia_laboral)->format('d/m/Y') ?? '-' }}</span></td>
+            <td><span class="msp-label">Fecha de Ingreso al Trabajo</span><br><span class="msp-value">{{ optional($ficha->fecha_ingreso_trabajo)->format('Y/m/d') ?? '-' }}</span></td>
+            <td><span class="msp-label">Fecha de Reintegro</span><br><span class="msp-value">{{ optional($ficha->fecha_reintegro)->format('Y/m/d') ?? '-' }}</span></td>
+            <td><span class="msp-label">Último Día Laboral / Salida</span><br><span class="msp-value">{{ optional($ficha->fecha_ultimo_dia_laboral)->format('Y/m/d') ?? '-' }}</span></td>
         </tr>
         <tr>
             <td colspan="3"><span class="msp-label">Observación</span><br><span class="msp-value">{{ $ficha->observaciones ?? '-' }}</span></td>
@@ -81,14 +88,26 @@
 
     <div class="msp-section-title">C. ANTECEDENTES PERSONALES</div>
     <table class="msp-table">
-        @foreach(['clinico' => 'Antecedentes Clínicos y Quirúrgicos', 'familiar' => 'Antecedentes Familiares'] as $tipoKey => $tipoLabel)
-            @if(($antecedentesPorTipo[$tipoKey] ?? collect())->isNotEmpty())
+        {{-- Todos los tipos que el asistente ofrece llegan al papel. Antes solo
+             se recorrían «clínico» y «familiar», y un antecedente quirúrgico
+             registrado no se imprimía. --}}
+        @foreach([
+            'Antecedentes Clínicos y Quirúrgicos' => ['clinico', 'quirurgico'],
+            'Antecedentes Familiares' => ['familiar'],
+            'Otros Antecedentes' => ['ginecologico', 'reproductivo_masculino', 'transfusion', 'tratamiento_hormonal', 'otro'],
+        ] as $tipoLabel => $tipos)
+            @php
+                $delGrupo = collect($tipos)->flatMap(fn ($t) => $antecedentesPorTipo[$t] ?? collect());
+            @endphp
+            @if($delGrupo->isNotEmpty() || $tipoLabel !== 'Otros Antecedentes')
                 <tr>
                     <td style="width:20%" class="msp-label">{{ $tipoLabel }}</td>
                     <td>
-                        @foreach($antecedentesPorTipo[$tipoKey] as $ant)
+                        @forelse($delGrupo as $ant)
                             {{ $ant->descripcion }}@if($ant->fecha_aproximada) ({{ $ant->fecha_aproximada }})@endif<br>
-                        @endforeach
+                        @empty
+                            -
+                        @endforelse
                     </td>
                 </tr>
             @endif
@@ -116,11 +135,12 @@
             <tr>
                 <td class="msp-label">Antecedentes Gineco Obstétricos</td>
                 <td class="small">
-                    FUM: {{ optional($antReprod->fecha_ultima_menstruacion)->format('d/m/Y') ?? '-' }} |
+                    FUM: {{ optional($antReprod->fecha_ultima_menstruacion)->format('Y/m/d') ?? '-' }} |
                     Gestas: {{ $antReprod->gestas ?? '-' }} | Partos: {{ $antReprod->partos ?? '-' }} |
                     Cesáreas: {{ $antReprod->cesareas ?? '-' }} | Abortos: {{ $antReprod->abortos ?? '-' }} |
                     Método Planificación: {{ strtoupper($antReprod->usa_metodo_planificacion ?? '-') }}
                     @if($antReprod->metodo_planificacion_cual) ({{ $antReprod->metodo_planificacion_cual }})@endif
+                    <br>Exámenes realizados: {{ $antReprod->examenes_realizados ?? '-' }} ({{ $antReprod->examenes_tiempo_anios ?? '-' }} años)
                 </td>
             </tr>
         @elseif(!$esFemenino && $antReprod)
@@ -184,27 +204,56 @@
     </table>
 
     <div class="msp-section-title">F. EXAMEN FÍSICO REGIONAL</div>
+    {{-- Como el impreso: las regiones en columnas, la X marca EVIDENCIA DE
+         PATOLOGÍA y se describe abajo con su numeral. Antes había una
+         columna «Normal» con la X al revés, y los ítems no tocados en el
+         asistente salían como «No evaluado». En una sola columna, las 31
+         filas sacaban la sección a una cuarta hoja. --}}
+    @php
+        $conPatologia = [];
+        $columnasF = collect($regiones)->groupBy(fn ($r) => match (true) {
+            $r->numero() <= 4 => 0,
+            $r->numero() <= 8 => 1,
+            default => 2,
+        });
+    @endphp
     <table class="msp-table">
         <tr>
-            <th style="width:20%">Región</th><th style="width:40%">Ítem</th><th style="width:15%">Normal</th><th style="width:25%">Observación</th>
+            @foreach($columnasF as $columna)
+                <td class="msp-col-f">
+                    <table class="msp-f">
+                        @foreach($columna as $region)
+                            @php $registrados = ($examenFisicoPorRegion[$region->value] ?? collect())->keyBy('item'); @endphp
+                            <tr><td colspan="2" class="msp-label">{{ $region->numero() }}. {{ $region->etiqueta() }}</td></tr>
+                            @foreach($region->items() as $indice => $nombreItem)
+                                @php
+                                    $item = $registrados[$nombreItem] ?? null;
+                                    $marca = $item && ! $item->normal;
+                                    if ($marca) {
+                                        $conPatologia[] = $region->numero().chr(97 + $indice).'. '.$nombreItem
+                                            .($item->observacion ? ': '.$item->observacion : '');
+                                    }
+                                @endphp
+                                <tr>
+                                    <td>{{ chr(97 + $indice) }}. {{ $nombreItem }}</td>
+                                    <td class="msp-check">{{ $marca ? 'X' : '' }}</td>
+                                </tr>
+                            @endforeach
+                        @endforeach
+                    </table>
+                </td>
+            @endforeach
         </tr>
-        @foreach($regiones as $region)
-            @php $items = $examenFisicoPorRegion[$region->value] ?? collect(); @endphp
-            @forelse($items as $item)
-                <tr>
-                    @if($loop->first)
-                        <td rowspan="{{ $items->count() }}" class="msp-label">{{ $region->etiqueta() }}</td>
-                    @endif
-                    <td>{{ $item->item }}</td>
-                    <td class="msp-check">{{ $item->normal ? 'X' : '' }}</td>
-                    <td class="small">{{ !$item->normal ? $item->observacion : '' }}</td>
-                </tr>
-            @empty
-                <tr>
-                    <td class="msp-label">{{ $region->etiqueta() }}</td>
-                    <td colspan="3" class="small">No evaluado</td>
-                </tr>
-            @endforelse
-        @endforeach
+        <tr>
+            <td colspan="3" class="small">
+                <span class="msp-label">Si existe evidencia de patología marcar con «X» y describir con el numeral · Observación</span><br>
+                @forelse($conPatologia as $linea)
+                    {{ $linea }}<br>
+                @empty
+                    Sin evidencia de patología.
+                @endforelse
+            </td>
+        </tr>
     </table>
+    <div class="msp-pie">SNS-MSP/HCU-form.123/2025 · Evaluación Médica Ocupacional · 1/3</div>
 </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { Stack, Group, Text, Checkbox, TextInput } from '@mantine/core'
+import { Stack, Grid, Text, Checkbox, TextInput } from '@mantine/core'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import type { ExamenFisicoItemForm } from '../../schemas/femo.schema'
 
@@ -11,6 +11,13 @@ interface Props {
   onChange: (valores: ExamenFisicoItemForm[]) => void
 }
 
+/**
+ * Los ítems de una región de la sección F.
+ *
+ * Como el impreso, se marca la **patología**, no la normalidad: «si existe
+ * evidencia de patología marcar con X y describir». Un ítem sin marcar es un
+ * ítem sin hallazgos, y así lo imprime el PDF.
+ */
 export function ExamenFisicoRegionTable({ region, items, valores, onChange }: Props) {
   const contained = useContainedInput()
 
@@ -27,30 +34,37 @@ export function ExamenFisicoRegionTable({ region, items, valores, onChange }: Pr
 
   return (
     <Stack gap="xs">
-      {items.map((item) => {
+      {items.map((item, i) => {
         const valor = getItem(item)
+        const letra = String.fromCharCode(97 + i)
         return (
-          <Group key={item} align="flex-start" wrap="nowrap">
-            <Text size="sm" w={180}>{item}</Text>
-            <Checkbox
-              label="Normal"
-              checked={valor.normal}
-              onChange={(e) => setItem(item, {
-                normal: e.currentTarget.checked,
-                observacion: e.currentTarget.checked ? null : valor.observacion,
-              })}
-            />
-            {!valor.normal && (
-              <TextInput
-                size="xs"
-                placeholder="Observación / hallazgo"
-                style={{ flex: 1 }}
-                {...contained}
-                value={valor.observacion ?? ''}
-                onChange={(e) => setItem(item, { observacion: e.currentTarget.value })}
+          <Grid key={item} align="center">
+            <Grid.Col span={{ base: 8, sm: 4 }}>
+              <Text size="sm">{letra}. {item}</Text>
+            </Grid.Col>
+            <Grid.Col span={{ base: 4, sm: 2 }}>
+              <Checkbox
+                label="Patología"
+                checked={!valor.normal}
+                onChange={(e) => setItem(item, {
+                  normal: !e.currentTarget.checked,
+                  // Sin patología no hay nada que describir.
+                  observacion: e.currentTarget.checked ? valor.observacion : null,
+                })}
               />
+            </Grid.Col>
+            {!valor.normal && (
+              <Grid.Col span={{ base: 12, sm: 6 }}>
+                <TextInput
+                  label={`Hallazgo en ${letra}. ${item}`}
+                  placeholder="Describa el hallazgo"
+                  {...contained}
+                  value={valor.observacion ?? ''}
+                  onChange={(e) => setItem(item, { observacion: e.currentTarget.value })}
+                />
+              </Grid.Col>
             )}
-          </Group>
+          </Grid>
         )
       })}
     </Stack>

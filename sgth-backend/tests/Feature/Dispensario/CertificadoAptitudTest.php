@@ -155,7 +155,7 @@ test('el certificado lleva la aptitud, las restricciones y quién firma', functi
 
     expect($html)
         ->toContain('CERTIFICADO DE APTITUD')
-        ->toContain('Apto con Restricciones')
+        ->toContain('Apto con limitaciones')
         ->toContain('Evitar levantar peso mayor a 10 kg.')
         ->toContain('Operador de maquinaria pesada')
         ->toContain('Obras')
@@ -210,9 +210,10 @@ test('las cuatro aptitudes de la ficha salen con su etiqueta', function (string 
     expect($html)->toContain($etiqueta);
 })->with([
     ['apto', 'Apto'],
-    ['apto_con_restricciones', 'Apto con Restricciones'],
-    ['en_observacion', 'Apto en Observación'],
-    ['no_apto', 'No Apto'],
+    // Los literales de la sección L del impreso del MSP.
+    ['apto_con_restricciones', 'Apto con limitaciones'],
+    ['en_observacion', 'Apto en observación'],
+    ['no_apto', 'No apto'],
 ]);
 
 test('una evaluación sin ficha no puede certificarse', function () {
