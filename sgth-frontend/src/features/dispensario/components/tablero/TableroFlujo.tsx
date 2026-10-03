@@ -10,9 +10,9 @@ interface Props {
   cargando: boolean
 }
 
-/** «45 min», «1 h 20 min», o un guion si no hubo consultas con turno. */
+/** «45 min», «1 h 20 min», o «sin datos» si no hubo consultas con turno. */
 function minutos(m: number | null | undefined): string {
-  if (m === null || m === undefined) return '—'
+  if (m === null || m === undefined) return 'sin datos'
   return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${m % 60} min`
 }
 
@@ -23,7 +23,9 @@ function minutos(m: number | null | undefined): string {
 export function TableroFlujo({ panorama, cargando }: Props) {
   const f = panorama?.flujo_hoy
   const e = f?.por_estado
-  const enSala = (e?.en_espera ?? 0) + (e?.en_sala ?? 0) + (e?.en_consulta ?? 0)
+  // Esperando es quien todavía no entra: el que ya está en consulta va aparte.
+  const enSala = (e?.en_espera ?? 0) + (e?.en_sala ?? 0)
+  const cancelados = e?.cancelada ?? 0
 
   return (
     <SectionCard
@@ -47,7 +49,7 @@ export function TableroFlujo({ panorama, cargando }: Props) {
             value={e?.no_presentado ?? 0}
             icon={IconUserX}
             loading={cargando}
-            hint={`${e?.cancelada ?? 0} cancelados`}
+            hint={`${cancelados} ${cancelados === 1 ? 'cancelado' : 'cancelados'}`}
           />
         </SimpleGrid>
 
