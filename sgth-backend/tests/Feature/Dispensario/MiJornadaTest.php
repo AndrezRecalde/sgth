@@ -132,13 +132,16 @@ test('quien no atiende pacientes no tiene jornada', function () {
         ->assertStatus(403);
 });
 
-test('con dos roles, la jornada es la de la pantalla desde la que se pide', function () {
-    $ambos = usuarioMiJornada('medico');
-    $ambos->assignRole(Role::firstOrCreate(['name' => 'enfermera', 'guard_name' => 'sanctum']));
+test('con varios roles, la jornada es la de la pantalla desde la que se pide', function () {
+    $todos = usuarioMiJornada('medico');
+    foreach (['odontologo', 'enfermera'] as $rol) {
+        $todos->assignRole(Role::firstOrCreate(['name' => $rol, 'guard_name' => 'sanctum']));
+    }
 
-    $this->actingAs($ambos, 'sanctum');
-    expect($this->getJson('/api/v1/dispensario/mi-jornada?perfil=enfermeria')->json('datos.perfil'))->toBe('enfermeria')
-        ->and($this->getJson('/api/v1/dispensario/mi-jornada?perfil=clinico')->json('datos.perfil'))->toBe('medico');
+    $this->actingAs($todos, 'sanctum');
+    foreach (['medico', 'odontologo', 'enfermeria'] as $perfil) {
+        expect($this->getJson("/api/v1/dispensario/mi-jornada?perfil={$perfil}")->json('datos.perfil'))->toBe($perfil);
+    }
 
     // Pedir un perfil que no tiene no le da otro: se queda con el suyo.
     expect($this->actingAs($this->medico, 'sanctum')

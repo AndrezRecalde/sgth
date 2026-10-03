@@ -15,7 +15,7 @@ export default function OdontologiaPage() {
         title="Odontología"
         description="Mis pacientes del día"
       />
-      <MiJornadaFranja contexto="clinico" />
+      <MiJornadaFranja contexto="odontologo" />
       <OdontologiaTurnosView />
     </PageShell>
   )

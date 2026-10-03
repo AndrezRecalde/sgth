@@ -44,8 +44,8 @@ interface JornadaEnfermeria {
 /** `GET /dispensario/mi-jornada`: lo de quien pregunta, y nada de los demás. */
 export type MiJornada = JornadaClinica | JornadaEnfermeria | { perfil: null }
 
-/** La pantalla desde la que se pide: decide la jornada de quien tiene dos roles. */
-export type ContextoJornada = 'clinico' | 'enfermeria'
+/** La pantalla desde la que se pide: decide la jornada de quien tiene varios roles. */
+export type ContextoJornada = 'medico' | 'odontologo' | 'enfermeria'
 
 export const miJornadaService = {
   obtener: (perfil: ContextoJornada) =>

@@ -15,7 +15,7 @@ export default function ConsultasPage() {
         title="Consultas"
         description="Mis pacientes del día"
       />
-      <MiJornadaFranja contexto="clinico" />
+      <MiJornadaFranja contexto="medico" />
       <ConsultasTurnosView />
     </PageShell>
   )

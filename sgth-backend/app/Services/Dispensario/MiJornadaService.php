@@ -16,25 +16,19 @@ use Illuminate\Support\Facades\DB;
  */
 final class MiJornadaService
 {
+    /** El perfil de jornada de cada rol, en el orden en que se elige sin pedido. */
+    private const ROLES = ['medico' => 'medico', 'odontologo' => 'odontologo', 'enfermeria' => 'enfermera'];
+
     /**
      * `$pedido` es el perfil de la pantalla desde la que se pregunta
-     * (`clinico` o `enfermeria`): quien tiene dos roles ve en Enfermería su
-     * jornada de enfermería, no la de médico. Se respeta solo si tiene el rol.
+     * (`medico`, `odontologo` o `enfermeria`): quien tiene varios roles ve en
+     * Odontología su jornada de odontólogo, no la de médico. Se respeta solo
+     * si tiene el rol; si no, se le da el primero que tenga.
      */
     public function resumen(User $usuario, ?string $pedido = null): array
     {
-        $clinico = match (true) {
-            $usuario->hasRole('medico') => 'medico',
-            $usuario->hasRole('odontologo') => 'odontologo',
-            default => null,
-        };
-        $enfermeria = $usuario->hasRole('enfermera') ? 'enfermeria' : null;
-
-        $perfil = match ($pedido) {
-            'enfermeria' => $enfermeria ?? $clinico,
-            'clinico' => $clinico ?? $enfermeria,
-            default => $clinico ?? $enfermeria,
-        };
+        $propios = array_keys(array_filter(self::ROLES, fn ($rol) => $usuario->hasRole($rol)));
+        $perfil = in_array($pedido, $propios, true) ? $pedido : ($propios[0] ?? null);
 
         return match ($perfil) {
             'medico', 'odontologo' => ['perfil' => $perfil, ...$this->clinico($usuario, $perfil)],
