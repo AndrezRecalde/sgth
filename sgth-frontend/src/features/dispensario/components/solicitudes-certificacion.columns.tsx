@@ -8,6 +8,7 @@ import {
 import { confirmar, StatusBadge, TableActions } from '@/components/ui'
 import {
   DICTAMEN_LABELS,
+  dictamenHabilitaIncorporacion,
   ESTADO_SOLICITUD_LABELS,
   etiquetaTipoEvento,
   TONO_DICTAMEN,
@@ -243,7 +244,7 @@ function accionesDe(s: SolicitudCertificacion, a: AccionesSso) {
     }] : []),
     ...(s.estado === 'completada' && !!s.postulante && !s.servidor &&
       a.puedeConfirmarIncorporacion &&
-      (s.dictamen === 'apto' || s.dictamen === 'apto_con_restricciones') ? [{
+      dictamenHabilitaIncorporacion(s.dictamen) ? [{
       label: 'Confirmar incorporación',
       icon: <IconUserCheck size={14} />,
       onClick: () => confirmar({

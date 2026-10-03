@@ -28,8 +28,9 @@ export function FemoView() {
   const getLabelTipo = (v: string) =>
     TIPO_FICHA_OPTIONS.find(o => o.value === v)?.label ?? v
 
-  const getLabelAptitud = (v: string) =>
-    APTITUD_OPTIONS.find(o => o.value === v)?.label ?? v
+  // Sin aptitud es un borrador: la evaluación sigue en curso.
+  const getLabelAptitud = (v?: string | null) =>
+    v ? APTITUD_OPTIONS.find(o => o.value === v)?.label ?? v : 'Borrador'
 
   const columns: DataTableColumn<FichaSaludOcupacional>[] = [
     {
@@ -82,7 +83,7 @@ export function FemoView() {
       title:    'Aptitud',
       width:    160,
       render: (f) => (
-        <StatusBadge tone={TONO_APTITUD[f.aptitud] ?? 'neutral'}>
+        <StatusBadge tone={TONO_APTITUD[f.aptitud ?? ''] ?? 'neutral'}>
           {getLabelAptitud(f.aptitud)}
         </StatusBadge>
       ),

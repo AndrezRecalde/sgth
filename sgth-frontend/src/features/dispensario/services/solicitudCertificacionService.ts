@@ -149,14 +149,24 @@ export const TONO_ESTADO_SOLICITUD: Record<string, SemanticTone> = {
 export const TONO_DICTAMEN: Record<string, SemanticTone> = {
   apto:                   'success',
   apto_con_restricciones: 'warning',
+  en_observacion:         'info',
   no_apto:                'danger',
 }
 
 export const DICTAMEN_LABELS: Record<string, string> = {
   apto:                   'Apto',
   apto_con_restricciones: 'Apto c/restricciones',
+  en_observacion:         'Apto en observación',
   no_apto:                'No apto',
 }
+
+/**
+ * Si el dictamen permite incorporar al candidato. Todos menos «no apto»:
+ * «apto en observación» no bloquea (decidido con el usuario el 2026-10-02).
+ * Es la misma regla que `AptitudMedica::habilitaIncorporacion()` del backend.
+ */
+export const dictamenHabilitaIncorporacion = (dictamen?: string | null): boolean =>
+  !!dictamen && dictamen !== 'no_apto'
 
 export const ESTADO_SOLICITUD_LABELS: Record<string, string> = {
   pendiente:   'Pendiente',
@@ -225,17 +235,13 @@ export const solicitudCertificacionService = {
       `/dispensario/solicitudes-certificacion/${id}/iniciar`
     ).then(r => r.data.datos),
 
-  completar: (
-    id: number,
-    data: {
-      dictamen:           'apto' | 'apto_con_restricciones' | 'no_apto'
-      observacion_medica?: string | null
-      ficha_femo_id?:     number | null
-    }
-  ) =>
+  /**
+   * Emite el dictamen. No lleva cuerpo: el dictamen es la aptitud de la ficha
+   * FEMO de la solicitud y la observación, sus restricciones.
+   */
+  completar: (id: number) =>
     api.patch<ApiResponse<SolicitudCertificacion>>(
-      `/dispensario/solicitudes-certificacion/${id}/completar`,
-      data
+      `/dispensario/solicitudes-certificacion/${id}/completar`
     ).then(r => r.data.datos),
 
   /**

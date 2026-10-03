@@ -6,9 +6,8 @@ import { Stepper, Button, Group, Card, Text, Alert, Skeleton } from '@mantine/co
 import {
   IconUser, IconBriefcase, IconStethoscope,
   IconArrowLeft, IconArrowRight, IconCheck,
-  IconInfoCircle, IconStretching,
+  IconInfoCircle, IconStretching, IconDeviceFloppy,
 } from '@tabler/icons-react'
-import { useDisclosure } from '@mantine/hooks'
 import { FemoPaso1 } from
   '@/features/dispensario/components/femo/FemoPaso1'
 import { FemoPasoExamenFisico } from
@@ -17,18 +16,19 @@ import { FemoPaso2 } from
   '@/features/dispensario/components/femo/FemoPaso2'
 import { FemoPaso3 } from
   '@/features/dispensario/components/femo/FemoPaso3'
-import { useCrearFemo } from
+import { useFemoDetalle } from
   '@/features/dispensario/hooks/useFemo'
+import { useGuardarFemo } from
+  '@/features/dispensario/hooks/useGuardarFemo'
 import { useFemoWizardState } from
   '@/features/dispensario/hooks/useFemoWizardState'
 import { useSolicitudDetalle } from
   '@/features/dispensario/hooks/useSolicitudCertificacion'
-import { DictamenMedicoModal } from
-  '@/features/dispensario/components/DictamenMedicoModal'
+import { APTITUD_OPTIONS } from '@/features/dispensario/services/femoOptions'
 import type { FichaBaseForm } from '@/features/dispensario/schemas/femo.schema'
 import api from '@/lib/axios'
 import { fromDateValue } from '@/lib/fecha'
-import { PageHeader, PageShell, StatusBadge } from '@/components/ui'
+import { confirmar, notificar, PageHeader, PageShell, StatusBadge } from '@/components/ui'
 import { ROUTES } from '@/config/routes'
 
 interface Props {
@@ -53,20 +53,14 @@ const TIPO_EVENTO_LABELS: Record<string, string> = {
 
 export function NuevaFemoView({ solicitudId }: Props) {
   const router          = useRouter()
-  const crear           = useCrearFemo()
 
   const solicitudIdNum = Number(solicitudId)
 
-  const [dictamenOpened,
-    { open: abrirDictamen, close: cerrarDictamen }] =
-    useDisclosure(false)
-  const [fichaGuardadaId, setFichaGuardadaId] =
-    useState<number | null>(null)
   const [puestoId, setPuestoId] = useState<number | null>(null)
 
   const wizard = useFemoWizardState({
     tipo_ficha:         'ingreso',
-    aptitud:            'apto',
+    aptitud:            null,
     grupo_embarazada:   false,
     grupo_discapacidad: false,
     fecha_evaluacion:   fromDateValue(new Date()),
@@ -75,22 +69,46 @@ export function NuevaFemoView({ solicitudId }: Props) {
 
   const {
     data: solicitudDetalle,
-    isFetched: solicitudDetalleFetched,
+    isFetching: solicitudCargando,
     isError: solicitudError,
   } = useSolicitudDetalle(Number.isNaN(solicitudIdNum) ? null : solicitudIdNum)
 
+  const guardado = useGuardarFemo({
+    solicitudId:      solicitudIdNum,
+    construirPayload: wizard.construirPayload,
+  })
+
   // El FEMO siempre nace de una solicitud de RRHH (reclutamiento o expediente);
   // el médico no puede crear una ficha de forma independiente. Enfermería debe
-  // registrar los signos vitales (Atención SSO) antes de continuar.
+  // registrar los signos vitales (Atención SSO) antes de continuar, y la
+  // solicitud tiene que estar en curso: una cancelada o ya dictaminada no se
+  // vuelve a llenar. Se espera a que termine de cargar para no rebotar con un
+  // estado viejo en caché justo después de «Iniciar».
   useEffect(() => {
     if (
       Number.isNaN(solicitudIdNum) ||
       solicitudError ||
-      (solicitudDetalleFetched && solicitudDetalle && !solicitudDetalle.constantes_vitales)
+      (!solicitudCargando && solicitudDetalle && (
+        !solicitudDetalle.constantes_vitales ||
+        solicitudDetalle.estado !== 'en_proceso'
+      ))
     ) {
       router.replace(ROUTES.SALUD.SSO)
     }
-  }, [solicitudIdNum, solicitudError, solicitudDetalleFetched, solicitudDetalle, router])
+  }, [solicitudIdNum, solicitudError, solicitudCargando, solicitudDetalle, router])
+
+  // «Continuar FEMO»: la solicitud ya tiene su ficha guardada como borrador y
+  // se retoma tal como quedó.
+  const { data: fichaGuardada } = useFemoDetalle(solicitudDetalle?.ficha_femo_id ?? null)
+  const [fichaCargada, setFichaCargada] = useState(false)
+  useEffect(() => {
+    if (!fichaGuardada || fichaCargada) return
+    wizard.cargarDesdeFicha(fichaGuardada)
+    guardado.setFichaId(fichaGuardada.id)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setFichaCargada(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fichaGuardada, fichaCargada])
 
   useEffect(() => {
     if (!solicitudDetalle) return
@@ -231,14 +249,27 @@ export function NuevaFemoView({ solicitudId }: Props) {
 
   const pendientes = faltantes()
 
-  const handleGuardar = () => {
-    const payload = wizard.construirPayload()
-    if (!payload) return
+  const aptitudLabel = APTITUD_OPTIONS.find(o => o.value === fichaData.aptitud)?.label
 
-    crear.mutate(payload, {
-      onSuccess: (ficha) => {
-        setFichaGuardadaId(ficha?.id ?? null)
-        abrirDictamen()
+  // El dictamen es la aptitud de la sección L; aquí solo se confirma.
+  const handleEmitir = () => {
+    if (!fichaData.aptitud) {
+      notificar.aviso('Falta la aptitud', 'Marque la aptitud médica en la sección L.')
+      return
+    }
+    confirmar({
+      title: 'Emitir dictamen',
+      message: (
+        <>
+          El dictamen será <b>{aptitudLabel}</b>, la aptitud marcada en la
+          sección L. Al emitirlo la ficha queda cerrada y ya no se puede editar.
+        </>
+      ),
+      confirmLabel: 'Emitir dictamen',
+      onConfirm: () => {
+        void guardado.emitirDictamen().then((cerrada) => {
+          if (cerrada) router.push(ROUTES.SALUD.SSO)
+        })
       },
     })
   }
@@ -338,19 +369,31 @@ export function NuevaFemoView({ solicitudId }: Props) {
       </Card>
 
       <Group justify="space-between">
-        <Button
-          variant="default"
-          leftSection={<IconArrowLeft size={14} />}
-          onClick={() => {
-            if (active === 0) {
-              router.push(ROUTES.SALUD.SSO)
-            } else {
-              setActive(a => a - 1)
-            }
-          }}
-        >
-          {active === 0 ? 'Cancelar' : 'Anterior'}
-        </Button>
+        <Group gap="sm">
+          <Button
+            variant="default"
+            leftSection={<IconArrowLeft size={14} />}
+            onClick={() => {
+              if (active === 0) {
+                router.push(ROUTES.SALUD.SSO)
+              } else {
+                setActive(a => a - 1)
+              }
+            }}
+          >
+            {active === 0 ? 'Volver a la bandeja' : 'Anterior'}
+          </Button>
+          {/* Se puede guardar en cualquier paso: la ficha queda como borrador
+              de la solicitud y «Continuar FEMO» la retoma. */}
+          <Button
+            variant="subtle"
+            leftSection={<IconDeviceFloppy size={14} />}
+            loading={guardado.guardando && !guardado.emitiendo}
+            onClick={() => { void guardado.guardar() }}
+          >
+            Guardar borrador
+          </Button>
+        </Group>
 
         {active < 3 ? (
           <Group gap="sm" wrap="nowrap">
@@ -370,25 +413,14 @@ export function NuevaFemoView({ solicitudId }: Props) {
           </Group>
         ) : (
           <Button
-            variant="light"
             leftSection={<IconCheck size={14} />}
-            loading={crear.isPending}
-            onClick={handleGuardar}
+            loading={guardado.emitiendo}
+            onClick={handleEmitir}
           >
-            Guardar FEMO y emitir dictamen
+            Emitir dictamen
           </Button>
         )}
       </Group>
-
-      <DictamenMedicoModal
-        opened={dictamenOpened}
-        onClose={() => {
-          cerrarDictamen()
-          router.push(ROUTES.SALUD.SSO)
-        }}
-        solicitud={solicitudDetalle}
-        fichaFemoId={fichaGuardadaId}
-      />
     </PageShell>
   )
 }

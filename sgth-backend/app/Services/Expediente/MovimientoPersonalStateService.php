@@ -2,6 +2,7 @@
 
 namespace App\Services\Expediente;
 
+use App\Enums\AptitudMedica;
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\PartidaPorModalidad;
 use App\Enums\TipoMovimientoPersonal;
@@ -657,7 +658,7 @@ class MovimientoPersonalStateService
             );
         }
 
-        if (!in_array($solicitud->dictamen, ['apto', 'apto_con_restricciones'], true)) {
+        if (!AptitudMedica::tryFrom((string) $solicitud->dictamen)?->habilitaIncorporacion()) {
             throw new ReglaNegocioException(
                 'El dictamen médico no es de aptitud ('.($solicitud->dictamen ?? 'sin dictamen')
                     .'): no se puede registrar esta acción de personal.'

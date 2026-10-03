@@ -14,7 +14,9 @@ export function useFemoWizardState(fichaInicial?: Partial<FichaBaseForm>) {
   const [fichaData, setFichaData] = useState<Partial<FichaBaseForm>>(
     fichaInicial ?? {
       tipo_ficha:         'ingreso',
-      aptitud:            'apto',
+      // Sin aptitud: se elige a conciencia antes de emitir el dictamen. Antes
+      // nacía en «apto» y una ficha guardada sin pensarlo quedaba apta.
+      aptitud:            null,
       grupo_embarazada:   false,
       grupo_discapacidad: false,
       fecha_evaluacion:   hoyIso(),
@@ -126,7 +128,7 @@ export function useFemoWizardState(fichaInicial?: Partial<FichaBaseForm>) {
 
   const construirPayload = (): CrearFemoData | null => {
     const tienePersona = !!fichaData.servidor_id || !!fichaData.postulante_id
-    if (!tienePersona || !fichaData.fecha_evaluacion || !fichaData.tipo_ficha || !fichaData.aptitud) {
+    if (!tienePersona || !fichaData.fecha_evaluacion || !fichaData.tipo_ficha) {
       return null
     }
 
@@ -141,7 +143,7 @@ export function useFemoWizardState(fichaInicial?: Partial<FichaBaseForm>) {
         numero_archivo:    fichaData.numero_archivo ?? null,
         fecha_evaluacion:  fichaData.fecha_evaluacion,
         tipo_ficha:        fichaData.tipo_ficha,
-        aptitud:           fichaData.aptitud,
+        aptitud:           fichaData.aptitud ?? null,
         puesto_id:         fichaData.puesto_id ?? null,
         puesto_trabajo:    fichaData.puesto_trabajo ?? null,
         puesto_trabajo_ciuo: fichaData.puesto_trabajo_ciuo ?? null,

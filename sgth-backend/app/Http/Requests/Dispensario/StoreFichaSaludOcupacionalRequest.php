@@ -23,14 +23,17 @@ class StoreFichaSaludOcupacionalRequest extends FormRequest
     public function rules(): array
     {
         return [
+            // Toda ficha nace de una solicitud de Talento Humano: de ella salen
+            // la persona y el tipo de evaluación (ver FemoService::registrar).
+            'solicitud_id' => ['required', 'integer', 'exists:solicitudes_certificacion_medica,id'],
             'ficha' => ['required', 'array'],
-            'ficha.servidor_id' => ['nullable', 'required_without:ficha.postulante_id', 'integer', 'exists:servidores,id'],
-            'ficha.postulante_id' => ['nullable', 'required_without:ficha.servidor_id', 'integer', 'exists:postulantes,id'],
+            'ficha.servidor_id' => ['nullable', 'integer', 'exists:servidores,id'],
+            'ficha.postulante_id' => ['nullable', 'integer', 'exists:postulantes,id'],
             'ficha.puesto_id' => ['nullable', 'integer', 'exists:puestos,id'],
             'ficha.accidente_trabajo_id' => ['nullable', 'integer', 'exists:accidentes_trabajo,id'],
             'ficha.numero_archivo' => ['nullable', 'string', 'max:50'],
             'ficha.fecha_evaluacion' => ['required', 'date'],
-            'ficha.tipo_ficha' => ['required', Rule::enum(TipoFichaFemo::class)],
+            'ficha.tipo_ficha' => ['nullable', Rule::enum(TipoFichaFemo::class)],
             'ficha.puesto_trabajo' => ['nullable', 'string', 'max:200'],
             'ficha.puesto_trabajo_ciuo' => ['nullable', 'string', 'max:20'],
             'ficha.fecha_ingreso_trabajo' => ['nullable', 'date'],
@@ -43,7 +46,9 @@ class StoreFichaSaludOcupacionalRequest extends FormRequest
             'ficha.grupo_adulto_mayor' => ['nullable', 'boolean'],
             'ficha.porcentaje_discapacidad' => ['nullable', 'string', 'max:10'],
             'ficha.lateralidad' => ['nullable', Rule::in(['derecha', 'izquierda'])],
-            'ficha.aptitud' => ['required', Rule::enum(AptitudMedica::class)],
+            // Nula mientras la ficha es un borrador; se exige al emitir el
+            // dictamen (SolicitudCertificacionController::completar).
+            'ficha.aptitud' => ['nullable', Rule::enum(AptitudMedica::class)],
             'ficha.restricciones' => ['nullable', 'string'],
             'ficha.observaciones' => ['nullable', 'string'],
             'ficha.enfermedad_actual' => ['nullable', 'string'],

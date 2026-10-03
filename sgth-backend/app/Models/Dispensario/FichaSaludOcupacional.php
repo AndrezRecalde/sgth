@@ -88,6 +88,17 @@ class FichaSaludOcupacional extends Model
         return $this->belongsTo(Puesto::class);
     }
 
+    /**
+     * La solicitud de Talento Humano que esta ficha atiende.
+     *
+     * Decide si la ficha se puede editar: mientras la solicitud está en
+     * curso, la ficha es un borrador; con el dictamen emitido queda cerrada.
+     */
+    public function solicitud(): HasOne
+    {
+        return $this->hasOne(SolicitudCertificacionMedica::class, 'ficha_femo_id');
+    }
+
     public function evaluador(): BelongsTo
     {
         return $this->belongsTo(User::class, 'evaluador_id');

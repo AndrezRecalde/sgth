@@ -13,6 +13,7 @@ import { useAspirantesExpress } from '../hooks/useExpress'
 import { useCriterios } from '../hooks/useCriterio'
 import { useEnviarAlDispensario } from '../hooks/useConvocatoria'
 import { useConfirmarIncorporacion } from '@/features/dispensario/hooks/useSolicitudCertificacion'
+import { dictamenHabilitaIncorporacion } from '@/features/dispensario/services/solicitudCertificacionService'
 import { useAuth } from '@/hooks/useAuth'
 import { CalificarPostulanteModal } from './CalificarPostulanteModal'
 import { SeleccionarPlantillaModal } from './SeleccionarPlantillaModal'
@@ -61,8 +62,6 @@ function nombreCompleto(a: AspiranteExpress): string {
  */
 const ESTADOS_CALIFICABLES = ['inscrito', 'en_evaluacion', 'aprobado', 'reprobado']
 
-/** Dictámenes que habilitan la incorporación. Los mismos que exige el backend. */
-const DICTAMENES_APTOS = ['apto', 'apto_con_restricciones']
 
 /**
  * Qué mostrar en la columna de estado.
@@ -79,7 +78,7 @@ function estadoVisible(a: AspiranteExpress): { etiqueta: string; tono: SemanticT
   const s = a.solicitud_certificacion
 
   if (a.estado === 'ganador_potencial' && s?.estado === 'completada') {
-    if (DICTAMENES_APTOS.includes(s.dictamen ?? '')) {
+    if (dictamenHabilitaIncorporacion(s.dictamen)) {
       return { etiqueta: 'Apto — por incorporar', tono: 'success' }
     }
     return { etiqueta: 'No apto', tono: 'danger' }
@@ -159,7 +158,7 @@ export function AspirantesExpressDrawer({
     const s = a.solicitud_certificacion
     return (
       s?.estado === 'completada' &&
-      (s.dictamen === 'apto' || s.dictamen === 'apto_con_restricciones')
+      dictamenHabilitaIncorporacion(s.dictamen)
     )
   }
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Dispensario;
 
+use App\Enums\AptitudMedica;
 use App\Enums\EstadoPostulante;
 use App\Enums\Permiso;
 use App\Enums\TipoMovimientoPersonal;
@@ -13,6 +14,7 @@ use App\Http\Requests\Dispensario\CancelarSolicitudCertificacionRequest;
 use App\Http\Requests\Dispensario\StoreSolicitudCertificacionLoteRequest;
 use App\Http\Requests\Dispensario\StoreSolicitudSignosVitalesRequest;
 use App\Http\Responses\ApiResponse;
+use App\Models\Dispensario\FichaSaludOcupacional;
 use App\Models\Dispensario\SolicitudCertificacionMedica;
 use App\Models\Dispensario\SolicitudConstantesVitales;
 use App\Models\Expediente\Servidor;
@@ -21,6 +23,7 @@ use App\Models\Seleccion\Onboarding;
 use App\Services\Expediente\MovimientoPersonalService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 final class SolicitudCertificacionController extends Controller
 {
@@ -171,27 +174,30 @@ final class SolicitudCertificacionController extends Controller
             );
         }
 
-        $solicitud = SolicitudCertificacionMedica::findOrFail($id);
+        // Bloqueada: el médico puede estar iniciándola en el mismo instante.
+        return DB::transaction(function () use ($request, $id) {
+            $solicitud = SolicitudCertificacionMedica::lockForUpdate()->findOrFail($id);
 
-        if ($solicitud->estado !== 'pendiente') {
-            return ApiResponse::error(
-                $solicitud->estado === 'en_proceso'
-                    ? 'La evaluación ya está en curso: solo quien la atiende puede cerrarla con un dictamen.'
-                    : 'Solo se pueden cancelar solicitudes pendientes.',
-                null, 422
+            if ($solicitud->estado !== 'pendiente') {
+                return ApiResponse::error(
+                    $solicitud->estado === 'en_proceso'
+                        ? 'La evaluación ya está en curso: solo quien la atiende puede cerrarla con un dictamen.'
+                        : 'Solo se pueden cancelar solicitudes pendientes.',
+                    null, 422
+                );
+            }
+
+            $solicitud->update([
+                'estado' => 'cancelada',
+                'cancelada_en' => now(),
+                'cancelada_por' => $request->user()->id,
+                'motivo_cancelacion' => $request->validated()['motivo'],
+            ]);
+
+            return ApiResponse::ok(
+                $solicitud, 'Solicitud cancelada. El servidor vuelve a quedar disponible para una nueva.'
             );
-        }
-
-        $solicitud->update([
-            'estado' => 'cancelada',
-            'cancelada_en' => now(),
-            'cancelada_por' => $request->user()->id,
-            'motivo_cancelacion' => $request->validated()['motivo'],
-        ]);
-
-        return ApiResponse::ok(
-            $solicitud, 'Solicitud cancelada. El servidor vuelve a quedar disponible para una nueva.'
-        );
+        });
     }
 
     public function show(int $id): JsonResponse
@@ -272,52 +278,98 @@ final class SolicitudCertificacionController extends Controller
         Request $request,
         int $id
     ): JsonResponse {
-        $solicitud = SolicitudCertificacionMedica::findOrFail($id);
+        // Con la fila bloqueada: Talento Humano puede estar cancelándola en
+        // el mismo instante, y sin el bloqueo las dos guardas pasaban.
+        return DB::transaction(function () use ($id) {
+            $solicitud = SolicitudCertificacionMedica::lockForUpdate()->findOrFail($id);
 
-        if ($solicitud->estado !== 'pendiente') {
-            return ApiResponse::error(
-                'La solicitud no está en estado pendiente.', null, 422
+            if ($solicitud->estado !== 'pendiente') {
+                return ApiResponse::error(
+                    'La solicitud no está en estado pendiente.', null, 422
+                );
+            }
+
+            if (! $solicitud->constantesVitales()->exists()) {
+                return ApiResponse::error(
+                    'Debe registrarse la atención de enfermería (signos vitales) antes de iniciar el FEMO.',
+                    null, 422
+                );
+            }
+
+            $solicitud->update(['estado' => 'en_proceso']);
+
+            return ApiResponse::ok(
+                $solicitud, 'Proceso iniciado correctamente.'
             );
-        }
-
-        if (! $solicitud->constantesVitales()->exists()) {
-            return ApiResponse::error(
-                'Debe registrarse la atención de enfermería (signos vitales) antes de iniciar el FEMO.',
-                null, 422
-            );
-        }
-
-        $solicitud->update(['estado' => 'en_proceso']);
-
-        return ApiResponse::ok(
-            $solicitud, 'Proceso iniciado correctamente.'
-        );
+        });
     }
 
+    /**
+     * Emite el dictamen y cierra la solicitud.
+     *
+     * El dictamen no lo elige nadie aquí: es la aptitud que el médico marcó en
+     * la sección L de la ficha FEMO de esta misma solicitud, y la observación
+     * son sus restricciones. Antes se pedían por separado, con tres opciones
+     * contra las cuatro de la ficha, y podían contradecirse: Talento Humano
+     * incorporaba con un «apto» y el certificado imprimía «no apto».
+     *
+     * Después del dictamen la ficha queda cerrada (ver `FemoService::actualizar`).
+     */
     public function completar(
         Request $request,
         int $id
     ): JsonResponse {
-        $request->validate([
-            'ficha_femo_id' => ['nullable', 'integer',
-                'exists:fichas_salud_ocupacional,id'],
-            'dictamen' => ['required',
-                'in:apto,apto_con_restricciones,no_apto'],
-            'observacion_medica' => ['nullable', 'string'],
-        ]);
+        return DB::transaction(function () use ($id) {
+            $solicitud = SolicitudCertificacionMedica::lockForUpdate()->findOrFail($id);
 
-        $solicitud = SolicitudCertificacionMedica::findOrFail($id);
+            if ($solicitud->estado !== 'en_proceso') {
+                return ApiResponse::error(
+                    $solicitud->estado === 'completada'
+                        ? 'Esta solicitud ya tiene su dictamen emitido.'
+                        : 'Solo se emite el dictamen de una evaluación en curso.',
+                    null, 422
+                );
+            }
 
-        $solicitud->update([
-            'estado' => 'completada',
-            'ficha_femo_id' => $request->integer('ficha_femo_id') ?: null,
-            'dictamen' => $request->input('dictamen'),
-            'observacion_medica' => $request->input('observacion_medica'),
-        ]);
+            $ficha = $solicitud->ficha_femo_id
+                ? FichaSaludOcupacional::find($solicitud->ficha_femo_id)
+                : null;
 
-        return ApiResponse::ok(
-            $solicitud, 'Solicitud completada con dictamen médico.'
-        );
+            if (! $ficha) {
+                return ApiResponse::error(
+                    'Guarde la ficha FEMO antes de emitir el dictamen.', null, 422
+                );
+            }
+
+            if (! $ficha->aptitud) {
+                return ApiResponse::error(
+                    'Elija la aptitud médica (sección L) antes de emitir el dictamen.',
+                    ['aptitud' => ['Elija la aptitud médica.']], 422
+                );
+            }
+
+            $exigeDetalle = in_array(
+                $ficha->aptitud,
+                [AptitudMedica::APTO_CON_RESTRICCIONES, AptitudMedica::NO_APTO],
+                true,
+            );
+            if ($exigeDetalle && blank($ficha->restricciones)) {
+                return ApiResponse::error(
+                    'Describa las restricciones o el motivo en la sección L antes de emitir el dictamen.',
+                    ['restricciones' => ['Requerido para esta aptitud.']], 422
+                );
+            }
+
+            $solicitud->update([
+                'estado' => 'completada',
+                'dictamen' => $ficha->aptitud->value,
+                'observacion_medica' => $ficha->restricciones,
+            ]);
+
+            return ApiResponse::ok(
+                $solicitud, 'Dictamen emitido: '.$ficha->aptitud->etiqueta().'.'
+            );
+        });
     }
 
     public function confirmarIncorporacion(
@@ -343,8 +395,7 @@ final class SolicitudCertificacionController extends Controller
             );
         }
 
-        if ($solicitud->dictamen !== 'apto' &&
-            $solicitud->dictamen !== 'apto_con_restricciones') {
+        if (! AptitudMedica::tryFrom((string) $solicitud->dictamen)?->habilitaIncorporacion()) {
             return ApiResponse::error(
                 'El candidato no tiene dictamen de aptitud médica.',
                 null, 422
@@ -381,6 +432,18 @@ final class SolicitudCertificacionController extends Controller
 
         \DB::beginTransaction();
         try {
+            // Dos clics seguidos pasaban los dos la guarda de `servidor_id`, que
+            // se leyó sin bloquear: con un candidato interno nacían dos
+            // ingresos en borrador. Se relee la fila bloqueada.
+            $bloqueada = SolicitudCertificacionMedica::lockForUpdate()->findOrFail($solicitud->id);
+            if ($bloqueada->servidor_id) {
+                \DB::rollBack();
+
+                return ApiResponse::error(
+                    'La incorporación de este candidato ya fue confirmada.', null, 422
+                );
+            }
+
             $esCandidatoInterno = $postulante->servidor_id !== null;
 
             if ($esCandidatoInterno) {
@@ -436,6 +499,13 @@ final class SolicitudCertificacionController extends Controller
                 'servidor_id'            => $servidor->id,
                 'movimiento_personal_id' => $movimiento->id,
             ]);
+
+            // La ficha de ingreso se hizo al postulante; ahora que la persona
+            // tiene expediente, la ficha aparece también en su historial.
+            if ($solicitud->ficha_femo_id) {
+                FichaSaludOcupacional::whereKey($solicitud->ficha_femo_id)
+                    ->update(['servidor_id' => $servidor->id]);
+            }
 
             $postulante->update([
                 'estado' => EstadoPostulante::INCORPORADO,

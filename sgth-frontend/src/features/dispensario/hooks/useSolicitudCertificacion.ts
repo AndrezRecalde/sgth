@@ -67,20 +67,15 @@ export function useIniciarProceso() {
 export function useCompletarSolicitud() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: {
-      id:   number
-      data: {
-        dictamen:           'apto' | 'apto_con_restricciones' | 'no_apto'
-        observacion_medica?: string | null
-        ficha_femo_id?:     number | null
-      }
-    }) => solicitudCertificacionService.completar(id, data),
+    mutationFn: (id: number) => solicitudCertificacionService.completar(id),
     onSuccess: () => {
-      notificar.exito('Solicitud completada', 'La certificación médica fue emitida.')
+      notificar.exito('Dictamen emitido', 'La evaluación quedó cerrada.')
       qc.invalidateQueries({
         queryKey: ['solicitudes-certificacion'],
       })
       qc.invalidateQueries({ queryKey: ['certificaciones-cobertura'] })
+      qc.invalidateQueries({ queryKey: ['femos'] })
+      qc.invalidateQueries({ queryKey: ['femo'] })
     },
     onError: notificar.alFallar('No se pudo completar la solicitud'),
   })

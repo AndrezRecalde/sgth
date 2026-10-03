@@ -41,7 +41,7 @@ class UpdateFichaSaludOcupacionalRequest extends FormRequest
             'ficha.grupo_adulto_mayor' => ['nullable', 'boolean'],
             'ficha.porcentaje_discapacidad' => ['nullable', 'string', 'max:10'],
             'ficha.lateralidad' => ['nullable', Rule::in(['derecha', 'izquierda'])],
-            'ficha.aptitud' => ['sometimes', Rule::enum(AptitudMedica::class)],
+            'ficha.aptitud' => ['sometimes', 'nullable', Rule::enum(AptitudMedica::class)],
             'ficha.restricciones' => ['nullable', 'string'],
             'ficha.observaciones' => ['nullable', 'string'],
             'ficha.enfermedad_actual' => ['nullable', 'string'],

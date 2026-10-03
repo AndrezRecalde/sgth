@@ -42,13 +42,15 @@ export function FemoSeccionMotivoConsulta({ fichaData, onFichaChange }: Props) {
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, md: 6 }}>
+          {/* Lo fija la solicitud de Talento Humano, y el backend lo toma de
+              ella: un retiro no se evalúa como ingreso. */}
           <Select
             label="Tipo de evaluación"
+            description="Lo define la solicitud de Talento Humano"
             data={TIPO_FICHA_OPTIONS}
-            required
+            disabled
             {...contained}
             value={fichaData.tipo_ficha ?? null}
-            onChange={(v) => set({ tipo_ficha: v as FichaBaseForm['tipo_ficha'] })}
           />
         </Grid.Col>
 

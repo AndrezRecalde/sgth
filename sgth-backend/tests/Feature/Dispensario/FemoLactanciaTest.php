@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Dispensario\FichaSaludOcupacional;
+use App\Models\Dispensario\SolicitudCertificacionMedica;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -36,13 +37,26 @@ function servidorFemoLactancia(string $cedula, ?string $genero): Servidor
     ]);
 }
 
-function fichaFemoLactancia(Servidor $servidor, array $extra = []): array
+function solicitudFemoLactancia(User $medico, Servidor $servidor): SolicitudCertificacionMedica
+{
+    return SolicitudCertificacionMedica::create([
+        'tipo_evento' => 'periodica',
+        'origen' => 'expediente',
+        'servidor_id' => $servidor->id,
+        'cedula_paciente' => $servidor->cedula,
+        'nombres_paciente' => "{$servidor->nombre} {$servidor->apellido}",
+        'solicitado_por' => $medico->id,
+        'estado' => 'en_proceso',
+        'fecha_limite' => now()->addDays(7),
+    ]);
+}
+
+function fichaFemoLactancia(User $medico, Servidor $servidor, array $extra = []): array
 {
     return [
+        'solicitud_id' => solicitudFemoLactancia($medico, $servidor)->id,
         'ficha' => [
-            'servidor_id' => $servidor->id,
             'fecha_evaluacion' => '2026-10-01',
-            'tipo_ficha' => 'periodica',
             'aptitud' => 'apto',
             ...$extra,
         ],
@@ -54,7 +68,7 @@ test('lactancia se guarda en la ficha', function () {
     $paciente = servidorFemoLactancia('0804258986', 'femenino');
 
     $id = $this->actingAs($medico, 'sanctum')
-        ->postJson('/api/v1/dispensario/fichas-sso', fichaFemoLactancia($paciente, ['grupo_lactancia' => true]))
+        ->postJson('/api/v1/dispensario/fichas-sso', fichaFemoLactancia($medico, $paciente, ['grupo_lactancia' => true]))
         ->assertCreated()
         ->json('datos.id');
 
@@ -66,7 +80,7 @@ test('un paciente hombre no puede registrarse en lactancia ni embarazado', funct
     $paciente = servidorFemoLactancia('0802704171', 'masculino');
 
     $this->actingAs($medico, 'sanctum')
-        ->postJson('/api/v1/dispensario/fichas-sso', fichaFemoLactancia($paciente, [$campo => true]))
+        ->postJson('/api/v1/dispensario/fichas-sso', fichaFemoLactancia($medico, $paciente, [$campo => true]))
         ->assertStatus(422)
         ->assertJsonStructure(['errores' => ["ficha.{$campo}"]]);
 
@@ -76,22 +90,19 @@ test('un paciente hombre no puede registrarse en lactancia ni embarazado', funct
 test('al editar tampoco se marca lactancia a un hombre', function () {
     $medico = medicoFemoLactancia();
     $paciente = servidorFemoLactancia('0802704171', 'masculino');
-    $ficha = FichaSaludOcupacional::create([
-        'servidor_id' => $paciente->id,
-        'evaluador_id' => $medico->id,
-        'fecha_evaluacion' => '2026-10-01',
-        'tipo_ficha' => 'periodica',
-        'aptitud' => 'apto',
-        'estado' => true,
-    ]);
+
+    $id = $this->actingAs($medico, 'sanctum')
+        ->postJson('/api/v1/dispensario/fichas-sso', fichaFemoLactancia($medico, $paciente))
+        ->assertCreated()
+        ->json('datos.id');
 
     $this->actingAs($medico, 'sanctum')
-        ->patchJson("/api/v1/dispensario/fichas-sso/{$ficha->id}", [
+        ->patchJson("/api/v1/dispensario/fichas-sso/{$id}", [
             'ficha' => ['grupo_lactancia' => true],
         ])
         ->assertStatus(422);
 
-    expect($ficha->refresh()->grupo_lactancia)->toBeFalse();
+    expect(FichaSaludOcupacional::findOrFail($id)->grupo_lactancia)->toBeFalse();
 });
 
 test('con el sexo sin registrar se acepta, como lo muestra el asistente', function () {
@@ -99,6 +110,6 @@ test('con el sexo sin registrar se acepta, como lo muestra el asistente', functi
     $paciente = servidorFemoLactancia('0804258986', null);
 
     $this->actingAs($medico, 'sanctum')
-        ->postJson('/api/v1/dispensario/fichas-sso', fichaFemoLactancia($paciente, ['grupo_lactancia' => true]))
+        ->postJson('/api/v1/dispensario/fichas-sso', fichaFemoLactancia($medico, $paciente, ['grupo_lactancia' => true]))
         ->assertCreated();
 });
