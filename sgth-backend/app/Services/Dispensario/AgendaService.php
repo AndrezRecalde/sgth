@@ -11,11 +11,27 @@ use Carbon\Carbon;
 
 final class AgendaService implements AgendaServiceInterface
 {
+    /**
+     * Un turno sigue vivo mientras el paciente no ha entrado ni se ha ido.
+     * Cancelar, marcar como no presentado o pasar a consulta solo se hace
+     * desde aquí: antes cada operación miraba únicamente `atendido`, y la
+     * cadena cancelada → no presentado → reactivar devolvía a la cola un turno
+     * que alguien había cancelado.
+     */
+    private const ABIERTOS = ['en_espera', 'en_sala'];
+
+    /** Horas durante las que un «no se presentó» se puede deshacer. */
+    private const HORAS_PARA_REACTIVAR = 6;
+
     public function listar(array $filtros): LengthAwarePaginator
     {
+        // Del que llegó primero al último: es el orden en que se atiende. Al
+        // revés, con más de una página los primeros en quedarse fuera eran los
+        // que más llevaban esperando. El id desempata dos registros del mismo
+        // segundo, que sin él cambian de sitio entre una recarga y otra.
         $query = AgendaMedica::with([
             'medico', 'servidor', 'cargaFamiliar.servidor', 'triaje',
-        ])->orderBy('registrado_en', 'desc');
+        ])->orderBy('registrado_en')->orderBy('id');
 
         if (!empty($filtros['medico_id'])) {
             $query->where('medico_id', $filtros['medico_id']);
@@ -49,9 +65,11 @@ final class AgendaService implements AgendaServiceInterface
         return DB::transaction(function () use ($datos, $creadoPor) {
             $fecha = now()->toDateString();
 
+            $this->rechazarTurnoDuplicado($datos, $fecha);
+
             $folio = $this->generarFolio($fecha);
 
-            return AgendaMedica::create([
+            $agenda = AgendaMedica::create([
                 ...$datos,
                 'folio'           => $folio,
                 'fecha'           => $fecha,
@@ -60,31 +78,63 @@ final class AgendaService implements AgendaServiceInterface
                 'estado_registro' => true,
                 'created_by'      => $creadoPor,
             ]);
+
+            // Quien lo crea pasa directo a tomarle el triaje, y esa pantalla
+            // muestra el nombre del paciente: sin las relaciones salía «—».
+            return $agenda->load(['medico', 'servidor', 'cargaFamiliar.servidor']);
         });
     }
 
-    public function actualizar(int $id, array $datos): AgendaMedica
+    /**
+     * Un mismo paciente no espera dos veces en la misma cola. Sí puede tener
+     * a la vez un turno de medicina y otro de odontología, que son colas
+     * distintas.
+     */
+    private function rechazarTurnoDuplicado(array $datos, string $fecha): void
     {
-        $agenda = AgendaMedica::findOrFail($id);
-        $agenda->update($datos);
-        return $agenda;
+        $abierto = AgendaMedica::query()
+            ->whereDate('fecha', $fecha)
+            ->whereIn('estado', [...self::ABIERTOS, 'en_consulta'])
+            ->where('tipo_atencion', $datos['tipo_atencion'] ?? 'medicina_general')
+            ->when(
+                !empty($datos['servidor_id']),
+                fn ($q) => $q->where('servidor_id', $datos['servidor_id']),
+                fn ($q) => $q->where('carga_familiar_id', $datos['carga_familiar_id'] ?? 0),
+            )
+            ->value('folio');
+
+        if ($abierto !== null) {
+            throw new ReglaNegocioException(
+                "El paciente ya tiene el turno {$abierto} abierto hoy en esta cola."
+            );
+        }
     }
 
     public function cancelar(int $id): AgendaMedica
     {
-        $agenda = AgendaMedica::findOrFail($id);
+        return DB::transaction(function () use ($id) {
+            $agenda = AgendaMedica::lockForUpdate()->findOrFail($id);
 
-        // 'atendido', no 'atendida': es el valor que escribe el resto del
-        // módulo. Con la 'a' esta comparación nunca daba verdadera y un turno
-        // ya atendido se podía cancelar igual.
-        if ($agenda->estado === 'atendido') {
+            $this->exigirAbierto($agenda, 'cancelar');
+
+            $agenda->update(['estado' => 'cancelada']);
+            return $agenda;
+        });
+    }
+
+    /**
+     * Las transiciones salen de un turno abierto. Lo cerrado —atendido,
+     * cancelado, no presentado— no se toca, salvo reactivar un no presentado,
+     * que tiene su propia regla.
+     */
+    private function exigirAbierto(AgendaMedica $turno, string $accion): void
+    {
+        if (!in_array($turno->estado, self::ABIERTOS, true)) {
             throw new ReglaNegocioException(
-                'No se puede cancelar un turno ya atendido.'
+                "No se puede {$accion} un turno que ya está " .
+                str_replace('_', ' ', $turno->estado) . '.'
             );
         }
-
-        $agenda->update(['estado' => 'cancelada']);
-        return $agenda;
     }
 
     public function listosParaConsulta(
@@ -160,56 +210,79 @@ final class AgendaService implements AgendaServiceInterface
         int $id,
         int $usuarioId
     ): AgendaMedica {
-        $turno = AgendaMedica::findOrFail($id);
+        return DB::transaction(function () use ($id, $usuarioId) {
+            $turno = AgendaMedica::lockForUpdate()->findOrFail($id);
 
-        if ($turno->estado === 'atendido') {
-            throw new \App\Exceptions\ReglaNegocioException(
-                'No se puede marcar como no presentado un turno ya atendido.'
-            );
-        }
+            $this->exigirAbierto($turno, 'marcar como no presentado');
 
-        $turno->update([
-            'estado'                    => 'no_presentado',
-            'marcado_no_presentado_en'  => now(),
-            'marcado_no_presentado_por' => $usuarioId,
-        ]);
+            $turno->update([
+                'estado'                    => 'no_presentado',
+                'marcado_no_presentado_en'  => now(),
+                'marcado_no_presentado_por' => $usuarioId,
+            ]);
 
-        return $turno;
+            return $turno;
+        });
     }
 
     public function reactivar(
         int $id,
         int $usuarioId
     ): AgendaMedica {
-        $turno = AgendaMedica::findOrFail($id);
+        return DB::transaction(function () use ($id, $usuarioId) {
+            $turno = AgendaMedica::lockForUpdate()->findOrFail($id);
 
-        if ($turno->estado !== 'no_presentado') {
-            throw new \App\Exceptions\ReglaNegocioException(
-                'Solo se pueden reactivar turnos marcados como no presentado.'
-            );
-        }
+            if ($turno->estado !== 'no_presentado') {
+                throw new ReglaNegocioException(
+                    'Solo se pueden reactivar turnos marcados como no presentado.'
+                );
+            }
 
-        $horas = now()->diffInHours($turno->marcado_no_presentado_en);
-        if ($horas > 6) {
-            throw new \App\Exceptions\ReglaNegocioException(
-                'No se puede reactivar un turno con más de 6 horas de ausencia.'
-            );
-        }
+            // Desde la marca hasta ahora, en ese orden. Con Carbon 3,
+            // `now()->diffInHours($pasado)` da un número NEGATIVO, así que el
+            // tope nunca saltaba y un turno de hace días volvía a la cola. Y
+            // solo el mismo día: reactivar uno de ayer lo metía en la cola de
+            // hoy con la fecha vieja.
+            $marcado = $turno->marcado_no_presentado_en;
+            if (
+                $marcado === null
+                || !$turno->fecha->isToday()
+                || $marcado->diffInHours(now()) > self::HORAS_PARA_REACTIVAR
+            ) {
+                throw new ReglaNegocioException(
+                    'Solo se reactiva un turno de hoy marcado hace menos de ' .
+                    self::HORAS_PARA_REACTIVAR . ' horas.'
+                );
+            }
 
-        $turno->update([
-            'estado'         => 'en_espera',
-            'reactivado_en'  => now(),
-            'reactivado_por' => $usuarioId,
-        ]);
+            $turno->update([
+                'estado'         => 'en_espera',
+                'reactivado_en'  => now(),
+                'reactivado_por' => $usuarioId,
+            ]);
 
-        return $turno;
+            return $turno;
+        });
     }
 
+    /**
+     * El médico abre la ficha del turno. Volver a abrirla es inocuo; lo que no
+     * se puede es «entrar» a un turno cerrado.
+     */
     public function marcarEnConsulta(int $id): AgendaMedica
     {
-        $turno = AgendaMedica::findOrFail($id);
-        $turno->update(['estado' => 'en_consulta']);
-        return $turno;
+        return DB::transaction(function () use ($id) {
+            $turno = AgendaMedica::lockForUpdate()->findOrFail($id);
+
+            if ($turno->estado === 'en_consulta') {
+                return $turno;
+            }
+
+            $this->exigirAbierto($turno, 'pasar a consulta');
+
+            $turno->update(['estado' => 'en_consulta']);
+            return $turno;
+        });
     }
 
     public function marcarAtendido(int $id): AgendaMedica

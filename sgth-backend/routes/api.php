@@ -1170,7 +1170,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 )->name('dispensario.triaje.pendientes');
             });
 
+        // Sin `update`: era un PUT que pasaba `$request->all()` a `update()` —
+        // estado, folio, paciente—, y el frontend nunca lo usó.
         Route::apiResource('agenda', AgendaController::class)
+            ->except(['update'])
             ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
 
         // Triaje

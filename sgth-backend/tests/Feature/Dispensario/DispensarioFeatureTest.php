@@ -1538,12 +1538,14 @@ test('nombre_completo_no_devuelve_null_aunque_falte_el_correo', function () {
 test('el_folio_del_turno_sale_del_mayor_no_de_contar_filas', function () {
     $service = app(AgendaService::class);
 
-    $agendar = fn () => $service->agendarCita([
+    // Cada turno se cierra antes del siguiente: un paciente no puede tener dos
+    // abiertos el mismo día en la misma cola.
+    $agendar = fn () => tap($service->agendarCita([
         'servidor_id'      => $this->paciente->id,
         'medico_id'        => $this->medico->id,
         'tipo_atencion'    => 'medicina_general',
         'motivo_solicitud' => 'Control',
-    ], $this->medico->id);
+    ], $this->medico->id), fn ($turno) => $turno->update(['estado' => 'atendido']));
 
     $anio = now()->year;
 

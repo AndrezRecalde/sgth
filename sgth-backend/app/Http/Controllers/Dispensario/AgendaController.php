@@ -40,17 +40,6 @@ final class AgendaController extends Controller
         return ApiResponse::ok($cita);
     }
 
-    public function update(
-        Request $request,
-        int $id
-    ): JsonResponse {
-        $cita = $this->agendaService->actualizar(
-            $id, $request->all()
-        );
-
-        return ApiResponse::ok($cita, 'Cita actualizada.');
-    }
-
     public function destroy(int $id): JsonResponse
     {
         $cita = $this->agendaService->cancelar($id);
@@ -115,5 +104,12 @@ final class AgendaController extends Controller
         );
 
         return ApiResponse::ok($turno, 'Turno reactivado correctamente.');
+    }
+
+    public function marcarEnConsulta(int $agenda): JsonResponse
+    {
+        $turno = $this->agendaService->marcarEnConsulta($agenda);
+
+        return ApiResponse::ok($turno, 'Turno en consulta.');
     }
 }

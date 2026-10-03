@@ -2,67 +2,29 @@
 
 namespace App\Http\Controllers\Dispensario;
 
-use App\Contracts\Dispensario\HistoriaClinicaServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dispensario\StoreTriajeRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\Dispensario\AgendaMedica;
 use App\Models\Dispensario\Triaje;
-use App\Services\Dispensario\ValoracionSignosVitales;
+use App\Services\Dispensario\TriajeService;
 use Illuminate\Http\JsonResponse;
 
 class TriajeController extends Controller
 {
     public function __construct(
-        private readonly HistoriaClinicaServiceInterface $historiaService
+        private readonly TriajeService $triajeService
     ) {}
 
     public function store(
         StoreTriajeRequest $request,
         int $agendaId
     ): JsonResponse {
-        $agenda = AgendaMedica::findOrFail($agendaId);
-
-        $datos = $request->validated();
-
-        // Calcular IMC con peso y talla
-        $tallaMetros = $datos['talla_cm'] / 100;
-        $imc = $tallaMetros > 0
-            ? round($datos['peso_kg'] / ($tallaMetros ** 2), 2)
-            : null;
-
-        // La valoración se guarda con el triaje: la cola y el historial deben
-        // mostrar lo que se valoró con estas cifras, no lo que diría la tabla
-        // de umbrales el día que alguien consulte el registro.
-        $valoracion = ValoracionSignosVitales::evaluar(
-            $datos,
-            $this->edadDelPaciente($agenda)
+        $triaje = $this->triajeService->registrar(
+            $agendaId,
+            $request->validated(),
+            $request->user()->id
         );
-
-        // Cada toma es una fila nueva. Antes esto era un `updateOrCreate` sobre
-        // la agenda: rehacer el triaje pisaba la lectura anterior y nadie podía
-        // saber que había existido. Un turno puede tener varias tomas —una
-        // corrección de digitación, o una segunda medición tras la espera— y
-        // todas quedan; la vigente es la última.
-        // La historia se abre aquí si el paciente aún no la tiene: la columna
-        // es NOT NULL y antes se resolvía a null, así que un turno creado sin
-        // historia mataba el guardado con un error de base de datos.
-        $historia = $this->historiaService->paraPacienteDeTurno($agenda);
-
-        $triaje = Triaje::create([
-            ...$datos,
-            'agenda_medica_id'    => $agenda->id,
-            'historia_clinica_id' => $historia->id,
-            'enfermera_id'        => $request->user()->id,
-            'imc'                 => $imc,
-            'nivel_alerta'        => $valoracion['nivel'],
-            'hallazgos_alerta'    => $valoracion['hallazgos'],
-            'registrado_en'       => now(),
-        ]);
-
-        if ($agenda->estado === 'en_espera') {
-            $agenda->update(['estado' => 'en_sala']);
-        }
 
         return ApiResponse::created(
             $triaje, 'Triaje registrado exitosamente.'
@@ -122,20 +84,6 @@ class TriajeController extends Controller
     }
 
     /**
-     * Edad del paciente del turno, sea servidor o carga familiar. Sin fecha de
-     * nacimiento devuelve null, y entonces se valora como adulto: es lo que
-     * más se parece a la población que atiende el dispensario.
-     */
-    private function edadDelPaciente(AgendaMedica $agenda): ?int
-    {
-        $nacimiento = $agenda->servidor_id
-            ? $agenda->servidor?->fecha_nacimiento
-            : $agenda->cargaFamiliar?->fecha_nacimiento;
-
-        return $nacimiento?->age;
-    }
-
-    /**
      * Solo lectura: devuelve null si el paciente no tiene historia. Registrar
      * un triaje sí la abre, pero consultar el último no debe crear nada.
      */
@@ -167,7 +115,11 @@ class TriajeController extends Controller
           // subconsulta «la última», y preguntarle si no existe no es lo mismo
           // que preguntar si el turno no tiene ninguna toma.
           ->whereDoesntHave('triajes')
+          // Solo los de hoy: un turno de ayer que nadie cerró se quedaba en
+          // esta lista para siempre, y no se le puede tomar el triaje.
+          ->whereDate('fecha', today())
           ->orderBy('registrado_en', 'asc')
+          ->orderBy('id')
           ->get();
 
         return ApiResponse::ok($turnos);
