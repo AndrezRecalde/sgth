@@ -3,10 +3,13 @@
 import { useRouter } from 'next/navigation'
 import { ROUTES } from '@/config/routes'
 import { TurnosDelDiaTable } from './TurnosDelDiaTable'
+import { useAccionesTurno } from '../hooks/useAgenda'
+import { TURNO_PENDIENTE } from '../constants/turnos'
 import type { AgendaMedica } from '../services/agendaService'
 
 export function OdontologiaTurnosView() {
   const router = useRouter()
+  const { enConsulta } = useAccionesTurno()
 
   // Atender y ver la consulta llevan a la misma ficha: el odontograma
   // decide qué mostrar según el estado del turno.
@@ -17,9 +20,17 @@ export function OdontologiaTurnosView() {
     router.push(ROUTES.SALUD.ODONTOLOGIA_TURNO(turno.folio))
   }
 
+  // Atender deja el turno «en consulta»: es lo que ven la cola de
+  // Enfermería, «Mi jornada» y el Panorama. Antes nadie escribía ese estado y
+  // el paciente seguía contando como «esperando» con el médico delante.
+  const atender = (turno: AgendaMedica) => {
+    if (TURNO_PENDIENTE.includes(turno.estado)) enConsulta.mutate(turno.id)
+    abrirFicha(turno)
+  }
+
   return (
     <TurnosDelDiaTable
-      onAtender={abrirFicha}
+      onAtender={atender}
       onVerConsulta={abrirFicha}
     />
   )

@@ -5,8 +5,8 @@ import type { SemanticTone } from '@/config/design.tokens'
  * con el sitio exacto que los escribe:
  *
  *   en_espera      AgendaService: al crear el turno y al devolverlo a la cola
- *   en_sala        TriajeController: al registrar el triaje
- *   en_consulta    AgendaService: al llamar al paciente
+ *   en_sala        TriajeService: al registrar el triaje
+ *   en_consulta    AgendaService: cuando el profesional abre la ficha
  *   atendido       AgendaService: al cerrar la atención
  *   no_presentado  AgendaService: al marcar la ausencia
  *   cancelada      AgendaService: al cancelar  ← la única en femenino
@@ -62,3 +62,10 @@ const ESTADOS_CERRADOS = [
 export function turnoCerrado(estado: string): boolean {
   return ESTADOS_CERRADOS.includes(estado)
 }
+
+/**
+ * El paciente sigue esperando: aún no entra a consulta. Es desde donde el
+ * backend admite cancelar, marcar la ausencia, tomar el triaje o pasar a
+ * consulta (`AgendaService::ABIERTOS`).
+ */
+export const TURNO_PENDIENTE: readonly string[] = ['en_espera', 'en_sala']
