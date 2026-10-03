@@ -1,27 +1,12 @@
 'use client'
 
-import { useMemo } from 'react'
-import {
-  Stack, Group, NumberInput, Button, SimpleGrid,
-  Textarea, Text, Card, Avatar, Alert,
-} from '@mantine/core'
-import {
-  useForm, useWatch, Controller, type DefaultValues,
-} from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { IconCheck, IconUser, IconScale } from '@tabler/icons-react'
-import { useContainedInput } from '@/hooks/useContainedInput'
+import { Stack, Group, Text, Card, Avatar } from '@mantine/core'
+import { IconUser } from '@tabler/icons-react'
+import { StatusBadge } from '@/components/ui'
 import { useRegistrarSignosVitalesSolicitud } from '../hooks/useSolicitudSignosVitales'
-import {
-  solicitudSignosVitalesSchema,
-  type SolicitudSignosVitalesFormData,
-} from '../schemas/solicitudSignosVitales.schema'
-import { calcularImc, clasificacionImc } from '../constants/signosVitales'
 import { etiquetaTipoEvento } from '../services/solicitudCertificacionService'
 import type { SolicitudCertificacion } from '../services/solicitudCertificacionService'
-import { SectionCard, StatusBadge } from '@/components/ui'
-import { CamposSignosVitales } from './CamposSignosVitales'
-import { SEMANTIC_COLOR } from '@/config/design.tokens'
+import { FormularioSignosVitales } from './FormularioSignosVitales'
 
 interface Props {
   solicitud:  SolicitudCertificacion
@@ -30,171 +15,54 @@ interface Props {
 }
 
 /**
- * Ninguna constante vital arranca con un valor: se teclean todas. Las claves
- * se omiten en vez de escribirlas `undefined`, que es lo que antes obligaba a
- * una aserción de tipo — el esquema las declara `number`, no `number |
- * undefined` (ver regla 09).
+ * Los signos vitales previos a la evaluación ocupacional (FEMO). El médico no
+ * puede iniciar la ficha hasta que estén.
+ *
+ * Los pacientes del FEMO son servidores o candidatos a ingresar, todos
+ * adultos: nunca se trata como menor.
  */
-const VALORES_INICIALES: DefaultValues<SolicitudSignosVitalesFormData> = {
-  observaciones_enfermera: '',
-}
-
 export function SolicitudSignosVitalesForm({ solicitud, onCreado, onCancelar }: Props) {
-  const contained = useContainedInput()
   const registrar = useRegistrarSignosVitalesSolicitud()
 
-  const tipoLabel = etiquetaTipoEvento(solicitud.tipo_evento)
-
-  const {
-    control, handleSubmit,
-    formState: { errors },
-  } = useForm<SolicitudSignosVitalesFormData>({
-    resolver: zodResolver(solicitudSignosVitalesSchema),
-    defaultValues: VALORES_INICIALES,
-  })
-
-  const peso  = useWatch({ control, name: 'peso_kg' })
-  const talla = useWatch({ control, name: 'talla_cm' })
-
-  const imc = useMemo(
-    () => calcularImc(peso, talla),
-    [peso, talla]
+  const encabezado = (
+    <Card withBorder radius="lg" padding="md">
+      <Group justify="space-between" wrap="nowrap">
+        <Group gap="sm">
+          <Avatar radius="xl">
+            <IconUser size={16} />
+          </Avatar>
+          <Stack gap={0}>
+            <Text size="sm" fw={600}>
+              {solicitud.nombres_paciente}
+            </Text>
+            <Text size="xs" c="dimmed" ff="monospace">
+              {solicitud.cedula_paciente}
+            </Text>
+          </Stack>
+        </Group>
+        <StatusBadge>
+          {etiquetaTipoEvento(solicitud.tipo_evento)}
+        </StatusBadge>
+      </Group>
+    </Card>
   )
-  const clasificacion = clasificacionImc(imc)
-
-  const onSubmit = (values: SolicitudSignosVitalesFormData) => {
-    registrar.mutate(
-      { id: solicitud.id, data: values },
-      { onSuccess: () => onCreado() }
-    )
-  }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      <Stack gap="lg">
-
-        <Card withBorder radius="lg" padding="md">
-          <Group justify="space-between" wrap="nowrap">
-            <Group gap="sm">
-              <Avatar radius="xl">
-                <IconUser size={16} />
-              </Avatar>
-              <Stack gap={0}>
-                <Text size="sm" fw={600}>
-                  {solicitud.nombres_paciente}
-                </Text>
-                <Text size="xs" c="dimmed" ff="monospace">
-                  {solicitud.cedula_paciente}
-                </Text>
-              </Stack>
-            </Group>
-            <StatusBadge>
-              {tipoLabel}
-            </StatusBadge>
-          </Group>
-        </Card>
-
-        <SectionCard title="Antropometría">
-          <Stack gap="md">
-            <SimpleGrid cols={{ base: 1, sm: 3 }}>
-              <Controller
-                name="peso_kg"
-                control={control}
-                render={({ field }) => (
-                  <NumberInput
-                    label="Peso (kg)"
-                    decimalScale={2}
-                    hideControls
-                    {...contained}
-                    value={field.value}
-                    onChange={(v) => field.onChange(Number(v) || undefined)}
-                    error={errors.peso_kg?.message}
-                  />
-                )}
-              />
-              <Controller
-                name="talla_cm"
-                control={control}
-                render={({ field }) => (
-                  <NumberInput
-                    label="Talla (cm)"
-                    decimalScale={1}
-                    hideControls
-                    {...contained}
-                    value={field.value}
-                    onChange={(v) => field.onChange(Number(v) || undefined)}
-                    error={errors.talla_cm?.message}
-                  />
-                )}
-              />
-              <Controller
-                name="perimetro_abdominal_cm"
-                control={control}
-                render={({ field }) => (
-                  <NumberInput
-                    label="Perímetro abdominal (cm)"
-                    description="Opcional"
-                    decimalScale={1}
-                    hideControls
-                    {...contained}
-                    value={field.value ?? undefined}
-                    onChange={(v) => field.onChange(v === '' ? null : Number(v))}
-                    error={errors.perimetro_abdominal_cm?.message}
-                  />
-                )}
-              />
-            </SimpleGrid>
-
-            {imc !== null && (
-              <Alert
-                icon={<IconScale size={14} />}
-                color={SEMANTIC_COLOR[clasificacion.tono]}
-                variant="light"
-                radius="md"
-              >
-                <Text size="xs">
-                  IMC calculado: <strong>{imc}</strong>
-                  {' — '}{clasificacion.texto}
-                </Text>
-              </Alert>
-            )}
-          </Stack>
-        </SectionCard>
-
-        <CamposSignosVitales control={control} errors={errors} />
-
-        <SectionCard title="Observaciones">
-          <Controller
-            name="observaciones_enfermera"
-            control={control}
-            render={({ field }) => (
-              <Textarea
-                label="Observaciones (opcional)"
-                placeholder="Anotaciones relevantes durante la toma de signos vitales"
-                autosize
-                minRows={2}
-                {...contained}
-                value={field.value ?? ''}
-                onChange={(e) => field.onChange(e.currentTarget.value)}
-              />
-            )}
-          />
-        </SectionCard>
-
-        <Group justify="flex-end" mt="sm">
-          <Button variant="default" onClick={onCancelar}>
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            leftSection={<IconCheck size={14} />}
-            loading={registrar.isPending}
-          >
-            Registrar signos vitales
-          </Button>
-        </Group>
-
-      </Stack>
-    </form>
+    <FormularioSignosVitales
+      encabezado={encabezado}
+      conPerimetro
+      esMenor={false}
+      consecuencia={{
+        critico:  'Hay cifras críticas: avise al médico antes de que el paciente se retire.',
+        atencion: 'El médico verá estas cifras al iniciar la evaluación.',
+      }}
+      textoEnviar="Registrar signos vitales"
+      textoCancelar="Cancelar"
+      enviando={registrar.isPending}
+      enviar={(data) =>
+        registrar.mutateAsync({ id: solicitud.id, data }).then(onCreado)
+      }
+      onCancelar={onCancelar}
+    />
   )
 }
