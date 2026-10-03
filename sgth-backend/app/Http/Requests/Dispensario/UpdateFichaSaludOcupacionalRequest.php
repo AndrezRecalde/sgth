@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Dispensario;
 
+use App\Catalogos\FactoresRiesgoMsp;
 use App\Enums\AptitudMedica;
 use App\Enums\CategoriaRiesgoLaboral;
 use App\Enums\RegionExamenFisico;
@@ -23,8 +24,6 @@ class UpdateFichaSaludOcupacionalRequest extends FormRequest
     {
         return [
             'ficha' => ['required', 'array'],
-            'ficha.servidor_id' => ['sometimes', 'nullable', 'integer', 'exists:servidores,id'],
-            'ficha.postulante_id' => ['sometimes', 'nullable', 'integer', 'exists:postulantes,id'],
             'ficha.puesto_id' => ['nullable', 'integer', 'exists:puestos,id'],
             'ficha.accidente_trabajo_id' => ['nullable', 'integer', 'exists:accidentes_trabajo,id'],
             'ficha.numero_archivo' => ['nullable', 'string', 'max:50'],

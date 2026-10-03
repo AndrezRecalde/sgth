@@ -74,6 +74,10 @@ export function FemoDetalleView({ id }: Props) {
     )
   }
 
+  // Al editar, la sección A necesita el sexo (decide el bloque reproductivo),
+  // el grupo sanguíneo y la cédula, igual que al crear la ficha.
+  const persona = ficha.servidor ?? ficha.postulante ?? null
+
   const tipoLabel = TIPO_FICHA_OPTIONS.find(o => o.value === ficha.tipo_ficha)?.label ?? ficha.tipo_ficha
   const aptitudLabel = APTITUD_OPTIONS.find(o => o.value === ficha.aptitud)?.label ?? ficha.aptitud
 
@@ -124,6 +128,9 @@ export function FemoDetalleView({ id }: Props) {
               onAntecedentesChange={wizard.setAntecedentes}
               onAntecedenteReproductivoChange={wizard.setAntecedenteReproductivo}
               onConsumoSustanciasChange={wizard.setConsumoSustancias}
+              sexo={persona?.genero ?? null}
+              tipoSangre={persona?.tipo_sangre ?? null}
+              cedula={persona?.cedula}
             />
           )}
           {wizard.active === 1 && (
@@ -135,7 +142,7 @@ export function FemoDetalleView({ id }: Props) {
           {wizard.active === 2 && (
             <FemoPaso2
               fichaData={wizard.fichaData}
-              puestoId={null}
+              puestoId={ficha.puesto_id ?? null}
               actividadesRiesgo={wizard.actividadesRiesgo}
               factoresRiesgo={wizard.factoresRiesgo}
               empleosAnteriores={wizard.empleosAnteriores}
