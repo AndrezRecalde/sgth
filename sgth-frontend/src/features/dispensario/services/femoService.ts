@@ -124,7 +124,7 @@ export interface FichaSaludOcupacional {
   grupo_adulto_mayor?:           boolean
   porcentaje_discapacidad?:      string | null
   lateralidad?:                  'derecha' | 'izquierda' | null
-  aptitud:                       string
+  aptitud?:                      string | null
   restricciones?:                string | null
   observaciones?:                string | null
   enfermedad_actual?:            string | null
@@ -171,9 +171,17 @@ export interface FichaSaludOcupacional {
   examen_fisico?:            FemoExamenFisicoItem[]
   antecedente_reproductivo?: FemoAntecedenteReproductivo | null
   consumo_sustancias?:       FemoConsumoSustancia[]
+  /** La solicitud que la ficha atiende: en curso, la ficha es un borrador. */
+  solicitud?: {
+    id:        number
+    estado:    string
+    dictamen?: string | null
+  } | null
 }
 
 export interface CrearFemoData {
+  /** Obligatorio al crear: de ella salen la persona y el tipo de evaluación. */
+  solicitud_id?: number
   ficha: {
     servidor_id?:             number | null
     postulante_id?:           number | null
@@ -181,7 +189,7 @@ export interface CrearFemoData {
     numero_archivo?:          string | null
     fecha_evaluacion:         string
     tipo_ficha:               string
-    aptitud:                  string
+    aptitud?:                 string | null
     puesto_id?:               number | null
     puesto_trabajo?:          string | null
     puesto_trabajo_ciuo?:     string | null

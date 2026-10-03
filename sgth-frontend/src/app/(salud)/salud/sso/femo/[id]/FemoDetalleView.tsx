@@ -79,7 +79,10 @@ export function FemoDetalleView({ id }: Props) {
   const persona = ficha.servidor ?? ficha.postulante ?? null
 
   const tipoLabel = TIPO_FICHA_OPTIONS.find(o => o.value === ficha.tipo_ficha)?.label ?? ficha.tipo_ficha
-  const aptitudLabel = APTITUD_OPTIONS.find(o => o.value === ficha.aptitud)?.label ?? ficha.aptitud
+  const aptitudLabel = APTITUD_OPTIONS.find(o => o.value === ficha.aptitud)?.label ?? 'Sin definir'
+  // Solo el borrador de una evaluación en curso se edita: con el dictamen
+  // emitido la ficha es el respaldo de lo certificado (el backend lo exige).
+  const editable = ficha.solicitud?.estado === 'en_proceso'
 
   const handleGuardar = () => {
     const payload = wizard.construirPayload()
@@ -215,12 +218,14 @@ export function FemoDetalleView({ id }: Props) {
             >
               Descargar PDF
             </Button>
-            <Button
-              leftSection={<IconEdit size={14} />}
-              onClick={() => setModo('edicion')}
-            >
-              Editar
-            </Button>
+            {editable && (
+              <Button
+                leftSection={<IconEdit size={14} />}
+                onClick={() => setModo('edicion')}
+              >
+                Editar
+              </Button>
+            )}
           </Group>
         }
       />
@@ -232,7 +237,7 @@ export function FemoDetalleView({ id }: Props) {
         </Card>
         <Card withBorder radius="md" p="md">
           <Text size="xs" c="dimmed" tt="uppercase" fw={600}>Aptitud médica</Text>
-          <StatusBadge tone={TONO_APTITUD[ficha.aptitud] ?? 'neutral'} size="lg" mt={4}>
+          <StatusBadge tone={TONO_APTITUD[ficha.aptitud ?? ''] ?? 'neutral'} size="lg" mt={4}>
             {aptitudLabel}
           </StatusBadge>
         </Card>

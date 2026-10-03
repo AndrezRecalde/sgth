@@ -12,6 +12,7 @@ use App\Models\Dispensario\FemoExamen;
 use App\Models\Dispensario\FemoExamenFisico;
 use App\Models\Dispensario\FemoFactorRiesgo;
 use App\Models\Dispensario\FichaSaludOcupacional;
+use App\Models\Dispensario\SolicitudCertificacionMedica;
 use App\Models\Estructura\Puesto;
 use App\Models\Expediente\Servidor;
 use App\Models\Seleccion\Postulante;
@@ -78,6 +79,7 @@ final class FemoService
             'examenFisico',
             'antecedenteReproductivo',
             'consumoSustancias',
+            'solicitud:id,ficha_femo_id,estado,tipo_evento,dictamen',
         ])->findOrFail($id);
     }
 
@@ -136,14 +138,47 @@ final class FemoService
         }
     }
 
+    /**
+     * Registra la ficha FEMO de una solicitud y la enlaza a ella.
+     *
+     * La ficha nace como borrador de la solicitud en curso: se puede seguir
+     * editando hasta que el médico emite el dictamen. Una solicitud tiene una
+     * sola ficha; antes, cerrar el modal del dictamen dejaba la ficha suelta y
+     * «Continuar FEMO» creaba otra.
+     *
+     * La persona y el tipo de evaluación los fija la solicitud, no el cliente.
+     * Sin `solicitud_id` (solo llamadas internas y pruebas) se respeta lo que
+     * venga en la ficha.
+     */
     public function registrar(array $datos, int $evaluadorId): FichaSaludOcupacional
     {
-        $genero = ! empty($datos['ficha']['servidor_id'])
-            ? Servidor::whereKey($datos['ficha']['servidor_id'])->value('genero')
-            : Postulante::whereKey($datos['ficha']['postulante_id'] ?? null)->value('genero');
-        $this->validarGruposPorSexo($datos['ficha'], $genero);
-
         return DB::transaction(function () use ($datos, $evaluadorId) {
+            $solicitud = null;
+            if (! empty($datos['solicitud_id'])) {
+                $solicitud = SolicitudCertificacionMedica::lockForUpdate()
+                    ->findOrFail($datos['solicitud_id']);
+
+                if ($solicitud->estado !== 'en_proceso') {
+                    throw ValidationException::withMessages([
+                        'solicitud_id' => 'La solicitud no está en curso: inicie la evaluación desde la bandeja.',
+                    ]);
+                }
+                if ($solicitud->ficha_femo_id) {
+                    throw ValidationException::withMessages([
+                        'solicitud_id' => 'Esta solicitud ya tiene su ficha FEMO; ábrala para continuarla.',
+                    ]);
+                }
+
+                $datos['ficha']['servidor_id'] = $solicitud->servidor_id;
+                $datos['ficha']['postulante_id'] = $solicitud->postulante_id;
+                $datos['ficha']['tipo_ficha'] = $solicitud->tipo_evento;
+            }
+
+            $genero = ! empty($datos['ficha']['servidor_id'])
+                ? Servidor::whereKey($datos['ficha']['servidor_id'])->value('genero')
+                : Postulante::whereKey($datos['ficha']['postulante_id'] ?? null)->value('genero');
+            $this->validarGruposPorSexo($datos['ficha'], $genero);
+
             $ficha = FichaSaludOcupacional::create([
                 ...$this->sellarPuesto($datos['ficha']),
                 'evaluador_id' => $evaluadorId,
@@ -220,6 +255,8 @@ final class FemoService
                 ]);
             }
 
+            $solicitud?->update(['ficha_femo_id' => $ficha->id]);
+
             return $this->obtener($ficha->id);
         });
     }
@@ -232,12 +269,27 @@ final class FemoService
         return DB::transaction(function () use ($id, $datos, $usuarioId) {
             $ficha = FichaSaludOcupacional::findOrFail($id);
 
+            // Solo se edita el borrador de una evaluación en curso. Con el
+            // dictamen emitido, la ficha es el respaldo de lo que se certificó:
+            // cambiarle la aptitud después dejaba un certificado que ya no
+            // coincidía con su ficha.
+            $solicitud = SolicitudCertificacionMedica::where('ficha_femo_id', $ficha->id)
+                ->lockForUpdate()
+                ->first();
+            if ($solicitud?->estado !== 'en_proceso') {
+                throw ValidationException::withMessages([
+                    'ficha' => $solicitud?->estado === 'completada'
+                        ? 'La ficha ya tiene el dictamen emitido y no se puede modificar.'
+                        : 'Esta ficha no pertenece a una evaluación en curso y no se puede modificar.',
+                ]);
+            }
+
             // La ficha es de una persona y no cambia de dueño al editarla: el
             // PATCH ya no declara `servidor_id` ni `postulante_id`, así que no
             // llegan validados. Se quitan también aquí por si otro llamador los
             // manda; dejar los dos en nulo rompía el CHECK `chk_ficha_persona`.
             $campos = $datos['ficha'] ?? [];
-            unset($campos['servidor_id'], $campos['postulante_id']);
+            unset($campos['servidor_id'], $campos['postulante_id'], $campos['tipo_ficha']);
 
             $this->validarGruposPorSexo(
                 $campos,

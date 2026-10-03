@@ -26,10 +26,12 @@ export function useCrearFemo() {
   return useMutation({
     mutationFn: (data: CrearFemoData) => femoService.crear(data),
     onSuccess: () => {
-      notificar.exito('FEMO registrada', 'La ficha fue registrada correctamente.')
+      notificar.exito('Ficha guardada', 'Puede seguir editándola hasta emitir el dictamen.')
       qc.invalidateQueries({ queryKey: ['femos'] })
+      // La solicitud gana su `ficha_femo_id`: «Continuar FEMO» la retoma.
+      qc.invalidateQueries({ queryKey: ['solicitudes-certificacion'] })
     },
-    onError: notificar.alFallar('No se pudo registrar la FEMO'),
+    onError: notificar.alFallar('No se pudo guardar la ficha'),
   })
 }
 
@@ -42,10 +44,10 @@ export function useActualizarFemo() {
       data: Partial<CrearFemoData>
     }) => femoService.actualizar(id, data),
     onSuccess: (_, { id }) => {
-      notificar.exito('FEMO actualizada', 'Los cambios fueron guardados.')
+      notificar.exito('Ficha guardada', 'Los cambios fueron guardados.')
       qc.invalidateQueries({ queryKey: ['femos'] })
       qc.invalidateQueries({ queryKey: ['femo', id] })
     },
-    onError: notificar.alFallar('No se pudo actualizar la FEMO'),
+    onError: notificar.alFallar('No se pudo guardar la ficha'),
   })
 }

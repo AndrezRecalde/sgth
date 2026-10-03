@@ -22,7 +22,8 @@ export const fichaBaseSchema = z.object({
   porcentaje_discapacidad:       z.string().optional().nullable(),
   /** Mano dominante. Observación clínica del formulario 028. */
   lateralidad:                   z.enum(['derecha','izquierda']).optional().nullable(),
-  aptitud:                       z.enum(['apto','apto_con_restricciones','en_observacion','no_apto']),
+  /** Nula mientras la ficha es borrador; se exige al emitir el dictamen. */
+  aptitud:                       z.enum(['apto','apto_con_restricciones','en_observacion','no_apto']).optional().nullable(),
   restricciones:                 z.string().optional().nullable(),
   observaciones:                 z.string().optional().nullable(),
   enfermedad_actual:             z.string().optional().nullable(),

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Dispensario\FichaSaludOcupacional;
+use App\Models\Dispensario\SolicitudCertificacionMedica;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -38,6 +39,34 @@ function servidorFemoEdicion(string $cedula): Servidor
     ]);
 }
 
+function solicitudFemoEdicion(User $medico, Servidor $servidor, string $tipo = 'retiro'): SolicitudCertificacionMedica
+{
+    return SolicitudCertificacionMedica::create([
+        'tipo_evento' => $tipo,
+        'origen' => 'expediente',
+        'servidor_id' => $servidor->id,
+        'cedula_paciente' => $servidor->cedula,
+        'nombres_paciente' => "{$servidor->nombre} {$servidor->apellido}",
+        'solicitado_por' => $medico->id,
+        'estado' => 'en_proceso',
+        'fecha_limite' => now()->addDays(7),
+    ]);
+}
+
+/** El borrador de la ficha de una solicitud en curso, creado por HTTP. */
+function borradorFemoEdicion($test, User $medico, SolicitudCertificacionMedica $solicitud): FichaSaludOcupacional
+{
+    $id = $test->actingAs($medico, 'sanctum')
+        ->postJson('/api/v1/dispensario/fichas-sso', [
+            'solicitud_id' => $solicitud->id,
+            'ficha' => ['fecha_evaluacion' => '2026-10-01'],
+        ])
+        ->assertCreated()
+        ->json('datos.id');
+
+    return FichaSaludOcupacional::findOrFail($id);
+}
+
 /** Los campos que el asistente pedía y no enviaba. */
 function camposAntesPerdidosFemo(): array
 {
@@ -56,15 +85,15 @@ function camposAntesPerdidosFemo(): array
 beforeEach(function () {
     $this->medico = medicoFemoEdicion();
     $this->servidor = servidorFemoEdicion('0804258986');
+    $this->solicitud = solicitudFemoEdicion($this->medico, $this->servidor);
 });
 
 test('la ficha guarda los campos de A, B y C que antes se perdían', function () {
     $respuesta = $this->actingAs($this->medico, 'sanctum')
         ->postJson('/api/v1/dispensario/fichas-sso', [
+            'solicitud_id' => $this->solicitud->id,
             'ficha' => [
-                'servidor_id' => $this->servidor->id,
                 'fecha_evaluacion' => '2026-10-01',
-                'tipo_ficha' => 'retiro',
                 'aptitud' => 'apto',
                 ...camposAntesPerdidosFemo(),
             ],
@@ -84,14 +113,7 @@ test('la ficha guarda los campos de A, B y C que antes se perdían', function ()
 });
 
 test('editar una ficha por HTTP funciona y guarda lo editado', function () {
-    $ficha = FichaSaludOcupacional::create([
-        'servidor_id' => $this->servidor->id,
-        'evaluador_id' => $this->medico->id,
-        'fecha_evaluacion' => '2026-10-01',
-        'tipo_ficha' => 'periodica',
-        'aptitud' => 'apto',
-        'estado' => true,
-    ]);
+    $ficha = borradorFemoEdicion($this, $this->medico, $this->solicitud);
 
     $this->actingAs($this->medico, 'sanctum')
         ->patchJson("/api/v1/dispensario/fichas-sso/{$ficha->id}", [
@@ -116,14 +138,7 @@ test('editar una ficha por HTTP funciona y guarda lo editado', function () {
 });
 
 test('vaciar el bloque reproductivo al editar lo borra en vez de dar 500', function () {
-    $ficha = FichaSaludOcupacional::create([
-        'servidor_id' => $this->servidor->id,
-        'evaluador_id' => $this->medico->id,
-        'fecha_evaluacion' => '2026-10-01',
-        'tipo_ficha' => 'periodica',
-        'aptitud' => 'apto',
-        'estado' => true,
-    ]);
+    $ficha = borradorFemoEdicion($this, $this->medico, $this->solicitud);
     $ficha->antecedenteReproductivo()->create(['gestas' => 2]);
 
     $this->actingAs($this->medico, 'sanctum')
@@ -138,14 +153,7 @@ test('vaciar el bloque reproductivo al editar lo borra en vez de dar 500', funct
 
 test('editar una ficha no la cambia de persona', function () {
     $otro = servidorFemoEdicion('0802704171');
-    $ficha = FichaSaludOcupacional::create([
-        'servidor_id' => $this->servidor->id,
-        'evaluador_id' => $this->medico->id,
-        'fecha_evaluacion' => '2026-10-01',
-        'tipo_ficha' => 'periodica',
-        'aptitud' => 'apto',
-        'estado' => true,
-    ]);
+    $ficha = borradorFemoEdicion($this, $this->medico, $this->solicitud);
 
     $this->actingAs($this->medico, 'sanctum')
         ->patchJson("/api/v1/dispensario/fichas-sso/{$ficha->id}", [

@@ -27,6 +27,7 @@ class CoberturaCertificacionExport implements FromCollection, WithHeadings, Shou
     private const DICTAMENES = [
         'apto' => 'Apto',
         'apto_con_restricciones' => 'Apto con restricciones',
+        'en_observacion' => 'Apto en observación',
         'no_apto' => 'No apto',
     ];
 
