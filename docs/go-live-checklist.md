@@ -68,6 +68,16 @@
   NEXT_PUBLIC_API_URL sin definir (o relativa, /api/v1). Una URL
   absoluta a otro dominio rompe el inicio de sesión.
 □ SESSION_SECURE_COOKIE=true en el .env de Laravel
+□ TRUSTED_PROXIES en el .env de Laravel con las IP/rangos de lo que hay
+  DELANTE de Laravel: el nginx del despliegue y, si reenvía /api, el
+  contenedor de Next. Con docker compose, el rango de la red
+  sgth_prod_network (docker network inspect sgth-prod_sgth_prod_network).
+  Sin esto, todo llega con la IP del proxy: el límite de 30 fallos de
+  login por IP lo comparte la institución entera y bloquea a todos a la
+  vez. Nunca `*`: se ignora a propósito, porque con él cualquiera que
+  llegue directo a Laravel se inventa la IP y esquiva el límite.
+  Comprobar: dos personas desde equipos distintos fallan la clave 5
+  veces cada una; la segunda NO debe quedar bloqueada por la primera.
   Marca la cookie del token como Secure. Con nginx terminando TLS,
   Laravel recibe http y sin esta variable la cookie saldría sin Secure.
 □ HTTPS forzado en Nginx (redirigir HTTP a HTTPS)

@@ -70,6 +70,28 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Proxies de confianza
+    |--------------------------------------------------------------------------
+    |
+    | Quién está delante de Laravel reenviando peticiones: el nginx del
+    | despliegue, el servidor de Next cuando hace de rewrite de /api. Solo a
+    | ellos se les cree la cabecera X-Forwarded-For.
+    |
+    | Sin esto, detrás de un proxy toda la institución tiene la IP del proxy:
+    | el límite de 30 fallos de login por IP lo comparten todos, y el registro
+    | de actividad apunta siempre a la misma dirección. Tampoco se sabe que la
+    | petición llegó por HTTPS, y la cookie del token sale sin `Secure`.
+    |
+    | Lista de IP o rangos CIDR separados por comas. Sin definir, no se confía
+    | en nadie. Nunca `*`: con eso cualquiera que llegue directo a Laravel se
+    | inventa la IP que quiera y esquiva el límite de intentos.
+    |
+    */
+
+    'trusted_proxies' => env('TRUSTED_PROXIES'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |
