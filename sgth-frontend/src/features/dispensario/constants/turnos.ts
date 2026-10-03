@@ -74,3 +74,10 @@ export const TURNO_PENDIENTE: readonly string[] = ['en_espera', 'en_sala']
 
 /** Recién llegado: aún sin triaje. Es el único estado desde el que se cancela desde la cola. */
 export const EN_ESPERA = 'en_espera'
+
+/** Cuánto lleva esperando: «12 min», «1 h 05 min». */
+export function tiempoDeEspera(ms: number): string {
+  const minutos = Math.max(0, Math.floor(ms / 60_000))
+  if (minutos < 60) return `${minutos} min`
+  return `${Math.floor(minutos / 60)} h ${String(minutos % 60).padStart(2, '0')} min`
+}

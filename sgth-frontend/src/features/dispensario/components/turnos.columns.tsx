@@ -1,7 +1,7 @@
 'use client'
 
 import {
-  TONO_TURNO, ESTADO_TURNO_LABELS, TURNO_PENDIENTE, EN_ESPERA, turnoCerrado,
+  TONO_TURNO, ESTADO_TURNO_LABELS, TURNO_PENDIENTE, EN_ESPERA, turnoCerrado, tiempoDeEspera,
 } from '../constants/turnos'
 import { Text, Group, Stack } from '@mantine/core'
 import {
@@ -21,12 +21,6 @@ interface ColumnActions {
   ahora:          number
 }
 
-/** «12 min», «1 h 05 min». */
-function duracion(ms: number): string {
-  const minutos = Math.max(0, Math.floor(ms / 60_000))
-  if (minutos < 60) return `${minutos} min`
-  return `${Math.floor(minutos / 60)} h ${String(minutos % 60).padStart(2, '0')} min`
-}
 
 export function getTurnosColumns(
   actions: ColumnActions
@@ -115,7 +109,7 @@ export function getTurnosColumns(
                 aquí repetía la del filtro; esto es lo que ayuda a decidir. */}
             {esperando && (
               <Text size="xs" c="dimmed">
-                espera {duracion(actions.ahora - llegada.getTime())}
+                espera {tiempoDeEspera(actions.ahora - llegada.getTime())}
               </Text>
             )}
           </Stack>

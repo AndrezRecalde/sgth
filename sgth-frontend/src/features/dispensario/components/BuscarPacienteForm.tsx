@@ -1,125 +1,107 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import {
-  Stack,
-  TextInput,
-  Button,
-  Alert,
-  Text,
-  ActionIcon,
-  Card,
-  ThemeIcon,
-  Center,
-} from "@mantine/core";
-import {
-  IconSearch,
-  IconX,
-  IconInfoCircle,
-  IconUserSearch,
-} from "@tabler/icons-react";
-import { useContainedInput } from "@/hooks/useContainedInput";
-import { getApiErrorMessage } from "@/types/api";
-import { useBuscarPaciente } from "../hooks/usePaciente";
-import { useCrearHistoriaClinica } from "../hooks/useHistoriaClinica";
-import { PacienteCard } from "./PacienteCard";
-import type { PacienteEncontrado } from "../services/pacienteService";
+import { useState } from 'react'
+import { Stack, TextInput, Button, Alert, Text, ActionIcon, Group } from '@mantine/core'
+import { IconSearch, IconX, IconInfoCircle } from '@tabler/icons-react'
+import { useContainedInput } from '@/hooks/useContainedInput'
+import { getApiErrorMessage } from '@/types/api'
+import { hoyIso } from '@/lib/fecha'
+import { useBuscarPaciente } from '../hooks/usePaciente'
+import { useCrearHistoriaClinica } from '../hooks/useHistoriaClinica'
+import { useColaTurnos } from '../hooks/useAgenda'
+import { TURNO_PENDIENTE } from '../constants/turnos'
+import { PacienteCard, type AccionPaciente } from './PacienteCard'
+import type { PacienteEncontrado } from '../services/pacienteService'
+import type { AgendaMedica } from '../services/agendaService'
 
 interface Props {
-  onPacienteListo: (
-    paciente: PacienteEncontrado,
-    historiaClinicaId: number,
-  ) => void;
+  onElegir:       (paciente: PacienteEncontrado, accion: AccionPaciente) => void
+  onTomarTriaje?: (turno: AgendaMedica) => void
 }
 
-export function BuscarPacienteForm({ onPacienteListo }: Props) {
-  const contained = useContainedInput();
-  const [cedula, setCedula] = useState("");
+/** Abierto hoy: esperando, listo para pasar o ya con el profesional. */
+const ABIERTOS = [...TURNO_PENDIENTE, 'en_consulta']
 
-  const buscar = useBuscarPaciente();
-  const crearHistoria = useCrearHistoriaClinica();
+/**
+ * Buscar al paciente por cédula.
+ *
+ * Era una tarjeta con un icono de 56 px, título y descripción alrededor de un
+ * solo campo; ahora es el campo con su botón al lado, y el cursor ya está en
+ * él al entrar y al volver de atender a alguien: no hace falta tocar el ratón
+ * para empezar con el siguiente.
+ */
+export function BuscarPacienteForm({ onElegir, onTomarTriaje }: Props) {
+  const contained = useContainedInput()
+  const [cedula, setCedula] = useState('')
+  // La historia recién creada, para no tener que volver a buscar.
+  const [historiaCreada, setHistoriaCreada] = useState<number | null>(null)
+
+  const buscar = useBuscarPaciente()
+  const crearHistoria = useCrearHistoriaClinica()
+  const { data: cola } = useColaTurnos({ fecha: hoyIso(), per_page: 200 })
+
+  const encontrado = buscar.data
+  const paciente = encontrado && historiaCreada
+    ? { ...encontrado, tiene_historia_clinica: true, historia_clinica_id: historiaCreada }
+    : encontrado
+
+  const turnoAbierto = paciente && cola?.data.find((t) =>
+    ABIERTOS.includes(t.estado) && (paciente.tipo === 'servidor'
+      ? t.servidor_id === paciente.id
+      : t.carga_familiar_id === paciente.id),
+  )
+
+  const limpiar = () => {
+    buscar.reset()
+    setHistoriaCreada(null)
+  }
 
   const handleBuscar = () => {
-    if (!cedula.trim()) return;
-    buscar.mutate(cedula.trim());
-  };
+    if (!cedula.trim()) return
+    setHistoriaCreada(null)
+    buscar.mutate(cedula.trim())
+  }
 
-  const handleCrearHistoria = async () => {
-    const paciente = buscar.data;
-    if (!paciente) return;
-
-    try {
-      const data = await crearHistoria.mutateAsync(
-        paciente.tipo === "servidor"
-          ? { servidor_id: paciente.id }
-          : { carga_familiar_id: paciente.id },
-      );
-
-      onPacienteListo(
-        {
-          ...paciente,
-          tiene_historia_clinica: true,
-          historia_clinica_id: data.id,
-        },
-        data.id,
-      );
-    } catch {
-      // El hook de mutación ya notifica el error.
-    }
-  };
-
-  const handleContinuar = () => {
-    const paciente = buscar.data;
-    if (!paciente || !paciente.historia_clinica_id) return;
-    onPacienteListo(paciente, paciente.historia_clinica_id);
-  };
+  const handleCrearHistoria = () => {
+    if (!encontrado) return
+    crearHistoria.mutate(
+      encontrado.tipo === 'servidor'
+        ? { servidor_id: encontrado.id }
+        : { carga_familiar_id: encontrado.id },
+      { onSuccess: (historia) => setHistoriaCreada(historia.id) },
+    )
+  }
 
   return (
-    <Card padding="xl" withBorder>
-      <Stack gap="lg">
-        <Center>
-          <Stack gap={4} align="center">
-            <ThemeIcon variant="light" size={56}>
-              <IconUserSearch size={28} />
-            </ThemeIcon>
-            <Text fw={600} size="md" mt={4}>
-              Buscar paciente
-            </Text>
-            <Text size="xs" c="dimmed" ta="center" maw={320}>
-              Ingrese la cédula del servidor o de un familiar registrado como
-              carga familiar
-            </Text>
-          </Stack>
-        </Center>
-
+    <Stack gap="md">
+      <Group align="flex-end" gap="sm" wrap="nowrap">
         <TextInput
-          label="Cédula del paciente"
+          label="Cédula del servidor o del familiar"
           placeholder="Ej: 0801234567"
+          autoFocus
+          inputMode="numeric"
           {...contained}
           value={cedula}
           onChange={(e) => {
-            setCedula(e.currentTarget.value);
-            // La tarjeta del paciente anterior seguía a la vista, con su
-            // «Continuar», aunque la cédula ya fuese otra.
-            if (buscar.data || buscar.isError) buscar.reset();
+            setCedula(e.currentTarget.value)
+            // La tarjeta del paciente anterior seguía a la vista, con sus
+            // botones, aunque la cédula ya fuese otra.
+            if (buscar.data || buscar.isError) limpiar()
           }}
           onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              handleBuscar();
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              handleBuscar()
             }
           }}
-          style={{ flex: 1 }}
+          flex={1}
           rightSection={
             cedula ? (
               <ActionIcon
                 size="sm"
                 variant="subtle"
                 aria-label="Borrar la cédula"
-                onClick={() => {
-                  setCedula("");
-                  buscar.reset();
-                }}
+                onClick={() => { setCedula(''); limpiar() }}
               >
                 <IconX size={14} />
               </ActionIcon>
@@ -127,38 +109,36 @@ export function BuscarPacienteForm({ onPacienteListo }: Props) {
           }
         />
         <Button
-          size="md"
-          leftSection={<IconSearch size={14} />}
+          leftSection={<IconSearch size={16} />}
           loading={buscar.isPending}
           onClick={handleBuscar}
+          // La altura del campo `contained`, para que no quede un escalón.
+          h={48}
         >
           Buscar
         </Button>
+      </Group>
 
-        {buscar.isError && (
-          <Alert
-            icon={<IconInfoCircle size={14} />}
-            color="red"
-            variant="light"
-          >
-            {/* El mensaje del servidor: «no se encontró» cuando es eso, y el
-                motivo real cuando falla otra cosa. Antes un 403 o la red caída
-                también decían que el paciente no existía. */}
-            <Text size="xs">
-              {getApiErrorMessage(buscar.error, "No se pudo buscar al paciente.")}
-            </Text>
-          </Alert>
-        )}
+      {buscar.isError && (
+        <Alert icon={<IconInfoCircle size={14} />} color="red" variant="light">
+          {/* El mensaje del servidor: «no se encontró» cuando es eso, y el
+              motivo real cuando falla otra cosa. */}
+          <Text size="xs">
+            {getApiErrorMessage(buscar.error, 'No se pudo buscar al paciente.')}
+          </Text>
+        </Alert>
+      )}
 
-        {buscar.data && (
-          <PacienteCard
-            paciente={buscar.data}
-            onCrearHistoria={handleCrearHistoria}
-            onContinuar={handleContinuar}
-            creandoHistoria={crearHistoria.isPending}
-          />
-        )}
-      </Stack>
-    </Card>
-  );
+      {paciente && (
+        <PacienteCard
+          paciente={paciente}
+          creandoHistoria={crearHistoria.isPending}
+          onCrearHistoria={handleCrearHistoria}
+          onElegir={(accion) => onElegir(paciente, accion)}
+          turnoAbierto={turnoAbierto}
+          onTomarTriaje={onTomarTriaje}
+        />
+      )}
+    </Stack>
+  )
 }

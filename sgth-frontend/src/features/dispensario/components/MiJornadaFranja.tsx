@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { Anchor, Group, SimpleGrid, Text } from '@mantine/core'
 import {
-  IconClockHour4, IconFileText, IconHeartbeat, IconShieldCheck, IconStethoscope, IconUserCheck,
+  IconClockHour4, IconFileText, IconStethoscope, IconUserCheck,
 } from '@tabler/icons-react'
 import { StatCard } from '@/components/ui'
 import { ROUTES } from '@/config/routes'
@@ -31,10 +31,9 @@ export function MiJornadaFranja({ contexto }: Props) {
   // los datos empujaba hacia abajo lo de la pantalla —el buscador de cédula
   // incluido, con el clic de quien ya iba a escribir.
   if (isLoading) {
-    const tarjetas = contexto === 'enfermeria' ? 3 : 4
     return (
-      <SimpleGrid cols={{ base: 1, xs: tarjetas === 3 ? 3 : 2, md: tarjetas }} spacing="md">
-        {Array.from({ length: tarjetas }, (_, i) => (
+      <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }} spacing="md">
+        {Array.from({ length: 4 }, (_, i) => (
           <StatCard key={i} label="" value={0} icon={IconClockHour4} loading />
         ))}
       </SimpleGrid>
@@ -43,26 +42,8 @@ export function MiJornadaFranja({ contexto }: Props) {
 
   if (!data?.perfil) return null
 
-  if (data.perfil === 'enfermeria') {
-    return (
-      <>
-        <SimpleGrid cols={{ base: 1, xs: 3 }} spacing="md">
-          <StatCard label="Por triar" value={data.hoy.por_triar} icon={IconHeartbeat} loading={isLoading}
-            tone={data.hoy.por_triar ? 'warning' : undefined} hint="Turnos de hoy esperando sus signos" />
-          <StatCard label="Triaje de salud ocupacional" value={data.hoy.triaje_sso} icon={IconShieldCheck}
-            loading={isLoading} hint="Evaluaciones que esperan a Enfermería" />
-          <StatCard label="Mis servicios de hoy" value={data.hoy.mis_atenciones} icon={IconUserCheck} loading={isLoading} />
-        </SimpleGrid>
-        <Text size="xs" c="dimmed">
-          Este mes: {plural(data.mes.atenciones, 'servicio', 'servicios')} y {plural(data.mes.triajes, 'triaje', 'triajes')}
-          {data.mes.por_servicio[0] && ` · la más frecuente, ${data.mes.por_servicio[0].servicio.toLowerCase()}`}.
-          {data.hoy.triaje_sso > 0 && (
-            <> <Anchor size="xs" component={Link} href={ROUTES.SALUD.ENFERMERIA_SSO}>Ir a Atención SSO</Anchor></>
-          )}
-        </Text>
-      </>
-    )
-  }
+  // La de Enfermería va en el panel «Hoy en Enfermería», junto al buscador.
+  if (data.perfil === 'enfermeria') return null
 
   const { hoy, pendientes, mes } = data
   const sinTriaje = hoy.esperando - hoy.listos
