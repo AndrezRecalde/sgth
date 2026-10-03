@@ -1,25 +1,13 @@
 'use client'
 
-import { useMemo } from 'react'
-import {
-  Stack, Group, NumberInput, Button, SimpleGrid,
-  Textarea, Text, Card, Avatar, Alert,
-} from '@mantine/core'
-import {
-  useForm, Controller, useWatch, type DefaultValues,
-} from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { IconCheck, IconUser, IconUsers, IconScale, IconAlertTriangle } from '@tabler/icons-react'
-import { useContainedInput } from '@/hooks/useContainedInput'
+import { Stack, Group, Text, Card, Avatar } from '@mantine/core'
+import { IconUser, IconUsers } from '@tabler/icons-react'
+import { StatusBadge } from '@/components/ui'
 import { useRegistrarTriaje } from '../hooks/useTriaje'
 import { UltimoTriajeReferencia } from './UltimoTriajeReferencia'
 import { TomasPreviasTriaje } from './TomasPreviasTriaje'
-import { triajeSchema, type TriajeFormData } from '../schemas/triaje.schema'
-import {
-  hallazgos, NIVEL_ALERTA, calcularImc, clasificacionImc,
-} from '../constants/signosVitales'
-import { SectionCard, StatusBadge } from '@/components/ui'
-import { SEMANTIC_COLOR } from '@/config/design.tokens'
+import { FormularioSignosVitales } from './FormularioSignosVitales'
+import { EDAD_ADULTO, edadEnAnios } from '../constants/signosVitales'
 import type { AgendaMedica } from '../services/agendaService'
 import type { Triaje } from '../services/triajeService'
 
@@ -29,330 +17,72 @@ interface Props {
   onCancelar: () => void
 }
 
-/**
- * Ninguna constante vital arranca con un valor: se teclean todas. Las claves
- * se omiten en vez de escribirlas `undefined`, que es lo que antes obligaba a
- * una aserción de tipo — el esquema las declara `number`, no `number |
- * undefined` (ver regla 09).
- */
-const VALORES_INICIALES: DefaultValues<TriajeFormData> = {
-  observaciones_enfermera: '',
-}
-
+/** El triaje de un turno: signos vitales antes de pasar con el profesional. */
 export function TriajeForm({ turno, onCreado, onCancelar }: Props) {
-  const contained = useContainedInput()
   const registrar = useRegistrarTriaje()
 
   const esServidor = !!turno.servidor_id
   const nombrePaciente = esServidor
     ? `${turno.servidor?.nombre ?? ''} ${turno.servidor?.apellido ?? ''}`
     : `${turno.carga_familiar?.nombres ?? ''} ${turno.carga_familiar?.apellidos ?? ''}`
-
-  const {
-    control, handleSubmit,
-    formState: { errors },
-  } = useForm<TriajeFormData>({
-    resolver: zodResolver(triajeSchema),
-    defaultValues: VALORES_INICIALES,
-  })
-
-  const peso  = useWatch({ control, name: 'peso_kg' })
-  const talla = useWatch({ control, name: 'talla_cm' })
-
-  const imc = useMemo(
-    () => calcularImc(peso, talla),
-    [peso, talla]
+  const edad = edadEnAnios(
+    esServidor ? turno.servidor?.fecha_nacimiento : turno.carga_familiar?.fecha_nacimiento,
   )
-  const clasificacion = clasificacionImc(imc)
 
-  // Las constantes se vigilan mientras se escriben: el aviso tiene que llegar
-  // con el paciente delante, no al guardar. El nivel que queda registrado lo
-  // decide el backend; esto solo lo adelanta.
-  const constantes = useWatch({ control })
-  const alterados = useMemo(
-    () => hallazgos(constantes as Record<string, number | null | undefined>),
-    [constantes]
-  )
-  const hayCritico = alterados.some((h) => h.nivel === 'critico')
-
-  const onSubmit = (values: TriajeFormData) => {
-    registrar.mutate(
-      { agendaId: turno.id, data: values },
-      { onSuccess: (triaje) => onCreado(triaje) }
-    )
-  }
-
-  return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      <Stack gap="lg">
-
-        <Card withBorder radius="lg" padding="md">
-          <Group justify="space-between" wrap="nowrap">
-            <Group gap="sm">
-              <Avatar radius="xl">
-                {esServidor
-                  ? <IconUser size={16} />
-                  : <IconUsers size={16} />}
-              </Avatar>
-              <Stack gap={0}>
-                <Text size="sm" fw={600}>
-                  {nombrePaciente.trim() || '—'}
-                </Text>
-                <Text size="xs" c="dimmed" ff="monospace">
-                  {turno.folio}
-                </Text>
-              </Stack>
-            </Group>
-            <StatusBadge>
-              {turno.tipo_atencion === 'medicina_general'
-                ? 'Medicina General' : 'Odontología'}
-            </StatusBadge>
-          </Group>
-        </Card>
-
-        <TomasPreviasTriaje agendaId={turno.id} />
-
-        <UltimoTriajeReferencia agendaId={turno.id} />
-
-        <SectionCard title="Antropometría">
-          <Stack gap="md">
-            <SimpleGrid cols={{ base: 1, sm: 2 }}>
-              <Controller
-                name="peso_kg"
-                control={control}
-                render={({ field }) => (
-                  <NumberInput
-                    label="Peso (kg)"
-                    decimalScale={2}
-                    hideControls
-                    {...contained}
-                    value={field.value}
-                    onChange={(v) => field.onChange(Number(v) || undefined)}
-                    error={errors.peso_kg?.message}
-                  />
-                )}
-              />
-              <Controller
-                name="talla_cm"
-                control={control}
-                render={({ field }) => (
-                  <NumberInput
-                    label="Talla (cm)"
-                    decimalScale={1}
-                    hideControls
-                    {...contained}
-                    value={field.value}
-                    onChange={(v) => field.onChange(Number(v) || undefined)}
-                    error={errors.talla_cm?.message}
-                  />
-                )}
-              />
-            </SimpleGrid>
-
-            {imc !== null && (
-              <Alert
-                icon={<IconScale size={14} />}
-                color={SEMANTIC_COLOR[clasificacion.tono]}
-                variant="light"
-                radius="md"
-              >
-                <Text size="xs">
-                  IMC calculado: <strong>{imc}</strong>
-                  {' — '}{clasificacion.texto}
-                </Text>
-              </Alert>
-            )}
-          </Stack>
-        </SectionCard>
-
-        <SectionCard title="Signos vitales">
-          <Stack gap="md">
-            <SimpleGrid cols={{ base: 1, sm: 2 }}>
-              <Controller
-                name="presion_sistolica"
-                control={control}
-                render={({ field }) => (
-                  <NumberInput
-                    label="P. sistólica"
-                    description="Normal: 90–120 mmHg"
-                    hideControls
-                    {...contained}
-                    value={field.value}
-                    onChange={(v) => field.onChange(Number(v) || undefined)}
-                    error={errors.presion_sistolica?.message}
-                  />
-                )}
-              />
-              <Controller
-                name="presion_diastolica"
-                control={control}
-                render={({ field }) => (
-                  <NumberInput
-                    label="P. diastólica"
-                    description="Normal: 60–80 mmHg"
-                    hideControls
-                    {...contained}
-                    value={field.value}
-                    onChange={(v) => field.onChange(Number(v) || undefined)}
-                    error={errors.presion_diastolica?.message}
-                  />
-                )}
-              />
-            </SimpleGrid>
-
-            <SimpleGrid cols={{ base: 1, sm: 2 }}>
-              <Controller
-                name="frecuencia_cardiaca"
-                control={control}
-                render={({ field }) => (
-                  <NumberInput
-                    label="Frec. cardíaca"
-                    description="Normal: 60–100 lpm"
-                    hideControls
-                    {...contained}
-                    value={field.value}
-                    onChange={(v) => field.onChange(Number(v) || undefined)}
-                    error={errors.frecuencia_cardiaca?.message}
-                  />
-                )}
-              />
-              <Controller
-                name="frecuencia_respiratoria"
-                control={control}
-                render={({ field }) => (
-                  <NumberInput
-                    label="Frec. respiratoria"
-                    description="Normal: 12–20 rpm"
-                    hideControls
-                    {...contained}
-                    value={field.value}
-                    onChange={(v) => field.onChange(Number(v) || undefined)}
-                    error={errors.frecuencia_respiratoria?.message}
-                  />
-                )}
-              />
-            </SimpleGrid>
-
-            <SimpleGrid cols={{ base: 1, sm: 2 }}>
-              <Controller
-                name="temperatura_c"
-                control={control}
-                render={({ field }) => (
-                  <NumberInput
-                    label="Temperatura (°C)"
-                    decimalScale={1}
-                    description="Normal: 36.1–37.2 °C"
-                    hideControls
-                    {...contained}
-                    value={field.value}
-                    onChange={(v) => field.onChange(Number(v) || undefined)}
-                    error={errors.temperatura_c?.message}
-                  />
-                )}
-              />
-              <Controller
-                name="saturacion_oxigeno"
-                control={control}
-                render={({ field }) => (
-                  <NumberInput
-                    label="Sat. oxígeno (%)"
-                    decimalScale={1}
-                    description="Normal: 95–100 %"
-                    hideControls
-                    {...contained}
-                    value={field.value}
-                    onChange={(v) => field.onChange(Number(v) || undefined)}
-                    error={errors.saturacion_oxigeno?.message}
-                  />
-                )}
-              />
-            </SimpleGrid>
-
-            <Controller
-              name="glucosa"
-              control={control}
-              render={({ field }) => (
-                <NumberInput
-                  label="Glucosa (opcional)"
-                  decimalScale={1}
-                  description="Normal en ayunas: 70–100 mg/dL"
-                  hideControls
-                  {...contained}
-                  value={field.value ?? undefined}
-                  onChange={(v) => field.onChange(v ? Number(v) : null)}
-                />
-              )}
-            />
-          </Stack>
-        </SectionCard>
-
-        <SectionCard title="Observaciones">
-          <Controller
-            name="observaciones_enfermera"
-            control={control}
-            render={({ field }) => (
-              <Textarea
-                label="Observaciones (opcional)"
-                placeholder="Anotaciones relevantes durante la toma de signos vitales"
-                autosize
-                minRows={2}
-                {...contained}
-                value={field.value ?? ''}
-                onChange={(e) => field.onChange(e.currentTarget.value)}
-              />
-            )}
-          />
-        </SectionCard>
-
-        {alterados.length > 0 && (
-          <Alert
-            icon={<IconAlertTriangle size={16} />}
-            color={hayCritico ? 'red' : 'amber'}
-            variant="light"
-            radius="md"
-            title={
-              hayCritico
-                ? 'Signos vitales críticos'
-                : 'Signos vitales fuera de rango'
-            }
-          >
-            <Stack gap={6}>
-              {alterados.map((h) => (
-                <Group key={h.campo} gap="xs" wrap="nowrap">
-                  <StatusBadge
-                    tone={NIVEL_ALERTA[h.nivel].tono}
-                    size="xs"
-                  >
-                    {NIVEL_ALERTA[h.nivel].etiqueta}
-                  </StatusBadge>
-                  <Text size="xs">
-                    {h.etiqueta}: <strong>{h.valor}</strong>
-                  </Text>
-                </Group>
-              ))}
+  const encabezado = (
+    <Card withBorder radius="lg" padding="md">
+      <Stack gap="xs">
+        <Group justify="space-between" wrap="nowrap">
+          <Group gap="sm">
+            <Avatar radius="xl">
+              {esServidor ? <IconUser size={16} /> : <IconUsers size={16} />}
+            </Avatar>
+            <Stack gap={0}>
+              <Text size="sm" fw={600}>
+                {nombrePaciente.trim() || '—'}
+              </Text>
               <Text size="xs" c="dimmed">
-                {hayCritico
-                  ? 'El turno quedará marcado como crítico en la cola. Valore si el paciente puede esperar.'
-                  : 'El turno quedará marcado en la cola para que el médico lo vea.'}
+                <Text span ff="monospace" inherit>{turno.folio}</Text>
+                {edad !== null && ` · ${edad} ${edad === 1 ? 'año' : 'años'}`}
               </Text>
             </Stack>
-          </Alert>
-        )}
-
-        <Group justify="flex-end" mt="sm">
-          <Button variant="default" onClick={onCancelar}>
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            leftSection={<IconCheck size={14} />}
-            loading={registrar.isPending}
-          >
-            Registrar triaje
-          </Button>
+          </Group>
+          <StatusBadge>
+            {turno.tipo_atencion === 'medicina_general' ? 'Medicina General' : 'Odontología'}
+          </StatusBadge>
         </Group>
-
+        {/* Lo que se escribió al crear el turno: orienta qué mirar al medir. */}
+        {turno.motivo_solicitud && (
+          <Text size="xs">
+            <Text span c="dimmed" inherit>Motivo: </Text>
+            {turno.motivo_solicitud}
+          </Text>
+        )}
       </Stack>
-    </form>
+    </Card>
+  )
+
+  return (
+    <FormularioSignosVitales
+      encabezado={encabezado}
+      contexto={
+        <>
+          <TomasPreviasTriaje agendaId={turno.id} />
+          <UltimoTriajeReferencia agendaId={turno.id} />
+        </>
+      }
+      esMenor={edad !== null && edad < EDAD_ADULTO}
+      consecuencia={{
+        critico:  'El turno quedará marcado como crítico en la cola. Valore si el paciente puede esperar.',
+        atencion: 'El turno quedará marcado en la cola para que el profesional lo vea.',
+      }}
+      textoEnviar="Registrar triaje"
+      textoCancelar="Cancelar"
+      enviando={registrar.isPending}
+      enviar={(data) =>
+        registrar.mutateAsync({ agendaId: turno.id, data }).then(onCreado)
+      }
+      onCancelar={onCancelar}
+    />
   )
 }

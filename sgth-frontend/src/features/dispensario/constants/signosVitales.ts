@@ -20,6 +20,14 @@ export const NIVEL_ALERTA = {
 
 export type NivelAlerta = keyof typeof NIVEL_ALERTA
 
+/**
+ * Por debajo de esta edad el backend no valora las constantes
+ * (`ValoracionSignosVitales::EDAD_ADULTO`): los rangos son de adulto, y a un
+ * niño los mismos números no significan lo mismo. El triaje queda «Sin
+ * valorar».
+ */
+export const EDAD_ADULTO = 15
+
 /** [crítico bajo, atención bajo, atención alto, crítico alto] */
 const RANGOS: Record<string, [number, number, number, number]> = {
   presion_sistolica:       [90, 100, 139, 180],
@@ -31,8 +39,41 @@ const RANGOS: Record<string, [number, number, number, number]> = {
   glucosa:                 [54,  70, 180, 300],
 }
 
-/** Nivel de una constante suelta, para pintar el campo mientras se escribe. */
-export function nivelDeConstante(
+const UNIDADES: Record<string, string> = {
+  presion_sistolica:       'mmHg',
+  presion_diastolica:      'mmHg',
+  frecuencia_cardiaca:     'lpm',
+  frecuencia_respiratoria: 'rpm',
+  temperatura_c:           '°C',
+  saturacion_oxigeno:      '%',
+  glucosa:                 'mg/dL',
+}
+
+/**
+ * El texto de ayuda de cada campo, sacado de los mismos umbrales que disparan
+ * el aviso. Antes era un texto fijo con los rangos de los libros («Normal:
+ * 90–120») que no coincidía con la alerta: 130 se veía fuera de rango y no
+ * avisaba; 95 se veía normal y avisaba.
+ */
+export function rangoSinAlerta(campo: string): string {
+  const rango = RANGOS[campo]
+  if (!rango) return ''
+  const [, desde, hasta] = rango
+  return `Sin alerta: ${desde}–${hasta} ${UNIDADES[campo]}`
+}
+
+/** Años cumplidos a una fecha `AAAA-MM-DD` (o ISO); `null` si no hay fecha. */
+export function edadEnAnios(fechaNacimiento?: string | null): number | null {
+  if (!fechaNacimiento) return null
+  const [a, m, d] = fechaNacimiento.slice(0, 10).split('-').map(Number)
+  const hoy = new Date()
+  const edad = hoy.getFullYear() - a
+  const cumplioEsteAnio = hoy.getMonth() + 1 > m || (hoy.getMonth() + 1 === m && hoy.getDate() >= d)
+  return cumplioEsteAnio ? edad : edad - 1
+}
+
+/** Nivel de una constante suelta. */
+function nivelDeConstante(
   campo: string,
   valor: number | null | undefined,
 ): NivelAlerta | null {
@@ -46,21 +87,6 @@ export function nivelDeConstante(
   if (valor < criticoBajo || valor > criticoAlto) return 'critico'
   if (valor < atencionBajo || valor > atencionAlto) return 'atencion'
   return 'normal'
-}
-
-/** El peor nivel de todas las constantes capturadas. */
-export function nivelGeneral(
-  constantes: Record<string, number | null | undefined>,
-): NivelAlerta {
-  let hayAtencion = false
-
-  for (const campo of Object.keys(RANGOS)) {
-    const nivel = nivelDeConstante(campo, constantes[campo])
-    if (nivel === 'critico') return 'critico'
-    if (nivel === 'atencion') hayAtencion = true
-  }
-
-  return hayAtencion ? 'atencion' : 'normal'
 }
 
 /** Las constantes fuera de rango, con su etiqueta, para listarlas en el aviso. */
@@ -95,8 +121,7 @@ export function calcularImc(
  *
  * Devuelve un `SemanticTone` y no un nombre de color: el significado y el color
  * se deciden en un solo sitio (regla 06), y quien lo pinta lo resuelve con
- * `SEMANTIC_COLOR`. Estaba duplicada palabra por palabra en `TriajeForm` y en
- * `SolicitudSignosVitalesForm`, devolviendo `{ color: string }`.
+ * `SEMANTIC_COLOR`.
  *
  * Los tonos son los mismos que se venían mostrando: «Bajo peso» sigue en
  * `info`. Si el Dispensario decide que merece `warning` —como el sobrepeso—,

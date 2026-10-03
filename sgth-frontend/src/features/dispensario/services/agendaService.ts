@@ -8,7 +8,8 @@ export type EstadoAgenda =
   | 'en_consulta'
   | 'atendido'
   | 'no_presentado'
-  | 'cancelado'
+  // Femenino: es lo que escribe el backend (ver constants/turnos.ts).
+  | 'cancelada'
 
 export interface AgendaMedica {
   id:                           number
@@ -36,11 +37,14 @@ export interface AgendaMedica {
     id: number
     nombre: string
     apellido: string
+    /** Para no prometer una alerta que el backend no da a un menor. */
+    fecha_nacimiento?: string | null
   } | null
   carga_familiar?: {
     id: number
     nombres: string
     apellidos: string
+    fecha_nacimiento?: string | null
   } | null
   /**
    * Lo carga el listado de la cola. Estaba como `unknown`, así que su nivel de
