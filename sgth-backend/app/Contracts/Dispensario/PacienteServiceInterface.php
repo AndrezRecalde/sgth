@@ -18,4 +18,12 @@ interface PacienteServiceInterface
      * }
      */
     public function buscarPorCedula(string $cedula): array;
+
+    /**
+     * Pacientes cuyo nombre contiene todas las palabras, sin importar tildes
+     * ni mayúsculas. Misma forma que `buscarPorCedula`.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function buscarPorNombre(string $texto): array;
 }

@@ -26,4 +26,19 @@ final class PacienteController extends Controller
 
         return ApiResponse::ok($resultado);
     }
+
+    /**
+     * Pacientes por nombre o apellidos. Tres letras como mínimo: con menos,
+     * casi cualquier nombre coincide y la lista no ayuda a elegir.
+     */
+    public function buscarPorNombre(Request $request): JsonResponse
+    {
+        $request->validate([
+            'q' => ['required', 'string', 'min:3', 'max:100'],
+        ], [], ['q' => 'nombre o apellidos']);
+
+        return ApiResponse::ok(
+            $this->pacienteService->buscarPorNombre($request->string('q')->trim()->value())
+        );
+    }
 }

@@ -7,3 +7,13 @@ export function useBuscarPaciente() {
       pacienteService.buscarPorCedula(cedula),
   })
 }
+
+/**
+ * Por nombre o apellidos. Mutación y no consulta, como la de cédula: se
+ * lanza al pulsar Buscar, no con cada tecla.
+ */
+export function useBuscarPacientesPorNombre() {
+  return useMutation({
+    mutationFn: (q: string) => pacienteService.buscarPorNombre(q),
+  })
+}

@@ -6,11 +6,12 @@ import { IconSearch, IconX, IconInfoCircle } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { getApiErrorMessage } from '@/types/api'
 import { hoyIso } from '@/lib/fecha'
-import { useBuscarPaciente } from '../hooks/usePaciente'
+import { useBuscarPaciente, useBuscarPacientesPorNombre } from '../hooks/usePaciente'
 import { useCrearHistoriaClinica } from '../hooks/useHistoriaClinica'
 import { useColaTurnos } from '../hooks/useAgenda'
 import { TURNO_PENDIENTE } from '../constants/turnos'
 import { PacienteCard, type AccionPaciente } from './PacienteCard'
+import { ResultadosPorNombre } from './ResultadosPorNombre'
 import type { PacienteEncontrado } from '../services/pacienteService'
 import type { AgendaMedica } from '../services/agendaService'
 
@@ -22,25 +23,33 @@ interface Props {
 /** Abierto hoy: esperando, listo para pasar o ya con el profesional. */
 const ABIERTOS = [...TURNO_PENDIENTE, 'en_consulta']
 
+/** Solo dígitos: es una cédula. Cualquier otra cosa se busca como nombre. */
+const esCedula = (texto: string) => /^\d+$/.test(texto)
+
 /**
- * Buscar al paciente por cédula.
+ * Buscar al paciente por cédula o por nombre, en el mismo campo.
  *
- * Era una tarjeta con un icono de 56 px, título y descripción alrededor de un
- * solo campo; ahora es el campo con su botón al lado, y el cursor ya está en
- * él al entrar y al volver de atender a alguien: no hace falta tocar el ratón
- * para empezar con el siguiente.
+ * Solo admitía cédula, y con un familiar menor quien lo trae muchas veces no
+ * se la sabe. Si lo escrito son dígitos se busca la cédula; si no, el nombre o
+ * los apellidos, y se elige de la lista.
+ *
+ * El cursor está en el campo al entrar y al volver de atender a alguien: no
+ * hace falta tocar el ratón para empezar con el siguiente.
  */
 export function BuscarPacienteForm({ onElegir, onTomarTriaje }: Props) {
   const contained = useContainedInput()
-  const [cedula, setCedula] = useState('')
+  const [texto, setTexto] = useState('')
+  const [elegido, setElegido] = useState<PacienteEncontrado | null>(null)
   // La historia recién creada, para no tener que volver a buscar.
   const [historiaCreada, setHistoriaCreada] = useState<number | null>(null)
+  const [aviso, setAviso] = useState<string | null>(null)
 
-  const buscar = useBuscarPaciente()
+  const porCedula = useBuscarPaciente()
+  const porNombre = useBuscarPacientesPorNombre()
   const crearHistoria = useCrearHistoriaClinica()
   const { data: cola } = useColaTurnos({ fecha: hoyIso(), per_page: 200 })
 
-  const encontrado = buscar.data
+  const encontrado = elegido ?? porCedula.data
   const paciente = encontrado && historiaCreada
     ? { ...encontrado, tiene_historia_clinica: true, historia_clinica_id: historiaCreada }
     : encontrado
@@ -52,14 +61,20 @@ export function BuscarPacienteForm({ onElegir, onTomarTriaje }: Props) {
   )
 
   const limpiar = () => {
-    buscar.reset()
+    porCedula.reset()
+    porNombre.reset()
+    setElegido(null)
     setHistoriaCreada(null)
+    setAviso(null)
   }
 
   const handleBuscar = () => {
-    if (!cedula.trim()) return
-    setHistoriaCreada(null)
-    buscar.mutate(cedula.trim())
+    const limpio = texto.trim()
+    if (!limpio) return
+    limpiar()
+    if (esCedula(limpio)) porCedula.mutate(limpio)
+    else if (limpio.length < 3) setAviso('Escriba al menos tres letras del nombre o los apellidos.')
+    else porNombre.mutate(limpio)
   }
 
   const handleCrearHistoria = () => {
@@ -72,21 +87,23 @@ export function BuscarPacienteForm({ onElegir, onTomarTriaje }: Props) {
     )
   }
 
+  const error = porCedula.error ?? porNombre.error
+  const sinCoincidencias = porNombre.data?.length === 0
+
   return (
     <Stack gap="md">
       <Group align="flex-end" gap="sm" wrap="nowrap">
         <TextInput
-          label="Cédula del servidor o del familiar"
-          placeholder="Ej: 0801234567"
+          label="Cédula o apellidos del paciente"
+          placeholder="Ej: 0801234567 o Arroyo Vera"
           autoFocus
-          inputMode="numeric"
           {...contained}
-          value={cedula}
+          value={texto}
           onChange={(e) => {
-            setCedula(e.currentTarget.value)
-            // La tarjeta del paciente anterior seguía a la vista, con sus
-            // botones, aunque la cédula ya fuese otra.
-            if (buscar.data || buscar.isError) limpiar()
+            setTexto(e.currentTarget.value)
+            // Lo encontrado con la búsqueda anterior se va: seguía a la vista,
+            // con sus botones, aunque lo escrito ya fuese otro.
+            if (paciente || porNombre.data || error || aviso) limpiar()
           }}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
@@ -96,12 +113,12 @@ export function BuscarPacienteForm({ onElegir, onTomarTriaje }: Props) {
           }}
           flex={1}
           rightSection={
-            cedula ? (
+            texto ? (
               <ActionIcon
                 size="sm"
                 variant="subtle"
-                aria-label="Borrar la cédula"
-                onClick={() => { setCedula(''); limpiar() }}
+                aria-label="Borrar la búsqueda"
+                onClick={() => { setTexto(''); limpiar() }}
               >
                 <IconX size={14} />
               </ActionIcon>
@@ -110,7 +127,7 @@ export function BuscarPacienteForm({ onElegir, onTomarTriaje }: Props) {
         />
         <Button
           leftSection={<IconSearch size={16} />}
-          loading={buscar.isPending}
+          loading={porCedula.isPending || porNombre.isPending}
           onClick={handleBuscar}
           // La altura del campo `contained`, para que no quede un escalón.
           h={48}
@@ -119,14 +136,21 @@ export function BuscarPacienteForm({ onElegir, onTomarTriaje }: Props) {
         </Button>
       </Group>
 
-      {buscar.isError && (
-        <Alert icon={<IconInfoCircle size={14} />} color="red" variant="light">
+      {(error || aviso || sinCoincidencias) && (
+        <Alert icon={<IconInfoCircle size={14} />} color={error ? 'red' : 'amber'} variant="light">
           {/* El mensaje del servidor: «no se encontró» cuando es eso, y el
               motivo real cuando falla otra cosa. */}
           <Text size="xs">
-            {getApiErrorMessage(buscar.error, 'No se pudo buscar al paciente.')}
+            {aviso
+              ?? (sinCoincidencias
+                ? 'Nadie con ese nombre. Si es un familiar, debe estar registrado como carga familiar en el Expediente del servidor.'
+                : getApiErrorMessage(error, 'No se pudo buscar al paciente.'))}
           </Text>
         </Alert>
+      )}
+
+      {!paciente && !!porNombre.data?.length && (
+        <ResultadosPorNombre pacientes={porNombre.data} onElegir={setElegido} />
       )}
 
       {paciente && (
