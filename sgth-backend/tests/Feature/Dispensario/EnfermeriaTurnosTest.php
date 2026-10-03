@@ -188,3 +188,42 @@ test('la cola va del que llegó primero al último', function () {
 
     expect($ids)->toBe([$primero->id, $segundo->id]);
 });
+
+test('el cierre diario pasa a no presentado los turnos de días anteriores que quedaron esperando', function () {
+    $ayer = now()->subDay()->toDateString();
+    $enEspera   = ($this->turno)(['fecha' => $ayer, 'estado' => 'en_espera']);
+    $enSala     = ($this->turno)(['fecha' => $ayer, 'estado' => 'en_sala']);
+    // Puede tener una consulta en borrador: no se toca.
+    $enConsulta = ($this->turno)(['fecha' => $ayer, 'estado' => 'en_consulta']);
+    $atendido   = ($this->turno)(['fecha' => $ayer, 'estado' => 'atendido']);
+    $deHoy      = ($this->turno)(['estado' => 'en_espera']);
+
+    $this->artisan('sgth:dispensario:cerrar-turnos-vencidos')
+        ->expectsOutputToContain('2 turno(s)')
+        ->assertSuccessful();
+
+    foreach ([$enEspera, $enSala] as $turno) {
+        $turno->refresh();
+        expect($turno->estado)->toBe('no_presentado');
+        expect($turno->marcado_no_presentado_en)->not->toBeNull();
+        // Sin usuario: así se distingue del que marca a mano el profesional.
+        expect($turno->marcado_no_presentado_por)->toBeNull();
+    }
+
+    expect($enConsulta->fresh()->estado)->toBe('en_consulta');
+    expect($atendido->fresh()->estado)->toBe('atendido');
+    expect($deHoy->fresh()->estado)->toBe('en_espera');
+
+    // Correrlo otra vez no cambia nada.
+    $this->artisan('sgth:dispensario:cerrar-turnos-vencidos')
+        ->expectsOutputToContain('0 turno(s)')
+        ->assertSuccessful();
+});
+
+test('el cierre diario está programado', function () {
+    $evento = collect(app(Illuminate\Console\Scheduling\Schedule::class)->events())
+        ->first(fn ($e) => str_contains((string) $e->command, 'sgth:dispensario:cerrar-turnos-vencidos'));
+
+    expect($evento)->not->toBeNull();
+    expect($evento->expression)->toBe('10 0 * * *');
+});
