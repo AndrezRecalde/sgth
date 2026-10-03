@@ -23,6 +23,7 @@ use App\Http\Controllers\Catalogo\TipoUnidadController;
 use App\Http\Controllers\Disciplinario\DisciplinarioController;
 use App\Http\Controllers\Disciplinario\VistoBuenoController;
 use App\Http\Controllers\Dispensario\AdquisicionController;
+use App\Http\Controllers\Dispensario\TableroSaludOcupacionalController;
 use App\Http\Controllers\Dispensario\AgendaController;
 use App\Http\Controllers\Dispensario\AlergiaPacienteController;
 use App\Http\Controllers\Dispensario\AntecedentePacienteController;
@@ -1440,6 +1441,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->group(function () {
                 Route::post('{id}/confirmar-incorporacion', [SolicitudCertificacionController::class, 'confirmarIncorporacion']);
             });
+
+        // Tablero de salud ocupacional: la bandeja en cifras, la aptitud
+        // emitida, los diagnósticos y la exposición a factores de riesgo. Es
+        // de quien evalúa, como las fichas.
+        Route::get('salud-ocupacional/tablero', [TableroSaludOcupacionalController::class, 'index'])
+            ->middleware('role:medico|admin-dispensario');
 
         // Fichas de salud ocupacional
         Route::prefix('fichas-sso')
