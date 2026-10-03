@@ -24,6 +24,7 @@ use App\Http\Controllers\Disciplinario\DisciplinarioController;
 use App\Http\Controllers\Disciplinario\VistoBuenoController;
 use App\Http\Controllers\Dispensario\AdquisicionController;
 use App\Http\Controllers\Dispensario\TableroSaludOcupacionalController;
+use App\Http\Controllers\Dispensario\MiJornadaController;
 use App\Http\Controllers\Dispensario\AgendaController;
 use App\Http\Controllers\Dispensario\AlergiaPacienteController;
 use App\Http\Controllers\Dispensario\AntecedentePacienteController;
@@ -1182,6 +1183,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->middleware('role:admin-dispensario|maxima-autoridad');
         Route::get('dashboard/panorama', [DashboardDispensarioController::class, 'panorama'])
             ->middleware('role:admin-dispensario|maxima-autoridad');
+
+        // «Mi jornada»: cada profesional ve solo lo suyo. No es el tablero de
+        // la jefatura, que compara a unos con otros.
+        Route::get('mi-jornada', [MiJornadaController::class, 'index'])
+            ->middleware('role:medico|odontologo|enfermera');
 
         Route::get('personal-medico',
             [PersonalMedicoController::class, 'index']

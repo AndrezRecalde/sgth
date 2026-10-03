@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { ConsultasTurnosView } from '@/features/dispensario/components/ConsultasTurnosView'
 import { PageHeader, PageShell } from '@/components/ui'
+import { MiJornadaFranja } from '@/features/dispensario/components/MiJornadaFranja'
 
 export const metadata: Metadata = {
   title: 'Consultas',
@@ -14,6 +15,7 @@ export default function ConsultasPage() {
         title="Consultas"
         description="Mis pacientes del día"
       />
+      <MiJornadaFranja contexto="clinico" />
       <ConsultasTurnosView />
     </PageShell>
   )
