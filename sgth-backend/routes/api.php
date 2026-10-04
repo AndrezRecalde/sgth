@@ -722,13 +722,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // justifica el certificado médico, que ya crea su permiso con folio.
         Route::get('mi-historia-clinica', [AutoservicioController::class, 'miHistoriaClinica']);
 
-        // Cargas familiares (autoservicio)
-        Route::prefix('mis-cargas-familiares')->group(function () {
-            Route::get('/', [CargaFamiliarController::class, 'misCargas']);
-            Route::post('/', [CargaFamiliarController::class, 'storeMisCargas']);
-            Route::put('{id}', [CargaFamiliarController::class, 'updateMisCargas']);
-            Route::delete('{id}', [CargaFamiliarController::class, 'destroyMisCargas']);
-        });
+        // Aquí estaba `mis-cargas-familiares` (CRUD), retirado el 2026-10-03.
+        // Ninguna pantalla lo usaba y no pedía rol: cualquier servidor podía
+        // darse de alta familiares —que entran como pacientes del Dispensario—
+        // o borrar los que registró Talento Humano. Las cargas las registra
+        // Talento Humano desde el Expediente.
     });
 
     // Módulo 07: Selección e Incorporación
