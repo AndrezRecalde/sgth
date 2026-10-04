@@ -85,7 +85,18 @@ export function useDisciplinarioMutations() {
       // Impugnar también la toca: le deja el aviso en la descripción.
       if (concede || variables.data.estado === 'impugnado') invalidarMovimientos()
     },
-    onError: notificar.alFallar('No se pudo actualizar el trámite de visto bueno'),
+    // Los errores con campo los pone el modal bajo cada uno.
+    onError: notificar.alFallarSalvoCampos('No se pudo actualizar el trámite de visto bueno'),
+  })
+
+  const adjuntarResolucion = useMutation({
+    mutationFn: ({ id, archivo }: { id: number; archivo: File }) =>
+      disciplinarioService.adjuntarResolucion(id, archivo),
+    onSuccess: () => {
+      notificar.exito('Resolución adjuntada', 'El PDF de la resolución del Inspector quedó en el trámite.')
+      invalidarVistosBuenos()
+    },
+    onError: notificar.alFallarSalvoCampos('No se pudo adjuntar la resolución'),
   })
 
   return {
@@ -94,5 +105,6 @@ export function useDisciplinarioMutations() {
     resolverSumario,
     crearVistoBueno,
     transicionarVistoBueno,
+    adjuntarResolucion,
   }
 }

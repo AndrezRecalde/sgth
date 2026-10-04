@@ -13,6 +13,7 @@ import {
 } from '../utils/etiquetas'
 import { formatFecha } from '@/lib/fecha'
 import { ESTADO_LABELS } from '@/features/expediente/utils/estadoAccionPersonal'
+import { ResolucionInspectorDocumento } from './ResolucionInspectorDocumento'
 import type { VistoBueno } from '@/types/api'
 
 interface Props {
@@ -88,6 +89,20 @@ function Contenido({ tramite }: { tramite: VistoBueno }) {
             items={[
               { label: 'Fecha', value: formatFecha(tramite.fecha_resolucion) },
               { label: 'Detalle', value: tramite.resolucion_detalle, ancho: true },
+            ]}
+          />
+          <ResolucionInspectorDocumento tramite={tramite} />
+        </div>
+      )}
+
+      {tramite.impugnacion_referencia && (
+        <div>
+          <SectionHeading title="Impugnación" mb="xs" />
+          <DetailList
+            columnas={2}
+            items={[
+              { label: 'Juicio o causa', value: tramite.impugnacion_referencia },
+              { label: 'Fecha', value: formatFecha(tramite.fecha_impugnacion) },
             ]}
           />
         </div>

@@ -31,7 +31,8 @@ class VistoBueno extends Model
         'fecha_resolucion',
         'hechos',
         'resolucion_detalle',
-        'documento_respaldo',
+        'impugnacion_referencia',
+        'fecha_impugnacion',
         'movimiento_personal_id',
         'created_by',
         'updated_by',
@@ -45,7 +46,27 @@ class VistoBueno extends Model
             'fecha_solicitud'    => 'date',
             'fecha_notificacion' => 'date',
             'fecha_resolucion'   => 'date',
+            'fecha_impugnacion'  => 'date',
         ];
+    }
+
+    /*
+    | La ruta del PDF no sale en el JSON: es un detalle del disco, y el archivo
+    | se baja por GET vistos-buenos/{id}/documento, que pasa por la
+    | autorización. La pantalla solo necesita saber si hay uno y cómo se llama.
+    |
+    | `documento_respaldo` y `documento_nombre` tampoco están en $fillable:
+    | antes la ruta se aceptaba como texto libre en el alta y en la
+    | transición, y una ruta inventada es una descarga de cualquier archivo
+    | del disco. Solo los escribe VistoBuenoService::adjuntarResolucion().
+    */
+    protected $hidden = ['documento_respaldo'];
+
+    protected $appends = ['tiene_documento'];
+
+    public function getTieneDocumentoAttribute(): bool
+    {
+        return filled($this->documento_respaldo);
     }
 
     /**
@@ -62,6 +83,10 @@ class VistoBueno extends Model
                 'numero_tramite_mdt',
                 'fecha_resolucion',
                 'resolucion_detalle',
+                // Quién cambió el PDF de la resolución, y la impugnación.
+                'documento_nombre',
+                'impugnacion_referencia',
+                'fecha_impugnacion',
             ])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();

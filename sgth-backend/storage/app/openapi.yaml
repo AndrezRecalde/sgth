@@ -41382,6 +41382,114 @@
                     }
                 }
             }
+        },
+        "/v1/disciplinario/vistos-buenos/{vistoBueno}/documento": {
+            "post": {
+                "operationId": "vistoBueno.adjuntarDocumento",
+                "summary": "Sube (o reemplaza) el PDF de la resoluci\u00f3n del Inspector",
+                "tags": [
+                    "VistoBueno"
+                ],
+                "parameters": [
+                    {
+                        "name": "vistoBueno",
+                        "in": "path",
+                        "required": true,
+                        "description": "The visto bueno ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdjuntarResolucionVistoBuenoRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Resoluci\u00f3n del Inspector adjuntada."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/VistoBueno"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "get": {
+                "operationId": "vistoBueno.descargarDocumento",
+                "summary": "Descarga el PDF de la resoluci\u00f3n: el archivo vive en el disco privado",
+                "tags": [
+                    "VistoBueno"
+                ],
+                "parameters": [
+                    {
+                        "name": "vistoBueno",
+                        "in": "path",
+                        "required": true,
+                        "description": "The visto bueno ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -41701,6 +41809,22 @@
                     "contrasena_actual"
                 ],
                 "title": "ActualizarContrasenaRequest"
+            },
+            "AdjuntarResolucionVistoBuenoRequest": {
+                "type": "object",
+                "description": "La resoluci\u00f3n del Inspector del Trabajo, en PDF: es un documento oficial que\nse archiva y se presenta, no una foto. 10 MB alcanzan para un escaneo de\nvarias p\u00e1ginas.",
+                "properties": {
+                    "archivo": {
+                        "type": "string",
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "maxLength": 10240
+                    }
+                },
+                "required": [
+                    "archivo"
+                ],
+                "title": "AdjuntarResolucionVistoBuenoRequest"
             },
             "AdquisicionMedicamento": {
                 "type": "object",
@@ -55517,13 +55641,6 @@
                             "null"
                         ],
                         "maxLength": 150
-                    },
-                    "documento_respaldo": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 255
                     }
                 },
                 "required": [
@@ -56374,12 +56491,20 @@
                         ],
                         "maxLength": 150
                     },
-                    "documento_respaldo": {
+                    "impugnacion_referencia": {
                         "type": [
                             "string",
                             "null"
                         ],
-                        "maxLength": 255
+                        "description": "Al impugnar: el juicio o la causa y su fecha (2026-10-04). Los\nexige VistoBuenoService, que es quien sabe a qu\u00e9 estado se va.\nLa resoluci\u00f3n del Inspector ya no viaja aqu\u00ed como texto: se\nsube como PDF por POST vistos-buenos/{id}/documento.",
+                        "maxLength": 200
+                    },
+                    "fecha_impugnacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
                     }
                 },
                 "required": [
@@ -58965,12 +59090,6 @@
                             "null"
                         ]
                     },
-                    "documento_respaldo": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
                     "movimiento_personal_id": {
                         "type": [
                             "integer",
@@ -59009,6 +59128,28 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "documento_nombre": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "impugnacion_referencia": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "fecha_impugnacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "tiene_documento": {
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -59024,13 +59165,16 @@
                     "fecha_resolucion",
                     "hechos",
                     "resolucion_detalle",
-                    "documento_respaldo",
                     "movimiento_personal_id",
                     "created_by",
                     "updated_by",
                     "created_at",
                     "updated_at",
-                    "deleted_at"
+                    "deleted_at",
+                    "documento_nombre",
+                    "impugnacion_referencia",
+                    "fecha_impugnacion",
+                    "tiene_documento"
                 ],
                 "title": "VistoBueno"
             },

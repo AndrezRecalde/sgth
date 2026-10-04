@@ -256,7 +256,7 @@ test('impugnar el visto bueno deja la cesación avisada, no borrada', function (
     $cesacion = $tramite->movimientoPersonal;
 
     $tramite = $this->vistoBuenoService->transicionar(
-        $tramite, EstadoVistoBueno::IMPUGNADO, [], $this->user->id
+        $tramite, EstadoVistoBueno::IMPUGNADO, ['impugnacion_referencia' => 'Juicio 0001-2026'], $this->user->id
     );
 
     // La impugnación no deja sin efecto la resolución del Inspector: la
@@ -279,7 +279,7 @@ test('impugnar un visto bueno negado no toca ninguna acción de personal', funct
     ], $this->user->id);
 
     $tramite = $this->vistoBuenoService->transicionar(
-        $tramite, EstadoVistoBueno::IMPUGNADO, [], $this->user->id
+        $tramite, EstadoVistoBueno::IMPUGNADO, ['impugnacion_referencia' => 'Juicio 0002-2026'], $this->user->id
     );
 
     expect($tramite->estado)->toBe(EstadoVistoBueno::IMPUGNADO)

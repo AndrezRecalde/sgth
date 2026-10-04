@@ -25,7 +25,19 @@ class TransicionarVistoBuenoRequest extends FormRequest
             'numero_tramite_mdt' => ['nullable', 'string', 'max:50'],
             'inspectoria'        => ['nullable', 'string', 'max:150'],
             'inspector_nombre'   => ['nullable', 'string', 'max:150'],
-            'documento_respaldo' => ['nullable', 'string', 'max:255'],
+            // Al impugnar: el juicio o la causa y su fecha (2026-10-04). Los
+            // exige VistoBuenoService, que es quien sabe a qué estado se va.
+            // La resolución del Inspector ya no viaja aquí como texto: se
+            // sube como PDF por POST vistos-buenos/{id}/documento.
+            'impugnacion_referencia' => ['nullable', 'string', 'max:200'],
+            'fecha_impugnacion'      => ['nullable', 'date', 'before_or_equal:today'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'fecha_impugnacion.before_or_equal' => 'La impugnación no puede tener fecha futura.',
         ];
     }
 }

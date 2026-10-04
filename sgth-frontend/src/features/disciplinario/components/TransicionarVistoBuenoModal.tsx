@@ -4,9 +4,10 @@ import { Alert, Select, Stack, Text } from '@mantine/core'
 import { IconAlertTriangle } from '@tabler/icons-react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { FormModal, ModalFooter, SgthModal, notificar } from '@/components/ui'
+import { FormModal, ModalFooter, SgthModal } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { erroresDeCampo } from '@/lib/erroresDeCampo'
+import { erroresAlFormulario } from '@/lib/erroresAlFormulario'
 import { fromDateValue } from '@/lib/fecha'
 import { useDisciplinarioMutations } from '../hooks/useDisciplinarioMutations'
 import {
@@ -71,12 +72,14 @@ function FormularioTransicion({
       numero_tramite_mdt: tramite.numero_tramite_mdt ?? '',
       inspectoria: tramite.inspectoria ?? '',
       inspector_nombre: tramite.inspector_nombre ?? '',
+      impugnacion_referencia: '',
     },
   })
 
   const destino = useWatch({ control, name: 'estado' })
   const esResolucion = destino === 'concedido' || destino === 'negado'
   const esNotificacion = destino === 'notificado'
+  const esImpugnacion = destino === 'impugnado'
 
   const guardar = async (valores: TransicionVistoBuenoFormValues) => {
     try {
@@ -90,25 +93,20 @@ function FormularioTransicion({
           numero_tramite_mdt: valores.numero_tramite_mdt.trim() || null,
           inspectoria: valores.inspectoria.trim() || null,
           inspector_nombre: valores.inspector_nombre.trim() || null,
+          impugnacion_referencia: esImpugnacion ? valores.impugnacion_referencia.trim() : null,
+          fecha_impugnacion: esImpugnacion ? valores.fecha : null,
         },
       })
       onClose()
     } catch (error) {
-      const campos = erroresDeCampo(error)
-      if (!campos) return // el hook ya lo notificó
-
-      const sinCampo: string[] = []
-      for (const [campo, mensaje] of Object.entries(campos)) {
-        if (campo in transicionVistoBuenoSchema.shape) {
-          setError(campo as keyof TransicionVistoBuenoFormValues, { message: mensaje })
-        } else {
-          sinCampo.push(mensaje)
-        }
-      }
-
-      if (sinCampo.length) {
-        notificar.error('No se pudo actualizar el trámite', sinCampo.join(' '))
-      }
+      // Las tres fechas del API son un solo campo aquí.
+      const errores = erroresDeCampo(error)
+      const fecha = errores?.fecha_impugnacion ?? errores?.fecha_resolucion ?? errores?.fecha_notificacion
+      if (fecha) setError('fecha', { type: 'server', message: fecha })
+      erroresAlFormulario(error, setError, [
+        ...Object.keys(transicionVistoBuenoSchema.shape),
+        'fecha_impugnacion', 'fecha_resolucion', 'fecha_notificacion',
+      ], 'No se pudo actualizar el trámite')
     }
   }
 
@@ -171,6 +169,7 @@ function FormularioTransicion({
           errors={errors}
           esResolucion={esResolucion}
           esNotificacion={esNotificacion}
+          esImpugnacion={esImpugnacion}
         />
 
         {destino === 'impugnado' && tramite.movimiento_personal && (

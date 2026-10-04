@@ -1287,7 +1287,12 @@ export type VistoBueno = {
   fecha_resolucion?: string | null
   hechos: string
   resolucion_detalle?: string | null
-  documento_respaldo?: string | null
+  /** Si la resolución del Inspector está adjunta en PDF; la ruta no sale del API. */
+  tiene_documento?: boolean
+  documento_nombre?: string | null
+  /** Juicio o causa de la impugnación, y su fecha (2026-10-04). */
+  impugnacion_referencia?: string | null
+  fecha_impugnacion?: string | null
   movimiento_personal_id?: number | null
   movimiento_personal?: { id: number; codigo_registro?: string | null; estado?: EstadoAccionPersonal | null } | null
 }
