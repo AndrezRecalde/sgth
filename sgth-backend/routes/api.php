@@ -449,9 +449,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 Route::get('actividad-laboral', [ContratoServidorController::class, 'actividadLaboral'])
                     ->name('contratos.actividadLaboral');
 
-                Route::apiResource('contratos', ContratoServidorController::class)
-                    ->parameters(['contratos' => 'contrato'])
-                    ->only(['index', 'show']);
+                // Aquí estaban `GET contratos` y `GET contratos/{id}`, retirados
+                // el 2026-10-04: ninguna pantalla los pedía —la pestaña Laboral
+                // lee `actividad-laboral`— y `show` respondía fuera de ApiResponse.
 
                 Route::post('contratos', [ContratoServidorController::class, 'store'])
                     ->middleware('role:admin-ti')

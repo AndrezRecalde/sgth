@@ -16,12 +16,6 @@ class ContratoServidorController extends Controller
     {
     }
 
-    public function index(int $servidorId): JsonResponse
-    {
-        $contratos = $this->contratoService->listar($servidorId);
-        return ApiResponse::ok($contratos, 'Contratos del servidor.');
-    }
-
     /**
      * Actividad laboral: cada vínculo con las acciones de personal ocurridas
      * sobre él y la situación en que está hoy el servidor.
@@ -42,16 +36,6 @@ class ContratoServidorController extends Controller
             $servidorId, $request->validated()
         );
         return ApiResponse::created($contrato, 'Contrato registrado con éxito.');
-    }
-
-    public function show(int $servidorId, ContratoServidor $contrato): JsonResponse
-    {
-        if ($contrato->servidor_id !== (int) $servidorId) {
-            abort(404, 'Contrato no encontrado para este servidor.');
-        }
-        
-        $contrato->load(['unidadAdministrativa', 'puesto']);
-        return response()->json(['data' => $contrato]);
     }
 
     /**
