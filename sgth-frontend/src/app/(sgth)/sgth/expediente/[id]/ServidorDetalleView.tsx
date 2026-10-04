@@ -7,7 +7,6 @@ import {
   IconBriefcase,
   IconCertificate,
   IconEdit,
-  IconFolderOff,
   IconHeart,
   IconPaperclip,
   IconSchool,
@@ -15,7 +14,6 @@ import {
   IconUser,
 } from '@tabler/icons-react'
 import {
-  EmptyState,
   PageHeader,
   PageShell,
   StatusBadge,
@@ -26,6 +24,8 @@ import { ServidorEncabezado, nombreCompletoDe }
   from '@/features/expediente/components/ServidorEncabezado'
 import { ServidorEditarModal }
   from '@/features/expediente/components/ServidorEditarModal'
+import { ExpedienteNoDisponible }
+  from '@/features/expediente/components/ExpedienteNoDisponible'
 import { CertificadoLaboralModal }
   from '@/features/expediente/components/CertificadoLaboralModal'
 import { AcademicoTab } from '@/features/expediente/components/tabs/AcademicoTab'
@@ -59,7 +59,7 @@ interface Props {
 export function ServidorDetalleView({ id }: Props) {
   const router = useRouter()
   const servidorId = Number(id)
-  const { data: servidor, isLoading } = useServidor(servidorId)
+  const { data: servidor, isLoading, error, refetch } = useServidor(servidorId)
   const [editarOpened, { open: abrirEditar, close: cerrarEditar }] = useDisclosure(false)
   const [certificadoOpened, { open: abrirCertificado, close: cerrarCertificado }] =
     useDisclosure(false)
@@ -81,15 +81,10 @@ export function ServidorDetalleView({ id }: Props) {
           title="Expediente del servidor"
           backHref={ROUTES.SGTH.EXPEDIENTE}
         />
-        <EmptyState
-          icon={IconFolderOff}
-          title="Expediente no encontrado"
-          description="La ficha no existe o fue dada de baja. Vuelva al listado y ábrala desde allí."
-          action={
-            <Button variant="light" onClick={() => router.push(ROUTES.SGTH.EXPEDIENTE)}>
-              Ir al listado
-            </Button>
-          }
+        <ExpedienteNoDisponible
+          error={error}
+          onRetry={() => refetch()}
+          onIrAlListado={() => router.push(ROUTES.SGTH.EXPEDIENTE)}
         />
       </PageShell>
     )

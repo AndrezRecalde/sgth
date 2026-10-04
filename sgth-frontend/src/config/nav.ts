@@ -96,6 +96,11 @@ export const NAV_SGTH: NavGroup[] = [
             label: 'Expediente digital',
             href:  ROUTES.SGTH.EXPEDIENTE,
             icon:  'IconFolder',
+            // Los de ServidorPolicy::verAny. Sin declararlos, director, jefe
+            // de unidad, auditor y máxima autoridad lo veían en el menú y
+            // recibían 403; y admin-ti no entra al Expediente (Talento
+            // Humano, 2026-10-03).
+            roles: ['admin-uath', 'asistente-uath'],
           },
           {
             label: 'Subrogaciones y encargos',
@@ -110,6 +115,8 @@ export const NAV_SGTH: NavGroup[] = [
             label: 'Nueva acción de personal',
             href:  ROUTES.SGTH.ACCIONES_PERSONAL,
             icon:  'IconUserPlus',
+            // La bandeja y el registro piden `role:admin-uath|asistente-uath`.
+            roles: ['admin-uath', 'asistente-uath'],
           },
         ],
       },

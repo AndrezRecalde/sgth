@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Dedoc\Scramble\Scramble;
 use Dedoc\Scramble\Support\Generator\OpenApi;
 use Dedoc\Scramble\Support\Generator\SecurityScheme;
+use App\Models\Expediente\Servidor;
 use App\Models\User;
 use App\Support\ProxiesDeConfianza;
 use App\Contracts\Auth\AuthServiceInterface;
@@ -274,10 +275,25 @@ class AppServiceProvider extends ServiceProvider
         // No lo necesitaba: las policies de Expediente comprueban el rol
         // directamente (ServidorPolicy::verAny y siguientes), así que su
         // trabajo diario no depende de este atajo.
-        Gate::before(function ($user, $ability) {
-            if ($user->hasRole('admin-ti')) {
-                return true;
+        //
+        // El Expediente Digital tampoco (decisión de Talento Humano del
+        // 2026-10-03): es de Talento Humano, no del soporte técnico. Cuando lo
+        // que se autoriza es un Servidor, el atajo no responde y decide
+        // ServidorPolicy, que no nombra a admin-ti. Así quien tiene admin-ti Y
+        // admin-uath sigue entrando por admin-uath, y quien solo es admin-ti ve
+        // su propia ficha, como cualquier servidor. Sin esto la ficha le abría
+        // y la mitad de las pestañas —con rol en la ruta— le daban 403.
+        Gate::before(function ($user, $ability, $arguments = []) {
+            if (! $user->hasRole('admin-ti')) {
+                return null;
             }
+
+            $sobre = $arguments[0] ?? null;
+            if ($sobre instanceof Servidor || $sobre === Servidor::class) {
+                return null;
+            }
+
+            return true;
         });
 
         // El autodescubrimiento busca App\Policies\UserPolicy, así que sin este
