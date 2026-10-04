@@ -12,6 +12,11 @@ function cambio(a: AccionSobreVinculo): string | null {
   if (a.unidad_destino && a.unidad_destino !== a.unidad_origen) {
     return `${a.unidad_origen ?? 'Sin unidad'} → ${a.unidad_destino}`
   }
+  // Un traspaso a otro puesto de la misma unidad no decía nada: solo se
+  // miraba la unidad, aunque el backend ya mandaba los dos puestos.
+  if (a.puesto_destino && a.puesto_destino !== a.puesto_origen) {
+    return `${a.puesto_origen ?? 'Sin puesto'} → ${a.puesto_destino}`
+  }
   if (a.fecha_inicio) {
     return `${formatFecha(a.fecha_inicio)} – ${a.fecha_fin ? formatFecha(a.fecha_fin) : 'sin fecha de fin'}`
   }

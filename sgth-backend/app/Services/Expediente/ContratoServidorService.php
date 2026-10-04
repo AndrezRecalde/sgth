@@ -21,14 +21,6 @@ use Spatie\Activitylog\Models\Activity;
 
 class ContratoServidorService
 {
-    public function listar(int $servidorId)
-    {
-        return ContratoServidor::where('servidor_id', $servidorId)
-            ->with(['unidadAdministrativa', 'puesto.cargo'])
-            ->orderBy('fecha_inicio', 'desc')
-            ->get();
-    }
-
     /**
      * Actividad laboral del servidor: cada contrato con las acciones de
      * personal que ocurrieron sobre él.

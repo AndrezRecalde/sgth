@@ -60,10 +60,9 @@ test('un contrato vigente ya no se puede editar in-place vía PUT — la ruta fu
             ['tipo_nombramiento' => 'nombramiento_provisional']
         );
 
-    // El apiResource ya no registra update para esta URI (solo GET/HEAD):
-    // Laravel lanza MethodNotAllowedHttpException, que el handler global
-    // (bootstrap/app.php) ahora traduce a su código real.
-    $response->assertStatus(405);
+    // Ninguna ruta responde en esta URI. Era 405 mientras existía `GET
+    // contratos/{id}`, que nadie usaba y se retiró el 2026-10-04.
+    $response->assertNotFound();
 
     expect($this->contrato->fresh()->tipo_nombramiento->value)
         ->toBe('nombramiento_permanente');
@@ -75,7 +74,7 @@ test('un contrato vigente ya no se puede eliminar vía DELETE — la ruta fue re
             "/api/v1/expediente/servidores/{$this->servidor->id}/contratos/{$this->contrato->id}"
         );
 
-    $response->assertStatus(405);
+    $response->assertNotFound();
 
     expect(ContratoServidor::find($this->contrato->id))->not->toBeNull();
 });
