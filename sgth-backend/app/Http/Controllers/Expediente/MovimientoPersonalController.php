@@ -11,6 +11,7 @@ use App\Http\Resources\Expediente\MovimientoPersonalResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
+use App\Services\Disciplinario\AvisoFinancieroSancionService;
 use App\Services\Expediente\MovimientoPersonalService;
 use App\Services\Expediente\MovimientoPersonalStateService;
 use Illuminate\Http\JsonResponse;
@@ -21,6 +22,7 @@ class MovimientoPersonalController extends Controller
     public function __construct(
         private MovimientoPersonalService $movimientoService,
         private MovimientoPersonalStateService $stateService,
+        private AvisoFinancieroSancionService $avisoFinanciero,
     ) {
     }
 
@@ -155,11 +157,18 @@ class MovimientoPersonalController extends Controller
         $destino = EstadoAccionPersonal::from($request->validated('estado'));
         $datos   = $request->safe()->except('estado');
 
+        $origen      = $movimiento->estado;
         $actualizado = $this->stateService->transicionar($movimiento, $destino, $datos);
+
+        // Una multa o una suspensión registrada sale por correo a Financiero
+        // (y su anulación también). La pantalla necesita saber si salió o si
+        // le toca enviarla a mano.
+        $aviso = $this->avisoFinanciero->trasTransicion($actualizado, $origen);
 
         return ApiResponse::ok(
             new MovimientoPersonalResource($actualizado),
-            'Transición aplicada con éxito.'
+            'Transición aplicada con éxito.',
+            meta: $aviso ? ['aviso_financiero' => $aviso] : null,
         );
     }
 }

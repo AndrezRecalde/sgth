@@ -1234,6 +1234,26 @@ export type SancionDisciplinaria = {
   dias_suspension?: number | null
   fecha_efectiva?: string | null
   observaciones?: string | null
+  /** La acción de personal que nació de la sanción (multa, suspensión o destitución). */
+  movimiento_personal_id?: number | null
+  movimiento_personal?: {
+    id: number
+    codigo_registro: string | null
+    estado: EstadoAccionPersonal
+    remuneracion_origen?: string | number | null
+  } | null
+  /** Lo que Financiero descuenta, como referencia; null si la sanción no toca la remuneración. */
+  descuento_referencial?: DescuentoReferencial | null
+}
+
+/** Espeja `SancionDisciplinaria::descuentoReferencial()`. */
+export type DescuentoReferencial = {
+  sancion: string
+  detalle: string
+  desde: string | null
+  hasta: string | null
+  base: number | null
+  monto: number | null
 }
 
 export type Sumario = {
@@ -1267,7 +1287,7 @@ export type VistoBueno = {
   resolucion_detalle?: string | null
   documento_respaldo?: string | null
   movimiento_personal_id?: number | null
-  movimiento_personal?: { id: number; codigo_registro?: string | null; estado?: string | null } | null
+  movimiento_personal?: { id: number; codigo_registro?: string | null; estado?: EstadoAccionPersonal | null } | null
 }
 
 export type SumarioFormData = {

@@ -23616,7 +23616,21 @@
                                             "$ref": "#/components/schemas/MovimientoPersonalResource"
                                         },
                                         "meta": {
-                                            "type": "null"
+                                            "type": [
+                                                "object",
+                                                "null"
+                                            ],
+                                            "properties": {
+                                                "aviso_financiero": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "aviso_financiero"
+                                            ]
                                         }
                                     },
                                     "required": [
@@ -42684,7 +42698,8 @@
                             "string",
                             "null"
                         ],
-                        "format": "date-time"
+                        "format": "date-time",
+                        "description": "La notificaci\u00f3n y el informe ya ocurrieron; el t\u00e9rmino del\nper\u00edodo de prueba s\u00ed puede ser futuro. El orden entre hitos lo\ncomprueba DisciplinarioService::validarCronologia()."
                     },
                     "fecha_termino_prueba": {
                         "type": [

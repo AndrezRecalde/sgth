@@ -6,6 +6,9 @@ import type { ActualizarBorradorData, FiltrosBandeja, TransicionarData } from '.
 // Se reexportan para que quien los importaba de aquí no tenga que cambiar.
 export type { ActualizarBorradorData, FiltrosBandeja, TransicionarData }
 
+/** Espeja las constantes de `AvisoFinancieroSancionService`. */
+export type AvisoFinanciero = 'enviado' | 'sin_destinatario' | 'fallo_envio'
+
 export const movimientoService = {
   listar: (servidorId: number) =>
     api
@@ -43,12 +46,19 @@ export const movimientoService = {
       .get<ApiResponse<MovimientoPersonal>>(`/expediente/movimientos/${movimientoId}`)
       .then((r) => r.data.datos),
 
+  /**
+   * Con la acción viene, en `meta`, si una multa o una suspensión salió por
+   * correo a Gestión Financiera al registrarse o al anularse (2026-10-04).
+   */
   transicionar: (movimientoId: number, data: TransicionarData) =>
     api
-      .put<ApiResponse<MovimientoPersonal>>(
+      .put<ApiResponse<MovimientoPersonal, { aviso_financiero?: AvisoFinanciero }>>(
         `/expediente/movimientos/${movimientoId}/transicionar`, data,
       )
-      .then((r) => r.data.datos),
+      .then((r) => ({
+        movimiento: r.data.datos,
+        avisoFinanciero: r.data.meta?.aviso_financiero ?? null,
+      })),
 
   /**
    * Edita una acción de personal que sigue en borrador. El backend rechaza

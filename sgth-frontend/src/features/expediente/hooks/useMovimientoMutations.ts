@@ -1,10 +1,36 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { movimientoService } from '../services/movimientoService'
 import type {
-  TransicionarData, ActualizarBorradorData, FiltrosBandeja,
+  TransicionarData, ActualizarBorradorData, FiltrosBandeja, AvisoFinanciero,
 } from '../services/movimientoService'
 import { getApiErrorMessage } from '@/types/api'
 import { notificar } from '@/components/ui'
+
+/**
+ * Una multa o una suspensión registrada sale por correo al jefe de Gestión
+ * Financiera, y su anulación también (2026-10-04). Si el correo no salió, la
+ * acción quedó igual registrada: se avisa para que la envíen a mano.
+ */
+function avisarFinanciero(aviso: AvisoFinanciero | null, anulada: boolean) {
+  if (aviso === 'enviado') {
+    notificar.exito(
+      'Enviada a Gestión Financiera',
+      anulada
+        ? 'Se avisó al jefe de Gestión Financiera de la anulación, por si el descuento ya se aplicó.'
+        : 'El jefe de Gestión Financiera la recibió por correo para aplicar el descuento.',
+    )
+  } else if (aviso === 'sin_destinatario') {
+    notificar.aviso(
+      'No se envió a Gestión Financiera',
+      'La unidad financiera no tiene un jefe con correo institucional. Descargue el PDF y envíelo a mano.',
+    )
+  } else if (aviso === 'fallo_envio') {
+    notificar.aviso(
+      'No salió el correo a Gestión Financiera',
+      'El servidor de correo no respondió. Descargue el PDF y envíelo a mano.',
+    )
+  }
+}
 
 /**
  * El `servidorId` que recibía se retiró el 2026-09-27: lo único que hacía era
@@ -39,8 +65,9 @@ export function useMovimientoMutations() {
   const transicionar = useMutation({
     mutationFn: ({ id, ...datos }: { id: number } & TransicionarData) =>
       movimientoService.transicionar(id, datos),
-    onSuccess: () => {
+    onSuccess: ({ avisoFinanciero }, { estado }) => {
       notificar.exito('Acción actualizada', 'La acción de personal avanzó de estado.')
+      avisarFinanciero(avisoFinanciero, estado === 'anulada')
       qc.invalidateQueries({ queryKey: ['movimientos'] })
       qc.invalidateQueries({ queryKey: ['movimiento'] })
       qc.invalidateQueries({ queryKey: ['bandeja-movimientos'] })

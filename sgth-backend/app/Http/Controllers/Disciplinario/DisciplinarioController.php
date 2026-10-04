@@ -20,7 +20,8 @@ class DisciplinarioController extends Controller
     {
         $query = Sumario::with([
             'servidor:id,nombre,segundo_nombre,apellido,segundo_apellido,cedula',
-            'sancion',
+            // La acción que nació de la sanción y lo que descuenta (2026-10-04).
+            'sancion.movimientoPersonal:id,codigo_registro,estado,remuneracion_origen',
         ])
             ->when($request->filled('estado'), fn ($q) => $q->where('estado', $request->input('estado')))
             ->when($request->filled('servidor_id'), fn ($q) => $q->where('servidor_id', $request->integer('servidor_id')))
@@ -87,6 +88,6 @@ class DisciplinarioController extends Controller
                 .'borrador para revisión de Talento Humano.';
         }
 
-        return ApiResponse::ok($sumario->load('sancion'), $mensaje);
+        return ApiResponse::ok($sumario->load('sancion.movimientoPersonal:id,codigo_registro,estado,remuneracion_origen'), $mensaje);
     }
 }

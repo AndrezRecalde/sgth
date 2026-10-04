@@ -1,6 +1,6 @@
 'use client'
 
-import { Stack } from '@mantine/core'
+import { Stack, Text } from '@mantine/core'
 import {
   DetailList, SectionHeading, SgthDrawer, StatusBadge, type DetailItem,
 } from '@/components/ui'
@@ -12,7 +12,11 @@ import {
   nombreServidor,
 } from '../utils/etiquetas'
 import { formatFecha } from '@/lib/fecha'
+import { ESTADO_LABELS, TONO_ACCION } from '@/features/expediente/utils/estadoAccionPersonal'
 import type { Sumario } from '@/types/api'
+
+const dolares = (v: number) =>
+  `$${v.toLocaleString('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
 interface Props {
   opened: boolean
@@ -73,6 +77,8 @@ function Contenido({ sumario }: { sumario: Sumario }) {
   ]
 
   const sancion = sumario.sancion
+  const descuento = sancion?.descuento_referencial ?? null
+  const accion = sancion?.movimiento_personal ?? null
 
   return (
     <Stack gap="lg">
@@ -104,8 +110,9 @@ function Contenido({ sumario }: { sumario: Sumario }) {
               // enseñaba también «Multa: —».
               ...(sancion.tipo_sancion === 'multa' ? [{
                 label: 'Multa',
+                // Salía «5.00%»: el decimal viene de la base como texto.
                 value: sancion.porcentaje_multa
-                  ? `${sancion.porcentaje_multa}% de la remuneración`
+                  ? `${Number(sancion.porcentaje_multa).toLocaleString('es-EC')} % de la remuneración`
                   : null,
               }] : []),
               ...(sancion.tipo_sancion === 'suspension' ? [{
@@ -113,9 +120,32 @@ function Contenido({ sumario }: { sumario: Sumario }) {
                 value: sancion.dias_suspension ? `${sancion.dias_suspension} días` : null,
               }] : []),
               { label: 'Surte efecto desde', value: formatFecha(sancion.fecha_efectiva) },
+              ...(descuento ? [{
+                label: 'Descuento referencial',
+                value: descuento.monto !== null
+                  ? `${dolares(descuento.monto)}${descuento.hasta ? ` · hasta el ${formatFecha(descuento.hasta)}` : ''}`
+                  : 'Sin remuneración registrada',
+              }] : []),
+              ...(accion ? [{
+                label: 'Acción de personal',
+                value: (
+                  <StatusBadge tone={TONO_ACCION[accion.estado]}>
+                    {accion.codigo_registro
+                      ? `${accion.codigo_registro} · ${ESTADO_LABELS[accion.estado]}`
+                      : ESTADO_LABELS[accion.estado]}
+                  </StatusBadge>
+                ),
+              }] : []),
               { label: 'Observaciones', value: sancion.observaciones, ancho: true },
             ]}
           />
+          {descuento && (
+            <Text size="xs" c="dimmed" mt="xs">
+              Al registrarse la acción de personal se envía al jefe de Gestión
+              Financiera, que aplica el descuento en el rol de pagos. El valor es
+              una referencia.
+            </Text>
+          )}
         </div>
       )}
     </Stack>

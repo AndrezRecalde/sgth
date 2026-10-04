@@ -12,6 +12,7 @@ import {
   referenciaLegal,
 } from '../utils/etiquetas'
 import { formatFecha } from '@/lib/fecha'
+import { ESTADO_LABELS } from '@/features/expediente/utils/estadoAccionPersonal'
 import type { VistoBueno } from '@/types/api'
 
 interface Props {
@@ -104,7 +105,11 @@ function Contenido({ tramite }: { tramite: VistoBueno }) {
                   ? <StatusBadge variant="outline">{cesacion.codigo_registro}</StatusBadge>
                   : 'Sin registrar',
               },
-              { label: 'Estado de la acción', value: cesacion.estado },
+              {
+                label: 'Estado de la acción',
+                // Salía en crudo («registrada»).
+                value: cesacion.estado ? ESTADO_LABELS[cesacion.estado] : null,
+              },
             ]}
           />
         </div>

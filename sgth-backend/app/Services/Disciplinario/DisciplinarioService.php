@@ -230,7 +230,7 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
             $sumario->updated_by = $userId;
             $sumario->save();
 
-            SancionDisciplinaria::create([
+            $sancion = SancionDisciplinaria::create([
                 'sumario_id'       => $sumario->id,
                 'tipo_falta'       => $datosSancion['tipo_falta'],
                 'tipo_sancion'     => $datosSancion['tipo_sancion'],
@@ -260,12 +260,17 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
                 // 'destitucion' — el sumario es su causa, no su tipo. Se
                 // registra así desde la taxonomía de dos niveles; el tipo
                 // plano 'destitucion' queda solo para el histórico anterior.
-                $this->movimientoPersonalService->registrar($sumario->servidor_id, [
+                $cesacion = $this->movimientoPersonalService->registrar($sumario->servidor_id, [
                     'tipo_movimiento'    => TipoMovimientoPersonal::CESACION_FUNCIONES->value,
                     'subtipo_movimiento' => SubtipoMovimientoPersonal::DESTITUCION->value,
                     'descripcion'        => 'Destitución por sanción disciplinaria en Sumario Administrativo #' . $sumario->id,
                     'fecha_efectiva'     => $datosSancion['fecha_efectiva'] ?? now()->toDateString(),
                 ]);
+                $sancion->update(['movimiento_personal_id' => $cesacion->id]);
+            }
+
+            if ($sancion->afectaRemuneracion()) {
+                $this->crearAccionDeSancion($sumario, $sancion);
             }
 
             DB::commit();
@@ -275,6 +280,59 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
             DB::rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * La multa y la suspensión llegan a Financiero como acción de personal
+     * «Régimen Disciplinario — Sanción disciplinaria» (decisión de TH,
+     * 2026-10-04): nace en BORRADOR, como la cesación de una destitución, y
+     * cuando Talento Humano la registra sale por correo al jefe de Gestión
+     * Financiera con el descuento referencial (AvisoFinancieroSancionService).
+     *
+     * El subtipo solo admite los nombramientos LOSEP que TH fijó el
+     * 2026-09-28 (SubtipoMovimientoPersonal::elegiblePara()). A un obrero de
+     * Código del Trabajo, o a un dignatario de elección popular, la sanción se
+     * le registra igual, pero sin acción: queda pendiente que TH decida por
+     * qué vía le llega a Financiero.
+     */
+    private function crearAccionDeSancion(Sumario $sumario, SancionDisciplinaria $sancion): void
+    {
+        $servidor     = Servidor::with('contratoVigente')->findOrFail($sumario->servidor_id);
+        $nombramiento = $servidor->contratoVigente?->tipo_nombramiento;
+
+        if (! $nombramiento || ! SubtipoMovimientoPersonal::SANCION_DISCIPLINARIA->elegiblePara($nombramiento)) {
+            return;
+        }
+
+        $accion = $this->movimientoPersonalService->registrar($servidor->id, [
+            'tipo_movimiento'    => TipoMovimientoPersonal::REGIMEN_DISCIPLINARIO->value,
+            'subtipo_movimiento' => SubtipoMovimientoPersonal::SANCION_DISCIPLINARIA->value,
+            'descripcion'        => $this->explicacionDeLaSancion($sumario, $sancion),
+            'fecha_efectiva'     => $sancion->fecha_efectiva->toDateString(),
+        ]);
+
+        $sancion->update(['movimiento_personal_id' => $accion->id]);
+    }
+
+    /** El párrafo «Explicación» de la acción. Talento Humano lo puede editar en borrador. */
+    private function explicacionDeLaSancion(Sumario $sumario, SancionDisciplinaria $sancion): string
+    {
+        $literal = $sancion->tipo_falta === TipoFalta::LEVE ? 'a' : 'b';
+        $falta   = mb_strtolower($sancion->tipo_falta->etiqueta());
+        $origen  = "por falta {$falta} determinada en el Sumario Administrativo N.º {$sumario->id}, "
+            ."conforme a los Arts. 42 literal {$literal}) y 43 de la Ley Orgánica de Servicio Público.";
+
+        $efecto = $sancion->descuentoReferencial(null);
+
+        if ($sancion->tipo_sancion === TipoSancion::MULTA) {
+            return "Se impone la sanción de multa del {$efecto['detalle']}, {$origen}";
+        }
+
+        $desde = Carbon::parse($efecto['desde'])->format('d/m/Y');
+        $hasta = Carbon::parse($efecto['hasta'])->format('d/m/Y');
+
+        return "Se impone la sanción de suspensión temporal sin goce de remuneración por "
+            ."{$efecto['detalle']}, del {$desde} al {$hasta}, {$origen}";
     }
 
     /**
