@@ -11,7 +11,7 @@ import {
   useIniciarProceso,
 } from '@/features/dispensario/hooks/useSolicitudCertificacion'
 import { usePdfFemo } from '@/features/dispensario/hooks/usePdfFemo'
-import { getSolicitudesSsoColumns } from '@/features/dispensario/components/solicitudes-certificacion.columns'
+import { getSolicitudesSsoColumns } from '@/features/dispensario/components/solicitudes-sso.columns'
 import {
   ESTADO_SOLICITUD_FILTRO_OPTIONS, TIPO_EVENTO_OPTIONS,
 } from '@/features/dispensario/services/solicitudCertificacionService'
