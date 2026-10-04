@@ -210,8 +210,8 @@ export function ServidorFormPersonal() {
               checked={field.value}
               onChange={(e) => {
                 field.onChange(e.currentTarget.checked)
-                setValue('provincia_nacimiento_id', null)
-                setValue('canton_nacimiento_id', null)
+                setValue('provincia_nacimiento_id', null, { shouldDirty: true })
+                setValue('canton_nacimiento_id', null, { shouldDirty: true })
               }}
               mt="xs"
             />
@@ -236,7 +236,7 @@ export function ServidorFormPersonal() {
                   onChange={(v) => {
                     const id = v ? Number(v) : null
                     field.onChange(id)
-                    setValue('canton_nacimiento_id', null)
+                    setValue('canton_nacimiento_id', null, { shouldDirty: true })
                   }}
                   error={errors.provincia_nacimiento_id?.message}
                 />

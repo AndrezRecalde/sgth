@@ -1,12 +1,13 @@
 'use client'
 
-import { Alert, Grid, Stack } from '@mantine/core'
+import { Alert, Fieldset, Grid, Stack } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { IconAlertTriangle, IconInfoCircle } from '@tabler/icons-react'
 import { Controller, FormProvider, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ModalFooter, SectionCard, SgthModal, notificar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
+import { useAuthStore } from '@/store/auth.store'
 import { erroresDeCampo } from '@/lib/erroresDeCampo'
 import { toDateValue, fromDateValueOrNull } from '@/lib/fecha'
 import { useServidorMutations } from '../hooks/useServidorMutations'
@@ -36,7 +37,11 @@ const esCampo = (c: string): c is keyof ServidorEdicionFormData =>
  * completar la fecha de nacimiento ni el cantón de una ficha vieja. Lo que
  * falte se avisa, no se bloquea.
  *
- * El padre lo monta con `key` por servidor.
+ * El padre lo monta con `key` por servidor y por versión (`updated_at`): tras
+ * guardar, el formulario compara contra lo guardado y no contra lo de antes.
+ * Hasta el 2026-10-03 la nota lo afirmaba y el padre no lo hacía, y cancelar
+ * no deshacía nada: un apellido cambiado y cancelado seguía ahí al reabrir, y
+ * se guardaba junto con el siguiente cambio.
  */
 export function ServidorEditarModal({ opened, onClose, servidor }: Props) {
   const contained = useContainedInput()
@@ -48,6 +53,16 @@ export function ServidorEditarModal({ opened, onClose, servidor }: Props) {
   })
 
   const { control, formState: { dirtyFields, errors } } = form
+
+  // El asistente edita el contacto y nada más: el backend marca el resto como
+  // `prohibited`. Antes lo veía todo editable y al guardar le decía que solo
+  // podía cambiarlo Talento Humano —siendo él de Talento Humano—.
+  const soloContacto = !useAuthStore((st) => st.hasRole)('admin-uath')
+
+  const cerrar = () => {
+    form.reset(valoresDeEdicion(servidor))
+    onClose()
+  }
 
   // `useWatch` y no `form.watch()`: el compilador de React no puede memoizar
   // la función que devuelve el segundo.
@@ -64,7 +79,7 @@ export function ServidorEditarModal({ opened, onClose, servidor }: Props) {
     const campos = Object.keys(dirtyFields).filter(esCampo)
 
     if (campos.length === 0) {
-      onClose()
+      cerrar()
       return
     }
 
@@ -93,7 +108,7 @@ export function ServidorEditarModal({ opened, onClose, servidor }: Props) {
   return (
     <SgthModal
       opened={opened}
-      onClose={onClose}
+      onClose={cerrar}
       title="Editar datos del servidor"
       size="xl"
     >
@@ -112,8 +127,17 @@ export function ServidorEditarModal({ opened, onClose, servidor }: Props) {
               </Alert>
             )}
 
+            {soloContacto && (
+              <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
+                Puede corregir los datos de contacto. La identidad y la
+                antigüedad las cambia el administrador de Talento Humano.
+              </Alert>
+            )}
+
             <SectionCard title="Datos personales">
-              <ServidorFormPersonal />
+              <Fieldset variant="unstyled" disabled={soloContacto}>
+                <ServidorFormPersonal />
+              </Fieldset>
             </SectionCard>
 
             <SectionCard title="Contacto">
@@ -129,6 +153,7 @@ export function ServidorEditarModal({ opened, onClose, servidor }: Props) {
                 Permanente.
               </Alert>
 
+              <Fieldset variant="unstyled" disabled={soloContacto}>
               <Grid>
                 <Grid.Col span={{ base: 12, sm: 6 }}>
                   <Controller
@@ -175,12 +200,13 @@ export function ServidorEditarModal({ opened, onClose, servidor }: Props) {
                   />
                 </Grid.Col>
               </Grid>
+              </Fieldset>
             </SectionCard>
           </Stack>
         </FormProvider>
 
         <ModalFooter
-          onCancel={onClose}
+          onCancel={cerrar}
           submitLabel="Guardar cambios"
           submitting={editar.isPending}
         />
