@@ -62,6 +62,39 @@ export function ServidorFormContacto({ sinTitulo = false }: { sinTitulo?: boolea
         />
       </Grid.Col>
 
+      {/* A quién llamar si le pasa algo en el trabajo (2026-10-04). Opcional,
+          pero si se escribe el nombre hace falta el teléfono, y al revés. */}
+      <Grid.Col span={12}>
+        <SectionHeading title="Contacto de emergencia (opcional)" mt="xs" mb="xs" />
+      </Grid.Col>
+      <Grid.Col span={{ base: 12, sm: 6 }}>
+        <TextInput
+          label="Nombre"
+          placeholder="Ej: Rosa Cortez"
+          {...contained}
+          {...register('contacto_emergencia_nombre')}
+          error={errors.contacto_emergencia_nombre?.message}
+        />
+      </Grid.Col>
+      <Grid.Col span={{ base: 12, sm: 3 }}>
+        <TextInput
+          label="Parentesco"
+          placeholder="Ej: Madre"
+          {...contained}
+          {...register('contacto_emergencia_parentesco')}
+          error={errors.contacto_emergencia_parentesco?.message}
+        />
+      </Grid.Col>
+      <Grid.Col span={{ base: 12, sm: 3 }}>
+        <TextInput
+          label="Teléfono"
+          placeholder="0999999999"
+          {...contained}
+          {...register('contacto_emergencia_telefono')}
+          error={errors.contacto_emergencia_telefono?.message}
+        />
+      </Grid.Col>
+
       <Grid.Col span={12}>
         <SectionHeading title="Documentos adicionales" mt="xs" mb="xs" />
       </Grid.Col>

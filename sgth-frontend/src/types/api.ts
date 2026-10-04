@@ -567,6 +567,9 @@ export type ServidorConRelaciones = Servidor & {
   codigo_medico?: string | null
   direccion?: string
   direccion_domicilio?: string
+  contacto_emergencia_nombre?: string | null
+  contacto_emergencia_parentesco?: string | null
+  contacto_emergencia_telefono?: string | null
   tiene_discapacidad?: boolean
   tiene_enfermedad_catastrofica?: boolean
   contrato_vigente?: ContratoConRelaciones

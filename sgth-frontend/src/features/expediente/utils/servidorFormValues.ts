@@ -26,6 +26,9 @@ export const BLANK_FORM_VALUES: ServidorBasicoFormData = {
   correo_personal:       '',
   codigo_medico:         '',
   direccion_domicilio:   '',
+  contacto_emergencia_nombre:     '',
+  contacto_emergencia_parentesco: '',
+  contacto_emergencia_telefono:   '',
 }
 
 const soloFecha = (v?: string | null) => (v ? v.split('T')[0] : null)
@@ -55,6 +58,9 @@ export function mapServidorToFormValues(servidor: ServidorConRelaciones): Servid
     correo_personal:       servidor.correo_personal ?? '',
     codigo_medico:         servidor.codigo_medico ?? '',
     direccion_domicilio:   servidor.direccion_domicilio ?? '',
+    contacto_emergencia_nombre:     servidor.contacto_emergencia_nombre ?? '',
+    contacto_emergencia_parentesco: servidor.contacto_emergencia_parentesco ?? '',
+    contacto_emergencia_telefono:   servidor.contacto_emergencia_telefono ?? '',
   }
 }
 
@@ -88,6 +94,7 @@ export const CAMPOS_POR_PASO = [
   [
     'telefono_celular', 'telefono_convencional', 'correo_personal', 'codigo_medico',
     'direccion_domicilio', 'numero_papeleta_votacion', 'pasaporte_numero',
+    'contacto_emergencia_nombre', 'contacto_emergencia_parentesco', 'contacto_emergencia_telefono',
   ],
   ['fecha_ingreso_sector_publico', 'fecha_nombramiento'],
 ] as const satisfies readonly (readonly (keyof (ServidorBasicoFormData & ServidorLaboralFormData))[])[]
