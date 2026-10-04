@@ -16,6 +16,9 @@ class EnfermedadCatastroficaServidor extends Model
 
     protected $table = 'enfermedades_catastroficas_servidor';
 
+    /** La ruta interna del archivo no tiene por qué llegar al navegador. */
+    protected $hidden = ['certificado_ruta'];
+
     protected $fillable = [
         'servidor_id',
         'tipo_enfermedad',

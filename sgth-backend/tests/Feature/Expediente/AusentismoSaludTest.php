@@ -105,6 +105,8 @@ test('solo los de enfermedad, y solo del último año', function () {
     ($this->permiso)(['tipo' => 'calamidad']);
     // Más viejo que la ventana.
     ($this->permiso)(['fecha' => now()->subMonths(14)->toDateString()]);
+    // Con fecha futura: todavía no ocurrió (hasta el 2026-10-03 contaba).
+    ($this->permiso)(['fecha' => now()->addWeek()->toDateString()]);
 
     ($this->consultar)()->assertJsonPath('datos.permisos', 1);
 });

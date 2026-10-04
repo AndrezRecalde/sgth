@@ -1,4 +1,4 @@
-import { toDateValue } from '@/lib/fecha'
+import { fromDateValue, hoyIso, toDateValue } from '@/lib/fecha'
 import type { SolicitudCertificacion } from '@/features/dispensario/services/solicitudCertificacionService'
 
 /**
@@ -35,15 +35,27 @@ export function aptitudVigente(
   const ficha = solicitud.ficha_salud_ocupacional
   const fechaEvaluacion = ficha?.fecha_evaluacion ?? solicitud.created_at
 
-  const vence = toDateValue(fechaEvaluacion)
-  if (!vence) return null
-  vence.setFullYear(vence.getFullYear() + ANIOS_ENTRE_EVALUACIONES)
+  // El día de la evaluación en hora local («AAAA-MM-DD»), y todo con texto.
+  // Antes se comparaba la medianoche local con `Date.now()`: el mismo día del
+  // vencimiento ya salía «vencida», cuando el tablero de cobertura
+  // (CoberturaCertificacionService) la da por «por vencer» hasta el día
+  // siguiente. Y `toISOString()` cambiaba de día en husos al este de UTC.
+  const base = toDateValue(fechaEvaluacion)
+  if (!base) return null
+  const [anio, mes, dia] = fromDateValue(base).split('-')
+
+  // Como `fecha + interval '2 years'` de Postgres: el 29 de febrero cae en un
+  // año sin él y pasa al 28, no al 1 de marzo que daba `setFullYear`.
+  const anioVence = Number(anio) + ANIOS_ENTRE_EVALUACIONES
+  const venceEl = mes === '02' && dia === '29'
+    ? `${anioVence}-02-28`
+    : `${anioVence}-${mes}-${dia}`
 
   return {
     dictamen: solicitud.dictamen,
     restricciones: ficha?.restricciones ?? null,
     fechaEvaluacion,
-    venceEl: vence.toISOString().slice(0, 10),
-    vencida: vence.getTime() < Date.now(),
+    venceEl,
+    vencida: venceEl < hoyIso(),
   }
 }

@@ -58,7 +58,10 @@ final class AusentismoSaludController extends Controller
                 fn (EstadoPermiso $e) => $e->value,
                 self::ESTADOS_QUE_CUENTAN,
             ))
-            ->whereDate('fecha', '>=', $desde->toDateString())
+            // Los últimos doce meses HASTA HOY: sin el tope, un permiso con
+            // fecha de la semana próxima ya contaba. Y sin `whereDate`, que
+            // envolvía la columna en un cast y no usaba el índice.
+            ->whereBetween('fecha', [$desde->toDateString(), now()->toDateString()])
             ->count();
 
         return ApiResponse::ok([

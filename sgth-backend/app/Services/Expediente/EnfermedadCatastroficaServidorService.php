@@ -12,6 +12,7 @@ class EnfermedadCatastroficaServidorService
     {
         return EnfermedadCatastroficaServidor::where('servidor_id', $servidorId)
             ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
             ->get();
     }
 
