@@ -388,7 +388,7 @@ final class SolicitudCertificacionController extends Controller
         Request $request,
         int $id
     ): JsonResponse {
-        return DB::transaction(function () use ($id) {
+        return DB::transaction(function () use ($id, $request) {
             $solicitud = SolicitudCertificacionMedica::lockForUpdate()->findOrFail($id);
 
             if ($solicitud->estado !== 'en_proceso') {
@@ -434,6 +434,15 @@ final class SolicitudCertificacionController extends Controller
                 'dictamen' => $ficha->aptitud->value,
                 'observacion_medica' => $ficha->restricciones,
             ]);
+
+            // Un candidato no apto queda descalificado (decisión de TH,
+            // 2026-10-04): antes seguía «en evaluación médica» para siempre y
+            // el concurso formal no podía cerrarse ni cubrir su vacante.
+            if ($ficha->aptitud === AptitudMedica::NO_APTO && $solicitud->postulante_id && ! $solicitud->servidor_id) {
+                $this->seleccionService->descalificarPorNoApto(
+                    $solicitud->postulante_id, $request->user()->id
+                );
+            }
 
             return ApiResponse::ok(
                 $solicitud, 'Dictamen emitido: '.$ficha->aptitud->etiqueta().'.'
@@ -594,9 +603,9 @@ final class SolicitudCertificacionController extends Controller
 
             // En un concurso formal, incorporar al último ganador lo cierra
             // (2026-10-04): ya no hay «Declarar ganador oficial».
-            $finalizada = $this->seleccionService->finalizarSiNoQuedanGanadores(
+            $finalizada = $this->seleccionService->cerrarConcursoSiCorresponde(
                 $convocatoria->id, $request->user()->id
-            );
+            ) !== null;
 
             \DB::commit();
 

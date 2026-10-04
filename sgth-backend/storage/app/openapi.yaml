@@ -34380,6 +34380,60 @@
                 }
             }
         },
+        "/v1/seleccion/convocatorias/{convocatoriaId}/declarar-siguiente": {
+            "post": {
+                "operationId": "seleccion.declararSiguiente",
+                "summary": "Cubre la vacante que dej\u00f3 un no apto con el siguiente de la lista de\nespera, por puntaje",
+                "tags": [
+                    "Seleccion"
+                ],
+                "parameters": [
+                    {
+                        "name": "convocatoriaId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string"
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/Postulante"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/expediente/servidores/sin-usuario": {
             "get": {
                 "operationId": "servidores.sinUsuario",

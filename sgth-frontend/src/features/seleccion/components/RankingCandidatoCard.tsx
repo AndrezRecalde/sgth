@@ -12,6 +12,7 @@ const ESTADO_LABELS: Record<string, string> = {
   en_evaluacion:      'En evaluación',
   aprobado:           'Aprobado',
   reprobado:          'Reprobado',
+  descalificado:      'No apto',
   seleccionado:       'Ganador',
   ganador_potencial:  'En evaluación médica',
   no_seleccionado:    'No seleccionado',
@@ -35,6 +36,8 @@ function PosicionIcon({ pos }: { pos: number }) {
  * concurso formal: con el último ganador incorporado, la convocatoria se
  * finaliza sola. Antes había un «Declarar ganador oficial» que no miraba el
  * dictamen ni creaba el expediente.
+ *
+ * Un no apto ya no llega aquí: el dictamen lo pasa a «descalificado».
  */
 function EstadoIncorporacion({ p, puedeIncorporar, incorporando, onIncorporar }: {
   p: Postulante
@@ -43,17 +46,14 @@ function EstadoIncorporacion({ p, puedeIncorporar, incorporando, onIncorporar }:
   onIncorporar: (p: Postulante) => void
 }) {
   const s = p.solicitud_certificacion
-  const conDictamen = s?.estado === 'completada'
-  const apto = conDictamen && dictamenHabilitaIncorporacion(s.dictamen)
+  const apto = s?.estado === 'completada' && dictamenHabilitaIncorporacion(s.dictamen)
 
   return (
     <Group justify="space-between" gap="xs">
       <Text size="xs" c="dimmed">
-        {!conDictamen
-          ? 'Esperando el dictamen del Dispensario Médico.'
-          : apto
-            ? 'Con dictamen de aptitud: listo para incorporar.'
-            : 'El Dispensario lo declaró no apto.'}
+        {apto
+          ? 'Con dictamen de aptitud: listo para incorporar.'
+          : 'Esperando el dictamen del Dispensario Médico.'}
       </Text>
       {apto && (
         <Button
@@ -135,6 +135,12 @@ export function RankingCandidatoCard({
             incorporando={incorporando}
             onIncorporar={onIncorporar}
           />
+        )}
+
+        {p.estado === 'descalificado' && (
+          <Text size="xs" c="dimmed">
+            El Dispensario Médico lo declaró no apto: no puede ser incorporado.
+          </Text>
         )}
 
         {aprueba && seleccionable && (
