@@ -73,6 +73,11 @@ class ContratoServidorObserver
                 ->withProperties([
                     'motivo_fin' => $contrato->motivo_fin,
                     'fecha_fin'  => optional($contrato->fecha_fin)->toDateString(),
+                    // El plazo que tenía justo antes de cerrarse —`null` si
+                    // era indefinido—. Si se anula la acción que lo cerró, el
+                    // contrato vuelve a ESTE plazo: el del ingreso no sirve si
+                    // después se prorrogó. Aquí todavía se lee el original.
+                    'fecha_fin_previa' => $this->soloFecha($contrato->getRawOriginal('fecha_fin')),
                 ])
                 ->event('updated')
                 ->log('Contrato cerrado');
@@ -80,6 +85,12 @@ class ContratoServidorObserver
     }
 
     // ── Helpers ──────────────────────────────────────────
+
+    /** «2026-12-31 00:00:00» o «2026-12-31» → «2026-12-31». */
+    private function soloFecha(?string $valor): ?string
+    {
+        return $valor === null ? null : substr($valor, 0, 10);
+    }
 
     private function esVigente(ContratoServidor $contrato): bool
     {
