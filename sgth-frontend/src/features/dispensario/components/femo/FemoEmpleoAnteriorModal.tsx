@@ -86,7 +86,7 @@ export function FemoEmpleoAnteriorModal({ opened, onClose, onAgregar }: Props) {
           render={({ field }) => (
             <Checkbox
               label="Es el trabajo actual"
-              description="Déjalo sin marcar si es un empleo anterior"
+              description="Déjelo sin marcar si es un empleo anterior"
               checked={field.value ?? false}
               onChange={(e) => {
                 field.onChange(e.currentTarget.checked)

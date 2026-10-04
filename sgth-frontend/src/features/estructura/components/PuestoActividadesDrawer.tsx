@@ -243,7 +243,7 @@ export function PuestoActividadesDrawer({
           </Group>
 
           <Text size="xs" c="dimmed">
-            {soloLectura ? '' : 'Arrastra las actividades para reordenarlas. '}
+            {soloLectura ? '' : 'Arrastre las actividades para reordenarlas. '}
             Se usan en el formulario FEMO para marcar
             los factores de riesgo del puesto.
           </Text>
@@ -279,7 +279,7 @@ export function PuestoActividadesDrawer({
             <Card withBorder radius="md" p="md">
               <Text size="sm" c="dimmed" ta="center">
                 No hay actividades registradas.
-                Agrega la primera actividad del puesto.
+                Agregue la primera actividad del puesto.
               </Text>
             </Card>
           ) : (

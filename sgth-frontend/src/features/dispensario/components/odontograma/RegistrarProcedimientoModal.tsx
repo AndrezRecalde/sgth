@@ -74,7 +74,7 @@ export function RegistrarProcedimientoModal({
 
         <Select
           label="Procedimiento"
-          placeholder="Selecciona el procedimiento realizado"
+          placeholder="Seleccione el procedimiento realizado"
           data={PROCEDIMIENTO_OPTIONS}
           {...contained}
           value={procedimiento}
@@ -84,7 +84,7 @@ export function RegistrarProcedimientoModal({
 
         <Select
           label="Superficie (opcional)"
-          placeholder="Selecciona la superficie dental"
+          placeholder="Seleccione la superficie dental"
           data={SUPERFICIE_OPTIONS}
           clearable
           {...contained}

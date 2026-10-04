@@ -78,7 +78,7 @@ export function EmitirCertificadoModal({
 
   const handleSubmit = () => {
     if (!fechaInicio || !fechaFin) {
-      setErrorRango('Selecciona el rango de fechas del reposo.')
+      setErrorRango('Seleccione el rango de fechas del reposo.')
       return
     }
     if (rangoExcede) return
@@ -131,7 +131,7 @@ export function EmitirCertificadoModal({
           <DatePickerInput
             type="range"
             label="Rango de reposo"
-            placeholder="Selecciona fecha inicio y fin"
+            placeholder="Seleccione la fecha de inicio y la de fin"
             valueFormat="DD/MM/YYYY"
             maxDate={
               fechaInicio instanceof Date

@@ -99,7 +99,7 @@ export function TurnosDelDiaTable({ onAtender, onVerConsulta }: Props) {
           title="Sin turnos"
           description={filtroActivo
             ? "No hay turnos en el rango seleccionado."
-            : "No tienes pacientes asignados para hoy."}
+            : "No tiene pacientes asignados para hoy."}
         />
       ) : (
         <SgthTable

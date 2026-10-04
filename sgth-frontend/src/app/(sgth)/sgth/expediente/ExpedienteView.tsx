@@ -67,7 +67,7 @@ export function ExpedienteView() {
     } catch (error) {
       notificar.error(
         `No se pudo exportar el listado a ${tipo === 'excel' ? 'Excel' : 'PDF'}`,
-        getApiErrorMessage(error, 'Inténtalo de nuevo en unos segundos.'),
+        getApiErrorMessage(error, 'Inténtelo de nuevo en unos segundos.'),
       )
     } finally {
       setExportando(null)

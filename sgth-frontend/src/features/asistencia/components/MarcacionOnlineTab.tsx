@@ -88,10 +88,10 @@ export function MarcacionOnlineTab() {
       title: "Acceso a ubicación bloqueado",
       children: (
         <Text size="sm">
-          Has bloqueado el acceso a la ubicación. Para permitirlo, haz clic en
+          Ha bloqueado el acceso a la ubicación. Para permitirlo, haga clic en
           el icono de candado o de información que aparece en la barra de
-          direcciones de tu navegador, busca Ubicación y cámbialo a Permitir.
-          Luego recarga la página.
+          direcciones de su navegador, busque Ubicación y cámbielo a Permitir.
+          Luego recargue la página.
         </Text>
       ),
     });
@@ -123,7 +123,7 @@ export function MarcacionOnlineTab() {
     } catch (error) {
       notificar.error(
         `No se pudo registrar la ${label.toLowerCase()}`,
-        getApiErrorMessage(error, "Inténtalo de nuevo en unos segundos."),
+        getApiErrorMessage(error, "Inténtelo de nuevo en unos segundos."),
       );
     } finally {
       setRegistrando(false);
@@ -139,8 +139,8 @@ export function MarcacionOnlineTab() {
         radius="md"
       >
         <Text size="sm">
-          Tu usuario no tiene habilitada la marcación biométrica. Contacta a
-          Talento Humano para habilitarla en tu contrato.
+          Su usuario no tiene habilitada la marcación biométrica. Contacte a
+          Talento Humano para habilitarla en su contrato.
         </Text>
       </Alert>
     );
@@ -165,7 +165,7 @@ export function MarcacionOnlineTab() {
               <IconInfoCircle size={18} />
             </ThemeIcon>
             <Text size="xs" c="dimmed" lh={1.3} maw={250}>
-              Registra tu asistencia desde territorio con conexión a internet y
+              Registre su asistencia desde territorio con conexión a internet y
               GPS activo.
             </Text>
           </Group>

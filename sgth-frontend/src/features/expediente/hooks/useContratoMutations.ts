@@ -25,7 +25,7 @@ export function useContratoMutations(servidorId: number) {
     onError: (error) => {
       notificar.error(
         'No se pudo reprogramar el plazo del contrato',
-        getApiErrorMessage(error, 'Inténtalo de nuevo en unos segundos.'),
+        getApiErrorMessage(error, 'Inténtelo de nuevo en unos segundos.'),
       )
     },
   })

@@ -51,7 +51,7 @@ export function AccionPersonalPie({ m, onClose, onCompletarVinculo, onPedirDicta
     } catch (error) {
       notificar.error(
         'No se pudo generar el PDF de la acción de personal',
-        getApiErrorMessage(error, 'Inténtalo de nuevo en unos segundos.'),
+        getApiErrorMessage(error, 'Inténtelo de nuevo en unos segundos.'),
       )
     } finally {
       setDescargando(false)

@@ -80,7 +80,7 @@ export function CoberturaTab() {
     } catch (e) {
       notificar.error(
         'No se pudo exportar la cobertura a Excel',
-        getApiErrorMessage(e, 'Inténtalo de nuevo en unos segundos.'),
+        getApiErrorMessage(e, 'Inténtelo de nuevo en unos segundos.'),
       )
     } finally {
       setExportando(false)

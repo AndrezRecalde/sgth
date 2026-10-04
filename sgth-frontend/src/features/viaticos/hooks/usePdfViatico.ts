@@ -43,7 +43,7 @@ export function usePdfViatico() {
       )
       progreso.exito('PDF generado', 'La solicitud se abrió correctamente.')
     } catch {
-      progreso.error('No se pudo generar el PDF de la solicitud', 'Inténtalo de nuevo en unos segundos.')
+      progreso.error('No se pudo generar el PDF de la solicitud', 'Inténtelo de nuevo en unos segundos.')
     } finally {
       setLoadingSolicitud(false)
     }

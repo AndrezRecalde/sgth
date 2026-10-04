@@ -107,7 +107,7 @@ export function SolicitarCertificacionLoteModal({
 
         <Select
           label="Tipo de evento"
-          placeholder="Selecciona el tipo de evaluación"
+          placeholder="Seleccione el tipo de evaluación"
           data={TIPO_EVENTO_LOTE_OPTIONS}
           {...contained}
           value={tipoEvento}
@@ -117,7 +117,7 @@ export function SolicitarCertificacionLoteModal({
 
         <DatePickerInput
           label="Fecha límite"
-          placeholder="Selecciona la fecha límite"
+          placeholder="Seleccione la fecha límite"
           valueFormat="DD/MM/YYYY"
           {...contained}
           value={fechaLimite}

@@ -46,7 +46,7 @@ export function FamiliaTab({ servidorId }: Props) {
           emptyProps={{
             icon: IconUsers,
             title: 'Sin cargas familiares',
-            description: 'Registra los familiares dependientes del servidor.',
+            description: 'Registre los familiares dependientes del servidor.',
           }}
         >
           <SgthTable

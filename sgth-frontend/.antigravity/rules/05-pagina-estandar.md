@@ -175,3 +175,21 @@ Las pantallas de trabajo que ocupan la ventana entera —la ficha de atención
 médica y odontológica— también llevan `PageShell fluid` y `PageHeader`: sin
 `PageShell` el contenido quedaba pegado al borde, porque el padding lo pone él
 y no el shell.
+
+## Redacción: se trata de usted
+
+Todo texto que lee la persona —títulos, descripciones, estados vacíos,
+placeholders, notificaciones, errores— la trata de **usted**: «Seleccione el
+tipo», «Inténtelo de nuevo», «Registre la cuenta», «a su nombre».
+
+Hasta el 2026-10-04 la aplicación mezclaba los dos tratos, a veces en la misma
+pantalla: los formularios decían «Seleccione» y su estado vacío «Registra»;
+«Inténtalo de nuevo» salía en dieciséis sitios. Se unificó en usted, que es el
+registro de una institución pública.
+
+Cuidado con los falsos amigos al revisar: «Consulta registrada», «Marca
+asistencia» o «Define el grado del puesto» están en tercera persona —describen
+algo, no se lo piden a nadie— y no se tocan.
+
+No hay regla de lint: distinguir un imperativo de una tercera persona exige leer
+la frase. Se revisa a mano (ver [10](10-checklist.md)).

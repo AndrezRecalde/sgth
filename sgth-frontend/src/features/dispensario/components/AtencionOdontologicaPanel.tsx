@@ -193,7 +193,7 @@ export function AtencionOdontologicaPanel({
                 ) : (
                   <Stack gap="sm" p="md">
                     <Text size="sm" c="dimmed">
-                      Guarda la consulta primero para
+                      Guarde la consulta primero para
                       poder emitir recetas.
                     </Text>
                   </Stack>
@@ -215,7 +215,7 @@ export function AtencionOdontologicaPanel({
                 ) : (
                   <Stack gap="sm" p="md">
                     <Text size="sm" c="dimmed">
-                      Guarda la consulta primero para
+                      Guarde la consulta primero para
                       poder emitir certificados.
                     </Text>
                   </Stack>
@@ -231,7 +231,7 @@ export function AtencionOdontologicaPanel({
                 ) : (
                   <Stack gap="sm" p="md">
                     <Text size="sm" c="dimmed">
-                      Guarda la consulta primero para
+                      Guarde la consulta primero para
                       poder subir resultados.
                     </Text>
                   </Stack>

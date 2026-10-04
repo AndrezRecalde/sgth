@@ -22,7 +22,7 @@ export function usePdfFemo() {
 
       progreso.exito('PDF generado', 'La ficha FEMO se abrió correctamente.')
     } catch {
-      progreso.error('No se pudo generar el PDF de la FEMO', 'Inténtalo de nuevo en unos segundos.')
+      progreso.error('No se pudo generar el PDF de la FEMO', 'Inténtelo de nuevo en unos segundos.')
     } finally {
       setLoading(false)
     }

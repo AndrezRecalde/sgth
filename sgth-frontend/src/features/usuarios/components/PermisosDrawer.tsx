@@ -64,7 +64,7 @@ export function PermisosDrawer({ opened, onClose, usuario }: Props) {
                 <Stack gap={4}>
                   <Text size="xs" fw={600} c="dimmed">PERMISOS ADICIONALES</Text>
                   <Text size="xs" c="dimmed">
-                    Selecciona permisos extra que este usuario necesita fuera de
+                    Seleccione permisos extra que este usuario necesita fuera de
                     su rol. Los que ya vienen por rol aparecen bloqueados.
                   </Text>
                 </Stack>

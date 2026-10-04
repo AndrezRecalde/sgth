@@ -77,7 +77,7 @@ function SeccionCriterios({
           icon={<IconInfoCircle size={16} />}>
           <Text size="xs">
             No hay criterios configurados para esta sección.
-            {editable && ' Agrega criterios antes de publicar la convocatoria.'}
+            {editable && ' Agregue criterios antes de publicar la convocatoria.'}
           </Text>
         </Alert>
       ) : (
