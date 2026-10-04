@@ -134,6 +134,7 @@ function FormularioHito({
           render={({ field }) => (
             <DatePickerInput
               label={hito.etiqueta}
+              required
               description={hito.descripcion}
               valueFormat="DD/MM/YYYY"
               clearable={!hito.obligatoria}

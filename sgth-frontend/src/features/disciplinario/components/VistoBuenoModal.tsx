@@ -115,6 +115,7 @@ export function VistoBuenoModal({ opened, onClose }: Props) {
           render={({ field }) => (
             <Select
               label="Causal (Art. 172 del Código del Trabajo)"
+              required
               placeholder="Seleccione la causal invocada"
               data={CAUSAL_OPTIONS}
               searchable
@@ -128,6 +129,7 @@ export function VistoBuenoModal({ opened, onClose }: Props) {
 
         <Textarea
           label="Fundamento de hecho"
+          required
           placeholder="Relate los hechos que sustentan la solicitud"
           rows={4}
           error={errors.hechos?.message}

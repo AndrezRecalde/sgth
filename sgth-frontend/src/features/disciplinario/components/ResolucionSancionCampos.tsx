@@ -49,6 +49,7 @@ export function ResolucionSancionCampos({ control, register, errors, sancion }: 
           render={({ field }) => (
             <Select
               label="Gravedad de la falta"
+              required
               placeholder="Seleccione"
               data={FALTA_OPTIONS}
               error={errors.tipo_falta?.message}
@@ -67,6 +68,7 @@ export function ResolucionSancionCampos({ control, register, errors, sancion }: 
           render={({ field }) => (
             <Select
               label="Sanción que se impone"
+              required
               placeholder="Seleccione"
               data={SANCION_OPTIONS}
               error={errors.tipo_sancion?.message}
@@ -86,6 +88,7 @@ export function ResolucionSancionCampos({ control, register, errors, sancion }: 
             render={({ field }) => (
               <NumberInput
                 label="Multa (% de la remuneración)"
+                required
                 description={`El Art. 43 de la LOSEP no admite más del ${MULTA_MAX}%`}
                 placeholder="Ej: 5"
                 decimalScale={2}
@@ -110,6 +113,7 @@ export function ResolucionSancionCampos({ control, register, errors, sancion }: 
             render={({ field }) => (
               <NumberInput
                 label="Días de suspensión"
+                required
                 description={`El Art. 43 de la LOSEP no admite más de ${SUSPENSION_MAX_DIAS} días`}
                 placeholder="Ej: 15"
                 min={1}
@@ -133,6 +137,7 @@ export function ResolucionSancionCampos({ control, register, errors, sancion }: 
           render={({ field }) => (
             <DatePickerInput
               label="Surte efecto desde"
+              required
               valueFormat="DD/MM/YYYY"
               error={errors.fecha_efectiva?.message}
               {...contained}
