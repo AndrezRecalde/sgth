@@ -41,6 +41,7 @@ export function CargaFamiliarModal({
   const contained = useContainedInput();
   const { crear, editar } = useCargaFamiliarMutations(servidorId);
   const isEditing = !!initialValues;
+  const cedulaFija = Boolean(initialValues?.cedula);
 
   const {
     register,
@@ -92,8 +93,10 @@ export function CargaFamiliarModal({
           label="Cédula"
           placeholder="Ej: 0801234567"
           maxLength={10}
-          disabled={isEditing}
-          description={isEditing
+          // Una vez registrada no cambia: numera la historia clínica del
+          // Dispensario. Un familiar antiguo sin cédula la escribe aquí.
+          disabled={cedulaFija}
+          description={cedulaFija
             ? 'La cédula no se puede modificar'
             : undefined}
           {...contained}
