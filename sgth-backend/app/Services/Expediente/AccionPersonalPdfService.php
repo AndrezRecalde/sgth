@@ -99,8 +99,19 @@ class AccionPersonalPdfService
             );
         }
 
+        // Una multa o una suspensión no cambian la situación del servidor: lo
+        // que el documento tiene que decir —es el que recibe Financiero— es
+        // cuánto se descuenta. Se calcula sobre la remuneración que la acción
+        // congeló, así que reimprimirlo da siempre la misma cifra.
+        $descuento = \App\Models\Disciplinario\SancionDisciplinaria::where('movimiento_personal_id', $movimiento->id)
+            ->first()
+            ?->descuentoReferencial(
+                $movimiento->remuneracion_origen !== null ? (float) $movimiento->remuneracion_origen : null
+            );
+
         $pdf = Pdf::loadView('pdf.expediente.accion-personal', [
             'movimiento'   => $movimiento,
+            'descuento'    => $descuento,
             'anulada'      => $movimiento->estado === EstadoAccionPersonal::ANULADA,
             'servidor'     => $movimiento->servidor,
             'firmaAutoridad' => $this->firma($movimiento, 'firmante_autoridad', RolFirmaAccionPersonal::AUTORIDAD_NOMINADORA),

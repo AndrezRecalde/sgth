@@ -1,7 +1,7 @@
 'use client'
 
 import { Alert, Stack, Text } from '@mantine/core'
-import { IconAlertTriangle } from '@tabler/icons-react'
+import { IconAlertTriangle, IconInfoCircle } from '@tabler/icons-react'
 import { useForm, useWatch, type DefaultValues } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormModal, SgthModal, notificar } from '@/components/ui'
@@ -148,6 +148,15 @@ function FormularioResolucion({
             La destitución generará una Cesación de Funciones en borrador. El
             vínculo del servidor no se cierra aquí: Talento Humano debe revisarla
             y aprobarla desde Acciones de Personal.
+          </Alert>
+        )}
+
+        {(sancion === 'multa' || sancion === 'suspension') && (
+          <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
+            Se generará una acción de personal de sanción disciplinaria en
+            borrador. Cuando Talento Humano la registre, se enviará por correo al
+            jefe de Gestión Financiera con el descuento referencial, para que lo
+            aplique en el rol de pagos.
           </Alert>
         )}
       </Stack>

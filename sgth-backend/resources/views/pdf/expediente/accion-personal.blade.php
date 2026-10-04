@@ -382,7 +382,7 @@
 <table class="situacion">
     <tr>
         <th>Situación actual</th>
-        <th class="propuesta">Situación propuesta</th>
+        <th class="propuesta">{{ !empty($descuento) ? 'Efecto en la remuneración' : 'Situación propuesta' }}</th>
     </tr>
     <tr>
         <td>
@@ -403,6 +403,22 @@
             @endif
         </td>
         <td>
+        @if(!empty($descuento))
+            {{-- Multa o suspensión (2026-10-04): el servidor sigue en su puesto,
+                 así que la columna dice lo que Financiero necesita para el rol
+                 de pagos. Valor de referencia: lo aplica Financiero. --}}
+            <div class="campo"><span class="label">Sanción</span><span class="valor fuerte">{{ $descuento['sancion'] }}</span></div>
+            <div class="campo"><span class="label">Detalle</span><span class="valor">{{ $descuento['detalle'] }}</span></div>
+            @if($descuento['hasta'])
+                <div class="campo"><span class="label">Período</span><span class="valor">Del {{ $fmtFecha($descuento['desde']) }} al {{ $fmtFecha($descuento['hasta']) }}</span></div>
+            @endif
+            <div class="campo"><span class="label">Base de cálculo (R.M.U.)</span><span class="valor">{!! $dato($fmtRmu($descuento['base'])) !!}</span></div>
+            <div class="campo"><span class="label">Descuento referencial</span><span class="valor fuerte">{!! $dato($fmtRmu($descuento['monto'])) !!}</span></div>
+            <div class="campo"><span class="valor vacio">
+                {{ $descuento['hasta'] ? 'R.M.U. ÷ 30 × días de suspensión.' : 'Porcentaje de la multa sobre la R.M.U.' }}
+                Valor de referencia: el descuento lo aplica Financiero en el rol de pagos.
+            </span></div>
+        @else
             <div class="campo"><span class="label">Dirección</span><span class="valor">{!! $dato($movimiento->unidadDestino->nombre ?? null) !!}</span></div>
             <div class="campo"><span class="label">Grupo ocupacional</span><span class="valor">{!! $dato($movimiento->puestoDestino->grupoOcupacional->denominacion_generica ?? null) !!}</span></div>
             <div class="campo"><span class="label">Puesto</span><span class="valor fuerte">{!! $dato($movimiento->puestoDestino->cargo->nombre ?? null) !!}</span></div>
@@ -410,6 +426,7 @@
             <div class="campo"><span class="label">Lugar de trabajo</span><span class="valor">{!! $dato($movimiento->puestoDestino ? ($movimiento->lugar_trabajo ?: 'Esmeraldas') : null) !!}</span></div>
             <div class="campo"><span class="label">R.M.U.</span><span class="valor fuerte">{!! $dato($fmtRmu($rmuPropuesta)) !!}</span></div>
             <div class="campo"><span class="label">Partida presupuestaria</span><span class="valor">{!! $dato($partidaPropuesta) !!}</span></div>
+        @endif
         </td>
     </tr>
 </table>

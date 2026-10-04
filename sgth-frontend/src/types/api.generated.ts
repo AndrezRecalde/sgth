@@ -6774,7 +6774,12 @@ export interface components {
              * @enum {string}
              */
             estado: "en_instruccion" | "en_prueba" | "con_informe" | "apelado" | "cerrado";
-            /** Format: date-time */
+            /**
+             * Format: date-time
+             * @description La notificación y el informe ya ocurrieron; el término del
+             *     período de prueba sí puede ser futuro. El orden entre hitos lo
+             *     comprueba DisciplinarioService::validarCronologia().
+             */
             fecha_notificacion?: string | null;
             /** Format: date-time */
             fecha_termino_prueba?: string | null;
@@ -21677,7 +21682,9 @@ export interface operations {
                         /** @constant */
                         mensaje: "Transición aplicada con éxito.";
                         datos: components["schemas"]["MovimientoPersonalResource"];
-                        meta: null;
+                        meta: {
+                            aviso_financiero: string | null;
+                        } | null;
                     };
                 };
             };
