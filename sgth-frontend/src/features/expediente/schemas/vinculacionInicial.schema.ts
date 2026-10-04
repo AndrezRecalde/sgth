@@ -53,6 +53,11 @@ export const vinculacionInicialSchema = z.object({
   telefono_convencional: z.string().optional(),
   correo_personal:       z.string().email('Correo inválido').optional().or(z.literal('')),
   direccion_domicilio:   z.string().optional(),
+  // Contacto de emergencia, opcional. Que nombre y teléfono vayan juntos lo
+  // comprueba el backend, contra lo que ya tiene la ficha.
+  contacto_emergencia_nombre:     z.string().max(150, 'Máximo 150 caracteres').optional(),
+  contacto_emergencia_parentesco: z.string().max(50, 'Máximo 50 caracteres').optional(),
+  contacto_emergencia_telefono:   z.string().max(20, 'Máximo 20 caracteres').optional(),
 
   // Antigüedad real en la institución. Puede ser muy anterior al contrato
   // vigente si la persona tuvo vínculos previos.

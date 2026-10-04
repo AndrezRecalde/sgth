@@ -228,6 +228,9 @@ return [
         'correo_personal' => 'correo personal',
         'email' => 'correo electrónico',
         'direccion_domicilio' => 'dirección domiciliaria',
+        'contacto_emergencia_nombre' => 'nombre del contacto de emergencia',
+        'contacto_emergencia_parentesco' => 'parentesco del contacto de emergencia',
+        'contacto_emergencia_telefono' => 'teléfono del contacto de emergencia',
         'codigo_medico' => 'código médico',
 
         // Vínculo laboral

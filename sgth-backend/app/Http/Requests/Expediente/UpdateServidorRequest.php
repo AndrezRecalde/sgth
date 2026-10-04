@@ -29,6 +29,10 @@ class UpdateServidorRequest extends FormRequest
         'telefono_convencional',
         'correo_personal',
         'direccion_domicilio',
+        // Es contacto: el asistente lo corrige como los teléfonos.
+        'contacto_emergencia_nombre',
+        'contacto_emergencia_parentesco',
+        'contacto_emergencia_telefono',
     ];
 
     public function rules(): array
@@ -106,6 +110,14 @@ class UpdateServidorRequest extends FormRequest
             // de salud; aparece en la sección O de la ficha FEMO que firma.
             'codigo_medico'         => 'nullable|string|max:30',
             'direccion_domicilio'   => 'nullable|string|max:255',
+            // Contacto de emergencia, opcional. Nombre y teléfono van juntos:
+            // uno sin el otro no sirve para llamar a nadie.
+            // Aquí sin `required_with`: el modal envía solo lo que cambió, y
+            // corregir el nombre sin reenviar el teléfono ya guardado no
+            // debe fallar. Se comprueba contra la ficha en after().
+            'contacto_emergencia_nombre'     => 'nullable|string|max:150',
+            'contacto_emergencia_parentesco' => 'nullable|string|max:50',
+            'contacto_emergencia_telefono'   => 'nullable|string|max:20',
 
             // Secciones D y E: las dos marcas se derivan de los registros de
             // discapacidad y enfermedad del expediente (pestaña Condición),
@@ -137,7 +149,7 @@ class UpdateServidorRequest extends FormRequest
      */
     public function after(): array
     {
-        return [function (Validator $validator) {
+        return [fn (Validator $validator) => $this->validarContactoDeEmergencia($validator), function (Validator $validator) {
             if ($validator->errors()->hasAny(['provincia_nacimiento_id', 'canton_nacimiento_id'])) {
                 return;
             }
@@ -162,6 +174,28 @@ class UpdateServidorRequest extends FormRequest
                 );
             }
         }];
+    }
+
+    /**
+     * Nombre y teléfono de emergencia van juntos, contando lo que ya tiene la
+     * ficha: uno sin el otro no sirve para llamar a nadie.
+     */
+    private function validarContactoDeEmergencia(Validator $validator): void
+    {
+        $campos = ['contacto_emergencia_nombre', 'contacto_emergencia_telefono'];
+        if (! $this->hasAny($campos) || $validator->errors()->hasAny($campos)) {
+            return;
+        }
+
+        $actual = Servidor::find($this->route('servidore') ?? $this->route('servidor'));
+        $valor = fn (string $campo) => $this->has($campo) ? $this->input($campo) : $actual?->{$campo};
+        [$nombre, $telefono] = [$valor($campos[0]), $valor($campos[1])];
+
+        if (filled($nombre) && blank($telefono)) {
+            $validator->errors()->add($campos[1], 'Indique el teléfono del contacto de emergencia.');
+        } elseif (filled($telefono) && blank($nombre)) {
+            $validator->errors()->add($campos[0], 'Indique el nombre del contacto de emergencia.');
+        }
     }
 
     public function messages(): array

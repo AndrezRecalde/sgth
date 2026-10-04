@@ -57,6 +57,9 @@ class ServidorResource extends JsonResource
             'telefono_convencional' => $this->telefono_convencional,
             'correo_personal'       => $this->correo_personal,
             'direccion_domicilio'   => $this->direccion_domicilio,
+            'contacto_emergencia_nombre'     => $this->contacto_emergencia_nombre,
+            'contacto_emergencia_parentesco' => $this->contacto_emergencia_parentesco,
+            'contacto_emergencia_telefono'   => $this->contacto_emergencia_telefono,
 
             // ── Sección O · datos del profesional ───────────────────
             // Registro ante el ACESS de quien evalúa: lo pide el impreso

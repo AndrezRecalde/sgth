@@ -49,6 +49,7 @@ class Servidor extends Model
         // Sección C
         'telefono_celular', 'telefono_convencional', 'correo_personal', 'codigo_medico',
         'direccion_domicilio',
+        'contacto_emergencia_nombre', 'contacto_emergencia_parentesco', 'contacto_emergencia_telefono',
         // Sección D
         'tiene_discapacidad',
         // Sección E

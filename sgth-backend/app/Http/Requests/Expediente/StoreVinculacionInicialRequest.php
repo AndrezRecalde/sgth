@@ -50,6 +50,11 @@ class StoreVinculacionInicialRequest extends FormRequest
             'telefono_convencional' => 'nullable|string|max:20',
             'correo_personal'       => 'nullable|email|max:150',
             'direccion_domicilio'   => 'nullable|string|max:255',
+            // Contacto de emergencia, opcional. Nombre y teléfono van juntos:
+            // uno sin el otro no sirve para llamar a nadie.
+            'contacto_emergencia_nombre'     => 'nullable|string|max:150|required_with:contacto_emergencia_telefono',
+            'contacto_emergencia_parentesco' => 'nullable|string|max:50',
+            'contacto_emergencia_telefono'   => 'nullable|string|max:20|required_with:contacto_emergencia_nombre',
 
             // Primera vinculación con la institución. De aquí sale la
             // antigüedad; si no viene, el servicio usa la del contrato.

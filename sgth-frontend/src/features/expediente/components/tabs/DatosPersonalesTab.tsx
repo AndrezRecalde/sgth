@@ -49,6 +49,17 @@ export function DatosPersonalesTab({ servidor }: Props) {
     { label: 'Teléfono convencional', value: servidor.telefono_convencional },
     { label: 'Correo personal', value: servidor.correo_personal },
     { label: 'Dirección domiciliaria', value: servidor.direccion_domicilio, ancho: true },
+    {
+      label: 'Contacto de emergencia',
+      value: servidor.contacto_emergencia_nombre
+        ? [
+            servidor.contacto_emergencia_nombre
+              + (servidor.contacto_emergencia_parentesco ? ` (${servidor.contacto_emergencia_parentesco})` : ''),
+            servidor.contacto_emergencia_telefono,
+          ].filter(Boolean).join(' · ')
+        : null,
+      ancho: true,
+    },
   ]
 
   const sinCondiciones =

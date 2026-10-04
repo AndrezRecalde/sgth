@@ -64,6 +64,11 @@ class StoreServidorBasicoRequest extends FormRequest
             // de salud; aparece en la sección O de la ficha FEMO que firma.
             'codigo_medico'         => 'nullable|string|max:30',
             'direccion_domicilio'   => 'nullable|string|max:255',
+            // Contacto de emergencia, opcional. Nombre y teléfono van juntos:
+            // uno sin el otro no sirve para llamar a nadie.
+            'contacto_emergencia_nombre'     => 'nullable|string|max:150|required_with:contacto_emergencia_telefono',
+            'contacto_emergencia_parentesco' => 'nullable|string|max:50',
+            'contacto_emergencia_telefono'   => 'nullable|string|max:20|required_with:contacto_emergencia_nombre',
             'provincia_domicilio'   => 'nullable|string|max:100',
             'ciudad_domicilio'      => 'nullable|string|max:100',
         ];

@@ -38,6 +38,11 @@ export const servidorBasicoSchema = z.object({
   correo_personal:       z.string().email('Email inválido')
     .optional().or(z.literal('')),
   direccion_domicilio:   z.string().optional(),
+  // Contacto de emergencia, opcional. Que nombre y teléfono vayan juntos lo
+  // comprueba el backend, contra lo que ya tiene la ficha.
+  contacto_emergencia_nombre:     z.string().max(150, 'Máximo 150 caracteres').optional(),
+  contacto_emergencia_parentesco: z.string().max(50, 'Máximo 50 caracteres').optional(),
+  contacto_emergencia_telefono:   z.string().max(20, 'Máximo 20 caracteres').optional(),
   /**
    * Registro profesional ante el ACESS. Solo lo tiene el personal de salud;
    * aparece en la sección O de las fichas FEMO que este servidor firme.
