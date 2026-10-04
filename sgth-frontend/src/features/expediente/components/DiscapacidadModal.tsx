@@ -1,6 +1,8 @@
 'use client'
 
 import { Stack, TextInput, NumberInput, Select } from '@mantine/core'
+import { DatePickerInput } from '@mantine/dates'
+import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 import { FormModal } from '@/components/ui'
 import { useForm, useWatch, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -28,6 +30,7 @@ interface Props {
     tipo_discapacidad?:    string | null
     porcentaje?:           string | number | null
     numero_carnet_conadis?: string | null
+    carnet_vencimiento?:    string | null
   } | null
 }
 
@@ -50,6 +53,7 @@ export function DiscapacidadModal({
         porcentaje: initialValues?.porcentaje != null
           ? Number(initialValues.porcentaje) : undefined,
         numero_carnet_conadis: initialValues?.numero_carnet_conadis ?? '',
+        carnet_vencimiento: initialValues?.carnet_vencimiento?.slice(0, 10) ?? null,
       },
     })
 
@@ -107,6 +111,17 @@ export function DiscapacidadModal({
           placeholder={carnetObligatorio ? 'Ej: 13.456' : 'Si lo tiene a mano'}
           {...contained} {...register('numero_carnet_conadis')}
           error={errors.numero_carnet_conadis?.message} />
+        <Controller name="carnet_vencimiento" control={control}
+          render={({ field }) => (
+            <DatePickerInput label="Vencimiento del carné (opcional)"
+              placeholder="Seleccionar fecha"
+              valueFormat="DD/MM/YYYY"
+              clearable
+              {...contained}
+              value={toDateValue(field.value)}
+              onChange={(d) => field.onChange(fromDateValueOrNull(d))}
+              error={errors.carnet_vencimiento?.message} />
+          )} />
       </Stack>
     </FormModal>
   )

@@ -934,6 +934,7 @@ export type DiscapacidadCargaFamiliar = {
   tipo_discapacidad:     string
   porcentaje:            number
   numero_carnet_conadis?: string | null
+  carnet_vencimiento?:   string | null
   created_at?:           string
 }
 

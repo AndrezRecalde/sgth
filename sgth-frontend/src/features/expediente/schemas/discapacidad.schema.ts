@@ -15,6 +15,9 @@ export const discapacidadSchema = z.object({
     .min(PORCENTAJE_MINIMO_DISCAPACIDAD, RANGO)
     .max(100, RANGO),
   numero_carnet_conadis: z.string().min(1, 'El número de carnet es requerido'),
+  // Hasta el 2026-10-03 el backend lo aceptaba y ninguna pantalla lo pedía:
+  // un carné caducado seguía pareciendo vigente.
+  carnet_vencimiento: z.string().nullable().optional(),
 })
 
 /**

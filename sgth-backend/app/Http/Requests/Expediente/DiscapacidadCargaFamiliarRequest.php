@@ -23,6 +23,9 @@ class DiscapacidadCargaFamiliarRequest extends FormRequest
             'tipo_discapacidad'     => ['required', new Enum(TipoDiscapacidad::class)],
             'porcentaje'            => ['required', 'numeric', 'between:5,100'],
             'numero_carnet_conadis' => ['nullable', 'string', 'max:50'],
+            // La columna existía y el del servidor ya la aceptaba; el del
+            // familiar la descartaba.
+            'carnet_vencimiento'    => ['nullable', 'date'],
         ];
     }
 

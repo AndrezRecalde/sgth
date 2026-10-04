@@ -150,3 +150,14 @@ test('el grado se deriva del porcentaje con los rangos de Talento Humano', funct
         ->and(GradoDiscapacidad::desdePorcentaje(100))->toBe(GradoDiscapacidad::MUY_GRAVE)
         ->and(GradoDiscapacidad::desdePorcentaje(null))->toBeNull();
 });
+
+test('la discapacidad de un familiar guarda la caducidad del carné', function () {
+    // El request del familiar la descartaba aunque la columna existiera.
+    $id = $this->postJson("{$this->base}/discapacidades", [
+        'tipo_discapacidad' => 'fisica', 'porcentaje' => 30,
+        'numero_carnet_conadis' => '13.456', 'carnet_vencimiento' => '2027-03-31',
+    ])->assertCreated()->json('datos.id');
+
+    expect(\App\Models\Expediente\DiscapacidadCargaFamiliar::find($id)->carnet_vencimiento->toDateString())
+        ->toBe('2027-03-31');
+});
