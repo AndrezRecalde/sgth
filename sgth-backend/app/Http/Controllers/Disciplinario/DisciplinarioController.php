@@ -59,14 +59,6 @@ class DisciplinarioController extends Controller
         );
     }
 
-    public function show(Sumario $sumario): JsonResponse
-    {
-        return ApiResponse::ok(
-            $sumario->load(['servidor', 'sancion', 'createdBy', 'updatedBy']),
-            'Sumario administrativo.'
-        );
-    }
-
     public function avanzar(AvanzarSumarioRequest $request, Sumario $sumario): JsonResponse
     {
         $datos = $request->validated();

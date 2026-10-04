@@ -4,7 +4,6 @@ namespace App\Models\Disciplinario;
 
 use App\Enums\TipoFalta;
 use App\Enums\TipoSancion;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -42,15 +41,5 @@ class SancionDisciplinaria extends Model
     public function sumario(): BelongsTo
     {
         return $this->belongsTo(Sumario::class, 'sumario_id');
-    }
-
-    public function createdBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'created_by');
-    }
-
-    public function updatedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'updated_by');
     }
 }
