@@ -10241,10 +10241,10 @@ export interface components {
         TipoExamenFemo: "laboratorio" | "imagen" | "otro";
         /**
          * TipoFalta
-         * @description Gravedad de la falta disciplinaria — Art. 42 de la LOSEP.
+         * @description Gravedad de la falta disciplinaria — Art. 42 de la LOSEP, que solo distingue dos: leves y graves. Hasta el 2026-10-04 había también «muy grave», que la ley no reconoce (decisión de Talento Humano).
          * @enum {string}
          */
-        TipoFalta: "leve" | "grave" | "muy_grave";
+        TipoFalta: "leve" | "grave";
         /**
          * TipoFichaFemo
          * @enum {string}

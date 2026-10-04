@@ -55968,11 +55968,10 @@
             },
             "TipoFalta": {
                 "type": "string",
-                "description": "Gravedad de la falta disciplinaria \u2014 Art. 42 de la LOSEP.\n",
+                "description": "Gravedad de la falta disciplinaria \u2014 Art. 42 de la LOSEP, que solo distingue dos: leves y graves. Hasta el 2026-10-04 hab\u00eda tambi\u00e9n \u00abmuy grave\u00bb, que la ley no reconoce (decisi\u00f3n de Talento Humano).\n",
                 "enum": [
                     "leve",
-                    "grave",
-                    "muy_grave"
+                    "grave"
                 ],
                 "title": "TipoFalta"
             },

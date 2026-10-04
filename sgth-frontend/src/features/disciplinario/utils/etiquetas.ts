@@ -76,7 +76,17 @@ export function puedeResolverse(estado: EstadoSumario): boolean {
 export const TIPO_FALTA_LABELS: Record<TipoFalta, string> = {
   leve: 'Leve',
   grave: 'Grave',
-  muy_grave: 'Muy grave',
+}
+
+/**
+ * Las sanciones que el Art. 42 de la LOSEP admite para cada gravedad: la LOSEP
+ * solo tiene faltas leves y graves. Espeja
+ * `App\Enums\TipoFalta::sancionesAdmitidas()`, fijada por
+ * `EnumsDisciplinarioTest`.
+ */
+export const SANCIONES_POR_FALTA: Record<TipoFalta, readonly TipoSancion[]> = {
+  leve: ['amonestacion_verbal', 'amonestacion_escrita', 'multa'],
+  grave: ['suspension', 'destitucion'],
 }
 
 /** Espeja `App\Enums\TipoSancion::etiqueta()`. */

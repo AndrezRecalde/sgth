@@ -61,7 +61,7 @@ test('las etiquetas de los estados del visto bueno están fijadas', function () 
 
 test('las etiquetas de las sanciones y las faltas están fijadas', function () use ($aviso) {
     expect(array_map(fn (TipoFalta $f) => $f->etiqueta(), TipoFalta::cases()))
-        ->toBe(['Leve', 'Grave', 'Muy grave'], $aviso);
+        ->toBe(['Leve', 'Grave'], $aviso);
 
     expect(array_map(fn (TipoSancion $s) => $s->etiqueta(), TipoSancion::cases()))
         ->toBe([
@@ -99,4 +99,17 @@ test('el numeral no se repite ni se salta', function () {
 test('la referencia legal se arma con el numeral', function () {
     expect(CausalVistoBueno::FALTA_PROBIDAD->referenciaLegal())
         ->toBe('Art. 172 núm. 3 del Código del Trabajo');
+});
+
+test('las sanciones de cada gravedad son las del Art. 42 de la LOSEP', function () use ($aviso) {
+    // Espejadas por SANCIONES_POR_FALTA en el frontend.
+    $mapa = [];
+    foreach (TipoFalta::cases() as $falta) {
+        $mapa[$falta->value] = array_map(fn (TipoSancion $s) => $s->value, $falta->sancionesAdmitidas());
+    }
+
+    expect($mapa)->toBe([
+        'leve'  => ['amonestacion_verbal', 'amonestacion_escrita', 'multa'],
+        'grave' => ['suspension', 'destitucion'],
+    ], $aviso);
 });

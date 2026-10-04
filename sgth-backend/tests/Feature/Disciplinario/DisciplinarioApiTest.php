@@ -169,7 +169,7 @@ test('resolver un sumario por HTTP impone la sanción y lo deja resuelto', funct
 
     $this->actingAs($this->admin, 'sanctum')
         ->postJson("/api/v1/disciplinario/sumarios/{$sumario->id}/resolver", [
-            'tipo_falta'       => 'grave',
+            'tipo_falta'       => 'leve',
             'tipo_sancion'     => 'multa',
             'porcentaje_multa' => 7.5,
             'fecha_efectiva'   => '2026-02-25',
@@ -217,7 +217,7 @@ test('un sumario apelado no se vuelve a resolver', function () {
     // `sanciones_disciplinarias.sumario_id` con un error de SQL.
     $this->actingAs($this->admin, 'sanctum')
         ->postJson("/api/v1/disciplinario/sumarios/{$sumario->id}/resolver", [
-            'tipo_falta'   => 'grave',
+            'tipo_falta'   => 'leve',
             'tipo_sancion' => 'amonestacion_escrita',
         ])
         ->assertStatus(422);
@@ -233,7 +233,7 @@ test('una multa sin porcentaje se rechaza con el error en su campo', function ()
 
     $this->actingAs($this->admin, 'sanctum')
         ->postJson("/api/v1/disciplinario/sumarios/{$sumario->id}/resolver", [
-            'tipo_falta'   => 'grave',
+            'tipo_falta'   => 'leve',
             'tipo_sancion' => 'multa',
         ])
         ->assertStatus(422)
@@ -257,7 +257,7 @@ test('no se guardan días de suspensión en una multa', function () {
 
     $this->actingAs($this->admin, 'sanctum')
         ->postJson("/api/v1/disciplinario/sumarios/{$sumario->id}/resolver", [
-            'tipo_falta'       => 'grave',
+            'tipo_falta'       => 'leve',
             'tipo_sancion'     => 'multa',
             'porcentaje_multa' => 5,
             'dias_suspension'  => 10,
@@ -273,7 +273,7 @@ test('los topes del Art. 43 de la LOSEP se respetan', function () {
 
     $this->actingAs($this->admin, 'sanctum')
         ->postJson("/api/v1/disciplinario/sumarios/{$sumario->id}/resolver", [
-            'tipo_falta'       => 'muy_grave',
+            'tipo_falta'       => 'leve',
             'tipo_sancion'     => 'multa',
             'porcentaje_multa' => 15,
         ])
@@ -287,7 +287,7 @@ test('los topes del Art. 43 de la LOSEP se respetan', function () {
 
     $this->actingAs($this->admin, 'sanctum')
         ->postJson("/api/v1/disciplinario/sumarios/{$otro->id}/resolver", [
-            'tipo_falta'      => 'muy_grave',
+            'tipo_falta'      => 'grave',
             'tipo_sancion'    => 'suspension',
             'dias_suspension' => 45,
         ])
@@ -415,6 +415,55 @@ test('no hay detalle por id: el listado trae el registro y created_by es el id',
 
     $fila = $this->getJson('/api/v1/disciplinario/sumarios')->assertOk()->json('datos.data.0');
     expect($fila['created_by'])->toBe($this->admin->id);
+});
+
+// ── Gravedad y sanción (Art. 42 de la LOSEP) ───────────────────
+
+test('la sanción tiene que corresponder a la gravedad de la falta', function () {
+    // Hasta el 2026-10-04 no se relacionaban: una falta leve aceptaba una
+    // destitución, y existía una «muy grave» que la ley no reconoce.
+    $this->actingAs($this->admin, 'sanctum');
+
+    $leve = sumarioConInforme($this->servidor, 81);
+    $this->postJson("/api/v1/disciplinario/sumarios/{$leve->id}/resolver", [
+        'tipo_falta'      => 'leve',
+        'tipo_sancion'    => 'suspension',
+        'dias_suspension' => 5,
+    ])
+        ->assertUnprocessable()
+        ->assertJsonPath(
+            'errores.tipo_sancion.0',
+            'Una falta leve se sanciona con amonestación verbal, amonestación escrita o multa (Art. 42 de la LOSEP).'
+        );
+
+    $grave = sumarioConInforme($this->servidor, 82);
+    $this->postJson("/api/v1/disciplinario/sumarios/{$grave->id}/resolver", [
+        'tipo_falta'       => 'grave',
+        'tipo_sancion'     => 'multa',
+        'porcentaje_multa' => 5,
+    ])
+        ->assertUnprocessable()
+        ->assertJsonPath(
+            'errores.tipo_sancion.0',
+            'Una falta grave se sanciona con suspensión o destitución (Art. 42 de la LOSEP).'
+        );
+
+    $this->postJson("/api/v1/disciplinario/sumarios/{$grave->id}/resolver", [
+        'tipo_falta'   => 'muy_grave',
+        'tipo_sancion' => 'destitucion',
+    ])
+        ->assertUnprocessable()
+        ->assertJsonStructure(['errores' => ['tipo_falta']]);
+
+    // Nada quedó resuelto a medias.
+    expect($leve->fresh()->estado)->toBe(EstadoSumario::CON_INFORME)
+        ->and($grave->fresh()->estado)->toBe(EstadoSumario::CON_INFORME);
+
+    $this->postJson("/api/v1/disciplinario/sumarios/{$leve->id}/resolver", [
+        'tipo_falta'       => 'leve',
+        'tipo_sancion'     => 'multa',
+        'porcentaje_multa' => 5,
+    ])->assertOk();
 });
 
 // ── Cronología de los hitos ────────────────────────────────────
