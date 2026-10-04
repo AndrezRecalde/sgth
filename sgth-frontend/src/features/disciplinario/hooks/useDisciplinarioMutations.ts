@@ -38,7 +38,8 @@ export function useDisciplinarioMutations() {
       notificar.exito('Sumario actualizado', 'Se registró el avance procesal.')
       invalidarSumarios()
     },
-    onError: notificar.alFallar('No se pudo registrar el avance del sumario'),
+    // Una fecha fuera de orden la pone AvanzarHitoModal bajo el campo.
+    onError: notificar.alFallarSalvoCampos('No se pudo registrar el avance del sumario'),
   })
 
   const resolverSumario = useMutation({

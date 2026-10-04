@@ -75,13 +75,13 @@ function Contenido({ tramite }: { tramite: VistoBueno }) {
       <DetailList items={solicitud} columnas={2} />
 
       <div>
-        <SectionHeading title="Trámite ante el Ministerio del Trabajo" />
+        <SectionHeading title="Trámite ante el Ministerio del Trabajo" mb="xs" />
         <DetailList items={tramiteMdt} columnas={2} />
       </div>
 
       {tramite.resolucion_detalle && (
         <div>
-          <SectionHeading title="Resolución del Inspector" />
+          <SectionHeading title="Resolución del Inspector" mb="xs" />
           <DetailList
             columnas={1}
             items={[
@@ -94,7 +94,7 @@ function Contenido({ tramite }: { tramite: VistoBueno }) {
 
       {cesacion && (
         <div>
-          <SectionHeading title="Cesación de funciones generada" />
+          <SectionHeading title="Cesación de funciones generada" mb="xs" />
           <DetailList
             columnas={2}
             items={[

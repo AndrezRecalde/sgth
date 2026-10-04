@@ -97,6 +97,8 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
 
         $destino = EstadoSumario::from($estadoDestino);
 
+        $this->validarCronologia($sumario, $destino, $datos);
+
         // Cada hito procesal deja su fecha: son las que alimentan el control
         // de plazos legales de controlarPlazosLegales().
         match ($destino) {
@@ -111,6 +113,53 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
         $sumario->save();
 
         return $sumario->fresh(['servidor', 'sancion']);
+    }
+
+    /**
+     * Cada hito va después del anterior (2026-10-04). Se guardaba cualquier
+     * fecha: una notificación anterior a la apertura, o el informe del
+     * instructor antes de que terminara el período de prueba —que cierra la
+     * instrucción sin dejar al sumariado el plazo para presentar pruebas—.
+     * Los plazos legales que vigila controlarPlazosLegales() salen de estas
+     * fechas, así que un orden imposible daba alertas sin sentido.
+     *
+     * El error va en el campo del hito, para que la pantalla lo ponga bajo
+     * la fecha.
+     */
+    private function validarCronologia(Sumario $sumario, EstadoSumario $destino, array $datos): void
+    {
+        [$campo, $fecha, $previa, $mensaje] = match ($destino) {
+            EstadoSumario::EN_INSTRUCCION => [
+                'fecha_notificacion',
+                $datos['fecha_notificacion'] ?? null,
+                $sumario->fecha_apertura,
+                'La notificación no puede ser anterior a la apertura del sumario (%s).',
+            ],
+            EstadoSumario::EN_PRUEBA => [
+                'fecha_termino_prueba',
+                $datos['fecha_termino_prueba'] ?? null,
+                $sumario->fecha_notificacion ?? $sumario->fecha_apertura,
+                'El período de prueba no puede terminar antes de la notificación (%s).',
+            ],
+            EstadoSumario::CON_INFORME => [
+                'fecha_informe',
+                $datos['fecha_informe'] ?? now()->toDateString(),
+                $sumario->fecha_termino_prueba,
+                'El informe del instructor va después del período de prueba, que termina el %s.',
+            ],
+            default => [null, null, null, null],
+        };
+
+        if ($campo === null || $fecha === null || $previa === null) {
+            return;
+        }
+
+        $previa = Carbon::parse($previa)->startOfDay();
+        if (Carbon::parse($fecha)->startOfDay()->lt($previa)) {
+            throw ValidationException::withMessages([
+                $campo => sprintf($mensaje, $previa->format('d/m/Y')),
+            ]);
+        }
     }
 
     private function marcarNotificacion(Sumario $sumario, array $datos): void
