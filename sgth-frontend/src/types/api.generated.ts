@@ -2136,22 +2136,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/disciplinario/sumarios/{sumario}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["disciplinario.show"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/disciplinario/sumarios/{sumario}/avanzar": {
         parameters: {
             query?: never;
@@ -6428,22 +6412,6 @@ export interface paths {
         get: operations["vistoBueno.index"];
         put?: never;
         post: operations["vistoBueno.store"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/disciplinario/vistos-buenos/{vistoBueno}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["vistoBueno.show"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -17274,36 +17242,6 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             422: components["responses"]["ValidationException"];
-        };
-    };
-    "disciplinario.show": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The sumario ID */
-                sumario: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Sumario administrativo.";
-                        datos: components["schemas"]["Sumario"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            404: components["responses"]["ModelNotFoundException"];
         };
     };
     "disciplinario.avanzar": {
@@ -29420,36 +29358,6 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             422: components["responses"]["ValidationException"];
-        };
-    };
-    "vistoBueno.show": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The visto bueno ID */
-                vistoBueno: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Trámite de visto bueno.";
-                        datos: components["schemas"]["VistoBueno"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            404: components["responses"]["ModelNotFoundException"];
         };
     };
     "vistoBueno.transicionar": {

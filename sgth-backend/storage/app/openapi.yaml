@@ -13698,64 +13698,6 @@
                 }
             }
         },
-        "/v1/disciplinario/sumarios/{sumario}": {
-            "get": {
-                "operationId": "disciplinario.show",
-                "tags": [
-                    "Disciplinario"
-                ],
-                "parameters": [
-                    {
-                        "name": "sumario",
-                        "in": "path",
-                        "required": true,
-                        "description": "The sumario ID",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Sumario administrativo."
-                                        },
-                                        "datos": {
-                                            "$ref": "#/components/schemas/Sumario"
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
         "/v1/disciplinario/sumarios/{sumario}/avanzar": {
             "put": {
                 "operationId": "disciplinario.avanzar",
@@ -41343,64 +41285,6 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
-                    }
-                }
-            }
-        },
-        "/v1/disciplinario/vistos-buenos/{vistoBueno}": {
-            "get": {
-                "operationId": "vistoBueno.show",
-                "tags": [
-                    "VistoBueno"
-                ],
-                "parameters": [
-                    {
-                        "name": "vistoBueno",
-                        "in": "path",
-                        "required": true,
-                        "description": "The visto bueno ID",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Tr\u00e1mite de visto bueno."
-                                        },
-                                        "datos": {
-                                            "$ref": "#/components/schemas/VistoBueno"
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
