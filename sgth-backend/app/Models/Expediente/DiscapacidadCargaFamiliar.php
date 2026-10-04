@@ -3,11 +3,14 @@
 namespace App\Models\Expediente;
 
 use App\Enums\TipoDiscapacidad;
+use App\Observers\Expediente\CondicionCargaFamiliarObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+#[ObservedBy(CondicionCargaFamiliarObserver::class)]
 class DiscapacidadCargaFamiliar extends Model
 {
     use HasFactory, SoftDeletes;

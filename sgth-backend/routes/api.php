@@ -319,10 +319,14 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         ->group(function () {
             Route::post('discapacidades', [DiscapacidadCargaFamiliarController::class, 'store'])
                 ->name('carga.discapacidades.store');
+            Route::put('discapacidades/{id}', [DiscapacidadCargaFamiliarController::class, 'update'])
+                ->name('carga.discapacidades.update');
             Route::delete('discapacidades/{id}', [DiscapacidadCargaFamiliarController::class, 'destroy'])
                 ->name('carga.discapacidades.destroy');
             Route::post('enfermedades', [EnfermedadCargaFamiliarController::class, 'store'])
                 ->name('carga.enfermedades.store');
+            Route::put('enfermedades/{id}', [EnfermedadCargaFamiliarController::class, 'update'])
+                ->name('carga.enfermedades.update');
             Route::delete('enfermedades/{id}', [EnfermedadCargaFamiliarController::class, 'destroy'])
                 ->name('carga.enfermedades.destroy');
         });

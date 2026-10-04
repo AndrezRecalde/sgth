@@ -3,28 +3,23 @@
 namespace App\Http\Controllers\Expediente;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Expediente\EnfermedadCargaFamiliarRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\Expediente\CargaFamiliar;
 use App\Models\Expediente\EnfermedadCatastroficaCargaFamiliar;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
+/**
+ * La enfermedad catastrófica de una carga familiar. La marca
+ * `posee_enfermedad_catastrofica` la mantiene CondicionCargaFamiliarObserver.
+ */
 class EnfermedadCargaFamiliarController extends Controller
 {
-    public function store(Request $request, int $cargaId): JsonResponse
+    public function store(EnfermedadCargaFamiliarRequest $request, int $cargaId): JsonResponse
     {
         $carga = CargaFamiliar::findOrFail($cargaId);
 
-        $validated = $request->validate([
-            'tipo_enfermedad'    => ['required', 'string', 'max:150'],
-            'codigo_cie10'       => ['nullable', 'string', 'max:20'],
-            'fecha_diagnostico'  => ['nullable', 'date'],
-        ]);
-
-        $enfermedad = $carga->enfermedadesCatastroficas()->create($validated);
-
-        // Marcar carga familiar con enfermedad catastrófica
-        $carga->update(['posee_enfermedad_catastrofica' => true]);
+        $enfermedad = $carga->enfermedadesCatastroficas()->create($request->validated());
 
         return ApiResponse::created(
             $enfermedad,
@@ -32,19 +27,24 @@ class EnfermedadCargaFamiliarController extends Controller
         );
     }
 
+    public function update(
+        EnfermedadCargaFamiliarRequest $request,
+        int $cargaId,
+        int $id
+    ): JsonResponse {
+        $enfermedad = EnfermedadCatastroficaCargaFamiliar::where('carga_familiar_id', $cargaId)
+            ->findOrFail($id);
+
+        $enfermedad->update($request->validated());
+
+        return ApiResponse::ok($enfermedad, 'Enfermedad catastrófica actualizada.');
+    }
+
     public function destroy(int $cargaId, int $id): JsonResponse
     {
-        $enfermedad = EnfermedadCatastroficaCargaFamiliar::where(
-            'carga_familiar_id', $cargaId
-        )->findOrFail($id);
-
-        $enfermedad->delete();
-
-        // Si no quedan enfermedades, actualizar flag
-        $carga = CargaFamiliar::findOrFail($cargaId);
-        if ($carga->enfermedadesCatastroficas()->count() === 0) {
-            $carga->update(['posee_enfermedad_catastrofica' => false]);
-        }
+        EnfermedadCatastroficaCargaFamiliar::where('carga_familiar_id', $cargaId)
+            ->findOrFail($id)
+            ->delete();
 
         return ApiResponse::ok(null, 'Enfermedad catastrófica eliminada.');
     }

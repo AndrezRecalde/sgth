@@ -5,7 +5,6 @@ import {
   TextInput,
   Select,
   SimpleGrid,
-  Switch,
   Textarea,
 } from "@mantine/core";
 import { FormModal } from "@/components/ui";
@@ -172,20 +171,8 @@ export function CargaFamiliarModal({
           )}
         />
 
-        {([
-          ["persona_con_discapacidad", "Persona con discapacidad"],
-          ["posee_enfermedad_catastrofica", "Posee enfermedad catastrófica"],
-        ] as const).map(([name, label]) => (
-          <Controller
-            key={name}
-            name={name}
-            control={control}
-            render={({ field }) => (
-              <Switch label={label} checked={field.value} onChange={(e) => field.onChange(e.currentTarget.checked)} />
-            )}
-          />
-        ))}
-
+        {/* Sin interruptores de discapacidad ni de enfermedad: se registran
+            al desplegar la fila del familiar, y la marca sale de ahí. */}
         <Textarea
           label="Observaciones (Opcional)"
           placeholder="Observaciones adicionales"

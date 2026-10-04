@@ -37,7 +37,10 @@ export function CondicionTab({ servidorId }: Props) {
     useDiscapacidades(servidorId)
   const { data: enfermedades = [], isLoading: cargandoEnf, error: errorEnf } =
     useEnfermedades(servidorId)
-  const { eliminarDiscapacidad, eliminarEnfermedad } = useCondicionMutations(servidorId)
+  const {
+    crearDiscapacidad, editarDiscapacidad, eliminarDiscapacidad,
+    crearEnfermedad, editarEnfermedad, eliminarEnfermedad,
+  } = useCondicionMutations(servidorId)
 
   return (
     <Stack gap="lg">
@@ -55,7 +58,7 @@ export function CondicionTab({ servidorId }: Props) {
         >
           <SgthTable
             records={discapacidades}
-            columns={getDiscapacidadesColumns({
+            columns={getDiscapacidadesColumns<DiscapacidadServidor>({
               onEdit: (item) => { setEditDisc(item); openDisc() },
               onDelete: (id) => eliminarDiscapacidad.mutate(id),
             })}
@@ -78,7 +81,7 @@ export function CondicionTab({ servidorId }: Props) {
         >
           <SgthTable
             records={enfermedades}
-            columns={getEnfermedadesColumns({
+            columns={getEnfermedadesColumns<EnfermedadCatastroficaServidor>({
               onEdit: (item) => { setEditEnf(item); openEnf() },
               onDelete: (id) => eliminarEnfermedad.mutate(id),
             })}
@@ -91,14 +94,21 @@ export function CondicionTab({ servidorId }: Props) {
         key={`disc-${editDisc?.id ?? 'nueva'}`}
         opened={discOpened}
         onClose={() => { setEditDisc(null); closeDisc() }}
-        servidorId={servidorId}
+        carnetObligatorio
+        onGuardar={(data, id) => (id
+          ? editarDiscapacidad.mutateAsync({ id, data })
+          : crearDiscapacidad.mutateAsync(data))}
+        guardando={crearDiscapacidad.isPending || editarDiscapacidad.isPending}
         initialValues={editDisc}
       />
       <EnfermedadModal
         key={`enf-${editEnf?.id ?? 'nueva'}`}
         opened={enfOpened}
         onClose={() => { setEditEnf(null); closeEnf() }}
-        servidorId={servidorId}
+        onGuardar={(data, id) => (id
+          ? editarEnfermedad.mutateAsync({ id, data })
+          : crearEnfermedad.mutateAsync(data))}
+        guardando={crearEnfermedad.isPending || editarEnfermedad.isPending}
         initialValues={editEnf}
       />
     </Stack>

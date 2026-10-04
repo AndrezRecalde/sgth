@@ -23,8 +23,8 @@ class StoreCargaFamiliarRequest extends FormRequest
             // El sexo, con los valores de `servidores.genero`. Obligatorio al
             // registrar o editar: los familiares antiguos lo completan así.
             'genero'                        => ['required', 'in:masculino,femenino'],
-            'persona_con_discapacidad'      => ['required', 'boolean'],
-            'posee_enfermedad_catastrofica' => ['required', 'boolean'],
+            // Sin `persona_con_discapacidad` ni `posee_enfermedad_catastrofica`:
+            // se derivan de los registros (CondicionCargaFamiliarObserver).
             'observaciones'                 => ['nullable', 'string'],
         ];
     }
