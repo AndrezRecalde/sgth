@@ -12,10 +12,8 @@ import {
 import { useDisclosure } from '@mantine/hooks'
 import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import {
-  type FichaBaseForm, type ExamenForm,
-  type DiagnosticoFemoForm,
-} from '../../schemas/femo.schema'
+import { type FichaBaseForm } from '../../schemas/femo.schema'
+import { type ExamenForm, type DiagnosticoFemoForm } from '../../schemas/femoEvaluacion.schema'
 import { FemoExamenModal } from './FemoExamenModal'
 import { FemoDiagnosticosCie10 } from './FemoDiagnosticosCie10'
 import { FemoAptitudSelector } from './FemoAptitudSelector'

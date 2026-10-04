@@ -6,7 +6,7 @@ import { DatePickerInput } from '@mantine/dates'
 import { useForm, useWatch, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { examenSchema, type ExamenForm } from '../../schemas/femo.schema'
+import { examenSchema, type ExamenForm } from '../../schemas/femoEvaluacion.schema'
 import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 
 interface Props {

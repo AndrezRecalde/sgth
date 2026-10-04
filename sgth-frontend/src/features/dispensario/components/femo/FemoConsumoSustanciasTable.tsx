@@ -2,7 +2,7 @@
 
 import { Card, Checkbox, NumberInput, Stack, TextInput } from '@mantine/core'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import type { ConsumoSustanciaForm } from '../../schemas/femo.schema'
+import type { ConsumoSustanciaForm } from '../../schemas/femoHistoria.schema'
 import { SUSTANCIA_OPTIONS } from '../../services/femoOptions'
 import classes from './FemoConsumoSustanciasTable.module.css'
 import { SectionHeading } from '@/components/ui'

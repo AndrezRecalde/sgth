@@ -4,7 +4,7 @@ import { Card, Checkbox, Group, Stack, Text, TextInput } from '@mantine/core'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { CountBadge } from '@/components/ui'
 import type { CategoriaRiesgoMsp } from '../../services/catalogoRiesgosService'
-import type { FactorRiesgoForm } from '../../schemas/femo.schema'
+import type { FactorRiesgoForm } from '../../schemas/femoEvaluacion.schema'
 import classes from './FemoMatrizRiesgos.module.css'
 
 interface Props {

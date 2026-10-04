@@ -12,7 +12,7 @@ import {
 } from '../hooks/useSolicitudCertificacion'
 import { useCertificadoAptitud } from '../hooks/useCertificadoAptitud'
 import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
-import { getCertificacionesColumns } from './solicitudes-certificacion.columns'
+import { getCertificacionesColumns } from './certificaciones.columns'
 import {
   ESTADO_SOLICITUD_FILTRO_OPTIONS,
   etiquetaTipoEvento,

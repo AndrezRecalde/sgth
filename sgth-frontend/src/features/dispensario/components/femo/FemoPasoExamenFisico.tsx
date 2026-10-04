@@ -2,7 +2,8 @@
 
 import { Text, Accordion, Group, Textarea } from '@mantine/core'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import type { ExamenFisicoItemForm, FichaBaseForm } from '../../schemas/femo.schema'
+import type { FichaBaseForm } from '../../schemas/femo.schema'
+import type { ExamenFisicoItemForm } from '../../schemas/femoEvaluacion.schema'
 import { REGIONES_EXAMEN_FISICO } from '../../services/femoOptions'
 import { ExamenFisicoRegionTable } from './ExamenFisicoRegionTable'
 import { FemoSeccion } from './FemoSeccion'

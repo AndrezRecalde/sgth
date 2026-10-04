@@ -1,6 +1,5 @@
-import type {
-  ActividadRiesgoForm, FactorRiesgoForm, FichaBaseForm,
-} from '../schemas/femo.schema'
+import type { FichaBaseForm } from '../schemas/femo.schema'
+import type { ActividadRiesgoForm, FactorRiesgoForm } from '../schemas/femoEvaluacion.schema'
 import type { CrearFemoData, FichaSaludOcupacional } from '../services/femoService'
 
 /*

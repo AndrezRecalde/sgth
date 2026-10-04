@@ -1,5 +1,12 @@
 import { z } from 'zod/v4'
 
+/*
+| Cabecera y datos generales de la ficha FEMO. Las secciones repetibles viven
+| aparte desde el 2026-10-04, cuando el archivo llegaba a 140 líneas sobre una
+| guía de 80: la historia del paciente en `femoHistoria.schema.ts` y la
+| evaluación en `femoEvaluacion.schema.ts`.
+*/
+
 export const fichaBaseSchema = z.object({
   servidor_id:                   z.number().optional().nullable(),
   postulante_id:                 z.number().optional().nullable(),
@@ -48,93 +55,4 @@ export const fichaBaseSchema = z.object({
   observacion_examenes:          z.string().optional().nullable(),
 })
 
-export const antecedenteSchema = z.object({
-  tipo:             z.string().min(1),
-  descripcion:      z.string().min(3, 'Mínimo 3 caracteres'),
-  fecha_aproximada: z.number().optional().nullable(),
-})
-
-export const factorRiesgoSchema = z.object({
-  categoria:         z.string().min(1),
-  factor:            z.string().min(1),
-  presente:          z.boolean().default(true),
-  medida_preventiva: z.string().optional().nullable(),
-  actividad_index:   z.number().optional().nullable(),
-})
-
-export const actividadRiesgoSchema = z.object({
-  puesto_actividad_id: z.number().optional().nullable(),
-  actividad:            z.string().min(1),
-  medida_preventiva:    z.string().optional().nullable(),
-  orden:                z.number().optional().nullable(),
-})
-
-export const diagnosticoFemoSchema = z.object({
-  diagnostico_cie10_id: z.number(),
-  tipo:                 z.enum(['presuntivo','definitivo']),
-  orden:                z.number().min(1).max(6),
-  /** Solo para mostrar el código y la descripción; el servidor no lo lee. */
-  diagnostico:          z.object({ codigo: z.string(), descripcion: z.string() }).optional(),
-})
-
-export const examenSchema = z.object({
-  nombre_examen: z.string().min(1),
-  resultado:     z.string().optional().nullable(),
-  fecha_examen:  z.string().optional().nullable(),
-  tipo:          z.enum(['laboratorio','imagen','otro']),
-})
-
-export const empleoAnteriorSchema = z.object({
-  centro_trabajo:           z.string().min(1),
-  actividades_desempenadas: z.string().optional().nullable(),
-  /** Columna «TRABAJO: ANTERIOR / ACTUAL» del impreso. */
-  es_trabajo_actual:        z.boolean().optional(),
-  fecha_inicio:             z.string().optional().nullable(),
-  fecha_fin:                z.string().optional().nullable(),
-  observaciones:            z.string().optional().nullable(),
-  tipo_evento_laboral:      z.enum(['ninguno','incidente','accidente','enfermedad_profesional']),
-  calificado_iess:          z.boolean().optional().nullable(),
-  fecha_evento:             z.string().optional().nullable(),
-  especificar:              z.string().optional().nullable(),
-})
-
-export const examenFisicoItemSchema = z.object({
-  region:      z.string().min(1),
-  item:        z.string().min(1),
-  normal:      z.boolean().default(true),
-  observacion: z.string().optional().nullable(),
-})
-
-export const antecedenteReproductivoSchema = z.object({
-  fecha_ultima_menstruacion: z.string().optional().nullable(),
-  gestas:                    z.number().optional().nullable(),
-  partos:                    z.number().optional().nullable(),
-  cesareas:                  z.number().optional().nullable(),
-  abortos:                   z.number().optional().nullable(),
-  usa_metodo_planificacion:  z.enum(['si','no','no_responde']).optional().nullable(),
-  metodo_planificacion_cual: z.string().optional().nullable(),
-  examenes_realizados:       z.string().optional().nullable(),
-  examenes_tiempo_anios:     z.number().optional().nullable(),
-  /** Solo si interfiere con la actividad laboral y lo autoriza el titular. */
-  examenes_resultado:        z.string().optional().nullable(),
-})
-
-export const consumoSustanciaSchema = z.object({
-  sustancia:                 z.enum(['tabaco','alcohol','otra']),
-  sustancia_otra_detalle:    z.string().optional().nullable(),
-  tiempo_consumo_meses:      z.number().optional().nullable(),
-  ex_consumidor:             z.boolean().default(false),
-  tiempo_abstinencia_meses:  z.number().optional().nullable(),
-  no_consume:                z.boolean().default(false),
-})
-
-export type FichaBaseForm               = z.infer<typeof fichaBaseSchema>
-export type AntecedenteForm             = z.infer<typeof antecedenteSchema>
-export type FactorRiesgoForm            = z.infer<typeof factorRiesgoSchema>
-export type ActividadRiesgoForm         = z.infer<typeof actividadRiesgoSchema>
-export type DiagnosticoFemoForm         = z.infer<typeof diagnosticoFemoSchema>
-export type ExamenForm                  = z.infer<typeof examenSchema>
-export type EmpleoAnteriorForm          = z.infer<typeof empleoAnteriorSchema>
-export type ExamenFisicoItemForm        = z.infer<typeof examenFisicoItemSchema>
-export type AntecedenteReproductivoForm = z.infer<typeof antecedenteReproductivoSchema>
-export type ConsumoSustanciaForm        = z.infer<typeof consumoSustanciaSchema>
+export type FichaBaseForm = z.infer<typeof fichaBaseSchema>

@@ -1,14 +1,9 @@
 'use client'
 
 import { Stack, Text } from '@mantine/core'
-import {
-  IconBan, IconDownload, IconFileCertificate, IconFileText, IconPlayerPlay,
-  IconUserCheck,
-} from '@tabler/icons-react'
-import { confirmar, StatusBadge, TableActions } from '@/components/ui'
+import { StatusBadge } from '@/components/ui'
 import {
   DICTAMEN_LABELS,
-  dictamenHabilitaIncorporacion,
   ESTADO_SOLICITUD_LABELS,
   etiquetaTipoEvento,
   TONO_DICTAMEN,
@@ -19,37 +14,26 @@ import type { DataTableColumn } from 'mantine-datatable'
 import { formatFechaMes, hoyIso } from '@/lib/fecha'
 
 /*
-| Las columnas de las solicitudes de certificación médica.
+| Las columnas que comparten las dos tablas de solicitudes de certificación
+| médica. Salud Ocupacional (`solicitudes-sso.columns.tsx`) opera sobre ellas
+| y añade los signos vitales y el menú de acciones; Certificaciones médicas
+| (`certificaciones.columns.tsx`) es de solo lectura para Talento Humano y
+| añade la unidad administrativa.
 |
-| Dos pantallas las miran y no son la misma: Salud Ocupacional (`SsoView`)
-| opera sobre ellas y añade los signos vitales y el menú de acciones;
-| Certificaciones médicas es de solo lectura para Talento Humano y añade la
-| unidad administrativa. Las cinco columnas que comparten viven aquí una vez.
-|
-| El archivo pasa de las 150 líneas que el reglamento marca para las columnas.
-| La alternativa era duplicar esas cinco en dos archivos, que es peor: cuando
-| cambie el formato de una fecha o una etiqueta habría que acordarse de tocar
-| los dos.
+| Hasta el 2026-10-04 las tres cosas vivían en un archivo de 274 líneas, por
+| encima de las 150 de la guía, para no duplicar estas cinco. Separadas así no
+| hace falta ni lo uno ni lo otro.
 */
 
-type Columna = DataTableColumn<SolicitudCertificacion>
-
-interface AccionesSso {
-  descargando: boolean
-  puedeConfirmarIncorporacion: boolean
-  onIniciar: (id: number) => void
-  onContinuar: (id: number) => void
-  onDescargarFemo: (fichaFemoId: number, nombreArchivo: string) => void
-  onConfirmarIncorporacion: (id: number) => void
-}
+export type Columna = DataTableColumn<SolicitudCertificacion>
 
 /** La unidad sale del servidor, o del puesto de la convocatoria si es candidato. */
-const unidadDe = (s: SolicitudCertificacion) =>
+export const unidadDe = (s: SolicitudCertificacion) =>
   s.servidor?.unidad_administrativa?.nombre
     ?? s.convocatoria?.puesto?.unidad_administrativa?.nombre
     ?? null
 
-const tipoEvento: Columna = {
+export const tipoEvento: Columna = {
   accessor: 'tipo_evento',
   title: 'Tipo de evaluación',
   // Las etiquetas son de una palabra («Ingreso», «Periódica»…): con 180 y
@@ -61,7 +45,7 @@ const tipoEvento: Columna = {
   ),
 }
 
-const paciente: Columna = {
+export const paciente: Columna = {
   accessor: 'paciente',
   title: 'Servidor / Candidato',
   render: (s) => (
@@ -73,7 +57,7 @@ const paciente: Columna = {
   ),
 }
 
-const origen = (titulo: string, ancho: number, conConvocatoria: boolean): Columna => ({
+export const origen = (titulo: string, ancho: number, conConvocatoria: boolean): Columna => ({
   accessor: 'origen',
   title: titulo,
   width: ancho,
@@ -96,7 +80,7 @@ const origen = (titulo: string, ancho: number, conConvocatoria: boolean): Column
   ),
 })
 
-const fechaLimite: Columna = {
+export const fechaLimite: Columna = {
   accessor: 'fecha_limite',
   title: 'Fecha límite',
   width: 110,
@@ -118,7 +102,7 @@ const fechaLimite: Columna = {
   },
 }
 
-const estado: Columna = {
+export const estado: Columna = {
   accessor: 'estado',
   title: 'Estado',
   width: 160,
@@ -139,136 +123,4 @@ const estado: Columna = {
       )}
     </Stack>
   ),
-}
-
-/** Salud Ocupacional: opera sobre la solicitud. */
-export function getSolicitudesSsoColumns(acciones: AccionesSso): Columna[] {
-  return [
-    tipoEvento,
-    paciente,
-    origen('Solicitado por', 150, true),
-    fechaLimite,
-    {
-      ...estado,
-      // El triaje va con el estado y no en su propia columna: solo importa
-      // mientras la solicitud está abierta, y esa columna dejaba la tabla más
-      // ancha que la pantalla, con el menú de acciones fuera de la vista.
-      render: (s, i) => (
-        <Stack gap={4}>
-          {estado.render?.(s, i)}
-          {(s.estado === 'pendiente' || s.estado === 'en_proceso') && (
-            <StatusBadge size="xs" tone={s.constantes_vitales ? 'success' : 'warning'}>
-              {s.constantes_vitales ? 'Triaje hecho' : 'Sin triaje'}
-            </StatusBadge>
-          )}
-        </Stack>
-      ),
-    },
-    {
-      accessor: 'acciones',
-      title: '',
-      width: 50,
-      render: (s) => <TableActions actions={accionesDe(s, acciones)} />,
-    },
-  ]
-}
-
-interface AccionesCertificaciones {
-  /** `false` oculta la cancelación: sin `solicitar-certificacion-medica`. */
-  puedeCancelar: boolean
-  /** `null` cuando no hay ninguna descarga en curso. */
-  descargandoId: number | null
-  onCancelar: (solicitud: SolicitudCertificacion) => void
-  onDescargarCertificado: (solicitud: SolicitudCertificacion) => void
-}
-
-/** Certificaciones médicas: el seguimiento de Talento Humano. */
-export function getCertificacionesColumns(
-  acciones: AccionesCertificaciones,
-): Columna[] {
-  return [
-    tipoEvento,
-    paciente,
-    {
-      accessor: 'unidad',
-      title: 'Unidad administrativa',
-      width: 180,
-      render: (s) => <Text size="sm">{unidadDe(s) ?? '—'}</Text>,
-    },
-    origen('Origen', 150, false),
-    fechaLimite,
-    estado,
-    {
-      accessor: 'acciones',
-      title: '',
-      width: 50,
-      render: (s) => (
-        <TableActions
-          actions={[
-            {
-              label: 'Certificado de aptitud',
-              icon: <IconFileCertificate size={14} />,
-              // Sin ficha no hay acto médico firmado y el API responde 422.
-              hidden: !s.ficha_salud_ocupacional,
-              disabled: acciones.descargandoId !== null,
-              onClick: () => acciones.onDescargarCertificado(s),
-            },
-            {
-              label: 'Cancelar solicitud',
-              icon: <IconBan size={14} />,
-              color: 'red',
-              // Iniciada ya hay un FEMO en curso, y completada ya tiene
-              // dictamen: solo se retira lo que nadie ha tocado.
-              hidden: !acciones.puedeCancelar || s.estado !== 'pendiente',
-              onClick: () => acciones.onCancelar(s),
-            },
-          ]}
-        />
-      ),
-    },
-  ]
-}
-
-function accionesDe(s: SolicitudCertificacion, a: AccionesSso) {
-  const sinSignos = 'Pendiente signos vitales (Enfermería)'
-
-  return [
-    ...(s.estado === 'pendiente' ? [{
-      label: s.constantes_vitales ? 'Iniciar y crear FEMO' : sinSignos,
-      icon: <IconPlayerPlay size={14} />,
-      disabled: !s.constantes_vitales,
-      onClick: () => a.onIniciar(s.id),
-    }] : []),
-    ...(s.estado === 'en_proceso' ? [{
-      label: s.constantes_vitales ? 'Continuar FEMO' : sinSignos,
-      icon: <IconFileText size={14} />,
-      disabled: !s.constantes_vitales,
-      onClick: () => a.onContinuar(s.id),
-    }] : []),
-    ...(s.ficha_femo_id ? [{
-      label: 'Descargar PDF de la ficha FEMO',
-      icon: <IconDownload size={14} />,
-      disabled: a.descargando,
-      onClick: () => a.onDescargarFemo(
-        s.ficha_femo_id!, `femo-${s.cedula_paciente}-${s.id}.pdf`,
-      ),
-    }] : []),
-    ...(s.estado === 'completada' && !!s.postulante && !s.servidor &&
-      a.puedeConfirmarIncorporacion &&
-      dictamenHabilitaIncorporacion(s.dictamen) ? [{
-      label: 'Confirmar incorporación',
-      icon: <IconUserCheck size={14} />,
-      onClick: () => confirmar({
-        title: 'Confirmar incorporación',
-        message: (
-          <>
-            Se creará el expediente de <b>{s.nombres_paciente}</b> como servidor
-            del GADPE. No se puede deshacer.
-          </>
-        ),
-        confirmLabel: 'Confirmar incorporación',
-        onConfirm: () => a.onConfirmarIncorporacion(s.id),
-      }),
-    }] : []),
-  ]
 }
