@@ -92,3 +92,12 @@ test('el catálogo de cargos se lee con sesión y se gestiona con permiso', func
     $this->postJson('/api/v1/estructura/cargos', ['nombre' => 'Electricista', 'codigo_ciuo' => '7411'])->assertCreated();
     $this->putJson("/api/v1/estructura/cargos/{$cargo->id}", ['codigo_ciuo' => '8331'])->assertOk();
 });
+
+test('el 403 de cargos conserva su mensaje', function () {
+    // exigirGestion() pasó de devolver la respuesta a lanzar (2026-10-04),
+    // para que Scramble vuelva a tipar store/update/destroy.
+    $this->actingAs(User::factory()->create(), 'sanctum')
+        ->postJson('/api/v1/estructura/cargos', ['nombre' => 'Inventado'])
+        ->assertStatus(403)
+        ->assertJsonPath('mensaje', 'No tiene permiso para gestionar cargos.');
+});
