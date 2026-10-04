@@ -50,7 +50,11 @@ final class PostulanteController extends Controller
                 'nullable', 'integer', 'exists:puestos,id',
             ],
             'fecha_inscripcion' => ['nullable', 'date'],
-            'cedula' => ['required', 'string', 'max:20'],
+            // Diez dígitos, como en el Expediente (StoreServidorBasicoRequest):
+            // la columna es varchar(10), así que `max:20` dejaba pasar una
+            // cédula de 11 caracteres hasta la base y daba un 500. Y al
+            // incorporar, este valor pasa a `servidores`.
+            'cedula' => ['required', 'string', 'regex:/^\d{10}$/'],
             'nombres' => ['required', 'string', 'max:150'],
             'segundo_nombre' => ['nullable', 'string', 'max:150'],
             'apellidos' => ['required', 'string', 'max:150'],
@@ -68,6 +72,8 @@ final class PostulanteController extends Controller
             'tipo_sangre' => ['nullable', 'string', 'in:A+,A-,B+,B-,AB+,AB-,O+,O-'],
             'provincia_nacimiento_id' => ['nullable', 'integer', 'exists:provincias,id'],
             'canton_nacimiento_id' => ['nullable', 'integer', 'exists:cantones,id'],
+        ], [
+            'cedula.regex' => 'La cédula debe tener 10 dígitos numéricos.',
         ]);
 
         $datos['fecha_inscripcion'] = $datos['fecha_inscripcion'] ?? now()->toDateString();
@@ -154,10 +160,10 @@ final class PostulanteController extends Controller
         $postulante = Postulante::where('convocatoria_id', $convocatoriaId)
             ->findOrFail($postulanteId);
 
-        $postulante->documentos()->each(function ($doc) {
-            Storage::disk('public')->delete($doc->ruta);
-        });
-
+        // Es un borrado lógico: el postulante y sus documentos siguen en la
+        // base, así que sus archivos se quedan. Antes se borraban aquí y las
+        // filas de `documentos_postulante` apuntaban a archivos que ya no
+        // existían.
         $postulante->delete();
 
         return ApiResponse::ok([], 'Postulante eliminado.');
@@ -179,9 +185,13 @@ final class PostulanteController extends Controller
             ],
         ]);
 
+        // Disco privado (2026-10-04). Iba al `public`, enlazado en
+        // public/storage: la cédula y la hoja de vida de cada postulante se
+        // abrían sin iniciar sesión con solo conocer la ruta, que además salía
+        // en el JSON. Ahora se bajan por descargarDocumento(), que autoriza.
         $archivo = $request->file('archivo');
         $ruta = $archivo->store(
-            "seleccion/postulantes/{$postulanteId}", 'public'
+            "seleccion/postulantes/{$postulanteId}", 'local'
         );
 
         $documento = DocumentoPostulante::create([
@@ -189,7 +199,9 @@ final class PostulanteController extends Controller
             'tipo' => $request->input('tipo'),
             'nombre_archivo' => $archivo->getClientOriginalName(),
             'ruta' => $ruta,
-            'extension' => $archivo->getClientOriginalExtension(),
+            // La del contenido, no la que trae el nombre: la columna es
+            // varchar(10) y una extensión inventada daba un 500.
+            'extension' => $archivo->extension(),
             'tamano_bytes' => $archivo->getSize(),
         ]);
 
@@ -209,9 +221,27 @@ final class PostulanteController extends Controller
         $documento = DocumentoPostulante::where('postulante_id', $postulanteId)
             ->findOrFail($documentoId);
 
-        Storage::disk('public')->delete($documento->ruta);
+        Storage::disk('local')->delete($documento->ruta);
         $documento->delete();
 
         return ApiResponse::ok([], 'Documento eliminado.');
+    }
+
+    /** Descarga un documento del postulante: vive en el disco privado. */
+    public function descargarDocumento(
+        int $convocatoriaId,
+        int $postulanteId,
+        int $documentoId
+    ): mixed {
+        Postulante::where('convocatoria_id', $convocatoriaId)->findOrFail($postulanteId);
+
+        $documento = DocumentoPostulante::where('postulante_id', $postulanteId)
+            ->findOrFail($documentoId);
+
+        if (! Storage::disk('local')->exists($documento->ruta)) {
+            return ApiResponse::error('No se encontró el archivo del documento.', null, 404);
+        }
+
+        return Storage::disk('local')->download($documento->ruta, $documento->nombre_archivo);
     }
 }

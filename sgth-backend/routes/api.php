@@ -768,6 +768,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             // Documentos del postulante
             Route::post('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/documentos', [PostulanteController::class, 'subirDocumento']);
             Route::delete('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/documentos/{documentoId}', [PostulanteController::class, 'eliminarDocumento']);
+            // Los documentos están en el disco privado (2026-10-04): se bajan por aquí.
+            Route::get('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/documentos/{documentoId}', [PostulanteController::class, 'descargarDocumento']);
 
             // Criterios de evaluación
             Route::get('convocatorias/{convocatoriaId}/criterios', [CriterioEvaluacionController::class, 'index']);
