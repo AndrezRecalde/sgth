@@ -14,7 +14,7 @@ export function useDocumentoMutations(servidorId: number) {
       notificar.exito('Documento subido', 'El documento fue anexado al expediente.')
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo subir el documento'),
+    onError: notificar.alFallarSalvoCampos('No se pudo subir el documento'),
   })
 
   const eliminar = useMutation({

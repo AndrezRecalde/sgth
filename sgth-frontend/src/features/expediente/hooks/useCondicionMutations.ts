@@ -28,7 +28,7 @@ export function useCondicionMutations(servidorId: number) {
       notificar.exito('Discapacidad registrada', 'La discapacidad fue registrada correctamente.')
       invalidar('discapacidades')()
     },
-    onError: notificar.alFallar('No se pudo registrar la discapacidad'),
+    onError: notificar.alFallarSalvoCampos('No se pudo registrar la discapacidad'),
   })
 
   const editarDiscapacidad = useMutation({
@@ -38,7 +38,7 @@ export function useCondicionMutations(servidorId: number) {
       notificar.exito('Discapacidad actualizada', 'El registro fue actualizado correctamente.')
       invalidar('discapacidades')()
     },
-    onError: notificar.alFallar('No se pudo actualizar la discapacidad'),
+    onError: notificar.alFallarSalvoCampos('No se pudo actualizar la discapacidad'),
   })
 
   const eliminarDiscapacidad = useMutation({
@@ -57,7 +57,7 @@ export function useCondicionMutations(servidorId: number) {
       notificar.exito('Enfermedad registrada', 'La enfermedad catastrófica fue registrada.')
       invalidar('enfermedades')()
     },
-    onError: notificar.alFallar('No se pudo registrar la enfermedad'),
+    onError: notificar.alFallarSalvoCampos('No se pudo registrar la enfermedad'),
   })
 
   const editarEnfermedad = useMutation({
@@ -67,7 +67,7 @@ export function useCondicionMutations(servidorId: number) {
       notificar.exito('Enfermedad actualizada', 'El registro fue actualizado correctamente.')
       invalidar('enfermedades')()
     },
-    onError: notificar.alFallar('No se pudo actualizar la enfermedad'),
+    onError: notificar.alFallarSalvoCampos('No se pudo actualizar la enfermedad'),
   })
 
   const eliminarEnfermedad = useMutation({

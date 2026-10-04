@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import { FileInput, Stack, TextInput, Select } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormModal } from "@/components/ui";
 import { useContainedInput } from "@/hooks/useContainedInput";
+import { erroresAlFormulario } from "@/lib/erroresAlFormulario";
 import { fromDateValue, toDateValue } from "@/lib/fecha";
 import { useDeclaracionMutations } from "../hooks/useDeclaracionMutations";
 import {
@@ -25,6 +25,7 @@ const VACIO: DeclaracionFormData = {
   tipo_declaracion: "inicio_gestion",
   fecha_declaracion: "",
   codigo_barras: "",
+  documento: null,
 };
 
 interface Props {
@@ -38,7 +39,6 @@ interface Props {
 export function DeclaracionModal({ opened, onClose, servidorId, initialValues }: Props) {
   const contained = useContainedInput();
   const { crear, editar } = useDeclaracionMutations(servidorId);
-  const [documento, setDocumento] = useState<File | null>(null);
   const isEditing = !!initialValues;
 
   const {
@@ -46,6 +46,7 @@ export function DeclaracionModal({ opened, onClose, servidorId, initialValues }:
     control,
     handleSubmit,
     reset,
+    setError,
     formState: { errors },
   } = useForm<DeclaracionFormData>({
     resolver: zodResolver(declaracionSchema),
@@ -54,21 +55,24 @@ export function DeclaracionModal({ opened, onClose, servidorId, initialValues }:
           tipo_declaracion: initialValues.tipo_declaracion,
           fecha_declaracion: initialValues.fecha_declaracion?.split("T")[0] ?? "",
           codigo_barras: initialValues.codigo_barras ?? "",
+          documento: null,
         }
       : VACIO,
   });
 
   const handleClose = () => {
     reset(VACIO);
-    setDocumento(null);
     onClose();
   };
 
   const onSubmit = (data: DeclaracionFormData) => {
+    const documento = data.documento ?? null;
     const guardado = initialValues
       ? editar.mutateAsync({ id: initialValues.id, data, documento })
       : crear.mutateAsync({ data, documento });
-    guardado.then(handleClose).catch(() => {}); // el hook ya notificó
+    guardado.then(handleClose).catch((e) => erroresAlFormulario(
+      e, setError, Object.keys(declaracionSchema.shape), "No se pudo guardar la declaración",
+    ));
   };
 
   return (
@@ -121,16 +125,23 @@ export function DeclaracionModal({ opened, onClose, servidorId, initialValues }:
           {...register("codigo_barras")}
           error={errors.codigo_barras?.message}
         />
-        <FileInput
-          label={initialValues?.documento_nombre_archivo
-            ? "Reemplazar documento (PDF)"
-            : "Documento escaneado (PDF)"}
-          placeholder={initialValues?.documento_nombre_archivo ?? "Opcional, hasta 10 MB"}
-          accept="application/pdf"
-          clearable
-          {...contained}
-          value={documento}
-          onChange={setDocumento}
+        <Controller
+          name="documento"
+          control={control}
+          render={({ field }) => (
+            <FileInput
+              label={initialValues?.documento_nombre_archivo
+                ? "Reemplazar documento (PDF)"
+                : "Documento escaneado (PDF, opcional)"}
+              placeholder={initialValues?.documento_nombre_archivo ?? "Hasta 10 MB"}
+              accept="application/pdf"
+              clearable
+              {...contained}
+              value={field.value ?? null}
+              onChange={field.onChange}
+              error={errors.documento?.message}
+            />
+          )}
         />
       </Stack>
     </FormModal>

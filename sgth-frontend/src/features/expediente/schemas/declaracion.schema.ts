@@ -10,6 +10,14 @@ export const declaracionSchema = z.object({
   ]),
   fecha_declaracion: z.string().min(1, 'La fecha es requerida'),
   codigo_barras:     z.string().min(1, 'El código de barras es requerido'),
+  // El PDF escaneado, como campo del formulario (regla 07). Antes vivía en un
+  // useState sin validar: los «10 MB» del placeholder no los comprobaba nadie
+  // hasta que el backend lo rechazaba.
+  documento: z.instanceof(File)
+    .refine((f) => f.type === 'application/pdf', 'El documento debe ser un archivo PDF')
+    .refine((f) => f.size <= 10 * 1024 * 1024, 'El documento no debe superar los 10 MB')
+    .nullable()
+    .optional(),
 })
 
 export type DeclaracionFormData = z.infer<typeof declaracionSchema>

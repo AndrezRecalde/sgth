@@ -5,6 +5,7 @@ import { useForm, Controller, type DefaultValues } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormModal } from "@/components/ui";
 import { useContainedInput } from "@/hooks/useContainedInput";
+import { erroresAlFormulario } from "@/lib/erroresAlFormulario";
 import { useEntidadesFinancieras } from "../hooks/useEntidadesFinancieras";
 import { useCuentaBancariaMutations } from "../hooks/useCuentaBancariaMutations";
 import {
@@ -71,7 +72,7 @@ export function CuentaBancariaModal({ opened, onClose, servidorId, initialValues
     label: e.nombre ?? `Entidad ${e.id}`,
   }));
 
-  const { register, control, handleSubmit, reset, setValue, getValues, formState: { errors } } =
+  const { register, control, handleSubmit, reset, setValue, getValues, setError, formState: { errors } } =
     useForm<CuentaBancariaFormData>({
       resolver: zodResolver(cuentaBancariaSchema),
       defaultValues: initialValues ? valoresDe(initialValues) : VACIO,
@@ -94,7 +95,9 @@ export function CuentaBancariaModal({ opened, onClose, servidorId, initialValues
     const guardado = initialValues
       ? editar.mutateAsync({ id: Number(initialValues.id), data: values })
       : crear.mutateAsync(values);
-    guardado.then(handleClose).catch(() => {}); // el hook ya notificó
+    guardado.then(handleClose).catch((e) => erroresAlFormulario(
+      e, setError, Object.keys(cuentaBancariaSchema.shape), "No se pudo guardar la cuenta",
+    ));
   };
 
   return (

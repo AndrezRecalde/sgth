@@ -6,6 +6,7 @@ import { useForm, Controller, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
 import { useContainedInput } from '@/hooks/useContainedInput'
+import { erroresAlFormulario } from '@/lib/erroresAlFormulario'
 import { useHistorialAcademicoMutations } from '../hooks/useHistorialAcademicoMutations'
 import { historialAcademicoSchema, type HistorialAcademicoFormData }
   from '../schemas/historialAcademico.schema'
@@ -40,7 +41,7 @@ export function HistorialAcademicoModal({ opened, onClose, servidorId, initialVa
   const { crear, editar }  = useHistorialAcademicoMutations(servidorId)
   const isEditing = !!initialValues
 
-  const { register, control, handleSubmit, reset, formState: { errors } } =
+  const { register, control, handleSubmit, reset, setError, formState: { errors } } =
     useForm<HistorialAcademicoFormData>({
       resolver: zodResolver(historialAcademicoSchema),
       defaultValues: {
@@ -99,7 +100,9 @@ export function HistorialAcademicoModal({ opened, onClose, servidorId, initialVa
 
     promise
       .then(() => { reset(); onClose() })
-      .catch(() => {})
+      .catch((e) => erroresAlFormulario(
+        e, setError, Object.keys(historialAcademicoSchema.shape), 'No se pudo guardar el registro',
+      ))
   }
 
   return (

@@ -14,7 +14,7 @@ export function useCargaFamiliarMutations(servidorId: number) {
       notificar.exito('Carga familiar registrada', 'La carga familiar fue registrada.')
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo registrar la carga familiar'),
+    onError: notificar.alFallarSalvoCampos('No se pudo registrar la carga familiar'),
   })
 
   const editar = useMutation({
@@ -24,7 +24,7 @@ export function useCargaFamiliarMutations(servidorId: number) {
       notificar.exito('Carga familiar actualizada', 'La carga familiar fue actualizada.')
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo actualizar la carga familiar'),
+    onError: notificar.alFallarSalvoCampos('No se pudo actualizar la carga familiar'),
   })
 
   const eliminar = useMutation({
