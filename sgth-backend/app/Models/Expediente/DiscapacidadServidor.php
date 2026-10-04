@@ -17,6 +17,9 @@ class DiscapacidadServidor extends Model
 
     protected $table = 'discapacidades_servidor';
 
+    /** La ruta interna del archivo no tiene por qué llegar al navegador. */
+    protected $hidden = ['carnet_ruta'];
+
     protected $fillable = [
         'servidor_id',
         'tipo_discapacidad',

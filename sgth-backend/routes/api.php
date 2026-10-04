@@ -453,8 +453,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 // (prórroga o corrección de digitación), siempre con motivo.
                 Route::put('contratos/{contrato}/plazo', [ContratoServidorController::class, 'reprogramarPlazo'])
                     ->name('contratos.plazo');
-                Route::apiResource('discapacidades', DiscapacidadServidorController::class);
-                Route::apiResource('enfermedades', EnfermedadCatastroficaServidorController::class);
+                Route::apiResource('discapacidades', DiscapacidadServidorController::class)->except(['show']);
+                Route::apiResource('enfermedades', EnfermedadCatastroficaServidorController::class)->except(['show']);
 
                 // Historial académico
                 Route::get('historial-academico', [HistorialAcademicoController::class, 'index']);
