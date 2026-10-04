@@ -38,7 +38,9 @@ export function SaludOcupacionalTab({ servidor }: Props) {
 
   // La aptitud que rige se pide aparte y no se saca de la tabla: la tabla
   // pagina, y estando en la página 2 la evaluación más reciente no está ahí.
-  const { data: ultimas, isLoading: cargandoAptitud } = useSolicitudesCertificacion({
+  const {
+    data: ultimas, isLoading: cargandoAptitud, error: errorAptitud, refetch: reintentarAptitud,
+  } = useSolicitudesCertificacion({
     servidor_id: servidorId,
     estado: 'completada',
     per_page: 1,
@@ -57,6 +59,8 @@ export function SaludOcupacionalTab({ servidor }: Props) {
       <AptitudVigentePanel
         aptitud={aptitud}
         cargando={cargandoAptitud}
+        error={errorAptitud}
+        onReintentar={() => reintentarAptitud()}
         onSolicitar={abrirSolicitar}
         puedeSolicitar={hasPermiso('solicitar-certificacion-medica')}
       />

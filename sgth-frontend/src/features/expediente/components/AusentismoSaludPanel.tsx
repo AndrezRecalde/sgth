@@ -3,7 +3,7 @@
 import { Anchor, Group, Skeleton, Text } from '@mantine/core'
 import { IconExternalLink } from '@tabler/icons-react'
 import Link from 'next/link'
-import { SectionCard } from '@/components/ui'
+import { DataState, SectionCard } from '@/components/ui'
 import { ROUTES } from '@/config/routes'
 import { useAusentismoSalud } from '../hooks/useAusentismoSalud'
 
@@ -25,7 +25,7 @@ interface Props {
  * observación de un permiso es texto libre que puede llevar un diagnóstico.
  */
 export function AusentismoSaludPanel({ servidorId }: Props) {
-  const { data, isLoading } = useAusentismoSalud(servidorId)
+  const { data, isLoading, error, refetch } = useAusentismoSalud(servidorId)
 
   return (
     <SectionCard
@@ -45,6 +45,15 @@ export function AusentismoSaludPanel({ servidorId }: Props) {
     >
       {isLoading ? (
         <Skeleton height={44} radius="md" />
+      ) : error ? (
+        // Sin esto, un fallo pintaba «0 permisos por enfermedad».
+        <DataState
+          loading={false}
+          error={error}
+          errorTitle="No se pudo consultar el ausentismo"
+          errorHint="No quiere decir que no tenga permisos por enfermedad: no se pudo consultar."
+          onRetry={() => refetch()}
+        />
       ) : (
         <>
           <Text size="xl" fw={700}>

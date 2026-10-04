@@ -24,9 +24,27 @@ const api = axios.create({
  */
 const esIntentoDeLogin = (url: string | undefined) => url === '/auth/login'
 
+/**
+ * Una descarga pide `responseType: 'blob'`, y entonces el JSON de error del
+ * backend también llega como Blob. `getApiErrorMessage` no encontraba ahí el
+ * `mensaje` y caía en el de axios: «Request failed with status code 403», en
+ * inglés, en cada descarga fallida (documento, declaración, acción de
+ * personal, certificado). Se convierte de vuelta a objeto aquí, una vez.
+ */
+async function errorDeBlobAJson(error: { response?: { data?: unknown } }) {
+  const data = error.response?.data
+  if (!(data instanceof Blob) || !data.type.includes('json')) return
+  try {
+    error.response!.data = JSON.parse(await data.text())
+  } catch {
+    // No era JSON válido: se queda como vino y manda el mensaje de axios.
+  }
+}
+
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    await errorDeBlobAJson(error);
     if (error.response?.status === 401 && !esIntentoDeLogin(error.config?.url)) {
       if (typeof window !== 'undefined') {
         useAuthStore.getState().clearAuth();
