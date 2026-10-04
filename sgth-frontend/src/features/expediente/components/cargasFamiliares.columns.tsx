@@ -46,6 +46,15 @@ export const getCargasFamiliaresColumns = (
     ),
   },
   {
+    accessor: 'genero',
+    title: 'Sexo',
+    width: 110,
+    // Los registrados antes de existir el campo lo dicen, para completarlo.
+    render: (c) => c.genero
+      ? <Text size="sm">{c.genero === 'femenino' ? 'Femenino' : 'Masculino'}</Text>
+      : <StatusBadge size="xs" tone="warning">Sin registrar</StatusBadge>,
+  },
+  {
     accessor: 'fecha_nacimiento',
     title: 'Nacimiento',
     width: 110,

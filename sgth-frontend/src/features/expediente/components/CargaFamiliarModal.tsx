@@ -4,6 +4,7 @@ import {
   Stack,
   TextInput,
   Select,
+  SimpleGrid,
   Switch,
   Textarea,
 } from "@mantine/core";
@@ -20,11 +21,9 @@ import {
 import type { CargaFamiliar } from "@/types/api";
 import { DatePickerInput } from "@mantine/dates";
 import { toDateValue, fromDateValueOrNull } from "@/lib/fecha"
-
-const PARENTESCO_OPTIONS = [
-  { value: "conyugue", label: "Cónyuge / Conviviente" },
-  { value: "hijo", label: "Hijo/a" },
-];
+import {
+  CARGA_FAMILIAR_VACIA, PARENTESCO_OPTIONS, SEXO_OPTIONS, valoresDeCarga,
+} from "../constants/cargaFamiliar";
 
 interface Props {
   opened: boolean;
@@ -51,46 +50,11 @@ export function CargaFamiliarModal({
     formState: { errors },
   } = useForm<CargaFamiliarFormData>({
     resolver: zodResolver(cargaFamiliarSchema),
-    defaultValues: {
-      cedula: "",
-      nombres: "",
-      apellidos: "",
-      parentesco: "hijo",
-      fecha_nacimiento: "",
-      persona_con_discapacidad: false,
-      posee_enfermedad_catastrofica: false,
-      observaciones: "",
-    },
+    defaultValues: CARGA_FAMILIAR_VACIA,
   });
 
   useEffect(() => {
-    if (initialValues) {
-      reset({
-        cedula: initialValues.cedula ?? "",
-        nombres: initialValues.nombres ?? "",
-        apellidos: initialValues.apellidos ?? "",
-        parentesco: initialValues.parentesco ?? "hijo",
-        fecha_nacimiento: initialValues.fecha_nacimiento
-          ? initialValues.fecha_nacimiento.split("T")[0]
-          : "",
-        persona_con_discapacidad:
-          initialValues.persona_con_discapacidad ?? false,
-        posee_enfermedad_catastrofica:
-          initialValues.posee_enfermedad_catastrofica ?? false,
-        observaciones: initialValues.observaciones ?? "",
-      });
-    } else {
-      reset({
-        cedula: "",
-        nombres: "",
-        apellidos: "",
-        parentesco: "hijo",
-        fecha_nacimiento: "",
-        persona_con_discapacidad: false,
-        posee_enfermedad_catastrofica: false,
-        observaciones: "",
-      });
-    }
+    reset(initialValues ? valoresDeCarga(initialValues) : CARGA_FAMILIAR_VACIA);
   }, [initialValues, reset]);
 
   const onSubmit = (values: CargaFamiliarFormData) => {
@@ -153,20 +117,40 @@ export function CargaFamiliarModal({
           error={errors.apellidos?.message}
         />
 
-        <Controller
-          name="parentesco"
-          control={control}
-          render={({ field }) => (
-            <Select
-              label="Parentesco"
-              data={PARENTESCO_OPTIONS}
-              {...contained}
-              value={field.value}
-              onChange={(v) => field.onChange(v ?? "hijo")}
-              error={errors.parentesco?.message}
-            />
-          )}
-        />
+        <SimpleGrid cols={{ base: 1, xs: 2 }} spacing="sm">
+          <Controller
+            name="parentesco"
+            control={control}
+            render={({ field }) => (
+              <Select
+                label="Parentesco"
+                data={PARENTESCO_OPTIONS}
+                {...contained}
+                value={field.value}
+                onChange={(v) => field.onChange(v ?? "hijo")}
+                error={errors.parentesco?.message}
+              />
+            )}
+          />
+
+          {/* Lo pide el Dispensario: sin él, la morbilidad por sexo dejaba
+              fuera a todos los familiares. */}
+          <Controller
+            name="genero"
+            control={control}
+            render={({ field }) => (
+              <Select
+                label="Sexo"
+                placeholder="Seleccione"
+                data={SEXO_OPTIONS}
+                {...contained}
+                value={field.value ?? null}
+                onChange={(v) => field.onChange(v ?? undefined)}
+                error={errors.genero?.message}
+              />
+            )}
+          />
+        </SimpleGrid>
 
         <Controller
           name="fecha_nacimiento"
@@ -185,29 +169,19 @@ export function CargaFamiliarModal({
           )}
         />
 
-        <Controller
-          name="persona_con_discapacidad"
-          control={control}
-          render={({ field }) => (
-            <Switch
-              label="Persona con discapacidad"
-              checked={field.value}
-              onChange={(e) => field.onChange(e.currentTarget.checked)}
-            />
-          )}
-        />
-
-        <Controller
-          name="posee_enfermedad_catastrofica"
-          control={control}
-          render={({ field }) => (
-            <Switch
-              label="Posee enfermedad catastrófica"
-              checked={field.value}
-              onChange={(e) => field.onChange(e.currentTarget.checked)}
-            />
-          )}
-        />
+        {([
+          ["persona_con_discapacidad", "Persona con discapacidad"],
+          ["posee_enfermedad_catastrofica", "Posee enfermedad catastrófica"],
+        ] as const).map(([name, label]) => (
+          <Controller
+            key={name}
+            name={name}
+            control={control}
+            render={({ field }) => (
+              <Switch label={label} checked={field.value} onChange={(e) => field.onChange(e.currentTarget.checked)} />
+            )}
+          />
+        ))}
 
         <Textarea
           label="Observaciones (Opcional)"

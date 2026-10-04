@@ -22,6 +22,7 @@ class CargaFamiliar extends Model
         'nombres',
         'parentesco',
         'fecha_nacimiento',
+        'genero',
         'persona_con_discapacidad',
         'posee_enfermedad_catastrofica',
         'observaciones',

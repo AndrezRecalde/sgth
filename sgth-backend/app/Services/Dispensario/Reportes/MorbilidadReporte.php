@@ -47,7 +47,7 @@ final class MorbilidadReporte extends ReporteBase
             ['clave' => 'primera_vez', 'titulo' => 'Primera vez'],
             ['clave' => 'hombres', 'titulo' => 'Hombres'],
             ['clave' => 'mujeres', 'titulo' => 'Mujeres'],
-            ['clave' => 'sexo_sin_dato', 'titulo' => 'Sexo sin dato'],
+            ['clave' => 'sexo_sin_dato', 'titulo' => 'Otro o sin dato'],
         ];
 
         foreach (self::GRUPOS as $grupo) {
