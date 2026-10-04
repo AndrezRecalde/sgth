@@ -141,6 +141,7 @@ function FormularioResolucion({
           errors={errors}
           falta={falta}
           sancion={sancion}
+          esObrero={sumario.servidor?.contrato_vigente?.tipo_nombramiento === 'codigo_trabajo'}
         />
 
         {sancion === 'destitucion' && (

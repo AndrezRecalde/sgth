@@ -24,6 +24,13 @@ import type { TipoFalta, TipoSancion } from '@/types/api'
 const FALTA_OPTIONS = (Object.keys(TIPO_FALTA_LABELS) as TipoFalta[])
   .map((f) => ({ value: f, label: TIPO_FALTA_LABELS[f] }))
 
+/**
+ * A un obrero solo se le sanciona una falta leve, con amonestación o multa
+ * (TH, 2026-10-04): no se le suspende, y su falta grave es un visto bueno ante
+ * el Inspector del Trabajo, no un sumario.
+ */
+const FALTA_OPTIONS_OBRERO = FALTA_OPTIONS.filter((o) => o.value === 'leve')
+
 /** Solo las sanciones que el Art. 42 de la LOSEP admite para la gravedad. */
 const sancionesDe = (falta: TipoFalta | undefined) =>
   (falta ? SANCIONES_POR_FALTA[falta] : [])
@@ -38,6 +45,8 @@ interface Props {
   falta: TipoFalta | undefined
   /** La sanción elegida: decide qué cifra se pide. */
   sancion: TipoSancion | undefined
+  /** Obrero bajo Código del Trabajo: solo falta leve. */
+  esObrero: boolean
 }
 
 /**
@@ -46,7 +55,7 @@ interface Props {
  * porcentaje, y pedir las dos cifras siempre invita a guardar la que no toca.
  */
 export function ResolucionSancionCampos({
-  control, register, resetField, errors, falta, sancion,
+  control, register, resetField, errors, falta, sancion, esObrero,
 }: Props) {
   const contained = useContainedInput()
 
@@ -60,9 +69,11 @@ export function ResolucionSancionCampos({
             <Select
               label="Gravedad de la falta"
               required
-              description="Art. 42 de la LOSEP: leve o grave"
+              description={esObrero
+                ? 'Obrero: solo falta leve; la grave es un visto bueno'
+                : 'Art. 42 de la LOSEP: leve o grave'}
               placeholder="Seleccione"
-              data={FALTA_OPTIONS}
+              data={esObrero ? FALTA_OPTIONS_OBRERO : FALTA_OPTIONS}
               error={errors.tipo_falta?.message}
               {...contained}
               value={field.value ?? null}

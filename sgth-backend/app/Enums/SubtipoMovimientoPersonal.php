@@ -53,7 +53,8 @@ enum SubtipoMovimientoPersonal: string
      * Elegibilidad por tipo de nombramiento vigente del servidor, según las
      * reglas que dictó Talento Humano:
      * - Cambio administrativo (las cuatro variantes): solo Permanente.
-     * - Sanción disciplinaria: Permanente, Provisional y Ocasional.
+     * - Sanción disciplinaria: Permanente, Provisional, Ocasional, Libre
+     *   Nombramiento y, desde el 2026-10-04, obreros (solo la multa).
      * - Cesación por renuncia/destitución/jubilación/incapacidad: Permanente,
      *   Provisional y Ocasional.
      * - Contrato finalizado: exclusivo de Servicios Profesionales, porque es
@@ -87,7 +88,12 @@ enum SubtipoMovimientoPersonal: string
             self::COMISION_CON_REMUNERACION,
             self::COMISION_SIN_REMUNERACION => [TipoNombramiento::PERMANENTE],
 
-            self::SANCION_DISCIPLINARIA,
+            // Los obreros entran el 2026-10-04 (TH): la multa de un obrero
+            // llega a Financiero con la misma acción que la de un servidor
+            // LOSEP. Solo la multa —sin suspensión—, y eso lo vigila
+            // DisciplinarioService, que es quien sabe qué sanción es.
+            self::SANCION_DISCIPLINARIA => [...$conSancionYCesacionLosep, TipoNombramiento::CODIGO_TRABAJO],
+
             self::RENUNCIA,
             self::DESTITUCION,
             self::JUBILACION,

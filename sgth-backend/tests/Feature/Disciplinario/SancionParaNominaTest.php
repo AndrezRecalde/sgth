@@ -122,17 +122,36 @@ test('una suspensión descuenta la remuneración entre 30 por los días, en día
         ->toContain('Arts. 42 literal b) y 43');
 });
 
-test('una amonestación no crea acción de personal, y a un obrero tampoco por ahora', function () {
+test('una amonestación no crea acción de personal', function () {
     $permanente = ($this->servidorCon)(TipoNombramiento::PERMANENTE);
     ($this->resolver)($permanente, ['tipo_falta' => 'leve', 'tipo_sancion' => 'amonestacion_escrita'])->assertOk();
 
-    // El subtipo solo admite nombramientos LOSEP (TH, 2026-09-28): la multa de
-    // un obrero se registra, pero sin acción.
-    $obrero = ($this->servidorCon)(TipoNombramiento::CODIGO_TRABAJO);
-    ($this->resolver)($obrero, ['tipo_falta' => 'leve', 'tipo_sancion' => 'multa', 'porcentaje_multa' => 5])->assertOk();
+    expect(MovimientoPersonal::where('servidor_id', $permanente->id)->count())->toBe(0)
+        ->and(SancionDisciplinaria::count())->toBe(1);
+});
 
-    expect(MovimientoPersonal::whereIn('servidor_id', [$permanente->id, $obrero->id])->count())->toBe(0)
-        ->and(SancionDisciplinaria::count())->toBe(2);
+test('a un obrero se le multa con acción de personal, pero no se le suspende', function () {
+    // Decisión de TH (2026-10-04): solo la multa. Antes la multa de un obrero
+    // se registraba sin acción y no llegaba a Financiero.
+    $obrero = ($this->servidorCon)(TipoNombramiento::CODIGO_TRABAJO);
+
+    ($this->resolver)($obrero, ['tipo_falta' => 'leve', 'tipo_sancion' => 'multa', 'porcentaje_multa' => 5])
+        ->assertOk()
+        ->assertJsonPath('datos.sancion.descuento_referencial.monto', 60.6);
+
+    $accion = MovimientoPersonal::where('servidor_id', $obrero->id)->sole();
+    expect($accion->subtipo_movimiento)->toBe(SubtipoMovimientoPersonal::SANCION_DISCIPLINARIA)
+        ->and($accion->descripcion)->toContain('Reglamento Interno de Trabajo y al Código del Trabajo')
+        ->and($accion->descripcion)->not->toContain('Servicio Público');
+
+    $otro = ($this->servidorCon)(TipoNombramiento::CODIGO_TRABAJO);
+    ($this->resolver)($otro, ['tipo_falta' => 'grave', 'tipo_sancion' => 'suspension', 'dias_suspension' => 5])
+        ->assertUnprocessable()
+        ->assertJsonPath('mensaje', 'A los obreros bajo Código del Trabajo no se les suspende: se les sanciona con '
+            .'amonestación o multa. Una falta grave se tramita como visto bueno ante el Inspector del Trabajo.');
+
+    expect(MovimientoPersonal::where('servidor_id', $otro->id)->count())->toBe(0)
+        ->and(SancionDisciplinaria::count())->toBe(1);
 });
 
 test('al registrarse sale por correo al jefe de Financiero, y su anulación también', function () {

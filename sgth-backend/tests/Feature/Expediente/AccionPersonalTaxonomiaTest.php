@@ -160,7 +160,7 @@ dataset('matriz de elegibilidad', [
         SubtipoMovimientoPersonal::COMISION_SIN_REMUNERACION,
         [TipoNombramiento::PERMANENTE],
     ],
-    'sanción disciplinaria → permanente, provisional, ocasional y libre nombramiento' => [
+    'sanción disciplinaria → permanente, provisional, ocasional, libre nombramiento y obreros' => [
         SubtipoMovimientoPersonal::SANCION_DISCIPLINARIA,
         [
             TipoNombramiento::PERMANENTE,
@@ -168,6 +168,8 @@ dataset('matriz de elegibilidad', [
             TipoNombramiento::SERVICIOS_OCASIONALES,
             // TH equiparó Libre Nombramiento al ocasional el 2026-09-29.
             TipoNombramiento::LIBRE_NOMBRAMIENTO,
+            // Y los obreros el 2026-10-04, solo para la multa.
+            TipoNombramiento::CODIGO_TRABAJO,
         ],
     ],
     'renuncia → permanente, provisional, ocasional y libre nombramiento' => [

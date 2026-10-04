@@ -289,11 +289,10 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
      * cuando Talento Humano la registra sale por correo al jefe de Gestión
      * Financiera con el descuento referencial (AvisoFinancieroSancionService).
      *
-     * El subtipo solo admite los nombramientos LOSEP que TH fijó el
-     * 2026-09-28 (SubtipoMovimientoPersonal::elegiblePara()). A un obrero de
-     * Código del Trabajo, o a un dignatario de elección popular, la sanción se
-     * le registra igual, pero sin acción: queda pendiente que TH decida por
-     * qué vía le llega a Financiero.
+     * Elegibles: los nombramientos LOSEP que TH fijó el 2026-09-28 y, desde
+     * el 2026-10-04, los obreros, a quienes solo llega la multa porque la
+     * suspensión se les rechaza antes (assertSancionAplicableAlRegimen()). A
+     * un dignatario de elección popular la sanción se le registra sin acción.
      */
     private function crearAccionDeSancion(Sumario $sumario, SancionDisciplinaria $sancion): void
     {
@@ -307,20 +306,30 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
         $accion = $this->movimientoPersonalService->registrar($servidor->id, [
             'tipo_movimiento'    => TipoMovimientoPersonal::REGIMEN_DISCIPLINARIO->value,
             'subtipo_movimiento' => SubtipoMovimientoPersonal::SANCION_DISCIPLINARIA->value,
-            'descripcion'        => $this->explicacionDeLaSancion($sumario, $sancion),
+            'descripcion'        => $this->explicacionDeLaSancion($sumario, $sancion, $nombramiento),
             'fecha_efectiva'     => $sancion->fecha_efectiva->toDateString(),
         ]);
 
         $sancion->update(['movimiento_personal_id' => $accion->id]);
     }
 
-    /** El párrafo «Explicación» de la acción. Talento Humano lo puede editar en borrador. */
-    private function explicacionDeLaSancion(Sumario $sumario, SancionDisciplinaria $sancion): string
-    {
+    /**
+     * El párrafo «Explicación» de la acción. Talento Humano lo puede editar en
+     * borrador. A un obrero no lo rige la LOSEP sino el Código del Trabajo y
+     * el reglamento interno, y el texto lo dice así.
+     */
+    private function explicacionDeLaSancion(
+        Sumario $sumario,
+        SancionDisciplinaria $sancion,
+        TipoNombramiento $nombramiento,
+    ): string {
+        $falta  = mb_strtolower($sancion->tipo_falta->etiqueta());
+        $base   = "por falta {$falta} determinada en el Sumario Administrativo N.º {$sumario->id}, ";
         $literal = $sancion->tipo_falta === TipoFalta::LEVE ? 'a' : 'b';
-        $falta   = mb_strtolower($sancion->tipo_falta->etiqueta());
-        $origen  = "por falta {$falta} determinada en el Sumario Administrativo N.º {$sumario->id}, "
-            ."conforme a los Arts. 42 literal {$literal}) y 43 de la Ley Orgánica de Servicio Público.";
+        $origen = $nombramiento === TipoNombramiento::CODIGO_TRABAJO
+            ? $base.'conforme al Reglamento Interno de Trabajo y al Código del Trabajo, que no '
+                .'admite multas por más del 10 % de la remuneración.'
+            : $base."conforme a los Arts. 42 literal {$literal}) y 43 de la Ley Orgánica de Servicio Público.";
 
         $efecto = $sancion->descuentoReferencial(null);
 
@@ -375,19 +384,32 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
      */
     private function assertSancionAplicableAlRegimen(Sumario $sumario, string $tipoSancion): void
     {
-        if ($tipoSancion !== TipoSancion::DESTITUCION->value) {
+        if (! in_array($tipoSancion, [TipoSancion::DESTITUCION->value, TipoSancion::SUSPENSION->value], true)) {
             return;
         }
 
         $servidor = Servidor::with('contratoVigente')->findOrFail($sumario->servidor_id);
         $nombramiento = $servidor->contratoVigente?->tipo_nombramiento;
 
-        if ($nombramiento === TipoNombramiento::CODIGO_TRABAJO) {
+        if ($nombramiento !== TipoNombramiento::CODIGO_TRABAJO) {
+            return;
+        }
+
+        if ($tipoSancion === TipoSancion::DESTITUCION->value) {
             throw new ReglaNegocioException(
                 'Los obreros bajo Código del Trabajo no se destituyen por sumario administrativo. '
                     .'Tramite un visto bueno ante el Inspector del Trabajo desde el módulo Disciplinario.'
             );
         }
+
+        // Decisión de TH (2026-10-04): a un obrero se le multa, pero no se le
+        // suspende sin sueldo. El Código del Trabajo no regula la suspensión
+        // como sanción, y su falta grave termina en visto bueno.
+        throw new ReglaNegocioException(
+            'A los obreros bajo Código del Trabajo no se les suspende: se les sanciona con '
+                .'amonestación o multa. Una falta grave se tramita como visto bueno ante el '
+                .'Inspector del Trabajo.'
+        );
     }
 
     /**
