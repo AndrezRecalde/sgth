@@ -21,6 +21,9 @@ class StoreCargaFamiliarRequest extends FormRequest
             'nombres'                       => ['required', 'string', 'max:100'],
             'parentesco'                    => ['required', new Enum(TipoParentesco::class)],
             'fecha_nacimiento'              => ['required', 'date', 'before:today'],
+            // El sexo, con los valores de `servidores.genero`. Obligatorio al
+            // registrar o editar: los familiares antiguos lo completan así.
+            'genero'                        => ['required', 'in:masculino,femenino'],
             'persona_con_discapacidad'      => ['required', 'boolean'],
             'posee_enfermedad_catastrofica' => ['required', 'boolean'],
             'observaciones'                 => ['nullable', 'string'],
@@ -33,6 +36,8 @@ class StoreCargaFamiliarRequest extends FormRequest
             'cedula.required' => 'La cédula del familiar es obligatoria.',
             'cedula.size'     => 'La cédula debe tener 10 dígitos.',
             'cedula.unique'   => 'Esta cédula ya está registrada como carga familiar.',
+            'genero.required' => 'Indique el sexo del familiar.',
+            'genero.in'       => 'El sexo debe ser masculino o femenino.',
         ];
     }
 }

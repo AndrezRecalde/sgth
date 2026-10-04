@@ -16,8 +16,8 @@ use Illuminate\Support\Facades\DB;
  *
  * El paciente sale de su historia clínica: un servidor, un familiar (su unidad
  * es la del servidor titular) o un candidato del preocupacional, que solo
- * consta por la cédula en `postulantes`. Los familiares no tienen sexo
- * registrado en el Expediente: el reporte lo dice en vez de adivinarlo.
+ * consta por la cédula en `postulantes`. Quien no tiene el sexo registrado
+ * —los familiares anteriores a ese campo— sale como «Sin dato», sin adivinar.
  */
 final class ConsultasConPaciente
 {
@@ -49,7 +49,7 @@ final class ConsultasConPaciente
                 DB::raw('COALESCE(s.cedula, cf.cedula, hc.cedula_paciente) as cedula_paciente'),
                 DB::raw("TRIM(COALESCE(s.nombre || ' ' || s.apellido, cf.nombres || ' ' || cf.apellidos, p.nombres || ' ' || p.apellidos, '')) as paciente"),
                 DB::raw('COALESCE(s.fecha_nacimiento, cf.fecha_nacimiento, p.fecha_nacimiento) as fecha_nacimiento'),
-                DB::raw('COALESCE(s.genero, p.genero) as genero'),
+                DB::raw('COALESCE(s.genero, cf.genero, p.genero) as genero'),
                 'ua.nombre as unidad',
                 'd.codigo as cie10_codigo', 'd.descripcion as cie10_descripcion',
                 DB::raw("COALESCE(NULLIF(TRIM(COALESCE(ps.nombre, '') || ' ' || COALESCE(ps.apellido, '')), ''), u.usuario_ti) as profesional"),
@@ -108,6 +108,7 @@ final class ConsultasConPaciente
         return match ($genero) {
             'masculino' => 'Hombre',
             'femenino'  => 'Mujer',
+            'otro'      => 'Otro',
             default     => 'Sin dato',
         };
     }

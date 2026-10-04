@@ -911,6 +911,8 @@ export type CargaFamiliar = {
   nombres:     string
   parentesco:  TipoParentesco
   fecha_nacimiento: string
+  /** Nulo en los registrados antes de existir el campo. */
+  genero:      'masculino' | 'femenino' | null
   persona_con_discapacidad:      boolean
   posee_enfermedad_catastrofica: boolean
   observaciones: string | null
