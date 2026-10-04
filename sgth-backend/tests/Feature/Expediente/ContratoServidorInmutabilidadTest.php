@@ -80,28 +80,23 @@ test('un contrato vigente ya no se puede eliminar vía DELETE — la ruta fue re
     expect(ContratoServidor::find($this->contrato->id))->not->toBeNull();
 });
 
-test('cerrar un contrato exige motivo_fin y lo deja en estado terminado', function () {
+test('un vínculo no se cierra por API sin acción de personal — la ruta fue removida', function () {
+    // `PUT contratos/{id}/cerrar` se retiró el 2026-10-03. Ninguna pantalla
+    // lo usaba y cerraba el vínculo sin acción de personal que lo respaldara,
+    // sin `movimiento_cierre_id` y sin devolver el puesto: el servidor quedaba
+    // asignado al puesto de un vínculo terminado. Un vínculo se cierra con la
+    // acción de cesación, que llama a ContratoServidorService::cerrar().
     $response = $this->actingAs($this->adminUath, 'sanctum')
-        ->putJson(
-            "/api/v1/expediente/servidores/{$this->servidor->id}/contratos/{$this->contrato->id}/cerrar",
-            []
-        );
-
-    $response->assertStatus(422)
-        ->assertJsonStructure(['errores' => ['motivo_fin']]);
-
-    $response2 = $this->actingAs($this->adminUath, 'sanctum')
         ->putJson(
             "/api/v1/expediente/servidores/{$this->servidor->id}/contratos/{$this->contrato->id}/cerrar",
             ['motivo_fin' => 'Fin de periodo de prueba.']
         );
 
-    $response2->assertStatus(200);
+    $response->assertNotFound();
 
     $this->contrato->refresh();
-    expect($this->contrato->estado->value)->toBe('terminado');
-    expect($this->contrato->motivo_fin)->toBe('Fin de periodo de prueba.');
-    expect($this->contrato->fecha_fin)->not->toBeNull();
+    expect($this->contrato->estado->value)->toBe('vigente')
+        ->and($this->contrato->fecha_fin)->toBeNull();
 });
 
 test('sincronizarRegimenServidor genera un MovimientoPersonal en vez de mutar Servidor en silencio', function () {
