@@ -41,7 +41,7 @@ test('registrar una discapacidad enciende la marca y borrarla la apaga', functio
         'tipo_discapacidad' => 'fisica',
         'porcentaje' => 45,
         'numero_carnet_conadis' => 'C-123',
-    ])->assertCreated()->json('data.id');
+    ])->assertCreated()->json('datos.id');
 
     expect($this->servidor->fresh()->tiene_discapacidad)->toBeTrue();
 
@@ -54,7 +54,7 @@ test('registrar una enfermedad catastrófica enciende su marca y borrarla la apa
     $id = $this->postJson("{$this->base}/enfermedades", [
         'tipo_enfermedad' => 'Insuficiencia renal',
         'codigo_cie10' => 'N18',
-    ])->assertCreated()->json('data.id');
+    ])->assertCreated()->json('datos.id');
 
     expect($this->servidor->fresh()->tiene_enfermedad_catastrofica)->toBeTrue();
 
