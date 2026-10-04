@@ -320,25 +320,54 @@ class ContratoServidorService
      * estar. Por eso no es una operación que la UI ofrezca por su cuenta y
      * solo la llama MovimientoPersonalStateService al anular.
      */
-    public function reabrirPorAnulacion(ContratoServidor $contrato): ContratoServidor
+    /**
+     * El plazo que tenía el contrato justo antes de que lo cerraran.
+     *
+     * `cerrar()` sobreescribe `fecha_fin` con la fecha de la cesación, así que
+     * el plazo ya no está en la fila. Hasta el 2026-10-03 se recuperaba de la
+     * acción de ingreso, y eso perdía cualquier prórroga posterior: un
+     * contrato prorrogado al 30/06/2027 volvía al 31/12/2026 al anular su
+     * cesación, sin que nadie lo notara.
+     *
+     * Por orden:
+     * 1. lo que el cierre dejó anotado en la bitácora (`fecha_fin_previa`,
+     *    desde el 2026-10-03; `null` es un plazo indefinido, no un vacío);
+     * 2. para cierres anteriores, la última reprogramación registrada;
+     * 3. el plazo pactado en el ingreso;
+     * 4. si es de carga inicial y no tiene acción, se deriva como al darlo de
+     *    alta: null para los indefinidos, fin de año para Servicios
+     *    Profesionales.
+     */
+    private function plazoAntesDelCierre(ContratoServidor $contrato): ?string
     {
-        /*
-        | La fecha de fin no se pone en null sin más: `cerrar()` la sobreescribe
-        | con la fecha efectiva de la cesación, así que el plazo original ya no
-        | está ahí. Se recupera de la acción que creó el vínculo —que es lo que
-        | `movimiento_origen_id` permite—, y si el contrato es de carga inicial
-        | y no tiene acción, se vuelve a derivar como al darlo de alta: null
-        | para los indefinidos, el fin del año calendario para Servicios
-        | Profesionales.
-        */
-        $plazoPactado = $contrato->movimientoOrigen?->fecha_fin_propuesta?->toDateString();
+        $bitacora = Activity::where('subject_type', ContratoServidor::class)
+            ->where('subject_id', $contrato->id)
+            ->orderByDesc('id');
 
-        $contrato->update([
-            'estado'               => EstadoContrato::VIGENTE,
-            'fecha_fin'            => $plazoPactado ?? $this->resolverFechaFin([
+        $cierre = (clone $bitacora)->where('description', 'Contrato cerrado')->first();
+        if ($cierre && $cierre->properties->has('fecha_fin_previa')) {
+            return $cierre->properties->get('fecha_fin_previa');
+        }
+
+        $reprogramacion = (clone $bitacora)
+            ->where('description', 'Plazo del contrato reprogramado')
+            ->first();
+        if ($reprogramacion) {
+            return $reprogramacion->properties->get('fecha_fin_nueva');
+        }
+
+        return $contrato->movimientoOrigen?->fecha_fin_propuesta?->toDateString()
+            ?? $this->resolverFechaFin([
                 'tipo_nombramiento' => $contrato->tipo_nombramiento,
                 'fecha_inicio'      => $contrato->fecha_inicio?->toDateString(),
-            ]),
+            ]);
+    }
+
+    public function reabrirPorAnulacion(ContratoServidor $contrato): ContratoServidor
+    {
+        $contrato->update([
+            'estado'               => EstadoContrato::VIGENTE,
+            'fecha_fin'            => $this->plazoAntesDelCierre($contrato),
             'motivo_fin'           => null,
             'movimiento_cierre_id' => null,
         ]);
