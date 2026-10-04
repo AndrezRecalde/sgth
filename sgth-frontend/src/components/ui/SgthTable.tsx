@@ -37,8 +37,18 @@ export function SgthTable<T>(props: DataTableProps<T>) {
     if (page > ultima) onPageChange?.(ultima)
   }, [page, total, porPagina, onPageChange])
 
+  // La columna de acciones (regla 06: la última, con `TableActions`) queda
+  // fija a la derecha. Cuando la tabla no cabe —un teléfono, un panel
+  // estrecho— se desplaza en horizontal, y el menú de la fila se iba con el
+  // resto: había que arrastrar la tabla para encontrarlo (visto en el
+  // Disciplinario, 2026-10-04). Cinco tablas ya lo pedían a mano; ahora es el
+  // comportamiento de todas, y un `pinLastColumn` explícito sigue mandando.
+  const columnas = 'columns' in props ? props.columns : undefined
+  const fijarAcciones = columnas?.at(-1)?.accessor === 'acciones'
+
   return (
     <DataTable
+      pinLastColumn={fijarAcciones}
       withTableBorder
       withColumnBorders
       borderRadius="lg"

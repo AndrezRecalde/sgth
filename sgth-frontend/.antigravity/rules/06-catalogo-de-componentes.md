@@ -27,7 +27,7 @@ del módulo.
 | `DataState` | Los cuatro estados de una consulta | Envuelve la tabla o la lista |
 | `EmptyState` | Estado vacío | Dice qué falta **y** qué hacer |
 | `SgthTable` | La única tabla del sistema | `PAGINACION_ES` si hay paginación |
-| `TableActions` | Menú de acciones de una fila | Última columna, `width: 50` |
+| `TableActions` | Menú de acciones de una fila | Última columna, `width: 50`, `accessor: 'acciones'` (`SgthTable` la fija a la derecha) |
 | `SgthModal` | Base de todo modal | Nunca el `Modal` de Mantine directo |
 | `SgthDrawer` | Panel lateral: detalle o formulario junto a una lista | Nunca el `Drawer` de Mantine directo |
 | `ModalFooter` | Pie de un modal de acción | Pegajoso; principal relleno |
