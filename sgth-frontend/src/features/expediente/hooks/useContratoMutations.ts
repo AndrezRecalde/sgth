@@ -21,7 +21,6 @@ export function useContratoMutations(servidorId: number) {
       // muestran su ficha y el listado.
       qc.invalidateQueries({ queryKey: ['servidor'] })
       qc.invalidateQueries({ queryKey: ['servidores'] })
-      qc.invalidateQueries({ queryKey: ['contratos'] })
     },
     onError: (error) => {
       notificar.error(

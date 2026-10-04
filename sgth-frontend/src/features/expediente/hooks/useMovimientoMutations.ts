@@ -52,7 +52,6 @@ export function useMovimientoMutations() {
       // expediente, sin esto el encabezado seguía diciendo «Sin vínculo»
       // después de aprobar el Ingreso de esa misma persona.
       qc.invalidateQueries({ queryKey: ['servidor'] })
-      qc.invalidateQueries({ queryKey: ['contratos'] })
       qc.invalidateQueries({ queryKey: ['actividad-laboral'] })
       // Una comisión de servicios o una licencia sin remuneración abren una
       // ausencia, y el panel que las lista no se enteraba.
