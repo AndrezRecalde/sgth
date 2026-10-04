@@ -416,3 +416,42 @@ test('no hay detalle por id: el listado trae el registro y created_by es el id',
     $fila = $this->getJson('/api/v1/disciplinario/sumarios')->assertOk()->json('datos.data.0');
     expect($fila['created_by'])->toBe($this->admin->id);
 });
+
+// ── Cronología de los hitos ────────────────────────────────────
+
+test('cada hito del sumario va después del anterior', function () {
+    // Hasta el 2026-10-04 se guardaba cualquier fecha: el informe del
+    // instructor podía quedar antes del fin del período de prueba.
+    $sumario = Sumario::create([
+        'servidor_id'    => ($this->servidor)(1)->id,
+        'motivo'         => 'Sumario con hitos',
+        'estado'         => EstadoSumario::ABIERTO,
+        'fecha_apertura' => '2026-03-02',
+        'notificado_sn'  => false,
+    ]);
+    $url = "/api/v1/disciplinario/sumarios/{$sumario->id}/avanzar";
+    $this->actingAs($this->admin, 'sanctum');
+
+    $this->putJson($url, ['estado' => 'en_instruccion', 'fecha_notificacion' => '2026-03-01'])
+        ->assertUnprocessable()
+        ->assertJsonPath('errores.fecha_notificacion.0', 'La notificación no puede ser anterior a la apertura del sumario (02/03/2026).');
+
+    $this->putJson($url, ['estado' => 'en_instruccion', 'fecha_notificacion' => now()->addDay()->toDateString()])
+        ->assertUnprocessable()
+        ->assertJsonStructure(['errores' => ['fecha_notificacion']]);
+
+    $this->putJson($url, ['estado' => 'en_instruccion', 'fecha_notificacion' => '2026-03-03'])->assertOk();
+
+    $this->putJson($url, ['estado' => 'en_prueba', 'fecha_termino_prueba' => '2026-03-02'])
+        ->assertUnprocessable()
+        ->assertJsonStructure(['errores' => ['fecha_termino_prueba']]);
+
+    $this->putJson($url, ['estado' => 'en_prueba', 'fecha_termino_prueba' => '2026-03-10'])->assertOk();
+
+    $this->putJson($url, ['estado' => 'con_informe', 'fecha_informe' => '2026-03-09'])
+        ->assertUnprocessable()
+        ->assertJsonPath('errores.fecha_informe.0', 'El informe del instructor va después del período de prueba, que termina el 10/03/2026.');
+
+    $this->putJson($url, ['estado' => 'con_informe', 'fecha_informe' => '2026-03-10'])->assertOk();
+    expect($sumario->fresh()->estado)->toBe(EstadoSumario::CON_INFORME);
+});

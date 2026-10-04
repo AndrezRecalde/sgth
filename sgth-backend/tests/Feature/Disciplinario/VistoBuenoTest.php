@@ -367,6 +367,10 @@ test('el sumario avanza hito por hito y registra sus fechas', function () {
     expect($sumario->fecha_termino_prueba)->not->toBeNull()
         ->and($sumario->fecha_termino_prueba->gt($sumario->fecha_notificacion))->toBeTrue();
 
+    // El informe va después del período de prueba (2026-10-04): sin fecha en
+    // la petición se toma la de hoy, así que se avanza el reloj hasta ahí.
+    $this->travelTo($sumario->fecha_termino_prueba);
+
     $sumario = $this->disciplinarioService->avanzarSumario(
         $sumario, EstadoSumario::CON_INFORME->value, [], $this->user->id
     );
