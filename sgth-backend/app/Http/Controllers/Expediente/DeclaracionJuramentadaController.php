@@ -107,14 +107,17 @@ class DeclaracionJuramentadaController extends Controller
                 $request->fecha_inicio,
                 $request->fecha_fin,
             ])
-            ->orderBy('fecha_declaracion')
+            ->orderBy('fecha_declaracion')->orderBy('id')
             ->get();
 
         if ($declaraciones->isEmpty()) {
             return ApiResponse::ok([], 'No hay declaraciones en el rango indicado.');
         }
 
-        $lineas = $declaraciones->map(fn($d) => $d->toLineaContraloria());
+        // Los vínculos una sola vez para todo el archivo, no una por línea.
+        $contratos = $servidor->contratos()->with('puesto.cargo')->get();
+        $declaraciones->each->setRelation('servidor', $servidor);
+        $lineas = $declaraciones->map(fn($d) => $d->toLineaContraloria($contratos));
         $contenido = $lineas->implode("\n");
         $nombreArchivo = "declaraciones_{$servidor->cedula}_{$request->fecha_inicio}_{$request->fecha_fin}";
 
