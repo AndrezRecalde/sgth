@@ -55,7 +55,9 @@ export function DocumentosTab({ servidorId }: Props) {
       >
         {/* Qué falta por anexar: revisarlo a ojo obligaba a conocer de memoria
             la lista de documentos básicos del expediente. */}
-        {!isLoading && faltan.length > 0 && (
+        {/* Con la consulta fallida la lista viene vacía: avisaba que faltaban
+            los cuatro, encima del error. */}
+        {!isLoading && !error && faltan.length > 0 && (
           <Alert
             variant="light"
             color="amber"

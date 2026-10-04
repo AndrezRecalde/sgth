@@ -2,7 +2,7 @@
 
 import { Alert, Button, Group, Skeleton, Text } from '@mantine/core'
 import { IconAlertTriangle, IconStethoscope } from '@tabler/icons-react'
-import { DetailList, SectionCard, StatusBadge } from '@/components/ui'
+import { DataState, DetailList, SectionCard, StatusBadge } from '@/components/ui'
 import { formatFecha } from '@/lib/fecha'
 import {
   DICTAMEN_LABELS, TONO_DICTAMEN,
@@ -14,6 +14,9 @@ import {
 interface Props {
   aptitud: AptitudVigente | null
   cargando: boolean
+  /** Si la consulta falló: sin esto se leía «sin evaluaciones». */
+  error?: unknown
+  onReintentar?: () => void
   /** Abre el formulario para enviar al servidor a evaluarse. */
   onSolicitar: () => void
   puedeSolicitar: boolean
@@ -27,7 +30,7 @@ interface Props {
  * puede ubicar— no llegaban al frontend.
  */
 export function AptitudVigentePanel({
-  aptitud, cargando, onSolicitar, puedeSolicitar,
+  aptitud, cargando, error, onReintentar, onSolicitar, puedeSolicitar,
 }: Props) {
   const accion = puedeSolicitar ? (
     <Button
@@ -44,6 +47,20 @@ export function AptitudVigentePanel({
     return (
       <SectionCard title="Aptitud vigente">
         <Skeleton height={64} radius="md" />
+      </SectionCard>
+    )
+  }
+
+  if (error) {
+    return (
+      <SectionCard title="Aptitud vigente">
+        <DataState
+          loading={false}
+          error={error}
+          errorTitle="No se pudo consultar la aptitud"
+          errorHint="No quiere decir que no tenga evaluaciones: no se pudo consultar."
+          onRetry={onReintentar}
+        />
       </SectionCard>
     )
   }
