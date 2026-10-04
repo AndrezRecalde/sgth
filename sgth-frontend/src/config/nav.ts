@@ -407,6 +407,9 @@ export const NAV_SALUD: NavGroup[] = [
         label: 'Reportes',
         href:  ROUTES.SALUD.REPORTES,
         icon:  'IconReportAnalytics',
+        // Cada perfil ve los suyos: la administración todo, la máxima
+        // autoridad lo agregado y cada profesional lo propio (`AlcanceReporte`).
+        roles: ['admin-dispensario', 'maxima-autoridad', 'medico', 'odontologo', 'enfermera'],
       },
     ],
   },

@@ -25,6 +25,7 @@ use App\Http\Controllers\Disciplinario\VistoBuenoController;
 use App\Http\Controllers\Dispensario\AdquisicionController;
 use App\Http\Controllers\Dispensario\TableroSaludOcupacionalController;
 use App\Http\Controllers\Dispensario\MiJornadaController;
+use App\Http\Controllers\Dispensario\ReporteDispensarioController;
 use App\Http\Controllers\Dispensario\AgendaController;
 use App\Http\Controllers\Dispensario\AlergiaPacienteController;
 use App\Http\Controllers\Dispensario\AntecedentePacienteController;
@@ -1195,6 +1196,17 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // la jefatura, que compara a unos con otros.
         Route::get('mi-jornada', [MiJornadaController::class, 'index'])
             ->middleware('role:medico|odontologo|enfermera');
+
+        // Reportes del Dispensario. Qué reporte y con qué alcance lo decide
+        // `AlcanceReporte`: la administración todo, la máxima autoridad solo lo
+        // agregado y cada profesional lo suyo.
+        Route::prefix('reportes')
+            ->middleware('role:admin-dispensario|maxima-autoridad|medico|odontologo|enfermera')
+            ->group(function () {
+                Route::get('/', [ReporteDispensarioController::class, 'index']);
+                Route::get('{clave}/excel', [ReporteDispensarioController::class, 'excel']);
+                Route::get('{clave}', [ReporteDispensarioController::class, 'show']);
+            });
 
         // El personal clínico del dispensario, con nombre: lo piden Farmacia
         // (quién recetó) y la asignación de turnos. No es para cualquiera con
