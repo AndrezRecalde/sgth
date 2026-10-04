@@ -4,7 +4,6 @@ namespace App\Models\Disciplinario;
 
 use App\Enums\EstadoSumario;
 use App\Models\Expediente\Servidor;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -76,15 +75,5 @@ class Sumario extends Model
     public function sancion(): HasOne
     {
         return $this->hasOne(SancionDisciplinaria::class, 'sumario_id');
-    }
-
-    public function createdBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'created_by');
-    }
-
-    public function updatedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'updated_by');
     }
 }

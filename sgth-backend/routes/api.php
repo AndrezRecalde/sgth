@@ -1045,18 +1045,21 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
     // Módulo 14: Disciplinario — sumario administrativo (LOSEP) y visto bueno
     // (Código del Trabajo). Son procedimientos distintos según el régimen del
     // servidor, no dos nombres para lo mismo.
+    //
+    // Sin `show` (2026-10-04): los cajones de detalle se arman con lo que trae
+    // el listado, y lo único que añadía eran createdBy/updatedBy, que en el JSON
+    // pisaban la columna `created_by` con el usuario entero de quien abrió el
+    // trámite —su correo y su ficha, con cédula y teléfono—.
     Route::prefix('disciplinario')
         ->middleware('role:admin-uath')
         ->group(function () {
             Route::get('sumarios', [DisciplinarioController::class, 'index']);
             Route::post('sumarios', [DisciplinarioController::class, 'store']);
-            Route::get('sumarios/{sumario}', [DisciplinarioController::class, 'show']);
             Route::put('sumarios/{sumario}/avanzar', [DisciplinarioController::class, 'avanzar']);
             Route::post('sumarios/{id}/resolver', [DisciplinarioController::class, 'resolver']);
 
             Route::get('vistos-buenos', [VistoBuenoController::class, 'index']);
             Route::post('vistos-buenos', [VistoBuenoController::class, 'store']);
-            Route::get('vistos-buenos/{vistoBueno}', [VistoBuenoController::class, 'show']);
             Route::put('vistos-buenos/{vistoBueno}/transicionar', [VistoBuenoController::class, 'transicionar']);
         });
 
