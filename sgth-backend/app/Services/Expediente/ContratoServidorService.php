@@ -245,6 +245,7 @@ class ContratoServidorService
         }
 
         $data['fecha_fin'] = $this->resolverFechaFin($data);
+        $this->validarPlazo($data);
         $data['puede_marcar'] = $this->resolverPuedeMarcar($data);
 
         // De qué acción nació este vínculo. Sin esto, anular el ingreso que lo
@@ -432,19 +433,12 @@ class ContratoServidorService
 
         $nuevaFechaFin = $datos['fecha_fin'] ?? null;
 
-        if ($nuevaFechaFin && strtotime($nuevaFechaFin) < strtotime((string) $contrato->fecha_inicio)) {
-            throw new ReglaNegocioException(
-                'La fecha de fin no puede ser anterior a la fecha de inicio del contrato.'
-            );
-        }
-
-        if (!$nuevaFechaFin
-            && $contrato->tipo_nombramiento === TipoNombramiento::SERVICIOS_PROFESIONALES
-        ) {
-            throw new ReglaNegocioException(
-                'Un contrato de Servicios Profesionales no puede quedarse sin fecha de vencimiento.'
-            );
-        }
+        $this->validarPlazo([
+            'tipo_nombramiento'   => $contrato->tipo_nombramiento,
+            'fecha_inicio'        => $contrato->fecha_inicio?->toDateString(),
+            'fecha_fin'           => $nuevaFechaFin,
+            'cubre_movimiento_id' => $contrato->cubre_movimiento_id,
+        ]);
 
         $this->assertSinCesacionPendiente($contrato);
 
@@ -463,6 +457,49 @@ class ContratoServidorService
             ->log('Plazo del contrato reprogramado');
 
         return $contrato->fresh(['puesto.cargo', 'unidadAdministrativa']);
+    }
+
+    /**
+     * Las reglas del plazo de un vínculo, en un solo sitio: al crearlo y al
+     * reprogramarlo. Hasta el 2026-10-03 cada camino tenía las suyas y por
+     * los huecos pasaba:
+     *
+     * - un término anterior al inicio, al aprobar el ingreso;
+     * - un ocasional sin término, al ingresar o al reprogramar;
+     * - un reemplazo prorrogado más allá de la ausencia que cubre —o dejado
+     *   sin plazo—, con el titular ya de vuelta sobre la misma plaza.
+     *
+     * @param  array<string, mixed>  $datos  tipo_nombramiento, fecha_inicio,
+     *   fecha_fin y, si cubre a alguien, cubre_movimiento_id.
+     */
+    private function validarPlazo(array $datos): void
+    {
+        $fin    = $datos['fecha_fin'] ?? null;
+        $inicio = $datos['fecha_inicio'] ?? null;
+
+        if ($fin && $inicio && $fin < $inicio) {
+            throw new ReglaNegocioException(
+                'La fecha de fin no puede ser anterior a la fecha de inicio del contrato.'
+            );
+        }
+
+        $nombramiento = TipoNombramiento::tryFrom($this->valorTipoNombramiento($datos['tipo_nombramiento'] ?? ''));
+        if (! $fin && $nombramiento?->exigePlazo()) {
+            throw new ReglaNegocioException(
+                "Un vínculo «{$nombramiento->etiqueta()}» no puede quedarse sin fecha de vencimiento."
+            );
+        }
+
+        $ausencia = ! empty($datos['cubre_movimiento_id'])
+            ? MovimientoPersonal::find($datos['cubre_movimiento_id'])
+            : null;
+        $finAusencia = $ausencia?->fecha_fin?->toDateString();
+        if ($finAusencia && (! $fin || $fin > $finAusencia)) {
+            throw new ReglaNegocioException(
+                "El reemplazo no puede extenderse más allá del {$finAusencia}, "
+                    .'que es cuando termina la ausencia que cubre.'
+            );
+        }
     }
 
     /**

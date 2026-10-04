@@ -49,6 +49,9 @@ export function CompletarVinculoPlazo({
                 description="Servicios Profesionales toma el 31 de diciembre de su año si se deja vacío."
                 valueFormat="DD/MM/YYYY"
                 clearable
+                // El término no puede ser anterior al inicio: pasaba y el
+                // contrato nacía con el fin antes que el principio.
+                minDate={toDateValue(fechaEfectiva) ?? undefined}
                 value={toDateValue(field.value)}
                 onChange={(d) => field.onChange(fromDateValueOrNull(d))}
                 error={errors.fecha_fin_propuesta?.message}
