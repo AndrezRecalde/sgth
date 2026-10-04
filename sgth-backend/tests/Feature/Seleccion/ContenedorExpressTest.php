@@ -309,7 +309,8 @@ test('el listado de convocatorias no incluye los contenedores permanentes', func
     ]);
 
     $codigos = collect(
-        $this->getJson('/api/v1/seleccion/convocatorias?all=1')->assertOk()->json('datos')
+        // `all=1` se retiró el 2026-10-04: ninguna pantalla lo usaba.
+        $this->getJson('/api/v1/seleccion/convocatorias?per_page=100')->assertOk()->json('datos.data')
     )->pluck('codigo');
 
     expect($codigos)->toContain($formal->codigo)

@@ -15,6 +15,12 @@ class DocumentoPostulante extends Model
         'extension', 'tamano_bytes',
     ];
 
+    /**
+     * La ruta en el disco no sale en el JSON: el archivo se baja por
+     * GET …/postulantes/{id}/documentos/{id}, que pasa por la autorización.
+     */
+    protected $hidden = ['ruta'];
+
     public function postulante(): BelongsTo
     {
         return $this->belongsTo(Postulante::class);

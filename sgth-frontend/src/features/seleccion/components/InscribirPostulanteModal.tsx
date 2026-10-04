@@ -50,7 +50,8 @@ const TIPO_SANGRE_OPTIONS = [
 ].map(v => ({ value: v, label: v }))
 
 const schema = z.object({
-  cedula:           z.string().min(8, 'Cédula inválida').max(20),
+  // Diez dígitos, como el backend y el Expediente (2026-10-04).
+  cedula:           z.string().regex(/^\d{10}$/, 'La cédula debe tener 10 dígitos numéricos'),
   nombres:          z.string().min(2, 'Ingrese el primer nombre'),
   segundo_nombre:   z.string().optional().nullable(),
   apellidos:        z.string().min(2, 'Ingrese el primer apellido'),

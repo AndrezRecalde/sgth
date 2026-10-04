@@ -105,10 +105,13 @@ final class ContenedorExpressController extends Controller
             ->when($desde, fn ($q) => $q->whereYear('fecha_inscripcion', '>=', $desde))
             ->when($hasta, fn ($q) => $q->whereYear('fecha_inscripcion', '<=', $hasta))
             ->when($request->filled('estado'), fn ($q) => $q->where('estado', $request->input('estado')))
-            ->orderByDesc('fecha_inscripcion');
+            ->orderByDesc('fecha_inscripcion')
+            // La fecha se repite entre aspirantes: sin desempate por id, dos
+            // páginas del mismo resultado se solapan y repiten filas.
+            ->orderByDesc('id');
 
         return ApiResponse::ok(
-            $query->paginate($request->integer('per_page', 20)),
+            $query->paginate(min(max($request->integer('per_page', 20), 1), 100)),
             "Aspirantes de {$contenedor->titulo}."
         );
     }

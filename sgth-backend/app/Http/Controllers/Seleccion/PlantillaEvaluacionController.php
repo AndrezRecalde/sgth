@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Seleccion;
 
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
+use App\Models\Seleccion\Convocatoria;
 use App\Models\Seleccion\PlantillaEvaluacion;
 use App\Models\Seleccion\PlantillaCriterio;
 use App\Models\Seleccion\PlantillaOpcion;
@@ -139,6 +140,10 @@ final class PlantillaEvaluacionController extends Controller
         $plantilla = PlantillaEvaluacion::with([
             'criterios.opciones',
         ])->findOrFail($plantillaId);
+
+        // Un id inexistente chocaba con la clave foránea al insertar los
+        // criterios y daba un 500; ahora es un 404.
+        Convocatoria::findOrFail($convocatoriaId);
 
         DB::transaction(function () use (
             $plantilla, $convocatoriaId

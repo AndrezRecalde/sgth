@@ -50,11 +50,12 @@ final class ConvocatoriaController extends Controller
             });
         }
 
-        $convocatorias = $request->boolean('all')
-            ? $query->get()
-            : $query->paginate($request->integer('per_page', 15));
-
-        return ApiResponse::ok($convocatorias);
+        // Sin `all=1` (2026-10-04): devolvía todas las convocatorias de una vez
+        // y ninguna pantalla lo usaba. Y `per_page` con tope, para que nadie
+        // pida cien mil filas en una sola respuesta.
+        return ApiResponse::ok(
+            $query->paginate(min(max($request->integer('per_page', 15), 1), 100))
+        );
     }
 
     public function store(Request $request): JsonResponse
