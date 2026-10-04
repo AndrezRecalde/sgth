@@ -1,78 +1,67 @@
 'use client'
 
-import { useEffect } from 'react'
-import { Stack, TextInput,
-         NumberInput, Select } from '@mantine/core'
+import { Stack, TextInput, NumberInput, Select } from '@mantine/core'
 import { FormModal } from '@/components/ui'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, useWatch, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { useCondicionMutations } from '../hooks/useCondicionMutations'
-import { discapacidadSchema, type DiscapacidadFormData }
-  from '../schemas/discapacidad.schema'
-
-const TIPO_OPTIONS = [
-  { value: 'fisica',       label: 'Física' },
-  { value: 'sensorial',    label: 'Sensorial (Visual / Auditiva)' },
-  { value: 'intelectual',  label: 'Intelectual' },
-  { value: 'psicosocial',  label: 'Psicosocial o Mental' },
-  { value: 'visceral',     label: 'Visceral u Orgánica' },
-  { value: 'multiple',     label: 'Múltiple' },
-]
+import {
+  TIPOS_DISCAPACIDAD, discapacidadCargaSchema, discapacidadSchema,
+  type DiscapacidadFormData,
+} from '../schemas/discapacidad.schema'
+import {
+  PORCENTAJE_MINIMO_DISCAPACIDAD, TIPO_DISCAPACIDAD_OPTIONS, gradoDiscapacidad,
+} from '../utils/discapacidad'
 
 interface Props {
   opened:     boolean
   onClose:    () => void
-  servidorId: number
+  /** Guarda el registro: con `id`, lo edita. El hook que lo hace ya notifica. */
+  onGuardar:  (data: DiscapacidadFormData, id?: number) => Promise<unknown>
+  guardando:  boolean
+  /** En el servidor el carné CONADIS es obligatorio; en un familiar, no. */
+  carnetObligatorio?: boolean
+  /** El padre monta el modal con `key` por registro: no hace falta `reset`. */
   initialValues?: {
     id:                    number
-    tipo_discapacidad:     string
-    porcentaje:            string | number
+    tipo_discapacidad?:    string | null
+    porcentaje?:           string | number | null
     numero_carnet_conadis?: string | null
   } | null
 }
 
-export function DiscapacidadModal({ opened, onClose, servidorId, initialValues }: Props) {
+/**
+ * Registrar o editar una discapacidad, del servidor o de una carga familiar.
+ * Antes eran dos modales: el del familiar no permitía editar, guardaba 1 % al
+ * vaciar el porcentaje y escribía su esquema dentro del componente.
+ */
+export function DiscapacidadModal({
+  opened, onClose, onGuardar, guardando, carnetObligatorio = false, initialValues,
+}: Props) {
   const contained = useContainedInput()
-  const { crearDiscapacidad, editarDiscapacidad } = useCondicionMutations(servidorId)
 
   const { register, control, handleSubmit, reset, formState: { errors } } =
     useForm<DiscapacidadFormData>({
-      resolver: zodResolver(discapacidadSchema),
+      resolver: zodResolver(carnetObligatorio ? discapacidadSchema : discapacidadCargaSchema),
       defaultValues: {
-        tipo_discapacidad:     'fisica',
-        porcentaje:            1,
-        numero_carnet_conadis: '',
+        tipo_discapacidad: TIPOS_DISCAPACIDAD
+          .find((t) => t === initialValues?.tipo_discapacidad),
+        porcentaje: initialValues?.porcentaje != null
+          ? Number(initialValues.porcentaje) : undefined,
+        numero_carnet_conadis: initialValues?.numero_carnet_conadis ?? '',
       },
     })
 
-  useEffect(() => {
-    if (initialValues) {
-      reset({
-        tipo_discapacidad: initialValues.tipo_discapacidad as DiscapacidadFormData['tipo_discapacidad'],
-        porcentaje:        Number(initialValues.porcentaje),
-        numero_carnet_conadis: initialValues.numero_carnet_conadis ?? '',
-      })
-    } else {
-      reset({
-        tipo_discapacidad:     'fisica',
-        porcentaje:            1,
-        numero_carnet_conadis: '',
-      })
-    }
-  }, [initialValues, reset])
+  const grado = gradoDiscapacidad(useWatch({ control, name: 'porcentaje' }))
 
   const handleClose = () => {
     reset()
     onClose()
   }
 
-
   const onSubmit = (values: DiscapacidadFormData) => {
-    const guardado = initialValues
-      ? editarDiscapacidad.mutateAsync({ id: initialValues.id, data: values })
-      : crearDiscapacidad.mutateAsync(values)
-    guardado.then(handleClose).catch(() => {}) // el hook ya notificó
+    const data = { ...values, numero_carnet_conadis: values.numero_carnet_conadis || null }
+    onGuardar(data, initialValues?.id).then(handleClose).catch(() => {}) // el hook ya notificó
   }
 
   return (
@@ -82,33 +71,40 @@ export function DiscapacidadModal({ opened, onClose, servidorId, initialValues }
       title={initialValues ? 'Editar discapacidad' : 'Registrar discapacidad'}
       size="sm"
       onSubmit={handleSubmit(onSubmit)}
-      submitLabel={initialValues ? 'Actualizar' : 'Registrar discapacidad'}
-      submitting={crearDiscapacidad.isPending || editarDiscapacidad.isPending}
+      submitLabel={initialValues ? 'Guardar cambios' : 'Registrar discapacidad'}
+      submitting={guardando}
     >
       <Stack gap="sm">
         <Controller name="tipo_discapacidad" control={control}
           render={({ field }) => (
             <Select label="Tipo de discapacidad"
-              data={TIPO_OPTIONS} {...contained}
-              value={field.value}
-              onChange={(v) => field.onChange(v ?? '')}
+              placeholder="Seleccione"
+              data={TIPO_DISCAPACIDAD_OPTIONS} {...contained}
+              allowDeselect={false}
+              value={field.value ?? null}
+              onChange={(v) => field.onChange(v ?? undefined)}
               error={errors.tipo_discapacidad?.message} />
           )} />
         <Controller name="porcentaje" control={control}
           render={({ field }) => (
             <NumberInput label="Porcentaje de discapacidad"
-              placeholder="%" min={1} max={100} suffix="%"
+              placeholder="Ej: 45"
+              description={grado ? `Grado: ${grado}` : undefined}
+              min={PORCENTAJE_MINIMO_DISCAPACIDAD} max={100} suffix="%"
+              // Sin recortar al salir del campo: un 3 se volvía 5 sin avisar.
+              // Fuera de rango lo dice el esquema.
+              clampBehavior="none"
               {...contained}
-              value={field.value}
-              onChange={(v) => field.onChange(typeof v === 'number' ? v : 1)}
+              value={field.value ?? ''}
+              // Vacío es vacío: antes volvía a 1 % y se guardaba sin avisar.
+              onChange={(v) => field.onChange(typeof v === 'number' ? v : undefined)}
               error={errors.porcentaje?.message} />
           )} />
         <TextInput label="Número de carnet CONADIS"
-          placeholder="Ingrese el número de carnet"
+          placeholder={carnetObligatorio ? 'Ej: 13.456' : 'Si lo tiene a mano'}
           {...contained} {...register('numero_carnet_conadis')}
           error={errors.numero_carnet_conadis?.message} />
       </Stack>
     </FormModal>
   )
 }
-

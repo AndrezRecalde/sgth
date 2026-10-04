@@ -24,8 +24,6 @@ export const CARGA_FAMILIAR_VACIA: DefaultValues<CargaFamiliarFormData> = {
   apellidos: '',
   parentesco: 'hijo',
   fecha_nacimiento: '',
-  persona_con_discapacidad: false,
-  posee_enfermedad_catastrofica: false,
   observaciones: '',
 }
 
@@ -38,8 +36,6 @@ export function valoresDeCarga(carga: CargaFamiliar): DefaultValues<CargaFamilia
     parentesco: carga.parentesco ?? 'hijo',
     fecha_nacimiento: carga.fecha_nacimiento?.split('T')[0] ?? '',
     genero: carga.genero ?? undefined,
-    persona_con_discapacidad: carga.persona_con_discapacidad ?? false,
-    posee_enfermedad_catastrofica: carga.posee_enfermedad_catastrofica ?? false,
     observaciones: carga.observaciones ?? '',
   }
 }

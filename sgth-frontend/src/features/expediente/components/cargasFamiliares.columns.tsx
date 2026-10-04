@@ -63,19 +63,22 @@ export const getCargasFamiliaresColumns = (
   {
     accessor: 'condiciones',
     title: 'Condiciones',
-    width: 150,
+    width: 190,
+    // La marca la deriva el backend de los registros. Un familiar marcado a
+    // mano antes de eso, sin registro, se avisa para que se complete.
     render: (c) => {
-      if (!c.persona_con_discapacidad && !c.posee_enfermedad_catastrofica) {
-        return <Text size="sm" c="dimmed">—</Text>
-      }
+      const condiciones = [
+        { marca: c.persona_con_discapacidad, detalle: c.discapacidades?.length ?? 0, texto: 'Discapacidad' },
+        { marca: c.posee_enfermedad_catastrofica, detalle: c.enfermedades_catastroficas?.length ?? 0, texto: 'Enf. catastrófica' },
+      ].filter((x) => x.marca || x.detalle > 0)
+
+      if (condiciones.length === 0) return <Text size="sm" c="dimmed">—</Text>
+
       return (
         <Group gap="xs">
-          {c.persona_con_discapacidad && (
-            <StatusBadge size="xs" variant="dot">Discapacidad</StatusBadge>
-          )}
-          {c.posee_enfermedad_catastrofica && (
-            <StatusBadge size="xs" variant="dot">Enf. catastrófica</StatusBadge>
-          )}
+          {condiciones.map(({ texto, detalle }) => detalle > 0
+            ? <StatusBadge key={texto} size="xs" variant="dot">{texto}</StatusBadge>
+            : <StatusBadge key={texto} size="xs" tone="warning">{`${texto} · sin detalle`}</StatusBadge>)}
         </Group>
       )
     },

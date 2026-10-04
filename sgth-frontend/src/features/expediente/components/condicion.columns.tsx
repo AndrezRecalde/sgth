@@ -1,22 +1,37 @@
-import { Text } from '@mantine/core'
+import { Stack, Text } from '@mantine/core'
 import { IconEdit, IconTrash } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
-import { StatusBadge, TableActions, confirmar } from '@/components/ui'
+import { TableActions, confirmar } from '@/components/ui'
 import { formatFecha } from '@/lib/fecha'
-import { TIPO_DISCAPACIDAD_LABELS } from '../utils/discapacidad'
-import type {
-  DiscapacidadServidor,
-  EnfermedadCatastroficaServidor,
-} from '@/types/api'
+import { TIPO_DISCAPACIDAD_LABELS, gradoDiscapacidad } from '../utils/discapacidad'
 
 type Handlers<T> = {
   onEdit: (item: T) => void
   onDelete: (id: number) => void
 }
 
-export const getDiscapacidadesColumns = (
-  { onEdit, onDelete }: Handlers<DiscapacidadServidor>,
-): DataTableColumn<DiscapacidadServidor>[] => [
+/**
+ * Lo que comparten la discapacidad del servidor y la de una carga familiar.
+ * Las columnas son las mismas para las dos: antes el familiar tenía las suyas,
+ * sin «Editar» y con el porcentaje en otro formato.
+ */
+interface DiscapacidadFila {
+  id: number | string
+  tipo_discapacidad?: string | null
+  porcentaje?: number | string | null
+  numero_carnet_conadis?: string | null
+}
+
+interface EnfermedadFila {
+  id: number | string
+  tipo_enfermedad?: string | null
+  codigo_cie10?: string | null
+  fecha_diagnostico?: string | null
+}
+
+export const getDiscapacidadesColumns = <T extends DiscapacidadFila>(
+  { onEdit, onDelete }: Handlers<T>,
+): DataTableColumn<T>[] => [
   {
     accessor: 'tipo_discapacidad',
     title: 'Tipo',
@@ -30,11 +45,14 @@ export const getDiscapacidadesColumns = (
   },
   {
     accessor: 'porcentaje',
-    title: '%',
-    width: 80,
-    // Llega como decimal («1.00»): en pantalla se lee «1%».
-    render: ({ porcentaje }) => (
-      <StatusBadge>{porcentaje != null ? `${Number(porcentaje)}%` : '—'}</StatusBadge>
+    title: 'Porcentaje',
+    width: 160,
+    // Llega como decimal («45.00»): en pantalla se lee «45 %», con su grado.
+    render: ({ porcentaje }) => porcentaje == null ? <Text size="sm">—</Text> : (
+      <Stack gap={0}>
+        <Text size="sm">{Number(porcentaje)} %</Text>
+        <Text size="xs" c="dimmed">{gradoDiscapacidad(porcentaje) ?? 'Bajo el mínimo'}</Text>
+      </Stack>
     ),
   },
   {
@@ -67,9 +85,9 @@ export const getDiscapacidadesColumns = (
   },
 ]
 
-export const getEnfermedadesColumns = (
-  { onEdit, onDelete }: Handlers<EnfermedadCatastroficaServidor>,
-): DataTableColumn<EnfermedadCatastroficaServidor>[] => [
+export const getEnfermedadesColumns = <T extends EnfermedadFila>(
+  { onEdit, onDelete }: Handlers<T>,
+): DataTableColumn<T>[] => [
   {
     accessor: 'tipo_enfermedad',
     title: 'Enfermedad',

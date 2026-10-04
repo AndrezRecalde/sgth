@@ -1,12 +1,10 @@
 'use client'
 
-import React, { useEffect } from 'react'
 import { Stack, TextInput } from '@mantine/core'
 import { FormModal } from '@/components/ui'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { useCondicionMutations } from '../hooks/useCondicionMutations'
 import { enfermedadSchema, type EnfermedadFormData }
   from '../schemas/enfermedad.schema'
 import { DatePickerInput } from '@mantine/dates'
@@ -15,62 +13,47 @@ import { toDateValue, fromDateValueOrNull } from '@/lib/fecha'
 interface Props {
   opened:     boolean
   onClose:    () => void
-  servidorId: number
+  /** Guarda el registro: con `id`, lo edita. El hook que lo hace ya notifica. */
+  onGuardar:  (data: EnfermedadFormData, id?: number) => Promise<unknown>
+  guardando:  boolean
+  /** El padre monta el modal con `key` por registro: no hace falta `reset`. */
   initialValues?: {
     id:                  number
-    tipo_enfermedad:     string
+    tipo_enfermedad?:    string | null
     codigo_cie10?:       string | null
     fecha_diagnostico?:  string | null
   } | null
 }
 
-export function EnfermedadModal({ opened, onClose, servidorId, initialValues }: Props) {
+/**
+ * Registrar o editar una enfermedad catastrófica, del servidor o de una carga
+ * familiar. Antes eran dos modales y el del familiar no permitía editar.
+ */
+export function EnfermedadModal({ opened, onClose, onGuardar, guardando, initialValues }: Props) {
   const contained = useContainedInput()
-  const { crearEnfermedad, editarEnfermedad } = useCondicionMutations(servidorId)
 
   const { register, handleSubmit, reset, control, formState: { errors } } =
     useForm<EnfermedadFormData>({
       resolver: zodResolver(enfermedadSchema),
       defaultValues: {
-        tipo_enfermedad:    '',
-        codigo_cie10:       '',
-        fecha_diagnostico:  '',
+        tipo_enfermedad:   initialValues?.tipo_enfermedad ?? '',
+        codigo_cie10:      initialValues?.codigo_cie10 ?? '',
+        fecha_diagnostico: initialValues?.fecha_diagnostico?.split('T')[0] ?? null,
       },
     })
-
-  useEffect(() => {
-    if (initialValues) {
-      reset({
-        tipo_enfermedad:   initialValues.tipo_enfermedad,
-        codigo_cie10:      initialValues.codigo_cie10 ?? '',
-        fecha_diagnostico: initialValues.fecha_diagnostico
-          ? initialValues.fecha_diagnostico.split('T')[0] : '',
-      })
-    } else {
-      reset({
-        tipo_enfermedad:   '',
-        codigo_cie10:      '',
-        fecha_diagnostico: '',
-      })
-    }
-  }, [initialValues, reset])
 
   const handleClose = () => {
     reset()
     onClose()
   }
 
-
-  const onSubmit = async (values: EnfermedadFormData) => {
-    const payload = {
+  const onSubmit = (values: EnfermedadFormData) => {
+    const data = {
       ...values,
       codigo_cie10: values.codigo_cie10 || null,
       fecha_diagnostico: values.fecha_diagnostico || null,
     }
-    const guardado = initialValues
-      ? editarEnfermedad.mutateAsync({ id: initialValues.id, data: payload })
-      : crearEnfermedad.mutateAsync(payload)
-    guardado.then(handleClose).catch(() => {}) // el hook ya notificó
+    onGuardar(data, initialValues?.id).then(handleClose).catch(() => {}) // el hook ya notificó
   }
 
   return (
@@ -80,16 +63,17 @@ export function EnfermedadModal({ opened, onClose, servidorId, initialValues }: 
       title={initialValues ? 'Editar enfermedad catastrófica' : 'Registrar enfermedad catastrófica'}
       size="sm"
       onSubmit={handleSubmit(onSubmit)}
-      submitLabel={initialValues ? 'Actualizar' : 'Registrar enfermedad'}
-      submitting={crearEnfermedad.isPending || editarEnfermedad.isPending}
+      submitLabel={initialValues ? 'Guardar cambios' : 'Registrar enfermedad'}
+      submitting={guardando}
     >
       <Stack gap="sm">
         <TextInput label="Nombre/Tipo de la enfermedad"
-          placeholder="Diagnóstico médico"
+          placeholder="Ej: Insuficiencia renal crónica"
           {...contained} {...register('tipo_enfermedad')}
           error={errors.tipo_enfermedad?.message} />
-        <TextInput label="Código CIE-10 (Opcional)"
+        <TextInput label="Código CIE-10 (opcional)"
           placeholder="Ej: C18.0"
+          maxLength={10}
           {...contained} {...register('codigo_cie10')}
           error={errors.codigo_cie10?.message} />
         <Controller
@@ -99,8 +83,10 @@ export function EnfermedadModal({ opened, onClose, servidorId, initialValues }: 
             <DatePickerInput
               label="Fecha de diagnóstico"
               placeholder="Seleccionar fecha"
-              valueFormat="YYYY-MM-DD"
+              valueFormat="DD/MM/YYYY"
               clearable
+              // El backend no acepta un diagnóstico en el futuro.
+              maxDate={new Date()}
               {...contained}
               value={toDateValue(field.value)}
               onChange={(d) => field.onChange(fromDateValueOrNull(d))}
@@ -112,4 +98,3 @@ export function EnfermedadModal({ opened, onClose, servidorId, initialValues }: 
     </FormModal>
   )
 }
-

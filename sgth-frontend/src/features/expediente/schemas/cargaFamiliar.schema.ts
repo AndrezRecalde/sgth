@@ -10,8 +10,6 @@ export const cargaFamiliarSchema = z.object({
   fecha_nacimiento:              z.string().min(1, 'Requerido'),
   /** El Dispensario lo usa en sus reportes de morbilidad por sexo. */
   genero:                        z.enum(['masculino', 'femenino'], { error: 'Indique el sexo' }),
-  persona_con_discapacidad:      z.boolean(),
-  posee_enfermedad_catastrofica: z.boolean(),
   observaciones:                 z.string().optional().nullable(),
 })
 

@@ -53,13 +53,11 @@ export function FamiliaTab({ servidorId }: Props) {
             records={cargas}
             columns={columns}
             minHeight={80}
-            // Las condiciones de salud se despliegan bajo la fila, y solo en
-            // quienes las tienen declaradas.
+            // Las condiciones de salud se despliegan bajo la fila, en todas:
+            // es ahí donde se registran, y la marca sale de esos registros.
             rowExpansion={{
               allowMultiple: true,
               trigger: 'click',
-              expandable: ({ record }) =>
-                Boolean(record.persona_con_discapacidad || record.posee_enfermedad_catastrofica),
               content: ({ record }) => (
                 <CargaFamiliarCondiciones carga={record} servidorId={servidorId} />
               ),

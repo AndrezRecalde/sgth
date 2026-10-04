@@ -17,10 +17,18 @@ class UpdateDiscapacidadServidorRequest extends FormRequest
     {
         return [
             'tipo_discapacidad'     => ['sometimes', 'required', new Enum(TipoDiscapacidad::class)],
-            'porcentaje'            => 'sometimes|required|numeric|min:0.01|max:100.00',
+            'porcentaje'            => 'sometimes|required|numeric|between:5,100',
             'numero_carnet_conadis' => 'sometimes|required|string|max:50',
             'carnet_vencimiento'    => 'nullable|date',
             'archivo_carnet'        => 'nullable|file|mimes:pdf|max:5120',
+        ];
+    }
+
+    public function messages(): array
+    {
+        // El mínimo y los grados los fijó Talento Humano: ver GradoDiscapacidad.
+        return [
+            'porcentaje.between' => 'El porcentaje de discapacidad va del 5 % al 100 %.',
         ];
     }
 }
