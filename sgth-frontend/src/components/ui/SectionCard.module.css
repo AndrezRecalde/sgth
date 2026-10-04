@@ -1,0 +1,16 @@
+/* Mismo remedio que PageHeader.module.css. La cabecera era `nowrap` con las
+   acciones a `flex-shrink: 0`: a 375 px, con dos botones («Exportar» y «Nueva
+   declaración») o uno largo («Agregar carga familiar»), al título le quedaban
+   40–110 px y se partía palabra por palabra. Con una base, la cabecera baja
+   las acciones a su propia fila cuando no caben junto al título. */
+.titulo {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+/* Las acciones no se encogen, pero tampoco salen del ancho disponible: así
+   `wrap` reparte los botones en las filas que hagan falta. */
+.acciones {
+  flex-shrink: 0;
+  max-width: 100%;
+}

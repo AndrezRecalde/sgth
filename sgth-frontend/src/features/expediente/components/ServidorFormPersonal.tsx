@@ -87,7 +87,7 @@ export function ServidorFormPersonal() {
       <Grid.Col span={{ base: 12, sm: 6 }}>
         <TextInput
           label="Primer nombre"
-          placeholder="Primer nombre"
+          placeholder="Ej: María"
           {...contained}
           {...register('nombre')}
           error={errors.nombre?.message}
@@ -105,7 +105,7 @@ export function ServidorFormPersonal() {
       <Grid.Col span={{ base: 12, sm: 6 }}>
         <TextInput
           label="Primer apellido"
-          placeholder="Primer apellido"
+          placeholder="Ej: Cortez"
           {...contained}
           {...register('apellido')}
           error={errors.apellido?.message}
@@ -169,7 +169,7 @@ export function ServidorFormPersonal() {
               label="Fecha de nacimiento"
               placeholder="Seleccionar fecha"
               maxDate={new Date()}
-              valueFormat="YYYY-MM-DD"
+              valueFormat="DD/MM/YYYY"
               {...contained}
               value={toDateValue(field.value)}
               onChange={(date) => field.onChange(fromDateValue(date))}

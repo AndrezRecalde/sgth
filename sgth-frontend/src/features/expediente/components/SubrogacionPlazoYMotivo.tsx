@@ -30,7 +30,7 @@ export function SubrogacionPlazoYMotivo({
             <DatePickerInput
               label="Fecha de inicio"
               placeholder="Seleccionar fecha"
-              valueFormat="YYYY-MM-DD"
+              valueFormat="DD/MM/YYYY"
               {...contained}
               value={toDateValue(field.value)}
               onChange={(d) => field.onChange(fromDateValue(d))}
@@ -45,7 +45,7 @@ export function SubrogacionPlazoYMotivo({
             <DatePickerInput
               label="Fecha de fin"
               placeholder="Seleccionar fecha"
-              valueFormat="YYYY-MM-DD"
+              valueFormat="DD/MM/YYYY"
               {...contained}
               value={toDateValue(field.value)}
               onChange={(d) => field.onChange(fromDateValue(d))}

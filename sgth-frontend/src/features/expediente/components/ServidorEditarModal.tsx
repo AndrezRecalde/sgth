@@ -141,7 +141,7 @@ export function ServidorEditarModal({ opened, onClose, servidor }: Props) {
             </SectionCard>
 
             <SectionCard title="Contacto">
-              <ServidorFormContacto />
+              <ServidorFormContacto sinTitulo />
             </SectionCard>
 
             <SectionCard

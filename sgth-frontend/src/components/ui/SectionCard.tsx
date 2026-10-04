@@ -1,4 +1,5 @@
 import { Card, Group, Stack, Text, Title } from '@mantine/core'
+import classes from './SectionCard.module.css'
 
 interface Props {
   title: string
@@ -18,8 +19,8 @@ interface Props {
 export function SectionCard({ title, description, actions, children }: Props) {
   return (
     <Card withBorder radius="lg" padding="lg">
-      <Group justify="space-between" align="flex-start" wrap="nowrap" mb="md" gap="md">
-        <Stack gap={2} style={{ minWidth: 0 }}>
+      <Group justify="space-between" align="flex-start" wrap="wrap" mb="md" gap="md">
+        <Stack gap={2} className={classes.titulo}>
           <Title order={3}>{title}</Title>
           {description && (
             <Text size="sm" c="dimmed">
@@ -28,7 +29,7 @@ export function SectionCard({ title, description, actions, children }: Props) {
           )}
         </Stack>
         {actions && (
-          <Group gap="xs" wrap="nowrap" style={{ flexShrink: 0 }}>
+          <Group gap="xs" wrap="wrap" className={classes.acciones}>
             {actions}
           </Group>
         )}

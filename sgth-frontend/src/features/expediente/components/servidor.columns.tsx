@@ -21,14 +21,14 @@ export const getServidorColumns = ({ onView }: Handlers): DataTableColumn<Servid
     title: 'Cédula',
     width: 115,
     render: ({ cedula }) => (
-      <Text size="sm" ff="monospace">{cedula ?? '-'}</Text>
+      <Text size="sm" ff="monospace">{cedula ?? '—'}</Text>
     ),
   },
   {
     accessor: 'nombre',
     title: 'Nombre completo',
     render: (row) => (
-      <Text size="sm" fw={500}>{nombreCompleto(row) || '-'}</Text>
+      <Text size="sm" fw={500}>{nombreCompleto(row) || '—'}</Text>
     ),
   },
   {
@@ -36,7 +36,7 @@ export const getServidorColumns = ({ onView }: Handlers): DataTableColumn<Servid
     title: 'Cargo',
     render: (row) => (
       <Text size="sm" c="dimmed">
-        {row.contrato_vigente?.puesto?.cargo?.nombre ?? row.puesto?.cargo?.nombre ?? '-'}
+        {row.contrato_vigente?.puesto?.cargo?.nombre ?? row.puesto?.cargo?.nombre ?? '—'}
       </Text>
     ),
   },
@@ -48,7 +48,7 @@ export const getServidorColumns = ({ onView }: Handlers): DataTableColumn<Servid
       <Text size="sm" c="dimmed">
         {row.contrato_vigente?.unidad_administrativa?.nombre
           ?? row.unidad_administrativa?.nombre
-          ?? '-'}
+          ?? '—'}
       </Text>
     ),
   },
