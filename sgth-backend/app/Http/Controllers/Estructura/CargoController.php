@@ -18,11 +18,19 @@ use Illuminate\Http\Request;
  */
 class CargoController extends Controller
 {
-    private function exigirGestion(Request $request): ?JsonResponse
+    /**
+     * Lanza en vez de devolver la respuesta: con un `?JsonResponse` que se
+     * retornaba antes de tiempo, Scramble dejaba sin tipo la respuesta de
+     * store, update y destroy. El 403 sale igual, por el manejador de
+     * `HttpExceptionInterface` de bootstrap/app.php.
+     */
+    private function exigirGestion(Request $request): void
     {
-        return $request->user()->can(Permiso::GESTIONAR_PUESTOS->value)
-            ? null
-            : ApiResponse::error('No tiene permiso para gestionar cargos.', null, 403);
+        abort_unless(
+            $request->user()->can(Permiso::GESTIONAR_PUESTOS->value),
+            403,
+            'No tiene permiso para gestionar cargos.',
+        );
     }
 
     public function index(Request $request): JsonResponse
@@ -41,9 +49,7 @@ class CargoController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        if ($denegado = $this->exigirGestion($request)) {
-            return $denegado;
-        }
+        $this->exigirGestion($request);
 
         $validated = $request->validate([
             'nombre'                 => ['required', 'string', 'max:200'],
@@ -60,9 +66,7 @@ class CargoController extends Controller
 
     public function update(Request $request, int $id): JsonResponse
     {
-        if ($denegado = $this->exigirGestion($request)) {
-            return $denegado;
-        }
+        $this->exigirGestion($request);
 
         $cargo = Cargo::findOrFail($id);
         $validated = $request->validate([
@@ -81,9 +85,7 @@ class CargoController extends Controller
 
     public function destroy(Request $request, int $id): JsonResponse
     {
-        if ($denegado = $this->exigirGestion($request)) {
-            return $denegado;
-        }
+        $this->exigirGestion($request);
 
         $cargo = Cargo::findOrFail($id);
 
