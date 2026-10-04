@@ -1327,7 +1327,6 @@ export type DocumentoServidor = {
     usuario_ti?: string
   } | null
   created_at?:    string
-  url_descarga?:  string
 }
 
 export type TipoDocumentoServidor =

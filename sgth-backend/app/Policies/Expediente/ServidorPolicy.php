@@ -5,6 +5,12 @@ namespace App\Policies\Expediente;
 use App\Models\User;
 use App\Models\Expediente\Servidor;
 
+/**
+ * No hay `super-admin` en ninguna rama, como en SubrogacionPolicy: ese rol no
+ * está en el enum `Rol` ni lo siembra `RolPermisoSeeder`. Tampoco hay
+ * `eliminar`: una ficha no se borra —la ruta excluye `destroy`—, se
+ * desvincula con una acción de personal.
+ */
 class ServidorPolicy
 {
     /**
@@ -22,8 +28,7 @@ class ServidorPolicy
     public function verAny(User $user): bool
     {
         return $user->hasRole('admin-uath')
-            || $user->hasRole('asistente-uath')
-            || $user->hasRole('super-admin');
+            || $user->hasRole('asistente-uath');
     }
 
     /**
@@ -45,7 +50,7 @@ class ServidorPolicy
     public function ver(User $user, Servidor $servidor): bool
     {
         // Un servidor solo puede ver su propio expediente. UATH puede ver todos.
-        if ($user->hasRole('admin-uath') || $user->hasRole('asistente-uath') || $user->hasRole('super-admin')) {
+        if ($user->hasRole('admin-uath') || $user->hasRole('asistente-uath')) {
             return true;
         }
 
@@ -60,7 +65,7 @@ class ServidorPolicy
      */
     public function crear(User $user): bool
     {
-        return $user->hasRole('admin-uath') || $user->hasRole('super-admin');
+        return $user->hasRole('admin-uath');
     }
 
     /**
@@ -84,18 +89,10 @@ class ServidorPolicy
         // El servidor titular puede actualizar partes no sensibles (ej. teléfono),
         // pero UATH puede actualizar todo. La validación de campos se delega al Request/Service.
         // Aquí validamos el acceso general a la actualización.
-        if ($user->hasRole('admin-uath') || $user->hasRole('asistente-uath') || $user->hasRole('super-admin')) {
+        if ($user->hasRole('admin-uath') || $user->hasRole('asistente-uath')) {
             return true;
         }
 
         return $user->servidor_id === $servidor->id;
-    }
-
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function eliminar(User $user, Servidor $servidor): bool
-    {
-        return $user->hasRole('super-admin');
     }
 }

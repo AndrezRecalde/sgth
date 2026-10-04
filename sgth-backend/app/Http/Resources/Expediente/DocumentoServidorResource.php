@@ -25,11 +25,9 @@ class DocumentoServidorResource extends JsonResource
                 'id'         => $this->subidoPor?->id,
                 'usuario_ti' => $this->subidoPor?->usuario_ti,
             ]),
+            // Sin `url_descarga`: el frontend descarga por su servicio, con la
+            // sesión, y ese enlace no lo leía nadie.
             'created_at'        => $this->created_at?->format('Y-m-d H:i'),
-            'url_descarga'      => route('documentos.descargar',
-                ['servidorId' => $this->servidor_id, 'documentoId' => $this->id],
-                absolute: false
-            ),
         ];
     }
 }
