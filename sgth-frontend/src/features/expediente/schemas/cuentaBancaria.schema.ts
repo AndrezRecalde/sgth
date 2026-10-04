@@ -2,7 +2,7 @@ import { z } from 'zod/v4'
 
 export const cuentaBancariaSchema = z.object({
   entidad_financiera_id: z.number({ error: 'Seleccione la entidad financiera' }),
-  numero_cuenta:         z.string().min(5, 'Mínimo 5 caracteres'),
+  numero_cuenta:         z.string().min(5, 'Mínimo 5 caracteres').max(50, 'Máximo 50 caracteres'),
   tipo_cuenta:           z.enum(['ahorros', 'corriente']),
   proposito:             z.enum(['sueldo', 'viaticos', 'ambos']),
   es_principal_sueldo:   z.boolean().optional(),

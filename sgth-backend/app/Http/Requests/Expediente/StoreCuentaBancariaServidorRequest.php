@@ -16,7 +16,8 @@ class StoreCuentaBancariaServidorRequest extends FormRequest
         return [
             'entidad_financiera_id' => ['required', 'exists:entidades_financieras,id'],
             'tipo_cuenta'           => ['required', 'in:ahorros,corriente'],
-            'numero_cuenta'         => ['required', 'string', 'max:50'],
+            // Mismo mínimo que el formulario, que lo pedía y el backend no.
+            'numero_cuenta'         => ['required', 'string', 'min:5', 'max:50'],
             'proposito'             => ['required', 'in:sueldo,viaticos,ambos'],
             'es_principal_sueldo'   => ['boolean'],
             'es_principal_viatico'  => ['boolean'],

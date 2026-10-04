@@ -13,8 +13,13 @@ class CuentaBancariaServidorController extends Controller
 {
     public function index(int $servidorId)
     {
+        // Sin orden, la fila saltaba de sitio al marcarla principal o
+        // editarla: las principales primero y, entre las demás, por alta.
         $cuentas = CuentaBancariaServidor::with('entidadFinanciera')
             ->where('servidor_id', $servidorId)
+            ->orderByDesc('es_principal_sueldo')
+            ->orderByDesc('es_principal_viatico')
+            ->orderBy('id')
             ->get();
         return ApiResponse::ok($cuentas, 'Cuentas bancarias listadas exitosamente.');
     }
@@ -32,10 +37,10 @@ class CuentaBancariaServidorController extends Controller
         return ApiResponse::ok($cuentaActualizada, 'Cuenta bancaria actualizada exitosamente.');
     }
 
-    public function destroy(int $servidorId, int $cuentaId)
+    public function destroy(int $servidorId, int $cuentaId, CuentaBancariaServidorService $service)
     {
         $cuenta = CuentaBancariaServidor::where('servidor_id', $servidorId)->findOrFail($cuentaId);
-        $cuenta->delete();
+        $service->eliminarCuenta($cuenta);
         return ApiResponse::ok(null, 'Cuenta bancaria eliminada exitosamente.');
     }
 
