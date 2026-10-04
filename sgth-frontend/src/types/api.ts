@@ -1219,6 +1219,8 @@ export type ServidorResumen = {
   apellido?: string | null
   segundo_apellido?: string | null
   cedula?: string | null
+  /** El listado de sumarios lo trae para saber si es obrero (2026-10-04). */
+  contrato_vigente?: { tipo_nombramiento: string } | null
 }
 
 /**

@@ -174,7 +174,8 @@ const NOMBRAMIENTOS_POR_SUBTIPO: Record<AccionSubtipo, string[]> = {
   traspaso: ['nombramiento_permanente'],
   comision_con_remuneracion: ['nombramiento_permanente'],
   comision_sin_remuneracion: ['nombramiento_permanente'],
-  sancion_disciplinaria: CON_SANCION_Y_CESACION_LOSEP,
+  // Obreros desde el 2026-10-04 (TH), solo para la multa.
+  sancion_disciplinaria: [...CON_SANCION_Y_CESACION_LOSEP, 'codigo_trabajo'],
   renuncia: CON_SANCION_Y_CESACION_LOSEP,
   destitucion: CON_SANCION_Y_CESACION_LOSEP,
   jubilacion: CON_SANCION_Y_CESACION_LOSEP,

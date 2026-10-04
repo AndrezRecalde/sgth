@@ -20,6 +20,8 @@ class DisciplinarioController extends Controller
     {
         $query = Sumario::with([
             'servidor:id,nombre,segundo_nombre,apellido,segundo_apellido,cedula',
+            // A un obrero no se le ofrece suspensión ni destitución (2026-10-04).
+            'servidor.contratoVigente:id,servidor_id,tipo_nombramiento',
             // La acción que nació de la sanción y lo que descuenta (2026-10-04).
             'sancion.movimientoPersonal:id,codigo_registro,estado,remuneracion_origen',
         ])
