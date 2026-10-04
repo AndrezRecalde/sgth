@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { FormModal, SgthModal } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { fromDateValue, toDateValue } from '@/lib/fecha'
+import { erroresDeCampo } from '@/lib/erroresDeCampo'
 import { useDisciplinarioMutations } from '../hooks/useDisciplinarioMutations'
 import {
   hitoSumarioSchema,
@@ -28,18 +29,26 @@ const HITO = {
     etiqueta: 'Fecha de notificación al sumariado',
     descripcion: 'El día en que se le notificó el auto de apertura.',
     obligatoria: true,
+    previa: (s: Sumario) => s.fecha_apertura,
+    hastaHoy: true,
   },
   en_prueba: {
     campo: 'fecha_termino_prueba',
     etiqueta: 'Fecha de término del período de prueba',
     descripcion: 'En blanco se cuentan 5 días hábiles desde la notificación.',
     obligatoria: false,
+    previa: (s: Sumario) => s.fecha_notificacion ?? s.fecha_apertura,
+    hastaHoy: false,
   },
   con_informe: {
     campo: 'fecha_informe',
     etiqueta: 'Fecha del informe del instructor',
     descripcion: 'Desde este día corren los 10 días hábiles para resolver.',
     obligatoria: true,
+    // Va después del período de prueba: antes, el sumariado aún puede
+    // presentar pruebas.
+    previa: (s: Sumario) => s.fecha_termino_prueba,
+    hastaHoy: true,
   },
 } as const satisfies Partial<Record<EstadoSumario, unknown>>
 
@@ -93,6 +102,7 @@ function FormularioHito({
   const {
     control,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<HitoSumarioFormData>({
     resolver: zodResolver(hitoSumarioSchema(hito.obligatoria)),
@@ -106,9 +116,12 @@ function FormularioHito({
     try {
       await avanzarSumario.mutateAsync({ id: sumario.id, data: datos })
       onClose()
-    } catch {
-      // El hook ya lo notificó: el 422 de este formulario es de negocio
-      // —una transición que el grafo no admite—, no de un campo.
+    } catch (error) {
+      // Una fecha fuera de orden vuelve como 422 en el campo del hito
+      // (fecha_notificacion…), y aquí hay un solo campo. Lo demás —una
+      // transición que el grafo no admite— ya lo notificó el hook.
+      const mensaje = erroresDeCampo(error)?.[hito.campo]
+      if (mensaje) setError('fecha', { type: 'server', message: mensaje })
     }
   }
 
@@ -134,9 +147,13 @@ function FormularioHito({
           render={({ field }) => (
             <DatePickerInput
               label={hito.etiqueta}
-              required
+              // El término del período de prueba se puede dejar en blanco: lo
+              // calcula el servidor. #340 lo marcó obligatorio por error.
+              required={hito.obligatoria}
               description={hito.descripcion}
               valueFormat="DD/MM/YYYY"
+              minDate={toDateValue(hito.previa(sumario)?.slice(0, 10)) ?? undefined}
+              maxDate={hito.hastaHoy ? new Date() : undefined}
               clearable={!hito.obligatoria}
               error={errors.fecha?.message}
               {...contained}

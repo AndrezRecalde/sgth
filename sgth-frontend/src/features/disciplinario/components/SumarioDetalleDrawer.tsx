@@ -79,13 +79,13 @@ function Contenido({ sumario }: { sumario: Sumario }) {
       <DetailList items={procedimiento} columnas={2} />
 
       <div>
-        <SectionHeading title="Hitos procesales" />
+        <SectionHeading title="Hitos procesales" mb="xs" />
         <DetailList items={hitos} columnas={2} />
       </div>
 
       {sancion && (
         <div>
-          <SectionHeading title="Sanción impuesta" />
+          <SectionHeading title="Sanción impuesta" mb="xs" />
           <DetailList
             columnas={2}
             items={[
@@ -100,16 +100,18 @@ function Contenido({ sumario }: { sumario: Sumario }) {
                   </StatusBadge>
                 ),
               },
-              {
+              // Solo la fila que corresponde a la sanción: una suspensión
+              // enseñaba también «Multa: —».
+              ...(sancion.tipo_sancion === 'multa' ? [{
                 label: 'Multa',
                 value: sancion.porcentaje_multa
                   ? `${sancion.porcentaje_multa}% de la remuneración`
                   : null,
-              },
-              {
+              }] : []),
+              ...(sancion.tipo_sancion === 'suspension' ? [{
                 label: 'Suspensión',
                 value: sancion.dias_suspension ? `${sancion.dias_suspension} días` : null,
-              },
+              }] : []),
               { label: 'Surte efecto desde', value: formatFecha(sancion.fecha_efectiva) },
               { label: 'Observaciones', value: sancion.observaciones, ancho: true },
             ]}

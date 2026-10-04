@@ -25,9 +25,20 @@ class AvanzarSumarioRequest extends FormRequest
                 EstadoSumario::APELADO->value,
                 EstadoSumario::CERRADO->value,
             ])],
-            'fecha_notificacion'   => ['nullable', 'date'],
+            // La notificación y el informe ya ocurrieron; el término del
+            // período de prueba sí puede ser futuro. El orden entre hitos lo
+            // comprueba DisciplinarioService::validarCronologia().
+            'fecha_notificacion'   => ['nullable', 'date', 'before_or_equal:today'],
             'fecha_termino_prueba' => ['nullable', 'date'],
-            'fecha_informe'        => ['nullable', 'date'],
+            'fecha_informe'        => ['nullable', 'date', 'before_or_equal:today'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'fecha_notificacion.before_or_equal' => 'La notificación no puede tener fecha futura.',
+            'fecha_informe.before_or_equal'      => 'El informe del instructor no puede tener fecha futura.',
         ];
     }
 }
