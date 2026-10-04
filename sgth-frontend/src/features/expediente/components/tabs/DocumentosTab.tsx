@@ -5,6 +5,7 @@ import { useDisclosure } from '@mantine/hooks'
 import { IconAlertTriangle, IconPaperclip, IconPlus } from '@tabler/icons-react'
 import { DataState, SectionCard, SgthTable, notificar } from '@/components/ui'
 import { guardarArchivo } from '@/lib/archivo'
+import { useAuthStore } from '@/store/auth.store'
 import { getApiErrorMessage } from '@/types/api'
 import { useDocumentos } from '../../hooks/useDocumentos'
 import { useDocumentoMutations } from '../../hooks/useDocumentoMutations'
@@ -21,6 +22,9 @@ export function DocumentosTab({ servidorId }: Props) {
   const [opened, { open, close }] = useDisclosure(false)
   const { data: documentos = [], isLoading, error } = useDocumentos(servidorId)
   const { eliminar } = useDocumentoMutations(servidorId)
+  // Subir, Talento Humano entero; borrar, solo admin-uath (decisión de TH del
+  // 2026-10-03). Sin esto el asistente veía «Eliminar» y recibía 403.
+  const puedeEliminar = useAuthStore((s) => s.hasRole)('admin-uath')
 
   const descargar = async (doc: DocumentoServidor) => {
     try {
@@ -37,7 +41,7 @@ export function DocumentosTab({ servidorId }: Props) {
 
   const columns = getDocumentosColumns({
     onDescargar: descargar,
-    onDelete: (id) => eliminar.mutate(id),
+    onDelete: puedeEliminar ? (id) => eliminar.mutate(id) : undefined,
   })
 
   const faltan = documentosQueFaltan(documentos)

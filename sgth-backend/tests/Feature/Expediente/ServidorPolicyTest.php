@@ -169,18 +169,22 @@ test('un asistente-uath no puede crear fichas', function () {
 | trabajar las acciones de personal, eso se habría extendido al expediente de
 | cualquiera, así que la escritura se ancla en la ruta: quien archiva un
 | documento es Talento Humano. Leer y descargar siguen por policy.
+|
+| Desde el 2026-10-03 el asistente también SUBE (decisión de Talento Humano);
+| borrar sigue siendo solo de admin-uath. Ver AsistenteSubeDocumentosTest.
 */
-test('solo admin-uath sube y borra documentos del expediente', function () {
+test('el asistente sube pero no borra, y el titular no escribe en su ficha', function () {
     Role::firstOrCreate(['name' => 'asistente-uath', 'guard_name' => 'sanctum']);
     $asistente = User::factory()->create();
     $asistente->assignRole('asistente-uath');
 
     $base = "/api/v1/expediente/servidores/{$this->servidorAjeno->id}/documentos";
 
-    // El asistente lee el expediente —eso sí se le abrió— pero no lo escribe.
+    // El asistente lee y sube —pasa la ruta y solo le frena la validación—,
+    // pero no borra.
     $this->actingAs($asistente, 'sanctum');
     $this->getJson($base)->assertOk();
-    $this->postJson($base, [])->assertForbidden();
+    $this->postJson($base, [])->assertUnprocessable();
     $this->deleteJson("{$base}/1")->assertForbidden();
 
     // Y el titular tampoco mete papeles en su propia ficha.
