@@ -18,6 +18,8 @@ final class MorbilidadReporte extends ReporteBase
 
     public function titulo(): string { return 'Morbilidad'; }
 
+    public function area(): string { return 'Atención clínica'; }
+
     public function descripcion(): string
     {
         return 'Diagnósticos principales más frecuentes, por sexo y grupo de edad.';

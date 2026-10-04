@@ -18,11 +18,16 @@ abstract class ReporteBase implements ReporteDispensario
         return true;
     }
 
+    public function formatos(): array
+    {
+        return ['excel'];
+    }
+
     /**
      * La agrupación pedida si este reporte la tiene; si no, la primera suya.
      * El filtro es común a la pantalla y puede llegar el de otro reporte.
      */
-    protected function agrupacion(FiltrosReporte $filtros): string
+    protected function agrupacion(FiltrosReporte $filtros): ?string
     {
         $propias = array_keys($this->agrupaciones());
 

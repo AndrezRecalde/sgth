@@ -20,6 +20,8 @@ final class ExistenciasReporte extends ReporteBase
 
     public function titulo(): string { return 'Existencias y caducidades'; }
 
+    public function area(): string { return 'Farmacia'; }
+
     public function descripcion(): string
     {
         return 'Stock de hoy por lote, con su caducidad y su valor.';

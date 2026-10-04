@@ -4,10 +4,16 @@ import type { ApiResponse } from '@/types/api'
 /** Los filtros que un reporte puede ofrecer, además del período. */
 export type FiltroReporte = 'profesional' | 'especialidad' | 'tipo_paciente' | 'unidad'
 
+export type FormatoReporte = 'excel' | 'pdf'
+
 export interface ReporteDisponible {
   clave:       string
   titulo:      string
   descripcion: string
+  /** El grupo en que se ordena el catálogo. */
+  area:        string
+  /** `excel`, y además `pdf` el que se presenta firmado. */
+  formatos:    FormatoReporte[]
   /** Lleva nombres de pacientes con diagnósticos. */
   nominal:     boolean
   /** `false` en una foto de hoy (las existencias): no pide fechas. */
@@ -67,9 +73,9 @@ export const reportesDispensarioService = {
       `/dispensario/reportes/${clave}`, { params: parametros(filtros) },
     ).then(r => r.data.datos),
 
-  excel: (clave: string, filtros: FiltrosReporteDispensario) =>
+  descargar: (clave: string, filtros: FiltrosReporteDispensario, formato: FormatoReporte) =>
     api.get<Blob>(
-      `/dispensario/reportes/${clave}/excel`,
+      `/dispensario/reportes/${clave}/${formato}`,
       { params: parametros(filtros), responseType: 'blob' },
     ).then(r => r.data),
 }

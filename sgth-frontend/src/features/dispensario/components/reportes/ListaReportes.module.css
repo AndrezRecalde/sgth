@@ -1,14 +1,18 @@
-/* Cada reporte del catálogo, a todo el ancho de la tarjeta. */
+/* Cada área del catálogo, con su título encima de sus reportes. */
+.area + .area {
+  border-top: 1px solid var(--sgth-border);
+}
+
+.titulo {
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md) var(--mantine-spacing-xs);
+}
+
+/* Cada reporte, a todo el ancho de la tarjeta. */
 .reporte {
   display: block;
   width: 100%;
-  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
-  border-top: 1px solid var(--sgth-border);
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
   border-left: 3px solid transparent;
-}
-
-.reporte:first-child {
-  border-top: 0;
 }
 
 .reporte:hover {

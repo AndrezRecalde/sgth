@@ -1205,6 +1205,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->group(function () {
                 Route::get('/', [ReporteDispensarioController::class, 'index']);
                 Route::get('{clave}/excel', [ReporteDispensarioController::class, 'excel']);
+                Route::get('{clave}/pdf', [ReporteDispensarioController::class, 'pdf']);
                 Route::get('{clave}', [ReporteDispensarioController::class, 'show']);
             });
 

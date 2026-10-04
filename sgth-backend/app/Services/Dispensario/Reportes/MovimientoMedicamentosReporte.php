@@ -18,6 +18,8 @@ final class MovimientoMedicamentosReporte extends ReporteBase
 
     public function titulo(): string { return 'Movimiento de medicamentos'; }
 
+    public function area(): string { return 'Farmacia'; }
+
     public function descripcion(): string
     {
         return 'Ingresos, despachos, bajas y ajustes de cada medicamento en el período.';

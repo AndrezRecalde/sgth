@@ -12,7 +12,9 @@ use App\Services\Dispensario\Reportes\FiltrosReporte;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 final class ReporteDispensarioController extends Controller
 {
@@ -71,6 +73,30 @@ final class ReporteDispensarioController extends Controller
                 ? "{$clave}_{$filtros->desde->format('Ymd')}_{$filtros->hasta->format('Ymd')}.xlsx"
                 : "{$clave}_" . now()->format('Ymd') . '.xlsx'
         );
+    }
+
+    /**
+     * El reporte en PDF, para los que se presentan firmados. Los demás no lo
+     * tienen: una tabla de quince columnas no cabe en una hoja.
+     */
+    public function pdf(FiltrosReporteDispensarioRequest $request, string $clave): Response
+    {
+        $alcance = $this->alcance($request);
+        $filtros = FiltrosReporte::desde($request->validated());
+        $reporte = $this->catalogo->reporte($clave, $alcance);
+
+        abort_unless(in_array('pdf', $reporte->formatos(), true), 404, 'Este reporte no se descarga en PDF.');
+
+        $resultado = $this->catalogo->generar($clave, $filtros, $alcance);
+
+        return Pdf::loadView('pdf.dispensario.informe-dispensario', [
+            'titulo'      => $reporte->titulo(),
+            'periodo'     => $filtros->periodo(),
+            'alcance'     => $alcance->descripcion(),
+            'generadoPor' => $request->user()->nombre_completo ?? $request->user()->usuario_ti,
+            'secciones'   => collect($resultado['filas'])->groupBy('seccion'),
+        ])->setPaper('a4')
+          ->download("{$clave}_{$filtros->desde->format('Ymd')}_{$filtros->hasta->format('Ymd')}.pdf");
     }
 
     private function alcance(Request $request): AlcanceReporte

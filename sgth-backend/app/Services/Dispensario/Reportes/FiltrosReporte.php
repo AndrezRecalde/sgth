@@ -16,8 +16,8 @@ final class FiltrosReporte
         /** `servidor` o `familiar`. */
         public readonly ?string $tipoPaciente = null,
         public readonly ?int $unidadId = null,
-        /** `profesional` o `dia`, en los reportes que agrupan. */
-        public readonly string $agrupacion = 'profesional',
+        /** Una de las `agrupaciones()` del reporte; sin ella, la primera suya. */
+        public readonly ?string $agrupacion = null,
     ) {}
 
     /** @param array<string, mixed> $datos */
@@ -30,7 +30,7 @@ final class FiltrosReporte
             especialidad:  $datos['especialidad'] ?? null,
             tipoPaciente:  $datos['tipo_paciente'] ?? null,
             unidadId:      isset($datos['unidad_administrativa_id']) ? (int) $datos['unidad_administrativa_id'] : null,
-            agrupacion:    $datos['agrupacion'] ?? 'profesional',
+            agrupacion:    $datos['agrupacion'] ?? null,
         );
     }
 

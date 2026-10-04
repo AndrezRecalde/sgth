@@ -28,7 +28,10 @@ class FiltrosReporteDispensarioRequest extends FormRequest
             'especialidad'             => ['nullable', Rule::enum(EspecialidadAtencion::class)],
             'tipo_paciente'            => ['nullable', 'in:servidor,familiar'],
             'unidad_administrativa_id' => ['nullable', 'integer'],
-            'agrupacion'               => ['nullable', 'in:profesional,dia,unidad,diagnostico'],
+            // Cada reporte declara sus agrupaciones y, si le llega una que no
+            // tiene, usa la primera suya. Una lista aquí se desfasaba: le
+            // faltó `especialidad` y la gestión de turnos daba 422.
+            'agrupacion'               => ['nullable', 'string', 'max:30'],
         ];
     }
 
