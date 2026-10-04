@@ -249,6 +249,22 @@ export interface paths {
         patch: operations["agenda.reactivar"];
         trace?: never;
     };
+    "/v1/dispensario/agenda/{agenda}/en-consulta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["agenda.enConsulta"];
+        trace?: never;
+    };
     "/v1/dispensario/agenda/por-folio/{folio}": {
         parameters: {
             query?: never;
@@ -289,7 +305,7 @@ export interface paths {
             cookie?: never;
         };
         get: operations["agenda.show"];
-        put: operations["agenda.update"];
+        put?: never;
         post?: never;
         delete: operations["agenda.destroy"];
         options?: never;
@@ -1073,38 +1089,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/autoservicio/mis-cargas-familiares": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["cargaFamiliar.misCargas"];
-        put?: never;
-        post: operations["cargaFamiliar.storeMisCargas"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/autoservicio/mis-cargas-familiares/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put: operations["cargaFamiliar.updateMisCargas"];
-        post?: never;
-        delete: operations["cargaFamiliar.destroyMisCargas"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/estructura/cargos": {
         parameters: {
             query?: never;
@@ -1177,6 +1161,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["catalogoViatico.categoriasFactura"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/dispensario/solicitudes-certificacion/{id}/certificado-aptitud": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["certificadoAptitud.generar"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1333,6 +1333,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["dispensario.certificados.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/dispensario/certificaciones/cobertura": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["coberturaCertificacion.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/dispensario/certificaciones/cobertura/excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["coberturaCertificacion.excel"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1589,46 +1621,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["contratos.index"];
+        get?: never;
         put?: never;
         post: operations["contratos.store"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/expediente/servidores/{servidorId}/contratos/{contrato}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["contratos.show"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/expediente/servidores/{servidorId}/contratos/{contrato}/cerrar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Cierra un contrato vigente (fecha_fin + motivo_fin). Un contrato
-         *     nunca se edita para cambiar de modalidad: se cierra este y se crea
-         *     uno nuevo con crear()
-         */
-        put: operations["contratos.cerrar"];
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1902,8 +1897,28 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Retorna los KPIs integrales del dispensario */
+        /** Las cifras del Dispensario de un período. Sin período, el mes en curso */
         get: operations["dashboardDispensario.kpis"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/dispensario/dashboard/panorama": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * El resto del Dispensario: flujo de pacientes, enfermería, reposos,
+         *     salud ocupacional y la tendencia de los últimos doce meses
+         */
+        get: operations["dashboardDispensario.panorama"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2032,7 +2047,7 @@ export interface paths {
             cookie?: never;
         };
         /** Busca diagnósticos CIE-10 para autocompletado */
-        get: operations["diagnosticoCie10.buscar"];
+        get: operations["dispensario.cie10.buscar"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2065,7 +2080,7 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put?: never;
+        put: operations["carga.discapacidades.update"];
         post?: never;
         delete: operations["carga.discapacidades.destroy"];
         options?: never;
@@ -2096,7 +2111,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["discapacidades.show"];
+        get?: never;
         put: operations["discapacidades.update"];
         post?: never;
         delete: operations["discapacidades.destroy"];
@@ -2504,7 +2519,7 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put?: never;
+        put: operations["carga.enfermedades.update"];
         post?: never;
         delete: operations["carga.enfermedades.destroy"];
         options?: never;
@@ -2535,7 +2550,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["enfermedades.show"];
+        get?: never;
         put: operations["enfermedades.update"];
         post?: never;
         delete: operations["enfermedades.destroy"];
@@ -2667,6 +2682,28 @@ export interface paths {
         put: operations["equipos-proteccion.update"];
         post?: never;
         delete: operations["equipos-proteccion.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sso/catalogos/equipos-proteccion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * El catálogo completo de equipos activos, para los desplegables
+         * @description Va en su propia ruta y no como un parámetro de `index` porque `index`
+         *     pagina y esto no: los tres formularios que eligen un equipo necesitan
+         *     ofrecerlos todos, y leyendo la primera página se quedaban con quince.
+         */
+        get: operations["equipoProteccion.catalogo"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -3159,7 +3196,7 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put: operations["horasTrabajadas.update"];
+        put?: never;
         post?: never;
         delete: operations["horasTrabajadas.destroy"];
         options?: never;
@@ -3611,6 +3648,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/dispensario/mi-jornada": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lo de quien pregunta: sus turnos, sus pendientes y su mes */
+        get: operations["miJornada.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/expediente/servidores/{servidorId}/movimientos": {
         parameters: {
             query?: never;
@@ -3894,6 +3948,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/dispensario/pacientes/buscar-por-nombre": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Pacientes por nombre o apellidos. Tres letras como mínimo: con menos,
+         *     casi cualquier nombre coincide y la lista no ayuda a elegir
+         */
+        get: operations["dispensario.pacientes.buscar-por-nombre"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/estructura/partidas-presupuestarias": {
         parameters: {
             query?: never;
@@ -3926,6 +4000,22 @@ export interface paths {
          *     ofrecerse en los selectores sin romper el histórico
          */
         delete: operations["estructura.partidas-presupuestarias.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/contrasena": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["password.actualizar"];
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -4850,6 +4940,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/dispensario/reportes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["reporteDispensario.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/dispensario/reportes/{clave}/excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["reporteDispensario.excel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/dispensario/reportes/{clave}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * El reporte en PDF, para los que se presentan firmados. Los demás no lo
+         *     tienen: una tabla de quince columnas no cabe en una hoja
+         */
+        get: operations["reporteDispensario.pdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/dispensario/reportes/{clave}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["reporteDispensario.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/reportes/siith-sut/movimientos": {
         parameters: {
             query?: never;
@@ -5081,6 +5239,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * Servidores todavía sin cuenta, para el buscador del módulo de Usuarios.
+         *     Es trabajo de quien gestiona usuarios, no del Expediente: se autoriza
+         *     por `gestionar-usuarios`. Con `verAny` de Servidor, admin-ti —que es
+         *     quien crea las cuentas— se quedó sin él al salir del Expediente
+         */
         get: operations["servidores.sinUsuario"];
         put?: never;
         post?: never;
@@ -5228,6 +5392,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/dispensario/solicitudes-certificacion/{id}/cancelar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Retira una solicitud pedida por error, sin borrarla
+         * @description Solo una `pendiente`: en cuanto quien evalúa la inicia hay un FEMO en
+         *     curso, y tirarlo desde Talento Humano lo dejaría huérfano. Es la misma
+         *     frontera que `anular-permiso-pendiente` en Asistencia.
+         */
+        patch: operations["solicitudCertificacion.cancelar"];
+        trace?: never;
+    };
     "/v1/dispensario/solicitudes-certificacion": {
         parameters: {
             query?: never;
@@ -5289,6 +5475,16 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
+        /**
+         * Emite el dictamen y cierra la solicitud
+         * @description El dictamen no lo elige nadie aquí: es la aptitud que el médico marcó en
+         *     la sección L de la ficha FEMO de esta misma solicitud, y la observación
+         *     son sus restricciones. Antes se pedían por separado, con tres opciones
+         *     contra las cuatro de la ficha, y podían contradecirse: Talento Humano
+         *     incorporaba con un «apto» y el certificado imprimía «no apto».
+         *
+         *     Después del dictamen la ficha queda cerrada (ver `FemoService::actualizar`).
+         */
         patch: operations["solicitudCertificacion.completar"];
         trace?: never;
     };
@@ -5386,6 +5582,22 @@ export interface paths {
         };
         get?: never;
         put: operations["subrogacion.cancelar"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/dispensario/salud-ocupacional/tablero": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tableroSaludOcupacional.index"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -6336,6 +6548,18 @@ export interface components {
             /** Format: date-time */
             updated_at: string | null;
         };
+        /**
+         * ActualizarContrasenaRequest
+         * @description Cambio de contraseña por iniciativa propia, con la sesión ya establecida.
+         *
+         *     A diferencia del primer acceso, aquí sí se pide la contraseña actual: es lo
+         *     único que separa al dueño de la cuenta de quien tenga su token, o de quien
+         *     se siente frente a un equipo con la sesión abierta.
+         */
+        ActualizarContrasenaRequest: {
+            contrasena_actual: string;
+            nueva_contrasena?: string;
+        };
         /** AdquisicionMedicamento */
         AdquisicionMedicamento: {
             id: number;
@@ -6430,6 +6654,10 @@ export interface components {
             anulado_por: number | null;
             motivo_anulacion: string | null;
         };
+        /** AnularAtencionEnfermeriaRequest */
+        AnularAtencionEnfermeriaRequest: {
+            motivo_anulacion: string;
+        };
         /** AnularOdontogramaProcedimientoRequest */
         AnularOdontogramaProcedimientoRequest: {
             motivo_anulacion: string;
@@ -6449,7 +6677,7 @@ export interface components {
          * AptitudMedica
          * @enum {string}
          */
-        AptitudMedica: "apto" | "apto_con_restricciones" | "en_observacion" | "no_apto";
+        AptitudMedica: "apto" | "en_observacion" | "apto_con_restricciones" | "no_apto";
         /** AreaDtic */
         AreaDtic: {
             id: number;
@@ -6633,7 +6861,18 @@ export interface components {
         };
         /** CambiarContrasenaRequest */
         CambiarContrasenaRequest: {
-            nueva_contrasena: string;
+            nueva_contrasena?: string;
+        };
+        /**
+         * CancelarSolicitudCertificacionRequest
+         * @description El motivo por el que se retira una solicitud de certificación médica.
+         *
+         *     El tope de 500 es el mismo que pide `MotivoModal` en el frontend, que es el
+         *     modal con el que se escribe: sin él, el formulario aceptaba un texto que el
+         *     API no rechazaba pero que no cabía en la columna.
+         */
+        CancelarSolicitudCertificacionRequest: {
+            motivo: string;
         };
         /**
          * CancelarSubrogacionRequest
@@ -6663,7 +6902,7 @@ export interface components {
             tema: string;
             /** Format: date-time */
             fecha: string;
-            duracion_horas: string;
+            duracion_horas: number;
             instructor: string;
             lugar: string | null;
             estado: boolean;
@@ -6696,6 +6935,7 @@ export interface components {
             deleted_at: string | null;
             cedula: string | null;
             estado: boolean;
+            genero: string | null;
         };
         /** Cargo */
         Cargo: {
@@ -6777,12 +7017,6 @@ export interface components {
          * @enum {string}
          */
         CausalVistoBueno: "faltas_puntualidad_asistencia" | "indisciplina_desobediencia" | "falta_probidad" | "injurias_graves" | "ineptitud_manifiesta" | "denuncia_injustificada_iess" | "incumplimiento_seguridad";
-        /** CerrarContratoServidorRequest */
-        CerrarContratoServidorRequest: {
-            motivo_fin: string;
-            /** Format: date-time */
-            fecha_fin?: string | null;
-        };
         /** CertificadoCapacitacion */
         CertificadoCapacitacion: {
             id: number;
@@ -7095,6 +7329,27 @@ export interface components {
             /** Format: date-time */
             updated_at: string | null;
         };
+        /**
+         * DiscapacidadCargaFamiliarRequest
+         * @description La discapacidad de una carga familiar, al registrarla o editarla. Mismo
+         *     rango que la del servidor; el carné CONADIS es opcional porque Talento
+         *     Humano no siempre lo tiene a mano para un familiar.
+         */
+        DiscapacidadCargaFamiliarRequest: {
+            /**
+             * @description El modelo lo castea a TipoDiscapacidad: un texto fuera del
+             *     catálogo pasaba la validación y reventaba en 500 al guardar.
+             */
+            tipo_discapacidad: components["schemas"]["TipoDiscapacidad"];
+            porcentaje: number;
+            numero_carnet_conadis?: string | null;
+            /**
+             * Format: date-time
+             * @description La columna existía y el del servidor ya la aceptaba; el del
+             *     familiar la descartaba.
+             */
+            carnet_vencimiento?: string | null;
+        };
         /** DiscapacidadServidor */
         DiscapacidadServidor: {
             id: number;
@@ -7102,7 +7357,6 @@ export interface components {
             tipo_discapacidad: components["schemas"]["TipoDiscapacidad"];
             porcentaje: string;
             numero_carnet_conadis: string;
-            carnet_ruta: string | null;
             carnet_nombre_archivo: string | null;
             /** Format: date-time */
             carnet_vencimiento: string | null;
@@ -7159,8 +7413,11 @@ export interface components {
                 id: string;
                 usuario_ti: string;
             };
+            /**
+             * @description Sin `url_descarga`: el frontend descarga por su servicio, con la
+             *     sesión, y ese enlace no lo leía nadie.
+             */
             created_at: string;
-            url_descarga: string;
         };
         /** DocumentoSso */
         DocumentoSso: {
@@ -7238,13 +7495,26 @@ export interface components {
             /** Format: date-time */
             deleted_at: string | null;
         };
+        /**
+         * EnfermedadCargaFamiliarRequest
+         * @description La enfermedad catastrófica de una carga familiar, al registrarla o editarla.
+         */
+        EnfermedadCargaFamiliarRequest: {
+            tipo_enfermedad: string;
+            /**
+             * @description La columna es de 10: con `max:20` un código de 11 a 20
+             *     caracteres pasaba y reventaba en 500 al guardar.
+             */
+            codigo_cie10?: string | null;
+            /** Format: date-time */
+            fecha_diagnostico?: string | null;
+        };
         /** EnfermedadCatastroficaServidor */
         EnfermedadCatastroficaServidor: {
             id: number;
             servidor_id: number;
             tipo_enfermedad: string;
             codigo_cie10: string | null;
-            certificado_ruta: string | null;
             certificado_nombre_archivo: string | null;
             /** Format: date-time */
             fecha_diagnostico: string | null;
@@ -7319,6 +7589,24 @@ export interface components {
             /** Format: date-time */
             updated_at: string | null;
         };
+        /** EquipoProteccion */
+        EquipoProteccion: {
+            id: number;
+            codigo: string;
+            nombre: string;
+            tipo: string;
+            norma_tecnica: string | null;
+            vida_util_meses: number | null;
+            estado: boolean;
+            created_by: number | null;
+            updated_by: number | null;
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+            /** Format: date-time */
+            deleted_at: string | null;
+        };
         /** EquipoProteccionResource */
         EquipoProteccionResource: {
             id: number;
@@ -7354,6 +7642,12 @@ export interface components {
          * @enum {string}
          */
         EstadoActividadPrograma: "pendiente" | "en_proceso" | "ejecutada" | "no_ejecutada";
+        /**
+         * EstadoCoberturaCertificacion
+         * @description Cómo está un servidor frente a su evaluación médica ocupacional periódica. `SIN_EVALUACION` es la categoría que motivó el tablero: hasta ahora el sistema solo sabía listar solicitudes, así que quien nunca tuvo una era invisible en las tres pantallas del módulo, y es justo quien importa.
+         * @enum {string}
+         */
+        EstadoCoberturaCertificacion: "al_dia" | "por_vencer" | "vencida" | "sin_evaluacion";
         /**
          * EstadoContrato
          * @enum {string}
@@ -7433,6 +7727,7 @@ export interface components {
             created_at: string | null;
             /** Format: date-time */
             updated_at: string | null;
+            estado_campania: string;
         };
         /** EvaluacionPsicosocial */
         EvaluacionPsicosocial: {
@@ -7450,6 +7745,7 @@ export interface components {
             created_at: string | null;
             /** Format: date-time */
             updated_at: string | null;
+            estado_campania: string;
         };
         /** EvaluacionSeleccion */
         EvaluacionSeleccion: {
@@ -7531,7 +7827,7 @@ export interface components {
             /** Format: date-time */
             fecha_evaluacion: string;
             tipo_ficha: components["schemas"]["TipoFichaFemo"];
-            aptitud: components["schemas"]["AptitudMedica"];
+            aptitud: components["schemas"]["AptitudMedica"] | null;
             restricciones: string | null;
             observaciones: string | null;
             evaluador_id: number;
@@ -7578,6 +7874,10 @@ export interface components {
             autoriza_transfusion: boolean | null;
             tratamiento_hormonal: boolean | null;
             tratamiento_hormonal_cual: string | null;
+            grupo_lactancia: boolean;
+            observacion_antecedentes: string | null;
+            observacion_examen_fisico: string | null;
+            observacion_examenes: string | null;
         };
         /**
          * GravedadAccidente
@@ -8777,6 +9077,9 @@ export interface components {
             canton_nacimiento_id: number | null;
             puede_marcar: boolean;
             codigo_medico: string | null;
+            contacto_emergencia_nombre: string | null;
+            contacto_emergencia_parentesco: string | null;
+            contacto_emergencia_telefono: string | null;
         };
         /** ServidorResource */
         ServidorResource: {
@@ -8817,6 +9120,9 @@ export interface components {
             telefono_convencional: string | null;
             correo_personal: string | null;
             direccion_domicilio: string | null;
+            contacto_emergencia_nombre: string | null;
+            contacto_emergencia_parentesco: string | null;
+            contacto_emergencia_telefono: string | null;
             /**
              * @description ── Sección O · datos del profesional ───────────────────
              *     Registro ante el ACESS de quien evalúa: lo pide el impreso
@@ -8879,7 +9185,6 @@ export interface components {
              *     resolución interna.
              */
             pendiente_vinculacion: boolean | null;
-            user?: components["schemas"]["User"];
             documentos?: components["schemas"]["DocumentoServidorResource"][];
             movimientos?: components["schemas"]["MovimientoPersonal"][];
         };
@@ -8940,29 +9245,10 @@ export interface components {
             dictamen: string | null;
             observacion_medica: string | null;
             movimiento_personal_id: number | null;
-        };
-        /** SolicitudConstantesVitales */
-        SolicitudConstantesVitales: {
-            id: number;
-            solicitud_id: number;
-            enfermera_id: number;
-            peso_kg: string | null;
-            talla_cm: string | null;
-            imc: string | null;
-            temperatura_c: string | null;
-            presion_sistolica: number | null;
-            presion_diastolica: number | null;
-            frecuencia_cardiaca: number | null;
-            frecuencia_respiratoria: number | null;
-            saturacion_oxigeno: string | null;
-            glucosa: string | null;
-            observaciones_enfermera: string | null;
             /** Format: date-time */
-            registrado_en: string;
-            /** Format: date-time */
-            created_at: string | null;
-            /** Format: date-time */
-            updated_at: string | null;
+            cancelada_en: string | null;
+            cancelada_por: number | null;
+            motivo_cancelacion: string | null;
         };
         /** StoreAccidenteTrabajoRequest */
         StoreAccidenteTrabajoRequest: {
@@ -9069,8 +9355,16 @@ export interface components {
             parentesco: components["schemas"]["TipoParentesco"];
             /** Format: date-time */
             fecha_nacimiento: string;
-            persona_con_discapacidad: boolean;
-            posee_enfermedad_catastrofica: boolean;
+            /**
+             * @description El sexo, con los valores de `servidores.genero`. Obligatorio al
+             *     registrar o editar: los familiares antiguos lo completan así.
+             * @enum {string}
+             */
+            genero: "masculino" | "femenino";
+            /**
+             * @description Sin `persona_con_discapacidad` ni `posee_enfermedad_catastrofica`:
+             *     se derivan de los registros (CondicionCargaFamiliarObserver).
+             */
             observaciones?: string | null;
         };
         /** StoreConsultaMedicaRequest */
@@ -9121,6 +9415,7 @@ export interface components {
             entidad_financiera_id: number;
             /** @enum {string} */
             tipo_cuenta: "ahorros" | "corriente";
+            /** @description Mismo mínimo que el formulario, que lo pedía y el backend no. */
             numero_cuenta: string;
             /** @enum {string} */
             proposito: "sueldo" | "viaticos" | "ambos";
@@ -9130,8 +9425,15 @@ export interface components {
         };
         /** StoreDeclaracionJuramentadaRequest */
         StoreDeclaracionJuramentadaRequest: {
-            /** Format: date-time */
+            /**
+             * Format: date-time
+             * @description Una declaración ya presentada: no puede tener fecha futura.
+             */
             fecha_declaracion: string;
+            /**
+             * @description El código de barras identifica la declaración en Contraloría:
+             *     el mismo dos veces en un expediente salía dos veces en el TXT.
+             */
             codigo_barras: string;
             tipo_declaracion: components["schemas"]["TipoDeclaracion"];
             /** Format: binary */
@@ -9177,6 +9479,9 @@ export interface components {
             /**
              * Format: date-time
              * @description 5MB máx
+             *     Un documento ya vencido no se anexa (Talento Humano,
+             *     2026-10-03). El que vence hoy todavía vale: con `after:today`
+             *     se rechazaba, aunque la tabla no lo pinta como vencido.
              */
             fecha_vencimiento?: string | null;
             descripcion?: string | null;
@@ -9208,6 +9513,11 @@ export interface components {
         };
         /** StoreFichaSaludOcupacionalRequest */
         StoreFichaSaludOcupacionalRequest: {
+            /**
+             * @description Toda ficha nace de una solicitud de Talento Humano: de ella salen
+             *     la persona y el tipo de evaluación (ver FemoService::registrar).
+             */
+            solicitud_id: number;
             ficha: {
                 servidor_id?: number | null;
                 postulante_id?: number | null;
@@ -9216,7 +9526,7 @@ export interface components {
                 numero_archivo?: string | null;
                 /** Format: date-time */
                 fecha_evaluacion: string;
-                tipo_ficha: components["schemas"]["TipoFichaFemo"];
+                tipo_ficha?: components["schemas"]["TipoFichaFemo"];
                 puesto_trabajo?: string | null;
                 puesto_trabajo_ciuo?: string | null;
                 /** Format: date-time */
@@ -9228,11 +9538,16 @@ export interface components {
                 grupo_embarazada?: boolean | null;
                 grupo_discapacidad?: boolean | null;
                 grupo_enfermedad_catastrofica?: boolean | null;
+                grupo_lactancia?: boolean | null;
                 grupo_adulto_mayor?: boolean | null;
                 porcentaje_discapacidad?: string | null;
                 /** @enum {string|null} */
                 lateralidad?: "derecha" | "izquierda" | null;
-                aptitud: components["schemas"]["AptitudMedica"];
+                /**
+                 * @description Nula mientras la ficha es un borrador; se exige al emitir el
+                 *     dictamen (SolicitudCertificacionController::completar).
+                 */
+                aptitud?: components["schemas"]["AptitudMedica"];
                 restricciones?: string | null;
                 observaciones?: string | null;
                 enfermedad_actual?: string | null;
@@ -9251,19 +9566,9 @@ export interface components {
                 actividad_fisica_tiempo?: string | null;
                 medicacion_habitual_cual?: string | null;
                 medicacion_habitual_cantidad?: string | null;
-            };
-            constantes_vitales?: {
-                temperatura_c?: number | null;
-                presion_sistolica?: number | null;
-                presion_diastolica?: number | null;
-                frecuencia_cardiaca?: number | null;
-                frecuencia_respiratoria?: number | null;
-                saturacion_oxigeno?: number | null;
-                peso_kg?: number | null;
-                talla_cm?: number | null;
-                perimetro_abdominal_cm?: number | null;
-                imc?: number | null;
-                glucosa?: number | null;
+                observacion_antecedentes?: string | null;
+                observacion_examen_fisico?: string | null;
+                observacion_examenes?: string | null;
             };
             antecedente_reproductivo?: {
                 /** Format: date-time */
@@ -9277,12 +9582,19 @@ export interface components {
                 metodo_planificacion_cual?: string | null;
                 examenes_realizados?: string | null;
                 examenes_tiempo_anios?: number | null;
+                examenes_resultado?: string | null;
             };
+            /**
+             * @description Sin constantes vitales: las tomó Enfermería en el triaje y el
+             *     servidor las copia de ahí (FemoService::registrar). Antes las
+             *     mandaba el navegador, sin rangos, y el IMC no se recalculaba.
+             */
             antecedentes?: {
                 tipo: components["schemas"]["TipoAntecedenteFemo"];
                 descripcion: string;
                 fecha_aproximada?: number | null;
             }[] | null;
+            /** @description El impreso tiene siete columnas de actividades. */
             actividades?: {
                 puesto_actividad_id?: number | null;
                 actividad: string;
@@ -9360,7 +9672,10 @@ export interface components {
             institucion: string;
             /** Format: date-time */
             fecha_inicio: string;
-            /** Format: date-time */
+            /**
+             * Format: date-time
+             * @description `after` impedía registrar un curso de un solo día.
+             */
             fecha_fin?: string | null;
             titulo_capacitacion: string;
             codigo_senescyt?: string | null;
@@ -9619,6 +9934,13 @@ export interface components {
              */
             codigo_medico?: string | null;
             direccion_domicilio?: string | null;
+            /**
+             * @description Contacto de emergencia, opcional. Nombre y teléfono van juntos:
+             *     uno sin el otro no sirve para llamar a nadie.
+             */
+            contacto_emergencia_nombre?: string | null;
+            contacto_emergencia_parentesco?: string | null;
+            contacto_emergencia_telefono?: string | null;
             provincia_domicilio?: string | null;
             ciudad_domicilio?: string | null;
         };
@@ -9641,6 +9963,7 @@ export interface components {
             saturacion_oxigeno: number;
             peso_kg: number;
             talla_cm: number;
+            perimetro_abdominal_cm?: number | null;
             glucosa?: number | null;
             observaciones_enfermera?: string | null;
         };
@@ -9661,6 +9984,10 @@ export interface components {
             presion_sistolica: number;
             presion_diastolica: number;
             frecuencia_cardiaca: number;
+            /**
+             * @description Mínimo 4 y no 10: por debajo de 10 la valoración ya lo marca
+             *     crítico, y con `min:10` justo ese paciente no se podía registrar.
+             */
             frecuencia_respiratoria: number;
             temperatura_c: number;
             saturacion_oxigeno: number;
@@ -9763,6 +10090,13 @@ export interface components {
             /** Format: email */
             correo_personal?: string | null;
             direccion_domicilio?: string | null;
+            /**
+             * @description Contacto de emergencia, opcional. Nombre y teléfono van juntos:
+             *     uno sin el otro no sirve para llamar a nadie.
+             */
+            contacto_emergencia_nombre?: string | null;
+            contacto_emergencia_parentesco?: string | null;
+            contacto_emergencia_telefono?: string | null;
             /**
              * Format: date-time
              * @description Primera vinculación con la institución. De aquí sale la
@@ -10284,8 +10618,6 @@ export interface components {
         /** UpdateFichaSaludOcupacionalRequest */
         UpdateFichaSaludOcupacionalRequest: {
             ficha: {
-                servidor_id?: number | null;
-                postulante_id?: number | null;
                 puesto_id?: number | null;
                 accidente_trabajo_id?: number | null;
                 numero_archivo?: string | null;
@@ -10303,6 +10635,7 @@ export interface components {
                 grupo_embarazada?: boolean | null;
                 grupo_discapacidad?: boolean | null;
                 grupo_enfermedad_catastrofica?: boolean | null;
+                grupo_lactancia?: boolean | null;
                 grupo_adulto_mayor?: boolean | null;
                 porcentaje_discapacidad?: string | null;
                 /** @enum {string|null} */
@@ -10326,19 +10659,9 @@ export interface components {
                 actividad_fisica_tiempo?: string | null;
                 medicacion_habitual_cual?: string | null;
                 medicacion_habitual_cantidad?: string | null;
-            };
-            constantes_vitales?: {
-                temperatura_c?: number | null;
-                presion_sistolica?: number | null;
-                presion_diastolica?: number | null;
-                frecuencia_cardiaca?: number | null;
-                frecuencia_respiratoria?: number | null;
-                saturacion_oxigeno?: number | null;
-                peso_kg?: number | null;
-                talla_cm?: number | null;
-                perimetro_abdominal_cm?: number | null;
-                imc?: number | null;
-                glucosa?: number | null;
+                observacion_antecedentes?: string | null;
+                observacion_examen_fisico?: string | null;
+                observacion_examenes?: string | null;
             };
             antecedente_reproductivo?: {
                 /** Format: date-time */
@@ -10352,12 +10675,19 @@ export interface components {
                 metodo_planificacion_cual?: string | null;
                 examenes_realizados?: string | null;
                 examenes_tiempo_anios?: number | null;
+                examenes_resultado?: string | null;
             };
+            /**
+             * @description Sin constantes vitales: las tomó Enfermería en el triaje y el
+             *     servidor las copia de ahí (FemoService::registrar). Antes las
+             *     mandaba el navegador, sin rangos, y el IMC no se recalculaba.
+             */
             antecedentes?: {
                 tipo: components["schemas"]["TipoAntecedenteFemo"];
                 descripcion: string;
                 fecha_aproximada?: number | null;
             }[] | null;
+            /** @description El impreso tiene siete columnas de actividades. */
             actividades?: {
                 puesto_actividad_id?: number | null;
                 actividad: string;
@@ -10369,8 +10699,9 @@ export interface components {
                 /**
                  * @description El factor debe existir en el catálogo del MSP. Un nombre libre
                  *     rompe la fidelidad del PDF y descuadra los indicadores de SSO.
+                 * @enum {string}
                  */
-                factor: string;
+                factor: "Temperaturas altas" | "Temperaturas bajas" | "Radiación ionizante" | "Radiación no ionizante" | "Ruido" | "Vibración" | "Iluminación" | "Ventilación" | "Fluido eléctrico" | "Otros" | "Falta de señalización, aseo, desorden" | "Atrapamiento entre máquinas y/o superficies" | "Atrapamiento entre objetos" | "Caída de objetos" | "Caídas al mismo nivel" | "Caídas a diferente nivel" | "Pinchazos" | "Cortes" | "Choques / colisión vehicular" | "Atropellamientos por vehículos" | "Proyección de fluidos" | "Proyección de partículas – fragmentos" | "Contacto con superficies de trabajo" | "Contacto eléctrico" | "Polvos" | "Sólidos" | "Humos" | "Líquidos" | "Vapores" | "Aerosoles" | "Neblinas" | "Gaseosos" | "Virus" | "Hongos" | "Bacterias" | "Parásitos" | "Exposición a vectores" | "Exposición a animales selváticos" | "Manejo manual de cargas" | "Movimientos repetitivos" | "Posturas forzadas" | "Trabajos con PVD" | "Diseño inadecuado del puesto" | "Monotonía del trabajo" | "Sobrecarga laboral" | "Minuciosidad de la tarea" | "Alta responsabilidad" | "Autonomía en la toma de decisiones" | "Supervisión y estilos de dirección deficiente" | "Conflicto de rol" | "Falta de claridad en las funciones" | "Incorrecta distribución del trabajo" | "Turnos rotativos" | "Relaciones interpersonales" | "Inestabilidad laboral" | "Amenaza delincuencial";
                 presente?: boolean | null;
                 medida_preventiva?: string | null;
                 actividad_index?: number | null;
@@ -10554,22 +10885,6 @@ export interface components {
             /** @enum {string} */
             estado: "aprobada" | "rechazada";
             observacion?: string | null;
-        };
-        /** User */
-        User: {
-            id: number;
-            email: string;
-            /** Format: date-time */
-            email_verified_at: string | null;
-            /** Format: date-time */
-            created_at: string | null;
-            /** Format: date-time */
-            updated_at: string | null;
-            usuario_ti: string | null;
-            primer_login: boolean;
-            activo: boolean;
-            servidor_id: number | null;
-            nombre_completo: string;
         };
         /** UsuarioAutenticadoResource */
         UsuarioAutenticadoResource: {
@@ -10788,7 +11103,18 @@ export type $defs = Record<string, never>;
 export interface operations {
     "accidentes.index": {
         parameters: {
-            query?: never;
+            query?: {
+                servidor_id?: number | null;
+                estado?: boolean | null;
+                por_pagina?: number | null;
+                /**
+                 * @description `page` no va en `filtros()`: lo lee el paginador de Laravel
+                 *     directamente de la petición. Se valida igual para que el
+                 *     contrato del listado esté completo y no quede un parámetro sin
+                 *     reglas al lado de los que sí las tienen.
+                 */
+                page?: number | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -10818,6 +11144,7 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "accidentes.store": {
@@ -11511,6 +11838,34 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
+    "agenda.enConsulta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                agenda: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Turno en consulta.";
+                        datos: components["schemas"]["AgendaMedica"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "agenda.porFolio": {
         parameters: {
             query?: never;
@@ -11541,7 +11896,13 @@ export interface operations {
     };
     "agenda.index": {
         parameters: {
-            query?: never;
+            query?: {
+                fecha?: string | null;
+                medico_id?: number | null;
+                estado?: string | null;
+                tipo_atencion?: string | null;
+                per_page?: number | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -11563,6 +11924,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "agenda.store": {
@@ -11616,34 +11978,6 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Operación exitosa.";
-                        datos: components["schemas"]["AgendaMedica"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-        };
-    };
-    "agenda.update": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Cita actualizada.";
                         datos: components["schemas"]["AgendaMedica"];
                         meta: null;
                     };
@@ -12137,7 +12471,12 @@ export interface operations {
     };
     "dispensario.atenciones-enfermeria.index": {
         parameters: {
-            query?: never;
+            query?: {
+                fecha?: string | null;
+                enfermera_id?: number | null;
+                solo_vigentes?: boolean | null;
+                per_page?: number | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -12159,6 +12498,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "dispensario.atenciones-enfermeria.store": {
@@ -12203,9 +12543,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    motivo_anulacion: string;
-                };
+                "application/json": components["schemas"]["AnularAtencionEnfermeriaRequest"];
             };
         };
         responses: {
@@ -12425,6 +12763,12 @@ export interface operations {
             };
         };
         responses: {
+            /**
+             * @description El servicio entrega el modelo; lo que viaja es la misma forma del
+             *     perfil, con roles y permisos, que el frontend guarda tal cual. Va el
+             *     recurso sin resolver, como en el resto de controladores: se serializa
+             *     igual, y así Scramble lo documenta con sus campos en el contrato.
+             */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -12435,8 +12779,7 @@ export interface operations {
                         /** @constant */
                         mensaje: "Inicio de sesión exitoso.";
                         datos: {
-                            token: string;
-                            primer_login: boolean;
+                            primer_login: unknown;
                             usuario: components["schemas"]["UsuarioAutenticadoResource"];
                         };
                         meta: null;
@@ -12505,7 +12848,7 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
                 "application/json": components["schemas"]["CambiarContrasenaRequest"];
             };
@@ -13441,7 +13784,17 @@ export interface operations {
     };
     "capacitaciones.index": {
         parameters: {
-            query?: never;
+            query?: {
+                estado?: boolean | null;
+                por_pagina?: number | null;
+                /**
+                 * @description `page` no va en `filtros()`: lo lee el paginador de Laravel
+                 *     directamente de la petición. Se valida igual para que el
+                 *     contrato del listado esté completo y no quede un parámetro sin
+                 *     reglas al lado de los que sí las tienen.
+                 */
+                page?: number | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -13471,6 +13824,7 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "capacitaciones.store": {
@@ -13651,6 +14005,12 @@ export interface operations {
                         mensaje: "Carga familiar registrada.";
                         datos: components["schemas"]["CargaFamiliar"];
                         meta: null;
+                    } | {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Carga familiar registrada.";
+                        datos: components["schemas"]["CargaFamiliar"] | null;
+                        meta: null;
                     };
                 };
             };
@@ -13743,139 +14103,6 @@ export interface operations {
                         /** @enum {string} */
                         mensaje: "Carga familiar activada." | "Carga familiar desactivada.";
                         datos: string;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-        };
-    };
-    "cargaFamiliar.misCargas": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Mis cargas familiares.";
-                        datos: components["schemas"]["CargaFamiliar"][];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "El usuario no tiene un servidor vinculado.";
-                        datos: null;
-                        /** @constant */
-                        errores: 422;
-                    };
-                };
-            };
-        };
-    };
-    "cargaFamiliar.storeMisCargas": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StoreCargaFamiliarRequest"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Carga familiar registrada.";
-                        datos: components["schemas"]["CargaFamiliar"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
-    "cargaFamiliar.updateMisCargas": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StoreCargaFamiliarRequest"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Carga familiar actualizada.";
-                        datos: string;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
-    "cargaFamiliar.destroyMisCargas": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Carga familiar eliminada.";
-                        datos: null;
                         meta: null;
                     };
                 };
@@ -14109,6 +14336,29 @@ export interface operations {
                         datos: components["schemas"]["CategoriaFactura"][];
                         meta: null;
                     };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "certificadoAptitud.generar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
                 };
             };
             401: components["responses"]["AuthenticationException"];
@@ -14416,6 +14666,71 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "coberturaCertificacion.index": {
+        parameters: {
+            query?: {
+                unidad_administrativa_id?: number | null;
+                estado_cobertura?: components["schemas"]["EstadoCoberturaCertificacion"];
+                buscar?: string | null;
+                per_page?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /**
+             * @description El resumen viaja junto a la página, no en una segunda petición: es
+             *     la misma consulta y el tablero no se puede leer a medias.
+             */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Operación exitosa.";
+                        datos: {
+                            ""?: unknown[];
+                            resumen: unknown[];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "coberturaCertificacion.excel": {
+        parameters: {
+            query?: {
+                unidad_administrativa_id?: number | null;
+                estado_cobertura?: components["schemas"]["EstadoCoberturaCertificacion"];
+                buscar?: string | null;
+                per_page?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "comentarioTicket.index": {
@@ -15062,34 +15377,6 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
-    "contratos.index": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                servidorId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Contratos del servidor.";
-                        datos: components["schemas"]["ContratoServidor"][];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-        };
-    };
     "contratos.store": {
         parameters: {
             query?: never;
@@ -15120,69 +15407,6 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
-    "contratos.show": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                servidorId: number;
-                /** @description The contrato ID */
-                contrato: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["ContratoServidor"];
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            404: components["responses"]["ModelNotFoundException"];
-        };
-    };
-    "contratos.cerrar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                servidorId: number;
-                /** @description The contrato ID */
-                contrato: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CerrarContratoServidorRequest"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Contrato cerrado con éxito.";
-                        datos: components["schemas"]["ContratoServidor"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            404: components["responses"]["ModelNotFoundException"];
             422: components["responses"]["ValidationException"];
         };
     };
@@ -16164,6 +16388,69 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
+    "dashboardDispensario.panorama": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Operación exitosa.";
+                        datos: {
+                            flujo_hoy: {
+                                por_estado: string;
+                                total: number;
+                                espera_promedio_min: number | null;
+                            };
+                            espera_periodo_min: number | null;
+                            enfermeria: {
+                                total: number;
+                                por_servicio: string;
+                            };
+                            reposos: {
+                                certificados: number;
+                                dias: number;
+                                diagnosticos: string;
+                            };
+                            salud_ocupacional: {
+                                por_atender: string;
+                                /**
+                                 * @description Llegan solas del cese: si se acumulan, alguien sale sin su
+                                 *     evaluación de retiro.
+                                 */
+                                vencidas: number;
+                                /**
+                                 * @description Llegan solas del cese: si se acumulan, alguien sale sin su
+                                 *     evaluación de retiro.
+                                 */
+                                retiros: number;
+                                cobertura_vencida: unknown;
+                                cobertura_sin_evaluacion: unknown;
+                                plantilla: unknown;
+                            };
+                            tendencia: {
+                                mes: string;
+                                medicina_general: number;
+                                odontologia: number;
+                            }[];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "dashboardSso.resumen": {
         parameters: {
             query: {
@@ -16187,6 +16474,7 @@ export interface operations {
                         mensaje: "Resumen del dashboard SSO calculado exitosamente.";
                         datos: {
                             periodo: string;
+                            unidad_administrativa_id: number | null;
                             riesgos: {
                                 total_activos: string;
                                 /**
@@ -16202,6 +16490,11 @@ export interface operations {
                                 dias_reposo_total: number;
                             };
                             epp: {
+                                /**
+                                 * @description El catálogo es institucional por naturaleza: un casco existe para
+                                 *     toda la institución, no para una dirección. Por eso el bloque
+                                 *     declara alcance institucional aunque las entregas sí filtren.
+                                 */
                                 equipos_activos: number;
                                 entregas_periodo: number;
                             };
@@ -16248,6 +16541,42 @@ export interface operations {
                                  *     decimales y no con cuatro, que es lo que pide un consolidado.
                                  */
                                 total_dias: number;
+                            };
+                            alcances: {
+                                riesgos: {
+                                    alcance: string;
+                                    nota: null;
+                                };
+                                accidentes: {
+                                    alcance: string;
+                                    nota: null;
+                                };
+                                epp: {
+                                    alcance: string;
+                                    nota: string | null;
+                                };
+                                cumplimiento: {
+                                    alcance: string;
+                                    /** @constant */
+                                    nota: "La normativa legal aplica a toda la institución, no por unidad.";
+                                };
+                                psicosocial: {
+                                    alcance: string;
+                                    nota: null;
+                                };
+                                assist: {
+                                    alcance: string;
+                                    nota: null;
+                                };
+                                programa_drogas: {
+                                    alcance: string;
+                                    /** @constant */
+                                    nota: "Las actividades del programa de prevención no se registran por unidad.";
+                                };
+                                ausentismo: {
+                                    alcance: string;
+                                    nota: null;
+                                };
                             };
                         };
                         meta: null;
@@ -16438,7 +16767,8 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
-            422: {
+            /** @description El segundo argumento son los errores, no el código: respondía 422. */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -16448,8 +16778,7 @@ export interface operations {
                         /** @constant */
                         mensaje: "Documento no encontrado.";
                         datos: null;
-                        /** @constant */
-                        errores: 404;
+                        errores: null;
                     };
                 };
             };
@@ -16602,7 +16931,7 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
-    "diagnosticoCie10.buscar": {
+    "dispensario.cie10.buscar": {
         parameters: {
             query?: never;
             header?: never;
@@ -16635,6 +16964,7 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["AuthenticationException"];
         };
     };
     "carga.discapacidades.store": {
@@ -16648,15 +16978,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    /**
-                     * @description El modelo lo castea a TipoDiscapacidad: un texto fuera del
-                     *     catálogo pasaba esta validación y reventaba en 500 al guardar.
-                     */
-                    tipo_discapacidad: components["schemas"]["TipoDiscapacidad"];
-                    porcentaje: number;
-                    numero_carnet_conadis?: string | null;
-                };
+                "application/json": components["schemas"]["DiscapacidadCargaFamiliarRequest"];
             };
         };
         responses: {
@@ -16669,6 +16991,40 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Discapacidad registrada en la carga familiar.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "carga.discapacidades.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cargaId: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DiscapacidadCargaFamiliarRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Discapacidad actualizada.";
                         datos: string;
                         meta: null;
                     };
@@ -16756,41 +17112,16 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        exito: boolean;
                         /** @constant */
-                        message: "Discapacidad registrada con éxito.";
-                        data: components["schemas"]["DiscapacidadServidor"];
+                        mensaje: "Discapacidad registrada con éxito.";
+                        datos: components["schemas"]["DiscapacidadServidor"];
+                        meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
             422: components["responses"]["ValidationException"];
-        };
-    };
-    "discapacidades.show": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                servidorId: number;
-                /** @description The discapacidade ID */
-                discapacidade: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["DiscapacidadServidor"];
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            404: components["responses"]["ModelNotFoundException"];
         };
     };
     "discapacidades.update": {
@@ -16816,9 +17147,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        exito: boolean;
                         /** @constant */
-                        message: "Discapacidad actualizada con éxito.";
-                        data: components["schemas"]["DiscapacidadServidor"];
+                        mensaje: "Discapacidad actualizada con éxito.";
+                        datos: components["schemas"]["DiscapacidadServidor"];
+                        meta: null;
                     };
                 };
             };
@@ -16846,8 +17179,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        exito: boolean;
                         /** @constant */
-                        message: "Discapacidad eliminada con éxito.";
+                        mensaje: "Discapacidad eliminada con éxito.";
+                        datos: null;
+                        meta: null;
                     };
                 };
             };
@@ -17764,12 +18100,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    tipo_enfermedad: string;
-                    codigo_cie10?: string | null;
-                    /** Format: date-time */
-                    fecha_diagnostico?: string | null;
-                };
+                "application/json": components["schemas"]["EnfermedadCargaFamiliarRequest"];
             };
         };
         responses: {
@@ -17782,6 +18113,40 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Enfermedad catastrófica registrada en la carga familiar.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "carga.enfermedades.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cargaId: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EnfermedadCargaFamiliarRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Enfermedad catastrófica actualizada.";
                         datos: string;
                         meta: null;
                     };
@@ -17869,41 +18234,16 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        exito: boolean;
                         /** @constant */
-                        message: "Enfermedad catastrófica registrada con éxito.";
-                        data: components["schemas"]["EnfermedadCatastroficaServidor"];
+                        mensaje: "Enfermedad catastrófica registrada con éxito.";
+                        datos: components["schemas"]["EnfermedadCatastroficaServidor"];
+                        meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
             422: components["responses"]["ValidationException"];
-        };
-    };
-    "enfermedades.show": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                servidorId: number;
-                /** @description The enfermedade ID */
-                enfermedade: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["EnfermedadCatastroficaServidor"];
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            404: components["responses"]["ModelNotFoundException"];
         };
     };
     "enfermedades.update": {
@@ -17929,9 +18269,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        exito: boolean;
                         /** @constant */
-                        message: "Enfermedad catastrófica actualizada con éxito.";
-                        data: components["schemas"]["EnfermedadCatastroficaServidor"];
+                        mensaje: "Enfermedad catastrófica actualizada con éxito.";
+                        datos: components["schemas"]["EnfermedadCatastroficaServidor"];
+                        meta: null;
                     };
                 };
             };
@@ -17959,8 +18301,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        exito: boolean;
                         /** @constant */
-                        message: "Enfermedad catastrófica eliminada con éxito.";
+                        mensaje: "Enfermedad catastrófica eliminada con éxito.";
+                        datos: null;
+                        meta: null;
                     };
                 };
             };
@@ -18118,7 +18463,20 @@ export interface operations {
     };
     "eppEntrega.index": {
         parameters: {
-            query?: never;
+            query?: {
+                servidor_id?: number | null;
+                equipo_proteccion_id?: number | null;
+                fecha_inicio?: string | null;
+                fecha_fin?: string | null;
+                por_pagina?: number | null;
+                /**
+                 * @description `page` no va en `filtros()`: lo lee el paginador de Laravel
+                 *     directamente de la petición. Se valida igual para que el
+                 *     contrato del listado esté completo y no quede un parámetro sin
+                 *     reglas al lado de los que sí las tienen.
+                 */
+                page?: number | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -18147,6 +18505,8 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "eppEntrega.store": {
@@ -18231,6 +18591,11 @@ export interface operations {
                     fecha_entrega: string;
                     observaciones?: string | null;
                     equipos: {
+                        /**
+                         * @description `distinct`: el mismo equipo repetido en el arreglo creaba dos
+                         *     filas de entrega del mismo equipo al mismo servidor el mismo
+                         *     día, que es un duplicado que después nadie sabe explicar.
+                         */
                         equipo_proteccion_id: number;
                         cantidad?: number | null;
                     }[];
@@ -18258,7 +18623,18 @@ export interface operations {
     };
     "equipos-proteccion.index": {
         parameters: {
-            query?: never;
+            query?: {
+                tipo?: string | null;
+                estado?: boolean | null;
+                por_pagina?: number | null;
+                /**
+                 * @description `page` no va en `filtros()`: lo lee el paginador de Laravel
+                 *     directamente de la petición. Se valida igual para que el
+                 *     contrato del listado esté completo y no quede un parámetro sin
+                 *     reglas al lado de los que sí las tienen.
+                 */
+                page?: number | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -18288,6 +18664,7 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "equipos-proteccion.store": {
@@ -18406,6 +18783,33 @@ export interface operations {
                         /** @constant */
                         mensaje: "Equipo de protección eliminado exitosamente.";
                         datos: null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "equipoProteccion.catalogo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Catálogo de equipos de protección obtenido exitosamente.";
+                        datos: components["schemas"]["EquipoProteccion"][];
                         meta: null;
                     };
                 };
@@ -19235,6 +19639,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Operación exitosa.";
+                        /** @description Con techo: `per_page` llega del cliente. */
                         datos: {
                             current_page: number;
                             data: components["schemas"]["FichaSaludOcupacional"][];
@@ -19787,7 +20192,18 @@ export interface operations {
     };
     "horasTrabajadas.index": {
         parameters: {
-            query?: never;
+            query?: {
+                periodo?: string | null;
+                unidad_administrativa_id?: number | null;
+                por_pagina?: number | null;
+                /**
+                 * @description `page` no va en `filtros()`: lo lee el paginador de Laravel
+                 *     directamente de la petición. Se valida igual para que el
+                 *     contrato del listado esté completo y no quede un parámetro sin
+                 *     reglas al lado de los que sí las tienen.
+                 */
+                page?: number | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -19816,6 +20232,8 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "horasTrabajadas.store": {
@@ -19844,41 +20262,6 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Horas trabajadas registradas exitosamente.";
-                        datos: components["schemas"]["HorasTrabajadasPeriodo"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
-    "horasTrabajadas.update": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    total_horas: number;
-                };
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Horas trabajadas actualizadas exitosamente.";
                         datos: components["schemas"]["HorasTrabajadasPeriodo"];
                         meta: null;
                     };
@@ -20047,7 +20430,18 @@ export interface operations {
     };
     "inspecciones.index": {
         parameters: {
-            query?: never;
+            query?: {
+                unidad_administrativa_id?: number | null;
+                estado?: boolean | null;
+                por_pagina?: number | null;
+                /**
+                 * @description `page` no va en `filtros()`: lo lee el paginador de Laravel
+                 *     directamente de la petición. Se valida igual para que el
+                 *     contrato del listado esté completo y no quede un parámetro sin
+                 *     reglas al lado de los que sí las tienen.
+                 */
+                page?: number | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -20077,6 +20471,7 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "inspecciones.store": {
@@ -21060,6 +21455,79 @@ export interface operations {
             };
         };
     };
+    "miJornada.index": {
+        parameters: {
+            query?: {
+                perfil?: "medico" | "odontologo" | "enfermeria" | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Operación exitosa.";
+                        datos: {
+                            perfil: unknown;
+                            hoy: {
+                                esperando: string;
+                                listos: string;
+                                en_consulta: number;
+                                atendidos: number;
+                                no_presentados: number;
+                            };
+                            pendientes: {
+                                borradores: string;
+                                /**
+                                 * @description Las fichas FEMO que este médico dejó como borrador: la
+                                 *     solicitud sigue en curso con su ficha enlazada.
+                                 */
+                                fichas_femo: string | 0;
+                                /**
+                                 * @description Evaluaciones ocupacionales con el triaje hecho, listas para
+                                 *     que cualquier médico las inicie.
+                                 */
+                                evaluaciones_listas: string | 0;
+                            };
+                            mes: {
+                                consultas: string;
+                                pacientes: string;
+                                reposos: number;
+                                dias_reposo: number;
+                                procedimientos: string | 0;
+                                diagnosticos: string;
+                            };
+                        } | {
+                            perfil: unknown;
+                            hoy: {
+                                por_triar: string;
+                                triaje_sso: string;
+                                mis_atenciones: string;
+                            };
+                            mes: {
+                                atenciones: string;
+                                triajes: string;
+                                por_servicio: string;
+                            };
+                        } | {
+                            perfil: null;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "movimientoPersonal.index": {
         parameters: {
             query?: never;
@@ -21756,6 +22224,37 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "dispensario.pacientes.buscar-por-nombre": {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Operación exitosa.";
+                        datos: {
+                            [key: string]: unknown;
+                        }[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "estructura.partidas-presupuestarias.index": {
         parameters: {
             query?: {
@@ -21949,6 +22448,38 @@ export interface operations {
                     };
                 };
             };
+        };
+    };
+    "password.actualizar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActualizarContrasenaRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Contraseña actualizada. Se cerró la sesión en los demás equipos.";
+                        datos: null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "periodos.resumen": {
@@ -23867,6 +24398,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             404: components["responses"]["ModelNotFoundException"];
             422: components["responses"]["ValidationException"];
         };
@@ -23928,6 +24460,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
         };
     };
     "puestoActividad.store": {
@@ -23963,6 +24496,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
         };
     };
@@ -23993,6 +24527,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
         };
     };
     "puestoActividad.update": {
@@ -24030,6 +24565,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
         };
     };
@@ -24065,6 +24601,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
         };
     };
@@ -24564,6 +25101,187 @@ export interface operations {
                     };
                 };
             };
+        };
+    };
+    "reporteDispensario.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Operación exitosa.";
+                        datos: {
+                            alcance: string;
+                            propio: boolean;
+                            reportes: {
+                                clave: string;
+                                titulo: string;
+                                descripcion: string;
+                                nominal: boolean;
+                                filtros: string[];
+                            }[];
+                            opciones: {
+                                profesionales: {
+                                    id: number;
+                                    nombre: string;
+                                }[];
+                                unidades: {
+                                    id: number;
+                                    nombre: string;
+                                }[];
+                            };
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "reporteDispensario.excel": {
+        parameters: {
+            query: {
+                desde: string;
+                /**
+                 * @description Hasta un año: un reporte nominal de varios años no se revisa
+                 *     en pantalla y es justo el que no debería salir de una vez.
+                 */
+                hasta: string;
+                profesional_id?: number | null;
+                especialidad?: components["schemas"]["EspecialidadAtencion"];
+                tipo_paciente?: "servidor" | "familiar" | null;
+                unidad_administrativa_id?: number | null;
+                /**
+                 * @description Cada reporte declara sus agrupaciones y, si le llega una que no
+                 *     tiene, usa la primera suya. Una lista aquí se desfasaba: le
+                 *     faltó `especialidad` y la gestión de turnos daba 422.
+                 */
+                agrupacion?: string | null;
+            };
+            header?: never;
+            path: {
+                clave: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "reporteDispensario.pdf": {
+        parameters: {
+            query: {
+                desde: string;
+                /**
+                 * @description Hasta un año: un reporte nominal de varios años no se revisa
+                 *     en pantalla y es justo el que no debería salir de una vez.
+                 */
+                hasta: string;
+                profesional_id?: number | null;
+                especialidad?: components["schemas"]["EspecialidadAtencion"];
+                tipo_paciente?: "servidor" | "familiar" | null;
+                unidad_administrativa_id?: number | null;
+                /**
+                 * @description Cada reporte declara sus agrupaciones y, si le llega una que no
+                 *     tiene, usa la primera suya. Una lista aquí se desfasaba: le
+                 *     faltó `especialidad` y la gestión de turnos daba 422.
+                 */
+                agrupacion?: string | null;
+            };
+            header?: never;
+            path: {
+                clave: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "reporteDispensario.show": {
+        parameters: {
+            query: {
+                desde: string;
+                /**
+                 * @description Hasta un año: un reporte nominal de varios años no se revisa
+                 *     en pantalla y es justo el que no debería salir de una vez.
+                 */
+                hasta: string;
+                profesional_id?: number | null;
+                especialidad?: components["schemas"]["EspecialidadAtencion"];
+                tipo_paciente?: "servidor" | "familiar" | null;
+                unidad_administrativa_id?: number | null;
+                /**
+                 * @description Cada reporte declara sus agrupaciones y, si le llega una que no
+                 *     tiene, usa la primera suya. Una lista aquí se desfasaba: le
+                 *     faltó `especialidad` y la gestión de turnos daba 422.
+                 */
+                agrupacion?: string | null;
+            };
+            header?: never;
+            path: {
+                clave: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Operación exitosa.";
+                        datos: {
+                            columnas: {
+                                clave: string;
+                                titulo: string;
+                            }[];
+                            filas: unknown[];
+                            total: number;
+                            recortado: boolean;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "reporteSiithSut.movimientos": {
@@ -25242,7 +25960,18 @@ export interface operations {
     };
     "riesgos.index": {
         parameters: {
-            query?: never;
+            query?: {
+                puesto_id?: number | null;
+                estado?: boolean | null;
+                por_pagina?: number | null;
+                /**
+                 * @description `page` no va en `filtros()`: lo lee el paginador de Laravel
+                 *     directamente de la petición. Se valida igual para que el
+                 *     contrato del listado esté completo y no quede un parámetro sin
+                 *     reglas al lado de los que sí las tienen.
+                 */
+                page?: number | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -25272,6 +26001,7 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "riesgos.store": {
@@ -25891,6 +26621,20 @@ export interface operations {
             };
         };
         responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Signos vitales corregidos.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -25900,7 +26644,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Signos vitales registrados exitosamente.";
-                        datos: components["schemas"]["SolicitudConstantesVitales"];
+                        datos: string;
                         meta: null;
                     };
                 };
@@ -25956,6 +26700,33 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "solicitudCertificacion.cancelar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CancelarSolicitudCertificacionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "solicitudCertificacion.index": {
         parameters: {
             query?: {
@@ -25964,6 +26735,7 @@ export interface operations {
                 servidor_id?: string;
                 origen?: string;
                 unidad_administrativa_id?: string;
+                /** @description Un rango y no `whereYear`, que no aprovecha el índice. */
                 anio?: number;
                 per_page?: number;
             };
@@ -26058,36 +26830,10 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Proceso iniciado correctamente.";
-                        datos: string;
-                        meta: null;
-                    };
+                    "application/json": Record<string, never>;
                 };
             };
             401: components["responses"]["AuthenticationException"];
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Debe registrarse la atención de enfermería (signos vitales) antes de iniciar el FEMO.";
-                        datos: null;
-                        errores: null;
-                    } | {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "La solicitud no está en estado pendiente.";
-                        datos: null;
-                        errores: null;
-                    };
-                };
-            };
         };
     };
     "solicitudCertificacion.completar": {
@@ -26099,33 +26845,17 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": {
-                    ficha_femo_id?: number | null;
-                    /** @enum {string} */
-                    dictamen: "apto" | "apto_con_restricciones" | "no_apto";
-                    observacion_medica?: string | null;
-                };
-            };
-        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Solicitud completada con dictamen médico.";
-                        datos: string;
-                        meta: null;
-                    };
+                    "application/json": Record<string, never>;
                 };
             };
             401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
         };
     };
     "solicitudCertificacion.confirmarIncorporacion": {
@@ -26177,6 +26907,12 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "La incorporación de este candidato ya fue confirmada.";
+                        datos: null;
+                        errores: null;
+                    } | {
                         exito: boolean;
                         /** @constant */
                         mensaje: "El aspirante no tiene un puesto asignado y la convocatoria tampoco lo define.";
@@ -26372,6 +27108,76 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "tableroSaludOcupacional.index": {
+        parameters: {
+            query?: {
+                anio?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Operación exitosa.";
+                        datos: {
+                            anio: number;
+                            bandeja: {
+                                /**
+                                 * @description Llegan solas del cese: si se acumulan, alguien sale sin su
+                                 *     evaluación de retiro.
+                                 */
+                                pendientes: number;
+                                /**
+                                 * @description Llegan solas del cese: si se acumulan, alguien sale sin su
+                                 *     evaluación de retiro.
+                                 */
+                                en_proceso: number;
+                                /**
+                                 * @description Llegan solas del cese: si se acumulan, alguien sale sin su
+                                 *     evaluación de retiro.
+                                 */
+                                vencidas: number;
+                                /**
+                                 * @description Esperan a Enfermería: el médico no puede iniciarlas todavía.
+                                 *     Llegan solas del cese: si se acumulan, alguien sale sin su
+                                 *     evaluación de retiro.
+                                 */
+                                sin_triaje: number;
+                                /**
+                                 * @description Llegan solas del cese: si se acumulan, alguien sale sin su
+                                 *     evaluación de retiro.
+                                 *     Llegan solas del cese: si se acumulan, alguien sale sin su
+                                 *     evaluación de retiro.
+                                 */
+                                retiros: number;
+                            };
+                            antiguedad: unknown[];
+                            abiertas_por_tipo: {
+                                [key: string]: number;
+                            };
+                            aptitud: {
+                                [key: string]: number;
+                            };
+                            diagnosticos: unknown[];
+                            factores_riesgo: unknown[];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
             422: components["responses"]["ValidationException"];
         };
     };
