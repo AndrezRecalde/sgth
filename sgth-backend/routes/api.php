@@ -355,13 +355,18 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // personal— eso se habría extendido al expediente de cualquiera, así que
         // la escritura se ancla aquí: quien archiva un documento en el
         // expediente es Talento Humano.
+        //
+        // Desde el 2026-10-03 el asistente también SUBE (decisión de Talento
+        // Humano, «por el momento», pendiente de reforzar): veía el botón y
+        // recibía 403, aunque en Declaraciones sí podía subir. BORRAR sigue
+        // siendo solo de admin-uath.
         Route::prefix('servidores/{servidorId}')->group(function () {
             Route::get('documentos',
                 [DocumentoServidorController::class, 'index'])
                 ->name('documentos.index');
             Route::post('documentos',
                 [DocumentoServidorController::class, 'store'])
-                ->middleware('role:admin-uath')
+                ->middleware('role:admin-uath|asistente-uath')
                 ->name('documentos.store');
             Route::delete('documentos/{documentoId}',
                 [DocumentoServidorController::class, 'destroy'])

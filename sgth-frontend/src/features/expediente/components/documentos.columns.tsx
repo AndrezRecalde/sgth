@@ -40,7 +40,8 @@ function toneVencimiento(fecha: string): 'danger' | 'warning' | undefined {
 
 type Handlers = {
   onDescargar: (documento: DocumentoServidor) => void
-  onDelete: (id: number) => void
+  /** Sin él no se ofrece «Eliminar»: borrar es solo de admin-uath. */
+  onDelete?: (id: number) => void
 }
 
 export const getDocumentosColumns = (
@@ -97,7 +98,7 @@ export const getDocumentosColumns = (
           icon: <IconDownload size={14} />,
           onClick: () => onDescargar(doc),
         },
-        {
+        ...(onDelete ? [{
           label: 'Eliminar',
           icon: <IconTrash size={14} />,
           color: 'red',
@@ -107,7 +108,7 @@ export const getDocumentosColumns = (
             destructiva: true,
             onConfirm: () => onDelete(doc.id),
           }),
-        },
+        }] : []),
       ]} />
     ),
   },
