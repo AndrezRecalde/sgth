@@ -49,6 +49,9 @@ class ContratoServidorService
             ->with([
                 'unidadAdministrativa:id,nombre',
                 'puesto.cargo:id,nombre',
+                // La partida que paga es la del contrato; la del puesto solo
+                // respalda a los vínculos anteriores a esa columna.
+                'partidaPresupuestaria:id,codigo',
                 'puesto.partidaPresupuestaria:id,codigo',
                 'cubreMovimiento:id,servidor_id,tipo_movimiento,subtipo_movimiento,fecha_fin',
                 'cubreMovimiento.servidor:id,nombre,apellido',

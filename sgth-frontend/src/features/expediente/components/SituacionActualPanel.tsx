@@ -6,6 +6,7 @@ import { SectionHeading } from '@/components/ui'
 import { getApiErrorMessage } from '@/types/api'
 import { useServidor } from '../hooks/useServidor'
 import { BloqueDetalle } from './BloqueDetalle'
+import { partidaDelVinculo } from '../utils/partidaPorModalidad'
 
 interface Props {
   servidorId: number
@@ -115,7 +116,7 @@ export function SituacionActualPanel({
             <Grid.Col span={{ base: 12, xs: 6 }}>
               <Campo
                 etiqueta="Partida presupuestaria"
-                valor={puesto?.partida_presupuestaria?.codigo}
+                valor={partidaDelVinculo(contrato)}
               />
             </Grid.Col>
           </>

@@ -627,13 +627,19 @@ export type ContratoConRelaciones = ContratoServidor & {
       nombre?:               string
       denominacion_generica?: string
     } | null
-    // La partida cuelga del puesto, no del contrato: al reubicar a alguien
-    // por traslado o traspaso, la partida acompaña al puesto nuevo.
+    // La partida del puesto es solo la sugerencia al registrar el vínculo, y
+    // el respaldo de los anteriores a `contratos_servidor.partida_presupuestaria_id`.
+    // La que paga es la del contrato: ver `partidaDelVinculo`.
     partida_presupuestaria?: {
       id: number
       codigo?: string | null
       descripcion?: string | null
     } | null
+  } | null
+  /** La partida que paga este vínculo; depende de la modalidad, no del puesto. */
+  partida_presupuestaria?: {
+    id: number
+    codigo?: string | null
   } | null
   estado?:         string
   motivo_fin?:     string | null
