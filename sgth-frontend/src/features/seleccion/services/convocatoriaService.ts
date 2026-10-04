@@ -21,6 +21,8 @@ export interface Postulante {
   cv_ruta?:                string | null
   estado:                  string
   evaluacion?:             EvaluacionSeleccion | null
+  /** La última solicitud al Dispensario: decide si se ofrece «Confirmar incorporación». */
+  solicitud_certificacion?: { id: number; estado: string; dictamen?: string | null } | null
   documentos?:             DocumentoPostulante[]
 }
 
@@ -207,9 +209,4 @@ export const convocatoriaService = {
     api.delete<ApiResponse<unknown>>(
       `/seleccion/convocatorias/${convocatoriaId}/postulantes/${postulanteId}/documentos/${documentoId}`
     ).then(r => r.data.datos),
-
-  confirmarGanador: (convocatoriaId: number) =>
-    api.post<ApiResponse<unknown>>(
-      `/seleccion/convocatorias/${convocatoriaId}/confirmar-ganador`
-    ).then(r => r.data),
 }

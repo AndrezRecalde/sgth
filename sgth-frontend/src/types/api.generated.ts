@@ -4572,7 +4572,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Descarga un documento del postulante: vive en el disco privado */
+        get: operations["postulante.descargarDocumento"];
         put?: never;
         post?: never;
         delete: operations["postulante.eliminarDocumento"];
@@ -5194,22 +5195,6 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["seleccion.declararGanador"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/seleccion/convocatorias/{convocatoriaId}/confirmar-ganador": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["seleccion.confirmarGanador"];
         delete?: never;
         options?: never;
         head?: never;
@@ -7392,7 +7377,6 @@ export interface components {
             postulante_id: number;
             tipo: string;
             nombre_archivo: string;
-            ruta: string;
             extension: string | null;
             tamano_bytes: number | null;
             /** Format: date-time */
@@ -15472,6 +15456,11 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /**
+             * @description Sin `all=1` (2026-10-04): devolvía todas las convocatorias de una vez
+             *     y ninguna pantalla lo usaba. Y `per_page` con tope, para que nadie
+             *     pida cien mil filas en una sola respuesta.
+             */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -15481,7 +15470,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Operación exitosa.";
-                        datos: components["schemas"]["Convocatoria"][] | {
+                        datos: {
                             current_page: number;
                             data: components["schemas"]["Convocatoria"][];
                             first_page_url: string | null;
@@ -23806,6 +23795,12 @@ export interface operations {
                     puesto_id?: number | null;
                     /** Format: date-time */
                     fecha_inscripcion?: string | null;
+                    /**
+                     * @description Diez dígitos, como en el Expediente (StoreServidorBasicoRequest):
+                     *     la columna es varchar(10), así que `max:20` dejaba pasar una
+                     *     cédula de 11 caracteres hasta la base y daba un 500. Y al
+                     *     incorporar, este valor pasa a `servidores`.
+                     */
                     cedula: string;
                     nombres: string;
                     segundo_nombre?: string | null;
@@ -23989,6 +23984,44 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             422: components["responses"]["ValidationException"];
+        };
+    };
+    "postulante.descargarDocumento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                convocatoriaId: number;
+                postulanteId: number;
+                documentoId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "No se encontró el archivo del documento.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
         };
     };
     "postulante.eliminarDocumento": {
@@ -26206,53 +26239,6 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             422: components["responses"]["ValidationException"];
-        };
-    };
-    "seleccion.confirmarGanador": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                convocatoriaId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        mensaje: string;
-                        datos: string;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "No se encontró ningún ganador potencial para esta convocatoria.";
-                        datos: null;
-                        errores: null;
-                    } | {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "La convocatoria debe estar en evaluación médica para confirmar al ganador.";
-                        datos: null;
-                        errores: null;
-                    };
-                };
-            };
         };
     };
     "servidores.sinUsuario": {

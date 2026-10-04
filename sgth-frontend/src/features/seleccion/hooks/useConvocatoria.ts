@@ -167,21 +167,3 @@ export function useEnviarAlDispensario(convocatoriaId: number) {
     onError: notificar.alFallar('No se pudo enviar al Dispensario'),
   })
 }
-
-export function useConfirmarGanador(convocatoriaId: number) {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: () =>
-      convocatoriaService.confirmarGanador(convocatoriaId),
-    onSuccess: () => {
-      notificar.exito(
-        'Ganador confirmado',
-        'El candidato fue declarado ganador oficial. La convocatoria ha sido finalizada.',
-        { autoClose: 6000 },
-      )
-      qc.invalidateQueries({ queryKey: ['convocatoria', convocatoriaId] })
-      qc.invalidateQueries({ queryKey: ['postulantes', convocatoriaId] })
-    },
-    onError: notificar.alFallar('No se pudo confirmar al ganador'),
-  })
-}

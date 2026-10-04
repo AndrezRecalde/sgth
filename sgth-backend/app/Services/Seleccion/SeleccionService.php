@@ -128,6 +128,49 @@ final class SeleccionService implements SeleccionServiceInterface
         });
     }
 
+    /**
+     * El cierre del concurso formal (decisión de TH, 2026-10-04). Antes lo
+     * hacía «Declarar ganador oficial» (confirmarGanador), que marcaba
+     * ganador a cualquiera en evaluación médica —también a un «no apto»— y
+     * finalizaba sin crear el expediente ni el ingreso: un concurso formal
+     * nunca terminaba en una persona contratada.
+     *
+     * Ahora cada ganador se incorpora uno por uno, con su dictamen de aptitud
+     * (SolicitudCertificacionController::confirmarIncorporacion), y cuando ya
+     * no queda ninguno por resolver la convocatoria se finaliza sola. Los que
+     * esperaban en la lista de espera quedan como no seleccionados.
+     *
+     * Se llama dentro de la transacción de la incorporación.
+     */
+    public function finalizarSiNoQuedanGanadores(int $convocatoriaId, int $userId): bool
+    {
+        $convocatoria = Convocatoria::lockForUpdate()->findOrFail($convocatoriaId);
+
+        if ($convocatoria->es_contenedor_permanente
+            || $convocatoria->estado !== EstadoConvocatoria::EN_EVALUACION_MEDICA) {
+            return false;
+        }
+
+        $pendientes = Postulante::where('convocatoria_id', $convocatoria->id)
+            ->where('estado', EstadoPostulante::GANADOR_POTENCIAL->value)
+            ->exists();
+
+        if ($pendientes) {
+            return false;
+        }
+
+        $convocatoria->update([
+            'estado'     => EstadoConvocatoria::FINALIZADA,
+            'updated_by' => $userId,
+        ]);
+
+        Postulante::where('convocatoria_id', $convocatoria->id)
+            ->where('estado', EstadoPostulante::LISTA_ESPERA->value)
+            ->update(['estado' => EstadoPostulante::NO_SELECCIONADO->value]);
+
+        return true;
+    }
+
     private function assertConcursoAbierto(Convocatoria $convocatoria): void
     {
         if (in_array($convocatoria->estado, [

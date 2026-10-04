@@ -1,21 +1,13 @@
 'use client'
 
-import { TONO_POSTULANTE } from '../services/convocatoriaService'
-import { confirmar, StatusBadge } from '@/components/ui'
-import {
-  Stack, Text, Group, Card,
-  Button, ThemeIcon, Progress,
-  Alert, Skeleton, Checkbox, Box,
-} from '@mantine/core'
-import {
-  IconTrophy, IconMedal, IconMedal2,
-  IconInfoCircle, IconSend,
-} from '@tabler/icons-react'
+import { Alert, Box, Button, Card, Group, Skeleton, Stack, Text } from '@mantine/core'
+import { IconInfoCircle, IconSend, IconTrophy } from '@tabler/icons-react'
 import { useMemo, useState } from 'react'
-import {
-  usePostulantes,
-  useEnviarAlDispensario,
-} from '../hooks/useConvocatoria'
+import { confirmar, StatusBadge } from '@/components/ui'
+import { useAuth } from '@/hooks/useAuth'
+import { useConfirmarIncorporacion } from '@/features/dispensario/hooks/useSolicitudCertificacion'
+import { usePostulantes, useEnviarAlDispensario } from '../hooks/useConvocatoria'
+import { RankingCandidatoCard, nombreCandidato } from './RankingCandidatoCard'
 import type { Postulante } from '../services/convocatoriaService'
 
 interface Props {
@@ -25,75 +17,68 @@ interface Props {
   vacantes?:           number
 }
 
-function PosicionIcon({ pos }: { pos: number }) {
-  if (pos === 1) return (
-    <ThemeIcon size="md" color="amber.4" variant="filled" radius="xl">
-      <IconTrophy size={14} />
-    </ThemeIcon>
-  )
-  if (pos === 2) return (
-    <ThemeIcon size="md" color="slate.4" variant="filled" radius="xl">
-      <IconMedal size={14} />
-    </ThemeIcon>
-  )
-  if (pos === 3) return (
-    <ThemeIcon size="md" color="amber.8" variant="light" radius="xl">
-      <IconMedal2 size={14} />
-    </ThemeIcon>
-  )
-  return (
-    <ThemeIcon size="md" color="slate.4" variant="light" radius="xl">
-      <Text size="xs" fw={700}>{pos}</Text>
-    </ThemeIcon>
-  )
-}
-
-const ESTADO_LABELS: Record<string, string> = {
-  inscrito:           'Inscrito',
-  en_evaluacion:      'En evaluación',
-  aprobado:           'Aprobado',
-  reprobado:          'Reprobado',
-  seleccionado:       'Ganador',
-  ganador_potencial:  'En evaluación médica',
-  no_seleccionado:    'No seleccionado',
-  lista_espera:       'Lista de espera',
-  incorporado:        'Incorporado',
-}
-
 export function TabRanking({ convocatoriaId, estadoConvocatoria, vacantes = 1 }: Props) {
-  const { data: postulantes = [], isLoading } =
-    usePostulantes(convocatoriaId)
-  const enviar   = useEnviarAlDispensario(convocatoriaId)
+  const { data: postulantes = [], isLoading } = usePostulantes(convocatoriaId)
+  const enviar = useEnviarAlDispensario(convocatoriaId)
+  const incorporar = useConfirmarIncorporacion()
+  const { hasPermiso } = useAuth()
+  const puedeIncorporar = hasPermiso('gestionar-onboarding')
 
   const [seleccionados, setSeleccionados] = useState<number[]>([])
-
   const alternar = (id: number) =>
     setSeleccionados((previos) =>
-      previos.includes(id)
-        ? previos.filter((x) => x !== id)
-        : [...previos, id],
+      previos.includes(id) ? previos.filter((x) => x !== id) : [...previos, id],
     )
 
-  const ranking = useMemo(() => {
-    return [...postulantes]
-      .filter(p => p.evaluacion)
-      .sort((a, b) =>
-        (b.evaluacion?.puntaje_total ?? 0) -
-        (a.evaluacion?.puntaje_total ?? 0)
-      )
-  }, [postulantes])
-
-  const sinCalificar    = postulantes.filter(p => !p.evaluacion)
-  const enEvalMedica    = estadoConvocatoria === 'en_evaluacion_medica'
-  const finalizada      = estadoConvocatoria === 'finalizada'
-  const puedeEnviar     = !enEvalMedica && !finalizada
-  const ganadorPotencial = postulantes.find(
-    p => p.estado === 'ganador_potencial'
+  const ranking = useMemo(
+    () => [...postulantes]
+      .filter((p) => p.evaluacion)
+      .sort((a, b) => (b.evaluacion?.puntaje_total ?? 0) - (a.evaluacion?.puntaje_total ?? 0)),
+    [postulantes],
   )
 
-  const getNombreCompleto = (p: Postulante) =>
-    [p.apellidos, p.segundo_apellido, p.nombres, p.segundo_nombre]
-      .filter(Boolean).join(' ')
+  const sinCalificar = postulantes.filter((p) => !p.evaluacion)
+  const enEvalMedica = estadoConvocatoria === 'en_evaluacion_medica'
+  const finalizada = estadoConvocatoria === 'finalizada'
+  const puedeEnviar = !enEvalMedica && !finalizada
+  // Todos los enviados, no solo el primero: con dos o más vacantes el aviso
+  // nombraba a uno.
+  const enviados = postulantes.filter((p) => p.estado === 'ganador_potencial')
+
+  const confirmarIncorporacion = (p: Postulante) => {
+    const solicitudId = p.solicitud_certificacion?.id
+    if (!solicitudId) return
+    confirmar({
+      title: 'Confirmar incorporación',
+      message: (
+        <>
+          Se creará el expediente de servidor de <b>{nombreCandidato(p)}</b> con su
+          acción de ingreso en borrador. No se puede deshacer.
+        </>
+      ),
+      confirmLabel: 'Incorporar',
+      onConfirm: () => incorporar.mutate(solicitudId),
+    })
+  }
+
+  const enviarAlDispensario = () => {
+    const elegidos = ranking.filter((p) => seleccionados.includes(p.id))
+    confirmar({
+      title: 'Enviar al Dispensario Médico',
+      message: (
+        <>
+          Se enviará al Dispensario Médico a <b>{elegidos.length} candidato(s)</b>:
+          <Box component="ul" my="xs" pl="md">
+            {elegidos.map((p) => <li key={p.id}>{nombreCandidato(p)}</li>)}
+          </Box>
+          La convocatoria queda en espera de los dictámenes médicos. Los demás
+          aprobados pasan a lista de espera.
+        </>
+      ),
+      confirmLabel: 'Enviar',
+      onConfirm: () => enviar.mutate(seleccionados, { onSuccess: () => setSeleccionados([]) }),
+    })
+  }
 
   if (isLoading) {
     return (
@@ -108,50 +93,39 @@ export function TabRanking({ convocatoriaId, estadoConvocatoria, vacantes = 1 }:
   return (
     <Stack gap="md" p="md">
       {finalizada && (
-        <Alert color="emerald" variant="light"
-          icon={<IconTrophy size={16} />}>
+        <Alert color="emerald" variant="light" icon={<IconTrophy size={16} />}>
           <Text size="xs">
-            Esta convocatoria fue finalizada. El ganador
-            ha sido declarado oficialmente.
+            Esta convocatoria fue finalizada: sus ganadores fueron incorporados.
           </Text>
         </Alert>
       )}
 
-      {enEvalMedica && (
-        <Alert color="amethyst" variant="light"
-          icon={<IconInfoCircle size={16} />}>
+      {enEvalMedica && enviados.length > 0 && (
+        <Alert color="ocean" variant="light" icon={<IconInfoCircle size={16} />}>
           <Text size="xs">
-            El candidato{' '}
-            <strong>
-              {ganadorPotencial
-                ? getNombreCompleto(ganadorPotencial)
-                : ''}
-            </strong>
-            {' '}está en evaluación médica en el Dispensario.
-            Una vez que el médico emita el dictamen de aptitud
-            y RRHH confirme la incorporación, podrá declararlo
-            ganador oficial.
+            En evaluación médica: <strong>{enviados.map(nombreCandidato).join(', ')}</strong>.
+            Cuando el Dispensario emita el dictamen de aptitud, Talento Humano
+            confirma aquí la incorporación de cada uno. Al incorporar al último,
+            la convocatoria se finaliza sola.
           </Text>
         </Alert>
       )}
 
       {!enEvalMedica && !finalizada && ranking.length === 0 && (
-        <Alert color="amber" variant="light"
-          icon={<IconInfoCircle size={16} />}>
+        <Alert color="amber" variant="light" icon={<IconInfoCircle size={16} />}>
           <Text size="xs">
-            Ningún candidato ha sido calificado aún.
-            Califique a los candidatos para generar el ranking.
+            Ningún candidato ha sido calificado aún. Califique a los candidatos
+            para generar el ranking.
           </Text>
         </Alert>
       )}
 
       {sinCalificar.length > 0 && !finalizada && (
-        <Alert color="ocean" variant="light"
-          icon={<IconInfoCircle size={16} />}>
+        <Alert color="ocean" variant="light" icon={<IconInfoCircle size={16} />}>
           <Text size="xs">
-            {sinCalificar.length} candidato
-            {sinCalificar.length !== 1 ? 's' : ''} aún
-            no han sido calificados.
+            {sinCalificar.length === 1
+              ? '1 candidato aún no ha sido calificado.'
+              : `${sinCalificar.length} candidatos aún no han sido calificados.`}
           </Text>
         </Alert>
       )}
@@ -159,13 +133,11 @@ export function TabRanking({ convocatoriaId, estadoConvocatoria, vacantes = 1 }:
       {ranking.length > 0 && (
         <Stack gap="xs">
           <Group justify="space-between">
-            <Text size="xs" fw={600} c="dimmed" tt="uppercase"
-              style={{ letterSpacing: '0.05em' }}>
+            <Text size="xs" fw={600} c="dimmed" tt="uppercase" style={{ letterSpacing: '0.05em' }}>
               Ranking de candidatos
             </Text>
             <StatusBadge>
-              {ranking.length} calificado
-              {ranking.length !== 1 ? 's' : ''}
+              {ranking.length} calificado{ranking.length !== 1 ? 's' : ''}
             </StatusBadge>
           </Group>
 
@@ -174,9 +146,8 @@ export function TabRanking({ convocatoriaId, estadoConvocatoria, vacantes = 1 }:
               <Group justify="space-between" wrap="nowrap">
                 <div>
                   <Text size="sm" fw={600}>
-                    {seleccionados.length} de {vacantes} vacante
-                    {vacantes !== 1 ? 's' : ''} seleccionada
-                    {seleccionados.length !== 1 ? 's' : ''}
+                    {seleccionados.length} de {vacantes} vacante{vacantes !== 1 ? 's' : ''}{' '}
+                    seleccionada{seleccionados.length !== 1 ? 's' : ''}
                   </Text>
                   <Text size="xs" c="dimmed">
                     Cada candidato recibe su propia solicitud de certificación médica.
@@ -186,31 +157,7 @@ export function TabRanking({ convocatoriaId, estadoConvocatoria, vacantes = 1 }:
                   size="xs"
                   leftSection={<IconSend size={13} />}
                   loading={enviar.isPending}
-                  onClick={() => {
-                    const elegidos = ranking
-                      .filter((p) => seleccionados.includes(p.id))
-
-                    confirmar({
-                      title:   'Enviar al Dispensario Médico',
-                      message: (
-                        <>
-                          Se enviará al Dispensario Médico a{' '}
-                          <b>{elegidos.length} candidato(s)</b>:
-                          <Box component="ul" my="xs" pl="md">
-                            {elegidos.map((p) => (
-                              <li key={p.id}>{getNombreCompleto(p)}</li>
-                            ))}
-                          </Box>
-                          La convocatoria queda en espera de los dictámenes
-                          médicos. Los demás aprobados pasan a lista de espera.
-                        </>
-                      ),
-                      confirmLabel: 'Enviar',
-                      onConfirm: () => enviar.mutate(seleccionados, {
-                        onSuccess: () => setSeleccionados([]),
-                      }),
-                    })
-                  }}
+                  onClick={enviarAlDispensario}
                 >
                   Enviar al Dispensario
                 </Button>
@@ -218,87 +165,20 @@ export function TabRanking({ convocatoriaId, estadoConvocatoria, vacantes = 1 }:
             </Card>
           )}
 
-          {ranking.map((p, i) => {
-            const total   = p.evaluacion?.puntaje_total ?? 0
-            const aprueba = Number(total) >= 70
-            const esPrimero = i === 0
-
-            return (
-              <Card
-                key={p.id}
-                withBorder
-                radius="md"
-                p="sm"
-                style={{
-                  borderColor: esPrimero && aprueba
-                    ? 'var(--mantine-color-amber-4)'
-                    : undefined,
-                  borderWidth: esPrimero && aprueba ? 2 : 1,
-                }}
-              >
-                <Stack gap="xs">
-                  <Group justify="space-between" wrap="nowrap">
-                    <Group gap="sm" wrap="nowrap">
-                      <PosicionIcon pos={i + 1} />
-                      <Stack gap={0}>
-                        <Text size="sm" fw={600}>
-                          {getNombreCompleto(p)}
-                        </Text>
-                        <Text size="xs" c="dimmed">
-                          {p.cedula}
-                        </Text>
-                      </Stack>
-                    </Group>
-                    <Group gap="xs" wrap="nowrap">
-                      <StatusBadge tone={TONO_POSTULANTE[p.estado] ?? 'neutral'}>
-                        {ESTADO_LABELS[p.estado] ?? p.estado}
-                      </StatusBadge>
-                      <StatusBadge tone={aprueba ? 'success' : 'danger'} size="lg">
-                        {Number(total).toFixed(2)} pts
-                      </StatusBadge>
-                    </Group>
-                  </Group>
-
-                  <Group gap="xs">
-                    <Text size="xs" c="dimmed">
-                      Méritos: {Number(
-                        p.evaluacion?.puntaje_meritos ?? 0
-                      ).toFixed(2)}
-                    </Text>
-                    <Text size="xs" c="dimmed">·</Text>
-                    <Text size="xs" c="dimmed">
-                      Oposición: {Number(
-                        p.evaluacion?.puntaje_oposicion ?? 0
-                      ).toFixed(2)}
-                    </Text>
-                  </Group>
-
-                  <Progress
-                    value={Number(total)}
-                    color={aprueba ? undefined : 'red'}
-                    size="xs"
-                    radius="xl"
-                  />
-
-                  {aprueba && puedeEnviar && (
-                    <Group justify="flex-end">
-                      <Checkbox
-                        label="Declarar ganador"
-                        checked={seleccionados.includes(p.id)}
-                        onChange={() => alternar(p.id)}
-                        // Sin cupo restante solo se puede desmarcar.
-                        disabled={
-                          !seleccionados.includes(p.id)
-                          && seleccionados.length >= vacantes
-                        }
-                        size="sm"
-                      />
-                    </Group>
-                  )}
-                </Stack>
-              </Card>
-            )
-          })}
+          {ranking.map((p, i) => (
+            <RankingCandidatoCard
+              key={p.id}
+              p={p}
+              posicion={i + 1}
+              seleccionable={puedeEnviar}
+              seleccionado={seleccionados.includes(p.id)}
+              sinCupo={seleccionados.length >= vacantes}
+              onAlternar={alternar}
+              puedeIncorporar={puedeIncorporar}
+              incorporando={incorporar.isPending && incorporar.variables === p.solicitud_certificacion?.id}
+              onIncorporar={confirmarIncorporacion}
+            />
+          ))}
         </Stack>
       )}
     </Stack>

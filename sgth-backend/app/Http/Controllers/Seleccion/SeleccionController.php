@@ -3,16 +3,11 @@
 namespace App\Http\Controllers\Seleccion;
 
 use App\Contracts\Seleccion\SeleccionServiceInterface;
-use App\Enums\EstadoConvocatoria;
-use App\Enums\EstadoPostulante;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Seleccion\CalificarPostulanteRequest;
 use App\Http\Requests\Seleccion\DeclararGanadorRequest;
 use App\Http\Responses\ApiResponse;
-use App\Models\Seleccion\Convocatoria;
-use App\Models\Seleccion\Postulante;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class SeleccionController extends Controller
 {
@@ -47,43 +42,12 @@ class SeleccionController extends Controller
         );
     }
 
-    public function confirmarGanador(
-        int $convocatoriaId,
-        Request $request
-    ): JsonResponse {
-        $convocatoria = Convocatoria::findOrFail($convocatoriaId);
-
-        if ($convocatoria->estado !== EstadoConvocatoria::EN_EVALUACION_MEDICA) {
-            return ApiResponse::error(
-                'La convocatoria debe estar en evaluación médica para confirmar al ganador.',
-                null, 422
-            );
-        }
-
-        $ganadores = Postulante::where('convocatoria_id', $convocatoriaId)
-            ->where('estado', EstadoPostulante::GANADOR_POTENCIAL->value)
-            ->get();
-
-        if ($ganadores->isEmpty()) {
-            return ApiResponse::error(
-                'No se encontró ningún ganador potencial para esta convocatoria.',
-                null, 422
-            );
-        }
-
-        $convocatoria->update([
-            'estado'     => EstadoConvocatoria::FINALIZADA,
-            'updated_by' => $request->user()->id,
-        ]);
-
-        Postulante::whereIn('id', $ganadores->pluck('id'))
-            ->update(['estado' => EstadoPostulante::SELECCIONADO->value]);
-
-        $cantidad = $ganadores->count();
-
-        return ApiResponse::ok(
-            $ganadores->map->fresh(),
-            "{$cantidad} ganador(es) confirmado(s). La convocatoria ha sido finalizada."
-        );
-    }
+    /*
+    | Sin `confirmarGanador` desde el 2026-10-04 (decisión de TH). Declaraba
+    | «ganador oficial» a todo el que estaba en evaluación médica sin mirar el
+    | dictamen —también a un no apto— y finalizaba la convocatoria sin crear
+    | el expediente ni el ingreso. El concurso formal se cierra ahora al
+    | incorporar a su último ganador:
+    | SeleccionService::finalizarSiNoQuedanGanadores().
+    */
 }
