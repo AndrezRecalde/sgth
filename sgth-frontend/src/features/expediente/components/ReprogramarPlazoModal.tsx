@@ -9,6 +9,7 @@ import { useContainedInput } from '@/hooks/useContainedInput'
 import { useContratoMutations } from '../hooks/useContratoMutations'
 import type { ContratoConRelaciones } from '@/types/api'
 import { formatFecha, toDateValue, fromDateValueOrNull } from '@/lib/fecha'
+import { etiquetaNombramiento } from '../utils/tipoNombramientoOptions'
 
 /**
  * Mueve la fecha de vencimiento de un vínculo vigente.
@@ -29,23 +30,33 @@ interface Props {
   onClose: () => void
   servidorId: number
   contrato: ContratoConRelaciones | null
+  /** Si el vínculo cubre una ausencia: hasta cuándo dura esa ausencia. */
+  hastaReemplazo?: string | null
 }
 
-const SIN_PLAZO_PROHIBIDO = 'servicios_profesionales'
+/**
+ * Las modalidades que no pueden quedarse sin término. Espejo de
+ * `TipoNombramiento::exigePlazo()`: hasta el 2026-10-03 aquí solo estaba
+ * Servicios Profesionales, y un ocasional quedaba indefinido.
+ */
+const EXIGEN_PLAZO = ['servicios_ocasionales', 'servicios_profesionales']
 
 /** Como formatFecha, pero un contrato sin fecha de fin no tiene plazo. */
 const legible = (f?: string | null): string => (f ? formatFecha(f) : 'sin plazo')
 
-export function ReprogramarPlazoModal({ opened, onClose, servidorId, contrato }: Props) {
+export function ReprogramarPlazoModal({
+  opened, onClose, servidorId, contrato, hastaReemplazo,
+}: Props) {
   const contained = useContainedInput()
   const { reprogramarPlazo } = useContratoMutations(servidorId)
 
-  const [fechaFin, setFechaFin] = useState<Date | null>(null)
+  // Arranca en el vencimiento actual: vacío significa «sin plazo», y quien solo
+  // escribía el motivo dejaba el vínculo indefinido sin haberlo elegido.
+  const [fechaFin, setFechaFin] = useState<Date | null>(toDateValue(contrato?.fecha_fin))
   const [motivo, setMotivo] = useState('')
   const [errores, setErrores] = useState<{ fecha?: string; motivo?: string }>({})
 
   const cerrar = () => {
-    setFechaFin(null)
     setMotivo('')
     setErrores({})
     onClose()
@@ -53,20 +64,28 @@ export function ReprogramarPlazoModal({ opened, onClose, servidorId, contrato }:
 
   if (!contrato) return null
 
-  const exigePlazo = contrato.tipo_nombramiento === SIN_PLAZO_PROHIBIDO
-  const inicio = toDateValue(contrato.fecha_inicio)
+  const tipo = contrato.tipo_nombramiento ?? ''
+  const exigePlazo = EXIGEN_PLAZO.includes(tipo) || !!hastaReemplazo
+  const inicio = contrato.fecha_inicio?.slice(0, 10) ?? null
   const nueva = fromDateValueOrNull(fechaFin)
 
   const guardar = () => {
     const nuevos: typeof errores = {}
 
-    // El backend impide las dos cosas; avisarlo aquí evita un viaje que ya se
-    // sabe que va a fallar.
+    // El backend impide todo esto; avisarlo aquí evita un viaje que ya se sabe
+    // que va a fallar. Se comparan las fechas como texto «AAAA-MM-DD»: con
+    // `new Date('2026-01-01')` —medianoche UTC, las 19:00 del día anterior en
+    // Guayaquil— elegir el mismo día del inicio salía como «anterior».
     if (exigePlazo && !nueva) {
-      nuevos.fecha = 'Un contrato de Servicios Profesionales no puede quedarse sin vencimiento.'
+      nuevos.fecha = hastaReemplazo
+        ? 'Un reemplazo no puede quedarse sin vencimiento.'
+        : `Un vínculo de ${etiquetaNombramiento(tipo)} no puede quedarse sin vencimiento.`
     }
-    if (nueva && inicio && new Date(nueva) < inicio) {
+    if (nueva && inicio && nueva < inicio) {
       nuevos.fecha = 'La fecha de fin no puede ser anterior al inicio del contrato.'
+    }
+    if (nueva && hastaReemplazo && nueva > hastaReemplazo) {
+      nuevos.fecha = `El reemplazo no puede ir más allá del ${formatFecha(hastaReemplazo)}, cuando termina la ausencia que cubre.`
     }
     if (motivo.trim().length < 5) {
       nuevos.motivo = 'Explique el cambio: si es una prórroga o una corrección.'
@@ -102,18 +121,19 @@ export function ReprogramarPlazoModal({ opened, onClose, servidorId, contrato }:
           <Text size="sm" fw={600}>{legible(contrato.fecha_fin)}</Text>
           <Text size="xs" c="dimmed">
             Contrato desde el {legible(contrato.fecha_inicio)}
+            {hastaReemplazo && ` · cubre una ausencia hasta el ${formatFecha(hastaReemplazo)}`}
           </Text>
         </div>
 
         <DatePickerInput
           label="Nuevo vencimiento"
           placeholder={exigePlazo ? 'Seleccionar fecha' : 'Vacío = sin plazo'}
-          valueFormat="YYYY-MM-DD"
+          valueFormat="DD/MM/YYYY"
           clearable={!exigePlazo}
-          minDate={inicio ?? undefined}
-          // Este modal se abre dentro del drawer del expediente, y el
-          // calendario quedaba por debajo de ambos: hay que levantarlo sobre
-          // la pila de capas que ya hay encima.
+          minDate={toDateValue(inicio) ?? undefined}
+          maxDate={toDateValue(hastaReemplazo) ?? undefined}
+          // El calendario se abre sobre un modal: hay que levantarlo por
+          // encima de la pila de capas que ya hay.
           popoverProps={{ withinPortal: true, zIndex: 1100 }}
           {...contained}
           value={fechaFin}
@@ -126,8 +146,8 @@ export function ReprogramarPlazoModal({ opened, onClose, servidorId, contrato }:
 
         {!exigePlazo && !nueva && (
           <Alert color="amber" variant="light" icon={<IconAlertTriangle size={16} />}>
-            Sin fecha de vencimiento el vínculo deja de tener término: no se
-            generará su Cesación de Funciones por plazo cumplido.
+            Sin fecha de vencimiento el vínculo deja de tener término: queda
+            vigente hasta que una acción de personal lo cierre.
           </Alert>
         )}
 

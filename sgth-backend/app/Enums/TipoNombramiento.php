@@ -31,6 +31,21 @@ enum TipoNombramiento: string
     }
 
     /**
+     * ¿Este vínculo no puede quedarse sin fecha de término?
+     *
+     * Los contratos de servicios ocasionales y profesionales se pactan con
+     * plazo. Hasta el 2026-10-03 la regla vivía en tres sitios con tres
+     * listas distintas —la carga inicial pedía plazo al ocasional, reprogramar
+     * solo al profesional, el ingreso a ninguno—, así que un ocasional podía
+     * quedarse indefinido. Servicios Profesionales, si no se indica, recibe el
+     * 31 de diciembre de su año al crearse.
+     */
+    public function exigePlazo(): bool
+    {
+        return in_array($this, [self::SERVICIOS_OCASIONALES, self::SERVICIOS_PROFESIONALES], true);
+    }
+
+    /**
      * Valor sugerido para 'puede_marcar' (marcación biométrica) al crear un
      * vínculo. Sigue la regla que dio Talento Humano: marcan los nombramientos
      * permanente, provisional y de servicios ocasionales.

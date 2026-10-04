@@ -1,215 +1,13 @@
 'use client'
 
-import type { SemanticTone } from '@/config/design.tokens'
 import { useState } from 'react'
-import {
-  Accordion, ActionIcon, Alert, Group, Paper, Stack, Text, Tooltip,
-} from '@mantine/core'
-import { IconBriefcase, IconCalendarCog, IconInfoCircle } from '@tabler/icons-react'
-import { DataState, DetailList, SectionCard, SectionHeading } from '@/components/ui'
+import { Accordion, Alert, Stack } from '@mantine/core'
+import { IconBriefcase, IconInfoCircle } from '@tabler/icons-react'
+import { DataState, SectionCard } from '@/components/ui'
 import { useActividadLaboral } from '../../hooks/useActividadLaboral'
-import { etiquetaNombramiento } from '../../utils/tipoNombramientoOptions'
-import { partidaDelVinculo } from '../../utils/partidaPorModalidad'
 import { ReprogramarPlazoModal } from '../ReprogramarPlazoModal'
-import type {
-  AccionSobreVinculo, VinculoConActividad,
-} from '../../services/actividadLaboralService'
-import type { ContratoConRelaciones, EstadoContrato } from '@/types/api'
-import { StatusBadge } from '@/components/ui'
-import { formatFecha, formatFechaHora } from '@/lib/fecha'
-
-const TONO_CONTRATO: Record<EstadoContrato, SemanticTone> = {
-  vigente: 'success',
-  terminado: 'neutral',
-  cancelado: 'danger',
-}
-
-const ESTADO_LABELS: Record<EstadoContrato, string> = {
-  vigente: 'Vigente',
-  terminado: 'Terminado',
-  cancelado: 'Cancelado',
-}
-
-function dinero(v?: string | number | null): string {
-  return v != null ? `$ ${Number(v).toFixed(2)}` : '—'
-}
-
-/** Resumen legible del cambio que produjo una acción. */
-function cambio(a: AccionSobreVinculo): string | null {
-  if (a.unidad_destino && a.unidad_destino !== a.unidad_origen) {
-    return `${a.unidad_origen ?? 'Sin unidad'} → ${a.unidad_destino}`
-  }
-  if (a.fecha_inicio) {
-    return `${formatFecha(a.fecha_inicio)} – ${a.fecha_fin ? formatFecha(a.fecha_fin) : 'sin fecha de fin'}`
-  }
-  return null
-}
-
-function FilaAccion({ accion }: { accion: AccionSobreVinculo }) {
-  const detalle = cambio(accion)
-
-  return (
-    <Paper withBorder p="xs" radius="sm">
-      <Group justify="space-between" wrap="nowrap" align="flex-start">
-        <div style={{ minWidth: 0 }}>
-          <Text size="sm" fw={500}>{accion.etiqueta ?? accion.tipo_movimiento}</Text>
-          {detalle && <Text size="xs" c="dimmed">{detalle}</Text>}
-        </div>
-        <div style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-          <Text size="xs">{formatFecha(accion.fecha_efectiva)}</Text>
-          {accion.codigo_registro && (
-            <Text size="xs" c="dimmed" ff="monospace">{accion.codigo_registro}</Text>
-          )}
-        </div>
-      </Group>
-    </Paper>
-  )
-}
-
-function Vinculo({
-  vinculo, onReprogramar,
-}: {
-  vinculo: VinculoConActividad
-  onReprogramar: (contrato: VinculoConActividad['contrato']) => void
-}) {
-  const c = vinculo.contrato
-  const estado = (c.estado ?? 'vigente') as EstadoContrato
-
-  // De todo lo auditado sobre el contrato, la reprogramación es la única que
-  // trae una explicación escrita por una persona. El alta y el cierre ya se
-  // leen en el resto de la tarjeta.
-  const reprogramaciones = (vinculo.cambios ?? []).filter((x) => x.motivo)
-
-  return (
-    <Accordion.Item value={String(c.id)}>
-      <Accordion.Control>
-        <Group justify="space-between" wrap="nowrap" pr="sm">
-          <div style={{ minWidth: 0 }}>
-            <Group gap="xs">
-              <Text fw={600} size="sm">
-                {etiquetaNombramiento(c.tipo_nombramiento)}
-              </Text>
-              {c.numero_contrato && (
-                <Text size="sm" c="dimmed" ff="monospace">{c.numero_contrato}</Text>
-              )}
-            </Group>
-            <Text size="xs" c="dimmed">
-              {c.puesto?.cargo?.nombre ?? 'Sin puesto'} · {c.unidad_administrativa?.nombre ?? 'Sin unidad'}
-            </Text>
-          </div>
-          <Group gap="xs" wrap="nowrap">
-            <StatusBadge tone={TONO_CONTRATO[estado]}>
-              {ESTADO_LABELS[estado]}
-            </StatusBadge>
-            {/* Situación derivada de las acciones vigentes hoy, no un estado
-                almacenado: el vínculo sigue vigente aunque la persona esté
-                temporalmente ausente. */}
-            {vinculo.situacion && (
-              <StatusBadge tone="info">
-                {vinculo.situacion.etiqueta}
-                {vinculo.situacion.hasta ? ` hasta ${formatFecha(vinculo.situacion.hasta)}` : ''}
-              </StatusBadge>
-            )}
-            {vinculo.reemplaza_a && (
-              <StatusBadge>Reemplazo</StatusBadge>
-            )}
-          </Group>
-        </Group>
-      </Accordion.Control>
-
-      <Accordion.Panel>
-        <Stack gap="md">
-          {vinculo.reemplaza_a && (
-            <Alert variant="light" color="amethyst" icon={<IconInfoCircle size={16} />}>
-              Contrato de reemplazo: cubre la{' '}
-              {vinculo.reemplaza_a.etiqueta?.toLowerCase() ?? 'ausencia'} de{' '}
-              <strong>{vinculo.reemplaza_a.servidor}</strong>
-              {vinculo.reemplaza_a.hasta
-                ? `, hasta el ${formatFecha(vinculo.reemplaza_a.hasta)}.`
-                : '.'}
-            </Alert>
-          )}
-
-          <DetailList
-            columnas={3}
-            items={[
-              { label: 'Desde', value: formatFecha(c.fecha_inicio) },
-              {
-                label: 'Hasta',
-                value: (
-                  <Group gap={4} align="center" wrap="nowrap">
-                    {c.fecha_fin ? formatFecha(c.fecha_fin) : 'Sin plazo'}
-                    {/* El plazo es lo único editable de un vínculo ya creado,
-                        y solo mientras siga vigente: en uno terminado la fecha
-                        de fin ya es un hecho histórico. */}
-                    {estado === 'vigente' && (
-                      <Tooltip label="Prórroga o corrección del vencimiento" withArrow>
-                        <ActionIcon
-                          variant="subtle"
-                          size="sm"
-                          aria-label="Reprogramar el plazo"
-                          onClick={() => onReprogramar(c)}
-                        >
-                          <IconCalendarCog size={16} />
-                        </ActionIcon>
-                      </Tooltip>
-                    )}
-                  </Group>
-                ),
-              },
-              { label: 'Remuneración', value: dinero(c.remuneracion) },
-              { label: 'Resolución', value: c.resolucion_numero },
-              { label: 'Partida', value: partidaDelVinculo(c) },
-              { label: 'Marca asistencia', value: c.puede_marcar === false ? 'No' : 'Sí' },
-              ...(c.motivo_fin
-                ? [{ label: 'Motivo de término', value: c.motivo_fin, ancho: true }]
-                : []),
-            ]}
-          />
-
-          {/* El plazo es lo único editable de un vínculo, y moverlo cambia
-              cuándo cesa el servidor. Aquí queda dicho quién lo movió y por
-              qué — antes el motivo se exigía, se guardaba y no lo veía nadie. */}
-          {reprogramaciones.length > 0 && (
-            <div>
-              <SectionHeading title="Reprogramaciones del plazo" mb="xs" />
-              <Stack gap="xs">
-                {reprogramaciones.map((r) => (
-                  <Paper key={r.id} withBorder p="xs" radius="sm">
-                    <Group gap="xs" wrap="nowrap" align="baseline">
-                      <Text size="sm" fw={500}>
-                        {formatFecha(r.fecha_fin_anterior)} → {formatFecha(r.fecha_fin_nueva)}
-                      </Text>
-                      <Text size="xs" c="dimmed">
-                        {formatFechaHora(r.fecha)}
-                        {r.por ? ` · ${r.por}` : ''}
-                      </Text>
-                    </Group>
-                    {r.motivo && <Text size="sm" mt={2}>{r.motivo}</Text>}
-                  </Paper>
-                ))}
-              </Stack>
-            </div>
-          )}
-
-          <div>
-            <SectionHeading title="Acciones de personal sobre este vínculo" mb="xs" />
-
-            {vinculo.acciones.length === 0 ? (
-              <Text size="sm" c="dimmed">
-                Sin acciones registradas sobre este vínculo.
-              </Text>
-            ) : (
-              <Stack gap="xs">
-                {vinculo.acciones.map((a) => <FilaAccion key={a.id} accion={a} />)}
-              </Stack>
-            )}
-          </div>
-        </Stack>
-      </Accordion.Panel>
-    </Accordion.Item>
-  )
-}
+import { VinculoLaboralItem } from '../VinculoLaboralItem'
+import type { VinculoConActividad } from '../../services/actividadLaboralService'
 
 interface Props {
   servidorId: number
@@ -225,8 +23,8 @@ interface Props {
 export function LaboralTab({ servidorId }: Props) {
   const { data: vinculos = [], isLoading, error } = useActividadLaboral(servidorId)
 
-  /** El contrato abierto para reprogramar; null = modal cerrado. */
-  const [reprogramando, setReprogramando] = useState<ContratoConRelaciones | null>(null)
+  /** El vínculo abierto para reprogramar; null = modal cerrado. */
+  const [reprogramando, setReprogramando] = useState<VinculoConActividad | null>(null)
 
   return (
     <Stack gap="md">
@@ -257,17 +55,21 @@ export function LaboralTab({ servidorId }: Props) {
         >
           <Accordion variant="separated" defaultValue={String(vinculos[0]?.contrato.id)}>
             {vinculos.map((v) => (
-              <Vinculo key={v.contrato.id} vinculo={v} onReprogramar={setReprogramando} />
+              <VinculoLaboralItem key={v.contrato.id} vinculo={v} onReprogramar={setReprogramando} />
             ))}
           </Accordion>
         </DataState>
       </SectionCard>
 
       <ReprogramarPlazoModal
+        // Se monta de nuevo por vínculo: arranca con SU vencimiento actual.
+        key={reprogramando?.contrato.id ?? 'cerrado'}
         opened={reprogramando !== null}
         onClose={() => setReprogramando(null)}
         servidorId={servidorId}
-        contrato={reprogramando}
+        contrato={reprogramando?.contrato ?? null}
+        // Un reemplazo no se prorroga más allá de la ausencia que cubre.
+        hastaReemplazo={reprogramando?.reemplaza_a?.hasta ?? null}
       />
     </Stack>
   )

@@ -232,6 +232,8 @@ test('el reemplazo tampoco consume plaza para un tercer ingreso ordinario', func
     $this->stateService->transicionar($ingreso->fresh(), EstadoAccionPersonal::REGISTRADA, [
         'numero_contrato'        => 'CT-2026-SUPL2',
         'remuneracion_propuesta' => 900,
+        // Un reemplazo lleva término: el de la ausencia que cubre.
+        'fecha_fin_propuesta'    => '2028-07-31',
     ]);
 
     // La plaza sigue siendo del titular: un ingreso ordinario debe seguir
@@ -471,6 +473,8 @@ test('la actividad laboral del suplente explica a quién está reemplazando', fu
     $this->stateService->transicionar($ingreso->fresh(), EstadoAccionPersonal::REGISTRADA, [
         'numero_contrato'        => 'CT-2026-ACTIV',
         'remuneracion_propuesta' => 900,
+        // Un reemplazo lleva término: el de la ausencia que cubre.
+        'fecha_fin_propuesta'    => '2028-07-31',
     ]);
 
     $actividad = app(\App\Services\Expediente\ContratoServidorService::class)
@@ -521,4 +525,33 @@ test('el filtro de cobertura acepta el booleano tal como lo envía el cliente', 
     $this->getJson('/api/v1/expediente/ausencias-temporales?fecha=2027-01-15&cubiertas=0')
         ->assertOk()
         ->assertJsonCount(1, 'datos');
+});
+
+// ── Reprogramar el plazo del reemplazo (2026-10-03) ─────────────
+
+test('reprogramar no alarga el reemplazo más allá de la ausencia, ni lo deja sin plazo', function () {
+    [, $comision] = ($this->comisionRegistrada)();
+
+    $suplente = ($this->servidor)();
+    $ingreso  = $this->service->registrar($suplente->id, ($this->datosReemplazo)($comision));
+    $ingreso  = $this->stateService->transicionar($ingreso, EstadoAccionPersonal::SUSCRITA);
+    $this->stateService->transicionar($ingreso->fresh(), EstadoAccionPersonal::REGISTRADA, [
+        'numero_contrato'        => 'CT-2026-REPRO',
+        'remuneracion_propuesta' => 900,
+        'fecha_fin_propuesta'    => '2027-12-31',
+    ]);
+
+    $contratos = app(\App\Services\Expediente\ContratoServidorService::class);
+    $contrato  = $suplente->fresh()->contratoVigente;
+
+    // Hasta el 2026-10-03 la regla solo se miraba al nacer el contrato: una
+    // prórroga lo dejaba sobre la plaza con el titular ya de vuelta.
+    expect(fn () => $contratos->reprogramarPlazo($contrato, ['fecha_fin' => '2029-06-30', 'motivo' => 'Prórroga larga']))
+        ->toThrow(ReglaNegocioException::class, 'más allá del 2028-07-31');
+    expect(fn () => $contratos->reprogramarPlazo($contrato, ['fecha_fin' => null, 'motivo' => 'Sin plazo']))
+        ->toThrow(ReglaNegocioException::class);
+
+    // Hasta el fin de la ausencia, sí.
+    $contratos->reprogramarPlazo($contrato, ['fecha_fin' => '2028-07-31', 'motivo' => 'Prórroga hasta el retorno']);
+    expect($contrato->fresh()->fecha_fin->toDateString())->toBe('2028-07-31');
 });
