@@ -30,7 +30,10 @@ class MovimientoPersonalController extends Controller
 
         $this->authorize('ver', $servidor);
 
-        $movimientos = MovimientoPersonal::with(['unidadOrigen', 'unidadDestino', 'puestoOrigen.cargo', 'puestoDestino.cargo', 'puestoDestino.grupoOcupacional:id,rmu', 'autorizadoPor'])
+        $movimientos = MovimientoPersonal::with(['unidadOrigen', 'unidadDestino', 'puestoOrigen.cargo', 'puestoDestino.cargo', 'puestoDestino.grupoOcupacional:id,rmu',
+                // El nombre del autorizador lo arma el accesor de User desde su
+                // servidor: sin cargarlo, una consulta por cada fila.
+                'autorizadoPor.servidor:id,nombre,apellido'])
             ->where('servidor_id', $servidorId)
             // El id desempata: varias acciones del mismo día es lo normal
             // (una cesación y el ingreso que la sigue, por ejemplo), y sin
@@ -96,7 +99,7 @@ class MovimientoPersonalController extends Controller
             'puestoDestino.grupoOcupacional:id,rmu',
             'partidaPresupuestaria:id,codigo,descripcion',
             'partidaOrigen:id,codigo,descripcion',
-            'autorizadoPor',
+            'autorizadoPor.servidor:id,nombre,apellido',
             'movimientoPrevio:id,tipo_movimiento,subtipo_movimiento,codigo_registro,fecha_efectiva',
             'cubreMovimiento:id,servidor_id,tipo_movimiento,subtipo_movimiento,codigo_registro,fecha_inicio,fecha_fin',
             'cubreMovimiento.servidor:id,nombre,apellido,cedula',

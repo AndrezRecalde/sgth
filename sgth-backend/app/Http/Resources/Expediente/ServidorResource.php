@@ -99,7 +99,6 @@ class ServidorResource extends JsonResource
             'pendiente_vinculacion' => $this->resource->relationLoaded('contratoVigente')
                 ? is_null($this->resource->contratoVigente)
                 : null,
-            'user'        => $this->whenLoaded('usuario'),
             'documentos'  => DocumentoServidorResource::collection($this->whenLoaded('documentos')),
             'movimientos' => $this->whenLoaded('movimientos'),
         ];

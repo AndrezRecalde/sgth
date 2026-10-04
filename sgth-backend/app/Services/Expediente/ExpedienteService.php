@@ -93,7 +93,8 @@ class ExpedienteService implements ExpedienteServiceInterface
     public function obtenerExpedienteCompleto(int $servidorId): Servidor
     {
         return Servidor::with([
-            'usuario',
+            // Sin 'usuario': la ficha lo devolvía como `user` —correo y
+            // usuario_ti incluidos— y ninguna pantalla lo leía.
             'unidadAdministrativa',
             // El cargo y la partida del puesto alimentan el bloque "situación
             // actual" del documento de Acción de Personal. Sin cargarlos, ese

@@ -43,9 +43,4 @@ class HistorialAcademicoServidor extends Model
     {
         return $this->belongsTo(Servidor::class);
     }
-
-    public function estaEnCurso(): bool
-    {
-        return is_null($this->fecha_fin);
-    }
 }
