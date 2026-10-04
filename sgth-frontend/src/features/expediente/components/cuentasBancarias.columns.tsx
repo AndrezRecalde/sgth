@@ -1,4 +1,5 @@
 import { Group, Text } from '@mantine/core'
+import { PROPOSITO_LABELS } from '../constants/cuentaBancaria'
 import { IconEdit, IconStar, IconTrash } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
 import { StatusBadge, TableActions, confirmar } from '@/components/ui'
@@ -9,11 +10,6 @@ const TIPO_LABELS: Record<string, string> = {
   corriente: 'Corriente',
 }
 
-const PROPOSITO_LABELS: Record<string, string> = {
-  sueldo: 'Nómina',
-  viaticos: 'Viáticos',
-  ambos: 'Nómina y viáticos',
-}
 
 /** Solo se ofrece ser principal de lo que la cuenta paga. */
 const puedeSerPrincipal = (

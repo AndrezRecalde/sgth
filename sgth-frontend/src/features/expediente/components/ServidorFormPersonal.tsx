@@ -1,34 +1,15 @@
 'use client'
 
 import {
-  TextInput, Select, Grid, Switch, } from '@mantine/core'
+  TextInput, Select, Grid, } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { Controller, useFormContext } from 'react-hook-form'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { useProvincias } from '../hooks/useProvincias'
-import { useCantones } from '../hooks/useCantones'
 import type { ServidorBasicoFormData } from '../schemas/servidorBasico.schema'
-import type { Provincia, Canton } from '@/types/api'
+import { ESTADO_CIVIL_OPTIONS, GENERO_OPTIONS, TIPO_SANGRE_OPTIONS } from '../constants/servidor'
+import { ServidorFormOrigen } from './ServidorFormOrigen'
 import { toDateValue, fromDateValue } from '@/lib/fecha'
 import { SectionHeading } from '@/components/ui'
-
-const GENERO_OPTIONS = [
-  { value: 'masculino', label: 'Masculino' },
-  { value: 'femenino',  label: 'Femenino' },
-  { value: 'otro',      label: 'Otro' },
-]
-
-const ESTADO_CIVIL_OPTIONS = [
-  { value: 'soltero',     label: 'Soltero/a' },
-  { value: 'casado',      label: 'Casado/a' },
-  { value: 'divorciado',  label: 'Divorciado/a' },
-  { value: 'viudo',       label: 'Viudo/a' },
-  { value: 'union_libre', label: 'Unión libre' },
-]
-
-const TIPO_SANGRE_OPTIONS = [
-  'A+','A-','B+','B-','AB+','AB-','O+','O-',
-].map(v => ({ value: v, label: v }))
 
 /**
  * Los campos personales de la ficha. Se lee del contexto del formulario para
@@ -38,25 +19,7 @@ const TIPO_SANGRE_OPTIONS = [
 export function ServidorFormPersonal() {
   const contained = useContainedInput()
   const form = useFormContext<ServidorBasicoFormData>()
-  const { register, setValue, watch, formState: { errors } } = form
-
-  const esExtranjero = watch('es_extranjero')
-  const provinciaId  = watch('provincia_nacimiento_id')
-
-  const { data: provincias = [] } = useProvincias()
-  const { data: cantones = [] } = useCantones(
-    esExtranjero ? null : (provinciaId ?? null)
-  )
-
-  const provinciaOptions = (provincias as Provincia[]).map(p => ({
-    value: String(p.id),
-    label: p.nombre ?? `Provincia ${p.id}`,
-  }))
-
-  const cantonOptions = (cantones as Canton[]).map(c => ({
-    value: String(c.id),
-    label: (c as Canton & { nombre?: string }).nombre ?? `Cantón ${c.id}`,
-  }))
+  const { register, formState: { errors } } = form
 
   return (
     <Grid>
@@ -197,95 +160,7 @@ export function ServidorFormPersonal() {
         />
       </Grid.Col>
 
-      <Grid.Col span={12}>
-        <SectionHeading title="Origen" mt="xs" mb="xs" />
-      </Grid.Col>
-      <Grid.Col span={12}>
-        <Controller
-          name="es_extranjero"
-          control={form.control}
-          render={({ field }) => (
-            <Switch
-              label="¿Es extranjero?"
-              checked={field.value}
-              onChange={(e) => {
-                field.onChange(e.currentTarget.checked)
-                setValue('provincia_nacimiento_id', null, { shouldDirty: true })
-                setValue('canton_nacimiento_id', null, { shouldDirty: true })
-              }}
-              mt="xs"
-            />
-          )}
-        />
-      </Grid.Col>
-
-      {!esExtranjero ? (
-        <>
-          <Grid.Col span={{ base: 12, sm: 6 }}>
-            <Controller
-              name="provincia_nacimiento_id"
-              control={form.control}
-              render={({ field }) => (
-                <Select
-                  label="Provincia de nacimiento"
-                  placeholder="Seleccionar provincia"
-                  data={provinciaOptions}
-                  searchable
-                  {...contained}
-                  value={field.value ? String(field.value) : ''}
-                  onChange={(v) => {
-                    const id = v ? Number(v) : null
-                    field.onChange(id)
-                    setValue('canton_nacimiento_id', null, { shouldDirty: true })
-                  }}
-                  error={errors.provincia_nacimiento_id?.message}
-                />
-              )}
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 6 }}>
-            <Controller
-              name="canton_nacimiento_id"
-              control={form.control}
-              render={({ field }) => (
-                <Select
-                  label="Cantón de nacimiento"
-                  placeholder="Seleccionar cantón"
-                  data={cantonOptions}
-                  searchable
-                  disabled={!provinciaId}
-                  {...contained}
-                  value={field.value ? String(field.value) : ''}
-                  onChange={(v) => field.onChange(v ? Number(v) : null)}
-                  error={errors.canton_nacimiento_id?.message}
-                />
-              )}
-            />
-          </Grid.Col>
-        </>
-      ) : (
-        <>
-          <Grid.Col span={{ base: 12, sm: 6 }}>
-            <TextInput
-              label="Nacionalidad"
-              placeholder="Ej: Colombiana"
-              {...contained}
-              {...register('nacionalidad')}
-              error={errors.nacionalidad?.message}
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 6 }}>
-            <TextInput
-              label="País de origen"
-              placeholder="Ej: Colombia"
-              {...contained}
-              {...register('pais_origen')}
-              error={errors.pais_origen?.message}
-            />
-          </Grid.Col>
-        </>
-      )}
-
+      <ServidorFormOrigen />
     </Grid>
   )
 }
