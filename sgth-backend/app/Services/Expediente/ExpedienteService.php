@@ -65,12 +65,10 @@ class ExpedienteService implements ExpedienteServiceInterface
     {
         $servidor = Servidor::findOrFail($servidorId);
 
-        // Guardado seguro del archivo en storage
-        $ruta = $archivo->storeAs(
-            "expedientes/{$servidor->cedula}/documentos",
-            time() . '_' . $archivo->getClientOriginalName(),
-            'local' // Storage local blindado
-        );
+        // Con un nombre único, no `time()_nombre-original`: dos subidas del
+        // mismo «cedula.pdf» en el mismo segundo compartían ruta y la segunda
+        // pisaba a la primera. El nombre original queda en la base.
+        $ruta = $archivo->store("expedientes/{$servidor->cedula}/documentos", 'local');
 
         if (!$ruta) {
             throw new ReglaNegocioException("Error al almacenar físicamente el archivo en el servidor.");

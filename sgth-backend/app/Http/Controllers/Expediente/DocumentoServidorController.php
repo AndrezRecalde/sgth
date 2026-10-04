@@ -27,7 +27,7 @@ class DocumentoServidorController extends Controller
 
         $documentos = DocumentoServidor::where('servidor_id', $servidorId)
             ->with('subidoPor:id,usuario_ti,email,servidor_id')
-            ->orderByDesc('created_at')
+            ->orderByDesc('created_at')->orderByDesc('id')
             ->get();
 
         return ApiResponse::ok(

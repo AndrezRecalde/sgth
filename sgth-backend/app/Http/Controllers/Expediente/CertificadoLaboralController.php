@@ -46,7 +46,7 @@ class CertificadoLaboralController extends Controller
             'emitidoPor.servidor:id,nombre,apellido',
         ])
             ->where('servidor_id', $servidorId)
-            ->orderByDesc('emitido_en')
+            ->orderByDesc('emitido_en')->orderByDesc('id')
             ->get();
 
         return ApiResponse::ok(

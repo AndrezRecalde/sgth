@@ -24,7 +24,8 @@ class StoreHistorialAcademicoRequest extends FormRequest
             'nacionalidad_estudio' => ['required', new Enum(NacionalidadEstudio::class)],
             'institucion'          => ['required', 'string', 'max:200'],
             'fecha_inicio'         => ['required', 'date'],
-            'fecha_fin'            => ['nullable', 'date', 'after:fecha_inicio'],
+            // `after` impedía registrar un curso de un solo día.
+            'fecha_fin'            => ['nullable', 'date', 'after_or_equal:fecha_inicio'],
             'titulo_capacitacion'  => ['required', 'string', 'max:300'],
             'codigo_senescyt'      => ['nullable', 'string', 'max:50'],
         ];
@@ -35,8 +36,8 @@ class StoreHistorialAcademicoRequest extends FormRequest
         return [
             'nivel_estudio.required_if' =>
                 'El nivel de estudio es obligatorio para estudios formales.',
-            'fecha_fin.after' =>
-                'La fecha de finalización debe ser posterior a la fecha de inicio.',
+            'fecha_fin.after_or_equal' =>
+                'La fecha de finalización no puede ser anterior a la de inicio.',
         ];
     }
 }

@@ -18,6 +18,7 @@ class DeclaracionJuramentadaController extends Controller
         $servidor = Servidor::findOrFail($servidorId);
         $declaraciones = $servidor->declaracionesJuramentadas()
             ->orderByDesc('fecha_declaracion')
+            ->orderByDesc('id')
             ->get();
         return ApiResponse::ok($declaraciones, 'Declaraciones juramentadas.');
     }
@@ -30,14 +31,7 @@ class DeclaracionJuramentadaController extends Controller
         $datos = $request->validated();
 
         if ($request->hasFile('documento')) {
-            $archivo  = $request->file('documento');
-            $ruta = $archivo->storeAs(
-                "expedientes/{$servidor->cedula}/declaraciones",
-                time() . '_' . $archivo->getClientOriginalName(),
-                'local'
-            );
-            $datos['documento_ruta']           = $ruta;
-            $datos['documento_nombre_archivo'] = $archivo->getClientOriginalName();
+            $datos = [...$datos, ...$this->guardarDocumento($request, $servidor)];
         }
 
         unset($datos['documento']);
@@ -58,24 +52,20 @@ class DeclaracionJuramentadaController extends Controller
 
         $datos = $request->validated();
 
+        // El nuevo se guarda ANTES de borrar el anterior: al revés, si guardar
+        // fallaba, la fila quedaba apuntando a un archivo que ya no existía.
+        $anterior = null;
         if ($request->hasFile('documento')) {
-            // Eliminar documento anterior si existe
-            if ($declaracion->documento_ruta) {
-                Storage::disk('local')->delete($declaracion->documento_ruta);
-            }
-            $servidor = Servidor::findOrFail($servidorId);
-            $archivo  = $request->file('documento');
-            $ruta = $archivo->storeAs(
-                "expedientes/{$servidor->cedula}/declaraciones",
-                time() . '_' . $archivo->getClientOriginalName(),
-                'local'
-            );
-            $datos['documento_ruta']           = $ruta;
-            $datos['documento_nombre_archivo'] = $archivo->getClientOriginalName();
+            $anterior = $declaracion->documento_ruta;
+            $datos = [...$datos, ...$this->guardarDocumento($request, Servidor::findOrFail($servidorId))];
         }
 
         unset($datos['documento']);
         $declaracion->update($datos);
+
+        if ($anterior) {
+            Storage::disk('local')->delete($anterior);
+        }
 
         return ApiResponse::ok($declaracion->fresh(), 'Declaración actualizada.');
     }
@@ -85,12 +75,28 @@ class DeclaracionJuramentadaController extends Controller
         $declaracion = DeclaracionJuramentada::where('servidor_id', $servidorId)
             ->findOrFail($id);
 
-        if ($declaracion->documento_ruta) {
-            Storage::disk('local')->delete($declaracion->documento_ruta);
-        }
-
+        // Borrado lógico, y el PDF se queda: se borraba el archivo y la fila
+        // no, así que una declaración restaurada volvía sin su documento. Es
+        // lo mismo que hacen los documentos del expediente.
         $declaracion->delete();
         return ApiResponse::ok(null, 'Declaración eliminada.');
+    }
+
+    /**
+     * Guarda el PDF con un nombre único. Con `time()_nombre-original`, dos
+     * subidas del mismo archivo en el mismo segundo compartían ruta: la
+     * segunda pisaba a la primera, y borrar una se llevaba el PDF de la otra.
+     *
+     * @return array{documento_ruta: string, documento_nombre_archivo: string}
+     */
+    private function guardarDocumento(Request $request, Servidor $servidor): array
+    {
+        $archivo = $request->file('documento');
+
+        return [
+            'documento_ruta'           => $archivo->store("expedientes/{$servidor->cedula}/declaraciones", 'local'),
+            'documento_nombre_archivo' => $archivo->getClientOriginalName(),
+        ];
     }
 
     public function exportar(Request $request, int $servidorId): mixed
@@ -148,7 +154,8 @@ class DeclaracionJuramentadaController extends Controller
 
         if (!$declaracion->documento_ruta ||
             !Storage::disk('local')->exists($declaracion->documento_ruta)) {
-            return ApiResponse::error('Documento no encontrado.', 404);
+            // El segundo argumento son los errores, no el código: respondía 422.
+            return ApiResponse::error('Documento no encontrado.', null, 404);
         }
 
         return Storage::disk('local')->response(

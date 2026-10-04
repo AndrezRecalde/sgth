@@ -15,7 +15,7 @@ class HistorialAcademicoController extends Controller
     {
         $servidor = Servidor::findOrFail($servidorId);
         $historial = $servidor->historialAcademico()
-            ->orderByDesc('fecha_inicio')
+            ->orderByDesc('fecha_inicio')->orderByDesc('id')
             ->get();
         return ApiResponse::ok($historial, 'Historial académico del servidor.');
     }
