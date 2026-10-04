@@ -200,12 +200,15 @@ export function DocumentoModal({ opened, onClose, servidorId }: Props) {
             <DatePickerInput
               label="Fecha de vencimiento"
               placeholder="Seleccionar fecha"
-              valueFormat="YYYY-MM-DD"
+              valueFormat="DD/MM/YYYY"
               clearable
+              // Un documento ya vencido no se anexa (Talento Humano,
+              // 2026-10-03); el que vence hoy, sí.
+              minDate={new Date()}
               {...contained}
               value={toDateValue(field.value)}
               onChange={(d) => field.onChange(fromDateValueOrNull(d))}
-              description="Útil para pasaportes y documentos con caducidad"
+              description="Para pasaportes y documentos con caducidad. Uno ya vencido no se anexa."
               error={errors.fecha_vencimiento?.message}
             />
           )}
