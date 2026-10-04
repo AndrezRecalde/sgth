@@ -7,7 +7,7 @@ import { useContainedInput } from '@/hooks/useContainedInput'
 import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 import { METODO_PLANIFICACION_OPTIONS } from '../../services/femoOptions'
 import type { SexoPaciente } from '../../services/solicitudCertificacionService'
-import type { AntecedenteReproductivoForm } from '../../schemas/femo.schema'
+import type { AntecedenteReproductivoForm } from '../../schemas/femoHistoria.schema'
 import { SectionHeading } from '@/components/ui'
 
 interface Props {

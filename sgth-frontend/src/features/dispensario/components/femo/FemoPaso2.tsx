@@ -14,10 +14,9 @@ import { DatePickerInput } from '@mantine/dates'
 import { useDisclosure } from '@mantine/hooks'
 import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import {
-  type FichaBaseForm, type FactorRiesgoForm,
-  type ActividadRiesgoForm, type EmpleoAnteriorForm,
-} from '../../schemas/femo.schema'
+import { type FichaBaseForm } from '../../schemas/femo.schema'
+import { type EmpleoAnteriorForm } from '../../schemas/femoHistoria.schema'
+import { type FactorRiesgoForm, type ActividadRiesgoForm } from '../../schemas/femoEvaluacion.schema'
 import { FemoEmpleoAnteriorModal } from './FemoEmpleoAnteriorModal'
 import { FemoMatrizRiesgos } from './FemoMatrizRiesgos'
 import { TIPO_EVENTO_LABORAL_OPTIONS } from '../../services/femoOptions'

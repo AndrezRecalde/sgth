@@ -1,10 +1,8 @@
 'use client'
 
 import { Stack } from '@mantine/core'
-import type {
-  AntecedenteForm, AntecedenteReproductivoForm,
-  ConsumoSustanciaForm, FichaBaseForm,
-} from '../../schemas/femo.schema'
+import type { FichaBaseForm } from '../../schemas/femo.schema'
+import type { AntecedenteForm, AntecedenteReproductivoForm, ConsumoSustanciaForm } from '../../schemas/femoHistoria.schema'
 import type { SexoPaciente } from '../../services/solicitudCertificacionService'
 import { FemoSeccionDatosUsuario } from './FemoSeccionDatosUsuario'
 import { FemoSeccionMotivoConsulta } from './FemoSeccionMotivoConsulta'

@@ -5,10 +5,8 @@ import { useDisclosure } from '@mantine/hooks'
 import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { TIPO_ANTECEDENTE_OPTIONS } from '../../services/femoOptions'
-import type {
-  AntecedenteForm, AntecedenteReproductivoForm,
-  ConsumoSustanciaForm, FichaBaseForm,
-} from '../../schemas/femo.schema'
+import type { FichaBaseForm } from '../../schemas/femo.schema'
+import type { AntecedenteForm, AntecedenteReproductivoForm, ConsumoSustanciaForm } from '../../schemas/femoHistoria.schema'
 import type { SexoPaciente } from '../../services/solicitudCertificacionService'
 import { FemoSeccion } from './FemoSeccion'
 import { SiNoSinRespuesta } from './SiNoSinRespuesta'

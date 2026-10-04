@@ -5,7 +5,7 @@ import { FormModal } from '@/components/ui'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { antecedenteSchema, type AntecedenteForm } from '../../schemas/femo.schema'
+import { antecedenteSchema, type AntecedenteForm } from '../../schemas/femoHistoria.schema'
 import { TIPO_ANTECEDENTE_SELECCIONABLES } from '../../services/femoOptions'
 
 interface Props {

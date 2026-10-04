@@ -2,7 +2,7 @@
 
 import { Stack, Grid, Text, Checkbox, TextInput } from '@mantine/core'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import type { ExamenFisicoItemForm } from '../../schemas/femo.schema'
+import type { ExamenFisicoItemForm } from '../../schemas/femoEvaluacion.schema'
 
 interface Props {
   region:   string

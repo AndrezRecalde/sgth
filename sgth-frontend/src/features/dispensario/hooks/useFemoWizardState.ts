@@ -1,10 +1,7 @@
 import { useState } from 'react'
-import type {
-  FichaBaseForm, AntecedenteForm, FactorRiesgoForm,
-  ActividadRiesgoForm,
-  ExamenForm, DiagnosticoFemoForm, EmpleoAnteriorForm,
-  ExamenFisicoItemForm, AntecedenteReproductivoForm, ConsumoSustanciaForm,
-} from '../schemas/femo.schema'
+import type { FichaBaseForm } from '../schemas/femo.schema'
+import type { AntecedenteForm, EmpleoAnteriorForm, AntecedenteReproductivoForm, ConsumoSustanciaForm } from '../schemas/femoHistoria.schema'
+import type { FactorRiesgoForm, ActividadRiesgoForm, ExamenForm, DiagnosticoFemoForm, ExamenFisicoItemForm } from '../schemas/femoEvaluacion.schema'
 import type { CrearFemoData, FichaSaludOcupacional } from '../services/femoService'
 import { hoyIso } from '@/lib/fecha'
 import { constantesDe, fichaAFormulario, fichaAPayload, riesgosDe } from './femoMapeo'
