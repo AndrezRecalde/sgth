@@ -1,7 +1,7 @@
 "use client";
 
 import { Select, TextInput, Grid, Switch } from "@mantine/core";
-import { useForm, Controller, type DefaultValues } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormModal } from "@/components/ui";
 import { useContainedInput } from "@/hooks/useContainedInput";
@@ -13,39 +13,9 @@ import {
   type CuentaBancariaFormData,
 } from "../schemas/cuentaBancaria.schema";
 import type { CuentaBancariaConRelaciones } from "@/types/api";
-
-const TIPO_CUENTA_OPTIONS = [
-  { value: "ahorros", label: "Ahorros" },
-  { value: "corriente", label: "Corriente" },
-];
-
-const PROPOSITO_OPTIONS = [
-  { value: "sueldo", label: "Nómina" },
-  { value: "viaticos", label: "Viáticos" },
-  { value: "ambos", label: "Nómina y viáticos" },
-];
-
-// Sin entidad: todavía no se elige (DefaultValues admite omitir la clave).
-const VACIO: DefaultValues<CuentaBancariaFormData> = {
-  numero_cuenta: "",
-  tipo_cuenta: "ahorros",
-  proposito: "sueldo",
-  es_principal_sueldo: false,
-  es_principal_viatico: false,
-  estado: true,
-};
-
-function valoresDe(c: CuentaBancariaConRelaciones): CuentaBancariaFormData {
-  return {
-    entidad_financiera_id: Number(c.entidad_financiera_id),
-    numero_cuenta: c.numero_cuenta ?? "",
-    tipo_cuenta: c.tipo_cuenta === "corriente" ? "corriente" : "ahorros",
-    proposito: c.proposito === "viaticos" || c.proposito === "ambos" ? c.proposito : "sueldo",
-    es_principal_sueldo: c.es_principal_sueldo ?? false,
-    es_principal_viatico: c.es_principal_viatico ?? false,
-    estado: c.estado ?? true,
-  };
-}
+import {
+  CUENTA_VACIA, PROPOSITO_OPTIONS, TIPO_CUENTA_OPTIONS, valoresDeCuenta,
+} from "../constants/cuentaBancaria";
 
 interface Props {
   opened: boolean;
@@ -75,11 +45,11 @@ export function CuentaBancariaModal({ opened, onClose, servidorId, initialValues
   const { register, control, handleSubmit, reset, setValue, getValues, setError, formState: { errors } } =
     useForm<CuentaBancariaFormData>({
       resolver: zodResolver(cuentaBancariaSchema),
-      defaultValues: initialValues ? valoresDe(initialValues) : VACIO,
+      defaultValues: initialValues ? valoresDeCuenta(initialValues) : CUENTA_VACIA,
     });
 
   const handleClose = () => {
-    reset(VACIO);
+    reset(CUENTA_VACIA);
     onClose();
   };
 

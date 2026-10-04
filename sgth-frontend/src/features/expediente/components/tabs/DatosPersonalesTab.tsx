@@ -4,20 +4,7 @@ import { Group, Stack, Text } from '@mantine/core'
 import { DetailList, SectionCard, StatusBadge } from '@/components/ui'
 import { formatFecha } from '@/lib/fecha'
 import type { ServidorConRelaciones } from '@/types/api'
-
-const GENERO_LABELS: Record<string, string> = {
-  masculino: 'Masculino',
-  femenino: 'Femenino',
-  otro: 'Otro',
-}
-
-const ESTADO_CIVIL_LABELS: Record<string, string> = {
-  soltero: 'Soltero/a',
-  casado: 'Casado/a',
-  union_libre: 'Unión libre',
-  divorciado: 'Divorciado/a',
-  viudo: 'Viudo/a',
-}
+import { ESTADO_CIVIL_LABELS, GENERO_LABELS } from '../../constants/servidor'
 
 interface Props {
   servidor: ServidorConRelaciones
