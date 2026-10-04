@@ -1,8 +1,8 @@
 import { Stack, Text } from '@mantine/core'
 import { IconEdit, IconTrash } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
-import { TableActions, confirmar } from '@/components/ui'
-import { formatFecha } from '@/lib/fecha'
+import { StatusBadge, TableActions, confirmar } from '@/components/ui'
+import { formatFecha, hoyIso } from '@/lib/fecha'
 import { TIPO_DISCAPACIDAD_LABELS, gradoDiscapacidad } from '../utils/discapacidad'
 
 type Handlers<T> = {
@@ -20,6 +20,7 @@ interface DiscapacidadFila {
   tipo_discapacidad?: string | null
   porcentaje?: number | string | null
   numero_carnet_conadis?: string | null
+  carnet_vencimiento?: string | null
 }
 
 interface EnfermedadFila {
@@ -58,8 +59,14 @@ export const getDiscapacidadesColumns = <T extends DiscapacidadFila>(
   {
     accessor: 'numero_carnet_conadis',
     title: 'Carnet CONADIS',
-    render: ({ numero_carnet_conadis }) => (
-      <Text size="sm" ff="monospace">{numero_carnet_conadis ?? '—'}</Text>
+    // Un carné caducado seguía pareciendo vigente: ahora se dice.
+    render: ({ numero_carnet_conadis, carnet_vencimiento }) => (
+      <Stack gap={2}>
+        <Text size="sm" ff="monospace">{numero_carnet_conadis || '—'}</Text>
+        {carnet_vencimiento && (carnet_vencimiento.slice(0, 10) < hoyIso()
+          ? <StatusBadge size="xs" tone="danger">Caducado el {formatFecha(carnet_vencimiento)}</StatusBadge>
+          : <Text size="xs" c="dimmed">Vence el {formatFecha(carnet_vencimiento)}</Text>)}
+      </Stack>
     ),
   },
   {
