@@ -27,7 +27,7 @@ export const getHistorialAcademicoColumns = (
     title: 'Título / Capacitación',
     render: ({ titulo_capacitacion, nivel_estudio }) => (
       <div>
-        <Text size="sm" fw={500}>{titulo_capacitacion ?? '-'}</Text>
+        <Text size="sm" fw={500}>{titulo_capacitacion ?? '—'}</Text>
         {nivel_estudio && (
           <Text size="xs" c="dimmed">
             {NIVEL_LABELS[nivel_estudio] ?? nivel_estudio}
@@ -41,7 +41,7 @@ export const getHistorialAcademicoColumns = (
     title: 'Institución',
     render: ({ institucion, nacionalidad_estudio }) => (
       <div>
-        <Text size="sm">{institucion ?? '-'}</Text>
+        <Text size="sm">{institucion ?? '—'}</Text>
         <Text size="xs" c="dimmed">
           {nacionalidad_estudio === 'nacional' ? 'Nacional' : 'Internacional'}
         </Text>
@@ -54,7 +54,7 @@ export const getHistorialAcademicoColumns = (
     width: 120,
     render: ({ tipo_estudio }) => (
       <StatusBadge size="xs">
-        {tipo_estudio === 'estudio' ? 'Título Académico' : 'Capacitación'}
+        {tipo_estudio === 'estudio' ? 'Título académico' : 'Capacitación'}
       </StatusBadge>
     ),
   },
@@ -63,7 +63,7 @@ export const getHistorialAcademicoColumns = (
     title: 'Período',
     width: 150,
     render: ({ fecha_inicio, fecha_fin }) => (
-      <Text size="sm">{`${anio(fecha_inicio) ?? '-'} - ${anio(fecha_fin) ?? 'Presente'}`}</Text>
+      <Text size="sm">{`${anio(fecha_inicio) ?? '—'} – ${anio(fecha_fin) ?? 'Presente'}`}</Text>
     ),
   },
   {
@@ -71,7 +71,7 @@ export const getHistorialAcademicoColumns = (
     title: 'SENESCYT',
     width: 120,
     render: ({ codigo_senescyt }) => (
-      <Text size="sm" ff="monospace">{codigo_senescyt || '-'}</Text>
+      <Text size="sm" ff="monospace">{codigo_senescyt || '—'}</Text>
     ),
   },
   {

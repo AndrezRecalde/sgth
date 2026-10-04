@@ -165,7 +165,7 @@ export function CargaFamiliarModal({
             <DatePickerInput
               label="Fecha de nacimiento"
               placeholder="Seleccionar fecha"
-              valueFormat="YYYY-MM-DD"
+              valueFormat="DD/MM/YYYY"
               clearable
               {...contained}
               value={toDateValue(field.value)}
@@ -178,7 +178,7 @@ export function CargaFamiliarModal({
         {/* Sin interruptores de discapacidad ni de enfermedad: se registran
             al desplegar la fila del familiar, y la marca sale de ahí. */}
         <Textarea
-          label="Observaciones (Opcional)"
+          label="Observaciones (opcional)"
           placeholder="Observaciones adicionales"
           rows={2}
           {...contained}

@@ -6,16 +6,22 @@ import { useFormContext } from 'react-hook-form'
 import type { ServidorBasicoFormData } from '../schemas/servidorBasico.schema'
 import { SectionHeading } from '@/components/ui'
 
-/** Contacto y documentos adicionales. Lee del contexto, como el de datos personales. */
-export function ServidorFormContacto() {
+/**
+ * Contacto y documentos adicionales. Lee del contexto, como el de datos
+ * personales. `sinTitulo` cuando ya va dentro de una tarjeta titulada
+ * «Contacto»: el modal de edición lo mostraba dos veces, los dos como h3.
+ */
+export function ServidorFormContacto({ sinTitulo = false }: { sinTitulo?: boolean }) {
   const contained = useContainedInput()
   const { register, formState: { errors } } = useFormContext<ServidorBasicoFormData>()
 
   return (
     <Grid>
-      <Grid.Col span={12}>
-        <SectionHeading title="Contacto" mb="xs" />
-      </Grid.Col>
+      {!sinTitulo && (
+        <Grid.Col span={12}>
+          <SectionHeading title="Contacto" mb="xs" />
+        </Grid.Col>
+      )}
       <Grid.Col span={{ base: 12, sm: 6 }}>
         <TextInput
           label="Teléfono celular"
@@ -61,8 +67,8 @@ export function ServidorFormContacto() {
       </Grid.Col>
       <Grid.Col span={{ base: 12, sm: 6 }}>
         <TextInput
-          label="Número papeleta de votación"
-          placeholder="Opcional"
+          label="Número papeleta de votación (opcional)"
+          placeholder="Ej: 007-0001"
           {...contained}
           {...register('numero_papeleta_votacion')}
           error={errors.numero_papeleta_votacion?.message}
@@ -70,8 +76,8 @@ export function ServidorFormContacto() {
       </Grid.Col>
       <Grid.Col span={{ base: 12, sm: 6 }}>
         <TextInput
-          label="Número de pasaporte"
-          placeholder="Opcional"
+          label="Número de pasaporte (opcional)"
+          placeholder="Ej: A1234567"
           {...contained}
           {...register('pasaporte_numero')}
           error={errors.pasaporte_numero?.message}
@@ -102,8 +108,8 @@ export function ServidorFormContacto() {
       </Grid.Col>
       <Grid.Col span={{ base: 12, sm: 6 }}>
         <TextInput
-          label="Código médico"
-          placeholder="Opcional"
+          label="Código médico (opcional)"
+          placeholder="Ej: 0123456789"
           {...contained}
           {...register('codigo_medico')}
           error={errors.codigo_medico?.message}

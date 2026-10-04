@@ -3,6 +3,8 @@
 import { Stack, TextInput, Select } from '@mantine/core'
 import { FormModal } from '@/components/ui'
 import { useForm, Controller, useWatch } from 'react-hook-form'
+import { DatePickerInput } from '@mantine/dates'
+import { fromDateValue, fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -152,19 +154,35 @@ export function HistorialAcademicoModal({ opened, onClose, servidorId, initialVa
           {...contained} {...register('institucion')}
           error={errors.institucion?.message} />
 
-        <TextInput label="Fecha inicio"
-          type="date"
-          {...contained} {...register('fecha_inicio')}
-          error={errors.fecha_inicio?.message} />
+        {/* El selector de fechas del resto del sistema: el `type="date"`
+            nativo cambiaba de aspecto y de formato según el navegador, y su
+            placeholder no se veía nunca. */}
+        <Controller name="fecha_inicio" control={control}
+          render={({ field }) => (
+            <DatePickerInput label="Fecha de inicio"
+              placeholder="Seleccionar fecha"
+              valueFormat="DD/MM/YYYY"
+              maxDate={new Date()}
+              {...contained}
+              value={toDateValue(field.value)}
+              onChange={(d) => field.onChange(fromDateValue(d))}
+              error={errors.fecha_inicio?.message} />
+          )} />
 
-        <TextInput label="Fecha fin (Opcional)"
-          type="date"
-          placeholder="Dejar vacío si sigue cursando"
-          {...contained} {...register('fecha_fin')}
-          error={errors.fecha_fin?.message} />
+        <Controller name="fecha_fin" control={control}
+          render={({ field }) => (
+            <DatePickerInput label="Fecha de fin (opcional)"
+              placeholder="Vacío si sigue cursando"
+              valueFormat="DD/MM/YYYY"
+              clearable
+              {...contained}
+              value={toDateValue(field.value)}
+              onChange={(d) => field.onChange(fromDateValueOrNull(d))}
+              error={errors.fecha_fin?.message} />
+          )} />
 
         {tipoEstudio === 'estudio' && (
-          <TextInput label="Código de registro SENESCYT (Opcional)"
+          <TextInput label="Código de registro SENESCYT (opcional)"
             placeholder="Ej: 1005-2021-2245367"
             {...contained} {...register('codigo_senescyt')}
             error={errors.codigo_senescyt?.message} />

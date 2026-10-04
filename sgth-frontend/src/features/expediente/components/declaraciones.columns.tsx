@@ -1,5 +1,5 @@
 import { Text } from '@mantine/core'
-import { IconDownload, IconEdit, IconTrash } from '@tabler/icons-react'
+import { IconEdit, IconEye, IconTrash } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
 import { StatusBadge, TableActions, confirmar } from '@/components/ui'
 import { formatFecha } from '@/lib/fecha'
@@ -40,7 +40,7 @@ export const getDeclaracionesColumns = (
     accessor: 'codigo_barras',
     title: 'Código',
     render: ({ codigo_barras }) => (
-      <Text size="sm" ff="monospace">{codigo_barras ?? '-'}</Text>
+      <Text size="sm" ff="monospace">{codigo_barras ?? '—'}</Text>
     ),
   },
   {
@@ -52,7 +52,8 @@ export const getDeclaracionesColumns = (
         {
           // Solo aparece si la declaración tiene su PDF escaneado.
           label: 'Ver documento',
-          icon: <IconDownload size={14} />,
+          // Se abre, no se descarga.
+          icon: <IconEye size={14} />,
           hidden: !item.documento_ruta,
           onClick: () => onVerDocumento(item.id),
         },
@@ -67,7 +68,7 @@ export const getDeclaracionesColumns = (
           color: 'red',
           onClick: () => confirmar({
             title: 'Eliminar declaración',
-            message: 'Se eliminará esta declaración patrimonial del expediente. No se puede deshacer.',
+            message: 'Se eliminará esta declaración juramentada del expediente. No se puede deshacer.',
             destructiva: true,
             onConfirm: () => onDelete(Number(item.id)),
           }),
