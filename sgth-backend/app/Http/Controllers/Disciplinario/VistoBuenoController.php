@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Disciplinario;
 
 use App\Enums\EstadoVistoBueno;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Disciplinario\AdjuntarResolucionVistoBuenoRequest;
 use App\Http\Requests\Disciplinario\StoreVistoBuenoRequest;
 use App\Http\Requests\Disciplinario\TransicionarVistoBuenoRequest;
 use App\Http\Responses\ApiResponse;
@@ -11,6 +12,7 @@ use App\Models\Disciplinario\VistoBueno;
 use App\Services\Disciplinario\VistoBuenoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 final class VistoBuenoController extends Controller
 {
@@ -79,5 +81,34 @@ final class VistoBuenoController extends Controller
             : "Trámite actualizado a '{$destino->etiqueta()}'.";
 
         return ApiResponse::ok($actualizado, $mensaje);
+    }
+
+    /** Sube (o reemplaza) el PDF de la resolución del Inspector. */
+    public function adjuntarDocumento(
+        AdjuntarResolucionVistoBuenoRequest $request,
+        VistoBueno $vistoBueno
+    ): JsonResponse {
+        $actualizado = $this->vistoBuenoService->adjuntarResolucion(
+            $vistoBueno,
+            $request->file('archivo'),
+            $request->user()->id
+        );
+
+        return ApiResponse::ok($actualizado, 'Resolución del Inspector adjuntada.');
+    }
+
+    /** Descarga el PDF de la resolución: el archivo vive en el disco privado. */
+    public function descargarDocumento(VistoBueno $vistoBueno): mixed
+    {
+        $ruta = $vistoBueno->documento_respaldo;
+
+        if (! $ruta || ! Storage::disk('local')->exists($ruta)) {
+            return ApiResponse::error('Este trámite no tiene la resolución adjunta.', null, 404);
+        }
+
+        return Storage::disk('local')->download(
+            $ruta,
+            $vistoBueno->documento_nombre ?: "resolucion-visto-bueno-{$vistoBueno->id}.pdf"
+        );
     }
 }

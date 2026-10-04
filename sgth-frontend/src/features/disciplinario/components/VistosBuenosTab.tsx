@@ -47,6 +47,10 @@ export function VistosBuenosTab() {
     per_page: POR_PAGINA,
   })
   const tramites = data?.data ?? []
+  // El cajón enseña la versión recargada del trámite, no la copia de cuando
+  // se abrió: adjuntar la resolución desde el propio cajón no se veía hasta
+  // cerrarlo y volver a abrirlo.
+  const aVerFresco = aVer ? tramites.find((t) => t.id === aVer.id) ?? aVer : null
 
   const abrirTransicion = (tramite: VistoBueno) => {
     setSeleccionado(tramite)
@@ -121,7 +125,7 @@ export function VistosBuenosTab() {
       <VistoBuenoDetalleDrawer
         opened={detalleOpened}
         onClose={closeDetalle}
-        tramite={aVer}
+        tramite={aVerFresco}
       />
       <VistoBuenoModal opened={crearOpened} onClose={closeCrear} />
       <TransicionarVistoBuenoModal

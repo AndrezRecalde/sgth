@@ -20,12 +20,14 @@ interface Props {
   esResolucion: boolean
   /** Se pasa a `notificado`: hay datos del trámite ante el Ministerio. */
   esNotificacion: boolean
+  /** Se pasa a `impugnado`: el juicio o la causa y su fecha. */
+  esImpugnacion: boolean
 }
 
 /**
  * Los campos que pide cada avance del trámite, que son los que
  * `VistoBuenoService::transicionar()` lee según el estado de destino. Pasar a
- * «en investigación», «desistido» o «impugnado» no pide ninguno.
+ * «en investigación» o «desistido» no pide ninguno.
  */
 export function TransicionVistoBuenoCampos({
   control,
@@ -33,18 +35,21 @@ export function TransicionVistoBuenoCampos({
   errors,
   esResolucion,
   esNotificacion,
+  esImpugnacion,
 }: Props) {
   const contained = useContainedInput()
 
   return (
     <Stack gap="sm">
-      {(esResolucion || esNotificacion) && (
+      {(esResolucion || esNotificacion || esImpugnacion) && (
         <Controller
           name="fecha"
           control={control}
           render={({ field }) => (
             <DatePickerInput
-              label={esResolucion ? 'Fecha de la resolución' : 'Fecha de notificación'}
+              label={esResolucion
+                ? 'Fecha de la resolución'
+                : esImpugnacion ? 'Fecha de la impugnación' : 'Fecha de notificación'}
               required
               valueFormat="DD/MM/YYYY"
               error={errors.fecha?.message}
@@ -82,6 +87,17 @@ export function TransicionVistoBuenoCampos({
             {...register('inspector_nombre')}
           />
         </>
+      )}
+
+      {esImpugnacion && (
+        <TextInput
+          label="Juicio o causa"
+          required
+          placeholder="Ej: Juicio 08281-2026-00123, Unidad Judicial de Trabajo"
+          error={errors.impugnacion_referencia?.message}
+          {...contained}
+          {...register('impugnacion_referencia')}
+        />
       )}
 
       {esResolucion && (

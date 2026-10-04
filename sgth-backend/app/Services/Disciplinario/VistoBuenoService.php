@@ -13,7 +13,10 @@ use App\Models\Expediente\Servidor;
 use App\Services\Expediente\MovimientoPersonalService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Trámite de visto bueno ante el Inspector del Trabajo (Art. 172 y 183 del
@@ -154,6 +157,7 @@ class VistoBuenoService
                 EstadoVistoBueno::NOTIFICADO => $this->aplicarNotificacion($vistoBueno, $datos),
                 EstadoVistoBueno::CONCEDIDO,
                 EstadoVistoBueno::NEGADO     => $this->aplicarResolucion($vistoBueno, $datos),
+                EstadoVistoBueno::IMPUGNADO  => $this->aplicarImpugnacion($vistoBueno, $datos),
                 default                      => null,
             };
 
@@ -249,7 +253,70 @@ class VistoBuenoService
 
         $vistoBueno->resolucion_detalle = $datos['resolucion_detalle'];
         $vistoBueno->fecha_resolucion   = $datos['fecha_resolucion'] ?? now()->toDateString();
-        $vistoBueno->documento_respaldo = $datos['documento_respaldo'] ?? $vistoBueno->documento_respaldo;
+    }
+
+    /**
+     * La impugnación queda con su referencia —el juicio o la causa— y su
+     * fecha (2026-10-04). Antes no había dónde ponerlas: el estado decía
+     * «Impugnado» y nada más, y `resolucion_detalle` es del Inspector.
+     */
+    private function aplicarImpugnacion(VistoBueno $vistoBueno, array $datos): void
+    {
+        $referencia = trim((string) ($datos['impugnacion_referencia'] ?? ''));
+        if ($referencia === '') {
+            throw ValidationException::withMessages([
+                'impugnacion_referencia' => 'Indique el número de juicio o de causa de la impugnación.',
+            ]);
+        }
+
+        $fecha = Carbon::parse($datos['fecha_impugnacion'] ?? now()->toDateString())->startOfDay();
+        if ($vistoBueno->fecha_resolucion && $fecha->lt($vistoBueno->fecha_resolucion->copy()->startOfDay())) {
+            throw ValidationException::withMessages([
+                'fecha_impugnacion' => 'La impugnación no puede ser anterior a la resolución del Inspector ('
+                    .$vistoBueno->fecha_resolucion->format('d/m/Y').').',
+            ]);
+        }
+
+        $vistoBueno->impugnacion_referencia = $referencia;
+        $vistoBueno->fecha_impugnacion      = $fecha->toDateString();
+    }
+
+    /**
+     * La resolución del Inspector del Trabajo, en PDF (2026-10-04). Se adjunta
+     * cuando ya la hay —concedido, negado o impugnado— y reemplaza a la
+     * anterior: el trámite tiene una sola resolución.
+     *
+     * Va al disco privado; se baja por el controlador, que autoriza.
+     */
+    public function adjuntarResolucion(VistoBueno $vistoBueno, UploadedFile $archivo, int $userId): VistoBueno
+    {
+        $conResolucion = [EstadoVistoBueno::CONCEDIDO, EstadoVistoBueno::NEGADO, EstadoVistoBueno::IMPUGNADO];
+        if (! in_array($vistoBueno->estado, $conResolucion, true)) {
+            throw new ReglaNegocioException(
+                'La resolución se adjunta cuando el Inspector del Trabajo se pronuncia: el trámite '
+                    ."está en «{$vistoBueno->estado->etiqueta()}»."
+            );
+        }
+
+        $ruta = $archivo->store("disciplinario/vistos-buenos/{$vistoBueno->id}", 'local');
+        if (! $ruta) {
+            throw new ReglaNegocioException('No se pudo guardar el archivo. Inténtelo de nuevo.');
+        }
+
+        $anterior = $vistoBueno->documento_respaldo;
+
+        $vistoBueno->documento_respaldo = $ruta;
+        $vistoBueno->documento_nombre   = $archivo->getClientOriginalName();
+        $vistoBueno->updated_by         = $userId;
+        $vistoBueno->save();
+
+        // El anterior se borra después de guardar el nuevo: si algo falla
+        // antes, el trámite no se queda sin documento.
+        if ($anterior && $anterior !== $ruta) {
+            Storage::disk('local')->delete($anterior);
+        }
+
+        return $vistoBueno->fresh(['servidor', 'movimientoPersonal']);
     }
 
     /**
@@ -295,8 +362,9 @@ class VistoBuenoService
             return;
         }
 
-        $aviso = ' IMPUGNADO por el trabajador: revísese con Asesoría Jurídica '
-            .'antes de continuar con esta cesación.';
+        $aviso = ' IMPUGNADO por el trabajador ('.$vistoBueno->impugnacion_referencia
+            .', '.$vistoBueno->fecha_impugnacion?->format('d/m/Y').'): revísese con Asesoría '
+            .'Jurídica antes de continuar con esta cesación.';
 
         if (!str_contains((string) $movimiento->descripcion, 'IMPUGNADO')) {
             $movimiento->descripcion = $movimiento->descripcion.$aviso;

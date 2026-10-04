@@ -27,7 +27,6 @@ class StoreVistoBuenoRequest extends FormRequest
             'numero_tramite_mdt' => ['nullable', 'string', 'max:50'],
             'inspectoria'        => ['nullable', 'string', 'max:150'],
             'inspector_nombre'   => ['nullable', 'string', 'max:150'],
-            'documento_respaldo' => ['nullable', 'string', 'max:255'],
         ];
     }
 

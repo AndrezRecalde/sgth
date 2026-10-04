@@ -1061,6 +1061,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::get('vistos-buenos', [VistoBuenoController::class, 'index']);
             Route::post('vistos-buenos', [VistoBuenoController::class, 'store']);
             Route::put('vistos-buenos/{vistoBueno}/transicionar', [VistoBuenoController::class, 'transicionar']);
+            // La resolución del Inspector en PDF (2026-10-04).
+            Route::post('vistos-buenos/{vistoBueno}/documento', [VistoBuenoController::class, 'adjuntarDocumento']);
+            Route::get('vistos-buenos/{vistoBueno}/documento', [VistoBuenoController::class, 'descargarDocumento']);
         });
 
     // Módulo 10 — SSO

@@ -6434,6 +6434,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/disciplinario/vistos-buenos/{vistoBueno}/documento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Descarga el PDF de la resolución: el archivo vive en el disco privado */
+        get: operations["vistoBueno.descargarDocumento"];
+        put?: never;
+        /** Sube (o reemplaza) el PDF de la resolución del Inspector */
+        post: operations["vistoBueno.adjuntarDocumento"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -6527,6 +6545,16 @@ export interface components {
         ActualizarContrasenaRequest: {
             contrasena_actual: string;
             nueva_contrasena?: string;
+        };
+        /**
+         * AdjuntarResolucionVistoBuenoRequest
+         * @description La resolución del Inspector del Trabajo, en PDF: es un documento oficial que
+         *     se archiva y se presenta, no una foto. 10 MB alcanzan para un escaneo de
+         *     varias páginas.
+         */
+        AdjuntarResolucionVistoBuenoRequest: {
+            /** Format: binary */
+            archivo: string;
         };
         /** AdquisicionMedicamento */
         AdquisicionMedicamento: {
@@ -10109,7 +10137,6 @@ export interface components {
             numero_tramite_mdt?: string | null;
             inspectoria?: string | null;
             inspector_nombre?: string | null;
-            documento_respaldo?: string | null;
         };
         /** Subrogacion */
         Subrogacion: {
@@ -10375,7 +10402,15 @@ export interface components {
             numero_tramite_mdt?: string | null;
             inspectoria?: string | null;
             inspector_nombre?: string | null;
-            documento_respaldo?: string | null;
+            /**
+             * @description Al impugnar: el juicio o la causa y su fecha (2026-10-04). Los
+             *     exige VistoBuenoService, que es quien sabe a qué estado se va.
+             *     La resolución del Inspector ya no viaja aquí como texto: se
+             *     sube como PDF por POST vistos-buenos/{id}/documento.
+             */
+            impugnacion_referencia?: string | null;
+            /** Format: date-time */
+            fecha_impugnacion?: string | null;
         };
         /** Triaje */
         Triaje: {
@@ -10996,7 +11031,6 @@ export interface components {
             fecha_resolucion: string | null;
             hechos: string;
             resolucion_detalle: string | null;
-            documento_respaldo: string | null;
             movimiento_personal_id: number | null;
             created_by: number | null;
             updated_by: number | null;
@@ -11006,6 +11040,11 @@ export interface components {
             updated_at: string | null;
             /** Format: date-time */
             deleted_at: string | null;
+            documento_nombre: string | null;
+            impugnacion_referencia: string | null;
+            /** Format: date-time */
+            fecha_impugnacion: string | null;
+            tiene_documento: string;
         };
         /**
          * ZonaViatico
@@ -29391,6 +29430,65 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         mensaje: string | "Visto bueno concedido. Se generó la Cesación de Funciones en borrador para revisión de Talento Humano.";
+                        datos: components["schemas"]["VistoBueno"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "vistoBueno.descargarDocumento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The visto bueno ID */
+                vistoBueno: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "vistoBueno.adjuntarDocumento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The visto bueno ID */
+                vistoBueno: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["AdjuntarResolucionVistoBuenoRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Resolución del Inspector adjuntada.";
                         datos: components["schemas"]["VistoBueno"];
                         meta: null;
                     };

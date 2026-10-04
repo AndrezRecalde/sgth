@@ -53,6 +53,8 @@ export type TransicionarVistoBuenoData = {
   numero_tramite_mdt?: string | null
   inspectoria?: string | null
   inspector_nombre?: string | null
+  impugnacion_referencia?: string | null
+  fecha_impugnacion?: string | null
 }
 
 const BASE = '/disciplinario'
@@ -84,4 +86,19 @@ export const disciplinarioService = {
     api.put<ApiResponse<VistoBueno>>(
       `${BASE}/vistos-buenos/${id}/transicionar`, data
     ).then(r => r.data.datos),
+
+  /** La resolución del Inspector en PDF; reemplaza la anterior (2026-10-04). */
+  adjuntarResolucion: (id: number, archivo: File) => {
+    const datos = new FormData()
+    datos.append('archivo', archivo)
+    // La instancia de axios fija JSON: sin esto el PDF llegaba como texto y el
+    // backend respondía «El campo archivo debe ser un archivo».
+    return api.post<ApiResponse<VistoBueno>>(`${BASE}/vistos-buenos/${id}/documento`, datos, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then(r => r.data.datos)
+  },
+
+  descargarResolucion: (id: number) =>
+    api.get(`${BASE}/vistos-buenos/${id}/documento`, { responseType: 'blob' })
+      .then(r => r.data as Blob),
 }
