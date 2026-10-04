@@ -9,6 +9,7 @@ import { IconBriefcase, IconCalendarCog, IconInfoCircle } from '@tabler/icons-re
 import { DataState, DetailList, SectionCard, SectionHeading } from '@/components/ui'
 import { useActividadLaboral } from '../../hooks/useActividadLaboral'
 import { etiquetaNombramiento } from '../../utils/tipoNombramientoOptions'
+import { partidaDelVinculo } from '../../utils/partidaPorModalidad'
 import { ReprogramarPlazoModal } from '../ReprogramarPlazoModal'
 import type {
   AccionSobreVinculo, VinculoConActividad,
@@ -158,7 +159,7 @@ function Vinculo({
               },
               { label: 'Remuneración', value: dinero(c.remuneracion) },
               { label: 'Resolución', value: c.resolucion_numero },
-              { label: 'Partida', value: c.puesto?.partida_presupuestaria?.codigo },
+              { label: 'Partida', value: partidaDelVinculo(c) },
               { label: 'Marca asistencia', value: c.puede_marcar === false ? 'No' : 'Sí' },
               ...(c.motivo_fin
                 ? [{ label: 'Motivo de término', value: c.motivo_fin, ancho: true }]

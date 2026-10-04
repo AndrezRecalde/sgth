@@ -32,3 +32,21 @@ export function codigosDePartida(modalidad?: string | null): string[] {
 export function exigeElegirPartida(modalidad?: string | null): boolean {
   return codigosDePartida(modalidad).length > 1
 }
+
+interface VinculoConPartida {
+  partida_presupuestaria?: { codigo?: string | null } | null
+  puesto?: { partida_presupuestaria?: { codigo?: string | null } | null } | null
+}
+
+/**
+ * El código de la partida que paga un vínculo. Sale del contrato, no del
+ * puesto: un ocasional y un permanente sobre la misma plaza se imputan a
+ * partidas distintas. La del puesto solo respalda a los vínculos anteriores a
+ * esa distinción. Es la misma regla con que el backend llena la
+ * `partida_origen` de una acción de personal.
+ */
+export function partidaDelVinculo(vinculo?: VinculoConPartida | null): string | null {
+  return vinculo?.partida_presupuestaria?.codigo
+    ?? vinculo?.puesto?.partida_presupuestaria?.codigo
+    ?? null
+}

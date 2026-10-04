@@ -106,6 +106,8 @@ class ExpedienteService implements ExpedienteServiceInterface
             'puesto.grupoOcupacional',
             'contratoVigente.puesto.cargo',
             'contratoVigente.puesto.partidaPresupuestaria',
+            // La que paga el vínculo; la del puesto queda de respaldo.
+            'contratoVigente.partidaPresupuestaria',
             'contratoVigente.unidadAdministrativa',
             // Sin 'documentos' ni 'movimientos': nadie los lee de aquí —las
             // pestañas del expediente y la bandeja tienen sus propios
