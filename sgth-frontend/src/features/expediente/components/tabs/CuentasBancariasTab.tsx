@@ -46,6 +46,11 @@ export function CuentasBancariasTab({ servidorId }: Props) {
             icon: IconCreditCard,
             title: 'Sin cuentas bancarias',
             description: 'Registre la cuenta bancaria para el pago de nómina.',
+            action: (
+              <Button variant="light" leftSection={<IconPlus size={14} />} onClick={open}>
+                Nueva cuenta
+              </Button>
+            ),
           }}
         >
           <SgthTable records={cuentas} columns={columns} minHeight={80} />

@@ -82,6 +82,11 @@ export function DocumentosTab({ servidorId }: Props) {
             icon: IconPaperclip,
             title: 'Sin documentos',
             description: 'Suba los documentos del expediente del servidor.',
+            action: (
+              <Button variant="light" leftSection={<IconPlus size={14} />} onClick={open}>
+                Subir documento
+              </Button>
+            ),
           }}
         >
           <SgthTable records={documentos} columns={columns} minHeight={100} />
