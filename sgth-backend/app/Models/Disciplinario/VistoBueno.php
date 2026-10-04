@@ -6,7 +6,6 @@ use App\Enums\CausalVistoBueno;
 use App\Enums\EstadoVistoBueno;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -77,15 +76,5 @@ class VistoBueno extends Model
     public function movimientoPersonal(): BelongsTo
     {
         return $this->belongsTo(MovimientoPersonal::class, 'movimiento_personal_id');
-    }
-
-    public function createdBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'created_by');
-    }
-
-    public function updatedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'updated_by');
     }
 }

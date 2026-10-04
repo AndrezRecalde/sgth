@@ -386,3 +386,33 @@ test('el filtro por estado recorta el listado y el total', function () {
     expect($pagina['total'])->toBe(1)
         ->and($pagina['data'][0]['estado'])->toBe('cerrado');
 });
+
+// ── Sin detalle por id ─────────────────────────────────────────
+
+test('no hay detalle por id: el listado trae el registro y created_by es el id', function () {
+    // Hasta el 2026-10-04 `GET sumarios/{id}` cargaba createdBy, que en el JSON
+    // pisaba la columna `created_by` con el usuario entero de quien abrió el
+    // trámite: su correo y su ficha, con cédula y teléfono.
+    $sumario = Sumario::create([
+        'servidor_id'    => ($this->servidor)(1)->id,
+        'motivo'         => 'Sumario con autor',
+        'estado'         => EstadoSumario::ABIERTO,
+        'fecha_apertura' => '2026-03-02',
+        'notificado_sn'  => false,
+        'created_by'     => $this->admin->id,
+    ]);
+    $tramite = VistoBueno::create([
+        'servidor_id'     => ($this->servidor)(2)->id,
+        'causal'          => CausalVistoBueno::INDISCIPLINA_DESOBEDIENCIA->value,
+        'estado'          => 'solicitado',
+        'hechos'          => 'Trámite con autor',
+        'fecha_solicitud' => '2026-03-02',
+    ]);
+
+    $this->actingAs($this->admin, 'sanctum');
+    $this->getJson("/api/v1/disciplinario/sumarios/{$sumario->id}")->assertNotFound();
+    $this->getJson("/api/v1/disciplinario/vistos-buenos/{$tramite->id}")->assertNotFound();
+
+    $fila = $this->getJson('/api/v1/disciplinario/sumarios')->assertOk()->json('datos.data.0');
+    expect($fila['created_by'])->toBe($this->admin->id);
+});

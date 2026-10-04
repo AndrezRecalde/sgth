@@ -60,14 +60,6 @@ final class VistoBuenoController extends Controller
         );
     }
 
-    public function show(VistoBueno $vistoBueno): JsonResponse
-    {
-        return ApiResponse::ok(
-            $vistoBueno->load(['servidor', 'movimientoPersonal', 'createdBy', 'updatedBy']),
-            'Trámite de visto bueno.'
-        );
-    }
-
     public function transicionar(
         TransicionarVistoBuenoRequest $request,
         VistoBueno $vistoBueno
