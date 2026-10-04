@@ -14,7 +14,7 @@ export function useHistorialAcademicoMutations(servidorId: number) {
       notificar.exito('Título registrado', 'El título académico fue registrado.')
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo registrar el título'),
+    onError: notificar.alFallarSalvoCampos('No se pudo registrar el título'),
   })
 
   const editar = useMutation({
@@ -24,7 +24,7 @@ export function useHistorialAcademicoMutations(servidorId: number) {
       notificar.exito('Título actualizado', 'El título académico fue actualizado.')
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo actualizar el título'),
+    onError: notificar.alFallarSalvoCampos('No se pudo actualizar el título'),
   })
 
   const eliminar = useMutation({

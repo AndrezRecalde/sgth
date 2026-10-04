@@ -16,7 +16,7 @@ export function useCuentaBancariaMutations(servidorId: number) {
       notificar.exito('Cuenta registrada', 'La cuenta bancaria fue registrada.')
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo registrar la cuenta'),
+    onError: notificar.alFallarSalvoCampos('No se pudo registrar la cuenta'),
   })
 
   // Antes la edición llamaba al servicio directo desde el modal: un fallo se
@@ -28,7 +28,7 @@ export function useCuentaBancariaMutations(servidorId: number) {
       notificar.exito('Cuenta actualizada', 'La cuenta bancaria fue actualizada.')
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo actualizar la cuenta'),
+    onError: notificar.alFallarSalvoCampos('No se pudo actualizar la cuenta'),
   })
 
   const setPrincipal = useMutation({

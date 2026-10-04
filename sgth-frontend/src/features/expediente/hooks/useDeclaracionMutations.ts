@@ -17,7 +17,7 @@ export function useDeclaracionMutations(servidorId: number) {
       notificar.exito('Declaración registrada', 'La declaración juramentada fue registrada.')
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo registrar la declaración'),
+    onError: notificar.alFallarSalvoCampos('No se pudo registrar la declaración'),
   })
 
   // Antes la edición llamaba al servicio directo y un fallo se tragaba sin
@@ -29,7 +29,7 @@ export function useDeclaracionMutations(servidorId: number) {
       notificar.exito('Declaración actualizada', 'La declaración fue actualizada correctamente.')
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo actualizar la declaración'),
+    onError: notificar.alFallarSalvoCampos('No se pudo actualizar la declaración'),
   })
 
   const eliminar = useMutation({

@@ -5,6 +5,7 @@ import { FormModal } from '@/components/ui'
 import { useForm, useWatch, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useContainedInput } from '@/hooks/useContainedInput'
+import { erroresAlFormulario } from '@/lib/erroresAlFormulario'
 import {
   TIPOS_DISCAPACIDAD, discapacidadCargaSchema, discapacidadSchema,
   type DiscapacidadFormData,
@@ -40,7 +41,7 @@ export function DiscapacidadModal({
 }: Props) {
   const contained = useContainedInput()
 
-  const { register, control, handleSubmit, reset, formState: { errors } } =
+  const { register, control, handleSubmit, reset, setError, formState: { errors } } =
     useForm<DiscapacidadFormData>({
       resolver: zodResolver(carnetObligatorio ? discapacidadSchema : discapacidadCargaSchema),
       defaultValues: {
@@ -61,7 +62,9 @@ export function DiscapacidadModal({
 
   const onSubmit = (values: DiscapacidadFormData) => {
     const data = { ...values, numero_carnet_conadis: values.numero_carnet_conadis || null }
-    onGuardar(data, initialValues?.id).then(handleClose).catch(() => {}) // el hook ya notificó
+    onGuardar(data, initialValues?.id).then(handleClose).catch((e) => erroresAlFormulario(
+      e, setError, Object.keys(discapacidadCargaSchema.shape), 'No se pudo guardar la discapacidad',
+    ))
   }
 
   return (

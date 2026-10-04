@@ -5,6 +5,7 @@ import { FormModal } from '@/components/ui'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useContainedInput } from '@/hooks/useContainedInput'
+import { erroresAlFormulario } from '@/lib/erroresAlFormulario'
 import { enfermedadSchema, type EnfermedadFormData }
   from '../schemas/enfermedad.schema'
 import { DatePickerInput } from '@mantine/dates'
@@ -32,7 +33,7 @@ interface Props {
 export function EnfermedadModal({ opened, onClose, onGuardar, guardando, initialValues }: Props) {
   const contained = useContainedInput()
 
-  const { register, handleSubmit, reset, control, formState: { errors } } =
+  const { register, handleSubmit, reset, control, setError, formState: { errors } } =
     useForm<EnfermedadFormData>({
       resolver: zodResolver(enfermedadSchema),
       defaultValues: {
@@ -53,7 +54,9 @@ export function EnfermedadModal({ opened, onClose, onGuardar, guardando, initial
       codigo_cie10: values.codigo_cie10 || null,
       fecha_diagnostico: values.fecha_diagnostico || null,
     }
-    onGuardar(data, initialValues?.id).then(handleClose).catch(() => {}) // el hook ya notificó
+    onGuardar(data, initialValues?.id).then(handleClose).catch((e) => erroresAlFormulario(
+      e, setError, Object.keys(enfermedadSchema.shape), 'No se pudo guardar la enfermedad',
+    ))
   }
 
   return (

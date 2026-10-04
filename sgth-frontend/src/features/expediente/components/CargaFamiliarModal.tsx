@@ -12,6 +12,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useContainedInput } from "@/hooks/useContainedInput";
+import { erroresAlFormulario } from "@/lib/erroresAlFormulario";
 import { useCargaFamiliarMutations } from "../hooks/useCargaFamiliarMutations";
 import {
   cargaFamiliarSchema,
@@ -47,6 +48,7 @@ export function CargaFamiliarModal({
     control,
     handleSubmit,
     reset,
+    setError,
     formState: { errors },
   } = useForm<CargaFamiliarFormData>({
     resolver: zodResolver(cargaFamiliarSchema),
@@ -74,7 +76,9 @@ export function CargaFamiliarModal({
         reset();
         onClose();
       })
-      .catch(() => {});
+      .catch((e) => erroresAlFormulario(
+        e, setError, Object.keys(cargaFamiliarSchema.shape), "No se pudo guardar la carga familiar",
+      ));
   };
 
   return (
