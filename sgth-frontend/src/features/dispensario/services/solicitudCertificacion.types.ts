@@ -94,6 +94,9 @@ export interface SolicitudCertificacion {
     cedula:  string
     genero?: SexoPaciente
     tipo_sangre?: string | null
+    /** Lo que consta en el Expediente, para que el FEMO nazca con ello. */
+    tiene_discapacidad?: boolean
+    discapacidades?: { id: number; porcentaje: string | number }[]
     puesto?: PuestoDeSolicitud | null
     unidad_administrativa?: {
       id:     number

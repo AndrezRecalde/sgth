@@ -21,7 +21,8 @@ use Illuminate\Support\Facades\DB;
 final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
 {
     public function __construct(
-        private readonly AgendaServiceInterface $agendaService
+        private readonly AgendaServiceInterface $agendaService,
+        private readonly CondicionDeclaradaService $condicionDeclarada,
     ) {}
     public function listar(array $filtros): LengthAwarePaginator
     {
@@ -457,6 +458,9 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
             'historia_clinica'      => $historia,
             'triaje_actual'         => $triajeActual,
             'consultas_anteriores'  => $consultasAnteriores,
+            // Discapacidad y enfermedad catastrófica del Expediente, en solo
+            // lectura: el médico no las veía en ninguna parte.
+            'condicion_declarada'   => $this->condicionDeclarada->de($historia),
         ];
     }
 }

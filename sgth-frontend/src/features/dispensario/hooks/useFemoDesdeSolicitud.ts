@@ -42,8 +42,21 @@ export function useFemoDesdeSolicitud(
       solicitud.convocatoria?.puesto ??
       null
 
+    // La discapacidad que consta en el Expediente, ya marcada: antes el médico
+    // la volvía a teclear. Se toma el porcentaje mayor si hay varias. Es solo
+    // el punto de partida: el médico la confirma o la corrige en la ficha, y
+    // eso no toca el Expediente.
+    const porcentajes = (solicitud.servidor?.discapacidades ?? []).map(d => Number(d.porcentaje))
+    const discapacidad = solicitud.servidor?.tiene_discapacidad
+      ? {
+          grupo_discapacidad:      true,
+          porcentaje_discapacidad: porcentajes.length > 0 ? String(Math.max(...porcentajes)) : null,
+        }
+      : {}
+
     wizard.setFichaData(prev => ({
       ...prev,
+      ...discapacidad,
       tipo_ficha:     solicitud.tipo_evento as FichaBaseForm['tipo_ficha'],
       numero_archivo: solicitud.cedula_paciente,
       servidor_id:    solicitud.servidor?.id ?? null,

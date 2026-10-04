@@ -14,6 +14,7 @@ import { AnularRegistroModal } from './AnularRegistroModal'
 import { AvisoAlergiaGrave, SeccionAlergias } from './SeccionAlergias'
 import { BloqueTriaje } from './BloqueTriaje'
 import { SeccionAntecedentes } from './SeccionAntecedentes'
+import { SeccionCondicionDeclarada } from './SeccionCondicionDeclarada'
 import { useContextoConsulta } from '../hooks/useContextoConsulta'
 import { useAnularAlergia, useAnularAntecedente } from '../hooks/useHistoriaClinica'
 import type { AgendaMedica } from '../services/agendaService'
@@ -106,6 +107,8 @@ export function PanelContextoPaciente({ turno, historiaClinicaId }: Props) {
         </Group>
 
         <AvisoAlergiaGrave alergias={alergias} />
+
+        <SeccionCondicionDeclarada condicion={contexto?.condicion_declarada} />
 
         <BloqueTriaje triaje={triaje} />
 

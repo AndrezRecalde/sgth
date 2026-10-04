@@ -24,6 +24,26 @@ export interface Antecedente {
   fecha_aproximada?: number | null
 }
 
+/**
+ * La discapacidad y la enfermedad catastrófica que constan en el Expediente,
+ * del servidor o del familiar. `null` para quien no tiene expediente (un
+ * candidato de ingreso). El grado lo deriva el backend del porcentaje.
+ */
+export interface CondicionDeclarada {
+  discapacidades: {
+    etiqueta:   string
+    porcentaje: number | null
+    grado:      string | null
+  }[]
+  enfermedades: {
+    nombre:       string
+    codigo_cie10: string | null
+  }[]
+  /** Marcado a mano antes de que existieran los registros, sin detalle. */
+  discapacidad_sin_detalle: boolean
+  enfermedad_sin_detalle:   boolean
+}
+
 export interface ContextoConsulta {
   historia_clinica: {
     id: number
@@ -36,6 +56,7 @@ export interface ContextoConsulta {
   }
   triaje_actual:        Triaje | null
   consultas_anteriores: ConsultaResumen[]
+  condicion_declarada:  CondicionDeclarada | null
 }
 
 export const contextoConsultaService = {
