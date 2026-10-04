@@ -447,8 +447,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 Route::post('contratos', [ContratoServidorController::class, 'store'])
                     ->middleware('role:admin-ti')
                     ->name('contratos.store');
-                Route::put('contratos/{contrato}/cerrar', [ContratoServidorController::class, 'cerrar'])
-                    ->name('contratos.cerrar');
+                // Aquí estaba `PUT contratos/{contrato}/cerrar`, retirado el
+                // 2026-10-03: cerraba el vínculo sin acción de personal y sin
+                // devolver el puesto. Un vínculo se cierra con la cesación.
                 // Único campo editable de un vínculo ya creado: el plazo
                 // (prórroga o corrección de digitación), siempre con motivo.
                 Route::put('contratos/{contrato}/plazo', [ContratoServidorController::class, 'reprogramarPlazo'])

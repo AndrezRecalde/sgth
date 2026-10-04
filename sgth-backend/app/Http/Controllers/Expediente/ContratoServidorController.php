@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Expediente;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Expediente\CerrarContratoServidorRequest;
 use App\Http\Requests\Expediente\ReprogramarPlazoContratoRequest;
 use App\Http\Requests\Expediente\StoreContratoServidorRequest;
 use App\Http\Responses\ApiResponse;
@@ -53,27 +52,6 @@ class ContratoServidorController extends Controller
         
         $contrato->load(['unidadAdministrativa', 'puesto']);
         return response()->json(['data' => $contrato]);
-    }
-
-    /**
-     * Cierra un contrato vigente (fecha_fin + motivo_fin). Un contrato
-     * nunca se edita para cambiar de modalidad: se cierra este y se crea
-     * uno nuevo con crear().
-     */
-    public function cerrar(
-        CerrarContratoServidorRequest $request,
-        int $servidorId,
-        ContratoServidor $contrato
-    ): JsonResponse {
-        if ($contrato->servidor_id !== (int) $servidorId) {
-            abort(404, 'Contrato no encontrado para este servidor.');
-        }
-        $contratoCerrado = $this->contratoService->cerrar(
-            $contrato, $request->validated()
-        );
-        return ApiResponse::ok(
-            $contratoCerrado, 'Contrato cerrado con éxito.'
-        );
     }
 
     /**
