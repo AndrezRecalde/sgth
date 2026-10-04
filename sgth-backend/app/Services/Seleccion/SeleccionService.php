@@ -140,35 +140,121 @@ final class SeleccionService implements SeleccionServiceInterface
      * no queda ninguno por resolver la convocatoria se finaliza sola. Los que
      * esperaban en la lista de espera quedan como no seleccionados.
      *
-     * Se llama dentro de la transacción de la incorporación.
+     * Un no apto deja una vacante sin cubrir: mientras quede alguien en lista
+     * de espera, el concurso sigue abierto para declarar al siguiente
+     * (`declararSiguiente`). Sin nadie a quien declarar, se finaliza con los
+     * que hubo, o queda desierto si no se incorporó ninguno.
+     *
+     * Se llama dentro de la transacción de la incorporación o del dictamen.
      */
-    public function finalizarSiNoQuedanGanadores(int $convocatoriaId, int $userId): bool
+    public function cerrarConcursoSiCorresponde(int $convocatoriaId, int $userId): ?EstadoConvocatoria
     {
         $convocatoria = Convocatoria::lockForUpdate()->findOrFail($convocatoriaId);
 
         if ($convocatoria->es_contenedor_permanente
             || $convocatoria->estado !== EstadoConvocatoria::EN_EVALUACION_MEDICA) {
-            return false;
+            return null;
         }
 
-        $pendientes = Postulante::where('convocatoria_id', $convocatoria->id)
-            ->where('estado', EstadoPostulante::GANADOR_POTENCIAL->value)
-            ->exists();
+        $delConcurso = fn (EstadoPostulante $estado) => Postulante::where('convocatoria_id', $convocatoria->id)
+            ->where('estado', $estado->value);
 
-        if ($pendientes) {
-            return false;
+        if ($delConcurso(EstadoPostulante::GANADOR_POTENCIAL)->exists()) {
+            return null;
         }
+
+        $incorporados = $delConcurso(EstadoPostulante::INCORPORADO)->count();
+        $vacantesCubiertas = $incorporados >= (int) ($convocatoria->vacantes ?? 1);
+
+        if (! $vacantesCubiertas && $delConcurso(EstadoPostulante::LISTA_ESPERA)->exists()) {
+            return null;
+        }
+
+        $estado = $incorporados > 0 ? EstadoConvocatoria::FINALIZADA : EstadoConvocatoria::DESIERTA;
 
         $convocatoria->update([
-            'estado'     => EstadoConvocatoria::FINALIZADA,
+            'estado'     => $estado,
             'updated_by' => $userId,
         ]);
 
-        Postulante::where('convocatoria_id', $convocatoria->id)
-            ->where('estado', EstadoPostulante::LISTA_ESPERA->value)
+        $delConcurso(EstadoPostulante::LISTA_ESPERA)
             ->update(['estado' => EstadoPostulante::NO_SELECCIONADO->value]);
 
-        return true;
+        return $estado;
+    }
+
+    /**
+     * Antes el no apto se quedaba en «ganador_potencial» para siempre: no se
+     * podía incorporar, nadie ocupaba su lugar y el concurso formal no se
+     * cerraba nunca (decisión de TH, 2026-10-04).
+     */
+    public function descalificarPorNoApto(int $postulanteId, int $userId): void
+    {
+        $postulante = Postulante::lockForUpdate()->findOrFail($postulanteId);
+
+        if ($postulante->estado !== EstadoPostulante::GANADOR_POTENCIAL) {
+            return;
+        }
+
+        $postulante->update(['estado' => EstadoPostulante::DESCALIFICADO]);
+
+        $this->cerrarConcursoSiCorresponde($postulante->convocatoria_id, $userId);
+    }
+
+    /**
+     * El siguiente lo decide el puntaje, no Talento Humano: en un concurso de
+     * méritos, saltarse a alguien de la lista de espera no es una opción.
+     * A igual puntaje, el que se inscribió primero.
+     */
+    public function declararSiguiente(int $convocatoriaId, int $userId): Postulante
+    {
+        return DB::transaction(function () use ($convocatoriaId, $userId) {
+            $convocatoria = Convocatoria::with('puesto.cargo')->lockForUpdate()->findOrFail($convocatoriaId);
+
+            if ($convocatoria->es_contenedor_permanente) {
+                throw new ReglaNegocioException(
+                    'En el reclutamiento express no hay ranking: cada aspirante se envía por separado.'
+                );
+            }
+
+            if ($convocatoria->estado !== EstadoConvocatoria::EN_EVALUACION_MEDICA) {
+                throw new ReglaNegocioException(
+                    'Solo se declara al siguiente mientras la convocatoria está en evaluación médica.'
+                );
+            }
+
+            $ocupadas = Postulante::where('convocatoria_id', $convocatoria->id)
+                ->whereIn('estado', [
+                    EstadoPostulante::GANADOR_POTENCIAL->value,
+                    EstadoPostulante::INCORPORADO->value,
+                ])
+                ->count();
+
+            if ($ocupadas >= (int) ($convocatoria->vacantes ?? 1)) {
+                throw new ReglaNegocioException(
+                    'Las vacantes ya están cubiertas o en evaluación médica: no hay lugar para otro candidato.'
+                );
+            }
+
+            $siguiente = Postulante::with('puesto.cargo')
+                ->select('postulantes.*')
+                ->join('evaluaciones_seleccion as e', 'e.postulante_id', '=', 'postulantes.id')
+                ->where('postulantes.convocatoria_id', $convocatoria->id)
+                ->where('postulantes.estado', EstadoPostulante::LISTA_ESPERA->value)
+                ->orderByDesc('e.puntaje_total')
+                ->orderBy('postulantes.id')
+                ->lockForUpdate()
+                ->first();
+
+            if (! $siguiente) {
+                throw new ReglaNegocioException('No queda nadie en la lista de espera.');
+            }
+
+            $siguiente->update(['estado' => EstadoPostulante::GANADOR_POTENCIAL]);
+            $this->solicitarCertificacion($convocatoria, $siguiente, $userId);
+
+            return $siguiente->fresh();
+        });
     }
 
     private function assertConcursoAbierto(Convocatoria $convocatoria): void

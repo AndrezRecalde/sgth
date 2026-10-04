@@ -5201,6 +5201,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/seleccion/convocatorias/{convocatoriaId}/declarar-siguiente": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cubre la vacante que dejó un no apto con el siguiente de la lista de
+         *     espera, por puntaje
+         */
+        post: operations["seleccion.declararSiguiente"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/expediente/servidores/sin-usuario": {
         parameters: {
             query?: never;
@@ -26239,6 +26259,33 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             422: components["responses"]["ValidationException"];
+        };
+    };
+    "seleccion.declararSiguiente": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                convocatoriaId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: components["schemas"]["Postulante"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
         };
     };
     "servidores.sinUsuario": {

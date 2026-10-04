@@ -794,6 +794,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             // Evaluación y selección
             Route::post('postulantes/{id}/calificar', [SeleccionController::class, 'calificar']);
             Route::post('convocatorias/{id}/declarar-ganador', [SeleccionController::class, 'declararGanador']);
+            // La vacante que deja un no apto la cubre el siguiente del ranking.
+            Route::post('convocatorias/{id}/declarar-siguiente', [SeleccionController::class, 'declararSiguiente']);
         });
 
     // Módulo 12 — Inventario de Bienes Informáticos

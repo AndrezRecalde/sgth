@@ -7,6 +7,7 @@ import { confirmar, StatusBadge } from '@/components/ui'
 import { useAuth } from '@/hooks/useAuth'
 import { useConfirmarIncorporacion } from '@/features/dispensario/hooks/useSolicitudCertificacion'
 import { usePostulantes, useEnviarAlDispensario } from '../hooks/useConvocatoria'
+import { DeclararSiguienteAviso } from './DeclararSiguienteAviso'
 import { RankingCandidatoCard, nombreCandidato } from './RankingCandidatoCard'
 import type { Postulante } from '../services/convocatoriaService'
 
@@ -44,6 +45,13 @@ export function TabRanking({ convocatoriaId, estadoConvocatoria, vacantes = 1 }:
   // Todos los enviados, no solo el primero: con dos o más vacantes el aviso
   // nombraba a uno.
   const enviados = postulantes.filter((p) => p.estado === 'ganador_potencial')
+
+  // La vacante de un no apto la cubre el primero de la lista de espera en el
+  // ranking. El backend lo elige igual; aquí solo se nombra.
+  const ocupadas = postulantes.filter((p) => ['ganador_potencial', 'incorporado'].includes(p.estado)).length
+  const siguiente = ranking.find((p) => p.estado === 'lista_espera')
+  const hayNoAptos = postulantes.some((p) => p.estado === 'descalificado')
+  const puedeDeclararSiguiente = enEvalMedica && hayNoAptos && ocupadas < vacantes
 
   const confirmarIncorporacion = (p: Postulante) => {
     const solicitudId = p.solicitud_certificacion?.id
@@ -109,6 +117,10 @@ export function TabRanking({ convocatoriaId, estadoConvocatoria, vacantes = 1 }:
             la convocatoria se finaliza sola.
           </Text>
         </Alert>
+      )}
+
+      {puedeDeclararSiguiente && siguiente && (
+        <DeclararSiguienteAviso convocatoriaId={convocatoriaId} siguiente={siguiente} />
       )}
 
       {!enEvalMedica && !finalizada && ranking.length === 0 && (

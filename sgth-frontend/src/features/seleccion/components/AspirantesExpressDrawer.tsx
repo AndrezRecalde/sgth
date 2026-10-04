@@ -77,10 +77,13 @@ const ESTADOS_CALIFICABLES = ['inscrito', 'en_evaluacion', 'aprobado', 'reprobad
 function estadoVisible(a: AspiranteExpress): { etiqueta: string; tono: SemanticTone } {
   const s = a.solicitud_certificacion
 
-  if (a.estado === 'ganador_potencial' && s?.estado === 'completada') {
-    if (dictamenHabilitaIncorporacion(s.dictamen)) {
-      return { etiqueta: 'Apto — por incorporar', tono: 'success' }
-    }
+  if (a.estado === 'ganador_potencial' && s?.estado === 'completada'
+    && dictamenHabilitaIncorporacion(s.dictamen)) {
+    return { etiqueta: 'Apto — por incorporar', tono: 'success' }
+  }
+
+  // Desde el 2026-10-04 el no apto queda descalificado: su caso se cierra.
+  if (a.estado === 'descalificado' && s?.dictamen === 'no_apto') {
     return { etiqueta: 'No apto', tono: 'danger' }
   }
 

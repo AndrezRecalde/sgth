@@ -2,6 +2,7 @@
 
 namespace App\Contracts\Seleccion;
 
+use App\Enums\EstadoConvocatoria;
 use App\Models\Seleccion\EvaluacionSeleccion;
 use App\Models\Seleccion\Postulante;
 use Illuminate\Support\Collection;
@@ -28,9 +29,24 @@ interface SeleccionServiceInterface
     public function declararGanadores(int $convocatoriaId, array $postulanteIds, int $userId): Collection;
 
     /**
-     * Cierra un concurso formal cuando ya no le queda ningún ganador por
-     * resolver: todos los enviados al dispensario fueron incorporados. Lo
-     * llama la confirmación de la incorporación. Devuelve si la finalizó.
+     * Cierra un concurso formal cuando ya no le queda nada por resolver: no
+     * hay ganador esperando dictamen ni incorporación, y o las vacantes están
+     * cubiertas o no queda nadie en lista de espera para cubrirlas. Lo llaman
+     * la incorporación y el dictamen de no apto. Devuelve el estado en que la
+     * dejó (finalizada o desierta), o null si sigue abierta.
      */
-    public function finalizarSiNoQuedanGanadores(int $convocatoriaId, int $userId): bool;
+    public function cerrarConcursoSiCorresponde(int $convocatoriaId, int $userId): ?EstadoConvocatoria;
+
+    /**
+     * El Dispensario declaró no apto a un candidato: queda descalificado. En
+     * un express eso cierra su caso; en un concurso formal se cierra la
+     * convocatoria si no queda a quién declarar en su lugar.
+     */
+    public function descalificarPorNoApto(int $postulanteId, int $userId): void;
+
+    /**
+     * Envía al Dispensario al siguiente de la lista de espera, por puntaje,
+     * para cubrir la vacante que dejó un no apto.
+     */
+    public function declararSiguiente(int $convocatoriaId, int $userId): Postulante;
 }
