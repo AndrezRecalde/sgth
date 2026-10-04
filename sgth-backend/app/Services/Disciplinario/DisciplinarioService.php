@@ -6,6 +6,7 @@ use App\Contracts\Disciplinario\DisciplinarioServiceInterface;
 use App\Enums\EstadoSumario;
 use App\Enums\SubtipoMovimientoPersonal;
 use App\Enums\TipoMovimientoPersonal;
+use App\Enums\TipoFalta;
 use App\Enums\TipoNombramiento;
 use App\Enums\TipoSancion;
 use App\Exceptions\ReglaNegocioException;
@@ -17,6 +18,7 @@ use App\Services\Expediente\MovimientoPersonalService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 final class DisciplinarioService implements DisciplinarioServiceInterface
 {
@@ -170,6 +172,7 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
         }
 
         $this->assertSancionAplicableAlRegimen($sumario, $datosSancion['tipo_sancion']);
+        $this->assertSancionAdmitidaPorLaFalta($datosSancion['tipo_falta'], $datosSancion['tipo_sancion']);
 
         DB::beginTransaction();
         try {
@@ -223,6 +226,36 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
             DB::rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * La sanción tiene que ser de las que el Art. 42 de la LOSEP admite para
+     * la gravedad de la falta (TipoFalta::sancionesAdmitidas()). El error va en
+     * el campo de la sanción, para que la pantalla lo ponga bajo el selector.
+     */
+    private function assertSancionAdmitidaPorLaFalta(string $tipoFalta, string $tipoSancion): void
+    {
+        $falta   = TipoFalta::from($tipoFalta);
+        $sancion = TipoSancion::from($tipoSancion);
+
+        if ($falta->admite($sancion)) {
+            return;
+        }
+
+        $admitidas = array_map(
+            fn (TipoSancion $s) => mb_strtolower($s->etiqueta()),
+            $falta->sancionesAdmitidas(),
+        );
+        $ultima = array_pop($admitidas);
+
+        throw ValidationException::withMessages([
+            'tipo_sancion' => sprintf(
+                'Una falta %s se sanciona con %s o %s (Art. 42 de la LOSEP).',
+                mb_strtolower($falta->etiqueta()),
+                implode(', ', $admitidas),
+                $ultima,
+            ),
+        ]);
     }
 
     /**

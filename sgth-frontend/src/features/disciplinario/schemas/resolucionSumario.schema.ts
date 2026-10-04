@@ -1,4 +1,5 @@
 import { z } from 'zod/v4'
+import { SANCIONES_POR_FALTA } from '../utils/etiquetas'
 
 /**
  * Resolución de un sumario administrativo: la falta que se da por probada y la
@@ -20,7 +21,8 @@ export const SUSPENSION_MAX_DIAS = 30
 const OBSERVACIONES_MAX = 1000
 
 export const resolucionSumarioSchema = z.object({
-  tipo_falta: z.enum(['leve', 'grave', 'muy_grave'], {
+  // La LOSEP (Art. 42) solo tiene faltas leves y graves.
+  tipo_falta: z.enum(['leve', 'grave'], {
     message: 'Indique la gravedad de la falta',
   }),
   tipo_sancion: z.enum(
@@ -40,6 +42,17 @@ export const resolucionSumarioSchema = z.object({
   observaciones: z.string().max(OBSERVACIONES_MAX, `Máximo ${OBSERVACIONES_MAX} caracteres`),
 })
   .superRefine((v, ctx) => {
+    // Mismo mensaje que DisciplinarioService::assertSancionAdmitidaPorLaFalta().
+    if (!SANCIONES_POR_FALTA[v.tipo_falta].includes(v.tipo_sancion)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['tipo_sancion'],
+        message: v.tipo_falta === 'leve'
+          ? 'Una falta leve se sanciona con amonestación verbal, amonestación escrita o multa (Art. 42 de la LOSEP).'
+          : 'Una falta grave se sanciona con suspensión o destitución (Art. 42 de la LOSEP).',
+      })
+    }
+
     if (v.tipo_sancion === 'multa' && v.porcentaje_multa === undefined) {
       ctx.addIssue({
         code: 'custom',

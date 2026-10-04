@@ -68,6 +68,7 @@ function FormularioResolucion({
   const {
     control,
     register,
+    resetField,
     handleSubmit,
     setError,
     formState: { errors },
@@ -76,6 +77,7 @@ function FormularioResolucion({
     defaultValues: VALORES_INICIALES,
   })
 
+  const falta = useWatch({ control, name: 'tipo_falta' })
   const sancion = useWatch({ control, name: 'tipo_sancion' })
 
   const guardar = async (valores: ResolucionSumarioFormData) => {
@@ -135,7 +137,9 @@ function FormularioResolucion({
         <ResolucionSancionCampos
           control={control}
           register={register}
+          resetField={resetField}
           errors={errors}
+          falta={falta}
           sancion={sancion}
         />
 

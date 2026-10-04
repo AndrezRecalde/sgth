@@ -7,6 +7,7 @@ import {
   type Control,
   type FieldErrors,
   type UseFormRegister,
+  type UseFormResetField,
 } from 'react-hook-form'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { fromDateValue, toDateValue } from '@/lib/fecha'
@@ -15,19 +16,26 @@ import {
   SUSPENSION_MAX_DIAS,
   type ResolucionSumarioFormData,
 } from '../schemas/resolucionSumario.schema'
-import { TIPO_FALTA_LABELS, TIPO_SANCION_LABELS } from '../utils/etiquetas'
+import {
+  SANCIONES_POR_FALTA, TIPO_FALTA_LABELS, TIPO_SANCION_LABELS,
+} from '../utils/etiquetas'
 import type { TipoFalta, TipoSancion } from '@/types/api'
 
 const FALTA_OPTIONS = (Object.keys(TIPO_FALTA_LABELS) as TipoFalta[])
   .map((f) => ({ value: f, label: TIPO_FALTA_LABELS[f] }))
 
-const SANCION_OPTIONS = (Object.keys(TIPO_SANCION_LABELS) as TipoSancion[])
-  .map((s) => ({ value: s, label: TIPO_SANCION_LABELS[s] }))
+/** Solo las sanciones que el Art. 42 de la LOSEP admite para la gravedad. */
+const sancionesDe = (falta: TipoFalta | undefined) =>
+  (falta ? SANCIONES_POR_FALTA[falta] : [])
+    .map((s) => ({ value: s, label: TIPO_SANCION_LABELS[s] }))
 
 interface Props {
   control: Control<ResolucionSumarioFormData>
   register: UseFormRegister<ResolucionSumarioFormData>
+  resetField: UseFormResetField<ResolucionSumarioFormData>
   errors: FieldErrors<ResolucionSumarioFormData>
+  /** La gravedad elegida: decide qué sanciones se ofrecen. */
+  falta: TipoFalta | undefined
   /** La sanción elegida: decide qué cifra se pide. */
   sancion: TipoSancion | undefined
 }
@@ -37,7 +45,9 @@ interface Props {
  * sanción que los usa: una multa no tiene días y una suspensión no tiene
  * porcentaje, y pedir las dos cifras siempre invita a guardar la que no toca.
  */
-export function ResolucionSancionCampos({ control, register, errors, sancion }: Props) {
+export function ResolucionSancionCampos({
+  control, register, resetField, errors, falta, sancion,
+}: Props) {
   const contained = useContainedInput()
 
   return (
@@ -50,12 +60,20 @@ export function ResolucionSancionCampos({ control, register, errors, sancion }: 
             <Select
               label="Gravedad de la falta"
               required
+              description="Art. 42 de la LOSEP: leve o grave"
               placeholder="Seleccione"
               data={FALTA_OPTIONS}
               error={errors.tipo_falta?.message}
               {...contained}
               value={field.value ?? null}
-              onChange={field.onChange}
+              onChange={(v) => {
+                field.onChange(v)
+                // Una sanción elegida para la otra gravedad deja de valer.
+                const nueva = v as TipoFalta | null
+                if (sancion && (!nueva || !SANCIONES_POR_FALTA[nueva].includes(sancion))) {
+                  resetField('tipo_sancion')
+                }
+              }}
             />
           )}
         />
@@ -69,8 +87,14 @@ export function ResolucionSancionCampos({ control, register, errors, sancion }: 
             <Select
               label="Sanción que se impone"
               required
-              placeholder="Seleccione"
-              data={SANCION_OPTIONS}
+              description={falta === 'grave'
+                ? 'Una falta grave: suspensión o destitución'
+                : falta === 'leve'
+                  ? 'Una falta leve: amonestación o multa'
+                  : 'Según la gravedad de la falta'}
+              placeholder={falta ? 'Seleccione' : 'Elija primero la gravedad'}
+              disabled={!falta}
+              data={sancionesDe(falta)}
               error={errors.tipo_sancion?.message}
               {...contained}
               value={field.value ?? null}

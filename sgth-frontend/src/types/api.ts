@@ -1193,7 +1193,7 @@ export type EstadoSumario =
   | 'abierto' | 'en_instruccion' | 'en_prueba'
   | 'con_informe' | 'resuelto' | 'apelado' | 'cerrado'
 
-export type TipoFalta = 'leve' | 'grave' | 'muy_grave'
+export type TipoFalta = 'leve' | 'grave'
 
 export type TipoSancion =
   | 'amonestacion_verbal' | 'amonestacion_escrita'
