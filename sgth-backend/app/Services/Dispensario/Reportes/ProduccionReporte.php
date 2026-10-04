@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
  * la comparación que hace la jefatura. Es agregado: no lleva pacientes, así
  * que la autoridad también lo ve. Lo anulado no cuenta.
  */
-final class ProduccionReporte implements ReporteDispensario
+final class ProduccionReporte extends ReporteBase
 {
     /** Los indicadores, clave => título de la columna. */
     private const INDICADORES = [
@@ -52,12 +52,17 @@ final class ProduccionReporte implements ReporteDispensario
 
     public function filtros(): array
     {
-        return ['profesional', 'agrupacion'];
+        return ['profesional'];
+    }
+
+    public function agrupaciones(): array
+    {
+        return ['profesional' => 'Profesional', 'dia' => 'Día'];
     }
 
     public function columnas(FiltrosReporte $filtros): array
     {
-        $primera = $filtros->agrupacion === 'dia'
+        $primera = $this->agrupacion($filtros) === 'dia'
             ? ['clave' => 'fecha', 'titulo' => 'Fecha']
             : ['clave' => 'profesional', 'titulo' => 'Profesional'];
 
@@ -106,7 +111,7 @@ final class ProduccionReporte implements ReporteDispensario
 
         $registros = $fuentes->flatMap(fn (Builder $q) => $q->get())->values();
 
-        return $filtros->agrupacion === 'dia'
+        return $this->agrupacion($filtros) === 'dia'
             ? $this->porDia($registros)
             : $this->porProfesional($registros);
     }

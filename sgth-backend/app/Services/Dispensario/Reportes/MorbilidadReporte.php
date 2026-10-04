@@ -10,7 +10,7 @@ namespace App\Services\Dispensario\Reportes;
  * solo el diagnóstico principal: sumar los secundarios contaría dos veces a
  * quien llegó con dos dolencias.
  */
-final class MorbilidadReporte implements ReporteDispensario
+final class MorbilidadReporte extends ReporteBase
 {
     private const GRUPOS = ['Menor de 15', '15 a 29', '30 a 44', '45 a 64', '65 o más', 'Sin dato'];
 

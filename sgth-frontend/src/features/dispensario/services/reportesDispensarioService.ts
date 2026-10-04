@@ -2,7 +2,7 @@ import api from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
 
 /** Los filtros que un reporte puede ofrecer, además del período. */
-export type FiltroReporte = 'profesional' | 'especialidad' | 'tipo_paciente' | 'unidad' | 'agrupacion'
+export type FiltroReporte = 'profesional' | 'especialidad' | 'tipo_paciente' | 'unidad'
 
 export interface ReporteDisponible {
   clave:       string
@@ -10,7 +10,11 @@ export interface ReporteDisponible {
   descripcion: string
   /** Lleva nombres de pacientes con diagnósticos. */
   nominal:     boolean
+  /** `false` en una foto de hoy (las existencias): no pide fechas. */
+  periodo:     boolean
   filtros:     FiltroReporte[]
+  /** Cómo se puede agrupar; la primera es la de por defecto. Vacío si no agrupa. */
+  agrupaciones: { value: string; label: string }[]
 }
 
 export interface OpcionReporte {
@@ -33,7 +37,7 @@ export interface FiltrosReporteDispensario {
   especialidad?:             string | null
   tipo_paciente?:            string | null
   unidad_administrativa_id?: number | null
-  agrupacion?:               'profesional' | 'dia'
+  agrupacion?:               string
 }
 
 export type CeldaReporte = string | number | boolean | null

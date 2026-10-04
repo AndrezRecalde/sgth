@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
  *
  * Es nominal: nombres con diagnóstico. La autoridad no lo ve.
  */
-final class RegistroAtencionesReporte implements ReporteDispensario
+final class RegistroAtencionesReporte extends ReporteBase
 {
     private const TIPO_ATENCION = ['primera_vez' => 'Primera vez', 'subsecuente' => 'Subsecuente'];
     private const TIPO_DIAGNOSTICO = ['presuntivo' => 'Presuntivo', 'definitivo' => 'Definitivo'];

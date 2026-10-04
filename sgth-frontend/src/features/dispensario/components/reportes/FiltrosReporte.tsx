@@ -7,12 +7,12 @@ import { Toolbar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { fromDateValue, toDateValue } from '@/lib/fecha'
 import type {
-  FiltroReporte, FiltrosReporteDispensario, OpcionReporte,
+  FiltrosReporteDispensario, OpcionReporte, ReporteDisponible,
 } from '../../services/reportesDispensarioService'
 
 interface Props {
   filtros:      FiltrosReporteDispensario
-  disponibles:  FiltroReporte[]
+  reporte:      ReporteDisponible
   opciones:     { profesionales: OpcionReporte[]; unidades: OpcionReporte[] }
   onCambiar:    (cambio: Partial<FiltrosReporteDispensario>) => void
   onConsultar:  () => void
@@ -41,11 +41,11 @@ const aOpciones = (lista: OpcionReporte[]) =>
  * declara los suyos en el backend: aquí solo se dibujan.
  */
 export function FiltrosReporte({
-  filtros, disponibles, opciones, onCambiar, onConsultar, consultando,
+  filtros, reporte, opciones, onCambiar, onConsultar, consultando,
   onDescargar, descargando, puedeDescargar,
 }: Props) {
   const contained = useContainedInput('sm')
-  const admite = (f: FiltroReporte) => disponibles.includes(f)
+  const admite = (f: ReporteDisponible['filtros'][number]) => reporte.filtros.includes(f)
 
   return (
     <Toolbar
@@ -66,7 +66,13 @@ export function FiltrosReporte({
         </>
       }
     >
-      <Group gap="sm" wrap="nowrap" align="flex-end">
+      {/* Las existencias son una foto de hoy: pedir fechas haría pensar que
+          se puede ver el stock de otro día. */}
+      {!reporte.periodo && (
+        <Text size="sm" c="dimmed">Existencias al día de hoy</Text>
+      )}
+
+      {reporte.periodo && <Group gap="sm" wrap="nowrap" align="flex-end">
         <DatePickerInput
           label="Desde"
           valueFormat="DD/MM/YYYY"
@@ -84,7 +90,7 @@ export function FiltrosReporte({
           onChange={(d) => d && onCambiar({ hasta: fromDateValue(d) })}
           w={140}
         />
-      </Group>
+      </Group>}
 
       {admite('profesional') && (
         <Select
@@ -140,14 +146,14 @@ export function FiltrosReporte({
         />
       )}
 
-      {admite('agrupacion') && (
+      {reporte.agrupaciones.length > 0 && (
         <Stack gap={4}>
           <Text size="xs" fw={500}>Agrupar por</Text>
           <SegmentedControl
             size="xs"
-            data={[{ value: 'profesional', label: 'Profesional' }, { value: 'dia', label: 'Día' }]}
-            value={filtros.agrupacion ?? 'profesional'}
-            onChange={(v) => onCambiar({ agrupacion: v === 'dia' ? 'dia' : 'profesional' })}
+            data={reporte.agrupaciones}
+            value={filtros.agrupacion ?? reporte.agrupaciones[0].value}
+            onChange={(v) => onCambiar({ agrupacion: v })}
           />
         </Stack>
       )}

@@ -20,6 +20,10 @@ final class CatalogoReportesDispensario implements CatalogoReportesDispensarioIn
         RegistroAtencionesReporte::class,
         MorbilidadReporte::class,
         ProduccionReporte::class,
+        AusentismoReporte::class,
+        MovimientoMedicamentosReporte::class,
+        ExistenciasReporte::class,
+        EnfermeriaReporte::class,
     ];
 
     public function disponibles(AlcanceReporte $alcance): array
@@ -32,6 +36,10 @@ final class CatalogoReportesDispensario implements CatalogoReportesDispensarioIn
                 'titulo'      => $r->titulo(),
                 'descripcion' => $r->descripcion(),
                 'nominal'     => $r->nominal(),
+                'periodo'     => $r->usaPeriodo(),
+                'agrupaciones' => collect($r->agrupaciones())
+                    ->map(fn ($etiqueta, $valor) => ['value' => $valor, 'label' => $etiqueta])
+                    ->values()->all(),
                 // Quien solo ve lo suyo no elige profesional: sería elegirse a sí mismo.
                 'filtros'     => $alcance->soloLoPropio()
                     ? array_values(array_diff($r->filtros(), ['profesional']))
