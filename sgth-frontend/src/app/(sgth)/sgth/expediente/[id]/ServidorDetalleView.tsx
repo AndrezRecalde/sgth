@@ -214,6 +214,8 @@ export function ServidorDetalleView({ id }: Props) {
       </Stack>
 
       <ServidorEditarModal
+        // Por versión: tras guardar, el formulario parte de lo guardado.
+        key={`${servidor.id}-${servidor.updated_at ?? ''}`}
         opened={editarOpened}
         onClose={cerrarEditar}
         servidor={servidor}

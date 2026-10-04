@@ -5,9 +5,11 @@ namespace App\Http\Requests\Expediente;
 use App\Enums\RegimenLaboral;
 use App\Enums\TipoDiscapacidad;
 use App\Models\Expediente\Servidor;
+use App\Models\Geografia\Canton;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class UpdateServidorRequest extends FormRequest
 {
@@ -118,20 +120,56 @@ class UpdateServidorRequest extends FormRequest
             // registrar el MovimientoPersonal correspondiente, nunca por
             // un update() directo sobre Servidor.
             'tipo_nombramiento'            => ['prohibited'],
-            'numero_contrato'              => 'nullable|string|max:100',
             'fecha_ingreso_institucion'    => 'sometimes|required|date',
             'fecha_ingreso_sector_publico' => 'nullable|date',
             'fecha_nombramiento'           => 'nullable|date',
-            'fecha_inicio_ultimo_contrato' => 'nullable|date',
-            'fecha_fin_ultimo_contrato'    => 'nullable|date|after:fecha_inicio_ultimo_contrato',
+            // Aquí estaban numero_contrato y las fechas del último contrato:
+            // esas columnas se borraron de servidores (viven en el vínculo) y
+            // lo validado se descartaba sin avisar.
 
         ];
+    }
+
+    /**
+     * El cantón tiene que ser de la provincia: el backend aceptaba cualquier
+     * cantón del catálogo, y al cambiar solo la provincia el cantón viejo se
+     * quedaba en la ficha apuntando a otra.
+     */
+    public function after(): array
+    {
+        return [function (Validator $validator) {
+            if ($validator->errors()->hasAny(['provincia_nacimiento_id', 'canton_nacimiento_id'])) {
+                return;
+            }
+            if (! $this->has('provincia_nacimiento_id') && ! $this->has('canton_nacimiento_id')) {
+                return;
+            }
+
+            $actual = Servidor::find($this->route('servidore') ?? $this->route('servidor'));
+            $provincia = $this->has('provincia_nacimiento_id')
+                ? $this->input('provincia_nacimiento_id')
+                : $actual?->provincia_nacimiento_id;
+            $canton = $this->has('canton_nacimiento_id')
+                ? $this->input('canton_nacimiento_id')
+                : $actual?->canton_nacimiento_id;
+
+            if ($canton && $provincia
+                && ! Canton::whereKey($canton)->where('provincia_id', $provincia)->exists()
+            ) {
+                $validator->errors()->add(
+                    'canton_nacimiento_id',
+                    'El cantón de nacimiento no pertenece a la provincia elegida.',
+                );
+            }
+        }];
     }
 
     public function messages(): array
     {
         return [
-            'prohibited' => 'Este dato solo lo puede cambiar Talento Humano.',
+            // El asistente también es de Talento Humano: el mensaje anterior le
+            // decía que solo podía cambiarlo Talento Humano.
+            'prohibited' => 'Este dato solo lo puede cambiar el administrador de Talento Humano.',
             'provincia_nacimiento_id.required_if' => 'La provincia de nacimiento es obligatoria si el servidor no es extranjero.',
             'provincia_nacimiento_id.exists'      => 'La provincia de nacimiento seleccionada no existe en el catálogo.',
             'canton_nacimiento_id.required_if'    => 'El cantón de nacimiento es obligatorio si el servidor no es extranjero.',
