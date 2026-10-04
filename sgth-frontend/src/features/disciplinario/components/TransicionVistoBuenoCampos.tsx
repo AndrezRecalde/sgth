@@ -45,6 +45,7 @@ export function TransicionVistoBuenoCampos({
           render={({ field }) => (
             <DatePickerInput
               label={esResolucion ? 'Fecha de la resolución' : 'Fecha de notificación'}
+              required
               valueFormat="DD/MM/YYYY"
               error={errors.fecha?.message}
               {...contained}
@@ -86,6 +87,7 @@ export function TransicionVistoBuenoCampos({
       {esResolucion && (
         <Textarea
           label="Detalle de la resolución del Inspector"
+          required
           placeholder="Transcriba o resuma lo resuelto por el Inspector del Trabajo"
           rows={4}
           error={errors.resolucion_detalle?.message}

@@ -111,6 +111,7 @@ export function SumarioModal({ opened, onClose }: Props) {
 
         <Textarea
           label="Motivo"
+          required
           placeholder="Describa los hechos que motivan la apertura del sumario"
           rows={4}
           error={errors.motivo?.message}

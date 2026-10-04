@@ -154,6 +154,7 @@ function FormularioTransicion({
           render={({ field }) => (
             <Select
               label="Nuevo estado"
+              required
               placeholder="Seleccione"
               data={opciones}
               error={errors.estado?.message}
