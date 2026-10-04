@@ -8,6 +8,7 @@ use App\Http\Responses\ApiResponse;
 use App\Models\Expediente\CargaFamiliar;
 use App\Models\Expediente\Servidor;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 class CargaFamiliarController extends Controller
 {
@@ -16,7 +17,11 @@ class CargaFamiliarController extends Controller
         $servidor = Servidor::findOrFail($servidorId);
         $cargas = $servidor->cargasFamiliares()
             ->with(['discapacidades', 'enfermedadesCatastroficas'])
+            // Los hermanos comparten apellidos: sin desempate cambiaban de
+            // orden entre una recarga y otra.
             ->orderBy('apellidos')
+            ->orderBy('nombres')
+            ->orderBy('id')
             ->get();
         return ApiResponse::ok($cargas, 'Cargas familiares del servidor.');
     }
@@ -26,9 +31,24 @@ class CargaFamiliarController extends Controller
         int $servidorId
     ): JsonResponse {
         Servidor::findOrFail($servidorId);
-        $carga = CargaFamiliar::create(
-            array_merge($request->validated(), ['servidor_id' => $servidorId])
-        );
+        $datos = array_merge($request->validated(), ['servidor_id' => $servidorId]);
+
+        // Un familiar borrado se recupera con su misma fila, no se crea otro.
+        // Su historia clínica del Dispensario cuelga de ese id y se numera con
+        // la cédula, que es única: una fila nueva se quedaría sin historia.
+        $borrada = CargaFamiliar::onlyTrashed()
+            ->where('cedula', $datos['cedula'])
+            ->first();
+
+        if ($borrada) {
+            DB::transaction(function () use ($borrada, $datos) {
+                $borrada->restore();
+                $borrada->update([...$datos, 'estado' => true]);
+            });
+            return ApiResponse::created($borrada, 'Carga familiar registrada.');
+        }
+
+        $carga = CargaFamiliar::create($datos);
         return ApiResponse::created($carga, 'Carga familiar registrada.');
     }
 
