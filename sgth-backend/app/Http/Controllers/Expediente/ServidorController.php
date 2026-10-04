@@ -9,6 +9,7 @@ use App\Http\Requests\Expediente\UpdateServidorRequest;
 use App\Http\Resources\Expediente\ServidorResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Expediente\Servidor;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -73,9 +74,15 @@ class ServidorController extends Controller
         return ApiResponse::ok(new ServidorResource($servidor), 'Expediente actualizado exitosamente.');
     }
 
+    /**
+     * Servidores todavía sin cuenta, para el buscador del módulo de Usuarios.
+     * Es trabajo de quien gestiona usuarios, no del Expediente: se autoriza
+     * por `gestionar-usuarios`. Con `verAny` de Servidor, admin-ti —que es
+     * quien crea las cuentas— se quedó sin él al salir del Expediente.
+     */
     public function sinUsuario(Request $request): JsonResponse
     {
-        $this->authorize('verAny', Servidor::class);
+        $this->authorize('viewAny', User::class);
 
         $servidores = Servidor::whereDoesntHave('usuario')
             ->when(
