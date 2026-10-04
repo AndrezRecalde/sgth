@@ -183,7 +183,7 @@ export function MarcacionesTab() {
       {!buscar ? (
         <EmptyState
           icon={IconClock}
-          title="Selecciona un servidor y rango de fechas"
+          title="Seleccione un servidor y un rango de fechas"
           description="Las marcaciones se consultan desde el sistema biométrico."
         />
       ) : isLoading ? (

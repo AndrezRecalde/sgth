@@ -202,7 +202,7 @@ export function RecetaModal({
               description={
                 "Viene marcado. El impreso dirá que se consulten en el " +
                 "dispensario, sin afirmar que el paciente no las tenga. " +
-                "Desmárcalo para imprimirlas, útil si va a comprar en una " +
+                "Desmárquelo para imprimirlas, útil si va a comprar en una " +
                 "farmacia externa."
               }
               checked={field.value}
@@ -232,8 +232,8 @@ export function RecetaModal({
               variant="light"
             >
               <Text size="xs">
-                Busca y agrega al menos un medicamento a la receta. Si el
-                dispensario no lo maneja, escribe su nombre y elige
+                Busque y agregue al menos un medicamento a la receta. Si el
+                dispensario no lo maneja, escriba su nombre y elija
                 «Recetar como medicamento externo».
               </Text>
             </Alert>

@@ -287,7 +287,7 @@ export function OrganigramaChart({
           zIndex: 10,
         }}
       >
-        Scroll para zoom · Arrastra para mover · Clic en una unidad para detalles
+        Rueda del ratón para acercar · Arrastre para mover · Clic en una unidad para ver su detalle
       </Text>
       <div style={{ overflowX: 'auto', height: '100%', width: '100%' }}>
         <div style={{ minWidth: 1200, height: '100%' }}>

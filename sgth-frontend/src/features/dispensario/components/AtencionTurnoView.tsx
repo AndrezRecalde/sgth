@@ -77,7 +77,7 @@ export function AtencionTurnoView({ folio, especialidad }: Props) {
         emptyProps={{
           icon: IconCalendarOff,
           title: 'Turno no encontrado',
-          description: `El turno ${folio} no existe o no está asignado a tu cuenta.`,
+          description: `El turno ${folio} no existe o no está asignado a su cuenta.`,
         }}
         skeletonRows={4}
       >

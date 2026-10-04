@@ -60,6 +60,7 @@ script y no la buena memoria de quien lee.
 - [ ] ¿Se ve bien en modo oscuro? **Compruébalo, no lo supongas.**
 - [ ] ¿Funciona a 375px de ancho? ¿`Grid.Col` con `base: 12`?
 - [ ] ¿Los botones del modal van en `ModalFooter` (o en `FormModal`), y no en un `Group` escrito a mano?
+- [ ] ¿Los textos tratan de usted? («Seleccione», no «Selecciona»; ver [05](05-pagina-estandar.md))
 
 ## Formularios
 

@@ -107,7 +107,7 @@ export function BuscarMedicinaSelect({
       <Combobox.Dropdown>
         <Combobox.Options mah={220} style={{ overflowY: "auto" }}>
           {termino.length < 2 ? (
-            <Combobox.Empty>Escribe al menos 2 caracteres</Combobox.Empty>
+            <Combobox.Empty>Escriba al menos 2 caracteres</Combobox.Empty>
           ) : buscando ? (
             <Combobox.Empty>Buscando...</Combobox.Empty>
           ) : resultados.length === 0 ? (

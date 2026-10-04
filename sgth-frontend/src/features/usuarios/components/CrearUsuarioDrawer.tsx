@@ -115,7 +115,7 @@ export function CrearUsuarioDrawer({ opened, onClose }: Props) {
             {paso === 'buscar' && (
               <>
                 <Text size="sm" c="dimmed">
-                  Busca al servidor por cédula o nombre para crearle un acceso al
+                  Busque al servidor por cédula o nombre para crearle un acceso al
                   sistema.
                 </Text>
                 <BuscadorServidor onSeleccionar={handleSeleccionar} />

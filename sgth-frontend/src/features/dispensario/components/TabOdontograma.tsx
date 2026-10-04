@@ -194,7 +194,7 @@ export function TabOdontograma({ historiaClinicaId, consultaMedicaId }: Props) {
         <EmptyState
           icon={IconDental}
           title="Sin procedimientos registrados"
-          description="Haz clic en una pieza del odontograma para registrar un procedimiento."
+          description="Haga clic en una pieza del odontograma para registrar un procedimiento."
         />
       ) : (
         <SgthTable

@@ -71,7 +71,7 @@ export function useExportarConsolidado() {
 
       progreso.exito('Archivo descargado', `Consolidado exportado como ${ext.toUpperCase()}.`)
     } catch {
-      progreso.error('No se pudo exportar el consolidado de permisos', 'Inténtalo de nuevo en unos segundos.')
+      progreso.error('No se pudo exportar el consolidado de permisos', 'Inténtelo de nuevo en unos segundos.')
     } finally {
       setExportando(null)
     }

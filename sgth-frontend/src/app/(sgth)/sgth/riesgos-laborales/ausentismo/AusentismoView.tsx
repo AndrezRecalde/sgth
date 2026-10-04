@@ -72,7 +72,7 @@ export function AusentismoView() {
 
       progreso.exito('Archivo descargado', `Consolidado exportado como ${ext.toUpperCase()}.`)
     } catch {
-      progreso.error('No se pudo exportar el consolidado de ausentismo', 'Inténtalo de nuevo en unos segundos.')
+      progreso.error('No se pudo exportar el consolidado de ausentismo', 'Inténtelo de nuevo en unos segundos.')
     } finally {
       setExportando(null)
     }

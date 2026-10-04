@@ -53,7 +53,7 @@ export function CondicionTab({ servidorId }: Props) {
           emptyProps={{
             icon: IconHeart,
             title: 'Sin discapacidades registradas',
-            description: 'Registra el carnet del CONADIS y el porcentaje reconocido.',
+            description: 'Registre el carnet del CONADIS y el porcentaje reconocido.',
           }}
         >
           <SgthTable
@@ -76,7 +76,7 @@ export function CondicionTab({ servidorId }: Props) {
           emptyProps={{
             icon: IconHeart,
             title: 'Sin enfermedades registradas',
-            description: 'Registra el diagnóstico y su código CIE-10.',
+            description: 'Registre el diagnóstico y su código CIE-10.',
           }}
         >
           <SgthTable

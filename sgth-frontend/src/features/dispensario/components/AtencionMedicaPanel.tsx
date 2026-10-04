@@ -32,7 +32,7 @@ function RequiereConsulta({ para }: { para: string }) {
   return (
     <Stack gap="sm" p="md">
       <Text size="sm" c="dimmed">
-        Guarda la consulta primero para poder {para}.
+        Guarde la consulta primero para poder {para}.
       </Text>
     </Stack>
   )

@@ -41,8 +41,8 @@ export function DisponibilidadToggle() {
   return (
     <Tooltip
       label={disponible
-        ? 'Apareces disponible para atención. Pulsa para dejar de estarlo.'
-        : 'No apareces disponible. Pulsa para marcarte disponible.'}
+        ? 'Aparece disponible para atención. Pulse para dejar de estarlo.'
+        : 'No aparece disponible. Pulse para marcarse disponible.'}
       withArrow
     >
       <Button

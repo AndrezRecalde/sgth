@@ -41,7 +41,7 @@ export function SubirDocumentoModal({
     >
       <Stack gap="sm">
         <Text size="sm" c="dimmed">
-          Adjunta la factura, contrato o acta de donación
+          Adjunte la factura, contrato o acta de donación
           correspondiente al folio{' '}
           <Text span fw={600}>{adquisicion.folio}</Text>
         </Text>

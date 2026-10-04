@@ -24,7 +24,7 @@ export function useCertificadoAptitud() {
     } catch (e) {
       notificar.error(
         'No se pudo generar el certificado de aptitud',
-        getApiErrorMessage(e, 'Inténtalo de nuevo en unos segundos.'),
+        getApiErrorMessage(e, 'Inténtelo de nuevo en unos segundos.'),
       )
     } finally {
       setDescargandoId(null)

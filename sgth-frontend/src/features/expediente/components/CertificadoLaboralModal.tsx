@@ -88,7 +88,7 @@ export function CertificadoLaboralModal({ opened, onClose, servidor }: Props) {
     } catch (error) {
       notificar.error(
         'No se pudo emitir el certificado laboral',
-        getApiErrorMessage(error, 'Inténtalo de nuevo en unos segundos.'),
+        getApiErrorMessage(error, 'Inténtelo de nuevo en unos segundos.'),
       )
     } finally {
       setEmitiendo(false)

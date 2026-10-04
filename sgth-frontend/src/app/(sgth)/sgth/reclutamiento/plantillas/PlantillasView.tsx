@@ -89,7 +89,7 @@ export function PlantillasView() {
         <EmptyState
           icon={IconTemplate}
           title="Sin plantillas"
-          description="Crea plantillas de criterios reutilizables para tus convocatorias."
+          description="Cree plantillas de criterios reutilizables para sus convocatorias."
         />
       ) : (
         <Stack gap="sm">

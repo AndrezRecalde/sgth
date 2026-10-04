@@ -39,7 +39,7 @@ export function useDescargaPdf({ recurso, articulo, descargar }: Config) {
 
       progreso.exito('PDF descargado', `Se exportó ${articulo} correctamente.`)
     } catch {
-      progreso.error(`No se pudo exportar ${articulo}`, 'Inténtalo de nuevo en unos segundos.')
+      progreso.error(`No se pudo exportar ${articulo}`, 'Inténtelo de nuevo en unos segundos.')
     } finally {
       setExportandoId(null)
     }

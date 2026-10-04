@@ -31,7 +31,7 @@ export function useMovimientoMutations() {
     onError: (error) => {
       notificar.error(
         'No se pudo guardar el borrador de la acción de personal',
-        getApiErrorMessage(error, 'Inténtalo de nuevo en unos segundos.'),
+        getApiErrorMessage(error, 'Inténtelo de nuevo en unos segundos.'),
       )
     },
   })
@@ -64,7 +64,7 @@ export function useMovimientoMutations() {
     onError: (error) => {
       notificar.error(
         'No se pudo cambiar el estado de la acción de personal',
-        getApiErrorMessage(error, 'Inténtalo de nuevo en unos segundos.'),
+        getApiErrorMessage(error, 'Inténtelo de nuevo en unos segundos.'),
       )
     },
   })

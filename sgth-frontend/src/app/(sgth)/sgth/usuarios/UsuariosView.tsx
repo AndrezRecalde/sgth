@@ -175,7 +175,7 @@ export function UsuariosView() {
           <EmptyState
             icon={IconSearchOff}
             title="Ningún usuario coincide con la búsqueda"
-            description="Prueba con otros términos o quita los filtros aplicados."
+            description="Pruebe con otros términos o quite los filtros aplicados."
             action={
               <Button variant="default" onClick={limpiarFiltros}>
                 Limpiar filtros

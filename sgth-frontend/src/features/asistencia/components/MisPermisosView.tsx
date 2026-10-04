@@ -90,11 +90,11 @@ export function MisPermisosView() {
         empty={!lista.length}
         emptyProps={{
           icon: IconCalendarEvent,
-          title: `No tienes permisos ${periodo}`,
+          title: `No tiene permisos ${periodo}`,
           description: puedeRegistrar
-            ? 'Registra uno con «Nuevo permiso», o prueba con otro año o con otro estado.'
-            : 'Los permisos que registre Talento Humano a tu nombre aparecerán aquí. ' +
-              'Prueba con otro año o con otro estado.',
+            ? 'Registre uno con «Nuevo permiso», o pruebe con otro año o con otro estado.'
+            : 'Los permisos que registre Talento Humano a su nombre aparecerán aquí. ' +
+              'Pruebe con otro año o con otro estado.',
         }}
         page={page}
       >

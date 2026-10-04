@@ -84,7 +84,7 @@ export function BuscarCie10Input({ value, onChange }: Props) {
           {resultados.length === 0 ? (
             <Combobox.Empty>
               {termino.length < 2
-                ? 'Escribe al menos 2 caracteres'
+                ? 'Escriba al menos 2 caracteres'
                 : 'Sin resultados'}
             </Combobox.Empty>
           ) : (

@@ -176,7 +176,7 @@ export function AdquisicionForm({ onCreada }: Props) {
                   variant="light"
                 >
                   <Text size="xs">
-                    Busca y agrega al menos un medicamento
+                    Busque y agregue al menos un medicamento
                     a esta adquisición.
                   </Text>
                 </Alert>
