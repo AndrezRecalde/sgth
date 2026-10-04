@@ -2,22 +2,21 @@
 
 import { Alert, Grid, Stack, Switch, TextInput } from '@mantine/core'
 import { ModalFooter, SgthModal } from '@/components/ui'
-import { Controller, useForm, type DefaultValues } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { CompletarVinculoPlazo } from './CompletarVinculoPlazo'
 import { CompletarVinculoRemuneracion } from './CompletarVinculoRemuneracion'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconAlertTriangle } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { SelectPartidaPresupuestaria } from '@/features/estructura/components/SelectPartidaPresupuestaria'
+import { erroresAlFormulario } from '@/lib/erroresAlFormulario'
 import { useMovimientoMutations } from '../hooks/useMovimientoMutations'
-import { admiteMarcacion, esLosep } from '../utils/nombramiento'
+import { admiteMarcacion } from '../utils/nombramiento'
+import { llevaPlazo, valoresIniciales } from '../utils/completarVinculoValores'
 import {
   completarVinculoSchema, type CompletarVinculoFormData,
 } from '../schemas/completarVinculo.schema'
 import type { MovimientoPersonal } from '@/types/api'
-
-/** Nombramientos cuyo vínculo lleva plazo pactado. */
-const CON_PLAZO = ['servicios_ocasionales', 'servicios_profesionales']
 
 /**
  * Cierre de un ingreso: los datos que el contrato necesita para nacer, en el
@@ -70,42 +69,13 @@ function Formulario({
   const { transicionar } = useMovimientoMutations()
 
   const nombramiento = movimiento.tipo_nombramiento_propuesto ?? null
-  const derivaDelPuesto = esLosep(nombramiento)
-  const llevaPlazo = nombramiento ? CON_PLAZO.includes(nombramiento) : false
+  const conPlazo = llevaPlazo(nombramiento)
   const marca = admiteMarcacion(nombramiento)
-
   const puesto = movimiento.puesto_destino
-
-  // La RMU solo se sugiere en LOSEP, donde sale del grupo ocupacional del
-  // puesto. En Código del Trabajo y Servicios Profesionales se negocia en el
-  // contrato, así que el campo arranca vacío a propósito.
-  const rmuSugerida = derivaDelPuesto && puesto?.rmu != null ? Number(puesto.rmu) : undefined
-
-  /*
-  | Hasta el 2026-09-27 este formulario llevaba seis `useState` y validaba a mano
-  | en el `submit`, con lo que faltaba en un `Alert` al pie: el usuario leía «falta
-  | número de contrato y remuneración» y tenía que buscar cuáles de los seis
-  | campos eran. Es el estándar del proyecto desde hace tiempo (regla 07), y era
-  | el último formulario del módulo que no lo usaba.
-  */
-  const iniciales: DefaultValues<CompletarVinculoFormData> = {
-    numero_contrato: movimiento.numero_contrato ?? '',
-    remuneracion_propuesta: movimiento.remuneracion_propuesta != null
-      ? Number(movimiento.remuneracion_propuesta)
-      : rmuSugerida,
-    resolucion_numero: movimiento.resolucion_numero ?? '',
-    partida_presupuestaria_id: movimiento.partida_presupuestaria_id
-      ?? puesto?.partida_presupuestaria?.id
-      ?? null,
-    // La modalidad manda sobre lo que quedó guardado: servicios profesionales,
-    // libre nombramiento y elección popular no marcan nunca.
-    puede_marcar: marca && (movimiento.puede_marcar ?? false),
-    fecha_fin_propuesta: movimiento.fecha_fin_propuesta?.split('T')[0] ?? null,
-  }
 
   const form = useForm<CompletarVinculoFormData>({
     resolver: zodResolver(completarVinculoSchema),
-    defaultValues: iniciales,
+    defaultValues: valoresIniciales(movimiento),
   })
 
   const { control, handleSubmit, register, formState: { errors } } = form
@@ -119,14 +89,17 @@ function Formulario({
         resolucion_numero: datos.resolucion_numero || null,
         // Sin plazo pactado no se manda fecha de término, aunque haya quedado
         // una escrita antes de cambiar de modalidad.
-        fecha_fin_propuesta: llevaPlazo ? datos.fecha_fin_propuesta : null,
+        fecha_fin_propuesta: conPlazo ? datos.fecha_fin_propuesta : null,
         // Cinturón: el interruptor está bloqueado, pero el valor guardado pudo
         // llegar en true desde el borrador.
         puede_marcar: marca && datos.puede_marcar,
       })
       .then(() => { onClose(); onSaved?.() })
-      // El fallo ya lo notifica el `onError` de la mutación.
-      .catch(() => {})
+      // El fallo ya lo notifica el `onError` de la mutación, que comparten
+      // acciones sin formulario; aquí solo se marca el campo, si lo tiene.
+      .catch((e) => erroresAlFormulario(
+        e, form.setError, Object.keys(completarVinculoSchema.shape), null,
+      ))
 
   return (
     <form onSubmit={handleSubmit(registrar)} noValidate>
@@ -160,7 +133,7 @@ function Formulario({
         <CompletarVinculoPlazo
           form={form}
           fechaEfectiva={movimiento.fecha_efectiva}
-          llevaPlazo={llevaPlazo}
+          llevaPlazo={conPlazo}
         />
 
         <CompletarVinculoRemuneracion
@@ -177,6 +150,7 @@ function Formulario({
               value={field.value ?? null}
               onChange={field.onChange}
               modalidad={nombramiento}
+              error={errors.partida_presupuestaria_id?.message}
             />
           )}
         />

@@ -1,6 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { vinculacionInicialService } from '../services/vinculacionInicialService'
-import { getApiErrorMessage } from '@/types/api'
 import { useAuth } from '@/hooks/useAuth'
 import { notificar } from '@/components/ui'
 
@@ -23,22 +22,8 @@ export function useVinculacionInicial() {
         'Se registró la ficha y su contrato vigente. Quedó marcado como carga inicial.',
       )
       qc.invalidateQueries({ queryKey: ['servidores'] })
-      qc.invalidateQueries({ queryKey: ['vinculacion-inicial'] })
     },
-    onError: (error) => {
-      notificar.error(
-        'No se pudo registrar la vinculación inicial',
-        getApiErrorMessage(error, 'Inténtelo de nuevo en unos segundos.'),
-      )
-    },
-  })
-}
-
-export function useVinculosCargados(habilitado = true) {
-  return useQuery({
-    queryKey: ['vinculacion-inicial'],
-    queryFn: vinculacionInicialService.listar,
-    enabled: habilitado,
-    staleTime: 1000 * 60,
+    // Los errores con campo los pone el modal bajo cada uno; aquí, el resto.
+    onError: notificar.alFallarSalvoCampos('No se pudo registrar la vinculación inicial'),
   })
 }
