@@ -17,9 +17,7 @@ import {
   useConvocatoriaDetalle,
   usePostulantes,
   usePublicarConvocatoria,
-  useConfirmarGanador,
 } from '@/features/seleccion/hooks/useConvocatoria'
-import { IconCircleCheck } from '@tabler/icons-react'
 import {
   TONO_CONVOCATORIA,
   ESTADO_CONVOCATORIA_OPTIONS,
@@ -50,7 +48,6 @@ export function DetalleConvocatoriaView({ id }: Props) {
   const convocatoriaId = Number(id)
   const router       = useRouter()
   const publicar = usePublicarConvocatoria()
-  const confirmarGanador = useConfirmarGanador(convocatoriaId)
   const [modalOpened,
     { open: abrirModal, close: cerrarModal }] = useDisclosure(false)
   const [postulanteSel, setPostulanteSel] =
@@ -211,20 +208,10 @@ export function DetalleConvocatoriaView({ id }: Props) {
                 Publicar convocatoria
               </Button>
             )}
-            {convocatoria.estado === 'en_evaluacion_medica' && (
-              <Button
-                leftSection={<IconCircleCheck size={14} />}
-                loading={confirmarGanador.isPending}
-                onClick={() => confirmar({
-                  title:   'Declarar ganador oficial',
-                  message: 'Se declarará ganador al candidato aprobado por el Dispensario. La convocatoria queda finalizada definitivamente.',
-                  confirmLabel: 'Declarar ganador',
-                  onConfirm: () => confirmarGanador.mutate(),
-                })}
-              >
-                Declarar ganador oficial
-              </Button>
-            )}
+            {/* Sin «Declarar ganador oficial» (2026-10-04): no miraba el
+                dictamen ni creaba el expediente. Cada ganador apto se
+                incorpora desde el Ranking, y con el último la convocatoria
+                se finaliza sola. */}
           </Group>
         }
       />

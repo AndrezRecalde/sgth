@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Dispensario;
 
+use App\Contracts\Seleccion\SeleccionServiceInterface;
 use App\Enums\AptitudMedica;
 use App\Enums\EstadoPostulante;
 use App\Enums\Permiso;
@@ -30,6 +31,7 @@ final class SolicitudCertificacionController extends Controller
 {
     public function __construct(
         private readonly MovimientoPersonalService $movimientoPersonalService,
+        private readonly SeleccionServiceInterface $seleccionService,
     ) {
     }
 
@@ -511,6 +513,18 @@ final class SolicitudCertificacionController extends Controller
                 );
             }
 
+            // La cédula se busca otra vez aquí, no solo al inscribir: si la
+            // persona pasó a ser servidor después —la incorporó otro proceso,
+            // o un contenedor express mientras seguía en este concurso—,
+            // Servidor::create chocaba con la unique de la cédula y daba 500.
+            if ($postulante->servidor_id === null) {
+                $existente = Servidor::where('cedula', $postulante->cedula)->value('id');
+                if ($existente) {
+                    $postulante->servidor_id = $existente;
+                    $postulante->save();
+                }
+            }
+
             $esCandidatoInterno = $postulante->servidor_id !== null;
 
             if ($esCandidatoInterno) {
@@ -578,6 +592,12 @@ final class SolicitudCertificacionController extends Controller
                 'estado' => EstadoPostulante::INCORPORADO,
             ]);
 
+            // En un concurso formal, incorporar al último ganador lo cierra
+            // (2026-10-04): ya no hay «Declarar ganador oficial».
+            $finalizada = $this->seleccionService->finalizarSiNoQuedanGanadores(
+                $convocatoria->id, $request->user()->id
+            );
+
             \DB::commit();
 
             $mensajeIdentidad = $esCandidatoInterno
@@ -600,6 +620,7 @@ final class SolicitudCertificacionController extends Controller
                     .$movimiento->id.') y requiere revisión y aprobación de Talento Humano en el '
                     .'módulo de Expediente / Movimientos antes de quedar vinculado formalmente.'
                     .$mensajeCesacion
+                    .($finalizada ? ' Era el último ganador: la convocatoria quedó finalizada.' : '')
             );
         } catch (\Exception $e) {
             \DB::rollBack();

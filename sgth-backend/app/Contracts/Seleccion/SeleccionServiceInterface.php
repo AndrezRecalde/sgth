@@ -26,4 +26,11 @@ interface SeleccionServiceInterface
      * @return \Illuminate\Support\Collection<int, Postulante>
      */
     public function declararGanadores(int $convocatoriaId, array $postulanteIds, int $userId): Collection;
+
+    /**
+     * Cierra un concurso formal cuando ya no le queda ningún ganador por
+     * resolver: todos los enviados al dispensario fueron incorporados. Lo
+     * llama la confirmación de la incorporación. Devuelve si la finalizó.
+     */
+    public function finalizarSiNoQuedanGanadores(int $convocatoriaId, int $userId): bool;
 }

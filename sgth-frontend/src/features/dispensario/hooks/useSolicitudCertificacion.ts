@@ -144,6 +144,11 @@ export function useConfirmarIncorporacion() {
       // `useIniciarProceso`, que no incorpora a nadie.
       qc.invalidateQueries({ queryKey: ['express-aspirantes'] })
       qc.invalidateQueries({ queryKey: ['express-resumen'] })
+      // Y desde el ranking del concurso formal (2026-10-04): el ganador pasa a
+      // «Incorporado» y, con el último, la convocatoria se finaliza.
+      qc.invalidateQueries({ queryKey: ['postulantes'] })
+      qc.invalidateQueries({ queryKey: ['convocatoria'] })
+      qc.invalidateQueries({ queryKey: ['convocatorias'] })
     },
     onError: notificar.alFallar('No se pudo confirmar la incorporación'),
   })

@@ -20,7 +20,10 @@ final class PostulanteController extends Controller
     {
         Convocatoria::findOrFail($convocatoriaId);
 
-        $postulantes = Postulante::with(['evaluacion', 'documentos'])
+        // Con su solicitud médica (2026-10-04): el ranking del concurso formal
+        // ofrece «Confirmar incorporación» cuando hay dictamen de aptitud, igual
+        // que el cajón del express.
+        $postulantes = Postulante::with(['evaluacion', 'documentos', 'solicitudCertificacion'])
             ->where('convocatoria_id', $convocatoriaId)
             ->orderBy('apellidos')
             ->get();

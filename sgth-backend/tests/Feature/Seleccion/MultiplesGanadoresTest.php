@@ -251,19 +251,3 @@ test('el endpoint exige al menos un ganador', function () {
         ->assertStatus(422)
         ->assertJsonStructure(['errores']);
 });
-
-test('confirmar finaliza el concurso y marca a todos los ganadores', function () {
-    $convocatoria = ($this->convocatoriaCon)(2);
-    $a = ($this->aspirante)($convocatoria);
-    $b = ($this->aspirante)($convocatoria);
-
-    $this->service->declararGanadores($convocatoria->id, [$a->id, $b->id], $this->user->id);
-
-    $this->postJson("/api/v1/seleccion/convocatorias/{$convocatoria->id}/confirmar-ganador")
-        ->assertOk()
-        ->assertJsonPath('mensaje', fn ($m) => str_contains($m, '2 ganador(es)'));
-
-    expect($a->fresh()->estado)->toBe(EstadoPostulante::SELECCIONADO)
-        ->and($b->fresh()->estado)->toBe(EstadoPostulante::SELECCIONADO)
-        ->and($convocatoria->fresh()->estado)->toBe(EstadoConvocatoria::FINALIZADA);
-});
