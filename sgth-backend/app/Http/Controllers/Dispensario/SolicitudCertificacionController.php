@@ -261,6 +261,9 @@ final class SolicitudCertificacionController extends Controller
             'servidor',
             'servidor.puesto.cargo:id,nombre,codigo_ciuo',
             'servidor.puesto.unidadAdministrativa:id,nombre',
+            // La discapacidad del Expediente, para que el FEMO nazca con ella
+            // en vez de pedírsela otra vez al médico. Solo el porcentaje.
+            'servidor.discapacidades:id,servidor_id,porcentaje',
             'postulante',
             'postulante.puesto.cargo:id,nombre,codigo_ciuo',
             'postulante.puesto.unidadAdministrativa:id,nombre',
