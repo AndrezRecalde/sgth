@@ -7,7 +7,9 @@ import { z } from 'zod/v4'
 export const documentoSchema = z.object({
   tipo_documento:    z.string().min(1, 'Seleccione el tipo'),
   descripcion:       z.string().optional(),
-  fecha_vencimiento: z.string().optional(),
+  // `null` al borrar la fecha con la X del selector: sin `nullable` el
+  // formulario quedaba bloqueado con un error de tipo en inglés.
+  fecha_vencimiento: z.string().optional().nullable(),
 })
 
 export type DocumentoFormData = z.infer<typeof documentoSchema>
