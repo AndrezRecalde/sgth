@@ -8,6 +8,7 @@ import { DataState, SectionCard, SgthTable, notificar } from '@/components/ui'
 import { abrirArchivo } from '@/lib/archivo'
 import { getApiErrorMessage } from '@/types/api'
 import { useDeclaraciones } from '../../hooks/useDeclaraciones'
+import { useServidor } from '../../hooks/useServidor'
 import { useDeclaracionMutations } from '../../hooks/useDeclaracionMutations'
 import { declaracionService } from '../../services/declaracionService'
 import { getDeclaracionesColumns } from '../declaraciones.columns'
@@ -19,6 +20,8 @@ interface Props { servidorId: number }
 
 export function DeclaracionesTab({ servidorId }: Props) {
   const [opened, { open, close }] = useDisclosure(false)
+  // Ya en caché: la ficha la pidió al abrirse.
+  const { data: servidor } = useServidor(servidorId)
   const [exportarOpened, { open: abrirExportar, close: cerrarExportar }] = useDisclosure(false)
   const [editItem, setEditItem] = useState<DeclaracionJuramentada | null>(null)
   const { data: declaraciones = [], isLoading, error } = useDeclaraciones(servidorId)
@@ -79,6 +82,8 @@ export function DeclaracionesTab({ servidorId }: Props) {
         opened={exportarOpened}
         onClose={cerrarExportar}
         servidorId={servidorId}
+        // El archivo se nombra con la cédula; sin ella salía con el id.
+        cedula={servidor?.cedula}
       />
     </Stack>
   )

@@ -10,5 +10,10 @@ export const historialAcademicoSchema = z.object({
   titulo_capacitacion:  z.string().min(2, 'Mínimo 2 caracteres'),
   codigo_senescyt:      z.string().nullable().optional(),
 })
+  // Un curso de un día termina el mismo día: el backend ya lo admite.
+  .refine((d) => !d.fecha_fin || d.fecha_fin >= d.fecha_inicio, {
+    path: ['fecha_fin'],
+    message: 'La fecha de finalización no puede ser anterior a la de inicio',
+  })
 
 export type HistorialAcademicoFormData = z.infer<typeof historialAcademicoSchema>

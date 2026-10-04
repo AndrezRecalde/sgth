@@ -116,7 +116,7 @@ export function HistorialAcademicoModal({ opened, onClose, servidorId, initialVa
         <Controller name="tipo_estudio" control={control}
           render={({ field }) => (
             <Select label="Tipo de registro"
-              data={TIPO_OPTIONS} {...contained}
+              data={TIPO_OPTIONS} {...contained} allowDeselect={false}
               value={field.value} onChange={field.onChange}
               error={errors.tipo_estudio?.message} />
           )} />
@@ -134,7 +134,7 @@ export function HistorialAcademicoModal({ opened, onClose, servidorId, initialVa
         <Controller name="nacionalidad_estudio" control={control}
           render={({ field }) => (
             <Select label="Nacionalidad de la institución"
-              data={NACIONALIDAD_OPTIONS} {...contained}
+              data={NACIONALIDAD_OPTIONS} {...contained} allowDeselect={false}
               value={field.value} onChange={field.onChange}
               error={errors.nacionalidad_estudio?.message} />
           )} />

@@ -105,6 +105,8 @@ export function DeclaracionModal({ opened, onClose, servidorId, initialValues }:
               placeholder="Seleccionar fecha"
               valueFormat="DD/MM/YYYY"
               clearable
+              // Una declaración ya presentada: el backend rechaza el futuro.
+              maxDate={new Date()}
               {...contained}
               value={toDateValue(field.value)}
               onChange={(d) => field.onChange(fromDateValue(d))}
