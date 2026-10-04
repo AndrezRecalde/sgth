@@ -54,6 +54,11 @@ export function CondicionTab({ servidorId }: Props) {
             icon: IconHeart,
             title: 'Sin discapacidades registradas',
             description: 'Registre el carnet del CONADIS y el porcentaje reconocido.',
+            action: (
+              <Button variant="light" leftSection={<IconPlus size={14} />} onClick={openDisc}>
+                Registrar discapacidad
+              </Button>
+            ),
           }}
         >
           <SgthTable
@@ -77,6 +82,11 @@ export function CondicionTab({ servidorId }: Props) {
             icon: IconHeart,
             title: 'Sin enfermedades registradas',
             description: 'Registre el diagnóstico y su código CIE-10.',
+            action: (
+              <Button variant="light" leftSection={<IconPlus size={14} />} onClick={openEnf}>
+                Registrar enfermedad
+              </Button>
+            ),
           }}
         >
           <SgthTable

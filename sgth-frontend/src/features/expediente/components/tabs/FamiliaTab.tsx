@@ -47,6 +47,11 @@ export function FamiliaTab({ servidorId }: Props) {
             icon: IconUsers,
             title: 'Sin cargas familiares',
             description: 'Registre los familiares dependientes del servidor.',
+            action: (
+              <Button variant="light" leftSection={<IconPlus size={14} />} onClick={() => { setEditItem(null); open() }}>
+                Agregar carga familiar
+              </Button>
+            ),
           }}
         >
           <SgthTable

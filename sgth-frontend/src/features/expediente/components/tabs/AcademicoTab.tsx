@@ -44,6 +44,11 @@ export function AcademicoTab({ servidorId }: Props) {
             icon: IconSchool,
             title: 'Sin historial académico',
             description: 'Registre los títulos académicos o capacitaciones del servidor.',
+            action: (
+              <Button variant="light" leftSection={<IconPlus size={14} />} onClick={open}>
+                Agregar registro
+              </Button>
+            ),
           }}
         >
           <SgthTable records={historial} columns={columns} minHeight={100} />

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Alert, Button, Group, Stepper } from '@mantine/core'
 import { ModalFooter, SgthModal } from '@/components/ui'
 import { DatePickerInput } from '@mantine/dates'
-import { FormProvider, useForm, Controller, type DefaultValues } from 'react-hook-form'
+import { FormProvider, useForm, Controller, type FieldErrors } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconBriefcase, IconInfoCircle, IconPhone, IconUser } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -16,48 +16,16 @@ import {
   vinculacionInicialSchema, type VinculacionInicialFormData,
 } from '../schemas/vinculacionInicial.schema'
 import { toDateValue, fromDateValueOrNull } from '@/lib/fecha'
+import { erroresAlFormulario } from '@/lib/erroresAlFormulario'
+import { erroresDeCampo } from '@/lib/erroresDeCampo'
+import {
+  CAMPOS_VINCULACION, PASO_PERSONAL, VINCULACION_EN_BLANCO as BLANCO, pasoDeVinculacion,
+} from '../utils/vinculacionInicialForm'
 
 interface Props {
   opened: boolean
   onClose: () => void
 }
-
-/**
- * Unidad, puesto y remuneración arrancan sin valor: el esquema los exige al
- * enviar, pero los valores iniciales de un formulario son parciales por
- * definición, de ahí `DefaultValues`.
- */
-const BLANCO: DefaultValues<VinculacionInicialFormData> = {
-  nombre: '', segundo_nombre: '', apellido: '', segundo_apellido: '', cedula: '',
-  fecha_nacimiento: '',
-  genero: 'masculino',
-  estado_civil: 'soltero',
-  tipo_sangre: null,
-  es_extranjero: false,
-  provincia_nacimiento_id: null,
-  canton_nacimiento_id: null,
-  nacionalidad: '', pais_origen: '',
-  numero_papeleta_votacion: '', pasaporte_numero: '',
-  telefono_celular: '', telefono_convencional: '',
-  correo_personal: '', direccion_domicilio: '',
-  fecha_ingreso_institucion: null,
-  fecha_ingreso_sector_publico: null,
-  vinculo: {
-    tipo_nombramiento: 'nombramiento_permanente',
-    fecha_inicio: '',
-    fecha_fin: null,
-    numero_contrato: '',
-    resolucion_numero: '',
-    puede_marcar: true,
-  },
-}
-
-/** Campos que deben validarse antes de dejar avanzar de paso. */
-const PASO_PERSONAL = [
-  'nombre', 'apellido', 'cedula', 'fecha_nacimiento', 'genero', 'estado_civil',
-  'es_extranjero', 'provincia_nacimiento_id', 'canton_nacimiento_id',
-  'nacionalidad', 'pais_origen',
-] as const
 
 /**
  * Carga inicial de un servidor que ya estaba vinculado antes del sistema:
@@ -90,8 +58,18 @@ export function VinculacionInicialModal({ opened, onClose }: Props) {
     setPaso((p) => Math.min(p + 1, 2))
   }
 
+  /** Un campo inválido puede estar en otro paso: se vuelve a él para que se vea. */
+  const irAlError = (campos: string[]) => {
+    const p = pasoDeVinculacion(campos)
+    if (p !== null) setPaso(p)
+  }
+
   const enviar = (valores: VinculacionInicialFormData) => {
-    registrar.mutateAsync(valores).then(cerrar).catch(() => {})
+    registrar.mutateAsync(valores).then(cerrar).catch((e) => {
+      // Cédula repetida, puesto inexistente…: cada uno a su campo y a su paso.
+      erroresAlFormulario(e, form.setError, CAMPOS_VINCULACION, 'No se pudo registrar la vinculación inicial')
+      irAlError(Object.keys(erroresDeCampo(e) ?? {}))
+    })
   }
 
   return (
@@ -108,7 +86,10 @@ export function VinculacionInicialModal({ opened, onClose }: Props) {
       </Stepper>
 
       <FormProvider {...form}>
-        <form onSubmit={form.handleSubmit(enviar)} noValidate>
+        <form
+          onSubmit={form.handleSubmit(enviar, (e: FieldErrors) => irAlError(Object.keys(e)))}
+          noValidate
+        >
           {paso === 0 && <ServidorFormPersonal />}
 
           {paso === 1 && (

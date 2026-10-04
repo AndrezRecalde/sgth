@@ -12,6 +12,10 @@ import { erroresDeCampo } from './erroresDeCampo'
  *   mutateAsync(datos).then(cerrar).catch((e) =>
  *     erroresAlFormulario(e, setError, Object.keys(esquema.shape), 'No se pudo guardar'))
  *
+ * Con `titulo` en `null` solo marca los campos y no notifica nada: es para
+ * mutaciones compartidas cuyo `onError` ya notifica todo, porque otros
+ * llamadores no tienen formulario donde poner el error.
+ *
  * Hasta el 2026-10-03 los modales del Expediente hacían `.catch(() => {})` y
  * el error del backend solo salía como notificación: había que buscar cuál de
  * los campos estaba mal.
@@ -20,7 +24,7 @@ export function erroresAlFormulario<T extends FieldValues>(
   error: unknown,
   setError: UseFormSetError<T>,
   campos: readonly string[],
-  titulo: string,
+  titulo: string | null,
 ): void {
   const errores = erroresDeCampo(error)
   if (!errores) return
@@ -31,5 +35,5 @@ export function erroresAlFormulario<T extends FieldValues>(
     if (esCampo(campo)) setError(campo, { type: 'server', message: mensaje })
     else sueltos.push(mensaje)
   }
-  if (sueltos.length > 0) notificar.error(titulo, sueltos.join(' '))
+  if (titulo !== null && sueltos.length > 0) notificar.error(titulo, sueltos.join(' '))
 }

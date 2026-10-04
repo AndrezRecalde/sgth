@@ -65,6 +65,11 @@ export function DeclaracionesTab({ servidorId }: Props) {
             icon: IconFileDescription,
             title: 'Sin declaraciones juramentadas',
             description: 'Registre las declaraciones juramentadas del servidor.',
+            action: (
+              <Button variant="light" leftSection={<IconPlus size={14} />} onClick={open}>
+                Nueva declaración
+              </Button>
+            ),
           }}
         >
           <SgthTable records={declaraciones} columns={columns} minHeight={100} />
