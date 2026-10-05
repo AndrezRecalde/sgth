@@ -104,7 +104,7 @@ export function useInscribirPostulante(convocatoriaId: number) {
       qc.invalidateQueries({ queryKey: ['express-resumen'] })
       qc.invalidateQueries({ queryKey: ['express-anios'] })
     },
-    onError: notificar.alFallar('No se pudo inscribir al postulante'),
+    onError: notificar.alFallarSalvoCampos('No se pudo inscribir al postulante'),
   })
 }
 

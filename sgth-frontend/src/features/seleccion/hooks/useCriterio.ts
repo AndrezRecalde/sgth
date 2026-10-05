@@ -23,7 +23,7 @@ export function useCrearCriterio(convocatoriaId: number) {
       notificar.exito('Criterio agregado', 'El criterio fue registrado correctamente.')
       qc.invalidateQueries({ queryKey: ['criterios', convocatoriaId] })
     },
-    onError: notificar.alFallar('No se pudo agregar el criterio'),
+    onError: notificar.alFallarSalvoCampos('No se pudo agregar el criterio'),
   })
 }
 

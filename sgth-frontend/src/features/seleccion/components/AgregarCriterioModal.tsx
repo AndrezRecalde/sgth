@@ -9,6 +9,7 @@ import { FormModal, SectionHeading } from '@/components/ui'
 import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useForm, useWatch, Controller } from 'react-hook-form'
+import { erroresAlFormulario } from '@/lib/erroresAlFormulario'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v4'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -60,7 +61,7 @@ export function AgregarCriterioModal({
   ])
 
   const {
-    control, register, handleSubmit, reset,
+    control, register, handleSubmit, reset, setError,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -104,7 +105,12 @@ export function AgregarCriterioModal({
         ? opciones.filter(o => o.etiqueta.trim())
         : undefined,
     }
-    crear.mutate(data, { onSuccess: handleClose })
+    // El tope de 100 entre todos los criterios lo valida el backend y vuelve
+    // a «Puntaje máximo»; el de cada opción, en la notificación.
+    crear.mutateAsync(data)
+      .then(handleClose)
+      .catch((e) => erroresAlFormulario(e, setError, ['nombre', 'descripcion', 'puntaje_maximo', 'tipo_input'],
+        'No se pudo agregar el criterio'))
   }
 
   return (
