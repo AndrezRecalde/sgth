@@ -5,7 +5,7 @@ import { Alert, Button, Divider, Group, Stack, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconInfoCircle, IconTemplate } from '@tabler/icons-react'
 import { DataState, SectionHeading, StatusBadge } from '@/components/ui'
-import { useCriterios } from '../hooks/useCriterio'
+import { useCriterios, useEliminarCriterio } from '../hooks/useCriterio'
 import type { SeccionCriterio } from '../services/criterioService'
 import { AgregarCriterioModal } from './AgregarCriterioModal'
 import { SeccionCriterios } from './SeccionCriterios'
@@ -22,6 +22,12 @@ export function TabCriterios({ convocatoriaId, editable }: Props) {
   const [modalAbierto, modal] = useDisclosure(false)
   const [seccion, setSeccion] = useState<SeccionCriterio>('meritos')
   const [plantillaAbierta, plantilla] = useDisclosure(false)
+  const eliminar = useEliminarCriterio(convocatoriaId)
+  const seccionProps = {
+    editable,
+    onEliminar: (id: number) => eliminar.mutate(id),
+    ayudaVacia: 'Agregue criterios antes de publicar la convocatoria.',
+  }
 
   const total = criterios.reduce((s, c) => s + Number(c.puntaje_maximo), 0)
   const agregarEn = (s: SeccionCriterio) => { setSeccion(s); modal.open() }
@@ -65,10 +71,10 @@ export function TabCriterios({ convocatoriaId, editable }: Props) {
           )}
 
           <SeccionCriterios titulo="Méritos (hoja de vida)" criterios={criterios.filter(c => c.seccion === 'meritos')}
-            convocatoriaId={convocatoriaId} editable={editable} onAgregar={() => agregarEn('meritos')} />
+            onAgregar={() => agregarEn('meritos')} {...seccionProps} />
           <Divider />
           <SeccionCriterios titulo="Oposición (evaluación directa)" criterios={criterios.filter(c => c.seccion === 'oposicion')}
-            convocatoriaId={convocatoriaId} editable={editable} onAgregar={() => agregarEn('oposicion')} />
+            onAgregar={() => agregarEn('oposicion')} {...seccionProps} />
         </Stack>
       </DataState>
 

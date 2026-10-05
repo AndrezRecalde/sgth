@@ -8,7 +8,7 @@ import {
 } from '@/features/dispensario/services/solicitudCertificacionOptions'
 import { usePostulantes } from '../hooks/useConvocatoria'
 import { ESTADO_POSTULANTE_OPTIONS, TONO_POSTULANTE } from '../services/convocatoriaService'
-import { ESTADO_CIVIL_OPTIONS, GENERO_OPTIONS, etiquetaDe } from '../services/postulanteOptions'
+import { ESTADO_CIVIL_OPTIONS, GENERO_OPTIONS, etiquetaDe } from '../constants/postulante'
 import { DocumentosPostulante } from './DocumentosPostulante'
 import { nombreCandidato } from './RankingCandidatoCard'
 

@@ -27,7 +27,7 @@ export function useCrearPlantilla() {
       notificar.exito('Plantilla creada', 'La plantilla fue registrada correctamente.')
       qc.invalidateQueries({ queryKey: ['plantillas'] })
     },
-    onError: notificar.alFallar('No se pudo crear la plantilla'),
+    onError: notificar.alFallarSalvoCampos('No se pudo crear la plantilla'),
   })
 }
 
@@ -52,7 +52,7 @@ export function useAgregarCriterioPlantilla(plantillaId: number) {
       notificar.exito('Criterio agregado', 'El criterio fue agregado a la plantilla.')
       qc.invalidateQueries({ queryKey: ['plantilla', plantillaId] })
     },
-    onError: notificar.alFallar('No se pudo agregar el criterio a la plantilla'),
+    onError: notificar.alFallarSalvoCampos('No se pudo agregar el criterio a la plantilla'),
   })
 }
 

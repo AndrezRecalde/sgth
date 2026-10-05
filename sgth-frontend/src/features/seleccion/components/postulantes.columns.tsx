@@ -3,7 +3,7 @@ import { IconEdit, IconStar, IconUsers } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
 import { StatusBadge, TableActions } from '@/components/ui'
 import { ESTADO_POSTULANTE_OPTIONS, TONO_POSTULANTE, type Postulante } from '../services/convocatoriaService'
-import { etiquetaDe } from '../services/postulanteOptions'
+import { etiquetaDe } from '../constants/postulante'
 import { nombreCandidato } from './RankingCandidatoCard'
 
 interface Acciones {

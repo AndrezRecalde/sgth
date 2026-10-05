@@ -1,97 +1,44 @@
 'use client'
 
-import { Stack, Group, Text, Button, Card, ActionIcon, TextInput, Textarea, Select } from '@mantine/core'
-import {
-  IconTemplate,
-  IconPlus,
-  IconEdit,
-  IconTrash,
-} from '@tabler/icons-react'
+import { ActionIcon, Button, Card, Group, Stack, Text, Tooltip } from '@mantine/core'
+import { IconEdit, IconPlus, IconTemplate, IconTrash } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
 import { useRouter } from 'next/navigation'
-import { useForm, useWatch } from 'react-hook-form'
-import { useContainedInput } from '@/hooks/useContainedInput'
-import {
-  usePlantillas,
-  useCrearPlantilla,
-  useEliminarPlantilla,
-} from '@/features/seleccion/hooks/usePlantilla'
-import {
-  TIPO_CONTRATO_PLANTILLA_OPTIONS,
-} from '@/features/seleccion/services/plantillaService'
-import { confirmar, EmptyState, FormModal, PageHeader, PageShell, StatusBadge } from '@/components/ui'
+import { confirmar, DataState, PageHeader, PageShell, StatusBadge } from '@/components/ui'
 import { ROUTES } from '@/config/routes'
+import { NuevaPlantillaModal } from '@/features/seleccion/components/NuevaPlantillaModal'
+import { useEliminarPlantilla, usePlantillas } from '@/features/seleccion/hooks/usePlantilla'
+import { TIPO_CONTRATO_PLANTILLA_OPTIONS } from '@/features/seleccion/services/plantillaService'
+
+const etiquetaTipo = (tipo?: string | null) =>
+  TIPO_CONTRATO_PLANTILLA_OPTIONS.find(o => o.value === tipo)?.label ?? 'General'
 
 export function PlantillasView() {
-  const router   = useRouter()
-  const contained = useContainedInput()
-  const [modalOpened,
-    { open, close }] = useDisclosure(false)
-
-  const { data: plantillas = [], isLoading } = usePlantillas()
-  const crear    = useCrearPlantilla()
+  const router = useRouter()
+  const [modalAbierto, modal] = useDisclosure(false)
+  const { data: plantillas = [], isLoading, error, refetch } = usePlantillas()
   const eliminar = useEliminarPlantilla()
-
-  const { register, handleSubmit, reset, setValue, control,
-    formState: { errors } } =
-    useForm<{
-      nombre:        string
-      descripcion:   string
-      tipo_contrato: string
-    }>()
-
-  const tipoContrato = useWatch({ control, name: 'tipo_contrato' })
-
-  const onSubmit = (values: {
-    nombre: string
-    descripcion: string
-    tipo_contrato: string
-  }) => {
-    crear.mutate(
-      {
-        nombre:        values.nombre,
-        descripcion:   values.descripcion || null,
-        tipo_contrato: values.tipo_contrato || null,
-      },
-      {
-        onSuccess: (p) => {
-          reset()
-          close()
-          router.push(
-            ROUTES.SGTH.PLANTILLA(p.id)
-          )
-        },
-      }
-    )
-  }
-
-  const getLabelTipo = (tipo: string | null | undefined) =>
-    TIPO_CONTRATO_PLANTILLA_OPTIONS.find(
-      o => o.value === tipo
-    )?.label ?? 'General'
 
   return (
     <PageShell>
       <PageHeader
         title="Plantillas de evaluación"
-        description="Configuración de criterios reutilizables para convocatorias"
-        actions={
-          <Button
-            leftSection={<IconPlus size={14} />}
-            onClick={open}
-          >
-            Nueva plantilla
-          </Button>
-        }
+        description="Criterios reutilizables para las convocatorias"
+        actions={<Button leftSection={<IconPlus size={14} />} onClick={modal.open}>Nueva plantilla</Button>}
       />
 
-      {plantillas.length === 0 && !isLoading ? (
-        <EmptyState
-          icon={IconTemplate}
-          title="Sin plantillas"
-          description="Cree plantillas de criterios reutilizables para sus convocatorias."
-        />
-      ) : (
+      <DataState
+        loading={isLoading}
+        error={error}
+        errorTitle="No se pudieron cargar las plantillas"
+        onRetry={refetch}
+        empty={!plantillas.length}
+        emptyProps={{
+          icon: IconTemplate,
+          title: 'Sin plantillas',
+          description: 'Cree plantillas de criterios reutilizables para sus convocatorias.',
+        }}
+      >
         <Stack gap="sm">
           {plantillas.map(p => (
             <Card key={p.id} withBorder radius="lg" p="md">
@@ -99,97 +46,40 @@ export function PlantillasView() {
                 <Stack gap={4}>
                   <Group gap="xs">
                     <Text fw={600}>{p.nombre}</Text>
-                    {!p.activa && (
-                      <StatusBadge size="xs">
-                        Inactiva
-                      </StatusBadge>
-                    )}
+                    {!p.activa && <StatusBadge size="xs">Inactiva</StatusBadge>}
                   </Group>
-                  {p.descripcion && (
-                    <Text size="xs" c="dimmed" lineClamp={2}>
-                      {p.descripcion}
-                    </Text>
-                  )}
+                  {p.descripcion && <Text size="xs" c="dimmed" lineClamp={2}>{p.descripcion}</Text>}
                   <Group gap="xs" mt={2}>
-                    <StatusBadge size="xs">
-                      {getLabelTipo(p.tipo_contrato)}
-                    </StatusBadge>
-                    <StatusBadge size="xs">
-                      {p.criterios_count ?? 0} criterios
-                    </StatusBadge>
+                    <StatusBadge size="xs">{etiquetaTipo(p.tipo_contrato)}</StatusBadge>
+                    <StatusBadge size="xs">{p.criterios_count ?? 0} criterios</StatusBadge>
                   </Group>
                 </Stack>
                 <Group gap="xs" wrap="nowrap">
-                  <ActionIcon
-                    variant="light"
-                    onClick={() =>
-                      router.push(
-                        ROUTES.SGTH.PLANTILLA(p.id)
-                      )
-                    }
-                  >
-                    <IconEdit size={16} />
-                  </ActionIcon>
-                  <ActionIcon
-                    variant="light"
-                    color="red"
-                    onClick={() => confirmar({
-                      title:   'Eliminar plantilla',
-                      message: <>Se eliminará la plantilla <b>{p.nombre}</b>. No se puede deshacer.</>,
-                      destructiva: true,
-                      onConfirm: () => eliminar.mutate(p.id),
-                    })}
-                  >
-                    <IconTrash size={16} />
-                  </ActionIcon>
+                  <Tooltip label="Abrir plantilla">
+                    <ActionIcon variant="light" aria-label={`Abrir la plantilla ${p.nombre}`}
+                      onClick={() => router.push(ROUTES.SGTH.PLANTILLA(p.id))}>
+                      <IconEdit size={16} />
+                    </ActionIcon>
+                  </Tooltip>
+                  <Tooltip label="Eliminar plantilla">
+                    <ActionIcon variant="light" color="red" aria-label={`Eliminar la plantilla ${p.nombre}`}
+                      onClick={() => confirmar({
+                        title: 'Eliminar plantilla',
+                        message: <>Se eliminará la plantilla <b>{p.nombre}</b>. No se puede deshacer.</>,
+                        destructiva: true,
+                        onConfirm: () => eliminar.mutate(p.id),
+                      })}>
+                      <IconTrash size={16} />
+                    </ActionIcon>
+                  </Tooltip>
                 </Group>
               </Group>
             </Card>
           ))}
         </Stack>
-      )}
+      </DataState>
 
-      <FormModal
-        opened={modalOpened}
-        onClose={() => { reset(); close() }}
-        title="Nueva plantilla de evaluación"
-        size="md"
-        onSubmit={handleSubmit(onSubmit)}
-        submitLabel="Crear plantilla"
-        submitting={crear.isPending}
-      >
-        <Stack gap="sm">
-          <TextInput
-            label="Nombre de la plantilla"
-            placeholder="Ej: Concurso LOSEP estándar"
-            required
-            {...contained}
-            {...register('nombre', {
-              required: 'El nombre de la plantilla es obligatorio',
-            })}
-            error={errors.nombre?.message}
-          />
-          <Textarea
-            label="Descripción"
-            placeholder="Describe cuándo usar esta plantilla"
-            autosize
-            minRows={2}
-            {...contained}
-            {...register('descripcion')}
-          />
-          <Select
-            label="Tipo de contrato"
-            description="Ayuda a filtrar la plantilla según el tipo de convocatoria"
-            data={TIPO_CONTRATO_PLANTILLA_OPTIONS}
-            clearable
-            {...contained}
-            value={tipoContrato ?? null}
-            onChange={(v) =>
-              setValue('tipo_contrato', v ?? '')
-            }
-          />
-        </Stack>
-      </FormModal>
+      <NuevaPlantillaModal opened={modalAbierto} onClose={modal.close} />
     </PageShell>
   )
 }
