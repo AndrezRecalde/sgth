@@ -7,15 +7,12 @@ use App\Enums\TipoNombramiento;
 use App\Enums\TipoProcesoConvocatoria;
 use App\Models\Estructura\Puesto;
 use App\Models\User;
-use App\Observers\Seleccion\ConvocatoriaObserver;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[ObservedBy(ConvocatoriaObserver::class)]
 class Convocatoria extends Model
 {
     use HasFactory, SoftDeletes;

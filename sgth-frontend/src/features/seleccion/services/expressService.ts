@@ -1,5 +1,6 @@
 import api from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
+import type { Onboarding } from './convocatoriaService'
 
 export type TarjetaExpress = {
   convocatoria_id: number
@@ -41,6 +42,8 @@ export type AspiranteExpress = {
    * Trámite médico del aspirante. Con dictamen de aptitud, Talento Humano
    * confirma la incorporación desde Reclutamiento.
    */
+  /** El checklist de inducción, si ya fue incorporado. */
+  onboarding?: Onboarding | null
   solicitud_certificacion?: {
     id: number
     estado: string

@@ -10214,66 +10214,6 @@
             }
         },
         "/v1/seleccion/convocatorias/{convocatoriaId}/criterios/{criterioId}": {
-            "patch": {
-                "operationId": "criterioEvaluacion.update",
-                "tags": [
-                    "CriterioEvaluacion"
-                ],
-                "parameters": [
-                    {
-                        "name": "convocatoriaId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "criterioId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Criterio actualizado."
-                                        },
-                                        "datos": {
-                                            "type": "string"
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            },
             "delete": {
                 "operationId": "criterioEvaluacion.destroy",
                 "tags": [
@@ -24453,6 +24393,90 @@
                 }
             }
         },
+        "/v1/seleccion/onboardings/{id}": {
+            "patch": {
+                "operationId": "onboarding.update",
+                "tags": [
+                    "Onboarding"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "documentacion_entregada": {
+                                        "type": "boolean"
+                                    },
+                                    "induccion_completada": {
+                                        "type": "boolean"
+                                    },
+                                    "contrato_firmado": {
+                                        "type": "boolean"
+                                    },
+                                    "observaciones": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 1000
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Inducci\u00f3n actualizada."
+                                        },
+                                        "datos": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/estructura/organigrama": {
             "get": {
                 "operationId": "estructura.organigrama",
@@ -27742,92 +27766,6 @@
                     }
                 }
             },
-            "patch": {
-                "operationId": "plantillaEvaluacion.update",
-                "tags": [
-                    "PlantillaEvaluacion"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "nombre": {
-                                        "type": "string",
-                                        "maxLength": 200
-                                    },
-                                    "descripcion": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ]
-                                    },
-                                    "tipo_contrato": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ],
-                                        "maxLength": 50
-                                    },
-                                    "activa": {
-                                        "type": "boolean"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Plantilla actualizada."
-                                        },
-                                        "datos": {
-                                            "type": "string"
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            },
             "delete": {
                 "operationId": "plantillaEvaluacion.destroy",
                 "tags": [
@@ -28389,228 +28327,6 @@
                 }
             }
         },
-        "/v1/seleccion/convocatorias/{convocatoriaId}/postulantes/{postulanteId}": {
-            "get": {
-                "operationId": "postulante.show",
-                "tags": [
-                    "Postulante"
-                ],
-                "parameters": [
-                    {
-                        "name": "convocatoriaId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "postulanteId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Operaci\u00f3n exitosa."
-                                        },
-                                        "datos": {
-                                            "type": "string"
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            },
-            "patch": {
-                "operationId": "postulante.update",
-                "tags": [
-                    "Postulante"
-                ],
-                "parameters": [
-                    {
-                        "name": "convocatoriaId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "postulanteId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "nombres": {
-                                        "type": "string",
-                                        "maxLength": 150
-                                    },
-                                    "apellidos": {
-                                        "type": "string",
-                                        "maxLength": 150
-                                    },
-                                    "correo": {
-                                        "type": "string",
-                                        "format": "email",
-                                        "maxLength": 150
-                                    },
-                                    "telefono": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ],
-                                        "maxLength": 20
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Postulante actualizado."
-                                        },
-                                        "datos": {
-                                            "type": "string"
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            },
-            "delete": {
-                "operationId": "postulante.destroy",
-                "tags": [
-                    "Postulante"
-                ],
-                "parameters": [
-                    {
-                        "name": "convocatoriaId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "postulanteId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Postulante eliminado."
-                                        },
-                                        "datos": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            },
-                                            "minItems": 0,
-                                            "maxItems": 0,
-                                            "additionalItems": false
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
         "/v1/seleccion/convocatorias/{convocatoriaId}/postulantes/{postulanteId}/documentos/{documentoId}": {
             "get": {
                 "operationId": "postulante.descargarDocumento",
@@ -28736,6 +28452,231 @@
                                         "mensaje": {
                                             "type": "string",
                                             "const": "Documento eliminado."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "minItems": 0,
+                                            "maxItems": 0,
+                                            "additionalItems": false
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/seleccion/convocatorias/{convocatoriaId}/postulantes/{postulanteId}": {
+            "patch": {
+                "operationId": "postulante.update",
+                "summary": "Corregir los datos de un candidato desde su perfil (2026-10-05): el\nendpoint exist\u00eda pero ninguna pantalla lo usaba, y solo aceptaba cuatro\ncampos. No se corrige a quien ya fue incorporado \u2014sus datos viven ya en\nel expediente\u2014 ni en un concurso cerrado; y la c\u00e9dula, solo mientras no\nse haya enviado al Dispensario, que trabaja con ella",
+                "tags": [
+                    "Postulante"
+                ],
+                "parameters": [
+                    {
+                        "name": "convocatoriaId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "postulanteId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "cedula": {
+                                        "type": "string",
+                                        "pattern": "^\\d{10}$"
+                                    },
+                                    "nombres": {
+                                        "type": "string",
+                                        "maxLength": 150
+                                    },
+                                    "segundo_nombre": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 150
+                                    },
+                                    "apellidos": {
+                                        "type": "string",
+                                        "maxLength": 150
+                                    },
+                                    "segundo_apellido": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 150
+                                    },
+                                    "correo": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "maxLength": 150
+                                    },
+                                    "telefono": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 20
+                                    },
+                                    "genero": {
+                                        "type": "string",
+                                        "enum": [
+                                            "masculino",
+                                            "femenino",
+                                            "otro"
+                                        ]
+                                    },
+                                    "estado_civil": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "enum": [
+                                            "soltero",
+                                            "casado",
+                                            "union_libre",
+                                            "divorciado",
+                                            "viudo"
+                                        ]
+                                    },
+                                    "fecha_nacimiento": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "format": "date-time"
+                                    },
+                                    "tipo_sangre": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "enum": [
+                                            "A+",
+                                            "A-",
+                                            "B+",
+                                            "B-",
+                                            "AB+",
+                                            "AB-",
+                                            "O+",
+                                            "O-"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Datos del candidato actualizados."
+                                        },
+                                        "datos": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "postulante.destroy",
+                "tags": [
+                    "Postulante"
+                ],
+                "parameters": [
+                    {
+                        "name": "convocatoriaId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "postulanteId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Postulante eliminado."
                                         },
                                         "datos": {
                                             "type": "array",
@@ -49691,12 +49632,6 @@
                             "null"
                         ]
                     },
-                    "cv_ruta": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
                     "estado": {
                         "$ref": "#/components/schemas/EstadoPostulante"
                     },
@@ -49807,7 +49742,6 @@
                     "apellidos",
                     "correo",
                     "telefono",
-                    "cv_ruta",
                     "estado",
                     "created_by",
                     "updated_by",

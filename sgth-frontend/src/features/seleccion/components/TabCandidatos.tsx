@@ -5,6 +5,7 @@ import { Button } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconPlus, IconUsers } from '@tabler/icons-react'
 import { DataState, SectionCard, SgthTable } from '@/components/ui'
+import { useAuth } from '@/hooks/useAuth'
 import { usePostulantes } from '../hooks/useConvocatoria'
 import type { Postulante } from '../services/convocatoriaService'
 import { CalificarPostulanteModal } from './CalificarPostulanteModal'
@@ -25,6 +26,7 @@ export function TabCandidatos({ convocatoriaId, estadoConvocatoria, gestiona, ca
   const [inscribirAbierto, inscribir] = useDisclosure(false)
   const [aCalificar, setACalificar] = useState<Postulante | null>(null)
   const [perfilId, setPerfilId] = useState<number | null>(null)
+  const puedeIncorporar = useAuth().hasPermiso('gestionar-onboarding')
 
   const columns = columnasPostulantes({
     califica,
@@ -68,6 +70,8 @@ export function TabCandidatos({ convocatoriaId, estadoConvocatoria, gestiona, ca
         postulanteId={perfilId}
         onClose={() => setPerfilId(null)}
         puedeGestionar={gestiona}
+        puedeIncorporar={puedeIncorporar}
+        cerrada={['finalizada', 'desierta', 'cancelada'].includes(estadoConvocatoria)}
       />
 
       <CalificarPostulanteModal

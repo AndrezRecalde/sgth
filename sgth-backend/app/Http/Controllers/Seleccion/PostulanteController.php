@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Seleccion;
 
 use App\Enums\EstadoConvocatoria;
+use App\Enums\EstadoPostulante;
 use App\Exceptions\ReglaNegocioException;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
@@ -13,6 +14,7 @@ use App\Models\Seleccion\Postulante;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 final class PostulanteController extends Controller
 {
@@ -23,7 +25,8 @@ final class PostulanteController extends Controller
         // Con su solicitud médica (2026-10-04): el ranking del concurso formal
         // ofrece «Confirmar incorporación» cuando hay dictamen de aptitud, igual
         // que el cajón del express.
-        $postulantes = Postulante::with(['evaluacion', 'documentos', 'solicitudCertificacion'])
+        // Y su inducción (2026-10-05), para el perfil del incorporado.
+        $postulantes = Postulante::with(['evaluacion', 'documentos', 'solicitudCertificacion', 'onboarding'])
             ->where('convocatoria_id', $convocatoriaId)
             ->orderBy('apellidos')
             ->get();
@@ -86,21 +89,7 @@ final class PostulanteController extends Controller
         // En un contenedor permanente la unicidad es por año: la misma persona
         // puede ser contratada en 2026 y otra vez en 2027 bajo la misma
         // modalidad. En un concurso formal sigue siendo una sola inscripción.
-        $existe = Postulante::where('convocatoria_id', $convocatoriaId)
-            ->where('cedula', $datos['cedula'])
-            ->when($esContenedor, fn ($q) => $q->whereYear(
-                'fecha_inscripcion',
-                (int) date('Y', strtotime($datos['fecha_inscripcion']))
-            ))
-            ->exists();
-
-        if ($existe) {
-            throw new ReglaNegocioException(
-                $esContenedor
-                    ? 'Ya existe un aspirante con esa cédula en esta modalidad para ese año.'
-                    : 'Ya existe un postulante con esa cédula en esta convocatoria.'
-            );
-        }
+        $this->assertCedulaLibre($convocatoria, $datos['cedula'], $datos['fecha_inscripcion']);
 
         // Un servidor activo SÍ puede postular a un concurso interno — no se
         // bloquea la inscripción, solo se marca la referencia para que
@@ -122,38 +111,85 @@ final class PostulanteController extends Controller
         );
     }
 
-    public function show(int $convocatoriaId, int $postulanteId): JsonResponse
-    {
-        $postulante = Postulante::with(['evaluacion', 'documentos'])
-            ->where('convocatoria_id', $convocatoriaId)
-            ->findOrFail($postulanteId);
-
-        return ApiResponse::ok($postulante);
-    }
-
+    /**
+     * Corregir los datos de un candidato desde su perfil (2026-10-05): el
+     * endpoint existía pero ninguna pantalla lo usaba, y solo aceptaba cuatro
+     * campos. No se corrige a quien ya fue incorporado —sus datos viven ya en
+     * el expediente— ni en un concurso cerrado; y la cédula, solo mientras no
+     * se haya enviado al Dispensario, que trabaja con ella.
+     */
     public function update(
         Request $request,
         int $convocatoriaId,
         int $postulanteId
     ): JsonResponse {
-        $postulante = Postulante::where('convocatoria_id', $convocatoriaId)
+        $postulante = Postulante::with('convocatoria')
+            ->where('convocatoria_id', $convocatoriaId)
             ->findOrFail($postulanteId);
 
+        if ($postulante->estado === EstadoPostulante::INCORPORADO || $postulante->convocatoria->estado->esTerminal()) {
+            throw new ReglaNegocioException(
+                'Este candidato ya fue incorporado o el concurso está cerrado: sus datos no se corrigen aquí.'
+            );
+        }
+
         $datos = $request->validate([
+            'cedula' => ['sometimes', 'string', 'regex:/^\d{10}$/'],
             'nombres' => ['sometimes', 'string', 'max:150'],
+            'segundo_nombre' => ['nullable', 'string', 'max:150'],
             'apellidos' => ['sometimes', 'string', 'max:150'],
+            'segundo_apellido' => ['nullable', 'string', 'max:150'],
             'correo' => ['sometimes', 'email', 'max:150'],
             'telefono' => ['nullable', 'string', 'max:20'],
+            'genero' => ['sometimes', 'string', 'in:masculino,femenino,otro'],
+            'estado_civil' => ['nullable', 'string', 'in:soltero,casado,union_libre,divorciado,viudo'],
+            'fecha_nacimiento' => ['nullable', 'date'],
+            'tipo_sangre' => ['nullable', 'string', 'in:A+,A-,B+,B-,AB+,AB-,O+,O-'],
             // Sin `estado` (2026-10-05): fijarlo a mano saltaba la calificación,
             // el dictamen y el ranking. El estado lo mueven sus acciones.
+        ], [
+            'cedula.regex' => 'La cédula debe tener 10 dígitos numéricos.',
         ]);
+
+        if (isset($datos['cedula']) && $datos['cedula'] !== $postulante->cedula) {
+            if (! $postulante->estado->admiteCalificacion()) {
+                throw ValidationException::withMessages([
+                    'cedula' => 'El candidato ya fue enviado al Dispensario: la cédula ya no se cambia.',
+                ]);
+            }
+            $this->assertCedulaLibre($postulante->convocatoria, $datos['cedula'], $postulante->fecha_inscripcion?->toDateString(), $postulante->id);
+            $datos['servidor_id'] = Servidor::where('cedula', $datos['cedula'])->value('id');
+        }
 
         $postulante->update([
             ...$datos,
             'updated_by' => $request->user()->id,
         ]);
 
-        return ApiResponse::ok($postulante, 'Postulante actualizado.');
+        return ApiResponse::ok($postulante->fresh(), 'Datos del candidato actualizados.');
+    }
+
+    /**
+     * Una sola inscripción por cédula en un concurso formal; en un contenedor
+     * express, una por año. El error va al campo de la cédula.
+     */
+    private function assertCedulaLibre(Convocatoria $convocatoria, string $cedula, ?string $fecha, ?int $excepto = null): void
+    {
+        $esContenedor = (bool) $convocatoria->es_contenedor_permanente;
+
+        $existe = Postulante::where('convocatoria_id', $convocatoria->id)
+            ->where('cedula', $cedula)
+            ->when($excepto, fn ($q) => $q->where('id', '!=', $excepto))
+            ->when($esContenedor && $fecha, fn ($q) => $q->whereYear('fecha_inscripcion', (int) substr($fecha, 0, 4)))
+            ->exists();
+
+        if ($existe) {
+            throw ValidationException::withMessages([
+                'cedula' => $esContenedor
+                    ? 'Ya existe un aspirante con esa cédula en esta modalidad para ese año.'
+                    : 'Ya existe un postulante con esa cédula en esta convocatoria.',
+            ]);
+        }
     }
 
     public function destroy(

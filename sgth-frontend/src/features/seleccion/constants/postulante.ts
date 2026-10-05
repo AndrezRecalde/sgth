@@ -18,3 +18,10 @@ export const TIPO_SANGRE_OPTIONS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 
 
 export const etiquetaDe = (opciones: { value: string; label: string }[], valor?: string | null) =>
   opciones.find(o => o.value === valor)?.label ?? valor ?? '—'
+
+/**
+ * Estados en los que el puntaje todavía decide algo: se califica, se corrige
+ * la cédula y se elimina la inscripción. Espeja
+ * `EstadoPostulante::admiteCalificacion()` del backend.
+ */
+export const ESTADOS_CALIFICABLES = ['inscrito', 'en_evaluacion', 'aprobado', 'reprobado']

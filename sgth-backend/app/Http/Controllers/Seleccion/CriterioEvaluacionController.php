@@ -21,8 +21,8 @@ use Illuminate\Validation\ValidationException;
  * En un concurso formal solo se configuran en borrador: publicado, los
  * criterios son parte de lo que se anunció. En un contenedor express, que no
  * tiene borrador, se pueden cambiar, pero un criterio con el que ya se calificó
- * no se edita ni se borra: se retira (`activo = false`) y sus calificaciones
- * quedan. Antes borrarlo se llevaba en cascada las calificaciones de todos los
+ * no se borra: se retira (`activo = false`) y sus calificaciones quedan. No hay
+ * edición: un criterio se quita y se vuelve a crear (2026-10-05). Antes borrarlo se llevaba en cascada las calificaciones de todos los
  * años sin recalcular el total de nadie.
  */
 final class CriterioEvaluacionController extends Controller
@@ -41,7 +41,7 @@ final class CriterioEvaluacionController extends Controller
         $convocatoria = Convocatoria::findOrFail($convocatoriaId);
         self::assertCriteriosEditables($convocatoria);
 
-        $datos = $this->validar($request, null);
+        $datos = $this->validar($request);
         $this->assertNoPasaDe100($convocatoriaId, (float) $datos['puntaje_maximo']);
 
         $criterio = DB::transaction(function () use ($convocatoriaId, $datos) {
@@ -68,46 +68,6 @@ final class CriterioEvaluacionController extends Controller
         return ApiResponse::created(
             $criterio->load('opciones'),
             'Criterio registrado correctamente.'
-        );
-    }
-
-    public function update(
-        Request $request,
-        int $convocatoriaId,
-        int $criterioId
-    ): JsonResponse {
-        $convocatoria = Convocatoria::findOrFail($convocatoriaId);
-        $criterio = CriterioEvaluacion::where('convocatoria_id', $convocatoriaId)
-            ->where('activo', true)
-            ->findOrFail($criterioId);
-
-        self::assertCriteriosEditables($convocatoria);
-
-        // Cambiar el máximo o las opciones dejaría las calificaciones hechas
-        // con otra regla —y borrar las opciones las dejaba apuntando a nada.
-        if ($criterio->calificaciones()->exists()) {
-            throw new ReglaNegocioException(
-                'Ya se calificó con este criterio: no se puede modificar. Elimínelo (se conserva en las calificaciones hechas) y cree otro.'
-            );
-        }
-
-        $datos = $this->validar($request, $criterio);
-        if (isset($datos['puntaje_maximo'])) {
-            $this->assertNoPasaDe100($convocatoriaId, (float) $datos['puntaje_maximo'], $criterio->id);
-        }
-
-        DB::transaction(function () use ($criterio, $datos) {
-            $criterio->update(collect($datos)->except('opciones')->all());
-
-            if (array_key_exists('opciones', $datos)) {
-                $criterio->opciones()->delete();
-                $this->crearOpciones($criterio, $datos['opciones'] ?? []);
-            }
-        });
-
-        return ApiResponse::ok(
-            $criterio->load('opciones'),
-            'Criterio actualizado.'
         );
     }
 
@@ -143,35 +103,32 @@ final class CriterioEvaluacionController extends Controller
         }
     }
 
-    private function validar(Request $request, ?CriterioEvaluacion $criterio): array
+    private function validar(Request $request): array
     {
-        $parcial = $criterio !== null;
-        $req = $parcial ? 'sometimes' : 'required';
-
         $datos = $request->validate([
-            'seccion'             => [$parcial ? 'prohibited' : 'required', 'in:meritos,oposicion'],
-            'nombre'              => [$req, 'string', 'max:200'],
+            'seccion'             => ['required', 'in:meritos,oposicion'],
+            'nombre'              => ['required', 'string', 'max:200'],
             'descripcion'         => ['nullable', 'string'],
-            'puntaje_maximo'      => [$req, 'numeric', 'min:0.5', 'max:100'],
-            'tipo_input'          => [$parcial ? 'prohibited' : 'required', 'in:radio,numero,checklist'],
+            'puntaje_maximo'      => ['required', 'numeric', 'min:0.5', 'max:100'],
+            'tipo_input'          => ['required', 'in:radio,numero,checklist'],
             'opciones'            => ['nullable', 'array'],
             'opciones.*.etiqueta' => ['required', 'string', 'max:200'],
             'opciones.*.puntaje'  => ['required', 'numeric', 'min:0'],
         ]);
 
-        $tipo = $datos['tipo_input'] ?? $criterio->tipo_input;
-        $maximo = (float) ($datos['puntaje_maximo'] ?? $criterio->puntaje_maximo);
-        $opciones = array_key_exists('opciones', $datos) ? ($datos['opciones'] ?? []) : null;
+        $tipo = $datos['tipo_input'];
+        $maximo = (float) $datos['puntaje_maximo'];
+        $opciones = $datos['opciones'] ?? [];
 
         // Un radio o un checklist sin opciones no se puede calificar; un
         // número no las usa; y una opción no puede valer más que su criterio.
         if ($tipo === 'numero' && ! empty($opciones)) {
             throw ValidationException::withMessages(['opciones' => 'Un criterio numérico no lleva opciones.']);
         }
-        if ($tipo !== 'numero' && ($opciones !== null || ! $parcial) && empty($opciones)) {
+        if ($tipo !== 'numero' && empty($opciones)) {
             throw ValidationException::withMessages(['opciones' => 'Agregue al menos una opción.']);
         }
-        foreach ($opciones ?? [] as $i => $opcion) {
+        foreach ($opciones as $i => $opcion) {
             if ((float) $opcion['puntaje'] > $maximo) {
                 throw ValidationException::withMessages([
                     "opciones.{$i}.puntaje" => "Una opción no puede valer más que el criterio ({$maximo} puntos).",
@@ -182,11 +139,10 @@ final class CriterioEvaluacionController extends Controller
         return $datos;
     }
 
-    private function assertNoPasaDe100(int $convocatoriaId, float $nuevo, ?int $excepto = null): void
+    private function assertNoPasaDe100(int $convocatoriaId, float $nuevo): void
     {
         $resto = (float) CriterioEvaluacion::where('convocatoria_id', $convocatoriaId)
             ->where('activo', true)
-            ->when($excepto, fn ($q) => $q->where('id', '!=', $excepto))
             ->sum('puntaje_maximo');
 
         if (round($resto + $nuevo, 2) > 100) {

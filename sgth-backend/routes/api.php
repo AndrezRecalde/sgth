@@ -105,6 +105,7 @@ use App\Http\Controllers\Reporteria\DashboardController;
 use App\Http\Controllers\Reporteria\ReporteController;
 use App\Http\Controllers\Seleccion\CalificacionController;
 use App\Http\Controllers\Seleccion\ContenedorExpressController;
+use App\Http\Controllers\Seleccion\OnboardingController;
 use App\Http\Controllers\Seleccion\ConvocatoriaController;
 use App\Http\Controllers\Seleccion\CriterioEvaluacionController;
 use App\Http\Controllers\Seleccion\PlantillaEvaluacionController;
@@ -757,7 +758,6 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::get('convocatorias', [ConvocatoriaController::class, 'index']);
             Route::get('convocatorias/{id}', [ConvocatoriaController::class, 'show']);
             Route::get('convocatorias/{convocatoriaId}/postulantes', [PostulanteController::class, 'index']);
-            Route::get('convocatorias/{convocatoriaId}/postulantes/{postulanteId}', [PostulanteController::class, 'show']);
             // Los documentos están en el disco privado (2026-10-04): se bajan por aquí.
             Route::get('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/documentos/{documentoId}', [PostulanteController::class, 'descargarDocumento']);
             Route::get('convocatorias/{convocatoriaId}/criterios', [CriterioEvaluacionController::class, 'index']);
@@ -788,11 +788,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::delete('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/documentos/{documentoId}', [PostulanteController::class, 'eliminarDocumento']);
 
             Route::post('convocatorias/{convocatoriaId}/criterios', [CriterioEvaluacionController::class, 'store']);
-            Route::patch('convocatorias/{convocatoriaId}/criterios/{criterioId}', [CriterioEvaluacionController::class, 'update']);
             Route::delete('convocatorias/{convocatoriaId}/criterios/{criterioId}', [CriterioEvaluacionController::class, 'destroy']);
 
             Route::post('plantillas', [PlantillaEvaluacionController::class, 'store']);
-            Route::patch('plantillas/{id}', [PlantillaEvaluacionController::class, 'update']);
             Route::delete('plantillas/{id}', [PlantillaEvaluacionController::class, 'destroy']);
             Route::post('plantillas/{plantillaId}/criterios', [PlantillaEvaluacionController::class, 'agregarCriterio']);
             Route::delete('plantillas/{plantillaId}/criterios/{criterioId}', [PlantillaEvaluacionController::class, 'eliminarCriterio']);
@@ -802,6 +800,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             // La vacante que deja un no apto la cubre el siguiente del ranking.
             Route::post('convocatorias/{id}/declarar-siguiente', [SeleccionController::class, 'declararSiguiente']);
         });
+
+        // La inducción del incorporado (2026-10-05): se creaba al incorporar y
+        // ninguna pantalla la mostraba.
+        Route::patch('onboardings/{id}', [OnboardingController::class, 'update'])
+            ->middleware('permission:gestionar-onboarding');
     });
 
     // Módulo 12 — Inventario de Bienes Informáticos

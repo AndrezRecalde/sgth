@@ -70,16 +70,6 @@ export const criterioService = {
       data
     ).then(r => r.data.datos),
 
-  actualizar: (
-    convocatoriaId: number,
-    criterioId: number,
-    data: Partial<CrearCriterioData>
-  ) =>
-    api.patch<ApiResponse<CriterioEvaluacion>>(
-      `/seleccion/convocatorias/${convocatoriaId}/criterios/${criterioId}`,
-      data
-    ).then(r => r.data.datos),
-
   eliminar: (convocatoriaId: number, criterioId: number) =>
     api.delete<ApiResponse<unknown>>(
       `/seleccion/convocatorias/${convocatoriaId}/criterios/${criterioId}`

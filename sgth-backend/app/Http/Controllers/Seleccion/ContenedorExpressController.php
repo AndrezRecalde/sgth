@@ -100,6 +100,8 @@ final class ContenedorExpressController extends Controller
             // las columnas deja `postulante_id` ambiguo. Es una fila por
             // aspirante, así que traerla entera no cuesta nada.
             'solicitudCertificacion',
+            // La inducción del incorporado (2026-10-05).
+            'onboarding',
         ])
             ->where('convocatoria_id', $contenedor->id)
             ->when($desde, fn ($q) => $q->whereYear('fecha_inscripcion', '>=', $desde))

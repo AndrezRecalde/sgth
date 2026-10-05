@@ -17,13 +17,22 @@ export interface Postulante {
   tipo_sangre?:            string | null
   provincia_nacimiento_id?: number | null
   canton_nacimiento_id?:   number | null
-  cv_ruta?:                string | null
   fecha_inscripcion?:      string | null
   estado:                  string
   evaluacion?:             EvaluacionSeleccion | null
   /** La última solicitud al Dispensario: decide si se ofrece «Confirmar incorporación». */
   solicitud_certificacion?: { id: number; estado: string; dictamen?: string | null } | null
   documentos?:             DocumentoPostulante[]
+  /** El checklist de inducción, solo de un incorporado externo. */
+  onboarding?:             Onboarding | null
+}
+
+export interface Onboarding {
+  id:                      number
+  documentacion_entregada: boolean
+  induccion_completada:    boolean
+  contrato_firmado:        boolean
+  observaciones?:          string | null
 }
 
 export interface EvaluacionSeleccion {
@@ -140,10 +149,6 @@ export const convocatoriaService = {
     api.post<ApiResponse<Postulante>>(
       `/seleccion/convocatorias/${convocatoriaId}/postulantes`, data
     ).then(r => r.data.datos),
-
-  eliminarPostulante: (convocatoriaId: number, postulanteId: number) =>
-    api.delete<ApiResponse<unknown>>(
-      `/seleccion/convocatorias/${convocatoriaId}/postulantes/${postulanteId}`
-    ).then(r => r.data.datos),
-  // Los documentos del postulante viven en documentoPostulanteService.
+  // Corregir y eliminar un candidato, y su inducción, viven en
+  // postulanteService; sus documentos, en documentoPostulanteService.
 }
