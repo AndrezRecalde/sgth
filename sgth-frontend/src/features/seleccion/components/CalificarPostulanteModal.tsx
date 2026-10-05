@@ -84,7 +84,8 @@ function CriterioInput({
         {...contained}
         value={estado.valor_numerico ?? undefined}
         onChange={(v) =>
-          onChange({ valor_numerico: Number(v) || null })
+          // 0 es un puntaje válido: `Number(v) || null` lo borraba.
+          onChange({ valor_numerico: v === '' ? null : Number(v) })
         }
       />
     )
@@ -229,18 +230,8 @@ export function CalificarPostulanteModal({
             opcion_id: prev.opcion_id ?? null,
           }
         } else if (c.tipo_input === 'checklist') {
-          const todasCalif = Object.values(
-            calPrevias?.calificaciones ?? {}
-          ).filter(
-            (cal: { criterio_id: number; opcion_id?: number | null }) =>
-              cal.criterio_id === c.id && cal.opcion_id != null
-          )
           init[c.id] = {
-            opciones_ids: todasCalif
-              .map((cal: { opcion_id?: number | null }) =>
-                cal.opcion_id as number
-              )
-              .filter(Boolean),
+            opciones_ids: (prev.opciones ?? []).map(o => o.id),
           }
         } else {
           init[c.id] = {}
@@ -278,25 +269,14 @@ export function CalificarPostulanteModal({
   const handleGuardar = () => {
     const items: CalificacionItem[] = criterios.map(c => {
       const est = estados[c.id] ?? {}
-      if (c.tipo_input === 'checklist') {
-        const ids = est.opciones_ids ?? []
-        return ids.length > 0
-          ? ids.map(oid => ({
-              criterio_id:    c.id,
-              opcion_id:      oid,
-              valor_numerico: null,
-              observacion:    est.observacion ?? null,
-            }))
-          : [{ criterio_id: c.id, opcion_id: null,
-               valor_numerico: null, observacion: null }]
-      }
       return {
         criterio_id:    c.id,
-        opcion_id:      est.opcion_id ?? null,
-        valor_numerico: est.valor_numerico ?? null,
+        opcion_id:      c.tipo_input === 'radio' ? est.opcion_id ?? null : null,
+        opcion_ids:     c.tipo_input === 'checklist' ? est.opciones_ids ?? [] : undefined,
+        valor_numerico: c.tipo_input === 'numero' ? est.valor_numerico ?? null : null,
         observacion:    est.observacion ?? null,
       }
-    }).flat()
+    })
 
     guardar.mutate(items, { onSuccess: onClose })
   }
@@ -342,8 +322,8 @@ export function CalificarPostulanteModal({
             icon={<IconInfoCircle size={16} />}>
             <Text size="xs">
               Esta convocatoria no tiene criterios de evaluación
-              configurados. Configure los criterios primero en
-              el tab &laquo;Criterios&raquo;.
+              configurados. Configúrelos primero en la pestaña
+              &laquo;Criterios de evaluación&raquo;.
             </Text>
           </Alert>
         )}

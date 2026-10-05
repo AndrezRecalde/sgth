@@ -34,9 +34,14 @@ export interface CrearCriterioData {
   opciones?:      { etiqueta: string; puntaje: number }[]
 }
 
+/**
+ * Una por criterio vigente, todos. El radio manda `opcion_id`; el checklist,
+ * sus marcadas en `opcion_ids` (antes una fila por opción, y se guardaba una).
+ */
 export interface CalificacionItem {
   criterio_id:     number
   opcion_id?:      number | null
+  opcion_ids?:     number[]
   valor_numerico?: number | null
   observacion?:    string | null
 }
@@ -49,6 +54,8 @@ export interface CalificacionPostulante {
   observacion?:     string | null
   criterio?:        CriterioEvaluacion
   opcion?:          OpcionCriterio | null
+  /** Las marcadas de un checklist. */
+  opciones?:        OpcionCriterio[]
 }
 
 export const criterioService = {

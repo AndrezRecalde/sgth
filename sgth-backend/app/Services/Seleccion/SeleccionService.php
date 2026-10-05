@@ -9,7 +9,6 @@ use App\Exceptions\ReglaNegocioException;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
 use App\Models\Seleccion\Convocatoria;
-use App\Models\Seleccion\EvaluacionSeleccion;
 use App\Models\Seleccion\Onboarding;
 use App\Models\Seleccion\Postulante;
 use App\Models\Dispensario\SolicitudCertificacionMedica;
@@ -18,52 +17,6 @@ use Illuminate\Support\Facades\DB;
 
 final class SeleccionService implements SeleccionServiceInterface
 {
-    public function calificarPostulante(int $postulanteId, array $datos, int $evaluadorId): EvaluacionSeleccion
-    {
-        $postulante = Postulante::findOrFail($postulanteId);
-
-        // Un contenedor express es permanente y no atraviesa fases: se queda en
-        // 'publicada' de por vida, y sus aspirantes se evalúan uno por uno según
-        // van llegando. Exigirle 'en_evaluacion' dejaba la calificación
-        // inalcanzable para toda la modalidad express. Es la misma excepción que
-        // ya hace `declararGanadores`.
-        if (!$postulante->convocatoria->es_contenedor_permanente
-            && $postulante->convocatoria->estado !== EstadoConvocatoria::EN_EVALUACION
-        ) {
-            throw new ReglaNegocioException('La convocatoria no está en fase de evaluación.');
-        }
-
-        // Misma guarda que en la calificación por criterios: si el aspirante ya
-        // fue despachado al dispensario o incorporado, recalcular el estado lo
-        // devolvería a «aprobado» y borraría en silencio ese avance.
-        if (! $postulante->estado->admiteCalificacion()) {
-            throw new ReglaNegocioException(
-                'El aspirante ya avanzó a '.$postulante->estado->value.
-                ' y su calificación no se puede modificar.'
-            );
-        }
-
-        $puntajeTotal = $datos['puntaje_meritos'] + $datos['puntaje_oposicion'];
-
-        $evaluacion = EvaluacionSeleccion::updateOrCreate(
-            ['postulante_id' => $postulante->id],
-            [
-                'puntaje_meritos'   => $datos['puntaje_meritos'],
-                'puntaje_oposicion' => $datos['puntaje_oposicion'],
-                'puntaje_total'     => $puntajeTotal,
-                'observaciones'     => $datos['observaciones'] ?? null,
-                'evaluador_id'      => $evaluadorId,
-                'updated_by'        => $evaluadorId,
-            ]
-        );
-
-        // Actualizamos estado si aprueba o reprueba el umbral mínimo de 70/100 (Estándar general)
-        $postulante->estado = $puntajeTotal >= 70 ? EstadoPostulante::APROBADO : EstadoPostulante::REPROBADO;
-        $postulante->save();
-
-        return $evaluacion;
-    }
-
     public function declararGanadores(int $convocatoriaId, array $postulanteIds, int $userId): Collection
     {
         $convocatoria = Convocatoria::with('puesto.cargo')->findOrFail($convocatoriaId);

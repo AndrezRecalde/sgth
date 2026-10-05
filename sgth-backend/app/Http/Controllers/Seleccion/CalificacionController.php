@@ -5,16 +5,19 @@ namespace App\Http\Controllers\Seleccion;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\Seleccion\CalificacionPostulante;
-use App\Models\Seleccion\CriterioEvaluacion;
-use App\Models\Seleccion\OpcionCriterio;
 use App\Models\Seleccion\Postulante;
-use App\Exceptions\ReglaNegocioException;
+use App\Services\Seleccion\CalificacionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 final class CalificacionController extends Controller
 {
+    public function __construct(private readonly CalificacionService $calificaciones) {}
+
+    /**
+     * Las calificaciones del candidato con los criterios vigentes, por id de
+     * criterio. En un checklist, `opciones` son las marcadas.
+     */
     public function obtener(
         int $convocatoriaId,
         int $postulanteId
@@ -22,10 +25,9 @@ final class CalificacionController extends Controller
         $postulante = Postulante::where('convocatoria_id', $convocatoriaId)
             ->findOrFail($postulanteId);
 
-        $calificaciones = CalificacionPostulante::with([
-            'criterio.opciones', 'opcion',
-        ])
+        $calificaciones = CalificacionPostulante::with(['criterio.opciones', 'opcion', 'opciones'])
             ->where('postulante_id', $postulanteId)
+            ->whereHas('criterio', fn ($q) => $q->where('activo', true))
             ->get()
             ->keyBy('criterio_id');
 
@@ -35,100 +37,37 @@ final class CalificacionController extends Controller
         ]);
     }
 
+    /**
+     * Una fila por criterio vigente, todos: un total parcial decidía
+     * aprobado o reprobado antes de tiempo. El checklist manda sus opciones
+     * marcadas en `opcion_ids`.
+     */
     public function guardar(
         Request $request,
         int $convocatoriaId,
         int $postulanteId
     ): JsonResponse {
-        $postulante = Postulante::where('convocatoria_id', $convocatoriaId)
+        $postulante = Postulante::with('convocatoria')
+            ->where('convocatoria_id', $convocatoriaId)
             ->findOrFail($postulanteId);
 
-        // El puntaje ya decidió la suerte del aspirante y el trámite avanzó.
-        // Sin esta guarda, recalificar a alguien en evaluación médica lo
-        // devolvía en silencio a «aprobado» y se perdía el despacho al
-        // dispensario, junto con el dictamen que ya tuviera.
-        if (! $postulante->estado->admiteCalificacion()) {
-            return ApiResponse::error(
-                'El aspirante ya avanzó a '.$postulante->estado->value.
-                ' y su calificación no se puede modificar.',
-                null, 422
-            );
-        }
-
-        $request->validate([
-            'calificaciones'                    => ['required', 'array'],
-            'calificaciones.*.criterio_id'      => ['required', 'integer', 'exists:seleccion_criterios,id'],
-            'calificaciones.*.opcion_id'        => ['nullable', 'integer', 'exists:seleccion_opciones,id'],
-            'calificaciones.*.valor_numerico'   => ['nullable', 'numeric', 'min:0'],
-            'calificaciones.*.observacion'      => ['nullable', 'string'],
+        $datos = $request->validate([
+            'calificaciones'                  => ['required', 'array', 'min:1'],
+            'calificaciones.*.criterio_id'    => ['required', 'integer'],
+            'calificaciones.*.opcion_id'      => ['nullable', 'integer'],
+            'calificaciones.*.opcion_ids'     => ['nullable', 'array'],
+            'calificaciones.*.opcion_ids.*'   => ['integer'],
+            'calificaciones.*.valor_numerico' => ['nullable', 'numeric', 'min:0'],
+            'calificaciones.*.observacion'    => ['nullable', 'string', 'max:1000'],
         ]);
 
-        DB::transaction(function () use ($request, $postulante) {
-            $totalMeritos   = 0;
-            $totalOposicion = 0;
+        $evaluacion = $this->calificaciones->guardar(
+            $postulante, array_values($datos['calificaciones']), $request->user()->id
+        );
 
-            foreach ($request->input('calificaciones') as $cal) {
-                $criterio = CriterioEvaluacion::findOrFail(
-                    $cal['criterio_id']
-                );
-
-                $puntajeObtenido = 0;
-
-                if ($criterio->tipo_input === 'numero') {
-                    $valor = min(
-                        (float)($cal['valor_numerico'] ?? 0),
-                        (float)$criterio->puntaje_maximo
-                    );
-                    $puntajeObtenido = $valor;
-                } elseif (in_array($criterio->tipo_input, ['radio', 'checklist'])) {
-                    if (!empty($cal['opcion_id'])) {
-                        $opcion = OpcionCriterio::find($cal['opcion_id']);
-                        $puntajeObtenido = min(
-                            (float)($opcion?->puntaje ?? 0),
-                            (float)$criterio->puntaje_maximo
-                        );
-                    }
-                }
-
-                CalificacionPostulante::updateOrCreate(
-                    [
-                        'postulante_id' => $postulante->id,
-                        'criterio_id'   => $cal['criterio_id'],
-                    ],
-                    [
-                        'opcion_id'       => $cal['opcion_id'] ?? null,
-                        'valor_numerico'  => $cal['valor_numerico'] ?? null,
-                        'puntaje_obtenido'=> $puntajeObtenido,
-                        'observacion'     => $cal['observacion'] ?? null,
-                        'registrado_por'  => request()->user()->id,
-                    ]
-                );
-
-                if ($criterio->seccion === 'meritos') {
-                    $totalMeritos += $puntajeObtenido;
-                } else {
-                    $totalOposicion += $puntajeObtenido;
-                }
-            }
-
-            $total = $totalMeritos + $totalOposicion;
-
-            \App\Models\Seleccion\EvaluacionSeleccion::updateOrCreate(
-                ['postulante_id' => $postulante->id],
-                [
-                    'puntaje_meritos'   => $totalMeritos,
-                    'puntaje_oposicion' => $totalOposicion,
-                    'puntaje_total'     => $total,
-                    'evaluador_id'      => request()->user()->id,
-                    'updated_by'        => request()->user()->id,
-                ]
-            );
-
-            $postulante->update([
-                'estado' => $total >= 70 ? 'aprobado' : 'reprobado',
-            ]);
-        });
-
-        return ApiResponse::ok([], 'Calificación guardada correctamente.');
+        return ApiResponse::ok(
+            $evaluacion,
+            'Calificación guardada: '.number_format((float) $evaluacion->puntaje_total, 2).' puntos.'
+        );
     }
 }

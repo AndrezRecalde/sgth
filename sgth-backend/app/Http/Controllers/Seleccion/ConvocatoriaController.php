@@ -10,7 +10,7 @@ use App\Exceptions\ReglaNegocioException;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\Seleccion\Convocatoria;
-use App\Models\Seleccion\CriterioEvaluacion;
+use App\Services\Seleccion\CalificacionService;
 use App\Models\Estructura\Puesto;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -211,11 +211,16 @@ final class ConvocatoriaController extends Controller
             );
         }
 
-        if (! CriterioEvaluacion::where('convocatoria_id', $id)->exists()) {
+        $criterios = CalificacionService::criteriosVigentes($id);
+        if ($criterios->isEmpty()) {
             throw new ReglaNegocioException(
                 'No se puede publicar una convocatoria sin criterios de evaluación configurados. Aplique una plantilla o agregue criterios primero.'
             );
         }
+
+        // Sobre 100, como el puntaje aprobatorio de 70 (decisión 5 de TH,
+        // 2026-10-05). Antes se publicaba con criterios que sumaban 40 o 160.
+        CalificacionService::assertSuman100($criterios, 'publicar la convocatoria');
 
         $convocatoria->update([
             'estado'     => 'publicada',

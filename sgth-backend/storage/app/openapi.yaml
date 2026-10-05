@@ -5279,6 +5279,7 @@
         "/v1/seleccion/convocatorias/{convocatoriaId}/postulantes/{postulanteId}/calificaciones": {
             "get": {
                 "operationId": "calificacion.obtener",
+                "summary": "Las calificaciones del candidato con los criterios vigentes, por id de\ncriterio. En un checklist, `opciones` son las marcadas",
                 "tags": [
                     "Calificacion"
                 ],
@@ -5351,6 +5352,7 @@
             },
             "post": {
                 "operationId": "calificacion.guardar",
+                "summary": "Una fila por criterio vigente, todos: un total parcial decid\u00eda\naprobado o reprobado antes de tiempo. El checklist manda sus opciones\nmarcadas en `opcion_ids`",
                 "tags": [
                     "Calificacion"
                 ],
@@ -5393,6 +5395,15 @@
                                                         "null"
                                                     ]
                                                 },
+                                                "opcion_ids": {
+                                                    "type": [
+                                                        "array",
+                                                        "null"
+                                                    ],
+                                                    "items": {
+                                                        "type": "integer"
+                                                    }
+                                                },
                                                 "valor_numerico": {
                                                     "type": [
                                                         "number",
@@ -5404,7 +5415,8 @@
                                                     "type": [
                                                         "string",
                                                         "null"
-                                                    ]
+                                                    ],
+                                                    "maxLength": 1000
                                                 }
                                             },
                                             "required": [
@@ -5433,17 +5445,10 @@
                                             "type": "boolean"
                                         },
                                         "mensaje": {
-                                            "type": "string",
-                                            "const": "Calificaci\u00f3n guardada correctamente."
+                                            "type": "string"
                                         },
                                         "datos": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            },
-                                            "minItems": 0,
-                                            "maxItems": 0,
-                                            "additionalItems": false
+                                            "$ref": "#/components/schemas/EvaluacionSeleccion"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -10170,73 +10175,6 @@
                         }
                     }
                 ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "seccion": {
-                                        "type": "string",
-                                        "enum": [
-                                            "meritos",
-                                            "oposicion"
-                                        ]
-                                    },
-                                    "nombre": {
-                                        "type": "string",
-                                        "maxLength": 200
-                                    },
-                                    "descripcion": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ]
-                                    },
-                                    "puntaje_maximo": {
-                                        "type": "number",
-                                        "minimum": 0.5,
-                                        "maximum": 100
-                                    },
-                                    "tipo_input": {
-                                        "type": "string",
-                                        "enum": [
-                                            "radio",
-                                            "numero",
-                                            "checklist"
-                                        ]
-                                    },
-                                    "opciones": {
-                                        "type": [
-                                            "array",
-                                            "null"
-                                        ],
-                                        "items": {
-                                            "type": "object",
-                                            "properties": {
-                                                "etiqueta": {
-                                                    "type": "string",
-                                                    "maxLength": 200
-                                                },
-                                                "puntaje": {
-                                                    "type": "number",
-                                                    "minimum": 0
-                                                }
-                                            }
-                                        }
-                                    }
-                                },
-                                "required": [
-                                    "seccion",
-                                    "nombre",
-                                    "puntaje_maximo",
-                                    "tipo_input"
-                                ]
-                            }
-                        }
-                    }
-                },
                 "responses": {
                     "201": {
                         "description": "",
@@ -10253,7 +10191,7 @@
                                             "const": "Criterio registrado correctamente."
                                         },
                                         "datos": {
-                                            "$ref": "#/components/schemas/CriterioEvaluacion"
+                                            "type": "string"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -10268,9 +10206,6 @@
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -10302,52 +10237,6 @@
                         }
                     }
                 ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "nombre": {
-                                        "type": "string",
-                                        "maxLength": 200
-                                    },
-                                    "descripcion": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ]
-                                    },
-                                    "puntaje_maximo": {
-                                        "type": "number",
-                                        "minimum": 0.5
-                                    },
-                                    "activo": {
-                                        "type": "boolean"
-                                    },
-                                    "opciones": {
-                                        "type": [
-                                            "array",
-                                            "null"
-                                        ],
-                                        "items": {
-                                            "type": "object",
-                                            "properties": {
-                                                "etiqueta": {
-                                                    "type": "string"
-                                                },
-                                                "puntaje": {
-                                                    "type": "number",
-                                                    "minimum": 0
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -10379,9 +10268,6 @@
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -10417,33 +10303,67 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Criterio eliminado."
-                                        },
-                                        "datos": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "exito": {
+                                                    "type": "boolean"
+                                                },
+                                                "mensaje": {
+                                                    "type": "string",
+                                                    "const": "Criterio eliminado."
+                                                },
+                                                "datos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "minItems": 0,
+                                                    "maxItems": 0,
+                                                    "additionalItems": false
+                                                },
+                                                "meta": {
+                                                    "type": "null"
+                                                }
                                             },
-                                            "minItems": 0,
-                                            "maxItems": 0,
-                                            "additionalItems": false
+                                            "required": [
+                                                "exito",
+                                                "mensaje",
+                                                "datos",
+                                                "meta"
+                                            ]
                                         },
-                                        "meta": {
-                                            "type": "null"
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "exito": {
+                                                    "type": "boolean"
+                                                },
+                                                "mensaje": {
+                                                    "type": "string",
+                                                    "const": "Criterio retirado. Las calificaciones hechas con \u00e9l se conservan."
+                                                },
+                                                "datos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "minItems": 0,
+                                                    "maxItems": 0,
+                                                    "additionalItems": false
+                                                },
+                                                "meta": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "exito",
+                                                "mensaje",
+                                                "datos",
+                                                "meta"
+                                            ]
                                         }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
                                     ]
                                 }
                             }
@@ -34324,76 +34244,6 @@
                 }
             }
         },
-        "/v1/seleccion/postulantes/{postulanteId}/calificar": {
-            "post": {
-                "operationId": "seleccion.calificar",
-                "tags": [
-                    "Seleccion"
-                ],
-                "parameters": [
-                    {
-                        "name": "postulanteId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/CalificarPostulanteRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Calificaci\u00f3n del postulante registrada con \u00e9xito."
-                                        },
-                                        "datos": {
-                                            "$ref": "#/components/schemas/EvaluacionSeleccion"
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    }
-                }
-            }
-        },
         "/v1/seleccion/convocatorias/{convocatoriaId}/declarar-ganador": {
             "post": {
                 "operationId": "seleccion.declararGanador",
@@ -43094,33 +42944,6 @@
                     "insuficiente"
                 ],
                 "title": "CalificacionMrl"
-            },
-            "CalificarPostulanteRequest": {
-                "type": "object",
-                "properties": {
-                    "puntaje_meritos": {
-                        "type": "number",
-                        "minimum": 0,
-                        "maximum": 40
-                    },
-                    "puntaje_oposicion": {
-                        "type": "number",
-                        "minimum": 0,
-                        "maximum": 60
-                    },
-                    "observaciones": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 1000
-                    }
-                },
-                "required": [
-                    "puntaje_meritos",
-                    "puntaje_oposicion"
-                ],
-                "title": "CalificarPostulanteRequest"
             },
             "CambiarContrasenaRequest": {
                 "type": "object",
