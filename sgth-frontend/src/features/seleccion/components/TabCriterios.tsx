@@ -1,251 +1,81 @@
 'use client'
 
-import { confirmar, StatusBadge } from '@/components/ui'
 import { useState } from 'react'
-import {
-  Stack, Text, Group, Button,
-  Card, ActionIcon, ThemeIcon, Divider,
-  Skeleton, Alert,
-} from '@mantine/core'
-import {
-  IconPlus, IconTrash, 
-  IconList, IconHash, IconCheckbox,
-  IconInfoCircle,
-} from '@tabler/icons-react'
+import { Alert, Button, Divider, Group, Stack, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { useCriterios, useEliminarCriterio } from '../hooks/useCriterio'
+import { IconInfoCircle, IconTemplate } from '@tabler/icons-react'
+import { DataState, SectionHeading, StatusBadge } from '@/components/ui'
+import { useCriterios } from '../hooks/useCriterio'
+import type { SeccionCriterio } from '../services/criterioService'
 import { AgregarCriterioModal } from './AgregarCriterioModal'
-import type { CriterioEvaluacion, SeccionCriterio } from '../services/criterioService'
+import { SeccionCriterios } from './SeccionCriterios'
 import { SeleccionarPlantillaModal } from './SeleccionarPlantillaModal'
-import { IconTemplate } from '@tabler/icons-react'
 
 interface Props {
   convocatoriaId: number
   editable:       boolean
 }
 
-const TIPO_ICONS: Record<string, React.ReactNode> = {
-  radio:     <IconList size={13} />,
-  checklist: <IconCheckbox size={13} />,
-  numero:    <IconHash size={13} />,
-}
-
-const TIPO_LABELS: Record<string, string> = {
-  radio:     'Opción única',
-  checklist: 'Selección múltiple',
-  numero:    'Valor numérico',
-}
-
-function SeccionCriterios({
-  titulo, criterios, convocatoriaId, editable,
-  onAgregar,
-}: {
-  titulo:         string
-  criterios:      CriterioEvaluacion[]
-  convocatoriaId: number
-  editable:       boolean
-  onAgregar:      () => void
-}) {
-  const eliminar = useEliminarCriterio(convocatoriaId)
-  const total    = criterios.reduce(
-    (acc, c) => acc + Number(c.puntaje_maximo), 0
-  )
-
-  return (
-    <Stack gap="sm">
-      <Group justify="space-between">
-        <Group gap="xs">
-          <Text size="sm" fw={700}>{titulo}</Text>
-          <StatusBadge>
-            {total.toFixed(0)} pts totales
-          </StatusBadge>
-        </Group>
-        {editable && (
-          <Button
-            size="compact-xs"
-            variant="light"
-            leftSection={<IconPlus size={12} />}
-            onClick={onAgregar}
-          >
-            Agregar criterio
-          </Button>
-        )}
-      </Group>
-
-      {criterios.length === 0 ? (
-        <Alert color="slate" variant="light"
-          icon={<IconInfoCircle size={16} />}>
-          <Text size="xs">
-            No hay criterios configurados para esta sección.
-            {editable && ' Agregue criterios antes de publicar la convocatoria.'}
-          </Text>
-        </Alert>
-      ) : (
-        <Stack gap="xs">
-          {criterios.map((c, i) => (
-            <Card key={c.id} withBorder radius="md" p="sm">
-              <Group justify="space-between" wrap="nowrap">
-                <Group gap="sm" wrap="nowrap">
-                  <ThemeIcon
-                    size="sm" variant="light"
-                  >
-                    {TIPO_ICONS[c.tipo_input]}
-                  </ThemeIcon>
-                  <Stack gap={2}>
-                    <Group gap="xs">
-                      <Text size="sm" fw={500}>{i + 1}. {c.nombre}</Text>
-                      <StatusBadge size="xs" variant="dot">
-                        {TIPO_LABELS[c.tipo_input]}
-                      </StatusBadge>
-                    </Group>
-                    {c.descripcion && (
-                      <Text size="xs" c="dimmed">{c.descripcion}</Text>
-                    )}
-                    {c.opciones.length > 0 && (
-                      <Group gap="xs" mt={2}>
-                        {c.opciones.map(op => (
-                          <StatusBadge key={op.id} size="xs">
-                            {op.etiqueta}: {op.puntaje} pts
-                          </StatusBadge>
-                        ))}
-                      </Group>
-                    )}
-                  </Stack>
-                </Group>
-                <Group gap="xs" wrap="nowrap">
-                  <StatusBadge size="md">
-                    {c.puntaje_maximo} pts
-                  </StatusBadge>
-                  {editable && (
-                    <ActionIcon
-                      size="sm"
-                      color="red"
-                      variant="subtle"
-                      onClick={() => confirmar({
-                        title:   'Eliminar criterio',
-                        message: <>Se eliminará el criterio <b>{c.nombre}</b>. No se puede deshacer.</>,
-                        destructiva: true,
-                        onConfirm: () => eliminar.mutate(c.id),
-                      })}
-                    >
-                      <IconTrash size={13} />
-                    </ActionIcon>
-                  )}
-                </Group>
-              </Group>
-            </Card>
-          ))}
-        </Stack>
-      )}
-    </Stack>
-  )
-}
-
+/** La pestaña «Criterios de evaluación»: deben sumar 100 para publicar y para calificar. */
 export function TabCriterios({ convocatoriaId, editable }: Props) {
-  const { data: criterios = [], isLoading } =
-    useCriterios(convocatoriaId)
-  const [modalOpened, { open, close }] = useDisclosure(false)
-  const [seccionModal, setSeccionModal] =
-    useState<SeccionCriterio>('meritos')
-  const [plantillaModalOpened,
-    { open: abrirPlantilla, close: cerrarPlantilla }] =
-    useDisclosure(false)
+  const { data: criterios = [], isLoading, error, refetch } = useCriterios(convocatoriaId)
+  const [modalAbierto, modal] = useDisclosure(false)
+  const [seccion, setSeccion] = useState<SeccionCriterio>('meritos')
+  const [plantillaAbierta, plantilla] = useDisclosure(false)
 
-  const meritos   = criterios.filter(c => c.seccion === 'meritos')
-  const oposicion = criterios.filter(c => c.seccion === 'oposicion')
-  const totalPts  = criterios.reduce(
-    (acc, c) => acc + Number(c.puntaje_maximo), 0
-  )
-
-  const abrirModal = (seccion: SeccionCriterio) => {
-    setSeccionModal(seccion)
-    open()
-  }
-
-  if (isLoading) {
-    return (
-      <Stack gap="sm" p="md">
-        <Skeleton height={60} radius="md" />
-        <Skeleton height={60} radius="md" />
-        <Skeleton height={60} radius="md" />
-      </Stack>
-    )
-  }
+  const total = criterios.reduce((s, c) => s + Number(c.puntaje_maximo), 0)
+  const agregarEn = (s: SeccionCriterio) => { setSeccion(s); modal.open() }
 
   return (
     <Stack gap="md" p="md">
       {!editable && (
-        <Alert color="ocean" variant="light"
-          icon={<IconInfoCircle size={16} />}>
+        <Alert color="ocean" variant="light" icon={<IconInfoCircle size={16} />}>
           <Text size="xs">
-            Los criterios solo pueden modificarse mientras
-            la convocatoria esté en estado Borrador.
+            Los criterios solo se modifican mientras la convocatoria está en borrador.
           </Text>
         </Alert>
       )}
 
-      <Group justify="space-between">
-        <Text size="xs" fw={600} c="dimmed" tt="uppercase"
-          style={{ letterSpacing: '0.05em' }}>
-          Criterios configurados
-        </Text>
-        <Group gap="xs">
-          <StatusBadge tone={totalPts === 100 ? 'success' : 'warning'} size="md">
-            Total: {totalPts.toFixed(0)} / 100 pts
-          </StatusBadge>
-          {editable && (
-            <Button
-              size="compact-xs"
-              variant="light"
-              leftSection={<IconTemplate size={12} />}
-              onClick={abrirPlantilla}
-            >
-              Usar plantilla
-            </Button>
+      <SectionHeading
+        title="Criterios configurados"
+        action={
+          <Group gap="xs">
+            <StatusBadge tone={total === 100 ? 'success' : 'warning'} size="md">
+              Total: {total.toFixed(0)} / 100 pts
+            </StatusBadge>
+            {editable && (
+              <Button size="compact-xs" variant="light" leftSection={<IconTemplate size={12} />} onClick={plantilla.open}>
+                Usar plantilla
+              </Button>
+            )}
+          </Group>
+        }
+      />
+
+      <DataState loading={isLoading} error={error} errorTitle="No se pudieron cargar los criterios"
+        onRetry={refetch} skeletonRows={3}>
+        <Stack gap="md">
+          {total !== 100 && criterios.length > 0 && (
+            <Alert color="amber" variant="light" icon={<IconInfoCircle size={16} />}>
+              <Text size="xs">
+                Los criterios deben sumar exactamente 100 puntos para publicar y
+                calificar. Ahora suman {total.toFixed(0)}.
+              </Text>
+            </Alert>
           )}
-        </Group>
-      </Group>
 
-      {totalPts !== 100 && criterios.length > 0 && (
-        <Alert color="amber" variant="light"
-          icon={<IconInfoCircle size={16} />}>
-          <Text size="xs">
-            Los criterios deben sumar exactamente 100 puntos.
-            Actualmente suman {totalPts.toFixed(0)} puntos.
-          </Text>
-        </Alert>
-      )}
+          <SeccionCriterios titulo="Méritos (hoja de vida)" criterios={criterios.filter(c => c.seccion === 'meritos')}
+            convocatoriaId={convocatoriaId} editable={editable} onAgregar={() => agregarEn('meritos')} />
+          <Divider />
+          <SeccionCriterios titulo="Oposición (evaluación directa)" criterios={criterios.filter(c => c.seccion === 'oposicion')}
+            convocatoriaId={convocatoriaId} editable={editable} onAgregar={() => agregarEn('oposicion')} />
+        </Stack>
+      </DataState>
 
-      <SeccionCriterios
-        titulo="Méritos (hoja de vida)"
-        criterios={meritos}
-        convocatoriaId={convocatoriaId}
-        editable={editable}
-        onAgregar={() => abrirModal('meritos')}
-      />
-
-      <Divider />
-
-      <SeccionCriterios
-        titulo="Oposición (evaluación directa)"
-        criterios={oposicion}
-        convocatoriaId={convocatoriaId}
-        editable={editable}
-        onAgregar={() => abrirModal('oposicion')}
-      />
-
-      <AgregarCriterioModal
-        opened={modalOpened}
-        onClose={close}
-        convocatoriaId={convocatoriaId}
-        seccionInicial={seccionModal}
-      />
-      <SeleccionarPlantillaModal
-        opened={plantillaModalOpened}
-        onClose={cerrarPlantilla}
-        convocatoriaId={convocatoriaId}
-        tieneCriterios={criterios.length > 0}
-      />
+      <AgregarCriterioModal opened={modalAbierto} onClose={modal.close}
+        convocatoriaId={convocatoriaId} seccionInicial={seccion} />
+      <SeleccionarPlantillaModal opened={plantillaAbierta} onClose={plantilla.close}
+        convocatoriaId={convocatoriaId} tieneCriterios={criterios.length > 0} />
     </Stack>
   )
 }

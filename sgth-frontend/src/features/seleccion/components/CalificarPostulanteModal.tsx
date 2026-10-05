@@ -1,36 +1,24 @@
 'use client'
 
+import { useMemo } from 'react'
+import { Alert, Card, Divider, Group, Progress, ScrollArea, Stack, Text } from '@mantine/core'
+import { IconInfoCircle } from '@tabler/icons-react'
+import { useForm, useWatch } from 'react-hook-form'
+import { DataState, ModalFooter, SgthModal, StatusBadge, notificar } from '@/components/ui'
+import { erroresDeCampo } from '@/lib/erroresDeCampo'
+import { useCalificaciones, useCriterios, useGuardarCalificaciones } from '../hooks/useCriterio'
 import {
-  Stack, Text, NumberInput,
-  Group, Card,
-  Progress, Divider, Alert,
-  Radio, Checkbox, ScrollArea,
-  Skeleton, ThemeIcon,
-} from '@mantine/core'
-import { ModalFooter, SgthModal, StatusBadge } from '@/components/ui'
-import {
-  IconInfoCircle,
-  IconList, IconHash, IconCheckbox,
-} from '@tabler/icons-react'
-import { useState } from 'react'
-import { useContainedInput } from '@/hooks/useContainedInput'
-import {
-  useCriterios,
-  useCalificaciones,
-  useGuardarCalificaciones,
-} from '../hooks/useCriterio'
-import type {
-  CriterioEvaluacion,
-  CalificacionItem,
-} from '../services/criterioService'
+  aItems, claveCriterio, puntajeCriterio, valoresIniciales, type CalificacionForm,
+} from './calificacion/calificacion'
+import { SeccionCalificacion } from './calificacion/SeccionCalificacion'
+
 /**
  * Lo único que el modal necesita saber de la persona: su identidad, para
  * mostrarla en la cabecera, y su `id`, para guardar la calificación.
  *
- * Se tipa así de estrecho a propósito. Antes pedía un `Postulante` completo, y
- * eso dejaba fuera a los aspirantes de Reclutamiento Express, que llegan por
- * otro endpoint con una forma distinta aunque sean la misma entidad. Ambos
- * cumplen esta interfaz sin necesidad de forzar el tipo.
+ * Se tipa así de estrecho a propósito: los aspirantes de Reclutamiento Express
+ * llegan por otro endpoint con una forma distinta aunque sean la misma
+ * entidad. Ambos cumplen esta interfaz sin forzar el tipo.
  */
 export interface PostulanteCalificable {
   id:                number
@@ -49,406 +37,96 @@ interface Props {
   convocatoriaId: number
 }
 
-type EstadoCal = Record<number, {
-  opcion_id?:      number | null
-  opciones_ids?:   number[]
-  valor_numerico?: number | null
-  observacion?:    string | null
-}>
+const APROBATORIO = 70
 
-const TIPO_ICONS: Record<string, React.ReactNode> = {
-  radio:     <IconList size={14} />,
-  checklist: <IconCheckbox size={14} />,
-  numero:    <IconHash size={14} />,
-}
+/**
+ * La calificación por criterios (2026-10-05): con React Hook Form en vez de un
+ * `useState` sembrado a mano en el render, y cada 422 del backend debajo del
+ * criterio que lo causó. Pasó de 463 líneas a este modal y sus piezas.
+ */
+export function CalificarPostulanteModal({ opened, onClose, postulante, convocatoriaId }: Props) {
+  const criteriosQ = useCriterios(opened ? convocatoriaId : null)
+  const previasQ = useCalificaciones(opened ? convocatoriaId : null, opened ? postulante?.id ?? null : null)
+  const guardar = useGuardarCalificaciones(convocatoriaId, postulante?.id ?? 0)
+  const criterios = useMemo(() => criteriosQ.data ?? [], [criteriosQ.data])
 
-function CriterioInput({
-  criterio,
-  estado,
-  onChange,
-}: {
-  criterio: CriterioEvaluacion
-  estado:   EstadoCal[number]
-  onChange: (val: Partial<EstadoCal[number]>) => void
-}) {
-  const contained = useContainedInput()
-
-  if (criterio.tipo_input === 'numero') {
-    return (
-      <NumberInput
-        placeholder={`0 — ${criterio.puntaje_maximo} pts`}
-        min={0}
-        max={Number(criterio.puntaje_maximo)}
-        decimalScale={2}
-        size="sm"
-        {...contained}
-        value={estado.valor_numerico ?? undefined}
-        onChange={(v) =>
-          // 0 es un puntaje válido: `Number(v) || null` lo borraba.
-          onChange({ valor_numerico: v === '' ? null : Number(v) })
-        }
-      />
-    )
-  }
-
-  if (criterio.tipo_input === 'radio') {
-    return (
-      <Radio.Group
-        value={String(estado.opcion_id ?? '')}
-        onChange={(v) =>
-          onChange({ opcion_id: v ? Number(v) : null })
-        }
-      >
-        <Stack gap="xs">
-          {criterio.opciones.map(op => (
-            <Radio
-              key={op.id}
-              value={String(op.id)}
-              label={
-                <Group gap="xs">
-                  <Text size="sm">{op.etiqueta}</Text>
-                  <StatusBadge size="xs">
-                    {op.puntaje} pts
-                  </StatusBadge>
-                </Group>
-              }
-              size="sm"
-            />
-          ))}
-        </Stack>
-      </Radio.Group>
-    )
-  }
-
-  if (criterio.tipo_input === 'checklist') {
-    const seleccionados = estado.opciones_ids ?? []
-    return (
-      <Stack gap="xs">
-        {criterio.opciones.map(op => (
-          <Checkbox
-            key={op.id}
-            checked={seleccionados.includes(op.id)}
-            label={
-              <Group gap="xs">
-                <Text size="sm">{op.etiqueta}</Text>
-                <StatusBadge size="xs">
-                  +{op.puntaje} pts
-                </StatusBadge>
-              </Group>
-            }
-            size="sm"
-            onChange={(e) => {
-              const nuevos = e.currentTarget.checked
-                ? [...seleccionados, op.id]
-                : seleccionados.filter(id => id !== op.id)
-              onChange({ opciones_ids: nuevos })
-            }}
-          />
-        ))}
-      </Stack>
-    )
-  }
-
-  return null
-}
-
-function calcularPuntajeCriterio(
-  criterio: CriterioEvaluacion,
-  estado: EstadoCal[number]
-): number {
-  if (criterio.tipo_input === 'numero') {
-    return Math.min(
-      Number(estado.valor_numerico ?? 0),
-      Number(criterio.puntaje_maximo)
-    )
-  }
-  if (criterio.tipo_input === 'radio') {
-    const op = criterio.opciones.find(
-      o => o.id === estado.opcion_id
-    )
-    return Number(op?.puntaje ?? 0)
-  }
-  if (criterio.tipo_input === 'checklist') {
-    const ids = estado.opciones_ids ?? []
-    const sum = criterio.opciones
-      .filter(o => ids.includes(o.id))
-      .reduce((acc, o) => acc + Number(o.puntaje), 0)
-    return Math.min(sum, Number(criterio.puntaje_maximo))
-  }
-  return 0
-}
-
-export function CalificarPostulanteModal({
-  opened, onClose, postulante, convocatoriaId,
-}: Props) {
-  const [estados, setEstados] = useState<EstadoCal>({})
-
-  const { data: criterios = [], isLoading: cargandoCriterios } =
-    useCriterios(opened ? convocatoriaId : null)
-
-  const { data: calPrevias, isLoading: cargandoCal } =
-    useCalificaciones(
-      opened ? convocatoriaId : null,
-      opened ? postulante?.id ?? null : null
-    )
-
-  const guardar = useGuardarCalificaciones(
-    convocatoriaId, postulante?.id ?? 0
+  const listo = !criteriosQ.isLoading && !previasQ.isLoading
+  // `values` resiembra el formulario al abrirlo sobre otro candidato. Las
+  // consultas comparten estructura, así que un refresco no pisa lo tecleado.
+  const iniciales = useMemo(
+    () => valoresIniciales(criterios, previasQ.data?.calificaciones),
+    [criterios, previasQ.data],
   )
-
-  // Las calificaciones previas solo siembran el formulario; a partir de ahí
-  // las edita el evaluador. Se resiembran al abrir el modal sobre otro
-  // postulante, ajustando el estado durante el render en vez de en un efecto:
-  // hacerlo en un efecto reescribía lo ya tecleado en cada refresco de la
-  // consulta.
-  const semilla = opened && !cargandoCriterios && !cargandoCal
-    && criterios.length > 0
-    ? String(postulante?.id ?? '')
-    : null
-  const [semillaAplicada, setSemillaAplicada] = useState<string | null>(null)
-
-  if (semilla !== semillaAplicada) {
-    setSemillaAplicada(semilla)
-    sembrarEstados()
-  }
-
-  function sembrarEstados() {
-    if (semilla === null) { setEstados({}); return }
-
-    const init: EstadoCal = {}
-    criterios.forEach(c => {
-      const prev = calPrevias?.calificaciones?.[c.id]
-      if (prev) {
-        if (c.tipo_input === 'numero') {
-          init[c.id] = {
-            valor_numerico: prev.valor_numerico
-              ? Number(prev.valor_numerico)
-              : null,
-          }
-        } else if (c.tipo_input === 'radio') {
-          init[c.id] = {
-            opcion_id: prev.opcion_id ?? null,
-          }
-        } else if (c.tipo_input === 'checklist') {
-          init[c.id] = {
-            opciones_ids: (prev.opciones ?? []).map(o => o.id),
-          }
-        } else {
-          init[c.id] = {}
-        }
-      } else {
-        init[c.id] = {}
-      }
-    })
-    setEstados(init)
-  }
+  const { control, handleSubmit, setError } = useForm<CalificacionForm>({ values: listo ? iniciales : undefined })
+  const valores = useWatch({ control }) as CalificacionForm
 
   if (!postulante) return null
 
-  const nombreCompleto = [
-    postulante.apellidos,
-    postulante.segundo_apellido,
-    postulante.nombres,
-    postulante.segundo_nombre,
-  ].filter(Boolean).join(' ')
-
-  const meritos   = criterios.filter(c => c.seccion === 'meritos')
+  const nombre = [postulante.apellidos, postulante.segundo_apellido, postulante.nombres, postulante.segundo_nombre]
+    .filter(Boolean).join(' ')
+  const meritos = criterios.filter(c => c.seccion === 'meritos')
   const oposicion = criterios.filter(c => c.seccion === 'oposicion')
+  const total = criterios.reduce((s, c) => s + puntajeCriterio(c, valores?.[claveCriterio(c.id)]), 0)
+  const aprueba = total >= APROBATORIO
 
-  const totalMeritos = meritos.reduce(
-    (acc, c) => acc + calcularPuntajeCriterio(c, estados[c.id] ?? {}),
-    0
-  )
-  const totalOposicion = oposicion.reduce(
-    (acc, c) => acc + calcularPuntajeCriterio(c, estados[c.id] ?? {}),
-    0
-  )
-  const total   = totalMeritos + totalOposicion
-  const aprueba = total >= 70
-
-  const handleGuardar = () => {
-    const items: CalificacionItem[] = criterios.map(c => {
-      const est = estados[c.id] ?? {}
-      return {
-        criterio_id:    c.id,
-        opcion_id:      c.tipo_input === 'radio' ? est.opcion_id ?? null : null,
-        opcion_ids:     c.tipo_input === 'checklist' ? est.opciones_ids ?? [] : undefined,
-        valor_numerico: c.tipo_input === 'numero' ? est.valor_numerico ?? null : null,
-        observacion:    est.observacion ?? null,
+  const enviar = (v: CalificacionForm) => {
+    const items = aItems(criterios, v)
+    guardar.mutateAsync(items).then(onClose).catch((e) => {
+      // `calificaciones.N.campo` es el criterio N de lo enviado.
+      const errores = erroresDeCampo(e) ?? {}
+      const sueltos: string[] = []
+      for (const [campo, mensaje] of Object.entries(errores)) {
+        const n = /^calificaciones\.(\d+)\./.exec(campo)?.[1]
+        const item = n !== undefined ? items[Number(n)] : undefined
+        if (item) setError(claveCriterio(item.criterio_id), { type: 'server', message: mensaje })
+        else sueltos.push(mensaje)
       }
+      if (sueltos.length) notificar.error('No se pudo guardar la calificación', sueltos.join(' '))
     })
-
-    guardar.mutate(items, { onSuccess: onClose })
   }
 
-  const isLoading = cargandoCriterios || cargandoCal
-
   return (
-    <SgthModal
-      opened={opened}
-      onClose={onClose}
-      title="Calificar candidato"
-      size="xl"
-    >
+    <SgthModal opened={opened} onClose={onClose} title="Calificar candidato" size="xl">
       <Stack gap="md">
         <Card withBorder radius="md" p="sm">
           <Group justify="space-between">
             <Stack gap={2}>
-              <Text size="sm" fw={600}>{nombreCompleto}</Text>
-              <Text size="xs" c="dimmed">
-                {postulante.cedula} · {postulante.correo}
-              </Text>
+              <Text size="sm" fw={600}>{nombre}</Text>
+              <Text size="xs" c="dimmed">{postulante.cedula} · {postulante.correo}</Text>
             </Stack>
-            <StatusBadge tone={aprueba ? 'success' : 'danger'} size="lg">
-              {total.toFixed(2)} / 100 pts
-            </StatusBadge>
+            <StatusBadge tone={aprueba ? 'success' : 'danger'} size="lg">{total.toFixed(2)} / 100 pts</StatusBadge>
           </Group>
-          <Progress
-            value={total}
-            color={aprueba ? undefined : 'red'}
-            size="sm"
-            radius="xl"
-            mt="xs"
-          />
+          <Progress value={total} color={aprueba ? undefined : 'red'} size="sm" radius="xl" mt="xs" />
           <Text size="xs" c={aprueba ? 'emerald' : 'red'} mt={4}>
-            {aprueba
-              ? 'Aprueba (≥ 70 puntos)'
-              : 'No aprueba (< 70 puntos)'}
+            {aprueba ? `Aprueba (≥ ${APROBATORIO} puntos)` : `No aprueba (< ${APROBATORIO} puntos)`}
           </Text>
         </Card>
 
-        {criterios.length === 0 && !isLoading && (
-          <Alert color="amber" variant="light"
-            icon={<IconInfoCircle size={16} />}>
-            <Text size="xs">
-              Esta convocatoria no tiene criterios de evaluación
-              configurados. Configúrelos primero en la pestaña
-              &laquo;Criterios de evaluación&raquo;.
-            </Text>
-          </Alert>
-        )}
-
-        {isLoading ? (
-          <Stack gap="sm">
-            <Skeleton height={80} radius="md" />
-            <Skeleton height={80} radius="md" />
-            <Skeleton height={80} radius="md" />
-          </Stack>
-        ) : (
+        <DataState
+          loading={!listo}
+          error={criteriosQ.error ?? previasQ.error}
+          errorTitle="No se pudieron cargar los criterios"
+          empty={criterios.length === 0}
+          emptyProps={{
+            icon: IconInfoCircle,
+            title: 'Sin criterios de evaluación',
+            description: 'Configúrelos primero en la pestaña «Criterios de evaluación».',
+          }}
+          skeletonRows={3}
+        >
           <ScrollArea h={450} offsetScrollbars>
             <Stack gap="md" pr="sm">
-              {meritos.length > 0 && (
-                <Stack gap="sm">
-                  <Group gap="xs">
-                    <Text size="sm" fw={700}>
-                      Méritos
-                    </Text>
-                    <StatusBadge>
-                      {totalMeritos.toFixed(2)} pts
-                    </StatusBadge>
-                  </Group>
-                  {meritos.map((c, i) => (
-                    <Card key={c.id} withBorder radius="md" p="sm">
-                      <Stack gap="sm">
-                        <Group justify="space-between" wrap="nowrap">
-                          <Group gap="xs">
-                            <ThemeIcon
-                              size="xs" variant="light"
-                            >
-                              {TIPO_ICONS[c.tipo_input]}
-                            </ThemeIcon>
-                            <Text size="sm" fw={500}>
-                              {i + 1}. {c.nombre}
-                            </Text>
-                          </Group>
-                          <StatusBadge size="xs">
-                            Máx: {c.puntaje_maximo} pts
-                          </StatusBadge>
-                        </Group>
-                        {c.descripcion && (
-                          <Text size="xs" c="dimmed">
-                            {c.descripcion}
-                          </Text>
-                        )}
-                        <CriterioInput
-                          criterio={c}
-                          estado={estados[c.id] ?? {}}
-                          onChange={(val) =>
-                            setEstados(prev => ({
-                              ...prev,
-                              [c.id]: { ...prev[c.id], ...val },
-                            }))
-                          }
-                        />
-                        <Text size="xs" c="ocean" ta="right">
-                          Puntaje: {calcularPuntajeCriterio(
-                            c, estados[c.id] ?? {}
-                          ).toFixed(2)} pts
-                        </Text>
-                      </Stack>
-                    </Card>
-                  ))}
-                </Stack>
-              )}
-
-              {oposicion.length > 0 && (
-                <>
-                  <Divider />
-                  <Stack gap="sm">
-                    <Group gap="xs">
-                      <Text size="sm" fw={700}>
-                        Oposición
-                      </Text>
-                      <StatusBadge>
-                        {totalOposicion.toFixed(2)} pts
-                      </StatusBadge>
-                    </Group>
-                    {oposicion.map((c, i) => (
-                      <Card key={c.id} withBorder radius="md" p="sm">
-                        <Stack gap="sm">
-                          <Group justify="space-between" wrap="nowrap">
-                            <Group gap="xs">
-                              <ThemeIcon
-                                size="xs" variant="light"
-                              >
-                                {TIPO_ICONS[c.tipo_input]}
-                              </ThemeIcon>
-                              <Text size="sm" fw={500}>
-                                {i + 1}. {c.nombre}
-                              </Text>
-                            </Group>
-                            <StatusBadge size="xs">
-                              Máx: {c.puntaje_maximo} pts
-                            </StatusBadge>
-                          </Group>
-                          {c.descripcion && (
-                            <Text size="xs" c="dimmed">
-                              {c.descripcion}
-                            </Text>
-                          )}
-                          <CriterioInput
-                            criterio={c}
-                            estado={estados[c.id] ?? {}}
-                            onChange={(val) =>
-                              setEstados(prev => ({
-                                ...prev,
-                                [c.id]: { ...prev[c.id], ...val },
-                              }))
-                            }
-                          />
-                          <Text size="xs" c="amber" ta="right">
-                            Puntaje: {calcularPuntajeCriterio(
-                              c, estados[c.id] ?? {}
-                            ).toFixed(2)} pts
-                          </Text>
-                        </Stack>
-                      </Card>
-                    ))}
-                  </Stack>
-                </>
-              )}
+              <SeccionCalificacion titulo="Méritos" criterios={meritos} valores={valores ?? {}} control={control} />
+              {meritos.length > 0 && oposicion.length > 0 && <Divider />}
+              <SeccionCalificacion titulo="Oposición" criterios={oposicion} valores={valores ?? {}} control={control} />
             </Stack>
           </ScrollArea>
+        </DataState>
+
+        {criterios.length > 0 && (
+          <Alert color="ocean" variant="light" icon={<IconInfoCircle size={16} />} py={6}>
+            <Text size="xs">Se califican todos los criterios. Un checklist sin marcas vale 0.</Text>
+          </Alert>
         )}
       </Stack>
       <ModalFooter
@@ -456,7 +134,7 @@ export function CalificarPostulanteModal({
         submitLabel="Guardar calificación"
         submitting={guardar.isPending}
         submitDisabled={criterios.length === 0}
-        onSubmit={handleGuardar}
+        onSubmit={handleSubmit(enviar)}
       />
     </SgthModal>
   )

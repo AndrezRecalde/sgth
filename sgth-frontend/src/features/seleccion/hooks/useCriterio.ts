@@ -80,6 +80,7 @@ export function useGuardarCalificaciones(
       qc.invalidateQueries({ queryKey: ['express-aspirantes'] })
       qc.invalidateQueries({ queryKey: ['express-resumen'] })
     },
-    onError: notificar.alFallar('No se pudo guardar la calificación'),
+    // Los 422 de cada criterio los muestra el modal bajo el criterio.
+    onError: notificar.alFallarSalvoCampos('No se pudo guardar la calificación'),
   })
 }
