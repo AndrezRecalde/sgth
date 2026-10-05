@@ -65,7 +65,7 @@ export const expressService = {
   anios: () =>
     api.get<ApiResponse<number[]>>(`${BASE}/anios`).then((r) => r.data.datos),
 
-  aspirantes: (convocatoriaId: number, params?: FiltroAnios & { estado?: string }) =>
+  aspirantes: (convocatoriaId: number, params?: FiltroAnios & { estado?: string; page?: number; per_page?: number }) =>
     api.get<ApiResponse<{ data: AspiranteExpress[]; total: number }>>(
       `${BASE}/${convocatoriaId}/aspirantes`, { params },
     ).then((r) => r.data.datos),
