@@ -1,24 +1,18 @@
 'use client'
 
-import {
-  Stack, TextInput, 
-  Text, Alert, Select,
-  Grid, Divider,
-} from '@mantine/core'
-import { FormModal } from '@/components/ui'
+import { Alert, Grid, Stack, Text } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import {
-  IconInfoCircle,
-} from '@tabler/icons-react'
-import { useForm, Controller } from 'react-hook-form'
-import { BuscarPuestoSelect } from '@/features/estructura/components/BuscarPuestoSelect'
+import { IconInfoCircle } from '@tabler/icons-react'
+import { Controller, useForm, type DefaultValues } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { FormModal, SectionHeading } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { useInscribirPostulante } from '../hooks/useConvocatoria'
-import { fromDateValueOrNull, hoyIso, toDateValue } from '@/lib/fecha'
 import { erroresAlFormulario } from '@/lib/erroresAlFormulario'
+import { fromDateValueOrNull, hoyIso, toDateValue } from '@/lib/fecha'
+import { BuscarPuestoSelect } from '@/features/estructura/components/BuscarPuestoSelect'
+import { useInscribirPostulante } from '../hooks/useConvocatoria'
 import { CAMPOS_INSCRIPCION, esquemaInscripcion, type InscripcionFormData } from '../schemas/postulante.schema'
-import { ESTADO_CIVIL_OPTIONS, GENERO_OPTIONS, TIPO_SANGRE_OPTIONS } from '../services/postulanteOptions'
+import { DatosPostulanteCampos } from './inscripcion/DatosPostulanteCampos'
 
 interface Props {
   opened:         boolean
@@ -32,274 +26,66 @@ interface Props {
   requierePuesto?: boolean
 }
 
-type FormData = InscripcionFormData
+// Sin género a propósito: es obligatorio y nadie debe elegirlo por el usuario.
+const vacio = (): DefaultValues<InscripcionFormData> => ({
+  cedula: '', nombres: '', segundo_nombre: '', apellidos: '', segundo_apellido: '',
+  correo: '', telefono: '', estado_civil: null, fecha_nacimiento: null, tipo_sangre: null,
+  puesto_id: null, fecha_inscripcion: hoyIso(),
+})
 
-export function InscribirPostulanteModal({
-  opened, onClose, convocatoriaId, requierePuesto = false,
-}: Props) {
+/** Inscribir a un candidato en una convocatoria formal o en un contenedor express. */
+export function InscribirPostulanteModal({ opened, onClose, convocatoriaId, requierePuesto = false }: Props) {
   const contained = useContainedInput()
   const inscribir = useInscribirPostulante(convocatoriaId)
 
-  const {
-    control, register, handleSubmit,
-    reset, setError,
-    formState: { errors },
-  } = useForm<FormData>({
+  const { control, register, handleSubmit, reset, setError, formState: { errors } } = useForm<InscripcionFormData>({
     resolver: zodResolver(esquemaInscripcion(requierePuesto)),
-    // Sin `defaultValues` los campos arrancan no controlados y React avisa en
-    // consola la primera vez que se escribe en cada uno. `genero` se deja sin
-    // valor a propósito: es obligatorio y nadie debe elegirlo por el usuario.
-    defaultValues: {
-      cedula: '',
-      nombres: '',
-      segundo_nombre: '',
-      apellidos: '',
-      segundo_apellido: '',
-      correo: '',
-      telefono: '',
-      estado_civil: null,
-      fecha_nacimiento: null,
-      tipo_sangre: null,
-      puesto_id: null,
-      fecha_inscripcion: hoyIso(),
-    },
+    defaultValues: vacio(),
   })
 
-  const handleClose = () => {
-    reset()
-    onClose()
-  }
+  const cerrar = () => { reset(vacio()); onClose() }
 
   // Los 422 del backend —una cédula ya inscrita, un puesto inexistente— van
   // a su campo; antes solo salían en una notificación.
-  const onSubmit = ({ puesto_id, fecha_inscripcion, ...datos }: FormData) =>
+  const enviar = ({ puesto_id, fecha_inscripcion, ...datos }: InscripcionFormData) =>
     inscribir.mutateAsync(requierePuesto ? { ...datos, puesto_id, fecha_inscripcion } : datos)
-      .then(handleClose)
+      .then(cerrar)
       .catch((e) => erroresAlFormulario(e, setError, CAMPOS_INSCRIPCION, 'No se pudo inscribir al candidato'))
 
   return (
-    <FormModal
-      opened={opened}
-      onClose={handleClose}
-      title="Inscribir candidato"
-      size="xl"
-      onSubmit={handleSubmit(onSubmit)}
-      submitLabel="Inscribir candidato"
-      submitting={inscribir.isPending}
-    >
+    <FormModal opened={opened} onClose={cerrar} title="Inscribir candidato" size="xl"
+      onSubmit={handleSubmit(enviar)} submitLabel="Inscribir candidato" submitting={inscribir.isPending}>
       <Stack gap="md">
-        <Alert
-          color="ocean"
-          variant="light"
-          icon={<IconInfoCircle size={16} />}
-        >
+        <Alert color="ocean" variant="light" icon={<IconInfoCircle size={16} />}>
           <Text size="xs">
-            Ingrese los datos del candidato tal como aparecen
-            en su cédula de ciudadanía. Los datos demográficos
-            se copiarán automáticamente al expediente si el
+            Ingrese los datos del candidato tal como aparecen en su cédula de
+            ciudadanía. Los datos demográficos se copiarán al expediente si el
             candidato es seleccionado.
           </Text>
         </Alert>
 
         {requierePuesto && (
-          <Stack gap="xs">
-            <Text size="xs" fw={600} c="dimmed" tt="uppercase"
-              style={{ letterSpacing: '0.05em' }}>
-              Vacante a la que aspira
-            </Text>
+          <>
+            <SectionHeading title="Vacante a la que aspira" />
             <Grid>
               <Grid.Col span={{ base: 12, md: 8 }}>
                 <Controller name="puesto_id" control={control} render={({ field }) => (
-                  <BuscarPuestoSelect
-                    label="Puesto"
-                    required
-                    value={field.value}
-                    onChange={(id) => field.onChange(id)}
-                    error={errors.puesto_id?.message}
-                  />
+                  <BuscarPuestoSelect label="Puesto" required value={field.value}
+                    onChange={(id) => field.onChange(id)} error={errors.puesto_id?.message} />
                 )} />
               </Grid.Col>
               <Grid.Col span={{ base: 12, md: 4 }}>
                 <Controller name="fecha_inscripcion" control={control} render={({ field }) => (
-                  <DatePickerInput
-                    label="Fecha de inscripción"
-                    description="Define el año en que se contabiliza."
-                    value={toDateValue(field.value)}
-                    onChange={(v) => field.onChange(fromDateValueOrNull(v))}
-                    valueFormat="DD/MM/YYYY"
-                    {...contained}
-                    error={errors.fecha_inscripcion?.message}
-                  />
+                  <DatePickerInput label="Fecha de inscripción" description="Define el año en que se contabiliza."
+                    valueFormat="DD/MM/YYYY" {...contained} value={toDateValue(field.value)}
+                    onChange={(v) => field.onChange(fromDateValueOrNull(v))} error={errors.fecha_inscripcion?.message} />
                 )} />
               </Grid.Col>
             </Grid>
-            <Divider />
-          </Stack>
+          </>
         )}
 
-        <Stack gap="xs">
-          <Text size="xs" fw={600} c="dimmed" tt="uppercase"
-            style={{ letterSpacing: '0.05em' }}>
-            Identificación
-          </Text>
-          <Grid>
-            <Grid.Col span={{ base: 12, md: 4 }}>
-              <TextInput
-                label="Cédula de ciudadanía"
-                placeholder="0802704171"
-                required
-                {...contained}
-                {...register('cedula')}
-                error={errors.cedula?.message}
-              />
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, md: 4 }}>
-              <TextInput
-                label="Correo electrónico"
-                placeholder="candidato@correo.com"
-                description="Para notificaciones del proceso"
-                required
-                {...contained}
-                {...register('correo')}
-                error={errors.correo?.message}
-              />
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, md: 4 }}>
-              <TextInput
-                label="Teléfono"
-                placeholder="0991234567"
-                {...contained}
-                {...register('telefono')}
-              />
-            </Grid.Col>
-          </Grid>
-        </Stack>
-
-        <Divider />
-
-        <Stack gap="xs">
-          <Text size="xs" fw={600} c="dimmed" tt="uppercase"
-            style={{ letterSpacing: '0.05em' }}>
-            Nombres y apellidos
-          </Text>
-          <Grid>
-            <Grid.Col span={{ base: 12, md: 6 }}>
-              <TextInput
-                label="Primer nombre"
-                placeholder="Primer nombre"
-                required
-                {...contained}
-                {...register('nombres')}
-                error={errors.nombres?.message}
-              />
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, md: 6 }}>
-              <TextInput
-                label="Segundo nombre"
-                placeholder="Opcional"
-                {...contained}
-                {...register('segundo_nombre')}
-              />
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, md: 6 }}>
-              <TextInput
-                label="Primer apellido"
-                placeholder="Primer apellido"
-                required
-                {...contained}
-                {...register('apellidos')}
-                error={errors.apellidos?.message}
-              />
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, md: 6 }}>
-              <TextInput
-                label="Segundo apellido"
-                placeholder="Opcional"
-                {...contained}
-                {...register('segundo_apellido')}
-              />
-            </Grid.Col>
-          </Grid>
-        </Stack>
-
-        <Divider />
-
-        <Stack gap="xs">
-          <Text size="xs" fw={600} c="dimmed" tt="uppercase"
-            style={{ letterSpacing: '0.05em' }}>
-            Datos demográficos
-          </Text>
-          <Grid>
-            <Grid.Col span={{ base: 12, md: 4 }}>
-              <Controller
-                name="genero"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    label="Género"
-                    data={GENERO_OPTIONS}
-                    required
-                    {...contained}
-                    value={field.value ?? null}
-                    onChange={(v) => field.onChange(v)}
-                    error={errors.genero?.message}
-                  />
-                )}
-              />
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, md: 4 }}>
-              <Controller
-                name="estado_civil"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    label="Estado civil"
-                    data={ESTADO_CIVIL_OPTIONS}
-                    clearable
-                    {...contained}
-                    value={field.value ?? null}
-                    onChange={(v) => field.onChange(v)}
-                  />
-                )}
-              />
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, md: 4 }}>
-              <Controller
-                name="tipo_sangre"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    label="Tipo de sangre"
-                    data={TIPO_SANGRE_OPTIONS}
-                    clearable
-                    {...contained}
-                    value={field.value ?? null}
-                    onChange={(v) => field.onChange(v)}
-                  />
-                )}
-              />
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, md: 4 }}>
-              <Controller
-                name="fecha_nacimiento"
-                control={control}
-                render={({ field }) => (
-                  <DatePickerInput
-                    label="Fecha de nacimiento"
-                    valueFormat="DD/MM/YYYY"
-                    clearable
-                    maxDate={new Date()}
-                    {...contained}
-                    value={toDateValue(field.value)}
-                    onChange={(d) =>
-                      field.onChange(fromDateValueOrNull(d))
-                    }
-                  />
-                )}
-              />
-            </Grid.Col>
-          </Grid>
-        </Stack>
+        <DatosPostulanteCampos control={control} register={register} errors={errors} />
       </Stack>
     </FormModal>
   )

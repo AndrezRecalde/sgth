@@ -3,7 +3,6 @@
 import { ActionIcon, Alert, Button, Card, Group, Stack, Text, ThemeIcon, Tooltip } from '@mantine/core'
 import { IconCheckbox, IconHash, IconInfoCircle, IconList, IconPlus, IconTrash } from '@tabler/icons-react'
 import { confirmar, SectionHeading, StatusBadge } from '@/components/ui'
-import { useEliminarCriterio } from '../hooks/useCriterio'
 import type { CriterioEvaluacion } from '../services/criterioService'
 
 const TIPO_ICONS: Record<string, React.ReactNode> = {
@@ -18,17 +17,27 @@ const TIPO_LABELS: Record<string, string> = {
   numero:    'Valor numérico',
 }
 
-interface Props {
-  titulo:         string
-  criterios:      CriterioEvaluacion[]
-  convocatoriaId: number
-  editable:       boolean
-  onAgregar:      () => void
+/** Lo que se muestra de un criterio: sirve el de una convocatoria y el de una plantilla. */
+type CriterioMostrable = Pick<CriterioEvaluacion, 'id' | 'nombre' | 'descripcion' | 'puntaje_maximo' | 'tipo_input'> & {
+  opciones: { id: number; etiqueta: string; puntaje: number }[]
 }
 
-/** Una sección de criterios —méritos u oposición— con su subtotal. */
-export function SeccionCriterios({ titulo, criterios, convocatoriaId, editable, onAgregar }: Props) {
-  const eliminar = useEliminarCriterio(convocatoriaId)
+interface Props {
+  titulo:     string
+  criterios:  CriterioMostrable[]
+  editable:   boolean
+  onAgregar:  () => void
+  /** De una convocatoria o de una plantilla: cambia a dónde se pide. */
+  onEliminar: (criterioId: number) => void
+  /** Qué falta cuando la sección está vacía. */
+  ayudaVacia?: string
+}
+
+/**
+ * Una sección de criterios —méritos u oposición— con su subtotal. La usan la
+ * convocatoria y la plantilla, que antes tenían cada una su copia.
+ */
+export function SeccionCriterios({ titulo, criterios, editable, onAgregar, onEliminar, ayudaVacia }: Props) {
   const total = criterios.reduce((s, c) => s + Number(c.puntaje_maximo), 0)
 
   return (
@@ -51,7 +60,7 @@ export function SeccionCriterios({ titulo, criterios, convocatoriaId, editable, 
         <Alert color="slate" variant="light" icon={<IconInfoCircle size={16} />}>
           <Text size="xs">
             No hay criterios configurados para esta sección.
-            {editable && ' Agregue criterios antes de publicar la convocatoria.'}
+            {editable && ayudaVacia && ` ${ayudaVacia}`}
           </Text>
         </Alert>
       ) : criterios.map((c, i) => (
@@ -87,7 +96,7 @@ export function SeccionCriterios({ titulo, criterios, convocatoriaId, editable, 
                       title: 'Eliminar criterio',
                       message: <>Se eliminará el criterio <b>{c.nombre}</b>. No se puede deshacer.</>,
                       destructiva: true,
-                      onConfirm: () => eliminar.mutate(c.id),
+                      onConfirm: () => onEliminar(c.id),
                     })}
                   >
                     <IconTrash size={13} />

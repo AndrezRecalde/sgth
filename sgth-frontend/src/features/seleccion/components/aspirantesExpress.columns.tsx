@@ -6,7 +6,7 @@ import type { SemanticTone } from '@/config/design.tokens'
 import { formatFecha } from '@/lib/fecha'
 import { dictamenHabilitaIncorporacion } from '@/features/dispensario/services/solicitudCertificacionOptions'
 import { ESTADO_POSTULANTE_OPTIONS, TONO_POSTULANTE } from '../services/convocatoriaService'
-import { etiquetaDe } from '../services/postulanteOptions'
+import { etiquetaDe } from '../constants/postulante'
 import type { AspiranteExpress } from '../services/expressService'
 
 export const nombreAspirante = (a: AspiranteExpress): string =>

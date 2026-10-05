@@ -7,7 +7,7 @@ import { usePostulantes } from '../hooks/useConvocatoria'
 import {
   ESTADO_CONVOCATORIA_OPTIONS, TIPO_CONVOCATORIA_OPTIONS, TONO_CONVOCATORIA, type Convocatoria,
 } from '../services/convocatoriaService'
-import { etiquetaDe } from '../services/postulanteOptions'
+import { etiquetaDe } from '../constants/postulante'
 
 /**
  * Los que superaron la evaluación, estén donde estén después. Antes se

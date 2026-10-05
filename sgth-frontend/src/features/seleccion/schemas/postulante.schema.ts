@@ -24,12 +24,12 @@ export const esquemaInscripcion = (requierePuesto: boolean) => z.object({
   estado_civil:     z.string().optional().nullable(),
   fecha_nacimiento: z.string().optional().nullable(),
   tipo_sangre:      z.string().optional().nullable(),
-  puesto_id:        z.number().nullable(),
+  // En el campo y no en un `superRefine`: Zod 4 solo corre el refine si el
+  // resto del objeto ya es válido, y el error del puesto salía al final.
+  puesto_id: requierePuesto
+    ? z.number({ error: 'Seleccione el puesto al que aspira' })
+    : z.number().nullable(),
   fecha_inscripcion: z.string().nullable(),
-}).superRefine((d, ctx) => {
-  if (requierePuesto && !d.puesto_id) {
-    ctx.addIssue({ code: 'custom', path: ['puesto_id'], message: 'Seleccione el puesto al que aspira' })
-  }
 })
 
 export type InscripcionFormData = z.infer<ReturnType<typeof esquemaInscripcion>>
