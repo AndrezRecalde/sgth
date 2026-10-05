@@ -181,7 +181,7 @@ describe('criterios', function () {
 
         $this->postJson($base, ['seccion' => 'meritos', 'nombre' => 'Otro', 'puntaje_maximo' => 5, 'tipo_input' => 'numero'])
             ->assertStatus(422);
-        $this->patchJson("{$base}/{$this->k['numero']->id}", ['puntaje_maximo' => 10])->assertStatus(422);
+        $this->patchJson("{$base}/{$this->k['numero']->id}", ['puntaje_maximo' => 10])->assertMethodNotAllowed(); // sin edición: se quita y se crea
         $this->deleteJson("{$base}/{$this->k['numero']->id}")->assertStatus(422);
     });
 

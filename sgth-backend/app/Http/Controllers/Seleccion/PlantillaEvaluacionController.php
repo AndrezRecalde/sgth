@@ -53,22 +53,6 @@ final class PlantillaEvaluacionController extends Controller
         );
     }
 
-    public function update(Request $request, int $id): JsonResponse
-    {
-        $plantilla = PlantillaEvaluacion::findOrFail($id);
-
-        $datos = $request->validate([
-            'nombre'        => ['sometimes', 'string', 'max:200'],
-            'descripcion'   => ['nullable', 'string'],
-            'tipo_contrato' => ['nullable', 'string', 'max:50'],
-            'activa'        => ['sometimes', 'boolean'],
-        ]);
-
-        $plantilla->update($datos);
-
-        return ApiResponse::ok($plantilla, 'Plantilla actualizada.');
-    }
-
     public function destroy(int $id): JsonResponse
     {
         $plantilla = PlantillaEvaluacion::findOrFail($id);

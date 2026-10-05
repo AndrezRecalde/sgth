@@ -1761,7 +1761,7 @@ export interface paths {
         delete: operations["criterioEvaluacion.destroy"];
         options?: never;
         head?: never;
-        patch: operations["criterioEvaluacion.update"];
+        patch?: never;
         trace?: never;
     };
     "/v1/expediente/servidores/{servidorId}/cuentas-bancarias": {
@@ -3908,6 +3908,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/seleccion/onboardings/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["onboarding.update"];
+        trace?: never;
+    };
     "/v1/estructura/organigrama": {
         parameters: {
             query?: never;
@@ -4500,7 +4516,7 @@ export interface paths {
         delete: operations["plantillaEvaluacion.destroy"];
         options?: never;
         head?: never;
-        patch: operations["plantillaEvaluacion.update"];
+        patch?: never;
         trace?: never;
     };
     "/v1/seleccion/plantillas/{plantillaId}/criterios": {
@@ -4567,22 +4583,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/seleccion/convocatorias/{convocatoriaId}/postulantes/{postulanteId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["postulante.show"];
-        put?: never;
-        post?: never;
-        delete: operations["postulante.destroy"];
-        options?: never;
-        head?: never;
-        patch: operations["postulante.update"];
-        trace?: never;
-    };
     "/v1/seleccion/convocatorias/{convocatoriaId}/postulantes/{postulanteId}/documentos/{documentoId}": {
         parameters: {
             query?: never;
@@ -4598,6 +4598,29 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/v1/seleccion/convocatorias/{convocatoriaId}/postulantes/{postulanteId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["postulante.destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * Corregir los datos de un candidato desde su perfil (2026-10-05): el
+         *     endpoint existía pero ninguna pantalla lo usaba, y solo aceptaba cuatro
+         *     campos. No se corrige a quien ya fue incorporado —sus datos viven ya en
+         *     el expediente— ni en un concurso cerrado; y la cédula, solo mientras no
+         *     se haya enviado al Dispensario, que trabaja con ella
+         */
+        patch: operations["postulante.update"];
         trace?: never;
     };
     "/v1/seleccion/convocatorias/{convocatoriaId}/postulantes/{postulanteId}/documentos": {
@@ -8638,7 +8661,6 @@ export interface components {
             apellidos: string;
             correo: string;
             telefono: string | null;
-            cv_ruta: string | null;
             estado: components["schemas"]["EstadoPostulante"];
             created_by: number | null;
             updated_by: number | null;
@@ -15870,35 +15892,6 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
-    "criterioEvaluacion.update": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                convocatoriaId: number;
-                criterioId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Criterio actualizado.";
-                        datos: string;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-        };
-    };
     "cuentaBancariaServidor.index": {
         parameters: {
             query?: never;
@@ -22156,6 +22149,44 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
+    "onboarding.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    documentacion_entregada?: boolean;
+                    induccion_completada?: boolean;
+                    contrato_firmado?: boolean;
+                    observaciones?: string | null;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Inducción actualizada.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "estructura.organigrama": {
         parameters: {
             query?: never;
@@ -23652,44 +23683,6 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
-    "plantillaEvaluacion.update": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    nombre?: string;
-                    descripcion?: string | null;
-                    tipo_contrato?: string | null;
-                    activa?: boolean;
-                };
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Plantilla actualizada.";
-                        datos: string;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
     "plantillaEvaluacion.agregarCriterio": {
         parameters: {
             query?: never;
@@ -23894,104 +23887,6 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
-    "postulante.show": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                convocatoriaId: number;
-                postulanteId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Operación exitosa.";
-                        datos: string;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-        };
-    };
-    "postulante.destroy": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                convocatoriaId: number;
-                postulanteId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Postulante eliminado.";
-                        datos: string[];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-        };
-    };
-    "postulante.update": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                convocatoriaId: number;
-                postulanteId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    nombres?: string;
-                    apellidos?: string;
-                    /** Format: email */
-                    correo?: string;
-                    telefono?: string | null;
-                };
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Postulante actualizado.";
-                        datos: string;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
     "postulante.descargarDocumento": {
         parameters: {
             query?: never;
@@ -24058,6 +23953,86 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "postulante.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                convocatoriaId: number;
+                postulanteId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Postulante eliminado.";
+                        datos: string[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "postulante.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                convocatoriaId: number;
+                postulanteId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    cedula?: string;
+                    nombres?: string;
+                    segundo_nombre?: string | null;
+                    apellidos?: string;
+                    segundo_apellido?: string | null;
+                    /** Format: email */
+                    correo?: string;
+                    telefono?: string | null;
+                    /** @enum {string} */
+                    genero?: "masculino" | "femenino" | "otro";
+                    /** @enum {string|null} */
+                    estado_civil?: "soltero" | "casado" | "union_libre" | "divorciado" | "viudo" | null;
+                    /** Format: date-time */
+                    fecha_nacimiento?: string | null;
+                    /** @enum {string|null} */
+                    tipo_sangre?: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" | null;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Datos del candidato actualizados.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "postulante.subirDocumento": {

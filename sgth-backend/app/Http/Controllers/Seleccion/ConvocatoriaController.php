@@ -11,7 +11,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\Seleccion\Convocatoria;
 use App\Services\Seleccion\CalificacionService;
-use App\Models\Estructura\Puesto;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;

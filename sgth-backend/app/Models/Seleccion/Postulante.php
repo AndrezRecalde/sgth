@@ -7,8 +7,6 @@ use App\Models\Dispensario\SolicitudCertificacionMedica;
 use App\Models\Estructura\Puesto;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
-use App\Observers\Seleccion\PostulanteObserver;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,7 +15,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Seleccion\DocumentoPostulante;
 
-#[ObservedBy(PostulanteObserver::class)]
 class Postulante extends Model
 {
     use HasFactory, SoftDeletes;
@@ -42,7 +39,6 @@ class Postulante extends Model
         'tipo_sangre',
         'provincia_nacimiento_id',
         'canton_nacimiento_id',
-        'cv_ruta',
         'estado',
         'created_by',
         'updated_by',

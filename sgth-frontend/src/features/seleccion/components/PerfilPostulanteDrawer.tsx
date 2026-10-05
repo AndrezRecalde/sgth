@@ -10,6 +10,8 @@ import { usePostulantes } from '../hooks/useConvocatoria'
 import { ESTADO_POSTULANTE_OPTIONS, TONO_POSTULANTE } from '../services/convocatoriaService'
 import { ESTADO_CIVIL_OPTIONS, GENERO_OPTIONS, etiquetaDe } from '../constants/postulante'
 import { DocumentosPostulante } from './DocumentosPostulante'
+import { OnboardingChecklist } from './perfil/OnboardingChecklist'
+import { PerfilAcciones } from './perfil/PerfilAcciones'
 import { nombreCandidato } from './RankingCandidatoCard'
 
 interface Props {
@@ -18,6 +20,10 @@ interface Props {
   postulanteId:   number | null
   onClose:        () => void
   puedeGestionar: boolean
+  /** Quien puede marcar la inducción (`gestionar-onboarding`). */
+  puedeIncorporar: boolean
+  /** La convocatoria ya cerró: el perfil queda de consulta. */
+  cerrada:        boolean
 }
 
 const pts = (n?: number | string | null) => (n == null ? '—' : `${Number(n).toFixed(2)} pts`)
@@ -27,7 +33,9 @@ const pts = (n?: number | string | null) => (n == null ? '—' : `${Number(n).to
  * «Ver perfil» llevaba a una página que no existía. El candidato se toma del
  * listado ya cargado, así los documentos que se suben aparecen sin recargar.
  */
-export function PerfilPostulanteDrawer({ convocatoriaId, postulanteId, onClose, puedeGestionar }: Props) {
+export function PerfilPostulanteDrawer({
+  convocatoriaId, postulanteId, onClose, puedeGestionar, puedeIncorporar, cerrada,
+}: Props) {
   const { data: postulantes = [] } = usePostulantes(convocatoriaId)
   const p = postulantes.find((x) => x.id === postulanteId) ?? null
   const ev = p?.evaluacion
@@ -43,6 +51,7 @@ export function PerfilPostulanteDrawer({ convocatoriaId, postulanteId, onClose, 
     >
       {p && (
         <Stack gap="lg">
+          {puedeGestionar && <PerfilAcciones postulante={p} cerrado={cerrada} onEliminado={onClose} />}
           <DetailList items={[
             { label: 'Estado', value: (
               <StatusBadge tone={TONO_POSTULANTE[p.estado] ?? 'neutral'}>
@@ -84,6 +93,13 @@ export function PerfilPostulanteDrawer({ convocatoriaId, postulanteId, onClose, 
                   </StatusBadge>
                 ) : 'Pendiente' },
               ]} />
+            </>
+          )}
+
+          {p.onboarding && (
+            <>
+              <SectionHeading title="Inducción" />
+              <OnboardingChecklist convocatoriaId={convocatoriaId} onboarding={p.onboarding} editable={puedeIncorporar} />
             </>
           )}
 

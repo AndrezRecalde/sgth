@@ -61,16 +61,6 @@ export const plantillaService = {
       '/seleccion/plantillas', data
     ).then(r => r.data.datos),
 
-  actualizar: (id: number, data: Partial<{
-    nombre:        string
-    descripcion:   string
-    tipo_contrato: string
-    activa:        boolean
-  }>) =>
-    api.patch<ApiResponse<PlantillaEvaluacion>>(
-      `/seleccion/plantillas/${id}`, data
-    ).then(r => r.data.datos),
-
   eliminar: (id: number) =>
     api.delete<ApiResponse<unknown>>(
       `/seleccion/plantillas/${id}`

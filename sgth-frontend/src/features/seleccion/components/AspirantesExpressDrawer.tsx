@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Alert, Button, Group, Select, Stack, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconAlertTriangle, IconSettings, IconUsers } from '@tabler/icons-react'
-import { confirmar, DataState, SgthDrawer, SgthTable } from '@/components/ui'
+import { confirmar, DataState, SgthDrawer, SgthModal, SgthTable } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useAuth } from '@/hooks/useAuth'
 import { useConfirmarIncorporacion } from '@/features/dispensario/hooks/useSolicitudCertificacion'
@@ -15,6 +15,7 @@ import { ESTADO_POSTULANTE_OPTIONS } from '../services/convocatoriaService'
 import type { AspiranteExpress, FiltroAnios, TarjetaExpress } from '../services/expressService'
 import { columnasAspirantesExpress, nombreAspirante } from './aspirantesExpress.columns'
 import { CalificarPostulanteModal } from './CalificarPostulanteModal'
+import { OnboardingChecklist } from './perfil/OnboardingChecklist'
 import { SeleccionarPlantillaModal } from './SeleccionarPlantillaModal'
 
 interface Props {
@@ -33,6 +34,7 @@ export function AspirantesExpressDrawer({
   const [aspiranteSel, setAspiranteSel] = useState<AspiranteExpress | null>(null)
   const [calAbierto, cal] = useDisclosure(false)
   const [plantillaAbierta, plantilla] = useDisclosure(false)
+  const [enInduccion, setEnInduccion] = useState<AspiranteExpress | null>(null)
   const convocatoriaId = contenedor?.convocatoria_id ?? null
 
   // Paginado (2026-10-05): antes se veían los 20 primeros y del resto ni se
@@ -47,6 +49,8 @@ export function AspirantesExpressDrawer({
     { ...filtro, ...(estado ? { estado } : {}), page },
   )
   const aspirantes = data?.data ?? []
+  // El de la lista, que se refresca al guardar; no la copia del clic.
+  const induccion = aspirantes.find((a) => a.id === enInduccion?.id) ?? enInduccion
 
   // El contenedor necesita criterios de evaluación antes de poder calificar a
   // nadie. Se comparten por modalidad, así que se configuran una sola vez.
@@ -77,6 +81,7 @@ export function AspirantesExpressDrawer({
       confirmLabel: 'Enviar',
       onConfirm: () => enviarAlDispensario.mutate(a.id),
     }),
+    onInduccion: setEnInduccion,
     onIncorporar: (a) => confirmar({
       title: 'Confirmar incorporación',
       message: (
@@ -168,6 +173,13 @@ export function AspirantesExpressDrawer({
             postulante={aspiranteSel} convocatoriaId={convocatoriaId} />
           <SeleccionarPlantillaModal opened={plantillaAbierta} onClose={plantilla.close}
             convocatoriaId={convocatoriaId} tieneCriterios={tieneCriterios} />
+          <SgthModal opened={induccion !== null} onClose={() => setEnInduccion(null)}
+            title={induccion ? `Inducción — ${nombreAspirante(induccion)}` : 'Inducción'} size="md">
+            {induccion?.onboarding && (
+              <OnboardingChecklist convocatoriaId={convocatoriaId} onboarding={induccion.onboarding}
+                editable={hasPermiso('gestionar-onboarding')} />
+            )}
+          </SgthModal>
         </>
       )}
     </>

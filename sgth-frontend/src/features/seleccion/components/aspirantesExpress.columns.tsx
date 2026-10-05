@@ -1,22 +1,16 @@
 import { Text } from '@mantine/core'
-import { IconStar, IconStethoscope, IconUserCheck } from '@tabler/icons-react'
+import { IconChecklist, IconStar, IconStethoscope, IconUserCheck } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
 import { StatusBadge, TableActions } from '@/components/ui'
 import type { SemanticTone } from '@/config/design.tokens'
 import { formatFecha } from '@/lib/fecha'
 import { dictamenHabilitaIncorporacion } from '@/features/dispensario/services/solicitudCertificacionOptions'
 import { ESTADO_POSTULANTE_OPTIONS, TONO_POSTULANTE } from '../services/convocatoriaService'
-import { etiquetaDe } from '../constants/postulante'
+import { ESTADOS_CALIFICABLES, etiquetaDe } from '../constants/postulante'
 import type { AspiranteExpress } from '../services/expressService'
 
 export const nombreAspirante = (a: AspiranteExpress): string =>
   [a.apellidos, a.segundo_apellido, a.nombres, a.segundo_nombre].filter(Boolean).join(' ')
-
-/**
- * Estados en los que el puntaje todavía decide algo. Espeja
- * `EstadoPostulante::admiteCalificacion()` del backend.
- */
-const ESTADOS_CALIFICABLES = ['inscrito', 'en_evaluacion', 'aprobado', 'reprobado']
 
 /** Con dictamen de aptitud: lo que exige el backend para incorporar. */
 export const dictamenPermiteIncorporar = (a: AspiranteExpress) =>
@@ -56,6 +50,7 @@ interface Acciones {
   onCalificar:     (a: AspiranteExpress) => void
   onEnviar:        (a: AspiranteExpress) => void
   onIncorporar:    (a: AspiranteExpress) => void
+  onInduccion:     (a: AspiranteExpress) => void
 }
 
 export function columnasAspirantesExpress(acc: Acciones): DataTableColumn<AspiranteExpress>[] {
@@ -136,6 +131,13 @@ export function columnasAspirantesExpress(acc: Acciones): DataTableColumn<Aspira
               // Visible pero inerte mientras el dispensario no cierre el
               // dictamen: así se ve que el paso existe y qué falta para él.
               disabled: !dictamenPermiteIncorporar(a),
+            },
+            {
+              // El checklist que nace al incorporar (2026-10-05).
+              label: 'Inducción',
+              icon: <IconChecklist size={14} />,
+              onClick: () => acc.onInduccion(a),
+              hidden: !a.onboarding,
             },
           ]}
         />
