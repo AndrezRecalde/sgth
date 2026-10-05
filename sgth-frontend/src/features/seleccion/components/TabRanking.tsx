@@ -3,7 +3,7 @@
 import { Alert, Box, Button, Card, Group, Skeleton, Stack, Text } from '@mantine/core'
 import { IconInfoCircle, IconSend, IconTrophy } from '@tabler/icons-react'
 import { useMemo, useState } from 'react'
-import { confirmar, StatusBadge } from '@/components/ui'
+import { confirmar, SectionHeading, StatusBadge } from '@/components/ui'
 import { useAuth } from '@/hooks/useAuth'
 import { useConfirmarIncorporacion } from '@/features/dispensario/hooks/useSolicitudCertificacion'
 import { usePostulantes, useEnviarAlDispensario } from '../hooks/useConvocatoria'
@@ -146,14 +146,10 @@ export function TabRanking({ convocatoriaId, estadoConvocatoria, vacantes = 1, p
 
       {ranking.length > 0 && (
         <Stack gap="xs">
-          <Group justify="space-between">
-            <Text size="xs" fw={600} c="dimmed" tt="uppercase" style={{ letterSpacing: '0.05em' }}>
-              Ranking de candidatos
-            </Text>
-            <StatusBadge>
-              {ranking.length} calificado{ranking.length !== 1 ? 's' : ''}
-            </StatusBadge>
-          </Group>
+          <SectionHeading
+            title="Ranking de candidatos"
+            action={<StatusBadge>{ranking.length} calificado{ranking.length !== 1 ? 's' : ''}</StatusBadge>}
+          />
 
           {puedeEnviar && seleccionados.length > 0 && (
             <Card withBorder radius="md" padding="sm" bg="var(--sgth-surface-sunken)">
