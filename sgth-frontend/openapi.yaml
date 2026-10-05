@@ -9730,6 +9730,8 @@
             },
             "patch": {
                 "operationId": "convocatoria.update",
+                "description": "Antes aceptaba `estado` libre: dos de sus valores (`en_proceso`,\n`cerrada`) no existen y daban 500, una finalizada pod\u00eda volver a borrador\ny borrarse, y cambiar fechas o vacantes de un concurso ya publicado\nalteraba lo que se anunci\u00f3. El estado avanza solo con sus acciones:\npublicar, declarar ganadores, incorporar, declarar desierta o cancelar.",
+                "summary": "Solo en borrador, y sin tocar el estado (decisi\u00f3n de TH, 2026-10-05)",
                 "tags": [
                     "Convocatoria"
                 ],
@@ -9749,6 +9751,9 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
+                                    "puesto_id": {
+                                        "type": "integer"
+                                    },
                                     "titulo": {
                                         "type": "string",
                                         "maxLength": 255
@@ -9765,6 +9770,14 @@
                                             "type": "string"
                                         }
                                     },
+                                    "tipo": {
+                                        "type": "string",
+                                        "enum": [
+                                            "interna",
+                                            "externa",
+                                            "mixta"
+                                        ]
+                                    },
                                     "fecha_inicio": {
                                         "type": "string",
                                         "format": "date-time"
@@ -9772,16 +9785,6 @@
                                     "fecha_fin": {
                                         "type": "string",
                                         "format": "date-time"
-                                    },
-                                    "estado": {
-                                        "type": "string",
-                                        "enum": [
-                                            "borrador",
-                                            "publicada",
-                                            "en_proceso",
-                                            "cerrada",
-                                            "desierta"
-                                        ]
                                     },
                                     "vacantes": {
                                         "type": "integer",
@@ -10000,6 +10003,95 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/seleccion/convocatorias/{id}/cerrar": {
+            "post": {
+                "operationId": "convocatoria.cerrar",
+                "summary": "Declara desierto o cancela un concurso publicado, con su motivo",
+                "tags": [
+                    "Convocatoria"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "estado": {
+                                        "type": "string",
+                                        "enum": [
+                                            "desierta",
+                                            "cancelada"
+                                        ]
+                                    },
+                                    "motivo": {
+                                        "type": "string",
+                                        "minLength": 5,
+                                        "maxLength": 500
+                                    }
+                                },
+                                "required": [
+                                    "estado",
+                                    "motivo"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "enum": [
+                                                "La convocatoria fue declarada desierta.",
+                                                "La convocatoria fue cancelada."
+                                            ]
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/Convocatoria"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -28486,16 +28578,6 @@
                                             "null"
                                         ],
                                         "maxLength": 20
-                                    },
-                                    "estado": {
-                                        "type": "string",
-                                        "enum": [
-                                            "inscrito",
-                                            "en_evaluacion",
-                                            "seleccionado",
-                                            "no_seleccionado",
-                                            "lista_espera"
-                                        ]
                                     }
                                 }
                             }
@@ -44348,6 +44430,12 @@
                     },
                     "es_contenedor_permanente": {
                         "type": "boolean"
+                    },
+                    "motivo_cierre": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -44369,7 +44457,8 @@
                     "vacantes",
                     "tipo_proceso",
                     "tipo_nombramiento_previsto",
-                    "es_contenedor_permanente"
+                    "es_contenedor_permanente",
+                    "motivo_cierre"
                 ],
                 "title": "Convocatoria"
             },

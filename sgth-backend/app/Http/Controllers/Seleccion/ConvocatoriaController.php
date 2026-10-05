@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Seleccion;
 
+use App\Contracts\Seleccion\SeleccionServiceInterface;
+use App\Enums\EstadoConvocatoria;
 use App\Enums\TipoNombramiento;
 use App\Enums\TipoProcesoConvocatoria;
 use App\Exceptions\ReglaNegocioException;
@@ -13,10 +15,13 @@ use App\Models\Estructura\Puesto;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rules\Enum;
 
 final class ConvocatoriaController extends Controller
 {
+    public function __construct(private readonly SeleccionServiceInterface $seleccionService) {}
+
     public function index(Request $request): JsonResponse
     {
         // Los contenedores permanentes de Reclutamiento Express no son
@@ -125,28 +130,47 @@ final class ConvocatoriaController extends Controller
         return ApiResponse::ok($convocatoria);
     }
 
+    /**
+     * Solo en borrador, y sin tocar el estado (decisión de TH, 2026-10-05).
+     *
+     * Antes aceptaba `estado` libre: dos de sus valores (`en_proceso`,
+     * `cerrada`) no existen y daban 500, una finalizada podía volver a borrador
+     * y borrarse, y cambiar fechas o vacantes de un concurso ya publicado
+     * alteraba lo que se anunció. El estado avanza solo con sus acciones:
+     * publicar, declarar ganadores, incorporar, declarar desierta o cancelar.
+     */
     public function update(Request $request, int $id): JsonResponse
     {
         $convocatoria = Convocatoria::findOrFail($id);
 
-        if ($convocatoria->estado->value === 'cerrada') {
-            return ApiResponse::error(
-                'No se puede modificar una convocatoria cerrada.', null, 422
+        $this->assertNoEsContenedor($convocatoria);
+
+        if ($convocatoria->estado !== EstadoConvocatoria::BORRADOR) {
+            throw new ReglaNegocioException(
+                'Solo se edita una convocatoria en borrador: una vez publicada, sus condiciones ya se anunciaron.'
             );
         }
 
         $datos = $request->validate([
+            'puesto_id'      => ['sometimes', 'integer', 'exists:puestos,id'],
             'titulo'         => ['sometimes', 'string', 'max:255'],
             'descripcion'    => ['sometimes', 'string'],
             'bases_concurso' => ['nullable', 'array'],
+            'tipo'           => ['sometimes', Rule::in(['interna', 'externa', 'mixta'])],
             'fecha_inicio'   => ['sometimes', 'date'],
             'fecha_fin'      => ['sometimes', 'date'],
-            'estado'         => ['sometimes', Rule::in([
-                'borrador', 'publicada', 'en_proceso',
-                'cerrada', 'desierta',
-            ])],
             'vacantes'       => ['sometimes', 'integer', 'min:1'],
         ]);
+
+        // El orden de las fechas se mira con lo que quedaría guardado: si
+        // solo llega una, la otra es la de la convocatoria.
+        $inicio = $datos['fecha_inicio'] ?? $convocatoria->fecha_inicio?->toDateString();
+        $fin = $datos['fecha_fin'] ?? $convocatoria->fecha_fin?->toDateString();
+        if ($inicio && $fin && $fin <= $inicio) {
+            throw ValidationException::withMessages([
+                'fecha_fin' => 'La fecha de cierre debe ser posterior a la de inicio.',
+            ]);
+        }
 
         $convocatoria->update([
             ...$datos,
@@ -154,7 +178,7 @@ final class ConvocatoriaController extends Controller
         ]);
 
         return ApiResponse::ok(
-            $convocatoria->load(['puesto.cargo']),
+            $convocatoria->load(['puesto.cargo', 'puesto.unidadAdministrativa']),
             'Convocatoria actualizada.'
         );
     }
@@ -163,7 +187,9 @@ final class ConvocatoriaController extends Controller
     {
         $convocatoria = Convocatoria::findOrFail($id);
 
-        if ($convocatoria->estado->value !== 'borrador') {
+        $this->assertNoEsContenedor($convocatoria);
+
+        if ($convocatoria->estado !== EstadoConvocatoria::BORRADOR) {
             return ApiResponse::error(
                 'Solo se pueden eliminar convocatorias en borrador.', null, 422
             );
@@ -177,7 +203,9 @@ final class ConvocatoriaController extends Controller
     {
         $convocatoria = Convocatoria::findOrFail($id);
 
-        if ($convocatoria->estado->value !== 'borrador') {
+        $this->assertNoEsContenedor($convocatoria);
+
+        if ($convocatoria->estado !== EstadoConvocatoria::BORRADOR) {
             return ApiResponse::error(
                 'Solo se pueden publicar convocatorias en borrador.', null, 422
             );
@@ -195,5 +223,42 @@ final class ConvocatoriaController extends Controller
         ]);
 
         return ApiResponse::ok($convocatoria, 'Convocatoria publicada.');
+    }
+
+    /**
+     * Declara desierto o cancela un concurso publicado, con su motivo.
+     */
+    public function cerrar(Request $request, int $id): JsonResponse
+    {
+        $datos = $request->validate([
+            'estado' => ['required', Rule::in([
+                EstadoConvocatoria::DESIERTA->value, EstadoConvocatoria::CANCELADA->value,
+            ])],
+            'motivo' => ['required', 'string', 'min:5', 'max:500'],
+        ]);
+
+        $convocatoria = $this->seleccionService->cerrarSinGanadores(
+            $id, EstadoConvocatoria::from($datos['estado']), $datos['motivo'], $request->user()->id
+        );
+
+        return ApiResponse::ok(
+            $convocatoria->load(['puesto.cargo', 'puesto.unidadAdministrativa']),
+            $convocatoria->estado === EstadoConvocatoria::DESIERTA
+                ? 'La convocatoria fue declarada desierta.'
+                : 'La convocatoria fue cancelada.'
+        );
+    }
+
+    /**
+     * Los cuatro contenedores de reclutamiento express son permanentes: se
+     * crean con la base y no se editan, publican, cierran ni borran.
+     */
+    private function assertNoEsContenedor(Convocatoria $convocatoria): void
+    {
+        if ($convocatoria->es_contenedor_permanente) {
+            throw new ReglaNegocioException(
+                'Los contenedores de reclutamiento express son permanentes y no se modifican.'
+            );
+        }
     }
 }

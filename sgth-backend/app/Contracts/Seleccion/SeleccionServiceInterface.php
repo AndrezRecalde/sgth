@@ -3,6 +3,7 @@
 namespace App\Contracts\Seleccion;
 
 use App\Enums\EstadoConvocatoria;
+use App\Models\Seleccion\Convocatoria;
 use App\Models\Seleccion\EvaluacionSeleccion;
 use App\Models\Seleccion\Postulante;
 use Illuminate\Support\Collection;
@@ -49,4 +50,19 @@ interface SeleccionServiceInterface
      * para cubrir la vacante que dejó un no apto.
      */
     public function declararSiguiente(int $convocatoriaId, int $userId): Postulante;
+
+    /**
+     * Cierra un concurso publicado sin ganadores: desierto (nadie aprobó) o
+     * cancelado (por decisión de la institución), siempre con su motivo.
+     */
+    public function cerrarSinGanadores(
+        int $convocatoriaId, EstadoConvocatoria $estado, string $motivo, int $userId
+    ): Convocatoria;
+
+    /**
+     * Se canceló la solicitud médica de un candidato antes de evaluarlo: vuelve
+     * a la lista de espera (formal) o a aprobado (express), de donde se le
+     * puede volver a enviar.
+     */
+    public function devolverPorCancelacion(int $postulanteId): void;
 }

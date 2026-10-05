@@ -757,6 +757,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::patch('convocatorias/{id}', [ConvocatoriaController::class, 'update']);
             Route::delete('convocatorias/{id}', [ConvocatoriaController::class, 'destroy']);
             Route::patch('convocatorias/{id}/publicar', [ConvocatoriaController::class, 'publicar']);
+            // Desierta o cancelada, con motivo: el PATCH ya no cambia el estado.
+            Route::post('convocatorias/{id}/cerrar', [ConvocatoriaController::class, 'cerrar']);
 
             // Postulantes por convocatoria
             Route::get('convocatorias/{convocatoriaId}/postulantes', [PostulanteController::class, 'index']);
