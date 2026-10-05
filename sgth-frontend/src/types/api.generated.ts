@@ -983,8 +983,17 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * Las calificaciones del candidato con los criterios vigentes, por id de
+         *     criterio. En un checklist, `opciones` son las marcadas
+         */
         get: operations["calificacion.obtener"];
         put?: never;
+        /**
+         * Una fila por criterio vigente, todos: un total parcial decidía
+         *     aprobado o reprobado antes de tiempo. El checklist manda sus opciones
+         *     marcadas en `opcion_ids`
+         */
         post: operations["calificacion.guardar"];
         delete?: never;
         options?: never;
@@ -5194,22 +5203,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/seleccion/postulantes/{postulanteId}/calificar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["seleccion.calificar"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/seleccion/convocatorias/{convocatoriaId}/declarar-ganador": {
         parameters: {
             query?: never;
@@ -6884,12 +6877,6 @@ export interface components {
          * @enum {string}
          */
         CalificacionMrl: "excelente" | "muy_bueno" | "satisfactorio" | "regular" | "insuficiente";
-        /** CalificarPostulanteRequest */
-        CalificarPostulanteRequest: {
-            puntaje_meritos: number;
-            puntaje_oposicion: number;
-            observaciones?: string | null;
-        };
         /** CambiarContrasenaRequest */
         CambiarContrasenaRequest: {
             nueva_contrasena?: string;
@@ -13758,6 +13745,7 @@ export interface operations {
                     calificaciones: {
                         criterio_id: number;
                         opcion_id?: number | null;
+                        opcion_ids?: number[] | null;
                         valor_numerico?: number | null;
                         observacion?: string | null;
                     }[];
@@ -13772,9 +13760,8 @@ export interface operations {
                 content: {
                     "application/json": {
                         exito: boolean;
-                        /** @constant */
-                        mensaje: "Calificación guardada correctamente.";
-                        datos: string[];
+                        mensaje: string;
+                        datos: components["schemas"]["EvaluacionSeleccion"];
                         meta: null;
                     };
                 };
@@ -15829,23 +15816,7 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @enum {string} */
-                    seccion: "meritos" | "oposicion";
-                    nombre: string;
-                    descripcion?: string | null;
-                    puntaje_maximo: number;
-                    /** @enum {string} */
-                    tipo_input: "radio" | "numero" | "checklist";
-                    opciones?: {
-                        etiqueta?: string;
-                        puntaje?: number;
-                    }[] | null;
-                };
-            };
-        };
+        requestBody?: never;
         responses: {
             201: {
                 headers: {
@@ -15856,13 +15827,12 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Criterio registrado correctamente.";
-                        datos: components["schemas"]["CriterioEvaluacion"];
+                        datos: string;
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
         };
     };
     "criterioEvaluacion.destroy": {
@@ -15888,6 +15858,12 @@ export interface operations {
                         mensaje: "Criterio eliminado.";
                         datos: string[];
                         meta: null;
+                    } | {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Criterio retirado. Las calificaciones hechas con él se conservan.";
+                        datos: string[];
+                        meta: null;
                     };
                 };
             };
@@ -15904,20 +15880,7 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    nombre?: string;
-                    descripcion?: string | null;
-                    puntaje_maximo?: number;
-                    activo?: boolean;
-                    opciones?: {
-                        etiqueta?: string;
-                        puntaje?: number;
-                    }[] | null;
-                };
-            };
-        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
@@ -15934,7 +15897,6 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
         };
     };
     "cuentaBancariaServidor.index": {
@@ -26255,40 +26217,6 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
-        };
-    };
-    "seleccion.calificar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                postulanteId: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CalificarPostulanteRequest"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Calificación del postulante registrada con éxito.";
-                        datos: components["schemas"]["EvaluacionSeleccion"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            403: components["responses"]["AuthorizationException"];
-            422: components["responses"]["ValidationException"];
         };
     };
     "seleccion.declararGanador": {

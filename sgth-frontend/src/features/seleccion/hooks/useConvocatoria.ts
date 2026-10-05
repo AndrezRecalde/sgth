@@ -107,29 +107,6 @@ export function useInscribirPostulante(convocatoriaId: number) {
   })
 }
 
-export function useCalificarPostulante(convocatoriaId: number) {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: ({ postulanteId, data }: {
-      postulanteId: number
-      data: {
-        puntaje_meritos:   number
-        puntaje_oposicion: number
-        observaciones?:    string | null
-      }
-    }) =>
-      api.post<ApiResponse<unknown>>(
-        `/seleccion/postulantes/${postulanteId}/calificar`,
-        data
-      ).then(r => r.data.datos),
-    onSuccess: () => {
-      notificar.exito('Calificación registrada', 'El puntaje del candidato fue guardado.')
-      qc.invalidateQueries({ queryKey: ['postulantes', convocatoriaId] })
-    },
-    onError: notificar.alFallar('No se pudo registrar la calificación'),
-  })
-}
-
 /**
  * Despacha uno o varios candidatos al dispensario. El backend acota la
  * cantidad a las vacantes de la convocatoria; en los contenedores express no

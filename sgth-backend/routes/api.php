@@ -794,7 +794,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::post('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/calificaciones', [CalificacionController::class, 'guardar']);
 
             // Evaluación y selección
-            Route::post('postulantes/{id}/calificar', [SeleccionController::class, 'calificar']);
+            // Sin `postulantes/{id}/calificar` (2026-10-05): ponía méritos y
+            // oposición a mano, sin criterios. Se califica por criterios.
             Route::post('convocatorias/{id}/declarar-ganador', [SeleccionController::class, 'declararGanador']);
             // La vacante que deja un no apto la cubre el siguiente del ranking.
             Route::post('convocatorias/{id}/declarar-siguiente', [SeleccionController::class, 'declararSiguiente']);

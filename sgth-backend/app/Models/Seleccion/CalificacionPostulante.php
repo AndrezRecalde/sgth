@@ -5,6 +5,7 @@ namespace App\Models\Seleccion;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class CalificacionPostulante extends Model
 {
@@ -37,6 +38,13 @@ class CalificacionPostulante extends Model
     public function opcion(): BelongsTo
     {
         return $this->belongsTo(OpcionCriterio::class, 'opcion_id');
+    }
+
+    /** Las opciones marcadas de un criterio checklist; `opcion` es la del radio. */
+    public function opciones(): BelongsToMany
+    {
+        return $this->belongsToMany(OpcionCriterio::class, 'seleccion_calificacion_opciones', 'calificacion_id', 'opcion_id')
+            ->withTimestamps();
     }
 
     public function registradoPor(): BelongsTo

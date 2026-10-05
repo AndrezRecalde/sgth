@@ -143,14 +143,21 @@ final class PlantillaEvaluacionController extends Controller
 
         // Un id inexistente chocaba con la clave foránea al insertar los
         // criterios y daba un 500; ahora es un 404.
-        Convocatoria::findOrFail($convocatoriaId);
+        $convocatoria = Convocatoria::findOrFail($convocatoriaId);
+        CriterioEvaluacionController::assertCriteriosEditables($convocatoria);
 
         DB::transaction(function () use (
             $plantilla, $convocatoriaId
         ) {
-            CriterioEvaluacion::where(
-                'convocatoria_id', $convocatoriaId
-            )->delete();
+            // Los criterios con los que ya se calificó se retiran en vez de
+            // borrarse (2026-10-05): en un contenedor express, reaplicar la
+            // plantilla se llevaba en cascada las calificaciones de todos los
+            // años. Los demás sí se borran.
+            $vigentes = CriterioEvaluacion::where('convocatoria_id', $convocatoriaId)
+                ->where('activo', true);
+
+            (clone $vigentes)->whereHas('calificaciones')->update(['activo' => false]);
+            (clone $vigentes)->whereDoesntHave('calificaciones')->delete();
 
             foreach ($plantilla->criterios as $pc) {
                 $criterio = CriterioEvaluacion::create([

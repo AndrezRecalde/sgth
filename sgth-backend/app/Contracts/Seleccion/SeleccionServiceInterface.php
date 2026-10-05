@@ -4,17 +4,11 @@ namespace App\Contracts\Seleccion;
 
 use App\Enums\EstadoConvocatoria;
 use App\Models\Seleccion\Convocatoria;
-use App\Models\Seleccion\EvaluacionSeleccion;
 use App\Models\Seleccion\Postulante;
 use Illuminate\Support\Collection;
 
 interface SeleccionServiceInterface
 {
-    /**
-     * Registra o actualiza la calificación (méritos y oposición) de un postulante.
-     */
-    public function calificarPostulante(int $postulanteId, array $datos, int $evaluadorId): EvaluacionSeleccion;
-
     /**
      * Declara uno o varios ganadores y los despacha al dispensario médico.
      *

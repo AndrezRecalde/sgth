@@ -247,56 +247,8 @@ test('en un concurso formal el puesto del aspirante queda prohibido', function (
 });
 
 // ── Calificación dentro de un contenedor ────────────────────────
-
-test('se puede calificar a un aspirante de un contenedor permanente', function () {
-    ($this->inscribir)($this->profesionales, '2026-03-10')->assertCreated();
-    $postulante = Postulante::where('convocatoria_id', $this->profesionales->id)->firstOrFail();
-
-    // El contenedor vive en 'publicada' de por vida: nunca pasa a
-    // 'en_evaluacion', que es lo que el guard exigía a un concurso normal.
-    expect($this->profesionales->estado->value)->toBe('publicada');
-
-    $this->postJson("/api/v1/seleccion/postulantes/{$postulante->id}/calificar", [
-        'puntaje_meritos'   => 35,
-        'puntaje_oposicion' => 40,
-    ])->assertOk();
-
-    expect($postulante->fresh()->estado->value)->toBe(EstadoPostulante::APROBADO->value);
-});
-
-test('calificar por debajo del umbral reprueba al aspirante del contenedor', function () {
-    ($this->inscribir)($this->profesionales, '2026-03-11')->assertCreated();
-    $postulante = Postulante::where('convocatoria_id', $this->profesionales->id)->firstOrFail();
-
-    $this->postJson("/api/v1/seleccion/postulantes/{$postulante->id}/calificar", [
-        'puntaje_meritos'   => 20,
-        'puntaje_oposicion' => 30,
-    ])->assertOk();
-
-    expect($postulante->fresh()->estado->value)->toBe(EstadoPostulante::REPROBADO->value);
-});
-
-test('un concurso formal sigue exigiendo estar en fase de evaluación para calificar', function () {
-    $convocatoria = Convocatoria::create([
-        'codigo' => 'CONV-FORMAL-CAL', 'titulo' => 'Concurso formal',
-        'descripcion' => 'x', 'tipo' => 'externa', 'tipo_proceso' => 'formal',
-        'estado' => 'publicada', 'vacantes' => 1, 'puesto_id' => $this->puesto->id,
-        'fecha_inicio' => '2026-01-01', 'fecha_fin' => '2026-12-31',
-    ]);
-
-    $postulante = Postulante::create([
-        'convocatoria_id' => $convocatoria->id,
-        'cedula' => '1799999999', 'nombres' => 'Formal', 'apellidos' => 'Postulante',
-        'correo' => 'formal@test.ec', 'estado' => EstadoPostulante::INSCRITO->value,
-    ]);
-
-    $this->postJson("/api/v1/seleccion/postulantes/{$postulante->id}/calificar", [
-        'puntaje_meritos'   => 35,
-        'puntaje_oposicion' => 40,
-    ])->assertStatus(422);
-
-    expect($postulante->fresh()->estado->value)->toBe(EstadoPostulante::INSCRITO->value);
-});
+// Se califica por criterios: ver CalificacionCriteriosTest. El endpoint que
+// ponía méritos y oposición a mano se retiró el 2026-10-05.
 
 // ── Los contenedores no son convocatorias listables ─────────────
 
@@ -391,56 +343,5 @@ test('un aspirante sin trámite médico trae la solicitud en nulo', function () 
 });
 
 // ── La calificación se cierra cuando el trámite avanza ──────────
+// Ver CalificacionCriteriosTest: la guarda vive en CalificacionService.
 
-test('no se puede recalificar a un aspirante ya despachado al dispensario', function () {
-    ($this->inscribir)($this->profesionales, '2026-08-28')->assertCreated();
-    $postulante = Postulante::where('convocatoria_id', $this->profesionales->id)
-        ->latest('id')->firstOrFail();
-
-    $postulante->update(['estado' => EstadoPostulante::GANADOR_POTENCIAL]);
-
-    // Sin la guarda, esto lo devolvía en silencio a «aprobado» y se perdía el
-    // despacho al dispensario junto con el dictamen que ya tuviera.
-    $this->postJson("/api/v1/seleccion/postulantes/{$postulante->id}/calificar", [
-        'puntaje_meritos'   => 35,
-        'puntaje_oposicion' => 40,
-    ])->assertStatus(422);
-
-    expect($postulante->fresh()->estado->value)
-        ->toBe(EstadoPostulante::GANADOR_POTENCIAL->value);
-});
-
-test('tampoco se puede recalificar a un aspirante ya incorporado', function () {
-    ($this->inscribir)($this->profesionales, '2026-08-28')->assertCreated();
-    $postulante = Postulante::where('convocatoria_id', $this->profesionales->id)
-        ->latest('id')->firstOrFail();
-
-    $postulante->update(['estado' => EstadoPostulante::INCORPORADO]);
-
-    $this->postJson("/api/v1/seleccion/postulantes/{$postulante->id}/calificar", [
-        'puntaje_meritos'   => 10,
-        'puntaje_oposicion' => 10,
-    ])->assertStatus(422);
-
-    expect($postulante->fresh()->estado->value)
-        ->toBe(EstadoPostulante::INCORPORADO->value);
-});
-
-test('sí se puede corregir la calificación mientras el puntaje decide algo', function () {
-    ($this->inscribir)($this->profesionales, '2026-08-28')->assertCreated();
-    $postulante = Postulante::where('convocatoria_id', $this->profesionales->id)
-        ->latest('id')->firstOrFail();
-
-    // Aprobado: el trámite no avanzó todavía, así que corregir un error de
-    // digitación debe seguir siendo posible.
-    $this->postJson("/api/v1/seleccion/postulantes/{$postulante->id}/calificar", [
-        'puntaje_meritos'   => 35, 'puntaje_oposicion' => 40,
-    ])->assertOk();
-
-    $this->postJson("/api/v1/seleccion/postulantes/{$postulante->id}/calificar", [
-        'puntaje_meritos'   => 20, 'puntaje_oposicion' => 20,
-    ])->assertOk();
-
-    expect($postulante->fresh()->estado->value)
-        ->toBe(EstadoPostulante::REPROBADO->value);
-});
