@@ -18,6 +18,7 @@ import { z } from 'zod/v4'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useInscribirPostulante } from '../hooks/useConvocatoria'
 import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
+import { ESTADO_CIVIL_OPTIONS, GENERO_OPTIONS, TIPO_SANGRE_OPTIONS } from '../services/postulanteOptions'
 
 interface Props {
   opened:         boolean
@@ -30,24 +31,6 @@ interface Props {
    */
   requierePuesto?: boolean
 }
-
-const GENERO_OPTIONS = [
-  { value: 'masculino', label: 'Masculino' },
-  { value: 'femenino',  label: 'Femenino'  },
-  { value: 'otro',      label: 'Otro'      },
-]
-
-const ESTADO_CIVIL_OPTIONS = [
-  { value: 'soltero',     label: 'Soltero/a'        },
-  { value: 'casado',      label: 'Casado/a'          },
-  { value: 'union_libre', label: 'Unión de hecho'    },
-  { value: 'divorciado',  label: 'Divorciado/a'      },
-  { value: 'viudo',       label: 'Viudo/a'           },
-]
-
-const TIPO_SANGRE_OPTIONS = [
-  'A+','A-','B+','B-','AB+','AB-','O+','O-',
-].map(v => ({ value: v, label: v }))
 
 const schema = z.object({
   // Diez dígitos, como el backend y el Expediente (2026-10-04).
