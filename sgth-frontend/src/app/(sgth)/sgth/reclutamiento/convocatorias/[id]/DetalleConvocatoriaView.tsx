@@ -13,6 +13,7 @@ import {
 import { useRouter } from 'next/navigation'
 import { TabRanking } from '@/features/seleccion/components/TabRanking'
 import { CerrarConvocatoriaAcciones } from '@/features/seleccion/components/CerrarConvocatoriaAcciones'
+import { PerfilPostulanteDrawer } from '@/features/seleccion/components/PerfilPostulanteDrawer'
 import { IconChartBar } from '@tabler/icons-react'
 import {
   useConvocatoriaDetalle,
@@ -60,6 +61,7 @@ export function DetalleConvocatoriaView({ id }: Props) {
     { open: abrirModal, close: cerrarModal }] = useDisclosure(false)
   const [postulanteSel, setPostulanteSel] =
     useState<Postulante | null>(null)
+  const [perfilId, setPerfilId] = useState<number | null>(null)
   const [calModalOpened,
     { open: abrirCalModal, close: cerrarCalModal }] =
     useDisclosure(false)
@@ -155,9 +157,8 @@ export function DetalleConvocatoriaView({ id }: Props) {
           {
             label:   'Ver perfil',
             icon:    <IconUsers size={14} />,
-            onClick: () => router.push(
-              ROUTES.SGTH.CONVOCATORIA_POSTULANTE(convocatoriaId, p.id)
-            ),
+            // Panel lateral (2026-10-05): la página de perfil no existía.
+            onClick: () => setPerfilId(p.id),
           },
         ]} />
       ),
@@ -203,6 +204,15 @@ export function DetalleConvocatoriaView({ id }: Props) {
             >
               Volver
             </Button>
+            {gestiona && convocatoria.estado === 'borrador' && (
+              <Button
+                variant="default"
+                leftSection={<IconEdit size={14} />}
+                onClick={() => router.push(ROUTES.SGTH.CONVOCATORIA_EDITAR(convocatoriaId))}
+              >
+                Editar
+              </Button>
+            )}
             {gestiona && convocatoria.estado === 'borrador' && (
               <Button
                 leftSection={<IconWorldUpload size={14} />}
@@ -424,6 +434,13 @@ export function DetalleConvocatoriaView({ id }: Props) {
         opened={modalOpened}
         onClose={cerrarModal}
         convocatoriaId={convocatoriaId}
+      />
+
+      <PerfilPostulanteDrawer
+        convocatoriaId={convocatoriaId}
+        postulanteId={perfilId}
+        onClose={() => setPerfilId(null)}
+        puedeGestionar={gestiona}
       />
 
       <CalificarPostulanteModal

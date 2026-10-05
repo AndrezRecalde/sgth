@@ -77,11 +77,7 @@ export const ROUTES = {
     // suelta; lo que falta es la pantalla, o quitar la acción.
     CONVOCATORIA_EDITAR: (id: string | number) =>
       `/sgth/reclutamiento/convocatorias/${id}/editar`,
-    CONVOCATORIA_POSTULANTE: (
-      convocatoriaId: string | number,
-      postulanteId: string | number,
-    ) =>
-      `/sgth/reclutamiento/convocatorias/${convocatoriaId}/postulantes/${postulanteId}`,
+    // Sin CONVOCATORIA_POSTULANTE (2026-10-05): el perfil es un panel lateral.
     RECLUTAMIENTO_EXPRESS: '/sgth/reclutamiento/express',
     PLANTILLAS:       '/sgth/reclutamiento/plantillas',
     PLANTILLA: (id: string | number) => `/sgth/reclutamiento/plantillas/${id}`,

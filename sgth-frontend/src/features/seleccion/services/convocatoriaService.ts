@@ -19,6 +19,7 @@ export interface Postulante {
   provincia_nacimiento_id?: number | null
   canton_nacimiento_id?:   number | null
   cv_ruta?:                string | null
+  fecha_inscripcion?:      string | null
   estado:                  string
   evaluacion?:             EvaluacionSeleccion | null
   /** La última solicitud al Dispensario: decide si se ofrece «Confirmar incorporación». */
@@ -197,24 +198,5 @@ export const convocatoriaService = {
     api.delete<ApiResponse<unknown>>(
       `/seleccion/convocatorias/${convocatoriaId}/postulantes/${postulanteId}`
     ).then(r => r.data.datos),
-
-  subirDocumento: (
-    convocatoriaId: number,
-    postulanteId: number,
-    formData: FormData
-  ) =>
-    api.post<ApiResponse<DocumentoPostulante>>(
-      `/seleccion/convocatorias/${convocatoriaId}/postulantes/${postulanteId}/documentos`,
-      formData,
-      { headers: { 'Content-Type': 'multipart/form-data' } }
-    ).then(r => r.data.datos),
-
-  eliminarDocumento: (
-    convocatoriaId: number,
-    postulanteId: number,
-    documentoId: number
-  ) =>
-    api.delete<ApiResponse<unknown>>(
-      `/seleccion/convocatorias/${convocatoriaId}/postulantes/${postulanteId}/documentos/${documentoId}`
-    ).then(r => r.data.datos),
+  // Los documentos del postulante viven en documentoPostulanteService.
 }

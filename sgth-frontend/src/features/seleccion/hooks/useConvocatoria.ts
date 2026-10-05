@@ -31,7 +31,8 @@ export function useCrearConvocatoria() {
       notificar.exito('Convocatoria creada', 'La convocatoria fue registrada correctamente.')
       qc.invalidateQueries({ queryKey: ['convocatorias'] })
     },
-    onError: notificar.alFallar('No se pudo crear la convocatoria'),
+    // Los 422 de campo los muestra el formulario junto a cada campo.
+    onError: notificar.alFallarSalvoCampos('No se pudo crear la convocatoria'),
   })
 }
 
@@ -40,14 +41,14 @@ export function useActualizarConvocatoria() {
   return useMutation({
     mutationFn: ({ id, data }: {
       id:   number
-      data: Partial<CrearConvocatoriaData & { estado: string }>
+      data: Partial<CrearConvocatoriaData>
     }) => convocatoriaService.actualizar(id, data),
     onSuccess: (_, { id }) => {
       notificar.exito('Convocatoria actualizada', 'Los cambios fueron guardados.')
       qc.invalidateQueries({ queryKey: ['convocatorias'] })
       qc.invalidateQueries({ queryKey: ['convocatoria', id] })
     },
-    onError: notificar.alFallar('No se pudo actualizar la convocatoria'),
+    onError: notificar.alFallarSalvoCampos('No se pudo actualizar la convocatoria'),
   })
 }
 
