@@ -29,6 +29,7 @@ class Convocatoria extends Model
         'fecha_inicio',
         'fecha_fin',
         'estado',
+        'motivo_cierre',
         'tipo',
         'tipo_proceso',
         'tipo_nombramiento_previsto',

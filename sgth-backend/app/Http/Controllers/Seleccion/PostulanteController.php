@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Seleccion;
 
+use App\Enums\EstadoConvocatoria;
 use App\Exceptions\ReglaNegocioException;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
@@ -12,7 +13,6 @@ use App\Models\Seleccion\Postulante;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
 
 final class PostulanteController extends Controller
 {
@@ -37,7 +37,9 @@ final class PostulanteController extends Controller
     ): JsonResponse {
         $convocatoria = Convocatoria::findOrFail($convocatoriaId);
 
-        if (! in_array($convocatoria->estado->value, ['publicada', 'en_proceso'])) {
+        // Solo publicada: `en_proceso` no existe como estado. Un contenedor
+        // express está siempre publicado.
+        if ($convocatoria->estado !== EstadoConvocatoria::PUBLICADA) {
             throw new ReglaNegocioException(
                 'La convocatoria no está abierta para inscripciones.'
             );
@@ -142,10 +144,8 @@ final class PostulanteController extends Controller
             'apellidos' => ['sometimes', 'string', 'max:150'],
             'correo' => ['sometimes', 'email', 'max:150'],
             'telefono' => ['nullable', 'string', 'max:20'],
-            'estado' => ['sometimes', Rule::in([
-                'inscrito', 'en_evaluacion',
-                'seleccionado', 'no_seleccionado', 'lista_espera',
-            ])],
+            // Sin `estado` (2026-10-05): fijarlo a mano saltaba la calificación,
+            // el dictamen y el ranking. El estado lo mueven sus acciones.
         ]);
 
         $postulante->update([
@@ -160,8 +160,18 @@ final class PostulanteController extends Controller
         int $convocatoriaId,
         int $postulanteId
     ): JsonResponse {
-        $postulante = Postulante::where('convocatoria_id', $convocatoriaId)
+        $postulante = Postulante::with('convocatoria')
+            ->where('convocatoria_id', $convocatoriaId)
             ->findOrFail($postulanteId);
+
+        // Borrar a quien ya fue enviado al Dispensario o incorporado dejaba su
+        // solicitud médica y su vacante colgando; y un concurso cerrado es un
+        // registro de lo que pasó (2026-10-05).
+        if (! $postulante->estado->admiteCalificacion() || $postulante->convocatoria->estado->esTerminal()) {
+            throw new ReglaNegocioException(
+                'Este candidato ya avanzó en el proceso o el concurso está cerrado: no se puede eliminar.'
+            );
+        }
 
         // Es un borrado lógico: el postulante y sus documentos siguen en la
         // base, así que sus archivos se quedan. Antes se borraban aquí y las

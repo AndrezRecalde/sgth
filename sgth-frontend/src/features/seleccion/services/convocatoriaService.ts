@@ -59,6 +59,8 @@ export interface Convocatoria {
   tipo_nombramiento_previsto?: string | null
   vacantes:       number
   estado:         string
+  /** Por qué se declaró desierta o se canceló. */
+  motivo_cierre?: string | null
   puesto?: {
     id:    number
     cargo?: { nombre: string }
@@ -83,24 +85,27 @@ export interface CrearConvocatoriaData {
   vacantes:        number
 }
 
+// Los estados de EstadoConvocatoria (backend). Antes había `en_proceso` y
+// `cerrada`, que no existen, y faltaba `cancelada`. `en_evaluacion` solo lo
+// tienen datos antiguos: ninguna acción lleva a él.
 export const ESTADO_CONVOCATORIA_OPTIONS = [
   { value: 'borrador',              label: 'Borrador'              },
   { value: 'publicada',             label: 'Publicada'             },
-  { value: 'en_proceso',            label: 'En proceso'            },
+  { value: 'en_evaluacion',         label: 'En evaluación'         },
   { value: 'en_evaluacion_medica',  label: 'En evaluación médica'  },
   { value: 'finalizada',            label: 'Finalizada'            },
-  { value: 'cerrada',               label: 'Cerrada'               },
   { value: 'desierta',              label: 'Desierta'              },
+  { value: 'cancelada',             label: 'Cancelada'             },
 ]
 
 export const TONO_CONVOCATORIA: Record<string, SemanticTone> = {
   borrador:             'neutral',
   publicada:            'info',
-  en_proceso:           'info',
+  en_evaluacion:        'info',
   en_evaluacion_medica: 'info',
   finalizada:           'success',
-  cerrada:              'success',
   desierta:             'danger',
+  cancelada:            'neutral',
 }
 
 /** El mismo estado se ve en el detalle de la convocatoria y en el ranking. */
@@ -152,7 +157,8 @@ export const convocatoriaService = {
       '/seleccion/convocatorias', data
     ).then(r => r.data.datos),
 
-  actualizar: (id: number, data: Partial<CrearConvocatoriaData & { estado: string }>) =>
+  // Sin `estado`: el PATCH ya no lo acepta (2026-10-05) y solo edita borradores.
+  actualizar: (id: number, data: Partial<CrearConvocatoriaData>) =>
     api.patch<ApiResponse<Convocatoria>>(
       `/seleccion/convocatorias/${id}`, data
     ).then(r => r.data.datos),

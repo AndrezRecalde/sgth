@@ -228,6 +228,16 @@ final class SolicitudCertificacionController extends Controller
                 'motivo_cancelacion' => $request->validated()['motivo'],
             ]);
 
+            // Un candidato de Reclutamiento se quedaba «en evaluación médica»
+            // sin que nadie lo fuera a evaluar (2026-10-05).
+            if ($solicitud->postulante_id && ! $solicitud->servidor_id) {
+                $this->seleccionService->devolverPorCancelacion($solicitud->postulante_id);
+
+                return ApiResponse::ok(
+                    $solicitud, 'Solicitud cancelada. El candidato vuelve a Reclutamiento, de donde se le puede enviar otra vez.'
+                );
+            }
+
             return ApiResponse::ok(
                 $solicitud, 'Solicitud cancelada. El servidor vuelve a quedar disponible para una nueva.'
             );

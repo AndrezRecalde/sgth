@@ -12,6 +12,7 @@ import {
 } from '@tabler/icons-react'
 import { useRouter } from 'next/navigation'
 import { TabRanking } from '@/features/seleccion/components/TabRanking'
+import { CerrarConvocatoriaAcciones } from '@/features/seleccion/components/CerrarConvocatoriaAcciones'
 import { IconChartBar } from '@tabler/icons-react'
 import {
   useConvocatoriaDetalle,
@@ -43,6 +44,8 @@ import { ROUTES } from '@/config/routes'
 interface Props {
   id: string
 }
+
+const ESTADOS_APROBADOS = ['aprobado', 'lista_espera', 'ganador_potencial', 'seleccionado', 'incorporado']
 
 export function DetalleConvocatoriaView({ id }: Props) {
   const convocatoriaId = Number(id)
@@ -208,6 +211,13 @@ export function DetalleConvocatoriaView({ id }: Props) {
                 Publicar convocatoria
               </Button>
             )}
+            {convocatoria.estado === 'publicada' && (
+              <CerrarConvocatoriaAcciones
+                convocatoriaId={convocatoriaId}
+                codigo={convocatoria.codigo}
+                hayAprobados={postulantes.some((p) => p.estado === 'aprobado')}
+              />
+            )}
             {/* Sin «Declarar ganador oficial» (2026-10-04): no miraba el
                 dictamen ni creaba el expediente. Cada ganador apto se
                 incorpora desde el Ranking, y con el último la convocatoria
@@ -292,6 +302,9 @@ export function DetalleConvocatoriaView({ id }: Props) {
               >
                 {getLabelEstado(convocatoria.estado)}
               </StatusBadge>
+              {convocatoria.motivo_cierre && (
+                <Text size="xs" c="dimmed">Motivo: {convocatoria.motivo_cierre}</Text>
+              )}
               <Divider />
               <Stack gap={4}>
                 <Text size="xs" c="dimmed">Candidatos inscritos</Text>
@@ -302,8 +315,11 @@ export function DetalleConvocatoriaView({ id }: Props) {
               <Stack gap={4}>
                 <Text size="xs" c="dimmed">Aprobados</Text>
                 <Text size="lg" fw={600} c="emerald">
+                  {/* Los que superaron la evaluación, estén donde estén
+                      después: antes contaba solo `seleccionado`, un estado
+                      al que ya no lleva ninguna acción, y marcaba 0. */}
                   {postulantes.filter(
-                    p => p.estado === 'seleccionado'
+                    p => ESTADOS_APROBADOS.includes(p.estado)
                   ).length}
                 </Text>
               </Stack>
@@ -342,9 +358,7 @@ export function DetalleConvocatoriaView({ id }: Props) {
                   style={{ letterSpacing: '0.05em' }}>
                   Candidatos inscritos
                 </Text>
-                {['publicada', 'en_proceso'].includes(
-                  convocatoria.estado
-                ) && (
+                {convocatoria.estado === 'publicada' && (
                   <Button
                     size="xs"
                     leftSection={<IconPlus size={13} />}
@@ -363,7 +377,7 @@ export function DetalleConvocatoriaView({ id }: Props) {
                   title="Sin candidatos"
                   description={
                     convocatoria.estado === 'borrador'
-                      ? 'Publica la convocatoria para empezar a inscribir candidatos.'
+                      ? 'Publique la convocatoria para empezar a inscribir candidatos.'
                       : 'No hay candidatos inscritos aún.'
                   }
                 />

@@ -46,12 +46,12 @@ export function TabRanking({ convocatoriaId, estadoConvocatoria, vacantes = 1 }:
   // nombraba a uno.
   const enviados = postulantes.filter((p) => p.estado === 'ganador_potencial')
 
-  // La vacante de un no apto la cubre el primero de la lista de espera en el
-  // ranking. El backend lo elige igual; aquí solo se nombra.
+  // La vacante que dejó un no apto, o una solicitud médica cancelada (el
+  // candidato vuelve a la lista de espera), la cubre el primero de la lista en
+  // el ranking. El backend lo elige igual; aquí solo se nombra.
   const ocupadas = postulantes.filter((p) => ['ganador_potencial', 'incorporado'].includes(p.estado)).length
   const siguiente = ranking.find((p) => p.estado === 'lista_espera')
-  const hayNoAptos = postulantes.some((p) => p.estado === 'descalificado')
-  const puedeDeclararSiguiente = enEvalMedica && hayNoAptos && ocupadas < vacantes
+  const puedeDeclararSiguiente = enEvalMedica && ocupadas < vacantes
 
   const confirmarIncorporacion = (p: Postulante) => {
     const solicitudId = p.solicitud_certificacion?.id

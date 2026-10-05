@@ -257,16 +257,103 @@ final class SeleccionService implements SeleccionServiceInterface
         });
     }
 
+    /**
+     * Antes esto se hacía con el PATCH de la convocatoria, que aceptaba
+     * cualquier estado —también dos que no existen y daban 500— y no dejaba
+     * constancia de por qué (2026-10-05).
+     */
+    public function cerrarSinGanadores(
+        int $convocatoriaId, EstadoConvocatoria $estado, string $motivo, int $userId
+    ): Convocatoria {
+        if (! in_array($estado, [EstadoConvocatoria::DESIERTA, EstadoConvocatoria::CANCELADA], true)) {
+            throw new ReglaNegocioException('Un concurso sin ganadores se declara desierto o se cancela.');
+        }
+
+        return DB::transaction(function () use ($convocatoriaId, $estado, $motivo, $userId) {
+            $convocatoria = Convocatoria::lockForUpdate()->findOrFail($convocatoriaId);
+
+            if ($convocatoria->es_contenedor_permanente) {
+                throw new ReglaNegocioException('Los contenedores de reclutamiento express son permanentes: no se cierran.');
+            }
+
+            if (! in_array($convocatoria->estado, [EstadoConvocatoria::PUBLICADA, EstadoConvocatoria::EN_EVALUACION], true)) {
+                throw new ReglaNegocioException(match (true) {
+                    $convocatoria->estado === EstadoConvocatoria::BORRADOR => 'Una convocatoria en borrador no se cierra: se elimina.',
+                    $convocatoria->estado === EstadoConvocatoria::EN_EVALUACION_MEDICA => 'Ya hay candidatos en evaluación médica: el concurso se cierra al resolverlos.',
+                    default => 'Esta convocatoria ya está cerrada.',
+                });
+            }
+
+            // Desierto es que nadie alcanzó el puntaje: con aprobados, lo que
+            // corresponde es declararlos ganadores. Cancelar sí cabe siempre.
+            $aprobados = Postulante::where('convocatoria_id', $convocatoria->id)
+                ->where('estado', EstadoPostulante::APROBADO->value)
+                ->count();
+
+            if ($estado === EstadoConvocatoria::DESIERTA && $aprobados > 0) {
+                throw new ReglaNegocioException(
+                    "Hay {$aprobados} candidato(s) aprobado(s): declare ganadores o cancele la convocatoria."
+                );
+            }
+
+            $convocatoria->update([
+                'estado'        => $estado,
+                'motivo_cierre' => $motivo,
+                'updated_by'    => $userId,
+            ]);
+
+            // Los que seguían en carrera quedan fuera; un reprobado sigue
+            // reprobado, que es lo que fue.
+            Postulante::where('convocatoria_id', $convocatoria->id)
+                ->whereIn('estado', [
+                    EstadoPostulante::INSCRITO->value,
+                    EstadoPostulante::EN_EVALUACION->value,
+                    EstadoPostulante::APROBADO->value,
+                ])
+                ->update(['estado' => EstadoPostulante::NO_SELECCIONADO->value]);
+
+            return $convocatoria;
+        });
+    }
+
+    /**
+     * Una solicitud cancelada dejaba al candidato «en evaluación médica» para
+     * siempre: nadie lo iba a evaluar y no se le podía volver a enviar
+     * (2026-10-05). En el formal vuelve a la lista de espera, y como conserva
+     * su puntaje, «Declarar al siguiente» lo vuelve a elegir si sigue siendo
+     * el primero.
+     */
+    public function devolverPorCancelacion(int $postulanteId): void
+    {
+        $postulante = Postulante::with('convocatoria')->lockForUpdate()->findOrFail($postulanteId);
+
+        if ($postulante->estado !== EstadoPostulante::GANADOR_POTENCIAL) {
+            return;
+        }
+
+        $postulante->update([
+            'estado' => $postulante->convocatoria->es_contenedor_permanente
+                ? EstadoPostulante::APROBADO
+                : EstadoPostulante::LISTA_ESPERA,
+        ]);
+    }
+
+    /**
+     * Solo se declaran ganadores en un concurso publicado. Antes bastaba con
+     * que no estuviera finalizado ni en evaluación médica: también servía uno
+     * en borrador, desierto o cancelado.
+     */
     private function assertConcursoAbierto(Convocatoria $convocatoria): void
     {
-        if (in_array($convocatoria->estado, [
-            EstadoConvocatoria::FINALIZADA,
-            EstadoConvocatoria::EN_EVALUACION_MEDICA,
-        ], true)) {
-            throw new ReglaNegocioException(
-                'Esta convocatoria ya tiene candidatos en evaluación médica o fue finalizada.'
-            );
+        if (in_array($convocatoria->estado, [EstadoConvocatoria::PUBLICADA, EstadoConvocatoria::EN_EVALUACION], true)) {
+            return;
         }
+
+        throw new ReglaNegocioException(match ($convocatoria->estado) {
+            EstadoConvocatoria::BORRADOR => 'La convocatoria está en borrador: publíquela primero.',
+            EstadoConvocatoria::EN_EVALUACION_MEDICA => 'Esta convocatoria ya tiene candidatos en evaluación médica.',
+            default => 'Esta convocatoria ya está cerrada.',
+        });
     }
 
     /**

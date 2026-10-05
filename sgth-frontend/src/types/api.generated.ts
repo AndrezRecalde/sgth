@@ -1679,6 +1679,14 @@ export interface paths {
         delete: operations["convocatoria.destroy"];
         options?: never;
         head?: never;
+        /**
+         * Solo en borrador, y sin tocar el estado (decisión de TH, 2026-10-05)
+         * @description Antes aceptaba `estado` libre: dos de sus valores (`en_proceso`,
+         *     `cerrada`) no existen y daban 500, una finalizada podía volver a borrador
+         *     y borrarse, y cambiar fechas o vacantes de un concurso ya publicado
+         *     alteraba lo que se anunció. El estado avanza solo con sus acciones:
+         *     publicar, declarar ganadores, incorporar, declarar desierta o cancelar.
+         */
         patch: operations["convocatoria.update"];
         trace?: never;
     };
@@ -1696,6 +1704,23 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["convocatoria.publicar"];
+        trace?: never;
+    };
+    "/v1/seleccion/convocatorias/{id}/cerrar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Declara desierto o cancela un concurso publicado, con su motivo */
+        post: operations["convocatoria.cerrar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/v1/seleccion/convocatorias/{convocatoriaId}/criterios": {
@@ -7209,6 +7234,7 @@ export interface components {
             tipo_proceso: components["schemas"]["TipoProcesoConvocatoria"];
             tipo_nombramiento_previsto: components["schemas"]["TipoNombramiento"] | null;
             es_contenedor_permanente: boolean;
+            motivo_cierre: string | null;
         };
         /** CriterioEvaluacion */
         CriterioEvaluacion: {
@@ -15654,15 +15680,16 @@ export interface operations {
         requestBody?: {
             content: {
                 "application/json": {
+                    puesto_id?: number;
                     titulo?: string;
                     descripcion?: string;
                     bases_concurso?: string[] | null;
+                    /** @enum {string} */
+                    tipo?: "interna" | "externa" | "mixta";
                     /** Format: date-time */
                     fecha_inicio?: string;
                     /** Format: date-time */
                     fecha_fin?: string;
-                    /** @enum {string} */
-                    estado?: "borrador" | "publicada" | "en_proceso" | "cerrada" | "desierta";
                     vacantes?: number;
                 };
             };
@@ -15726,6 +15753,43 @@ export interface operations {
                     };
                 };
             };
+        };
+    };
+    "convocatoria.cerrar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    estado: "desierta" | "cancelada";
+                    motivo: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @enum {string} */
+                        mensaje: "La convocatoria fue declarada desierta." | "La convocatoria fue cancelada.";
+                        datos: components["schemas"]["Convocatoria"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "criterioEvaluacion.index": {
@@ -23944,8 +24008,6 @@ export interface operations {
                     /** Format: email */
                     correo?: string;
                     telefono?: string | null;
-                    /** @enum {string} */
-                    estado?: "inscrito" | "en_evaluacion" | "seleccionado" | "no_seleccionado" | "lista_espera";
                 };
             };
         };
