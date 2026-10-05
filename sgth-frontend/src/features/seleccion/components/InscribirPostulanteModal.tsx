@@ -10,14 +10,14 @@ import { DatePickerInput } from '@mantine/dates'
 import {
   IconInfoCircle,
 } from '@tabler/icons-react'
-import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { BuscarPuestoSelect } from '@/features/estructura/components/BuscarPuestoSelect'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod/v4'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useInscribirPostulante } from '../hooks/useConvocatoria'
-import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
+import { fromDateValueOrNull, hoyIso, toDateValue } from '@/lib/fecha'
+import { erroresAlFormulario } from '@/lib/erroresAlFormulario'
+import { CAMPOS_INSCRIPCION, esquemaInscripcion, type InscripcionFormData } from '../schemas/postulante.schema'
 import { ESTADO_CIVIL_OPTIONS, GENERO_OPTIONS, TIPO_SANGRE_OPTIONS } from '../services/postulanteOptions'
 
 interface Props {
@@ -32,29 +32,7 @@ interface Props {
   requierePuesto?: boolean
 }
 
-const schema = z.object({
-  // Diez dígitos, como el backend y el Expediente (2026-10-04).
-  cedula:           z.string().regex(/^\d{10}$/, 'La cédula debe tener 10 dígitos numéricos'),
-  nombres:          z.string().min(2, 'Ingrese el primer nombre'),
-  segundo_nombre:   z.string().optional().nullable(),
-  apellidos:        z.string().min(2, 'Ingrese el primer apellido'),
-  segundo_apellido: z.string().optional().nullable(),
-  correo:           z.email('Correo inválido'),
-  telefono:         z.string().optional().nullable(),
-  /**
-   * Obligatorio: al incorporar al aspirante este valor se copia a su
-   * expediente de servidor, donde el género es requerido. Además la ficha
-   * FEMO lo usa para decidir qué bloque reproductivo del MSP mostrar.
-   */
-  genero:           z.enum(['masculino', 'femenino', 'otro'], {
-    message: 'Seleccione el género',
-  }),
-  estado_civil:     z.string().optional().nullable(),
-  fecha_nacimiento: z.string().optional().nullable(),
-  tipo_sangre:      z.string().optional().nullable(),
-})
-
-type FormData = z.infer<typeof schema>
+type FormData = InscripcionFormData
 
 export function InscribirPostulanteModal({
   opened, onClose, convocatoriaId, requierePuesto = false,
@@ -62,19 +40,12 @@ export function InscribirPostulanteModal({
   const contained = useContainedInput()
   const inscribir = useInscribirPostulante(convocatoriaId)
 
-  const [puestoId, setPuestoId] = useState<number | null>(null)
-  // El selector de Mantine v9 devuelve una CADENA `YYYY-MM-DD` en cuanto se
-  // elige una fecha; solo el valor inicial es un `Date`. El estado admite las
-  // dos formas, que es lo que `fromDateValue` sabe leer.
-  const [fechaInscripcion, setFechaInscripcion] = useState<Date | string | null>(new Date())
-  const [errorPuesto, setErrorPuesto] = useState<string | null>(null)
-
   const {
     control, register, handleSubmit,
-    reset,
+    reset, setError,
     formState: { errors },
   } = useForm<FormData>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(esquemaInscripcion(requierePuesto)),
     // Sin `defaultValues` los campos arrancan no controlados y React avisa en
     // consola la primera vez que se escribe en cada uno. `genero` se deja sin
     // valor a propósito: es obligatorio y nadie debe elegirlo por el usuario.
@@ -89,36 +60,22 @@ export function InscribirPostulanteModal({
       estado_civil: null,
       fecha_nacimiento: null,
       tipo_sangre: null,
+      puesto_id: null,
+      fecha_inscripcion: hoyIso(),
     },
   })
 
   const handleClose = () => {
     reset()
-    setPuestoId(null)
-    setFechaInscripcion(new Date())
-    setErrorPuesto(null)
     onClose()
   }
 
-  const onSubmit = (values: FormData) => {
-    if (requierePuesto && !puestoId) {
-      setErrorPuesto('Seleccione el puesto al que aspira.')
-      return
-    }
-
-    setErrorPuesto(null)
-
-    inscribir.mutate(
-      requierePuesto
-        ? {
-          ...values,
-          puesto_id: puestoId,
-          fecha_inscripcion: fromDateValueOrNull(fechaInscripcion),
-        }
-        : values,
-      { onSuccess: handleClose },
-    )
-  }
+  // Los 422 del backend —una cédula ya inscrita, un puesto inexistente— van
+  // a su campo; antes solo salían en una notificación.
+  const onSubmit = ({ puesto_id, fecha_inscripcion, ...datos }: FormData) =>
+    inscribir.mutateAsync(requierePuesto ? { ...datos, puesto_id, fecha_inscripcion } : datos)
+      .then(handleClose)
+      .catch((e) => erroresAlFormulario(e, setError, CAMPOS_INSCRIPCION, 'No se pudo inscribir al candidato'))
 
   return (
     <FormModal
@@ -152,22 +109,28 @@ export function InscribirPostulanteModal({
             </Text>
             <Grid>
               <Grid.Col span={{ base: 12, md: 8 }}>
-                <BuscarPuestoSelect
-                  label="Puesto"
-                  value={puestoId}
-                  onChange={setPuestoId}
-                  error={errorPuesto ?? undefined}
-                />
+                <Controller name="puesto_id" control={control} render={({ field }) => (
+                  <BuscarPuestoSelect
+                    label="Puesto"
+                    required
+                    value={field.value}
+                    onChange={(id) => field.onChange(id)}
+                    error={errors.puesto_id?.message}
+                  />
+                )} />
               </Grid.Col>
               <Grid.Col span={{ base: 12, md: 4 }}>
-                <DatePickerInput
-                  label="Fecha de inscripción"
-                  description="Define el año en que se contabiliza."
-                  value={fechaInscripcion}
-                  onChange={(v) => setFechaInscripcion(v)}
-                  valueFormat="DD/MM/YYYY"
-                  {...contained}
-                />
+                <Controller name="fecha_inscripcion" control={control} render={({ field }) => (
+                  <DatePickerInput
+                    label="Fecha de inscripción"
+                    description="Define el año en que se contabiliza."
+                    value={toDateValue(field.value)}
+                    onChange={(v) => field.onChange(fromDateValueOrNull(v))}
+                    valueFormat="DD/MM/YYYY"
+                    {...contained}
+                    error={errors.fecha_inscripcion?.message}
+                  />
+                )} />
               </Grid.Col>
             </Grid>
             <Divider />
