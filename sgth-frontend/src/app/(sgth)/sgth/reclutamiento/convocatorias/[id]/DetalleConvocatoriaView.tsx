@@ -40,6 +40,7 @@ import { formatFechaMes } from '@/lib/fecha'
 
 import { confirmar, EmptyState, PageHeader, PageShell, SgthTable, StatusBadge, TableActions } from '@/components/ui'
 import { ROUTES } from '@/config/routes'
+import { useAuth } from '@/hooks/useAuth'
 
 interface Props {
   id: string
@@ -51,6 +52,10 @@ export function DetalleConvocatoriaView({ id }: Props) {
   const convocatoriaId = Number(id)
   const router       = useRouter()
   const publicar = usePublicarConvocatoria()
+  // El analista ve y califica; gestionar es de admin-uath (2026-10-05).
+  const { hasPermiso } = useAuth()
+  const gestiona = hasPermiso('gestionar-convocatorias')
+  const califica = hasPermiso('evaluar-postulantes')
   const [modalOpened,
     { open: abrirModal, close: cerrarModal }] = useDisclosure(false)
   const [postulanteSel, setPostulanteSel] =
@@ -137,6 +142,7 @@ export function DetalleConvocatoriaView({ id }: Props) {
       render: (p) => (
         <TableActions actions={[
           {
+            hidden:  !califica,
             label:   p.evaluacion ? 'Editar calificación' : 'Calificar',
             icon:    p.evaluacion
               ? <IconEdit size={14} />
@@ -197,7 +203,7 @@ export function DetalleConvocatoriaView({ id }: Props) {
             >
               Volver
             </Button>
-            {convocatoria.estado === 'borrador' && (
+            {gestiona && convocatoria.estado === 'borrador' && (
               <Button
                 leftSection={<IconWorldUpload size={14} />}
                 loading={publicar.isPending}
@@ -211,7 +217,7 @@ export function DetalleConvocatoriaView({ id }: Props) {
                 Publicar convocatoria
               </Button>
             )}
-            {convocatoria.estado === 'publicada' && (
+            {gestiona && convocatoria.estado === 'publicada' && (
               <CerrarConvocatoriaAcciones
                 convocatoriaId={convocatoriaId}
                 codigo={convocatoria.codigo}
@@ -358,7 +364,7 @@ export function DetalleConvocatoriaView({ id }: Props) {
                   style={{ letterSpacing: '0.05em' }}>
                   Candidatos inscritos
                 </Text>
-                {convocatoria.estado === 'publicada' && (
+                {gestiona && convocatoria.estado === 'publicada' && (
                   <Button
                     size="xs"
                     leftSection={<IconPlus size={13} />}
@@ -397,7 +403,7 @@ export function DetalleConvocatoriaView({ id }: Props) {
           <Card withBorder radius="lg" mt="sm">
             <TabCriterios
               convocatoriaId={convocatoriaId}
-              editable={convocatoria.estado === 'borrador'}
+              editable={gestiona && convocatoria.estado === 'borrador'}
             />
           </Card>
         </Tabs.Panel>
@@ -408,6 +414,7 @@ export function DetalleConvocatoriaView({ id }: Props) {
               convocatoriaId={convocatoriaId}
               estadoConvocatoria={convocatoria.estado}
               vacantes={convocatoria.vacantes}
+              puedeGestionar={gestiona}
             />
           </Card>
         </Tabs.Panel>

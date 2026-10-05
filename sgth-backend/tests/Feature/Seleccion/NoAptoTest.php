@@ -26,6 +26,9 @@ uses(Tests\TestCase::class, RefreshDatabase::class);
  */
 
 beforeEach(function () {
+    // Los roles con sus permisos reales: las rutas exigen el permiso desde el 2026-10-05.
+    $this->seed(\Database\Seeders\RolPermisoSeeder::class);
+
     $this->th = User::factory()->create();
     $this->th->assignRole(Role::firstOrCreate(['name' => 'admin-uath', 'guard_name' => 'sanctum']));
     $this->medico = User::factory()->create();

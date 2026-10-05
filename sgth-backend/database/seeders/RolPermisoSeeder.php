@@ -154,10 +154,10 @@ class RolPermisoSeeder extends Seeder
         $this->crearRol(Rol::ANALISTA_UATH, array_merge($permisosBase, [
             Permiso::VER_EXPEDIENTE_UNIDAD,
             Permiso::VER_EXPEDIENTE_TODOS,
-            Permiso::GESTIONAR_CONVOCATORIAS,
+            // En Reclutamiento ve y califica (decisión de TH, 2026-10-05):
+            // crear, publicar, declarar e incorporar son de admin-uath.
             Permiso::VER_POSTULANTES,
             Permiso::EVALUAR_POSTULANTES,
-            Permiso::GESTIONAR_ONBOARDING,
             Permiso::SOLICITAR_CERTIFICACION_MEDICA,
         ]));
 

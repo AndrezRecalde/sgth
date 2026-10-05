@@ -740,66 +740,69 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
     });
 
     // Módulo 07: Selección e Incorporación
-    Route::prefix('seleccion')
-        ->middleware('role:admin-uath|analista-uath|admin-ti')
-        ->group(function () {
+    //
+    // Por permiso, no por rol (decisión 6 de TH, 2026-10-05). Antes bastaba
+    // con ser admin-uath o analista-uath para todo: el analista creaba,
+    // publicaba, borraba y declaraba ganadores. Ahora el analista ve y
+    // califica; lo demás es de quien gestiona convocatorias (admin-uath).
+    // admin-ti pasa por el Gate::before.
+    Route::prefix('seleccion')->group(function () {
+        // Leer: listados, detalle, criterios, plantillas y calificaciones.
+        Route::middleware('permission:ver-postulantes')->group(function () {
             // Reclutamiento express: contenedores permanentes por modalidad.
-            // Van antes que 'convocatorias/{id}' para que 'express' no se
-            // interprete como un id.
             Route::get('express/resumen', [ContenedorExpressController::class, 'resumen']);
             Route::get('express/anios', [ContenedorExpressController::class, 'aniosDisponibles']);
             Route::get('express/{convocatoriaId}/aspirantes', [ContenedorExpressController::class, 'aspirantes']);
 
-            // Convocatorias
             Route::get('convocatorias', [ConvocatoriaController::class, 'index']);
-            Route::post('convocatorias', [ConvocatoriaController::class, 'store']);
             Route::get('convocatorias/{id}', [ConvocatoriaController::class, 'show']);
+            Route::get('convocatorias/{convocatoriaId}/postulantes', [PostulanteController::class, 'index']);
+            Route::get('convocatorias/{convocatoriaId}/postulantes/{postulanteId}', [PostulanteController::class, 'show']);
+            // Los documentos están en el disco privado (2026-10-04): se bajan por aquí.
+            Route::get('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/documentos/{documentoId}', [PostulanteController::class, 'descargarDocumento']);
+            Route::get('convocatorias/{convocatoriaId}/criterios', [CriterioEvaluacionController::class, 'index']);
+            Route::get('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/calificaciones', [CalificacionController::class, 'obtener']);
+            Route::get('plantillas', [PlantillaEvaluacionController::class, 'index']);
+            Route::get('plantillas/{id}', [PlantillaEvaluacionController::class, 'show']);
+        });
+
+        // Calificar: lo único que hace el analista.
+        // Sin `postulantes/{id}/calificar` (2026-10-05): ponía méritos y
+        // oposición a mano, sin criterios. Se califica por criterios.
+        Route::post('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/calificaciones', [CalificacionController::class, 'guardar'])
+            ->middleware('permission:evaluar-postulantes');
+
+        // Gestionar: la convocatoria, sus candidatos, sus criterios y sus ganadores.
+        Route::middleware('permission:gestionar-convocatorias')->group(function () {
+            Route::post('convocatorias', [ConvocatoriaController::class, 'store']);
             Route::patch('convocatorias/{id}', [ConvocatoriaController::class, 'update']);
             Route::delete('convocatorias/{id}', [ConvocatoriaController::class, 'destroy']);
             Route::patch('convocatorias/{id}/publicar', [ConvocatoriaController::class, 'publicar']);
             // Desierta o cancelada, con motivo: el PATCH ya no cambia el estado.
             Route::post('convocatorias/{id}/cerrar', [ConvocatoriaController::class, 'cerrar']);
 
-            // Postulantes por convocatoria
-            Route::get('convocatorias/{convocatoriaId}/postulantes', [PostulanteController::class, 'index']);
             Route::post('convocatorias/{convocatoriaId}/postulantes', [PostulanteController::class, 'store']);
-            Route::get('convocatorias/{convocatoriaId}/postulantes/{postulanteId}', [PostulanteController::class, 'show']);
             Route::patch('convocatorias/{convocatoriaId}/postulantes/{postulanteId}', [PostulanteController::class, 'update']);
             Route::delete('convocatorias/{convocatoriaId}/postulantes/{postulanteId}', [PostulanteController::class, 'destroy']);
-
-            // Documentos del postulante
             Route::post('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/documentos', [PostulanteController::class, 'subirDocumento']);
             Route::delete('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/documentos/{documentoId}', [PostulanteController::class, 'eliminarDocumento']);
-            // Los documentos están en el disco privado (2026-10-04): se bajan por aquí.
-            Route::get('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/documentos/{documentoId}', [PostulanteController::class, 'descargarDocumento']);
 
-            // Criterios de evaluación
-            Route::get('convocatorias/{convocatoriaId}/criterios', [CriterioEvaluacionController::class, 'index']);
             Route::post('convocatorias/{convocatoriaId}/criterios', [CriterioEvaluacionController::class, 'store']);
             Route::patch('convocatorias/{convocatoriaId}/criterios/{criterioId}', [CriterioEvaluacionController::class, 'update']);
             Route::delete('convocatorias/{convocatoriaId}/criterios/{criterioId}', [CriterioEvaluacionController::class, 'destroy']);
 
-            // Plantillas de evaluación
-            Route::get('plantillas', [PlantillaEvaluacionController::class, 'index']);
             Route::post('plantillas', [PlantillaEvaluacionController::class, 'store']);
-            Route::get('plantillas/{id}', [PlantillaEvaluacionController::class, 'show']);
             Route::patch('plantillas/{id}', [PlantillaEvaluacionController::class, 'update']);
             Route::delete('plantillas/{id}', [PlantillaEvaluacionController::class, 'destroy']);
             Route::post('plantillas/{plantillaId}/criterios', [PlantillaEvaluacionController::class, 'agregarCriterio']);
             Route::delete('plantillas/{plantillaId}/criterios/{criterioId}', [PlantillaEvaluacionController::class, 'eliminarCriterio']);
             Route::post('plantillas/{plantillaId}/aplicar/{convocatoriaId}', [PlantillaEvaluacionController::class, 'aplicarAConvocatoria']);
 
-            // Calificaciones por postulante
-            Route::get('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/calificaciones', [CalificacionController::class, 'obtener']);
-            Route::post('convocatorias/{convocatoriaId}/postulantes/{postulanteId}/calificaciones', [CalificacionController::class, 'guardar']);
-
-            // Evaluación y selección
-            // Sin `postulantes/{id}/calificar` (2026-10-05): ponía méritos y
-            // oposición a mano, sin criterios. Se califica por criterios.
             Route::post('convocatorias/{id}/declarar-ganador', [SeleccionController::class, 'declararGanador']);
             // La vacante que deja un no apto la cubre el siguiente del ranking.
             Route::post('convocatorias/{id}/declarar-siguiente', [SeleccionController::class, 'declararSiguiente']);
         });
+    });
 
     // Módulo 12 — Inventario de Bienes Informáticos
     Route::prefix('inventario')

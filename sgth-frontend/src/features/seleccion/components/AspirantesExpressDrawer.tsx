@@ -130,6 +130,9 @@ export function AspirantesExpressDrawer({
   // backend lo exige igual y responde 403 sin este permiso.
   const { hasPermiso } = useAuth()
   const puedeIncorporar = hasPermiso('gestionar-onboarding')
+  // El analista califica; enviar y configurar criterios son de admin-uath.
+  const gestiona = hasPermiso('gestionar-convocatorias')
+  const califica = hasPermiso('evaluar-postulantes')
 
   const aspirantes = data?.data ?? []
 
@@ -244,7 +247,7 @@ export function AspirantesExpressDrawer({
               // función. Recalificar recalcula el estado y lo devolvería a
               // «aprobado», borrando el despacho y el dictamen; el backend lo
               // rechaza, así que aquí ni se ofrece.
-              hidden: !ESTADOS_CALIFICABLES.includes(a.estado),
+              hidden: !califica || !ESTADOS_CALIFICABLES.includes(a.estado),
               // Sin criterios no hay nada que puntuar; se habilita al
               // configurarlos desde la cabecera del cajón.
               disabled: !tieneCriterios,
@@ -255,7 +258,7 @@ export function AspirantesExpressDrawer({
               onClick: () => despachar(a),
               // Solo tras aprobar: es lo que exige el backend, y adelantarlo
               // devolvería un error en vez de explicar el orden del trámite.
-              hidden: a.estado !== 'aprobado',
+              hidden: !gestiona || a.estado !== 'aprobado',
             },
             {
               // Último paso del reclutamiento. Estaba solo en la pantalla del
@@ -264,10 +267,10 @@ export function AspirantesExpressDrawer({
               label: 'Confirmar incorporación',
               icon: <IconUserCheck size={14} />,
               onClick: () => incorporar(a),
-              hidden: a.estado !== 'ganador_potencial',
+              hidden: !puedeIncorporar || a.estado !== 'ganador_potencial',
               // Visible pero inerte mientras el dispensario no cierre el
               // dictamen: así se ve que el paso existe y qué falta para él.
-              disabled: !dictamenPermiteIncorporar(a) || !puedeIncorporar,
+              disabled: !dictamenPermiteIncorporar(a),
             },
           ]}
         />
@@ -294,17 +297,17 @@ export function AspirantesExpressDrawer({
             >
               <Text size="sm" mb="sm">
                 Esta modalidad todavía no tiene criterios de evaluación, así que
-                no se puede calificar a nadie. Aplica una plantilla una sola vez
+                no se puede calificar a nadie. Aplique una plantilla una sola vez
                 y servirá para todos sus aspirantes.
               </Text>
-              <Button
+              {gestiona && <Button
                 variant="light"
                 size="xs"
                 leftSection={<IconSettings size={14} />}
                 onClick={plantilla.open}
               >
                 Configurar criterios
-              </Button>
+              </Button>}
             </Alert>
           )}
 
@@ -327,7 +330,7 @@ export function AspirantesExpressDrawer({
               </Text>
             </Group>
 
-            {tieneCriterios && (
+            {gestiona && tieneCriterios && (
               <Button
                 variant="subtle"
                 size="xs"
