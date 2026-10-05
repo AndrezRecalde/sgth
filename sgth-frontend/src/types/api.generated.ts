@@ -4583,22 +4583,6 @@ export interface paths {
         patch: operations["postulante.update"];
         trace?: never;
     };
-    "/v1/seleccion/convocatorias/{convocatoriaId}/postulantes/{postulanteId}/documentos": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["postulante.subirDocumento"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/seleccion/convocatorias/{convocatoriaId}/postulantes/{postulanteId}/documentos/{documentoId}": {
         parameters: {
             query?: never;
@@ -4611,6 +4595,22 @@ export interface paths {
         put?: never;
         post?: never;
         delete: operations["postulante.eliminarDocumento"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/seleccion/convocatorias/{convocatoriaId}/postulantes/{postulanteId}/documentos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postulante.subirDocumento"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -23992,44 +23992,6 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
-    "postulante.subirDocumento": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                convocatoriaId: number;
-                postulanteId: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": {
-                    tipo: string;
-                    /** Format: binary */
-                    archivo: string;
-                };
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Documento subido correctamente.";
-                        datos: components["schemas"]["DocumentoPostulante"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
     "postulante.descargarDocumento": {
         parameters: {
             query?: never;
@@ -24096,6 +24058,44 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "postulante.subirDocumento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                convocatoriaId: number;
+                postulanteId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    tipo: string;
+                    /** Format: binary */
+                    archivo: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Documento subido correctamente.";
+                        datos: components["schemas"]["DocumentoPostulante"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "programaDrogaActividad.index": {

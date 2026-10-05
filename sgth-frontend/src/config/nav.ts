@@ -263,12 +263,15 @@ export const NAV_SGTH: NavGroup[] = [
     ],
   },
   {
+    // Por permiso, como las rutas (2026-10-05): antes el menú se mostraba a
+    // quien después recibía un 403. El analista ve y califica.
     label: 'Reclutamiento',
     items: [
       {
         label:    'Convocatorias',
         href:     ROUTES.SGTH.CONVOCATORIAS,
         icon:     'IconSpeakerphone',
+        permiso:  'ver-postulantes',
         children: [
           {
             label: 'Todas las convocatorias',
@@ -276,21 +279,25 @@ export const NAV_SGTH: NavGroup[] = [
             icon:  'IconList',
           },
           {
-            label: 'Nueva convocatoria',
-            href:  ROUTES.SGTH.CONVOCATORIA_NUEVA,
-            icon:  'IconPlus',
+            label:   'Nueva convocatoria',
+            href:    ROUTES.SGTH.CONVOCATORIA_NUEVA,
+            icon:    'IconPlus',
+            permiso: 'gestionar-convocatorias',
           },
         ],
       },
       {
-        label: 'Reclutamiento Express',
-        href:  ROUTES.SGTH.RECLUTAMIENTO_EXPRESS,
-        icon:  'IconBolt',
+        label:   'Reclutamiento Express',
+        href:    ROUTES.SGTH.RECLUTAMIENTO_EXPRESS,
+        icon:    'IconBolt',
+        permiso: 'ver-postulantes',
       },
       {
-        label: 'Plantillas',
-        href:  ROUTES.SGTH.PLANTILLAS,
-        icon:  'IconTemplate',
+        // Las plantillas solo sirven para configurar criterios.
+        label:   'Plantillas',
+        href:    ROUTES.SGTH.PLANTILLAS,
+        icon:    'IconTemplate',
+        permiso: 'gestionar-convocatorias',
       },
     ],
   },

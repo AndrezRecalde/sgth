@@ -8,6 +8,7 @@ import {
 import { useDisclosure } from '@mantine/hooks'
 import { IconInfoCircle, IconPlus, IconUsers } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
+import { useAuth } from '@/hooks/useAuth'
 import { useAniosExpress, useResumenExpress } from '../hooks/useExpress'
 import { AspirantesExpressDrawer } from './AspirantesExpressDrawer'
 import { InscribirPostulanteModal } from './InscribirPostulanteModal'
@@ -16,14 +17,12 @@ import { StatusBadge } from '@/components/ui'
 
 type ModoFiltro = 'todos' | 'anio' | 'rango'
 
-function Metrica({ etiqueta, valor, color }: { etiqueta: string; valor: number; color?: string }) {
-  return (
-    <Box>
-      <Text size="xl" fw={700} c={color}>{valor}</Text>
-      <Text size="xs" c="dimmed" tt="uppercase">{etiqueta}</Text>
-    </Box>
-  )
-}
+const Metrica = ({ etiqueta, valor, color }: { etiqueta: string; valor: number; color?: string }) => (
+  <Box>
+    <Text size="xl" fw={700} c={color}>{valor}</Text>
+    <Text size="xs" c="dimmed" tt="uppercase">{etiqueta}</Text>
+  </Box>
+)
 
 /**
  * Reclutamiento express: cuatro modalidades permanentes. A diferencia del
@@ -33,6 +32,7 @@ function Metrica({ etiqueta, valor, color }: { etiqueta: string; valor: number; 
  */
 export function ReclutamientoExpressView() {
   const contained = useContainedInput()
+  const gestiona = useAuth().hasPermiso('gestionar-convocatorias') // el analista no inscribe
 
   const [modo, setModo] = useState<ModoFiltro>('todos')
   const [anio, setAnio] = useState<string | null>(null)
@@ -154,14 +154,14 @@ export function ReclutamientoExpressView() {
                 </Group>
 
                 <Group>
-                  <Button
+                  {gestiona && <Button
                     size="xs"
                     variant="light"
                     leftSection={<IconPlus size={14} />}
                     onClick={() => inscribirEn(c)}
                   >
                     Agregar aspirante
-                  </Button>
+                  </Button>}
                   <Button
                     size="xs"
                     variant="subtle"

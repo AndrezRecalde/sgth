@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Stack, Text, Button } from '@mantine/core'
+import { useAuth } from '@/hooks/useAuth'
 import {
   IconSpeakerphone, IconPlus,
   IconEye, IconEdit, IconTrash,
@@ -28,6 +29,7 @@ import { formatFechaMes } from '@/lib/fecha'
 
 export function ConvocatoriasView() {
   const router   = useRouter()
+  const gestiona = useAuth().hasPermiso('gestionar-convocatorias')
   const [page, setPage] = useState(1)
   const eliminar = useEliminarConvocatoria()
   const publicar = usePublicarConvocatoria()
@@ -120,7 +122,7 @@ export function ConvocatoriasView() {
               ROUTES.SGTH.CONVOCATORIA(c.id)
             ),
           },
-          ...(c.estado === 'borrador' ? [{
+          ...(gestiona && c.estado === 'borrador' ? [{
             label:   'Publicar',
             icon:    <IconWorldUpload size={14} />,
             onClick: () => confirmar({
@@ -135,14 +137,15 @@ export function ConvocatoriasView() {
               onConfirm: () => publicar.mutate(c.id),
             }),
           }] : []),
-          {
+          // Editar y eliminar, solo en borrador (2026-10-05).
+          ...(gestiona && c.estado === 'borrador' ? [{
             label:   'Editar',
             icon:    <IconEdit size={14} />,
             onClick: () => router.push(
               ROUTES.SGTH.CONVOCATORIA_EDITAR(c.id)
             ),
-          },
-          ...(c.estado === 'borrador' ? [{
+          }] : []),
+          ...(gestiona && c.estado === 'borrador' ? [{
             label:   'Eliminar',
             icon:    <IconTrash size={14} />,
             color:   'red',
@@ -163,7 +166,7 @@ export function ConvocatoriasView() {
       <PageHeader
         title="Convocatorias"
         description="Gestión de procesos de selección e incorporación"
-        actions={
+        actions={gestiona && (
           <Button
             leftSection={<IconPlus size={14} />}
             onClick={() =>
@@ -172,7 +175,7 @@ export function ConvocatoriasView() {
           >
             Nueva convocatoria
           </Button>
-        }
+        )}
       />
 
       {convocatorias.length === 0 && !isLoading ? (

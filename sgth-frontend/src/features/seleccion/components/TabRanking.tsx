@@ -16,9 +16,11 @@ interface Props {
   estadoConvocatoria:  string
   /** Tope de ganadores declarables. El backend es la autoridad. */
   vacantes?:           number
+  /** Enviar al Dispensario y declarar al siguiente son de quien gestiona. */
+  puedeGestionar?:     boolean
 }
 
-export function TabRanking({ convocatoriaId, estadoConvocatoria, vacantes = 1 }: Props) {
+export function TabRanking({ convocatoriaId, estadoConvocatoria, vacantes = 1, puedeGestionar = false }: Props) {
   const { data: postulantes = [], isLoading } = usePostulantes(convocatoriaId)
   const enviar = useEnviarAlDispensario(convocatoriaId)
   const incorporar = useConfirmarIncorporacion()
@@ -41,7 +43,7 @@ export function TabRanking({ convocatoriaId, estadoConvocatoria, vacantes = 1 }:
   const sinCalificar = postulantes.filter((p) => !p.evaluacion)
   const enEvalMedica = estadoConvocatoria === 'en_evaluacion_medica'
   const finalizada = estadoConvocatoria === 'finalizada'
-  const puedeEnviar = !enEvalMedica && !finalizada
+  const puedeEnviar = puedeGestionar && estadoConvocatoria === 'publicada'
   // Todos los enviados, no solo el primero: con dos o más vacantes el aviso
   // nombraba a uno.
   const enviados = postulantes.filter((p) => p.estado === 'ganador_potencial')
@@ -51,7 +53,7 @@ export function TabRanking({ convocatoriaId, estadoConvocatoria, vacantes = 1 }:
   // el ranking. El backend lo elige igual; aquí solo se nombra.
   const ocupadas = postulantes.filter((p) => ['ganador_potencial', 'incorporado'].includes(p.estado)).length
   const siguiente = ranking.find((p) => p.estado === 'lista_espera')
-  const puedeDeclararSiguiente = enEvalMedica && ocupadas < vacantes
+  const puedeDeclararSiguiente = puedeGestionar && enEvalMedica && ocupadas < vacantes
 
   const confirmarIncorporacion = (p: Postulante) => {
     const solicitudId = p.solicitud_certificacion?.id
