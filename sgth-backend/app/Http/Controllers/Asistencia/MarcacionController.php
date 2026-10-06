@@ -5,6 +5,7 @@ use App\Enums\Permiso;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\Expediente\Servidor;
+use App\Models\User;
 use App\Services\Asistencia\MarcacionBiometricaService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -86,6 +87,7 @@ class MarcacionController extends Controller
         );
     }
 
+
     /**
      * Estado de marcación del día para el usuario autenticado.
      * Usa la cédula del servidor vinculado al usuario.
@@ -95,26 +97,14 @@ class MarcacionController extends Controller
      */
     public function estadoHoy(Request $request, MarcacionBiometricaService $biometrico): JsonResponse
     {
-        $user    = $request->user();
-        $cedula  = $user->servidor?->cedula ?? null;
+        $user = $request->user();
 
-        if (!$cedula) {
-            return ApiResponse::error(
-                'Tu usuario no tiene un servidor vinculado.',
-                codigo: 404
-            );
-        }
-
-        // Verificar que puede marcar
-        if (!($user->servidor?->puede_marcar ?? false)) {
-            return ApiResponse::error(
-                'Tu perfil no tiene habilitada la marcación biométrica.',
-                codigo: 403
-            );
+        if ($rechazo = $this->rechazoParaMarcar($user)) {
+            return $rechazo;
         }
 
         try {
-            $marcaciones = $biometrico->porCedula($cedula, Carbon::today(), Carbon::today());
+            $marcaciones = $biometrico->porCedula($user->servidor->cedula, Carbon::today(), Carbon::today());
         } catch (\PDOException $e) {
             Log::error('Error estado hoy: ' . $e->getMessage());
             return ApiResponse::error(
@@ -130,43 +120,44 @@ class MarcacionController extends Controller
     }
 
     /**
-     * Registrar marcación online.
-     * Usa la cédula del usuario autenticado.
-     * Solo si puede_marcar = true.
+     * Registrar marcación online, a nombre del usuario autenticado.
+     *
+     * Exige `marcar-en-linea`, que TI asigna persona por persona a pedido de
+     * Talento Humano; antes bastaba con `puede_marcar` y se marcaba desde
+     * cualquier lugar. El permiso se comprueba primero, antes incluso de
+     * validar la petición: a quien no lo tiene no se le dice nada más.
+     *
+     * La ubicación es obligatoria (decisión del 2026-10-06) y se guarda en el
+     * biométrico. El procedimiento también la exige, porque es la única
+     * puerta de escritura del SGTH.
      */
     public function registrarOnline(Request $request, MarcacionBiometricaService $biometrico): JsonResponse
     {
-        $request->validate([
-            'checktype' => 'required|in:I,O',
-            // Se guardan en el biométrico (GEOLT/GEOLG): las dos o ninguna.
-            'latitud'   => 'nullable|numeric|between:-90,90|required_with:longitud',
-            'longitud'  => 'nullable|numeric|between:-180,180|required_with:latitud',
-        ]);
+        $user = $request->user();
 
-        $user   = $request->user();
-        $cedula = $user->servidor?->cedula ?? null;
-
-        if (!$cedula) {
-            return ApiResponse::error(
-                'Tu usuario no tiene un servidor vinculado.',
-                codigo: 404
+        if (!$user->can(Permiso::MARCAR_EN_LINEA->value)) {
+            return ApiResponse::noAutorizado(
+                'No tiene autorización para marcar en línea. Solicítela a Talento Humano.'
             );
         }
 
-        if (!($user->servidor?->puede_marcar ?? false)) {
-            return ApiResponse::error(
-                'Tu perfil no tiene habilitada la marcación biométrica.',
-                codigo: 403
-            );
+        $request->validate([
+            'checktype' => 'required|in:I,O',
+            'latitud'   => 'required|numeric|between:-90,90',
+            'longitud'  => 'required|numeric|between:-180,180',
+        ]);
+
+        if ($rechazo = $this->rechazoParaMarcar($user)) {
+            return $rechazo;
         }
 
         try {
             $registrada = $biometrico->registrarMarcacion(
-                $cedula,
+                $user->servidor->cedula,
                 $request->checktype,
                 now(),
-                $request->filled('latitud') ? (float) $request->latitud : null,
-                $request->filled('longitud') ? (float) $request->longitud : null,
+                (float) $request->latitud,
+                (float) $request->longitud,
             );
         } catch (\PDOException $e) {
             Log::error('Error marcación online: ' . $e->getMessage());
@@ -187,5 +178,39 @@ class MarcacionController extends Controller
             null,
             'Marcación registrada correctamente.'
         );
+    }
+
+    /**
+     * Lo que impide marcar a nombre propio, o null si nada lo impide: no tener
+     * servidor vinculado, no tener la marcación habilitada o que el servidor
+     * esté inactivo. Antes no se miraba el estado: un servidor inactivo con
+     * `puede_marcar` seguía marcando.
+     */
+    private function rechazoParaMarcar(User $user): ?JsonResponse
+    {
+        $servidor = $user->servidor;
+
+        if (!$servidor?->cedula) {
+            return ApiResponse::error(
+                'Su usuario no tiene un servidor vinculado.',
+                codigo: 404
+            );
+        }
+
+        if (!$servidor->puede_marcar) {
+            return ApiResponse::error(
+                'Su perfil no tiene habilitada la marcación biométrica.',
+                codigo: 403
+            );
+        }
+
+        if (!$servidor->estado) {
+            return ApiResponse::error(
+                'El servidor vinculado a su usuario está inactivo.',
+                codigo: 403
+            );
+        }
+
+        return null;
     }
 }

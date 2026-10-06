@@ -33,7 +33,11 @@ import { StatusBadge, notificar } from "@/components/ui";
 
 import { getApiErrorMessage } from "@/types/api";
 export function MarcacionOnlineTab() {
-  const { usuario } = useAuthStore();
+  const { usuario, hasPermiso } = useAuthStore();
+  // Además de tener la marcación habilitada hace falta este permiso, que TI
+  // asigna persona por persona. El menú ya lo oculta; esto es para quien
+  // entra por la URL.
+  const autorizado = hasPermiso("marcar-en-linea");
   const [ubicacion, setUbicacion] = useState<{
     lat: number;
     lon: number;
@@ -52,7 +56,7 @@ export function MarcacionOnlineTab() {
   } = useQuery({
     queryKey: ["marcacion-hoy", cedula],
     queryFn: () => asistenciaService.marcaciones.estadoHoy(),
-    enabled: !!cedula && puedeMarcar,
+    enabled: autorizado && !!cedula && puedeMarcar,
     staleTime: 0,
     refetchInterval: 60_000,
   });
@@ -102,9 +106,11 @@ export function MarcacionOnlineTab() {
     obtenerUbicacion();
   };
 
+  // Pedir el GPS solo a quien va a poder marcar.
+  const puedeUsarla = autorizado && !!cedula && puedeMarcar;
   useEffect(() => {
-    obtenerUbicacion();
-  }, []);
+    if (puedeUsarla) obtenerUbicacion();
+  }, [puedeUsarla]);
 
   const registrar = async (checktype: "I" | "O", label: string) => {
     if (!cedula || !puedeMarcar) return;
@@ -129,6 +135,22 @@ export function MarcacionOnlineTab() {
       setRegistrando(false);
     }
   };
+
+  if (!autorizado) {
+    return (
+      <Alert
+        icon={<IconInfoCircle size={16} />}
+        color="amber"
+        variant="light"
+        radius="md"
+      >
+        <Text size="sm">
+          No tiene autorización para marcar en línea. Si su trabajo lo
+          requiere, solicítela a Talento Humano.
+        </Text>
+      </Alert>
+    );
+  }
 
   if (!cedula || !puedeMarcar) {
     return (

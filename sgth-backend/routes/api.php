@@ -558,14 +558,18 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
 
     // Módulo 04: Asistencia, Permisos y Vacaciones
     Route::prefix('asistencia')->group(function () {
-        // Biométrico (Solo lectura)
+        // Biométrico (Sirha7). Se consulta en vivo por procedimientos; lo
+        // único que escribe es la marcación en línea.
         Route::get('marcaciones', [MarcacionController::class, 'index']);
 
+        // Diez por minuto y por usuario: una persona marca cuatro veces al
+        // día, y el doble toque ya lo absorbe el procedimiento.
         Route::post(
             'marcaciones/online',
             [MarcacionController::class,
                 'registrarOnline']
-        )->name('asistencia.marcaciones.online');
+        )->middleware('throttle:10,1')
+            ->name('asistencia.marcaciones.online');
 
         Route::get(
             'marcaciones/estado-hoy',

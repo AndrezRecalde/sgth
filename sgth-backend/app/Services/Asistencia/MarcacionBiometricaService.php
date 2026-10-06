@@ -57,8 +57,8 @@ class MarcacionBiometricaService
      * repetida en el mismo segundo (doble toque) cuenta como registrada: el
      * procedimiento no inserta otra.
      *
-     * La ubicación va a GEOLT/GEOLG, las dos o ninguna. Antes se validaba en
-     * la petición y se descartaba.
+     * La ubicación es obligatoria y va a GEOLT/GEOLG. Antes se validaba en la
+     * petición y se descartaba.
      *
      * La hora va en ISO 8601 con «T», que SQL Server lee igual en cualquier
      * idioma, y el parámetro del procedimiento es DATETIME. Con «Y-m-d H:i:s»
@@ -67,14 +67,14 @@ class MarcacionBiometricaService
      *
      * @throws ReglaNegocioException si el procedimiento la rechaza: cédula
      *         inválida, de relleno o repartida en varios usuarios, hora a más
-     *         de 15 minutos de la del biométrico, ubicación incompleta.
+     *         de 15 minutos de la del biométrico, ubicación fuera de rango.
      */
     public function registrarMarcacion(
         string $cedula,
         string $tipo,
         CarbonInterface $momento,
-        ?float $latitud = null,
-        ?float $longitud = null,
+        float $latitud,
+        float $longitud,
     ): bool {
         $resultado = $this->ejecutar(
             'EXEC dbo.sp_SGTH_RegistrarMarcacionOnline ?, ?, ?, ?, ?, ?',

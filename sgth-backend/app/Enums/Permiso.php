@@ -37,6 +37,10 @@ enum Permiso: string
     case VER_ASISTENCIA_PROPIA = 'ver-asistencia-propia';
     case VER_ASISTENCIA_UNIDAD = 'ver-asistencia-unidad';
     case VER_ASISTENCIA_TODOS = 'ver-asistencia-todos';
+    // Marcar asistencia desde el navegador, con ubicación. No va en ningún
+    // rol: TI lo asigna persona por persona desde Usuarios, a pedido de TH
+    // (decisión del 2026-10-06). Además hace falta `puede_marcar`.
+    case MARCAR_EN_LINEA = 'marcar-en-linea';
     case CREAR_PERMISO = 'crear-permiso';
     // Registrar permisos a nombre de cualquier servidor. `crear-permiso` lo
     // tiene todo el mundo y solo alcanza para el propio.

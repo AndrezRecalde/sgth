@@ -236,76 +236,139 @@ it('el estado de hoy responde 403 si quien consulta no tiene la marcación habil
         ->assertForbidden();
 });
 
-it('la marcación online se registra a nombre de quien la hace, con la hora y la ubicación', function () {
-    Carbon::setTestNow('2026-10-13 07:58:30');
+it('el estado de hoy responde 403 si el servidor vinculado está inactivo', function () {
+    $this->marca->update(['estado' => false]);
+    $this->mock(MarcacionBiometricaService::class)->shouldNotReceive('porCedula');
 
-    $this->mock(MarcacionBiometricaService::class)
-        ->shouldReceive('registrarMarcacion')->once()
-        ->withArgs(fn ($cedula, $tipo, $momento, $latitud, $longitud) => $cedula === '0802704171'
-            && $tipo === 'I'
-            && $momento->format('Y-m-d H:i:s') === '2026-10-13 07:58:30'
-            && $latitud === 0.968254
-            && $longitud === -79.651729)
-        ->andReturn(true);
-
-    $this->actingAs($this->usuario)
-        ->postJson('/api/v1/asistencia/marcaciones/online', [
-            'checktype' => 'I', 'latitud' => 0.968254, 'longitud' => -79.651729,
-        ])
-        ->assertOk();
+    $this->actingAs($this->usuario->fresh())
+        ->getJson('/api/v1/asistencia/marcaciones/estado-hoy')
+        ->assertForbidden();
 });
 
-it('la marcación online sin ubicación se registra igual', function () {
-    $this->mock(MarcacionBiometricaService::class)
-        ->shouldReceive('registrarMarcacion')->once()
-        ->withArgs(fn ($cedula, $tipo, $momento, $latitud, $longitud) => $latitud === null && $longitud === null)
-        ->andReturn(true);
+describe('marcación en línea', function () {
+    beforeEach(function () {
+        // `marcar-en-linea` no va en ningún rol: se asigna a la persona.
+        $this->usuario->givePermissionTo('marcar-en-linea');
+        $this->conUbicacion = fn (string $tipo) => [
+            'checktype' => $tipo, 'latitud' => 0.968254, 'longitud' => -79.651729,
+        ];
+    });
 
-    $this->actingAs($this->usuario)
-        ->postJson('/api/v1/asistencia/marcaciones/online', ['checktype' => 'O'])
-        ->assertOk();
-});
+    it('se registra a nombre de quien la hace, con la hora y la ubicación', function () {
+        Carbon::setTestNow('2026-10-13 07:58:30');
 
-it('la marcación online rechaza una ubicación incompleta o fuera de rango', function (array $ubicacion, string $campo) {
-    $this->mock(MarcacionBiometricaService::class)->shouldNotReceive('registrarMarcacion');
+        $this->mock(MarcacionBiometricaService::class)
+            ->shouldReceive('registrarMarcacion')->once()
+            ->withArgs(fn ($cedula, $tipo, $momento, $latitud, $longitud) => $cedula === '0802704171'
+                && $tipo === 'I'
+                && $momento->format('Y-m-d H:i:s') === '2026-10-13 07:58:30'
+                && $latitud === 0.968254
+                && $longitud === -79.651729)
+            ->andReturn(true);
 
-    $this->actingAs($this->usuario)
-        ->postJson('/api/v1/asistencia/marcaciones/online', ['checktype' => 'I'] + $ubicacion)
-        ->assertStatus(422)
-        ->assertJsonValidationErrors([$campo], 'errores');
-})->with([
-    'latitud sin longitud' => [['latitud' => 0.96], 'longitud'],
-    'longitud sin latitud' => [['longitud' => -79.65], 'latitud'],
-    'latitud fuera de rango' => [['latitud' => 95, 'longitud' => -79.65], 'latitud'],
-]);
+        $this->actingAs($this->usuario)
+            ->postJson('/api/v1/asistencia/marcaciones/online', ($this->conUbicacion)('I'))
+            ->assertOk();
+    });
 
-it('la marcación online responde 404 si la cédula no está en el biométrico', function () {
-    $this->mock(MarcacionBiometricaService::class)
-        ->shouldReceive('registrarMarcacion')->andReturn(false);
+    it('sin el permiso no se marca, aunque el servidor tenga la marcación habilitada', function () {
+        // Sin cuerpo a propósito: el 403 llega antes que la validación, así que
+        // a quien no puede marcar no se le dice qué faltaba en la petición.
+        $this->usuario->revokePermissionTo('marcar-en-linea');
+        $this->mock(MarcacionBiometricaService::class)->shouldNotReceive('registrarMarcacion');
 
-    $this->actingAs($this->usuario)
-        ->postJson('/api/v1/asistencia/marcaciones/online', ['checktype' => 'O'])
-        ->assertNotFound();
-});
+        $this->actingAs($this->usuario->fresh())
+            ->postJson('/api/v1/asistencia/marcaciones/online', [])
+            ->assertForbidden()
+            ->assertJsonPath('mensaje', 'No tiene autorización para marcar en línea. Solicítela a Talento Humano.');
+    });
 
-it('la marcación online responde 503 si el biométrico no responde', function () {
-    $this->mock(MarcacionBiometricaService::class)
-        ->shouldReceive('registrarMarcacion')->andThrow(errorSqlServer(-1, 'Login timeout expired'));
+    it('ningún rol trae el permiso: tampoco Talento Humano', function (string $rol) {
+        // Un servidor solo se vincula a un usuario: se libera el de la preparación.
+        $this->usuario->update(['servidor_id' => null]);
+        $this->mock(MarcacionBiometricaService::class)->shouldNotReceive('registrarMarcacion');
 
-    $this->actingAs($this->usuario)
-        ->postJson('/api/v1/asistencia/marcaciones/online', ['checktype' => 'O'])
-        ->assertStatus(503);
-});
+        $this->actingAs(usuarioMarcaciones($rol, $this->marca))
+            ->postJson('/api/v1/asistencia/marcaciones/online', ($this->conUbicacion)('I'))
+            ->assertForbidden();
+    })->with(['servidor', 'admin-uath', 'asistente-uath', 'jefe-unidad']);
 
-it('la marcación online responde 422 si la cédula no identifica a una sola persona', function () {
-    $this->mock(MarcacionBiometricaService::class)
-        ->shouldReceive('registrarMarcacion')
-        ->andThrow(new ReglaNegocioException('La cédula 0802704171 está registrada en varios usuarios del biométrico.'));
+    it('sin ubicación no se marca', function (array $ubicacion, string $campo) {
+        $this->mock(MarcacionBiometricaService::class)->shouldNotReceive('registrarMarcacion');
 
-    $this->actingAs($this->usuario)
-        ->postJson('/api/v1/asistencia/marcaciones/online', ['checktype' => 'I'])
-        ->assertStatus(422)
-        ->assertJsonPath('mensaje', 'La cédula 0802704171 está registrada en varios usuarios del biométrico.');
+        $this->actingAs($this->usuario)
+            ->postJson('/api/v1/asistencia/marcaciones/online', ['checktype' => 'I'] + $ubicacion)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors([$campo], 'errores');
+    })->with([
+        'sin ninguna coordenada' => [[], 'latitud'],
+        'latitud sin longitud'   => [['latitud' => 0.96], 'longitud'],
+        'longitud sin latitud'   => [['longitud' => -79.65], 'latitud'],
+        'latitud fuera de rango' => [['latitud' => 95, 'longitud' => -79.65], 'latitud'],
+    ]);
+
+    it('un servidor inactivo no marca', function () {
+        $this->marca->update(['estado' => false]);
+        $this->mock(MarcacionBiometricaService::class)->shouldNotReceive('registrarMarcacion');
+
+        $this->actingAs($this->usuario->fresh())
+            ->postJson('/api/v1/asistencia/marcaciones/online', ($this->conUbicacion)('I'))
+            ->assertForbidden()
+            ->assertJsonPath('mensaje', 'El servidor vinculado a su usuario está inactivo.');
+    });
+
+    it('sin la marcación habilitada no marca, aunque tenga el permiso', function () {
+        $this->marca->update(['puede_marcar' => false]);
+        $this->mock(MarcacionBiometricaService::class)->shouldNotReceive('registrarMarcacion');
+
+        $this->actingAs($this->usuario->fresh())
+            ->postJson('/api/v1/asistencia/marcaciones/online', ($this->conUbicacion)('I'))
+            ->assertForbidden();
+    });
+
+    it('admite diez marcaciones por minuto y rechaza la undécima', function () {
+        $this->mock(MarcacionBiometricaService::class)
+            ->shouldReceive('registrarMarcacion')->times(10)->andReturn(true);
+
+        foreach (range(1, 10) as $_) {
+            $this->actingAs($this->usuario)
+                ->postJson('/api/v1/asistencia/marcaciones/online', ($this->conUbicacion)('O'))
+                ->assertOk();
+        }
+
+        $this->actingAs($this->usuario)
+            ->postJson('/api/v1/asistencia/marcaciones/online', ($this->conUbicacion)('O'))
+            ->assertStatus(429);
+    });
+
+    it('responde 404 si la cédula no está en el biométrico', function () {
+        $this->mock(MarcacionBiometricaService::class)
+            ->shouldReceive('registrarMarcacion')->andReturn(false);
+
+        $this->actingAs($this->usuario)
+            ->postJson('/api/v1/asistencia/marcaciones/online', ($this->conUbicacion)('O'))
+            ->assertNotFound();
+    });
+
+    it('responde 503 si el biométrico no responde', function () {
+        $this->mock(MarcacionBiometricaService::class)
+            ->shouldReceive('registrarMarcacion')->andThrow(errorSqlServer(-1, 'Login timeout expired'));
+
+        $this->actingAs($this->usuario)
+            ->postJson('/api/v1/asistencia/marcaciones/online', ($this->conUbicacion)('O'))
+            ->assertStatus(503);
+    });
+
+    it('responde 422 si la cédula no identifica a una sola persona', function () {
+        $this->mock(MarcacionBiometricaService::class)
+            ->shouldReceive('registrarMarcacion')
+            ->andThrow(new ReglaNegocioException('La cédula 0802704171 está registrada en varios usuarios del biométrico.'));
+
+        $this->actingAs($this->usuario)
+            ->postJson('/api/v1/asistencia/marcaciones/online', ($this->conUbicacion)('I'))
+            ->assertStatus(422)
+            ->assertJsonPath('mensaje', 'La cédula 0802704171 está registrada en varios usuarios del biométrico.');
+    });
 });
 
 /**
@@ -369,17 +432,7 @@ describe('servicio', function () {
             ->withArgs(fn ($sql, $valores) => $valores[5] === '7')
             ->andReturn([(object) ['USERID' => '798', 'Resultado' => 'registrada']]);
 
-        biometricoSobre($conexion)->registrarMarcacion('0802704171', 'I', Carbon::now());
-    });
-
-    it('sin ubicación envía las dos coordenadas vacías', function () {
-        $conexion = Mockery::mock(ConnectionInterface::class);
-        $conexion->shouldReceive('select')->once()
-            ->withArgs(fn ($sql, $valores) => $valores[3] === null && $valores[4] === null)
-            ->andReturn([(object) ['USERID' => '798', 'Resultado' => 'registrada']]);
-
-        expect(biometricoSobre($conexion)->registrarMarcacion('0802704171', 'I', Carbon::now()))
-            ->toBeTrue();
+        biometricoSobre($conexion)->registrarMarcacion('0802704171', 'I', Carbon::now(), 0.968254, -79.651729);
     });
 
     it('un doble toque en el mismo segundo cuenta como registrada', function () {
@@ -387,7 +440,7 @@ describe('servicio', function () {
         $conexion->shouldReceive('select')
             ->andReturn([(object) ['USERID' => '798', 'Resultado' => 'duplicada']]);
 
-        expect(biometricoSobre($conexion)->registrarMarcacion('0802704171', 'I', Carbon::now()))
+        expect(biometricoSobre($conexion)->registrarMarcacion('0802704171', 'I', Carbon::now(), 0.968254, -79.651729))
             ->toBeTrue();
     });
 
@@ -396,7 +449,7 @@ describe('servicio', function () {
         $conexion->shouldReceive('select')
             ->andReturn([(object) ['USERID' => null, 'Resultado' => 'no_encontrada']]);
 
-        expect(biometricoSobre($conexion)->registrarMarcacion('0899999999', 'I', Carbon::now()))
+        expect(biometricoSobre($conexion)->registrarMarcacion('0899999999', 'I', Carbon::now(), 0.968254, -79.651729))
             ->toBeFalse();
     });
 
@@ -407,7 +460,7 @@ describe('servicio', function () {
             'La cédula 0802704171 está registrada en varios usuarios del biométrico y ninguno la tiene como código. Corríjase el SSN en USERINFO.',
         ));
 
-        biometricoSobre($conexion)->registrarMarcacion('0802704171', 'I', Carbon::now());
+        biometricoSobre($conexion)->registrarMarcacion('0802704171', 'I', Carbon::now(), 0.968254, -79.651729);
     })->throws(ReglaNegocioException::class, 'está registrada en varios usuarios del biométrico');
 
     it('un error inesperado al insertar no se disfraza de regla de negocio', function () {
@@ -416,7 +469,7 @@ describe('servicio', function () {
         $conexion = Mockery::mock(ConnectionInterface::class);
         $conexion->shouldReceive('select')->andThrow(errorSqlServer(547, 'Conflicto con la restricción'));
 
-        biometricoSobre($conexion)->registrarMarcacion('0802704171', 'I', Carbon::now());
+        biometricoSobre($conexion)->registrarMarcacion('0802704171', 'I', Carbon::now(), 0.968254, -79.651729);
     })->throws(QueryException::class);
 
     it('deja pasar los demás errores de SQL Server', function () {

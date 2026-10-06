@@ -21,8 +21,11 @@
              importa el idioma del servidor (en español, «2026-10-05 17:20»
              como texto se leía como 10 de mayo).
   @Latitud,
-  @Longitud  ubicación del dispositivo, las dos o ninguna. Van a GEOLT y
-             GEOLG, que la vista v_marcaciones ya muestra.
+  @Longitud  ubicación del dispositivo, obligatoria (decisión del
+             2026-10-06: una marcación en línea sin ubicación no vale). Van a
+             GEOLT y GEOLG, que la vista v_marcaciones ya muestra. Tienen
+             valor por defecto solo para que faltar dé este mensaje y no el
+             error genérico de parámetro ausente.
   @Sensor    SENSORID con que se guarda. Lo decide el SGTH (2 por ahora).
 
   Devuelve una fila: USERID y Resultado
@@ -33,7 +36,7 @@
 
   Errores (RAISERROR, número 50000): cédula inválida o de relleno, tipo
   desconocido, momento a más de 15 minutos de la hora del servidor,
-  coordenadas incompletas o fuera de rango, y una cédula repartida en varios
+  ubicación ausente, incompleta o fuera de rango, y una cédula repartida en varios
   usuarios sin forma de decidir.
 
   Script idempotente: crea un esqueleto si falta y hace ALTER, sin DROP, así
@@ -90,9 +93,9 @@ BEGIN
         RETURN;
     END
 
-    IF (@Latitud IS NULL AND @Longitud IS NOT NULL) OR (@Latitud IS NOT NULL AND @Longitud IS NULL)
+    IF @Latitud IS NULL OR @Longitud IS NULL
     BEGIN
-        RAISERROR('La ubicación necesita latitud y longitud.', 16, 1);
+        RAISERROR('La marcación en línea necesita la ubicación: latitud y longitud.', 16, 1);
         RETURN;
     END
 
