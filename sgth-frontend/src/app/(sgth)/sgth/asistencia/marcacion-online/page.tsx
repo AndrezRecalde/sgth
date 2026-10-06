@@ -1,11 +1,11 @@
-import type { Metadata } from 'next'
-import { MarcacionOnlineView } from './MarcacionOnlineView'
+import { permanentRedirect } from 'next/navigation'
+import { ROUTES } from '@/config/routes'
 
-export const metadata: Metadata = {
-  title: 'Marcación online',
-  description: 'Registro de entrada y salida desde el navegador con ubicación',
-}
-
-export default function MarcacionOnlinePage() {
-  return <MarcacionOnlineView />
+/**
+ * La marcación en línea se mudó al portal: es autoservicio, y el rol
+ * `servidor` no entra al subsistema SGTH. Esta ruta queda para no romper un
+ * marcador o un enlace guardado.
+ */
+export default function MarcacionOnlineMovidaPage() {
+  permanentRedirect(ROUTES.PORTAL.MARCACION_ONLINE)
 }

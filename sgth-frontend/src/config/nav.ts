@@ -158,13 +158,7 @@ export const NAV_SGTH: NavGroup[] = [
             href:  ROUTES.SGTH.ASISTENCIA_CONSOLIDADO,
             icon:  'IconReportAnalytics',
           },
-          {
-            // Permiso individual: TI lo asigna desde Usuarios a pedido de TH.
-            label: 'Marcación online',
-            href:  ROUTES.SGTH.ASISTENCIA_MARCACION_ONLINE,
-            icon:  'IconFingerprint',
-            permiso: 'marcar-en-linea',
-          },
+          // «Marcación online» se mudó al portal: es autoservicio.
         ],
       },
       {
@@ -493,6 +487,13 @@ export const NAV_PORTAL: NavGroup[] = [
         label: 'Marcaciones',
         href:  ROUTES.PORTAL.MIS_MARCACIONES,
         icon:  'IconClockRecord',
+      },
+      {
+        // Permiso individual: TI lo asigna desde Usuarios a pedido de TH.
+        label:   'Marcación online',
+        href:    ROUTES.PORTAL.MARCACION_ONLINE,
+        icon:    'IconFingerprint',
+        permiso: 'marcar-en-linea',
       },
       {
         label: 'Actividades',

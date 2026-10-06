@@ -28,7 +28,15 @@ function formatHora(h?: string | null): string {
   return h.substring(0, 5);
 }
 
-export function MarcacionesTab() {
+interface Props {
+  /**
+   * Solo las del usuario, aunque pueda ver las de todos. Es el modo del
+   * portal: «Mis marcaciones» es lo propio también para Talento Humano.
+   */
+  soloPropias?: boolean;
+}
+
+export function MarcacionesTab({ soloPropias = false }: Props) {
   const contained = useContainedInput();
   const { usuario, hasPermiso, hasRole } = useAuth();
   const [servidorId, setServidorId] = useState<number | null>(null);
@@ -41,7 +49,7 @@ export function MarcacionesTab() {
   // Las de cualquier servidor, quien tiene `ver-asistencia-todos`; los demás,
   // solo las propias. Es la regla de MarcacionController::index: aquí solo se
   // evita ofrecer un selector que terminaría en 403.
-  const veTodos = hasPermiso("ver-asistencia-todos");
+  const veTodos = !soloPropias && hasPermiso("ver-asistencia-todos");
   const propio = usuario?.servidor;
   const cedulaPropia = propio?.puede_marcar ? (propio.cedula ?? null) : null;
 
