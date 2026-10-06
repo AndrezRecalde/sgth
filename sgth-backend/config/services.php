@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    // Biométrico (Sirha7). La conexión es `sqlsrv` en database.php.
+    'biometrico' => [
+        // SENSORID con que se guardan las marcaciones online del SGTH. Por
+        // ahora el 2 (decisión de TH, 2026-10-06); los relojes físicos van
+        // del 1 al 5 en la tabla Machines.
+        'sensor_online' => env('BIOMETRICO_SENSOR_ONLINE', '2'),
+    ],
+
 ];

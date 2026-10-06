@@ -236,20 +236,48 @@ it('el estado de hoy responde 403 si quien consulta no tiene la marcación habil
         ->assertForbidden();
 });
 
-it('la marcación online se registra a nombre de quien la hace, con la hora actual', function () {
+it('la marcación online se registra a nombre de quien la hace, con la hora y la ubicación', function () {
     Carbon::setTestNow('2026-10-13 07:58:30');
 
     $this->mock(MarcacionBiometricaService::class)
         ->shouldReceive('registrarMarcacion')->once()
-        ->withArgs(fn ($cedula, $tipo, $momento) => $cedula === '0802704171'
+        ->withArgs(fn ($cedula, $tipo, $momento, $latitud, $longitud) => $cedula === '0802704171'
             && $tipo === 'I'
-            && $momento->format('Y-m-d H:i:s') === '2026-10-13 07:58:30')
+            && $momento->format('Y-m-d H:i:s') === '2026-10-13 07:58:30'
+            && $latitud === 0.968254
+            && $longitud === -79.651729)
         ->andReturn(true);
 
     $this->actingAs($this->usuario)
-        ->postJson('/api/v1/asistencia/marcaciones/online', ['checktype' => 'I'])
+        ->postJson('/api/v1/asistencia/marcaciones/online', [
+            'checktype' => 'I', 'latitud' => 0.968254, 'longitud' => -79.651729,
+        ])
         ->assertOk();
 });
+
+it('la marcación online sin ubicación se registra igual', function () {
+    $this->mock(MarcacionBiometricaService::class)
+        ->shouldReceive('registrarMarcacion')->once()
+        ->withArgs(fn ($cedula, $tipo, $momento, $latitud, $longitud) => $latitud === null && $longitud === null)
+        ->andReturn(true);
+
+    $this->actingAs($this->usuario)
+        ->postJson('/api/v1/asistencia/marcaciones/online', ['checktype' => 'O'])
+        ->assertOk();
+});
+
+it('la marcación online rechaza una ubicación incompleta o fuera de rango', function (array $ubicacion, string $campo) {
+    $this->mock(MarcacionBiometricaService::class)->shouldNotReceive('registrarMarcacion');
+
+    $this->actingAs($this->usuario)
+        ->postJson('/api/v1/asistencia/marcaciones/online', ['checktype' => 'I'] + $ubicacion)
+        ->assertStatus(422)
+        ->assertJsonValidationErrors([$campo], 'errores');
+})->with([
+    'latitud sin longitud' => [['latitud' => 0.96], 'longitud'],
+    'longitud sin latitud' => [['longitud' => -79.65], 'latitud'],
+    'latitud fuera de rango' => [['latitud' => 95, 'longitud' => -79.65], 'latitud'],
+]);
 
 it('la marcación online responde 404 si la cédula no está en el biométrico', function () {
     $this->mock(MarcacionBiometricaService::class)
@@ -279,12 +307,6 @@ it('la marcación online responde 422 si la cédula no identifica a una sola per
         ->assertStatus(422)
         ->assertJsonPath('mensaje', 'La cédula 0802704171 está registrada en varios usuarios del biométrico.');
 });
-
-/** Fila de USERINFO como la devuelve el driver; FechaRenuncia 1900-01-01 = activo. */
-function usuarioInfo(int $userId, string $badge, string $renuncia = '1900-01-01 00:00:00.000'): object
-{
-    return (object) ['USERID' => (string) $userId, 'BADGENUMBER' => $badge, 'FechaRenuncia' => $renuncia];
-}
 
 /**
  * El servicio con una conexión simulada en lugar de la de SQL Server. No se
@@ -322,92 +344,80 @@ describe('servicio', function () {
         biometricoSobre($conexion)->porCedula('1111111111', Carbon::today(), Carbon::today());
     })->throws(ReglaNegocioException::class, '1111111111 es la cédula de relleno del biométrico, no identifica a nadie.');
 
-    it('registra la marcación online con la fecha en ISO 8601, que SQL Server no confunde', function () {
+    it('registra la marcación online con el procedimiento, la fecha en ISO 8601 y la ubicación', function () {
         // Día 13: con «Y-m-d H:i:s» y DATEFORMAT dmy era el mes 13 y fallaba;
         // los días 1 a 12 se guardaban con el mes y el día cambiados.
         $conexion = Mockery::mock(ConnectionInterface::class);
         $conexion->shouldReceive('select')->once()
-            ->andReturn([usuarioInfo(798, '802704171')]);
-        $conexion->shouldReceive('statement')->once()
-            ->withArgs(fn ($sql, $valores) => str_contains($sql, 'INSERT INTO CHECKINOUT')
-                && $valores === [798, '2026-10-13T17:20:05', 'O', 'IR'])
-            ->andReturn(true);
+            ->with(
+                'EXEC dbo.sp_SGTH_RegistrarMarcacionOnline ?, ?, ?, ?, ?, ?',
+                ['0802704171', 'O', '2026-10-13T17:20:05', 0.968254, -79.651729, '2']
+            )
+            ->andReturn([(object) ['USERID' => '798', 'Resultado' => 'registrada']]);
+        $conexion->shouldNotReceive('statement');
 
-        expect(biometricoSobre($conexion)
-            ->registrarMarcacion('0802704171', 'O', Carbon::parse('2026-10-13 17:20:05')))
+        expect(biometricoSobre($conexion)->registrarMarcacion(
+            '0802704171', 'O', Carbon::parse('2026-10-13 17:20:05'), 0.968254, -79.651729,
+        ))->toBeTrue();
+    });
+
+    it('el sensor sale de la configuración', function () {
+        config(['services.biometrico.sensor_online' => '7']);
+
+        $conexion = Mockery::mock(ConnectionInterface::class);
+        $conexion->shouldReceive('select')->once()
+            ->withArgs(fn ($sql, $valores) => $valores[5] === '7')
+            ->andReturn([(object) ['USERID' => '798', 'Resultado' => 'registrada']]);
+
+        biometricoSobre($conexion)->registrarMarcacion('0802704171', 'I', Carbon::now());
+    });
+
+    it('sin ubicación envía las dos coordenadas vacías', function () {
+        $conexion = Mockery::mock(ConnectionInterface::class);
+        $conexion->shouldReceive('select')->once()
+            ->withArgs(fn ($sql, $valores) => $valores[3] === null && $valores[4] === null)
+            ->andReturn([(object) ['USERID' => '798', 'Resultado' => 'registrada']]);
+
+        expect(biometricoSobre($conexion)->registrarMarcacion('0802704171', 'I', Carbon::now()))
             ->toBeTrue();
     });
 
-    it('no inserta nada si la cédula no está en el biométrico', function () {
+    it('un doble toque en el mismo segundo cuenta como registrada', function () {
         $conexion = Mockery::mock(ConnectionInterface::class);
-        $conexion->shouldReceive('select')->once()->andReturn([]);
-        $conexion->shouldNotReceive('statement');
+        $conexion->shouldReceive('select')
+            ->andReturn([(object) ['USERID' => '798', 'Resultado' => 'duplicada']]);
 
-        expect(biometricoSobre($conexion)
-            ->registrarMarcacion('0802704171', 'I', Carbon::now()))
+        expect(biometricoSobre($conexion)->registrarMarcacion('0802704171', 'I', Carbon::now()))
+            ->toBeTrue();
+    });
+
+    it('devuelve false si la cédula no está en el biométrico', function () {
+        $conexion = Mockery::mock(ConnectionInterface::class);
+        $conexion->shouldReceive('select')
+            ->andReturn([(object) ['USERID' => null, 'Resultado' => 'no_encontrada']]);
+
+        expect(biometricoSobre($conexion)->registrarMarcacion('0899999999', 'I', Carbon::now()))
             ->toBeFalse();
     });
 
-    it('busca la cédula a 10 dígitos, así encuentra el SSN guardado sin el cero inicial', function () {
+    it('el RAISERROR del registro también sale como regla de negocio', function () {
         $conexion = Mockery::mock(ConnectionInterface::class);
-        $conexion->shouldReceive('select')->once()
-            ->withArgs(fn ($sql, $valores) => str_contains($sql, "RIGHT('0000000000' + LTRIM(RTRIM(SSN)), 10) = ?")
-                && $valores === ['0801160300'])
-            ->andReturn([usuarioInfo(687, '801160300')]);
-
-        expect(biometricoSobre($conexion)->usuarioPorCedula('801160300'))->toBe(687);
-    });
-
-    it('con la cédula en varios registros, se queda con el que la tiene como código', function () {
-        // 310 y 314 son otras personas a las que se les copió mal el SSN.
-        $conexion = Mockery::mock(ConnectionInterface::class);
-        $conexion->shouldReceive('select')->andReturn([
-            usuarioInfo(310, '803248954'),
-            usuarioInfo(314, '804198034'),
-            usuarioInfo(318, '1600521890'),
-        ]);
-
-        expect(biometricoSobre($conexion)->usuarioPorCedula('1600521890'))->toBe(318);
-    });
-
-    it('entre dos registros de la misma persona, marca en el activo', function () {
-        // Reingreso: el registro viejo tiene renuncia y un USERID menor… y
-        // también uno mayor, para que no gane solo por ser el último.
-        $conexion = Mockery::mock(ConnectionInterface::class);
-        $conexion->shouldReceive('select')->andReturn([
-            usuarioInfo(289, '1711058774', '2021-11-04 00:00:00.000'),
-            usuarioInfo(4833, '711058774'),
-            usuarioInfo(5000, '1711058774', '2025-01-31 00:00:00.000'),
-        ]);
-
-        expect(biometricoSobre($conexion)->usuarioPorCedula('1711058774'))->toBe(4833);
-    });
-
-    it('si varios registros tienen la cédula y ninguno como código, no marca en ninguno', function () {
-        $conexion = Mockery::mock(ConnectionInterface::class);
-        $conexion->shouldReceive('select')->andReturn([
-            usuarioInfo(1, '5'),
-            usuarioInfo(2, '9'),
-        ]);
-        $conexion->shouldNotReceive('statement');
+        $conexion->shouldReceive('select')->andThrow(errorSqlServer(
+            50000,
+            'La cédula 0802704171 está registrada en varios usuarios del biométrico y ninguno la tiene como código. Corríjase el SSN en USERINFO.',
+        ));
 
         biometricoSobre($conexion)->registrarMarcacion('0802704171', 'I', Carbon::now());
     })->throws(ReglaNegocioException::class, 'está registrada en varios usuarios del biométrico');
 
-    it('un único registro sirve aunque su código no sea la cédula', function () {
-        // BADGENUMBER de trabajador (código corto): la cédula solo vive en el SSN.
+    it('un error inesperado al insertar no se disfraza de regla de negocio', function () {
+        // 2627 (clave duplicada) lo absorbe el procedimiento; cualquier otro
+        // error del INSERT llega con su número y termina en 503, no en 422.
         $conexion = Mockery::mock(ConnectionInterface::class);
-        $conexion->shouldReceive('select')->andReturn([usuarioInfo(5100, '123')]);
+        $conexion->shouldReceive('select')->andThrow(errorSqlServer(547, 'Conflicto con la restricción'));
 
-        expect(biometricoSobre($conexion)->usuarioPorCedula('0802704171'))->toBe(5100);
-    });
-
-    it('rechaza la cédula de relleno sin consultar el biométrico', function () {
-        $conexion = Mockery::mock(ConnectionInterface::class);
-        $conexion->shouldNotReceive('select');
-
-        biometricoSobre($conexion)->usuarioPorCedula('1111111111');
-    })->throws(ReglaNegocioException::class, 'cédula de relleno');
+        biometricoSobre($conexion)->registrarMarcacion('0802704171', 'I', Carbon::now());
+    })->throws(QueryException::class);
 
     it('deja pasar los demás errores de SQL Server', function () {
         $conexion = Mockery::mock(ConnectionInterface::class);

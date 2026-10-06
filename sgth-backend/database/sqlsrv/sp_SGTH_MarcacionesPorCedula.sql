@@ -11,6 +11,8 @@
   en ninguna tabla (la única escritura es en una variable de tabla del propio
   lote).
 
+  Depende de dbo.fn_SGTH_UsuariosPorCedula: se despliega antes que este.
+
   Diferencias con el v3
   ---------------------
   - Busca por SSN. Acepta la cédula con o sin el cero inicial, y también
@@ -119,6 +121,9 @@ BEGIN
     --    digitados que repiten la cédula de otra persona: si alguno de los
     --    candidatos tiene un BADGENUMBER coherente con la cédula (sus
     --    últimos 9 dígitos), solo se toman esos.
+    --
+    --    La búsqueda vive en dbo.fn_SGTH_UsuariosPorCedula, que comparte con
+    --    sp_SGTH_RegistrarMarcacionOnline.
     -- ---------------------------------------------------------------
     DECLARE @Usuarios TABLE (
         USERID        INT PRIMARY KEY,
@@ -131,15 +136,8 @@ BEGIN
     );
 
     INSERT INTO @Usuarios (USERID, BADGENUMBER, NAME, DEFAULTDEPTID, Regimen, Activo, Coherente)
-    SELECT  ui.USERID,
-            ui.BADGENUMBER,
-            ui.NAME,
-            ui.DEFAULTDEPTID,
-            ui.GENDER,                      -- el sistema guarda aquí el régimen: LOSEP / CODIGOT
-            CASE WHEN ui.FechaRenuncia IS NULL OR ui.FechaRenuncia < '19000102' THEN 1 ELSE 0 END,
-            CASE WHEN RIGHT('000000000' + LTRIM(RTRIM(ui.BADGENUMBER)), 9) = RIGHT(@Ced, 9) THEN 1 ELSE 0 END
-    FROM    dbo.USERINFO ui
-    WHERE   RIGHT('0000000000' + LTRIM(RTRIM(ui.SSN)), 10) = @Ced;
+    SELECT  USERID, BADGENUMBER, NAME, DEFAULTDEPTID, Regimen, Activo, Coherente
+    FROM    dbo.fn_SGTH_UsuariosPorCedula(@Ced);
 
     DECLARE @HayCoherente BIT = CASE WHEN EXISTS (SELECT 1 FROM @Usuarios WHERE Coherente = 1) THEN 1 ELSE 0 END;
 
