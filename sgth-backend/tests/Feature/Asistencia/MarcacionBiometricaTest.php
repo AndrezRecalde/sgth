@@ -172,12 +172,46 @@ describe('quién consulta', function () {
     })->with(['admin-uath', 'asistente-uath', 'auditor']);
 });
 
-it('responde 404 si el servidor no tiene la marcación habilitada, sin consultar el biométrico', function () {
-    $this->mock(MarcacionBiometricaService::class)->shouldNotReceive('porCedula');
+it('Talento Humano ve el historial de quien ya no tiene la marcación habilitada', function () {
+    // Antes se exigía `puede_marcar`: quitarle la marcación a alguien
+    // escondía todas sus marcaciones pasadas.
+    $this->mock(MarcacionBiometricaService::class)
+        ->shouldReceive('porCedula')->once()
+        ->withArgs(fn ($cedula) => $cedula === '0802704172')
+        ->andReturn([filaBiometrico('2026-09-01')]);
 
     $this->actingAs($this->usuario)
         ->getJson('/api/v1/asistencia/marcaciones?cedula=0802704172&fecha_inicio=2026-09-01&fecha_fin=2026-09-30')
-        ->assertNotFound();
+        ->assertOk()
+        ->assertJsonCount(1, 'datos');
+});
+
+it('Talento Humano ve el historial de un servidor inactivo', function () {
+    $this->noMarca->update(['estado' => false]);
+    $this->mock(MarcacionBiometricaService::class)
+        ->shouldReceive('porCedula')->once()->andReturn([]);
+
+    $this->actingAs($this->usuario)
+        ->getJson('/api/v1/asistencia/marcaciones?cedula=0802704172&fecha_inicio=2026-09-01&fecha_fin=2026-09-30')
+        ->assertOk();
+});
+
+it('a Talento Humano, una cédula que no está en el SGTH le da 404 sin consultar el biométrico', function () {
+    $this->mock(MarcacionBiometricaService::class)->shouldNotReceive('porCedula');
+
+    $this->actingAs($this->usuario)
+        ->getJson('/api/v1/asistencia/marcaciones?cedula=0899999999&fecha_inicio=2026-09-01&fecha_fin=2026-09-30')
+        ->assertNotFound()
+        ->assertJsonPath('mensaje', 'No hay un servidor con esa cédula en el SGTH.');
+});
+
+it('un servidor sin la marcación habilitada no consulta las suyas', function () {
+    $this->mock(MarcacionBiometricaService::class)->shouldNotReceive('porCedula');
+
+    $this->actingAs(usuarioMarcaciones('servidor', $this->noMarca))
+        ->getJson('/api/v1/asistencia/marcaciones?cedula=0802704172&fecha_inicio=2026-09-01&fecha_fin=2026-09-30')
+        ->assertNotFound()
+        ->assertJsonPath('mensaje', 'Su perfil no tiene habilitada la marcación biométrica.');
 });
 
 it('devuelve 422 con el mensaje del procedimiento cuando rechaza la cédula', function () {
