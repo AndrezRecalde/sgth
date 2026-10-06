@@ -269,6 +269,23 @@ it('la marcación online responde 503 si el biométrico no responde', function (
         ->assertStatus(503);
 });
 
+it('la marcación online responde 422 si la cédula no identifica a una sola persona', function () {
+    $this->mock(MarcacionBiometricaService::class)
+        ->shouldReceive('registrarMarcacion')
+        ->andThrow(new ReglaNegocioException('La cédula 0802704171 está registrada en varios usuarios del biométrico.'));
+
+    $this->actingAs($this->usuario)
+        ->postJson('/api/v1/asistencia/marcaciones/online', ['checktype' => 'I'])
+        ->assertStatus(422)
+        ->assertJsonPath('mensaje', 'La cédula 0802704171 está registrada en varios usuarios del biométrico.');
+});
+
+/** Fila de USERINFO como la devuelve el driver; FechaRenuncia 1900-01-01 = activo. */
+function usuarioInfo(int $userId, string $badge, string $renuncia = '1900-01-01 00:00:00.000'): object
+{
+    return (object) ['USERID' => (string) $userId, 'BADGENUMBER' => $badge, 'FechaRenuncia' => $renuncia];
+}
+
 /**
  * El servicio con una conexión simulada en lugar de la de SQL Server. No se
  * sustituye la fachada DB: eso dejaría a RefreshDatabase sin su conexión.
@@ -310,8 +327,7 @@ describe('servicio', function () {
         // los días 1 a 12 se guardaban con el mes y el día cambiados.
         $conexion = Mockery::mock(ConnectionInterface::class);
         $conexion->shouldReceive('select')->once()
-            ->with('SELECT USERID FROM USERINFO WHERE SSN = ?', ['0802704171'])
-            ->andReturn([(object) ['USERID' => 798]]);
+            ->andReturn([usuarioInfo(798, '802704171')]);
         $conexion->shouldReceive('statement')->once()
             ->withArgs(fn ($sql, $valores) => str_contains($sql, 'INSERT INTO CHECKINOUT')
                 && $valores === [798, '2026-10-13T17:20:05', 'O', 'IR'])
@@ -331,6 +347,67 @@ describe('servicio', function () {
             ->registrarMarcacion('0802704171', 'I', Carbon::now()))
             ->toBeFalse();
     });
+
+    it('busca la cédula a 10 dígitos, así encuentra el SSN guardado sin el cero inicial', function () {
+        $conexion = Mockery::mock(ConnectionInterface::class);
+        $conexion->shouldReceive('select')->once()
+            ->withArgs(fn ($sql, $valores) => str_contains($sql, "RIGHT('0000000000' + LTRIM(RTRIM(SSN)), 10) = ?")
+                && $valores === ['0801160300'])
+            ->andReturn([usuarioInfo(687, '801160300')]);
+
+        expect(biometricoSobre($conexion)->usuarioPorCedula('801160300'))->toBe(687);
+    });
+
+    it('con la cédula en varios registros, se queda con el que la tiene como código', function () {
+        // 310 y 314 son otras personas a las que se les copió mal el SSN.
+        $conexion = Mockery::mock(ConnectionInterface::class);
+        $conexion->shouldReceive('select')->andReturn([
+            usuarioInfo(310, '803248954'),
+            usuarioInfo(314, '804198034'),
+            usuarioInfo(318, '1600521890'),
+        ]);
+
+        expect(biometricoSobre($conexion)->usuarioPorCedula('1600521890'))->toBe(318);
+    });
+
+    it('entre dos registros de la misma persona, marca en el activo', function () {
+        // Reingreso: el registro viejo tiene renuncia y un USERID menor… y
+        // también uno mayor, para que no gane solo por ser el último.
+        $conexion = Mockery::mock(ConnectionInterface::class);
+        $conexion->shouldReceive('select')->andReturn([
+            usuarioInfo(289, '1711058774', '2021-11-04 00:00:00.000'),
+            usuarioInfo(4833, '711058774'),
+            usuarioInfo(5000, '1711058774', '2025-01-31 00:00:00.000'),
+        ]);
+
+        expect(biometricoSobre($conexion)->usuarioPorCedula('1711058774'))->toBe(4833);
+    });
+
+    it('si varios registros tienen la cédula y ninguno como código, no marca en ninguno', function () {
+        $conexion = Mockery::mock(ConnectionInterface::class);
+        $conexion->shouldReceive('select')->andReturn([
+            usuarioInfo(1, '5'),
+            usuarioInfo(2, '9'),
+        ]);
+        $conexion->shouldNotReceive('statement');
+
+        biometricoSobre($conexion)->registrarMarcacion('0802704171', 'I', Carbon::now());
+    })->throws(ReglaNegocioException::class, 'está registrada en varios usuarios del biométrico');
+
+    it('un único registro sirve aunque su código no sea la cédula', function () {
+        // BADGENUMBER de trabajador (código corto): la cédula solo vive en el SSN.
+        $conexion = Mockery::mock(ConnectionInterface::class);
+        $conexion->shouldReceive('select')->andReturn([usuarioInfo(5100, '123')]);
+
+        expect(biometricoSobre($conexion)->usuarioPorCedula('0802704171'))->toBe(5100);
+    });
+
+    it('rechaza la cédula de relleno sin consultar el biométrico', function () {
+        $conexion = Mockery::mock(ConnectionInterface::class);
+        $conexion->shouldNotReceive('select');
+
+        biometricoSobre($conexion)->usuarioPorCedula('1111111111');
+    })->throws(ReglaNegocioException::class, 'cédula de relleno');
 
     it('deja pasar los demás errores de SQL Server', function () {
         $conexion = Mockery::mock(ConnectionInterface::class);
