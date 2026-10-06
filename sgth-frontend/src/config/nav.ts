@@ -159,9 +159,11 @@ export const NAV_SGTH: NavGroup[] = [
             icon:  'IconReportAnalytics',
           },
           {
+            // Permiso individual: TI lo asigna desde Usuarios a pedido de TH.
             label: 'Marcación online',
             href:  ROUTES.SGTH.ASISTENCIA_MARCACION_ONLINE,
             icon:  'IconFingerprint',
+            permiso: 'marcar-en-linea',
           },
         ],
       },

@@ -129,7 +129,8 @@ class PermisoController extends Controller
 
             str_contains($permiso, 'asistencia') ||
             str_contains($permiso, 'permiso') ||
-            str_contains($permiso, 'vacacion')
+            str_contains($permiso, 'vacacion') ||
+            $permiso === 'marcar-en-linea'
                 => 'Asistencia',
 
             str_contains($permiso, 'viatico') ||
