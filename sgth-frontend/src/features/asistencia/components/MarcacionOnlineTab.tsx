@@ -1,449 +1,132 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
+import { useState } from 'react'
+import { Grid } from '@mantine/core'
+import { IconLock } from '@tabler/icons-react'
+import { EmptyState, SectionCard, confirmar, notificar } from '@/components/ui'
+import { useAuth } from '@/hooks/useAuth'
+import { useMarcacionOnline } from '../hooks/useMarcacionOnline'
+import { useUbicacion } from '../hooks/useUbicacion'
 import {
-  Stack,
-  Button,
-  Text,
-  Group,
-  Card,
-  Alert,
-  Loader,
-  Center,
-  Timeline,
-  Grid,
-  Paper,
-  ThemeIcon,
-} from "@mantine/core";
-import {
-  IconLogin,
-  IconLogout,
-  IconSoup,
-  IconInfoCircle,
-  IconMapPin,
-  IconMapPinOff,
-  IconCheck,
-  IconClock,
-} from "@tabler/icons-react";
-import { useQuery } from "@tanstack/react-query";
-import { modals } from "@mantine/modals";
-import { asistenciaService } from "../services/asistenciaService";
-import { useAuthStore } from "@/store/auth.store";
-import { StatusBadge, notificar } from "@/components/ui";
+  accionesDelDia,
+  motivoParaConfirmar,
+  siguienteAccion,
+  type AccionMarcacion,
+  type ClaveAccion,
+} from '../utils/marcacionOnline'
+import { AccionesMarcacion } from './AccionesMarcacion'
+import { ProgresoHoy } from './ProgresoHoy'
+import { UbicacionEstado } from './UbicacionEstado'
 
-import { getApiErrorMessage } from "@/types/api";
+/**
+ * La marcación en línea: registrar las cuatro marcas del día con la ubicación
+ * del momento, y ver cuáles ya están.
+ *
+ * Hace falta el permiso `marcar-en-linea` (TI lo asigna a pedido de Talento
+ * Humano) y tener la marcación habilitada. El menú ya oculta la pantalla sin
+ * el permiso; los avisos de abajo son para quien entra por la URL.
+ */
 export function MarcacionOnlineTab() {
-  const { usuario, hasPermiso } = useAuthStore();
-  // Además de tener la marcación habilitada hace falta este permiso, que TI
-  // asigna persona por persona. El menú ya lo oculta; esto es para quien
-  // entra por la URL.
-  const autorizado = hasPermiso("marcar-en-linea");
-  const [ubicacion, setUbicacion] = useState<{
-    lat: number;
-    lon: number;
-  } | null>(null);
-  const [cargandoUbicacion, setCargandoUbicacion] = useState(true);
-  const [errorGPS, setErrorGPS] = useState<"denied" | "error" | null>(null);
-  const [registrando, setRegistrando] = useState(false);
+  const { usuario, hasPermiso } = useAuth()
+  const autorizado = hasPermiso('marcar-en-linea')
+  const servidor = usuario?.servidor
+  const habilitado = !!servidor?.cedula && !!servidor.puede_marcar
+  const activa = autorizado && habilitado
 
-  const cedula = usuario?.servidor?.cedula ?? null;
-  const puedeMarcar = usuario?.servidor?.puede_marcar ?? false;
+  const ubicacion = useUbicacion(activa)
+  const { hoy, registrar } = useMarcacionOnline(activa)
+  const [enCurso, setEnCurso] = useState<ClaveAccion | null>(null)
 
-  const {
-    data: estadoHoy,
-    isLoading: cargandoEstado,
-    refetch,
-  } = useQuery({
-    queryKey: ["marcacion-hoy", cedula],
-    queryFn: () => asistenciaService.marcaciones.estadoHoy(),
-    enabled: autorizado && !!cedula && puedeMarcar,
-    staleTime: 0,
-    refetchInterval: 60_000,
-  });
+  const acciones = accionesDelDia(hoy.data)
+  const siguiente = siguienteAccion(hoy.data, acciones)
 
-  const obtenerUbicacion = () => {
-    if (!navigator.geolocation) {
-      setTimeout(() => setCargandoUbicacion(false), 0);
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setUbicacion({
-          lat: pos.coords.latitude,
-          lon: pos.coords.longitude,
-        });
-        setErrorGPS(null);
-        setCargandoUbicacion(false);
-      },
-      (error) => {
-        if (error.code === error.PERMISSION_DENIED) {
-          setErrorGPS("denied");
-        } else {
-          setErrorGPS("error");
-        }
-        setCargandoUbicacion(false);
-      },
-      { enableHighAccuracy: true },
-    );
-  };
-
-  const mostrarInstruccionesGPS = () => {
-    modals.open({
-      title: "Acceso a ubicación bloqueado",
-      children: (
-        <Text size="sm">
-          Ha bloqueado el acceso a la ubicación. Para permitirlo, haga clic en
-          el icono de candado o de información que aparece en la barra de
-          direcciones de su navegador, busque Ubicación y cámbielo a Permitir.
-          Luego recargue la página.
-        </Text>
-      ),
-    });
-  };
-
-  const handleReintentar = () => {
-    setCargandoUbicacion(true);
-    obtenerUbicacion();
-  };
-
-  // Pedir el GPS solo a quien va a poder marcar.
-  const puedeUsarla = autorizado && !!cedula && puedeMarcar;
-  useEffect(() => {
-    if (puedeUsarla) obtenerUbicacion();
-  }, [puedeUsarla]);
-
-  const registrar = async (checktype: "I" | "O", label: string) => {
-    if (!cedula || !puedeMarcar) return;
-    setRegistrando(true);
+  const ejecutar = async (accion: AccionMarcacion) => {
+    setEnCurso(accion.clave)
     try {
-      await asistenciaService.marcaciones.registrarOnline({
-        checktype,
-        latitud: ubicacion?.lat,
-        longitud: ubicacion?.lon,
-      });
-      notificar.exito(
-        `${label} registrada`,
-        `Tu ${label.toLowerCase()} fue registrada correctamente.`,
-      );
-      refetch();
-    } catch (error) {
-      notificar.error(
-        `No se pudo registrar la ${label.toLowerCase()}`,
-        getApiErrorMessage(error, "Inténtelo de nuevo en unos segundos."),
-      );
+      // La ubicación se pide ahora, no la que se leyó al abrir la página.
+      const coordenadas = await ubicacion.actualizar().catch((error: Error) => {
+        notificar.error('Ubicación no disponible', `${error.message} La marcación no se registró.`)
+        return null
+      })
+      if (coordenadas) {
+        // El error de la petición ya lo avisa la mutación.
+        await registrar.mutateAsync({ accion, ubicacion: coordenadas }).catch(() => {})
+      }
     } finally {
-      setRegistrando(false);
+      setEnCurso(null)
     }
-  };
+  }
+
+  const marcar = (accion: AccionMarcacion) => {
+    const motivo = motivoParaConfirmar(accion, hoy.data, siguiente)
+    if (!motivo) {
+      void ejecutar(accion)
+      return
+    }
+    confirmar({
+      title: `¿Registrar «${accion.etiqueta}»?`,
+      message: motivo,
+      confirmLabel: 'Registrar',
+      onConfirm: () => void ejecutar(accion),
+    })
+  }
 
   if (!autorizado) {
     return (
-      <Alert
-        icon={<IconInfoCircle size={16} />}
-        color="amber"
-        variant="light"
-        radius="md"
-      >
-        <Text size="sm">
-          No tiene autorización para marcar en línea. Si su trabajo lo
-          requiere, solicítela a Talento Humano.
-        </Text>
-      </Alert>
-    );
+      <EmptyState
+        icon={IconLock}
+        title="No tiene autorización para marcar en línea"
+        description="Si su trabajo lo requiere, solicítela a Talento Humano."
+      />
+    )
   }
 
-  if (!cedula || !puedeMarcar) {
+  if (!habilitado) {
     return (
-      <Alert
-        icon={<IconInfoCircle size={16} />}
-        color="amber"
-        variant="light"
-        radius="md"
-      >
-        <Text size="sm">
-          Su usuario no tiene habilitada la marcación biométrica. Contacte a
-          Talento Humano para habilitarla en su contrato.
-        </Text>
-      </Alert>
-    );
-  }
-
-  // Lógica para determinar el paso activo en el Timeline
-  let activeStep = -1;
-  if (estadoHoy) {
-    if (estadoHoy.Entrada) activeStep = 0;
-    if (estadoHoy.AlmuerzoSalida) activeStep = 1;
-    if (estadoHoy.AlmuerzoRetorno) activeStep = 2;
-    if (estadoHoy.Salida) activeStep = 3;
+      <EmptyState
+        icon={IconLock}
+        title="Su usuario no tiene la marcación biométrica habilitada"
+        description="Talento Humano la habilita en su contrato."
+      />
+    )
   }
 
   return (
-    <Stack gap="lg" maw={600} mx="auto">
-      {/* Panel Superior: Información y Estado del GPS */}
-      <Paper withBorder radius="md" p="md" bg="var(--mantine-color-body)">
-        <Group justify="space-between" align="center" wrap="nowrap">
-          <Group gap="sm" wrap="nowrap">
-            <ThemeIcon size={32} radius="xl" variant="light" color="ocean">
-              <IconInfoCircle size={18} />
-            </ThemeIcon>
-            <Text size="xs" c="dimmed" lh={1.3} maw={250}>
-              Registre su asistencia desde territorio con conexión a internet y
-              GPS activo.
-            </Text>
-          </Group>
+    <Grid gap="lg">
+      <Grid.Col span={{ base: 12, md: 7 }}>
+        <SectionCard
+          title="Registrar marcación"
+          description="Se guarda con su ubicación en el momento de pulsar."
+          actions={
+            <UbicacionEstado
+              estado={ubicacion.estado}
+              coordenadas={ubicacion.coordenadas}
+              onReintentar={() => void ubicacion.actualizar().catch(() => {})}
+            />
+          }
+        >
+          <AccionesMarcacion
+            acciones={acciones}
+            siguiente={siguiente}
+            enCurso={enCurso}
+            bloqueadas={ubicacion.estado === 'denegada' || ubicacion.estado === 'no-disponible'}
+            onMarcar={marcar}
+          />
+        </SectionCard>
+      </Grid.Col>
 
-          <Stack gap={4} align="flex-end">
-            {cargandoUbicacion ? (
-              <StatusBadge variant="dot">
-                Ubicando...
-              </StatusBadge>
-            ) : ubicacion ? (
-              <>
-                <StatusBadge
-                  tone="success"
-                  leftSection={
-                    <IconMapPin size={10} style={{ marginLeft: 6 }} />
-                  }
-                >
-                  GPS Activo
-                </StatusBadge>
-                <Text size="10px" c="dimmed" fw={500}>
-                  {ubicacion.lat.toFixed(4)}, {ubicacion.lon.toFixed(4)}
-                </Text>
-              </>
-            ) : (
-              <Group gap="xs">
-                {errorGPS === "denied" ? (
-                  <Button
-                    size="compact-xs"
-                    variant="subtle"
-                    color="red"
-                    onClick={mostrarInstruccionesGPS}
-                  >
-                    Permiso Denegado
-                  </Button>
-                ) : (
-                  <Button
-                    size="compact-xs"
-                    variant="subtle"
-                    onClick={handleReintentar}
-                  >
-                    Reintentar
-                  </Button>
-                )}
-                <StatusBadge
-                  tone="danger"
-                  leftSection={
-                    <IconMapPinOff size={10} style={{ marginLeft: 6 }} />
-                  }
-                >
-                  GPS Inactivo
-                </StatusBadge>
-              </Group>
-            )}
-          </Stack>
-        </Group>
-      </Paper>
-
-      {/* Tarjeta Central: Timeline y Botones */}
-      <Card withBorder radius="md" p="xl" shadow="sm">
-        <Grid gap="xl">
-          {/* Columna Izquierda: Línea de tiempo (Timeline) */}
-          <Grid.Col span={{ base: 12, sm: 5 }}>
-            <Text
-              size="xs"
-              fw={600}
-              c="dimmed"
-              tt="uppercase"
-              style={{ letterSpacing: 0.5 }}
-              mb="xl"
-            >
-              Progreso de hoy
-            </Text>
-
-            {cargandoEstado ? (
-              <Center py="xl">
-                <Loader size="sm" />
-              </Center>
-            ) : (
-              <Timeline
-                active={activeStep}
-                bulletSize={24}
-                lineWidth={2}
-              >
-                <Timeline.Item
-                  bullet={
-                    estadoHoy?.Entrada ? (
-                      <IconCheck size={14} />
-                    ) : (
-                      <IconClock size={14} />
-                    )
-                  }
-                  title="Entrada"
-                >
-                  <Text c="dimmed" size="xs" mt={4}>
-                    {estadoHoy?.Entrada
-                      ? estadoHoy.Entrada.substring(0, 5)
-                      : "--:--"}
-                  </Text>
-                </Timeline.Item>
-
-                <Timeline.Item
-                  bullet={
-                    estadoHoy?.AlmuerzoSalida ? (
-                      <IconCheck size={14} />
-                    ) : (
-                      <IconClock size={14} />
-                    )
-                  }
-                  title="Salida almuerzo"
-                >
-                  <Text c="dimmed" size="xs" mt={4}>
-                    {estadoHoy?.AlmuerzoSalida
-                      ? estadoHoy.AlmuerzoSalida.substring(0, 5)
-                      : "--:--"}
-                  </Text>
-                </Timeline.Item>
-
-                <Timeline.Item
-                  bullet={
-                    estadoHoy?.AlmuerzoRetorno ? (
-                      <IconCheck size={14} />
-                    ) : (
-                      <IconClock size={14} />
-                    )
-                  }
-                  title="Retorno almuerzo"
-                >
-                  <Text c="dimmed" size="xs" mt={4}>
-                    {estadoHoy?.AlmuerzoRetorno
-                      ? estadoHoy.AlmuerzoRetorno.substring(0, 5)
-                      : "--:--"}
-                  </Text>
-                </Timeline.Item>
-
-                <Timeline.Item
-                  bullet={
-                    estadoHoy?.Salida ? (
-                      <IconCheck size={14} />
-                    ) : (
-                      <IconClock size={14} />
-                    )
-                  }
-                  title="Salida final"
-                >
-                  <Text c="dimmed" size="xs" mt={4}>
-                    {estadoHoy?.Salida
-                      ? estadoHoy.Salida.substring(0, 5)
-                      : "--:--"}
-                  </Text>
-                </Timeline.Item>
-              </Timeline>
-            )}
-          </Grid.Col>
-
-          {/* Columna Derecha: Botones de Acción */}
-          <Grid.Col span={{ base: 12, sm: 7 }}>
-            <Text
-              size="xs"
-              fw={600}
-              c="dimmed"
-              tt="uppercase"
-              style={{ letterSpacing: 0.5 }}
-              mb="md"
-            >
-              Registrar Acción
-            </Text>
-
-            <Grid gap="sm">
-              <Grid.Col span={6}>
-                <Button
-                  h={100}
-                  radius="md"
-                  variant="light"
-                  loading={registrando}
-                  onClick={() => registrar("I", "Entrada")}
-                  fullWidth
-                  disabled={cargandoEstado || !ubicacion}
-                  p={0}
-                >
-                  <Stack gap={4} align="center" justify="center">
-                    <IconLogin size={28} stroke={1.5} />
-                    <Text size="xs" fw={600}>
-                      Entrada
-                    </Text>
-                  </Stack>
-                </Button>
-              </Grid.Col>
-
-              <Grid.Col span={6}>
-                <Button
-                  h={100}
-                  radius="md"
-                  color="slate"
-                  variant="light"
-                  loading={registrando}
-                  onClick={() => registrar("I", "Salida")}
-                  fullWidth
-                  disabled={cargandoEstado || !ubicacion}
-                  p={0}
-                >
-                  <Stack gap={4} align="center" justify="center">
-                    <IconLogout size={28} stroke={1.5} />
-                    <Text size="xs" fw={600}>
-                      Salida
-                    </Text>
-                  </Stack>
-                </Button>
-              </Grid.Col>
-
-              <Grid.Col span={6}>
-                <Button
-                  h={100}
-                  radius="md"
-                  variant="light"
-                  loading={registrando}
-                  onClick={() => registrar("O", "Salida Almuerzo")}
-                  fullWidth
-                  disabled={cargandoEstado || !ubicacion}
-                  p={0}
-                >
-                  <Stack gap={4} align="center" justify="center">
-                    <IconSoup size={28} stroke={1.5} />
-                    <Text size="xs" fw={600} ta="center" lh={1.1}>
-                      Salida
-                      <br />
-                      Almuerzo
-                    </Text>
-                  </Stack>
-                </Button>
-              </Grid.Col>
-
-              <Grid.Col span={6}>
-                <Button
-                  h={100}
-                  radius="md"
-                  variant="light"
-                  loading={registrando}
-                  onClick={() => registrar("O", "Retorno Almuerzo")}
-                  fullWidth
-                  disabled={cargandoEstado || !ubicacion}
-                  p={0}
-                >
-                  <Stack gap={4} align="center" justify="center">
-                    <IconSoup size={28} stroke={1.5} />
-                    <Text size="xs" fw={600} ta="center" lh={1.1}>
-                      Retorno
-                      <br />
-                      Almuerzo
-                    </Text>
-                  </Stack>
-                </Button>
-              </Grid.Col>
-            </Grid>
-          </Grid.Col>
-        </Grid>
-      </Card>
-    </Stack>
-  );
+      <Grid.Col span={{ base: 12, md: 5 }}>
+        <SectionCard title="Progreso de hoy">
+          <ProgresoHoy
+            estado={hoy.data}
+            acciones={acciones}
+            siguiente={siguiente}
+            cargando={hoy.isLoading}
+            error={hoy.error}
+            onReintentar={() => void hoy.refetch()}
+          />
+        </SectionCard>
+      </Grid.Col>
+    </Grid>
+  )
 }
