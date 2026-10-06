@@ -109,7 +109,16 @@ export function MarcacionesTab({ soloPropias = false }: Props) {
           skeletonRows={4}
           emptyProps={{ icon: IconClock, title: 'Sin marcaciones en el período' }}
         >
-          <SgthTable records={marcaciones} columns={marcacionesColumns} fetching={isFetching} minHeight={200} />
+          {/* Las filas del biométrico no traen `id`, que es la clave que la
+              tabla usa por defecto: todas quedaban con la misma y React
+              avisaba. El procedimiento devuelve una fila por día. */}
+          <SgthTable
+            records={marcaciones}
+            columns={marcacionesColumns}
+            idAccessor="Fecha"
+            fetching={isFetching}
+            minHeight={200}
+          />
         </DataState>
       )}
     </Stack>
