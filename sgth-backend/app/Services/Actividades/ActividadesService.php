@@ -18,29 +18,6 @@ class ActividadesService implements ActividadesServiceInterface
         return ActividadLaboral::create($datos);
     }
 
-    public function validarCruceBiometrico(int $servidorId, string $fecha): array
-    {
-        $marcaciones = DB::table('marcaciones')
-            ->where('servidor_id', $servidorId)
-            ->whereDate('fecha_hora', $fecha)
-            ->count();
-
-        $actividades = ActividadLaboral::where('servidor_id', $servidorId)
-            ->where('fecha', $fecha)
-            ->count();
-
-        $alerta = false;
-        if ($marcaciones > 0 && $actividades === 0) {
-            $alerta = true;
-        }
-
-        return [
-            'marcaciones' => $marcaciones,
-            'actividades' => $actividades,
-            'alerta_sin_documentar' => $alerta
-        ];
-    }
-
     public function generarInformeMensual(int $servidorId, int $mes, int $anio): InformeActividad
     {
         return DB::transaction(function () use ($servidorId, $mes, $anio) {

@@ -101,8 +101,7 @@
   DB_SQLSRV_PORT con el puerto real de la instancia ATIEMPO (dinámico, no 1433)
   y BIOMETRICO_SENSOR_ONLINE
 □ GET /api/v1/asistencia/marcaciones responde con una cédula conocida
-□ ImportarMarcacionesBiometricoCommand ejecutado
-  manualmente una vez para verificar integración
+  (no hay importación: las marcaciones se consultan en vivo en Sirha7)
 
 ## DATOS INICIALES
 □ Usuario admin-ti creado por AdminTiSeeder

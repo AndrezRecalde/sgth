@@ -66,8 +66,6 @@ use App\Contracts\Nomina\NominaServiceInterface;
 use App\Services\Nomina\NominaService;
 use App\Contracts\Autoservicio\AutoservicioServiceInterface;
 use App\Services\Autoservicio\AutoservicioService;
-use App\Contracts\Biometrico\BiometricoServiceInterface;
-use App\Services\Biometrico\BiometricoService;
 use App\Contracts\Disciplinario\DisciplinarioServiceInterface;
 use App\Services\Disciplinario\DisciplinarioService;
 use App\Contracts\Evaluacion\EvaluacionServiceInterface;
@@ -203,10 +201,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             AutoservicioServiceInterface::class,
             AutoservicioService::class
-        );
-        $this->app->bind(
-            BiometricoServiceInterface::class,
-            BiometricoService::class
         );
         $this->app->bind(
             DisciplinarioServiceInterface::class,
