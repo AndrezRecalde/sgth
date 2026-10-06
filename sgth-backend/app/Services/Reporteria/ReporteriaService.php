@@ -339,60 +339,6 @@ class ReporteriaService implements ReporteriaServiceInterface
     }
 
     /**
-     * Asistencia y permisos por servidor en un rango.
-     *
-     * Las marcaciones vienen del biométrico y los permisos del módulo de
-     * Asistencia. Se cuentan por separado porque responden preguntas distintas:
-     * cuántas veces marcó y cuánto tiempo estuvo autorizado a no estar.
-     */
-    public function generarReporteAsistencia(array $filtros): array
-    {
-        return $this->cacheReporte('reporte_asistencia', $filtros, function () use ($filtros) {
-            $desde = $filtros['desde'] ?? now()->startOfMonth()->toDateString();
-            $hasta = $filtros['hasta'] ?? now()->endOfMonth()->toDateString();
-
-            $marcaciones = DB::table('marcaciones')
-                ->whereBetween(DB::raw('fecha_hora::date'), [$desde, $hasta])
-                ->select('servidor_id', DB::raw('COUNT(*) as total_marcaciones'))
-                ->groupBy('servidor_id');
-
-            $permisos = DB::table('permisos_servidor')
-                ->whereNull('deleted_at')
-                ->whereNull('anulado_en')
-                ->whereBetween('fecha', [$desde, $hasta])
-                ->select('servidor_id', DB::raw('COUNT(*) as total_permisos'))
-                ->groupBy('servidor_id');
-
-            $datos = DB::table('servidores')
-                ->leftJoinSub($marcaciones, 'm', 'm.servidor_id', '=', 'servidores.id')
-                ->leftJoinSub($permisos, 'p', 'p.servidor_id', '=', 'servidores.id')
-                ->leftJoin('unidades_administrativas', 'servidores.unidad_administrativa_id', '=', 'unidades_administrativas.id')
-                ->whereNull('servidores.deleted_at')
-                ->where('servidores.estado', true)
-                ->select(
-                    'servidores.cedula',
-                    'servidores.nombre',
-                    'servidores.apellido',
-                    'unidades_administrativas.nombre as unidad',
-                    DB::raw('COALESCE(m.total_marcaciones, 0) as total_marcaciones'),
-                    DB::raw('COALESCE(p.total_permisos, 0) as total_permisos'),
-                )
-                ->orderBy('servidores.apellido')
-                ->get();
-
-            return [
-                'metadata' => [
-                    'reporte' => 'Reporte de Asistencia y Permisos',
-                    'desde'   => $desde,
-                    'hasta'   => $hasta,
-                    'total_servidores' => $datos->count(),
-                ],
-                'datos' => $datos->toArray(),
-            ];
-        });
-    }
-
-    /**
      * Los viáticos del periodo, con lo anticipado y lo calculado.
      *
      * Se excluyen los rechazados y los cancelados: no representan gasto, y

@@ -25,8 +25,6 @@ interface ReporteriaServiceInterface
 
     public function generarInformePac(array $filtros): array;
 
-    public function generarReporteAsistencia(array $filtros): array;
-
     public function generarReporteViaticos(array $filtros): array;
 
     public function generarReporteAccidentabilidad(array $filtros): array;

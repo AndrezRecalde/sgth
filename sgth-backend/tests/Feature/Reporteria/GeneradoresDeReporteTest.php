@@ -130,36 +130,6 @@ test('la_nomina_consolidada_respeta_el_periodo_que_se_le_pide', function () {
     expect($reporte['metadata']['suma_neto'])->toBe(500.0);
 });
 
-test('el_reporte_de_asistencia_cuenta_marcaciones_y_permisos', function () {
-    DB::table('marcaciones')->insert([
-        ['servidor_id' => $this->servidor->id, 'fecha_hora' => now(), 'tipo' => 'entrada', 'created_at' => now(), 'updated_at' => now()],
-        ['servidor_id' => $this->servidor->id, 'fecha_hora' => now(), 'tipo' => 'salida',  'created_at' => now(), 'updated_at' => now()],
-    ]);
-    DB::table('permisos_servidor')->insert([
-        'servidor_id' => $this->servidor->id, 'tipo' => 'personal',
-        'fecha' => now()->toDateString(), 'hora_inicio' => '08:00',
-        'hora_fin' => '10:00', 'estado' => 'activo', 'folio' => 'PER-T-1',
-        'vence_en' => now()->addDays(3),
-        'created_at' => now(), 'updated_at' => now(),
-    ]);
-
-    $reporte = $this->servicio->generarReporteAsistencia([]);
-    $fila    = collect($reporte['datos'])->firstWhere('cedula', '0801234595');
-
-    expect((int) $fila->total_marcaciones)->toBe(2);
-    expect((int) $fila->total_permisos)->toBe(1);
-});
-
-test('el_reporte_de_asistencia_incluye_a_quien_no_marco_nada', function () {
-    // Un servidor sin marcaciones es precisamente el que hay que ver en un
-    // reporte de asistencia: si el join lo dejara fuera, desaparecería.
-    $reporte = $this->servicio->generarReporteAsistencia([]);
-    $fila    = collect($reporte['datos'])->firstWhere('cedula', '0801234595');
-
-    expect($fila)->not->toBeNull();
-    expect((int) $fila->total_marcaciones)->toBe(0);
-});
-
 test('el_reporte_de_viaticos_suma_montos_y_deja_fuera_los_rechazados', function () {
     foreach ([['aprobado', 200], ['rechazado', 999]] as $i => [$estado, $monto]) {
         DB::table('viaticos')->insert([

@@ -171,11 +171,6 @@ class Servidor extends Model
             ->limit(1);
     }
 
-    public function codigoMarcacionVigente(): ?string
-    {
-        return $this->cedula;
-    }
-
     /**
      * Tiempo de servicio EN LA INSTITUCIÓN, en años cumplidos.
      *

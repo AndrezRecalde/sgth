@@ -51,7 +51,6 @@ class GenerarReporteJob implements ShouldQueue
                 'planilla_iess' => $reporteriaService->generarPlanillaIess($this->parametros),
                 'formulario_107_sri' => $reporteriaService->generarFormulario107($this->parametros),
                 'informe_pac' => $reporteriaService->generarInformePac($this->parametros),
-                'reporte_asistencia' => $reporteriaService->generarReporteAsistencia($this->parametros),
                 'reporte_viaticos' => $reporteriaService->generarReporteViaticos($this->parametros),
                 'reporte_accidentabilidad' => $reporteriaService->generarReporteAccidentabilidad($this->parametros),
                 default => $reporteriaService->generarReporteAdHoc([
