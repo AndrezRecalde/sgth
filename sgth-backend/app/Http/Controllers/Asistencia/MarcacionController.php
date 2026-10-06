@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers\Asistencia;
 
+use App\Enums\Permiso;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\Expediente\Servidor;
@@ -21,6 +22,14 @@ class MarcacionController extends Controller
      * Consultar marcaciones de un servidor por cédula.
      * Solo servidores con puede_marcar = true.
      *
+     * Las de cualquier servidor, quien tiene `ver-asistencia-todos` (Talento
+     * Humano, máxima autoridad, auditoría: la misma regla con la que se ven
+     * las vacaciones de toda la institución). Los demás, solo las propias.
+     * Antes bastaba con iniciar sesión para leer las de cualquier cédula.
+     *
+     * El permiso se comprueba antes de buscar al servidor, para que un 404
+     * no le diga a quien no puede consultar qué cédulas existen.
+     *
      * Si el biométrico rechaza la cédula (de relleno, repartida en varios
      * usuarios…) el procedimiento lanza una ReglaNegocioException, que sale
      * como 422 con su mensaje.
@@ -34,6 +43,16 @@ class MarcacionController extends Controller
         ]);
 
         $cedula = $request->cedula;
+        $user   = $request->user();
+
+        if (
+            !$user->can(Permiso::VER_ASISTENCIA_TODOS->value)
+            && $cedula !== $user->servidor?->cedula
+        ) {
+            return ApiResponse::noAutorizado(
+                'Solo puede consultar sus propias marcaciones.'
+            );
+        }
 
         // Verificar que el servidor puede marcar
         $servidor = Servidor::where('cedula', $cedula)

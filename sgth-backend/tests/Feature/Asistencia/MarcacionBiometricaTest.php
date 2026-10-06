@@ -94,6 +94,84 @@ it('consulta el biométrico con la cédula de 10 dígitos y el rango pedido', fu
         ->assertJsonPath('datos.0.Entrada', '08:00:12');
 });
 
+/** Usuario con un único rol y, si se indica, vinculado a un servidor. */
+function usuarioMarcaciones(string $rol, ?Servidor $servidor = null): User
+{
+    $usuario = User::create([
+        'email' => "{$rol}.marcaciones@example.com", 'usuario_ti' => "{$rol}_marcaciones",
+        'password' => bcrypt('123456'), 'primer_login' => false,
+        'servidor_id' => $servidor?->id,
+    ]);
+    $usuario->assignRole($rol);
+
+    return $usuario;
+}
+
+describe('quién consulta', function () {
+    beforeEach(function () {
+        $this->otro = Servidor::create([
+            'cedula' => '0802704173', 'nombre' => 'Carla', 'apellido' => 'Otra',
+            'puesto_id' => $this->marca->puesto_id,
+            'unidad_administrativa_id' => $this->marca->unidad_administrativa_id,
+            'regimen_laboral' => RegimenLaboral::LOSEP, 'estado' => true,
+            'puede_marcar' => true,
+        ]);
+        $this->consulta = fn (string $cedula) =>
+            "/api/v1/asistencia/marcaciones?cedula={$cedula}&fecha_inicio=2026-09-01&fecha_fin=2026-09-30";
+    });
+
+    it('un servidor consulta sus propias marcaciones', function () {
+        $this->mock(MarcacionBiometricaService::class)
+            ->shouldReceive('porCedula')->once()->andReturn([filaBiometrico('2026-09-01')]);
+
+        $this->actingAs(usuarioMarcaciones('servidor', $this->otro))
+            ->getJson(($this->consulta)('0802704173'))
+            ->assertOk();
+    });
+
+    it('un servidor no consulta las de otro', function () {
+        $this->mock(MarcacionBiometricaService::class)->shouldNotReceive('porCedula');
+
+        $this->actingAs(usuarioMarcaciones('servidor', $this->otro))
+            ->getJson(($this->consulta)('0802704171'))
+            ->assertForbidden();
+    });
+
+    it('a quien no puede consultar, una cédula inexistente le da 403 y no 404', function () {
+        $this->mock(MarcacionBiometricaService::class)->shouldNotReceive('porCedula');
+
+        $this->actingAs(usuarioMarcaciones('servidor', $this->otro))
+            ->getJson(($this->consulta)('0899999999'))
+            ->assertForbidden();
+    });
+
+    it('un usuario sin servidor vinculado no consulta ninguna', function () {
+        $this->mock(MarcacionBiometricaService::class)->shouldNotReceive('porCedula');
+
+        $this->actingAs(usuarioMarcaciones('servidor'))
+            ->getJson(($this->consulta)('0802704171'))
+            ->assertForbidden();
+    });
+
+    it('el jefe de unidad tampoco consulta las de otro', function () {
+        // Tiene ver-asistencia-unidad, no ver-asistencia-todos.
+        $this->mock(MarcacionBiometricaService::class)->shouldNotReceive('porCedula');
+
+        $this->actingAs(usuarioMarcaciones('jefe-unidad', $this->otro))
+            ->getJson(($this->consulta)('0802704171'))
+            ->assertForbidden();
+    });
+
+    it('consulta las de cualquiera quien tiene ver-asistencia-todos', function (string $rol) {
+        $this->mock(MarcacionBiometricaService::class)
+            ->shouldReceive('porCedula')->once()->andReturn([]);
+
+        $this->actingAs(usuarioMarcaciones($rol))
+            ->getJson(($this->consulta)('0802704173'))
+            ->assertOk();
+    })->with(['admin-uath', 'asistente-uath', 'auditor']);
+});
+
 it('responde 404 si el servidor no tiene la marcación habilitada, sin consultar el biométrico', function () {
     $this->mock(MarcacionBiometricaService::class)->shouldNotReceive('porCedula');
 
