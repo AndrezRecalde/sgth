@@ -18,7 +18,8 @@ use Illuminate\Support\Facades\DB;
  * dígitos no encontraba a nadie de Esmeraldas (08…). El v3 sigue en la base
  * porque lo usa otro sistema; aquí ya no se llama.
  *
- * Solo lectura: el procedimiento no escribe en ninguna tabla.
+ * La consulta es de solo lectura: el procedimiento no escribe en ninguna
+ * tabla. La única escritura es la marcación online (registrarMarcacion).
  */
 class MarcacionBiometricaService
 {
@@ -50,6 +51,43 @@ class MarcacionBiometricaService
 
             throw $e;
         }
+    }
+
+    /**
+     * Registra una marcación online en CHECKINOUT a nombre de la cédula.
+     *
+     * Devuelve false si la cédula no está en USERINFO.SSN.
+     *
+     * La hora va en ISO 8601 con «T» («2026-10-05T17:20:00»), que SQL Server
+     * lee igual en cualquier idioma. Con «Y-m-d H:i:s» el servidor, que está
+     * en español (DATEFORMAT dmy), cambiaba el mes por el día: el 5 de octubre
+     * se guardaba como 10 de mayo, y del día 13 en adelante la inserción
+     * fallaba por fecha fuera de rango.
+     */
+    public function registrarMarcacion(string $cedula, string $tipo, CarbonInterface $momento): bool
+    {
+        $usuario = $this->conexion()->select(
+            'SELECT USERID FROM USERINFO WHERE SSN = ?',
+            [$cedula]
+        );
+
+        if (empty($usuario)) {
+            return false;
+        }
+
+        $this->conexion()->statement(
+            'INSERT INTO CHECKINOUT
+                (USERID, CHECKTIME, CHECKTYPE, SENSORID, MARCTYPE)
+             VALUES (?, ?, ?, 4, ?)',
+            [
+                $usuario[0]->USERID,
+                $momento->format('Y-m-d\TH:i:s'),
+                $tipo,
+                'IR',
+            ]
+        );
+
+        return true;
     }
 
     /** Aparte para que las pruebas puedan darle una conexión simulada. */

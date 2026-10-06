@@ -8,7 +8,6 @@ use App\Services\Asistencia\MarcacionBiometricaService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /*
@@ -116,7 +115,7 @@ class MarcacionController extends Controller
      * Usa la cédula del usuario autenticado.
      * Solo si puede_marcar = true.
      */
-    public function registrarOnline(Request $request): JsonResponse
+    public function registrarOnline(Request $request, MarcacionBiometricaService $biometrico): JsonResponse
     {
         $request->validate([
             'checktype' => 'required|in:I,O',
@@ -142,45 +141,25 @@ class MarcacionController extends Controller
         }
 
         try {
-            // Obtener USERID de USERINFO por SSN (cédula)
-            $userInfo = DB::connection('sqlsrv')
-                ->select(
-                    'SELECT USERID FROM USERINFO WHERE SSN = ?',
-                    [$cedula]
-                );
-
-            if (empty($userInfo)) {
-                return ApiResponse::error(
-                    'No se encontró el registro biométrico para esta cédula.',
-                    codigo: 404
-                );
-            }
-
-            $userId = $userInfo[0]->USERID;
-
-            // Registrar en CHECKINOUT
-            DB::connection('sqlsrv')->statement(
-                'INSERT INTO CHECKINOUT
-                    (USERID, CHECKTIME, CHECKTYPE, SENSORID, MARCTYPE)
-                 VALUES (?, ?, ?, 4, ?)',
-                [
-                    $userId,
-                    now()->format('Y-m-d H:i:s'),
-                    $request->checktype,
-                    'IR',
-                ]
-            );
-
-            return ApiResponse::ok(
-                null,
-                'Marcación registrada correctamente.'
-            );
-        } catch (\Exception $e) {
+            $registrada = $biometrico->registrarMarcacion($cedula, $request->checktype, now());
+        } catch (\PDOException $e) {
             Log::error('Error marcación online: ' . $e->getMessage());
             return ApiResponse::error(
                 'No se pudo registrar la marcación.',
                 codigo: 503
             );
         }
+
+        if (!$registrada) {
+            return ApiResponse::error(
+                'No se encontró el registro biométrico para esta cédula.',
+                codigo: 404
+            );
+        }
+
+        return ApiResponse::ok(
+            null,
+            'Marcación registrada correctamente.'
+        );
     }
 }

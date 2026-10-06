@@ -158,6 +158,39 @@ it('el estado de hoy responde 403 si quien consulta no tiene la marcación habil
         ->assertForbidden();
 });
 
+it('la marcación online se registra a nombre de quien la hace, con la hora actual', function () {
+    Carbon::setTestNow('2026-10-13 07:58:30');
+
+    $this->mock(MarcacionBiometricaService::class)
+        ->shouldReceive('registrarMarcacion')->once()
+        ->withArgs(fn ($cedula, $tipo, $momento) => $cedula === '0802704171'
+            && $tipo === 'I'
+            && $momento->format('Y-m-d H:i:s') === '2026-10-13 07:58:30')
+        ->andReturn(true);
+
+    $this->actingAs($this->usuario)
+        ->postJson('/api/v1/asistencia/marcaciones/online', ['checktype' => 'I'])
+        ->assertOk();
+});
+
+it('la marcación online responde 404 si la cédula no está en el biométrico', function () {
+    $this->mock(MarcacionBiometricaService::class)
+        ->shouldReceive('registrarMarcacion')->andReturn(false);
+
+    $this->actingAs($this->usuario)
+        ->postJson('/api/v1/asistencia/marcaciones/online', ['checktype' => 'O'])
+        ->assertNotFound();
+});
+
+it('la marcación online responde 503 si el biométrico no responde', function () {
+    $this->mock(MarcacionBiometricaService::class)
+        ->shouldReceive('registrarMarcacion')->andThrow(errorSqlServer(-1, 'Login timeout expired'));
+
+    $this->actingAs($this->usuario)
+        ->postJson('/api/v1/asistencia/marcaciones/online', ['checktype' => 'O'])
+        ->assertStatus(503);
+});
+
 /**
  * El servicio con una conexión simulada en lugar de la de SQL Server. No se
  * sustituye la fachada DB: eso dejaría a RefreshDatabase sin su conexión.
@@ -193,6 +226,33 @@ describe('servicio', function () {
 
         biometricoSobre($conexion)->porCedula('1111111111', Carbon::today(), Carbon::today());
     })->throws(ReglaNegocioException::class, '1111111111 es la cédula de relleno del biométrico, no identifica a nadie.');
+
+    it('registra la marcación online con la fecha en ISO 8601, que SQL Server no confunde', function () {
+        // Día 13: con «Y-m-d H:i:s» y DATEFORMAT dmy era el mes 13 y fallaba;
+        // los días 1 a 12 se guardaban con el mes y el día cambiados.
+        $conexion = Mockery::mock(ConnectionInterface::class);
+        $conexion->shouldReceive('select')->once()
+            ->with('SELECT USERID FROM USERINFO WHERE SSN = ?', ['0802704171'])
+            ->andReturn([(object) ['USERID' => 798]]);
+        $conexion->shouldReceive('statement')->once()
+            ->withArgs(fn ($sql, $valores) => str_contains($sql, 'INSERT INTO CHECKINOUT')
+                && $valores === [798, '2026-10-13T17:20:05', 'O', 'IR'])
+            ->andReturn(true);
+
+        expect(biometricoSobre($conexion)
+            ->registrarMarcacion('0802704171', 'O', Carbon::parse('2026-10-13 17:20:05')))
+            ->toBeTrue();
+    });
+
+    it('no inserta nada si la cédula no está en el biométrico', function () {
+        $conexion = Mockery::mock(ConnectionInterface::class);
+        $conexion->shouldReceive('select')->once()->andReturn([]);
+        $conexion->shouldNotReceive('statement');
+
+        expect(biometricoSobre($conexion)
+            ->registrarMarcacion('0802704171', 'I', Carbon::now()))
+            ->toBeFalse();
+    });
 
     it('deja pasar los demás errores de SQL Server', function () {
         $conexion = Mockery::mock(ConnectionInterface::class);
