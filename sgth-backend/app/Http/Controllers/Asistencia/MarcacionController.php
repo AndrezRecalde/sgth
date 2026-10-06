@@ -138,8 +138,9 @@ class MarcacionController extends Controller
     {
         $request->validate([
             'checktype' => 'required|in:I,O',
-            'latitud'   => 'nullable|numeric',
-            'longitud'  => 'nullable|numeric',
+            // Se guardan en el biométrico (GEOLT/GEOLG): las dos o ninguna.
+            'latitud'   => 'nullable|numeric|between:-90,90|required_with:longitud',
+            'longitud'  => 'nullable|numeric|between:-180,180|required_with:latitud',
         ]);
 
         $user   = $request->user();
@@ -160,7 +161,13 @@ class MarcacionController extends Controller
         }
 
         try {
-            $registrada = $biometrico->registrarMarcacion($cedula, $request->checktype, now());
+            $registrada = $biometrico->registrarMarcacion(
+                $cedula,
+                $request->checktype,
+                now(),
+                $request->filled('latitud') ? (float) $request->latitud : null,
+                $request->filled('longitud') ? (float) $request->longitud : null,
+            );
         } catch (\PDOException $e) {
             Log::error('Error marcación online: ' . $e->getMessage());
             return ApiResponse::error(

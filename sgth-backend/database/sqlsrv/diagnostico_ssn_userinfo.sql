@@ -2,6 +2,9 @@
 ================================================================================
   Diagnóstico de USERINFO.SSN (cédula) en Sirha7 — SOLO LECTURA
 
+  Lo ejecuta un administrador: sgth_app, el usuario del SGTH, no puede leer
+  USERINFO.
+
   sp_SGTH_MarcacionesPorCedula encuentra al servidor por SSN. Estas consultas
   listan a quienes marcaron en los últimos 60 días y NO se podrán consultar
   por cédula (o saldrían mezclados) hasta que TH corrija el SSN.

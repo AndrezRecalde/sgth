@@ -94,7 +94,13 @@
 
 ## BIOMÉTRICO
 □ Conexión ODBC al SQL Server del biométrico verificada
-□ Stored Procedure sp_ObtenerMarcaciones responde
+□ En Sirha7, en este orden (sgth-backend/database/sqlsrv/): fn_SGTH_UsuariosPorCedula,
+  sp_SGTH_MarcacionesPorCedula, sp_SGTH_RegistrarMarcacionOnline y usuario_sgth_app.
+  Ya aplicados el 2026-10-06; los scripts son idempotentes.
+□ .env de producción: DB_SQLSRV_USERNAME=sgth_app (nunca sa), su contraseña,
+  DB_SQLSRV_PORT con el puerto real de la instancia ATIEMPO (dinámico, no 1433)
+  y BIOMETRICO_SENSOR_ONLINE
+□ GET /api/v1/asistencia/marcaciones responde con una cédula conocida
 □ ImportarMarcacionesBiometricoCommand ejecutado
   manualmente una vez para verificar integración
 
