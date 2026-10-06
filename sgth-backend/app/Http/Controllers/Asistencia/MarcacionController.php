@@ -3,19 +3,30 @@ namespace App\Http\Controllers\Asistencia;
 
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
+use App\Models\Expediente\Servidor;
+use App\Services\Asistencia\MarcacionBiometricaService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
+/*
+| Los errores pasan el código HTTP con nombre (`codigo:`). Antes iba como
+| segundo argumento posicional, que es `errores`: todas las respuestas de
+| error de este controlador salían con 422, fuera un 404, un 403 o un 503.
+*/
 class MarcacionController extends Controller
 {
     /**
      * Consultar marcaciones de un servidor por cédula.
      * Solo servidores con puede_marcar = true.
+     *
+     * Si el biométrico rechaza la cédula (de relleno, repartida en varios
+     * usuarios…) el procedimiento lanza una ReglaNegocioException, que sale
+     * como 422 con su mensaje.
      */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request, MarcacionBiometricaService $biometrico): JsonResponse
     {
         $request->validate([
             'cedula'       => 'required|string',
@@ -23,49 +34,48 @@ class MarcacionController extends Controller
             'fecha_fin'    => 'required|date|after_or_equal:fecha_inicio',
         ]);
 
-        $cedula      = $request->cedula;
-        $fechaInicio = Carbon::parse($request->fecha_inicio)
-            ->format('Y-m-d');
-        $fechaFin    = Carbon::parse($request->fecha_fin)
-            ->format('Y-m-d');
+        $cedula = $request->cedula;
 
         // Verificar que el servidor puede marcar
-        $servidor = \App\Models\Expediente\Servidor::where('cedula', $cedula)
+        $servidor = Servidor::where('cedula', $cedula)
             ->where('puede_marcar', true)
             ->first();
 
         if (!$servidor) {
             return ApiResponse::error(
                 'El servidor no existe o no tiene habilitada la marcación biométrica.',
-                404
+                codigo: 404
             );
         }
 
         try {
-            $marcaciones = DB::connection('sqlsrv')
-                ->select(
-                    'EXEC sp_GetMarcacionesPorDiaYTipo_v3 ?, ?, ?',
-                    [$cedula, $fechaInicio, $fechaFin]
-                );
-
-            return ApiResponse::ok(
-                $marcaciones,
-                'Marcaciones obtenidas correctamente.'
+            $marcaciones = $biometrico->porCedula(
+                $cedula,
+                Carbon::parse($request->fecha_inicio),
+                Carbon::parse($request->fecha_fin)
             );
-        } catch (\Exception $e) {
+        } catch (\PDOException $e) {
             Log::error('Error consultando marcaciones: ' . $e->getMessage());
             return ApiResponse::error(
                 'No se pudo conectar al sistema biométrico.',
-                503
+                codigo: 503
             );
         }
+
+        return ApiResponse::ok(
+            $marcaciones,
+            'Marcaciones obtenidas correctamente.'
+        );
     }
 
     /**
      * Estado de marcación del día para el usuario autenticado.
      * Usa la cédula del servidor vinculado al usuario.
+     *
+     * El procedimiento devuelve la fila de hoy aunque no haya marcaciones si
+     * el día tiene horario o permiso; sin nada de eso, `datos` es null.
      */
-    public function estadoHoy(Request $request): JsonResponse
+    public function estadoHoy(Request $request, MarcacionBiometricaService $biometrico): JsonResponse
     {
         $user    = $request->user();
         $cedula  = $user->servidor?->cedula ?? null;
@@ -73,7 +83,7 @@ class MarcacionController extends Controller
         if (!$cedula) {
             return ApiResponse::error(
                 'Tu usuario no tiene un servidor vinculado.',
-                404
+                codigo: 404
             );
         }
 
@@ -81,32 +91,24 @@ class MarcacionController extends Controller
         if (!($user->servidor?->puede_marcar ?? false)) {
             return ApiResponse::error(
                 'Tu perfil no tiene habilitada la marcación biométrica.',
-                403
+                codigo: 403
             );
         }
 
-        $hoy = Carbon::now()->format('Y-m-d');
-
         try {
-            $marcaciones = DB::connection('sqlsrv')
-                ->select(
-                    'EXEC sp_GetMarcacionesPorDiaYTipo_v3 ?, ?, ?',
-                    [$cedula, $hoy, $hoy]
-                );
-
-            $estado = !empty($marcaciones) ? $marcaciones[0] : null;
-
-            return ApiResponse::ok(
-                $estado,
-                'Estado de marcación del día.'
-            );
-        } catch (\Exception $e) {
+            $marcaciones = $biometrico->porCedula($cedula, Carbon::today(), Carbon::today());
+        } catch (\PDOException $e) {
             Log::error('Error estado hoy: ' . $e->getMessage());
             return ApiResponse::error(
                 'No se pudo obtener el estado del día.',
-                503
+                codigo: 503
             );
         }
+
+        return ApiResponse::ok(
+            $marcaciones[0] ?? null,
+            'Estado de marcación del día.'
+        );
     }
 
     /**
@@ -128,14 +130,14 @@ class MarcacionController extends Controller
         if (!$cedula) {
             return ApiResponse::error(
                 'Tu usuario no tiene un servidor vinculado.',
-                404
+                codigo: 404
             );
         }
 
         if (!($user->servidor?->puede_marcar ?? false)) {
             return ApiResponse::error(
                 'Tu perfil no tiene habilitada la marcación biométrica.',
-                403
+                codigo: 403
             );
         }
 
@@ -150,7 +152,7 @@ class MarcacionController extends Controller
             if (empty($userInfo)) {
                 return ApiResponse::error(
                     'No se encontró el registro biométrico para esta cédula.',
-                    404
+                    codigo: 404
                 );
             }
 
@@ -177,7 +179,7 @@ class MarcacionController extends Controller
             Log::error('Error marcación online: ' . $e->getMessage());
             return ApiResponse::error(
                 'No se pudo registrar la marcación.',
-                503
+                codigo: 503
             );
         }
     }

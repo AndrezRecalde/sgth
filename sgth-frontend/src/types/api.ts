@@ -1470,18 +1470,37 @@ export type DescuentoRecurrente = {
 }
 
 // ── Asistencia ───────────────────────────────────
+// Una fila por día de sp_SGTH_MarcacionesPorCedula (Sirha7). Las horas llegan
+// como 'HH:mm:ss'. El driver de SQL Server entrega también los números como
+// texto: DiaSemana (1 = lunes … 7 = domingo), minutos y totales son cadenas.
 export type MarcacionBiometrica = {
   Fecha:                          string
+  DiaSemana:                      string
+  Cedula:                         string
   BADGENUMBER:                    string
   Nombre:                         string
+  Departamento:                   string | null
+  Regimen:                        string | null
+  /** USERID del biométrico; más de uno si la persona se registró de nuevo. */
+  UserIds:                        string
+  Horario:                        string | null
   HoraEntradaProgramada:          string | null
   HoraAlmuerzoSalidaProgramada:   string | null
   HoraAlmuerzoRetornoProgramada:  string | null
   HoraSalidaProgramada:           string | null
+  ToleranciaAtraso:               string | null
   Entrada:                        string | null
   AlmuerzoSalida:                 string | null
   AlmuerzoRetorno:                string | null
   Salida:                         string | null
+  /** Minutos completos, sin descontar la tolerancia. */
+  MinutosAtraso:                  string | null
+  MinutosSalidaAnticipada:        string | null
+  TotalMarcaciones:               string
+  /** Todas las del día: '08:00:23 I, 12:35:17 O, …'. */
+  Marcaciones:                    string | null
+  /** Marcas con la tecla probablemente equivocada, para que TH las corrija. */
+  MarcasPorRevisar:               string | null
   TipoPermiso:                    string | null
   PermisoDesde:                   string | null
   PermisoHasta:                   string | null
