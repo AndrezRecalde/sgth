@@ -21,12 +21,16 @@ class MarcacionController extends Controller
 {
     /**
      * Consultar marcaciones de un servidor por cédula.
-     * Solo servidores con puede_marcar = true.
      *
      * Las de cualquier servidor, quien tiene `ver-asistencia-todos` (Talento
      * Humano, máxima autoridad, auditoría: la misma regla con la que se ven
      * las vacaciones de toda la institución). Los demás, solo las propias.
      * Antes bastaba con iniciar sesión para leer las de cualquier cédula.
+     *
+     * Talento Humano ve también el historial de quien ya no marca o ya no
+     * está activo (decisión del 2026-10-06): antes se exigía `puede_marcar`,
+     * y quitarle la marcación a alguien escondía todas sus marcaciones
+     * pasadas. A uno mismo se le sigue exigiendo tenerla habilitada.
      *
      * El permiso se comprueba antes de buscar al servidor, para que un 404
      * no le diga a quien no puede consultar qué cédulas existen.
@@ -43,26 +47,25 @@ class MarcacionController extends Controller
             'fecha_fin'    => 'required|date|after_or_equal:fecha_inicio',
         ]);
 
-        $cedula = $request->cedula;
-        $user   = $request->user();
+        $cedula  = $request->cedula;
+        $user    = $request->user();
+        $veTodos = $user->can(Permiso::VER_ASISTENCIA_TODOS->value);
 
-        if (
-            !$user->can(Permiso::VER_ASISTENCIA_TODOS->value)
-            && $cedula !== $user->servidor?->cedula
-        ) {
+        if (!$veTodos && $cedula !== $user->servidor?->cedula) {
             return ApiResponse::noAutorizado(
                 'Solo puede consultar sus propias marcaciones.'
             );
         }
 
-        // Verificar que el servidor puede marcar
-        $servidor = Servidor::where('cedula', $cedula)
-            ->where('puede_marcar', true)
-            ->first();
+        $existe = Servidor::where('cedula', $cedula)
+            ->when(!$veTodos, fn ($q) => $q->where('puede_marcar', true))
+            ->exists();
 
-        if (!$servidor) {
+        if (!$existe) {
             return ApiResponse::error(
-                'El servidor no existe o no tiene habilitada la marcación biométrica.',
+                $veTodos
+                    ? 'No hay un servidor con esa cédula en el SGTH.'
+                    : 'Su perfil no tiene habilitada la marcación biométrica.',
                 codigo: 404
             );
         }
