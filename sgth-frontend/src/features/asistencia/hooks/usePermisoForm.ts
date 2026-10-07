@@ -65,8 +65,9 @@ export function usePermisoForm(onClose: () => void, soloPropio = false) {
 
   const enviar = form.handleSubmit(async (values) => {
     try {
+      // La unidad no viaja: el backend usa la del servidor. En el formulario
+      // solo sirve para filtrar a quién se elige.
       const result = await crear.mutateAsync({
-        unidad_administrativa_id: values.unidad_administrativa_id,
         servidor_id:              values.servidor_id,
         // Con la opción activa el jefe lo resuelve el backend: mandar además un
         // `jefe_id` sería ofrecer un dato que se va a ignorar.

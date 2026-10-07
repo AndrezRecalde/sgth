@@ -1,7 +1,7 @@
 'use client'
 
 import { Grid, Select } from '@mantine/core'
-import { Controller, type UseFormReturn } from 'react-hook-form'
+import { Controller, useWatch, type UseFormReturn } from 'react-hook-form'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { opcionServidor, useOpcionesSolicitante } from '../hooks/useOpcionesSolicitante'
 import { PermisoJefeSelect } from './PermisoJefeSelect'
@@ -22,6 +22,11 @@ export function PermisoSolicitanteTalentoHumano({ form, unidadSelId, onUnidad }:
   const { control, setValue, formState: { errors } } = form
   const { servidores, opcionesUnidad, opcionesJefe } = useOpcionesSolicitante(unidadSelId)
   const opcionesServidor = servidores.map(opcionServidor)
+  const servidorId = useWatch({ control, name: 'servidor_id' })
+  // Nadie firma su propio permiso: el jefe de la unidad que pide uno no se
+  // ofrece a sí mismo. Su jefe está en otra unidad, así que se dirige a
+  // Talento Humano (el backend lo rechaza igual).
+  const jefesPosibles = opcionesJefe.filter((o) => o.value !== String(servidorId))
 
   return (
     <>
@@ -71,6 +76,10 @@ export function PermisoSolicitanteTalentoHumano({ form, unidadSelId, onUnidad }:
                 value={field.value ? String(field.value) : null}
                 onChange={(v) => {
                   field.onChange(v ? Number(v) : undefined)
+                  // Si el elegido era el jefe ya marcado, deja de poder firmar.
+                  if (v && form.getValues('jefe_id') === Number(v)) {
+                    setValue('jefe_id', null)
+                  }
                   // La opción de Talento Humano se confirmó para otro
                   // servidor: si el nuevo es el propio jefe de TH ya no
                   // cabe, y en cualquier caso hay que volver a decidirla.
@@ -85,8 +94,8 @@ export function PermisoSolicitanteTalentoHumano({ form, unidadSelId, onUnidad }:
         <Grid.Col span={{ base: 12, sm: 6 }}>
           <PermisoJefeSelect
             form={form}
-            opciones={opcionesJefe}
-            cantidad={opcionesJefe.length}
+            opciones={jefesPosibles}
+            cantidad={jefesPosibles.length}
             textoVacio="Sin jefes en esta unidad"
             sinUnidad={!unidadSelId}
           />

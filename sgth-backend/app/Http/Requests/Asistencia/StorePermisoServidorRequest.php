@@ -34,7 +34,9 @@ class StorePermisoServidorRequest extends FormRequest
             'hora_inicio' => ['required', 'date_format:H:i'],
             'hora_fin'    => ['required', 'date_format:H:i', 'after:hora_inicio'],
             'observacion' => ['nullable', 'string', 'max:1000'],
-            'unidad_administrativa_id' => 'nullable|exists:unidades_administrativas,id',
+            // Sin `unidad_administrativa_id` ni `creado_por`: la unidad es la del
+            // servidor y el autor es quien tiene la sesión. Aceptarlos aquí
+            // invitaba a mandarlos, y la unidad llegó a usarse tal cual.
             'servidor_id' => 'nullable|exists:servidores,id',
             // Alguien tiene que firmar: el jefe inmediato elegido o, con la
             // opción activa, el jefe de Talento Humano que resuelve el servicio.
@@ -48,7 +50,6 @@ class StorePermisoServidorRequest extends FormRequest
             // ver PermisoService::jefeDeTalentoHumano(). Solo Talento Humano
             // puede pedirlo; lo autoriza el controlador con la policy.
             'dirigido_a_talento_humano' => ['sometimes', 'boolean'],
-            'creado_por'  => 'nullable|exists:users,id',
         ];
     }
 
