@@ -89,7 +89,7 @@ function contratoVigenteDeTh(Servidor $servidor, Puesto $puesto): void
     ]);
 }
 
-function pedirPermisoDirigido(Servidor $servidor, array $extra = []): TestResponse
+function pedirPermisoDirigido(Servidor $servidor, array $extra = [], ?User $como = null): TestResponse
 {
     // Un día laborable: la fecha no es lo que se prueba aquí.
     $fecha = now()->addDay();
@@ -97,7 +97,7 @@ function pedirPermisoDirigido(Servidor $servidor, array $extra = []): TestRespon
         $fecha->addDay();
     }
 
-    return test()->actingAs(test()->uath, 'sanctum')
+    return test()->actingAs($como ?? test()->uath, 'sanctum')
         ->postJson('/api/v1/asistencia/permisos', array_merge([
             'servidor_id'              => $servidor->id,
             'unidad_administrativa_id' => $servidor->unidad_administrativa_id,
@@ -191,4 +191,72 @@ test('sin la opción, el PDF sigue rotulando al jefe inmediato', function () {
         ->toContain('JEFE INMEDIATO')
         ->toContain('INMEDIATA CARLA')
         ->not->toContain('Firma: Jefe de Talento Humano');
+});
+
+/*
+| Quién puede dirigirlo. Decidido con Talento Humano el 2026-10-07: solo TH.
+| Antes el interruptor se ofrecía a cualquiera, también en el portal, y
+| cualquier servidor podía saltarse a su jefe inmediato.
+*/
+
+function usuarioDeServidorDirigido(Servidor $servidor, string $rol): User
+{
+    $usuario = User::create([
+        'email'        => "{$servidor->cedula}@example.com",
+        'usuario_ti'   => "u{$servidor->cedula}",
+        'password'     => bcrypt('123456'),
+        'primer_login' => false,
+        'servidor_id'  => $servidor->id,
+    ]);
+    $usuario->assignRole($rol);
+
+    return $usuario;
+}
+
+test('el servidor no puede dirigir su propio permiso a Talento Humano', function () {
+    $usuario = usuarioDeServidorDirigido($this->servidor, 'servidor');
+
+    pedirPermisoDirigido($this->servidor, [
+        'unidad_administrativa_id'  => null,
+        'servidor_id'               => null,
+        'dirigido_a_talento_humano' => true,
+    ], $usuario)->assertForbidden();
+
+    expect(PermisoServidor::count())->toBe(0);
+});
+
+test('el servidor sigue registrando el suyo con su jefe inmediato', function () {
+    $usuario = usuarioDeServidorDirigido($this->servidor, 'servidor');
+
+    pedirPermisoDirigido($this->servidor, [
+        'jefe_id'                   => $this->jefeInmediato->id,
+        'dirigido_a_talento_humano' => false,
+    ], $usuario)->assertCreated();
+
+    $permiso = PermisoServidor::latest('id')->firstOrFail();
+
+    expect($permiso->jefe_id)->toBe($this->jefeInmediato->id)
+        ->and($permiso->dirigido_a_talento_humano)->toBeFalse();
+});
+
+test('el asistente de Talento Humano también puede dirigirlo', function () {
+    $asistente = User::create([
+        'email' => 'asistente-dirigido@example.com', 'usuario_ti' => 'asis_dir',
+        'password' => bcrypt('123456'), 'primer_login' => false,
+    ]);
+    $asistente->assignRole('asistente-uath');
+
+    pedirPermisoDirigido($this->servidor, ['dirigido_a_talento_humano' => true], $asistente)
+        ->assertCreated();
+
+    expect(PermisoServidor::latest('id')->firstOrFail()->jefe_id)->toBe($this->directorTh->id);
+});
+
+test('quien es de Talento Humano puede dirigir también su propio permiso', function () {
+    $propio = usuarioDeServidorDirigido($this->servidor, 'asistente-uath');
+
+    pedirPermisoDirigido($this->servidor, ['dirigido_a_talento_humano' => true], $propio)
+        ->assertCreated();
+
+    expect(PermisoServidor::latest('id')->firstOrFail()->dirigido_a_talento_humano)->toBeTrue();
 });

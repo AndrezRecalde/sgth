@@ -60,6 +60,7 @@ export function PermisoModal({ opened, onClose, soloPropio = false }: Props) {
             <PermisoSolicitanteCampos
               form={registro.form}
               emiteATodos={registro.emiteATodos}
+              puedeDirigirATh={registro.puedeDirigirATh}
               nombrePropio={registro.nombrePropio}
               unidadSelId={registro.unidadSelId}
               onUnidad={registro.setUnidadSelId}

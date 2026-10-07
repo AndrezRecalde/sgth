@@ -45,7 +45,8 @@ class StorePermisoServidorRequest extends FormRequest
                 'exists:servidores,id',
             ],
             // En true, el jefe lo resuelve el servicio y `jefe_id` se ignora:
-            // ver PermisoService::jefeDeTalentoHumano().
+            // ver PermisoService::jefeDeTalentoHumano(). Solo Talento Humano
+            // puede pedirlo; lo autoriza el controlador con la policy.
             'dirigido_a_talento_humano' => ['sometimes', 'boolean'],
             'creado_por'  => 'nullable|exists:users,id',
         ];
@@ -63,7 +64,9 @@ class StorePermisoServidorRequest extends FormRequest
             'hora_fin.required'    => 'La hora de fin es obligatoria.',
             'hora_fin.date_format' => 'El formato de la hora de fin debe ser HH:MM.',
             'hora_fin.after'       => 'La hora de fin debe ser posterior a la hora de inicio.',
-            'jefe_id.required'     => 'Elija al jefe inmediato o dirija el permiso a Talento Humano.',
+            // Sin mencionar la opción de Talento Humano: solo la tiene TH, y
+            // al servidor le sugeriría algo que no puede hacer.
+            'jefe_id.required'     => 'Elija al jefe inmediato.',
         ];
     }
 }

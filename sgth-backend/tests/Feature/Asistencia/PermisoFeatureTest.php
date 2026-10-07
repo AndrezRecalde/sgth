@@ -116,7 +116,8 @@ test('permiso_sin_jefe_ni_dirigido_a_talento_humano_se_rechaza', function () {
         'observacion' => 'Diligencia en el SRI',
     ])
         ->assertStatus(422)
-        ->assertJsonPath('errores.jefe_id.0', 'Elija al jefe inmediato o dirija el permiso a Talento Humano.');
+        // Al servidor no se le sugiere dirigirlo a Talento Humano: no puede.
+        ->assertJsonPath('errores.jefe_id.0', 'Elija al jefe inmediato.');
 
     expect(\App\Models\Asistencia\PermisoServidor::count())->toBe(0);
 });

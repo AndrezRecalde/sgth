@@ -21,7 +21,13 @@ export function usePermisoForm(onClose: () => void, soloPropio = false) {
   // (`PermisoServidorPolicy::crear`): ofrecer aquí la lista de toda la
   // institución solo serviría para que el alta respondiera 403.
   const { usuario, hasPermiso } = useAuth()
-  const emiteATodos = !soloPropio && hasPermiso('registrar-permisos-servidores')
+  const esTalentoHumano = hasPermiso('registrar-permisos-servidores')
+  const emiteATodos = !soloPropio && esTalentoHumano
+  // Dirigir el permiso al jefe de Talento Humano es decisión de TH, también
+  // cuando registra el suyo desde el portal (`PermisoServidorPolicy::
+  // dirigirATalentoHumano`). Al servidor no se le ofrece: saltarse al jefe
+  // inmediato respondería 403.
+  const puedeDirigirATh = esTalentoHumano
   const propio = usuario?.servidor ?? null
   const unidadPropia = propio?.unidad_administrativa_id ?? null
   const puedeRegistrar = emiteATodos || (propio !== null && unidadPropia !== null)
@@ -95,6 +101,7 @@ export function usePermisoForm(onClose: () => void, soloPropio = false) {
   return {
     form,
     emiteATodos,
+    puedeDirigirATh,
     puedeRegistrar,
     nombrePropio,
     unidadSelId,

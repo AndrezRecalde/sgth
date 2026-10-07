@@ -17,7 +17,8 @@ import type { FirmanteVigente } from '@/types/api'
 | Apagarlo no pregunta nada: volver al jefe inmediato no sorprende a nadie.
 |
 | Va aparte de `PermisoModal` para que la consulta del firmante solo se haga con
-| el formulario abierto, y para poder usarlo tal cual en el portal del servidor.
+| el formulario abierto. Solo lo ve Talento Humano (`puedeDirigirATh`), tanto
+| en Asistencia como cuando registra su propio permiso en el portal.
 */
 
 interface Props {
