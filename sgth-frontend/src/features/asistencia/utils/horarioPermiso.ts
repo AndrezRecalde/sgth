@@ -1,10 +1,10 @@
 /*
 | Cómo se lee la fecha, el horario y el plazo de un permiso.
 |
-| Lo usan «Mis permisos» del Portal del Servidor y el formulario del permiso,
-| que muestra la duración mientras se eligen las horas. El listado de Talento
-| Humano (`permisos.columns.tsx`) tiene su propia copia de `duracion`;
-| unificarla ahí queda para cuando se fusionen los PR que tocan ese archivo.
+| Lo usan las dos tablas de permisos —la de Talento Humano y «Mis permisos»
+| del portal— y el formulario, que muestra la duración mientras se eligen las
+| horas. La tabla de Talento Humano tenía su propia copia de `duracion` y del
+| cálculo del vencimiento.
 */
 
 /** Minutos entre «08:00» y «12:30»; negativos si el fin es anterior al inicio. */
