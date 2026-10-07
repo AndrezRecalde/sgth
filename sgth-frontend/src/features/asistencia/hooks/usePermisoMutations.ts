@@ -4,7 +4,13 @@ import { notificar } from "@/components/ui";
 
 export function usePermisoMutations() {
   const qc = useQueryClient();
-  const invalidar = () => qc.invalidateQueries({ queryKey: ["permisos"] });
+  // El mismo permiso se ve en la tabla de Talento Humano y en «Mis permisos»
+  // del portal, que lee otra consulta. Solo `crear` refrescaba las dos: el
+  // servidor que anulaba el suyo seguía viéndolo pendiente hasta recargar.
+  const invalidar = () => {
+    qc.invalidateQueries({ queryKey: ["permisos"] });
+    qc.invalidateQueries({ queryKey: ["mis-permisos"] });
+  };
 
   const crear = useMutation({
     mutationFn: (data: Parameters<typeof asistenciaService.permisos.crear>[0]) =>
@@ -12,9 +18,6 @@ export function usePermisoMutations() {
     onSuccess: () => {
       notificar.exito("Permiso registrado", "El permiso fue registrado correctamente.");
       invalidar();
-      // «Mis permisos» del portal lee otra consulta: sin esto, el permiso
-      // recién registrado no aparecía en la lista hasta recargar.
-      qc.invalidateQueries({ queryKey: ["mis-permisos"] });
     },
     onError: notificar.alFallar("No se pudo registrar el permiso"),
   });
@@ -24,6 +27,9 @@ export function usePermisoMutations() {
     onSuccess: () => {
       notificar.exito("Permiso confirmado", "El permiso fue confirmado por Recepción.");
       invalidar();
+      // Confirmar un personal descuenta vacaciones: el saldo que se muestre
+      // tiene que releerse, igual que al revertir.
+      qc.invalidateQueries({ queryKey: ["periodos-vacaciones"] });
     },
     onError: notificar.alFallar("No se pudo confirmar el permiso"),
   });

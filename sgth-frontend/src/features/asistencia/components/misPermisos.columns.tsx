@@ -1,7 +1,7 @@
 'use client'
 
 import { Stack, Text } from '@mantine/core'
-import { IconPrinter } from '@tabler/icons-react'
+import { IconPrinter, IconX } from '@tabler/icons-react'
 import { StatusBadge, TableActions } from '@/components/ui'
 import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import { ESTADO_LABELS, TIPO_LABELS, TONO_ESTADO } from './permisos.constants'
@@ -14,14 +14,16 @@ import type { PermisoServidor } from '@/types/api'
 interface Acciones {
   exportandoId: number | null
   onExportar:   (id: number) => void
+  onAnular:     (p: PermisoServidor) => void
 }
 
 function PlazoRespaldo({ dias }: { dias: number }) {
+  // De usted, como el resto de la aplicación: decía «Entrega el respaldo».
   const texto = dias <= 0
     ? 'Plazo del respaldo vencido'
     : dias === 1
-      ? 'Entrega el respaldo hoy'
-      : `Entrega el respaldo en ${dias} días`
+      ? 'Entregue el respaldo hoy'
+      : `Quedan ${dias} días para entregar el respaldo`
 
   return (
     <Text size="xs" c={SEMANTIC_COLOR[dias <= 1 ? 'danger' : 'warning']}>
@@ -34,8 +36,9 @@ function PlazoRespaldo({ dias }: { dias: number }) {
  * Las columnas de «Mis permisos».
  *
  * Sin la columna del servidor —son todos del mismo— y con el motivo, que el
- * titular siempre puede leer. Solo se ofrece imprimir: confirmar, rechazar o
- * revertir son trabajo de Recepción y de Talento Humano.
+ * titular siempre puede leer. Se ofrece imprimir y, mientras está pendiente,
+ * anular: el backend se lo permite al titular. Confirmar, rechazar o revertir
+ * son trabajo de Recepción y de Talento Humano.
  */
 export function getMisPermisosColumns(acciones: Acciones): DataTableColumn<PermisoServidor>[] {
   return [
@@ -122,6 +125,15 @@ export function getMisPermisosColumns(acciones: Acciones): DataTableColumn<Permi
               label: acciones.exportandoId === p.id ? 'Exportando...' : 'Imprimir permiso',
               icon: <IconPrinter size={14} />,
               onClick: () => acciones.onExportar(p.id),
+            },
+            {
+              // El servidor que ya no va a usar un permiso lo retira él mismo;
+              // antes tenía que pedírselo a Talento Humano.
+              label: 'Anular',
+              icon: <IconX size={14} />,
+              color: 'red',
+              onClick: () => acciones.onAnular(p),
+              hidden: p.estado !== 'pendiente',
             },
           ]}
         />
