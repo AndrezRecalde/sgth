@@ -4,7 +4,9 @@ import { useState } from 'react'
 import { Button } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconCalendarEvent, IconCubePlus } from '@tabler/icons-react'
-import { DataState, PAGINACION_ES, PageHeader, PageShell, SgthTable } from '@/components/ui'
+import {
+  DataState, MotivoModal, PAGINACION_ES, PageHeader, PageShell, SgthTable,
+} from '@/components/ui'
 import { useAuth } from '@/hooks/useAuth'
 import {
   FILTROS_INICIALES_MIS_PERMISOS,
@@ -15,6 +17,8 @@ import { getMisPermisosColumns } from './misPermisos.columns'
 import { PermisoModal } from './PermisoModal'
 import { useMisPermisos } from '../hooks/useMisPermisos'
 import { useExportarPermiso } from '../hooks/useExportarPermiso'
+import { usePermisoMutations } from '../hooks/usePermisoMutations'
+import type { PermisoServidor } from '@/types/api'
 
 /** El mismo tamaño de página que el resto de los listados del sistema. */
 const POR_PAGINA = 15
@@ -40,6 +44,8 @@ export function MisPermisosView() {
   const { hasPermiso } = useAuth()
   const puedeRegistrar = hasPermiso('crear-permiso')
   const { exportar, exportandoId } = useExportarPermiso()
+  const { anular } = usePermisoMutations()
+  const [anulando, setAnulando] = useState<PermisoServidor | null>(null)
 
   // Cambiar un filtro sin volver a la primera página consultaría esa página
   // del resultado ya filtrado, casi siempre vacía.
@@ -60,6 +66,7 @@ export function MisPermisosView() {
   const columns = getMisPermisosColumns({
     exportandoId,
     onExportar: (id) => exportar(id),
+    onAnular: setAnulando,
   })
 
   const periodo = filtros.anio ? `en ${filtros.anio}` : 'registrados'
@@ -68,7 +75,7 @@ export function MisPermisosView() {
     <PageShell>
       <PageHeader
         title="Mis permisos"
-        description="Tus permisos de ausencia: su estado, el plazo para entregar el respaldo y el motivo."
+        description="Sus permisos de ausencia: el estado, el plazo para entregar el respaldo y el motivo."
         actions={
           puedeRegistrar && (
             <Button
@@ -113,6 +120,28 @@ export function MisPermisosView() {
       {puedeRegistrar && (
         <PermisoModal opened={modalAbierto} onClose={cerrarModal} soloPropio />
       )}
+
+      <MotivoModal
+        opened={anulando !== null}
+        onClose={() => setAnulando(null)}
+        title="Anular permiso"
+        confirmLabel="Anular"
+        destructiva
+        cargando={anular.isPending}
+        onConfirm={(motivo) => {
+          if (!anulando) return
+          anular.mutate(
+            { id: anulando.id, motivo },
+            { onSuccess: () => setAnulando(null) },
+          )
+        }}
+        descripcion={
+          <>
+            El permiso <b>{anulando?.folio}</b> quedará anulado y no amparará la
+            ausencia. Queda registrado el motivo.
+          </>
+        }
+      />
     </PageShell>
   )
 }
