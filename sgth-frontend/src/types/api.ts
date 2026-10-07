@@ -1553,6 +1553,10 @@ export type PermisoServidor = {
   anulado_por?:     number | null
   anulado_en?:      string | null
   motivo_anulacion?: string | null
+  rechazado_en?:    string | null
+  motivo_rechazo?:  string | null
+  revertido_en?:    string | null
+  motivo_reversion?: string | null
   servidor?:        ServidorConRelaciones
   unidad_administrativa_id?: number | null
   unidad_administrativa?:    { id: number; nombre?: string } | null

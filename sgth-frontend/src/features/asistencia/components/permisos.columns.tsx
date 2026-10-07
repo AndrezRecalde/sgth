@@ -6,12 +6,14 @@ import {
 } from '@tabler/icons-react'
 import { StatusBadge, TableActions } from '@/components/ui'
 import {
-  ESTADOS_CONFIRMADOS, ESTADO_LABELS, TIPO_LABELS, TONO_ESTADO,
+  ESTADOS_CONFIRMADOS, ESTADO_LABELS, TIPO_LABELS, TIPOS_TRABAJO_SOCIAL, TONO_ESTADO,
 } from './permisos.constants'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { PermisoServidor } from '@/types/api'
 import type { AccionesPermiso } from '../hooks/useAccionesPermiso'
+import { diasParaVencer, duracion } from '../utils/horarioPermiso'
 import { formatFecha } from '@/lib/fecha'
+import { MotivoDeEstadoTexto } from './MotivoDeEstadoTexto'
 
 interface ColumnActions {
   exportandoId: number | null
@@ -23,16 +25,6 @@ interface ColumnActions {
   onAnular:     (p: PermisoServidor) => void
   onRechazar:   (p: PermisoServidor) => void
   onRevertir:   (p: PermisoServidor) => void
-}
-
-function duracion(horaInicio: string, horaFin: string): string {
-  const [hI, mI] = horaInicio.substring(0, 5).split(':').map(Number)
-  const [hF, mF] = horaFin.substring(0, 5).split(':').map(Number)
-  const minutos = hF * 60 + mF - (hI * 60 + mI)
-  const horas = Math.floor(minutos / 60)
-  const mins = minutos % 60
-
-  return horas > 0 ? `${horas}h${mins > 0 ? ` ${mins}m` : ''}` : `${mins}m`
 }
 
 export function getPermisosColumns(
@@ -60,9 +52,9 @@ export function getPermisosColumns(
     {
       accessor: 'tipo',
       title: 'Tipo',
-      // «ENFERMEDAD» mide 89 px y la celda lleva 32 de relleno: con 100 se
-      // salía por la derecha, igual que CALAMIDAD y PERSONAL.
-      width: 130,
+      // «CALAMIDAD DOMÉSTICA» mide unos 170 px y la celda lleva 32 de
+      // relleno. Con las etiquetas cortas de antes («CALAMIDAD») bastaban 130.
+      width: 210,
       render: ({ tipo }) => (
         <StatusBadge>
           {TIPO_LABELS[tipo as string] ?? tipo}
@@ -111,9 +103,7 @@ export function getPermisosColumns(
           return <Text size="sm" c="dimmed">—</Text>
         }
 
-        const dias = Math.ceil(
-          (new Date(vence_en).getTime() - Date.now()) / 86_400_000
-        )
+        const dias = diasParaVencer(vence_en)
 
         return (
           <StatusBadge tone={dias <= 1 ? 'danger' : 'warning'}>
@@ -128,10 +118,13 @@ export function getPermisosColumns(
       // «FALTA INJUSTIFICADA» mide 133 px: con 140 de celda y 32 de relleno
       // desbordaba 25.
       width: 180,
-      render: ({ estado }) => (
-        <StatusBadge tone={TONO_ESTADO[estado as string] ?? 'neutral'}>
-          {ESTADO_LABELS[estado as string] ?? estado}
-        </StatusBadge>
+      render: (p) => (
+        <Stack gap={2}>
+          <StatusBadge tone={TONO_ESTADO[p.estado as string] ?? 'neutral'}>
+            {ESTADO_LABELS[p.estado as string] ?? p.estado}
+          </StatusBadge>
+          <MotivoDeEstadoTexto permiso={p} />
+        </Stack>
       ),
     },
     {
@@ -170,7 +163,7 @@ export function getPermisosColumns(
                 hidden:
                   !actions.puede.validarTs ||
                   estado !== 'activo' ||
-                  !['enfermedad', 'calamidad'].includes(p.tipo as string),
+                  !TIPOS_TRABAJO_SOCIAL.includes(p.tipo as string),
               },
               {
                 label: 'Revertir confirmación',

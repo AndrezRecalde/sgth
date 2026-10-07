@@ -326,7 +326,11 @@ class PermisoService implements PermisoServiceInterface
             $permiso->confirmado_en   = null;
             $permiso->validado_ts_por = null;
             $permiso->validado_ts_en  = null;
-            $permiso->motivo_rechazo  = $motivo;
+            // En sus propias columnas: en `motivo_rechazo` el permiso, de
+            // vuelta en pendiente, aparecía como rechazado.
+            $permiso->revertido_por    = $userId;
+            $permiso->revertido_en     = now();
+            $permiso->motivo_reversion = $motivo;
             $permiso->save();
 
             return $permiso;

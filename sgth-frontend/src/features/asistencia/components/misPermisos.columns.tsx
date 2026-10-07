@@ -7,6 +7,7 @@ import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import { ESTADO_LABELS, TIPO_LABELS, TONO_ESTADO } from './permisos.constants'
 import { diasParaVencer, duracion } from '../utils/horarioPermiso'
 import { formatFecha } from '@/lib/fecha'
+import { MotivoDeEstadoTexto } from './MotivoDeEstadoTexto'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { PermisoServidor } from '@/types/api'
 
@@ -49,7 +50,7 @@ export function getMisPermisosColumns(acciones: Acciones): DataTableColumn<Permi
     {
       accessor: 'tipo',
       title: 'Tipo',
-      width: 130,
+      width: 210,
       render: ({ tipo }) => (
         <StatusBadge>
           {TIPO_LABELS[tipo] ?? tipo}
@@ -81,10 +82,10 @@ export function getMisPermisosColumns(acciones: Acciones): DataTableColumn<Permi
       accessor: 'estado',
       title: 'Estado',
       width: 180,
-      render: ({ estado, vence_en }) => (
+      render: (p) => (
         <Stack gap={2}>
-          <StatusBadge tone={TONO_ESTADO[estado] ?? 'neutral'}>
-            {ESTADO_LABELS[estado] ?? estado}
+          <StatusBadge tone={TONO_ESTADO[p.estado] ?? 'neutral'}>
+            {ESTADO_LABELS[p.estado] ?? p.estado}
           </StatusBadge>
           {/*
             Lo que más le importa al servidor de un pendiente: cuánto le queda
@@ -92,9 +93,11 @@ export function getMisPermisosColumns(acciones: Acciones): DataTableColumn<Permi
             Va debajo del estado y no en una columna propia, que en los demás
             estados quedaba vacía y le quitaba al motivo el ancho que necesita.
           */}
-          {estado === 'pendiente' && vence_en && (
-            <PlazoRespaldo dias={diasParaVencer(vence_en)} />
+          {p.estado === 'pendiente' && p.vence_en && (
+            <PlazoRespaldo dias={diasParaVencer(p.vence_en)} />
           )}
+          {/* Por qué se rechazó o anuló: sin esto, el servidor no sabía qué corregir. */}
+          <MotivoDeEstadoTexto permiso={p} />
         </Stack>
       ),
     },

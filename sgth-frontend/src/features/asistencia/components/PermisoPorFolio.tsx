@@ -14,7 +14,7 @@
 import { useState } from 'react'
 import { Alert, Button, Skeleton, Stack, Text } from '@mantine/core'
 import { useQuery } from '@tanstack/react-query'
-import { IconAlertCircle, IconArrowBackUp, IconCheck, IconX } from '@tabler/icons-react'
+import { IconAlertCircle, IconArrowBackUp, IconCheck, IconShieldCheck, IconX } from '@tabler/icons-react'
 import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import { getApiErrorMessage } from '@/types/api'
 import { asistenciaService } from '../services/asistenciaService'
@@ -22,7 +22,7 @@ import { usePermisoMutations } from '../hooks/usePermisoMutations'
 import { useAccionesPermiso } from '../hooks/useAccionesPermiso'
 import { MotivoModal, PageHeader } from '@/components/ui'
 import { PermisoResumen } from './PermisoResumen'
-import { ESTADOS_CONFIRMADOS } from './permisos.constants'
+import { ESTADOS_CONFIRMADOS, TIPOS_TRABAJO_SOCIAL } from './permisos.constants'
 
 interface Props {
   folio: string
@@ -39,7 +39,7 @@ export function PermisoPorFolio({ folio }: Props) {
     retry: false,
   })
 
-  const { confirmar, rechazar, revertirConfirmacion } = usePermisoMutations()
+  const { confirmar, rechazar, revertirConfirmacion, validarTs } = usePermisoMutations()
 
   // El QR lo escanea Talento Humano, pero también puede abrirlo el titular o su
   // jefe: cada botón solo aparece a quien el backend se lo permite.
@@ -77,6 +77,9 @@ export function PermisoPorFolio({ folio }: Props) {
   const estado = permiso.estado as string
   const pendiente = estado === 'pendiente'
   const confirmado = ESTADOS_CONFIRMADOS.includes(estado)
+  // Trabajo Social valida enfermedad y calamidad ya confirmadas. Lo ofrecía la
+  // tabla y no esta pantalla, que es la que abre el QR.
+  const validable = estado === 'activo' && TIPOS_TRABAJO_SOCIAL.includes(permiso.tipo as string)
   const esRechazo = conMotivo === 'rechazar'
 
   const enviarMotivo = (motivo: string) => {
@@ -129,6 +132,18 @@ export function PermisoPorFolio({ folio }: Props) {
             onClick={() => setConMotivo('rechazar')}
           >
             Rechazar documento
+          </Button>
+        )}
+
+        {validable && puede.validarTs && (
+          <Button
+            size="md"
+            variant="light"
+            leftSection={<IconShieldCheck size={18} />}
+            loading={validarTs.isPending}
+            onClick={() => validarTs.mutate(permiso.id, { onSuccess: () => refetch() })}
+          >
+            Validar Trabajo Social
           </Button>
         )}
 

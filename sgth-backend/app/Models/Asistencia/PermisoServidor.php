@@ -62,6 +62,7 @@ class PermisoServidor extends Model
             'rechazado_en'   => 'datetime',
             'dirigido_a_talento_humano' => 'boolean',
             'anulado_en'     => 'datetime',
+            'revertido_en'   => 'datetime',
             'vence_en'       => 'datetime',
         ];
     }
@@ -90,6 +91,11 @@ class PermisoServidor extends Model
     public function anuladoPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'anulado_por');
+    }
+
+    public function revertidoPor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'revertido_por');
     }
 
     public function unidadAdministrativa(): BelongsTo

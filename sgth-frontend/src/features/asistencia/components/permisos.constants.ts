@@ -26,11 +26,17 @@ export const ESTADO_LABELS: Record<string, string> = {
   falta_injustificada:     'Falta injustificada',
 }
 
+/**
+ * Las mismas etiquetas que `TipoPermiso::etiqueta()` en el backend, que es lo
+ * que sale en el PDF y en el consolidado. Aquí decía «Enfermedad» y
+ * «Calamidad», así que el mismo permiso se llamaba distinto en pantalla y en
+ * papel.
+ */
 export const TIPO_LABELS: Record<string, string> = {
   personal:   'Personal',
   oficial:    'Oficial',
-  enfermedad: 'Enfermedad',
-  calamidad:  'Calamidad',
+  enfermedad: 'Por enfermedad',
+  calamidad:  'Calamidad doméstica',
 }
 
 /** Los tipos que se ofrecen al registrar un permiso. */
@@ -50,12 +56,9 @@ export const TIPO_OPCIONES = [
  * llamarse de cuatro formas distintas entre el registro, el consolidado y el
  * PDF.
  */
-export const TIPO_OPCIONES_CONSOLIDADO = [
-  { value: 'personal',   label: 'Personal' },
-  { value: 'oficial',    label: 'Oficial' },
-  { value: 'enfermedad', label: 'Por enfermedad' },
-  { value: 'calamidad',  label: 'Calamidad doméstica' },
-]
+export const TIPO_OPCIONES_CONSOLIDADO = Object.entries(TIPO_LABELS).map(
+  ([value, label]) => ({ value, label }),
+)
 
 /** Los estados por los que se filtra, en el orden del flujo. */
 export const FILTROS_ESTADO = [
@@ -70,6 +73,9 @@ export const FILTROS_ESTADO = [
 
 /** Un permiso ya recibido por Recepción: se puede revertir, no rechazar. */
 export const ESTADOS_CONFIRMADOS = ['activo', 'validado_trabajo_social']
+
+/** Los que valida Trabajo Social una vez confirmados (`PermisoService::esDeTrabajoSocial`). */
+export const TIPOS_TRABAJO_SOCIAL = ['enfermedad', 'calamidad']
 
 /** Enfermedad y calamidad se justifican después: nunca llevan fecha futura. */
 export const TIPOS_RETROACTIVOS = ['enfermedad', 'calamidad']
