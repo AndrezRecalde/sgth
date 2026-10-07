@@ -48,7 +48,6 @@ export const asistenciaService = {
         .then(r => r.data.datos),
 
     crear: (data: {
-      unidad_administrativa_id: number
       servidor_id:              number
       jefe_id?:                 number | null
       dirigido_a_talento_humano?: boolean

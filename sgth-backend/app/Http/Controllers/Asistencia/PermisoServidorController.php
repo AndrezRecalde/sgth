@@ -14,6 +14,7 @@ use App\Models\Asistencia\PermisoServidor;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class PermisoServidorController extends Controller
 {
@@ -27,6 +28,19 @@ class PermisoServidorController extends Controller
         $user = $request->user();
 
         $this->authorize('verAny', PermisoServidor::class);
+
+        // Una fecha mal escrita llegaba tal cual a `whereDate()` y Postgres
+        // respondía con un 500; un estado o un tipo inventado devolvía una
+        // lista vacía como si no hubiera permisos.
+        $request->validate([
+            'estado'                   => ['nullable', Rule::enum(EstadoPermiso::class)],
+            'tipo'                     => ['nullable', Rule::enum(TipoPermiso::class)],
+            'servidor_id'              => ['nullable', 'integer'],
+            'unidad_administrativa_id' => ['nullable', 'integer'],
+            'fecha_desde'              => ['nullable', 'date'],
+            'fecha_hasta'              => ['nullable', 'date', 'after_or_equal:fecha_desde'],
+            'per_page'                 => ['nullable', 'integer'],
+        ]);
 
         $query = PermisoServidor::with([
             'servidor',

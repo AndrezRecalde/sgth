@@ -91,18 +91,23 @@ class PermisoService implements PermisoServiceInterface
                 $tipo, $servidor, $fecha, $minutosFin - $minutosInicio
             );
 
-            $unidadId = $datos['unidad_administrativa_id']
-                ?? $servidor->unidad_administrativa_id
-                ?? null;
-
             $dirigidoATh = (bool) ($datos['dirigido_a_talento_humano'] ?? false);
+
+            $jefeId = $dirigidoATh
+                ? $this->jefeDeTalentoHumano($servidorId)
+                : $this->jefeInmediato(
+                    isset($datos['jefe_id']) ? (int) $datos['jefe_id'] : null,
+                    $servidorId
+                );
 
             return PermisoServidor::create([
                 'servidor_id'              => $servidorId,
-                'unidad_administrativa_id' => $unidadId,
-                'jefe_id'                  => $dirigidoATh
-                    ? $this->jefeDeTalentoHumano($servidorId)
-                    : ($datos['jefe_id'] ?? null),
+                // La del servidor, nunca la que llegue en la petición. Es la que
+                // decide qué jefe ve el permiso (`aplicarAlcance()` y la policy):
+                // aceptarla del cliente dejaba a un servidor mandar el suyo a
+                // otra unidad, fuera de la vista de su jefe.
+                'unidad_administrativa_id' => $servidor->unidad_administrativa_id,
+                'jefe_id'                  => $jefeId,
                 'dirigido_a_talento_humano' => $dirigidoATh,
                 'creado_por'               => $datos['creado_por'] ?? null,
                 'tipo'                     => $tipo->value,
@@ -148,6 +153,25 @@ class PermisoService implements PermisoServiceInterface
         }
 
         return $firmante?->id;
+    }
+
+    /**
+     * El jefe inmediato elegido, siempre que no sea el propio servidor.
+     *
+     * Nadie firma su propio permiso. Se comprobaba solo al dirigirlo a
+     * Talento Humano: Talento Humano podía registrar el permiso de un jefe de
+     * unidad y elegirlo a él mismo entre los jefes de esa unidad.
+     */
+    private function jefeInmediato(?int $jefeId, int $servidorId): ?int
+    {
+        if ($jefeId !== null && $jefeId === $servidorId) {
+            throw new ReglaNegocioException(
+                'Nadie firma su propio permiso: elija a otro jefe inmediato o '.
+                'dirija el permiso a Talento Humano.'
+            );
+        }
+
+        return $jefeId;
     }
 
     public function confirmarRecepcion(

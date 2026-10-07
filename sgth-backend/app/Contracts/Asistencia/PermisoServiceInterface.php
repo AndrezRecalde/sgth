@@ -12,8 +12,10 @@ interface PermisoServiceInterface
      *   suficiente, porque se descuenta de él.
      * - OFICIAL: requiere observación obligatoria.
      * - Sin solaparse con otro permiso del mismo servidor ese día.
-     * - PERSONAL y OFICIAL se registran desde hoy en adelante, con tolerancia
-     *   de 3 días hábiles hacia atrás; ENFERMEDAD y CALAMIDAD, solo hacia atrás.
+     * - Ningún tipo con el plazo del respaldo ya vencido: en la práctica, dos
+     *   días hábiles atrás como mucho. ENFERMEDAD y CALAMIDAD, nunca a futuro.
+     * - El jefe inmediato no puede ser el propio servidor, y la unidad es
+     *   siempre la del servidor.
      * - Vencimiento automático a los 3 días hábiles, feriados incluidos.
      * - Folio único del año.
      */
