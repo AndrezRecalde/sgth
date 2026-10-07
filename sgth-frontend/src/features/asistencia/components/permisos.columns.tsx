@@ -52,9 +52,9 @@ export function getPermisosColumns(
     {
       accessor: 'tipo',
       title: 'Tipo',
-      // «CALAMIDAD DOMÉSTICA» mide unos 170 px y la celda lleva 32 de
-      // relleno. Con las etiquetas cortas de antes («CALAMIDAD») bastaban 130.
-      width: 210,
+      // «CALAMIDAD DOMÉSTICA» mide 147 px (medido en el navegador) y la celda
+      // lleva 32 de relleno. Con las etiquetas cortas de antes bastaban 130.
+      width: 185,
       render: ({ tipo }) => (
         <StatusBadge>
           {TIPO_LABELS[tipo as string] ?? tipo}

@@ -40,7 +40,7 @@ export function useOpcionesSolicitante(unidadId: number | null) {
     })),
     // El jefe se elige entre los de la misma unidad con puesto de jefatura.
     opcionesJefe: servidores
-      .filter(s => (s.puesto as { es_jefe?: boolean } | null)?.es_jefe === true)
+      .filter(s => s.puesto?.es_jefe === true)
       .map(s => ({ value: String(s.id), label: nombreServidor(s) })),
   }
 }

@@ -449,6 +449,8 @@ export type ServidorParams = {
   pendiente_vinculacion?: boolean
   tipo_nombramiento?: TipoNombramiento
   anio_ingreso?: number
+  /** Solo quienes ocupan un puesto de jefatura. */
+  es_jefe?: boolean
 }
 
 export type AgendaParams = {
