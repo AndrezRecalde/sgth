@@ -55,6 +55,23 @@ class PermisoServidorPolicy
             && $user->can(Permiso::CREAR_PERMISO->value);
     }
 
+    /**
+     * Dirigir el permiso al jefe de Talento Humano en vez de al jefe inmediato.
+     *
+     * Solo Talento Humano, decidido con TH el 2026-10-07: es una excepción al
+     * circuito normal —el jefe inmediato deja de figurar en el documento— y la
+     * decide la unidad, no el servidor. Hasta entonces el interruptor se le
+     * ofrecía a cualquiera, también en el portal, y cualquier servidor podía
+     * saltarse a su jefe.
+     *
+     * Vale también para el permiso propio de quien es de Talento Humano: lo
+     * que se mira es quién registra, no a nombre de quién.
+     */
+    public function dirigirATalentoHumano(User $user): bool
+    {
+        return $user->can(Permiso::REGISTRAR_PERMISOS_SERVIDORES->value);
+    }
+
     public function ver(User $user, PermisoServidor $permiso): bool
     {
         if ($user->can(Permiso::VER_PERMISOS_TODOS->value)) {

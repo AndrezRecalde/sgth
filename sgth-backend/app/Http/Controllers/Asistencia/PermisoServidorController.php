@@ -103,6 +103,13 @@ class PermisoServidorController extends Controller
         // se le cuenta nada sobre él.
         $this->authorize('crear', [PermisoServidor::class, $servidor]);
 
+        // Saltarse al jefe inmediato es una decisión de Talento Humano, no del
+        // servidor: a quien no puede tomarla se le responde que no puede, no
+        // se le registra el permiso con su jefe en silencio.
+        if ($request->boolean('dirigido_a_talento_humano')) {
+            $this->authorize('dirigirATalentoHumano', PermisoServidor::class);
+        }
+
         // Solo LOSEP accede al módulo de permisos. Se comprueba en positivo y
         // no descartando el Código del Trabajo: con esa forma, el régimen de
         // servicios profesionales —agregado el 2026-08-29— habría entrado por

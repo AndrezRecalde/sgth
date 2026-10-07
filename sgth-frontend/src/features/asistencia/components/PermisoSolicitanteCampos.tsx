@@ -10,6 +10,8 @@ interface Props {
   form:         UseFormReturn<PermisoFormData>
   /** Talento Humano elige unidad y servidor; el resto registra solo el propio. */
   emiteATodos:  boolean
+  /** Solo Talento Humano dirige un permiso a su jefe en vez del inmediato. */
+  puedeDirigirATh: boolean
   nombrePropio: string
   unidadSelId:  number | null
   onUnidad:     (id: number | null) => void
@@ -25,7 +27,7 @@ interface Props {
  * 403, y se quedaba sin jefes que elegir.
  */
 export function PermisoSolicitanteCampos({
-  form, emiteATodos, nombrePropio, unidadSelId, onUnidad,
+  form, emiteATodos, puedeDirigirATh, nombrePropio, unidadSelId, onUnidad,
 }: Props) {
   const { control, setValue } = form
   const servidorId = useWatch({ control, name: 'servidor_id' })
@@ -46,8 +48,9 @@ export function PermisoSolicitanteCampos({
         Omitir al jefe inmediato. Quien firma entonces no se elige: es el
         jefe vigente de la unidad de Talento Humano, o quien lo subrogue, y lo
         resuelve el backend con la misma regla que las Acciones de Personal.
+        Solo lo decide Talento Humano: al servidor no se le muestra.
       */}
-      <Controller
+      {puedeDirigirATh && <Controller
         name="dirigido_a_talento_humano"
         control={control}
         render={({ field }) => (
@@ -65,7 +68,7 @@ export function PermisoSolicitanteCampos({
             }}
           />
         )}
-      />
+      />}
     </>
   )
 }

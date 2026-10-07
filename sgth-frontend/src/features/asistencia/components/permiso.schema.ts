@@ -21,10 +21,11 @@ export const permisoSchema = z
   //
   // Alguien tiene que firmar. Sin jefe y sin dirigirlo a Talento Humano, el
   // permiso quedaba sin firmante. El backend exige lo mismo
-  // (`StorePermisoServidorRequest`).
+  // (`StorePermisoServidorRequest`). El mensaje no menciona la opción de
+  // Talento Humano: solo la tiene TH, que la ve justo debajo.
   .refine((datos) => datos.dirigido_a_talento_humano || !!datos.jefe_id, {
     path: ['jefe_id'],
-    message: 'Elija al jefe inmediato o dirija el permiso a Talento Humano',
+    message: 'Elija al jefe inmediato',
     when: () => true,
   })
   // El backend la exige (`PermisoService::validarObservacion`), pero solo lo
