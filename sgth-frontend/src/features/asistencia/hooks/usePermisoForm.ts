@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useAuth } from '@/hooks/useAuth'
+import { erroresDeCampo } from '@/lib/erroresDeCampo'
 import { usePermisoMutations } from './usePermisoMutations'
 import { useExportarPermiso } from './useExportarPermiso'
 import { permisoSchema, type PermisoFormData } from '../components/permiso.schema'
@@ -76,9 +77,20 @@ export function usePermisoForm(onClose: () => void, soloPropio = false) {
       })
       setPermisoCreado(result ?? null)
       setPaso(1)
-    } catch {
-      // El hook de mutación ya notifica el error; el formulario sigue abierto
-      // para corregirlo. Sin esto, el rechazo quedaba sin atrapar.
+    } catch (error) {
+      // El hook de mutación ya notifica el error y el formulario sigue abierto
+      // para corregirlo. Un 422 de validación además marca su campo (regla
+      // 07): solo con la notificación, quien veía «Elija al jefe inmediato»
+      // tenía que adivinar dónde. Las reglas de negocio no traen campo y se
+      // quedan en la notificación.
+      const campos = erroresDeCampo(error)
+      const enFormulario = form.getValues()
+
+      for (const [campo, mensaje] of Object.entries(campos ?? {})) {
+        if (campo in enFormulario) {
+          form.setError(campo as keyof PermisoFormData, { type: 'server', message: mensaje })
+        }
+      }
     }
   })
 
