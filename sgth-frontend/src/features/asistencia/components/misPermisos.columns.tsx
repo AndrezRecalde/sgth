@@ -53,7 +53,8 @@ export function getMisPermisosColumns(acciones: Acciones): DataTableColumn<Permi
     {
       accessor: 'tipo',
       title: 'Tipo',
-      width: 210,
+      // Lo mismo que en la tabla de Talento Humano: 147 px de etiqueta + 32.
+      width: 185,
       render: ({ tipo }) => (
         <StatusBadge>
           {TIPO_LABELS[tipo] ?? tipo}

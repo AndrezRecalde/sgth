@@ -353,6 +353,15 @@ class ExpedienteService implements ExpedienteServiceInterface
                 : $query->has('contratoVigente');
         }
 
+        // Quienes ocupan un puesto de jefatura. Lo usa el registro de permisos
+        // de Talento Humano: el jefe inmediato de un jefe de unidad está en
+        // otra unidad, y el jefe de TH no tiene a nadie más en la suya.
+        if (isset($filtros['es_jefe']) && $filtros['es_jefe'] !== '') {
+            $esJefe = filter_var($filtros['es_jefe'], FILTER_VALIDATE_BOOLEAN);
+
+            $query->whereHas('puesto', fn ($q) => $q->where('es_jefe', $esJefe));
+        }
+
         if (!empty($filtros['tipo_nombramiento'])) {
             $query->where('tipo_nombramiento',
                 $filtros['tipo_nombramiento']);
