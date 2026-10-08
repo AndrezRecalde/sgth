@@ -2,15 +2,13 @@
 
 namespace App\Http\Controllers\Asistencia;
 
+use App\Http\Controllers\Concerns\RespondeSinBiometrico;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Asistencia\AprobarPermisoSirha7Request;
 use App\Http\Responses\ApiResponse;
 use App\Models\Asistencia\PermisoServidor;
 use App\Services\Asistencia\AprobacionPermisoSirha7Service;
-use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 /**
  * Aprobar un permiso registrándolo en Sirha7, el biométrico.
@@ -22,6 +20,8 @@ use Illuminate\Support\Facades\Log;
  */
 class PermisoSirha7Controller extends Controller
 {
+    use RespondeSinBiometrico;
+
     public function __construct(private AprobacionPermisoSirha7Service $aprobacion) {}
 
     public function tipos(): JsonResponse
@@ -57,26 +57,5 @@ class PermisoSirha7Controller extends Controller
             ),
             'Permiso aprobado y registrado en Sirha7.'
         ), 'No se pudo conectar al sistema biométrico. El permiso no cambió; inténtelo de nuevo.');
-    }
-
-    /**
-     * Si el biométrico no responde, nada cambió en el SGTH (la transacción se
-     * deshace) y se dice así, con un 503: no es un error de quien aprueba.
-     */
-    private function conBiometrico(callable $accion, string $mensaje): JsonResponse
-    {
-        try {
-            return $accion();
-        } catch (\PDOException $e) {
-            // Solo lo que viene del biométrico. Un fallo de la base del SGTH
-            // no es «Sirha7 no responde» y sigue su camino.
-            if ($e instanceof QueryException && $e->getConnectionName() !== 'sqlsrv') {
-                throw $e;
-            }
-
-            Log::error('Sirha7 no respondió (permisos): ' . $e->getMessage());
-
-            return ApiResponse::error($mensaje, codigo: 503);
-        }
     }
 }

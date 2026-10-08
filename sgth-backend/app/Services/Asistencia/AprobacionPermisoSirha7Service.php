@@ -61,7 +61,7 @@ class AprobacionPermisoSirha7Service
             'hora_fin'         => $rango['hora_fin'],
             'jornada_completa' => $rango['hora_inicio'] === null,
             'referencia'       => $this->referencia($permiso),
-            'certificado'      => $rango['certificado'] ? $this->datosDelCertificado($rango['certificado']) : null,
+            'certificado'      => $rango['certificado']?->resumenSinDatosClinicos(),
             'cruces'           => $this->cruces($permiso, $rango['desde'], $rango['hasta']),
         ];
     }
@@ -73,6 +73,15 @@ class AprobacionPermisoSirha7Service
 
             if (! $permiso->estaPendienteDeSirha7()) {
                 throw new ReglaNegocioException($this->porQueNo($permiso));
+            }
+
+            // Mientras los certificados se aprueban por su lado y todavía crean
+            // su permiso: el mismo reposo no se registra dos veces.
+            $certificado = $permiso->certificadoMedico()->first();
+            if ($certificado?->aprobado_en !== null) {
+                throw new ReglaNegocioException(
+                    "El reposo ya se aprobó desde el certificado médico {$certificado->folio}."
+                );
             }
 
             // Nadie aprueba su propio permiso. En el servicio y no en la policy:
@@ -201,27 +210,6 @@ class AprobacionPermisoSirha7Service
             'hora_inicio' => $diaCompleto ? null : $inicio,
             'hora_fin'    => $diaCompleto ? null : $fin,
             'certificado' => null,
-        ];
-    }
-
-    /**
-     * Lo que Trabajo Social ve del certificado: fechas, días, médico y folio.
-     * Ni diagnóstico ni observaciones, que son datos de salud (decisión del
-     * 2026-10-08).
-     */
-    private function datosDelCertificado(CertificadoMedico $certificado): array
-    {
-        $certificado->loadMissing('emisor.servidor');
-        $medico = $certificado->emisor?->servidor;
-
-        return [
-            'folio'        => $certificado->folio,
-            'fecha_inicio' => $certificado->fecha_inicio?->toDateString(),
-            'fecha_fin'    => $certificado->fecha_fin?->toDateString(),
-            'dias_reposo'  => $certificado->dias_reposo,
-            'medico'       => $medico
-                ? trim("{$medico->apellido} {$medico->nombre}")
-                : $certificado->emisor?->usuario_ti,
         ];
     }
 
