@@ -1,4 +1,5 @@
-import { ROUTES } from './routes'
+import { ROUTES, type Subsistema } from './routes'
+import { SUBSISTEMAS } from './subsistemas'
 
 export interface NavItem {
   label:      string
@@ -531,6 +532,38 @@ export const ROLES_SGTH = [
   'auditor',
 ]
 
+/**
+ * Roles que entran al SGTH solo para trabajar los permisos de ausencia.
+ *
+ * Recepción confirma el documento físico y Trabajo Social valida enfermedad y
+ * calamidad: el backend ya les daba los dos permisos, pero sus roles no estaban
+ * en `ROLES_SGTH` y solo veían el Portal, así que a Asistencia › Permisos
+ * llegaban escribiendo la dirección (decisión de TH, 2026-10-08).
+ *
+ * No van en `ROLES_SGTH` porque el resto del menú no está pensado para ellos:
+ * muchas entradas no declaran restricción y les responderían 403. Con uno de
+ * estos roles y ninguno de `ROLES_SGTH`, el SGTH se reduce a esa pantalla.
+ */
+export const ROLES_SGTH_SOLO_PERMISOS = ['recepcion', 'trabajo-social']
+
+/** Tiene el SGTH reducido a Asistencia › Permisos. */
+export function soloPermisosEnSgth(roles: string[]): boolean {
+  return !roles.some(r => ROLES_SGTH.includes(r))
+    && roles.some(r => ROLES_SGTH_SOLO_PERMISOS.includes(r))
+}
+
+/**
+ * Adónde lleva entrar a un subsistema. Para quien solo trabaja los permisos,
+ * el SGTH empieza en ellos: el panel principal no le dice nada.
+ */
+export function inicioDelSubsistema(subsistema: Subsistema, roles: string[]): string {
+  if (subsistema === 'sgth' && soloPermisosEnSgth(roles)) {
+    return ROUTES.SGTH.ASISTENCIA_PERMISOS
+  }
+
+  return SUBSISTEMAS[subsistema].home
+}
+
 export const ROLES_SALUD = [
   'medico', 'odontologo', 'enfermera',
   'admin-dispensario', 'tecnico-dtic',
@@ -559,7 +592,9 @@ export function getSubsistemasDisponibles(
   roles: string[]
 ): ('sgth' | 'salud' | 'portal')[] {
   const disponibles: ('sgth' | 'salud' | 'portal')[] = []
-  if (roles.some(r => ROLES_SGTH.includes(r)))   disponibles.push('sgth')
+  if (roles.some(r => ROLES_SGTH.includes(r)) || soloPermisosEnSgth(roles)) {
+    disponibles.push('sgth')
+  }
   if (roles.some(r => ROLES_SALUD.includes(r)))  disponibles.push('salud')
   if (roles.some(r => ROLES_PORTAL.includes(r))) disponibles.push('portal')
   return disponibles
@@ -591,14 +626,24 @@ export function buildNav(
     (!item.permisos || item.permisos.some(p => permisos.includes(p))) &&
     (!item.roles || item.roles.some(rol => roles.includes(rol)))
 
+  // Quien solo trabaja los permisos ve esa entrada y nada más, aunque otras
+  // no declaren restricción (ver `ROLES_SGTH_SOLO_PERMISOS`).
+  const soloPermisos = subsistema === 'sgth' && soloPermisosEnSgth(roles)
+  const permitido = (item: { href: string; children?: { href: string }[] }) =>
+    !soloPermisos
+    || item.href === ROUTES.SGTH.ASISTENCIA_PERMISOS
+    || !!item.children?.some(c => c.href === ROUTES.SGTH.ASISTENCIA_PERMISOS)
+  const visibleAqui = (item: Parameters<typeof visible>[0] & { href: string }) =>
+    visible(item) && permitido(item)
+
   return navMap[subsistema]
     .map(group => ({
       ...group,
       items: group.items
-        .filter(visible)
+        .filter(visibleAqui)
         .map(item => ({
           ...item,
-          children: item.children?.filter(visible),
+          children: item.children?.filter(visibleAqui),
         }))
         .filter(item => !item.children || item.children.length > 0),
     }))

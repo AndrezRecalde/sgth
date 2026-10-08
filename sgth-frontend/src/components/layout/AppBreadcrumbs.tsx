@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { Anchor, Breadcrumbs, Text } from '@mantine/core'
 import { IconChevronRight } from '@tabler/icons-react'
 import { useAuth } from '@/hooks/useAuth'
-import { findNavTrail } from '@/config/nav'
+import { findNavTrail, inicioDelSubsistema } from '@/config/nav'
 import { SUBSISTEMAS } from '@/config/subsistemas'
 import type { Subsistema } from '@/config/routes'
 
@@ -34,7 +34,7 @@ export function AppBreadcrumbs({ subsistema }: Props) {
   if (!trail) return null
 
   const migas = [
-    { label: cfg.nombre, href: cfg.home },
+    { label: cfg.nombre, href: inicioDelSubsistema(subsistema, usuario?.roles ?? []) },
     ...(trail.padre ? [{ label: trail.padre, href: undefined }] : []),
     { label: trail.label, href: trail.href },
   ]
