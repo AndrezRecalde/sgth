@@ -14,7 +14,7 @@
 import { useState } from 'react'
 import { Alert, Button, Skeleton, Stack, Text } from '@mantine/core'
 import { useQuery } from '@tanstack/react-query'
-import { IconAlertCircle, IconArrowBackUp, IconCheck, IconShieldCheck, IconX } from '@tabler/icons-react'
+import { IconAlertCircle, IconArrowBackUp, IconCheck, IconFingerprint, IconShieldCheck, IconX } from '@tabler/icons-react'
 import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import { getApiErrorMessage } from '@/types/api'
 import { asistenciaService } from '../services/asistenciaService'
@@ -22,6 +22,7 @@ import { usePermisoMutations } from '../hooks/usePermisoMutations'
 import { useAccionesPermiso } from '../hooks/useAccionesPermiso'
 import { MotivoModal, PageHeader } from '@/components/ui'
 import { PermisoResumen } from './PermisoResumen'
+import { AprobarSirha7Modal } from './AprobarSirha7Modal'
 import { ESTADOS_CONFIRMADOS, TIPOS_TRABAJO_SOCIAL } from './permisos.constants'
 
 interface Props {
@@ -32,6 +33,7 @@ type AccionConMotivo = 'rechazar' | 'revertir'
 
 export function PermisoPorFolio({ folio }: Props) {
   const [conMotivo, setConMotivo] = useState<AccionConMotivo | null>(null)
+  const [aprobando, setAprobando] = useState(false)
 
   const { data: permiso, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['permiso-por-folio', folio],
@@ -135,7 +137,12 @@ export function PermisoPorFolio({ folio }: Props) {
           </Button>
         )}
 
-        {validable && puede.validarTs && (
+        {/* Desde la fecha de corte, validar también registra en Sirha7. */}
+        {puede.aprobarSirha7(permiso) ? (
+          <Button size="md" variant="light" leftSection={<IconFingerprint size={18} />} onClick={() => setAprobando(true)}>
+            {validable ? 'Validar y aprobar en Sirha7' : 'Aprobar en Sirha7'}
+          </Button>
+        ) : validable && puede.validarTs && !permiso.pendiente_sirha7 && (
           <Button
             size="md"
             variant="light"
@@ -174,9 +181,15 @@ export function PermisoPorFolio({ folio }: Props) {
             <>
               El permiso <b>{permiso.folio}</b> volverá a pendiente y se devolverá
               al servidor el saldo de vacaciones descontado.
+              {permiso.sirha7_aprobado_en && ' También se retirará de Sirha7.'}
             </>
           )
         }
+      />
+
+      <AprobarSirha7Modal
+        permiso={aprobando ? permiso : null}
+        onClose={() => { setAprobando(false); refetch() }}
       />
     </Stack>
   )

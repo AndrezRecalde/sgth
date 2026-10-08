@@ -48,6 +48,12 @@ export function PermisoResumen({ permiso }: { permiso: PermisoServidor }) {
       label: 'Horario',
       value: `${permiso.hora_inicio?.substring(0, 5)} — ${permiso.hora_fin?.substring(0, 5)}`,
     },
+    ...(permiso.sirha7_aprobado_en
+      ? [{
+          label: 'Registrado en Sirha7',
+          value: `${permiso.sirha7_leave_nombre} · ${formatFecha(permiso.sirha7_aprobado_en)}`,
+        }]
+      : []),
     { label: 'Observación', value: observacion, ancho: true },
   ]
 
