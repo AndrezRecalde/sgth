@@ -2,6 +2,7 @@
 
 use App\Enums\Rol;
 use App\Models\User;
+use App\Services\Asistencia\Sirha7PermisoService;
 use Database\Seeders\RolPermisoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -44,6 +45,12 @@ test('ninguna_ruta_get_del_api_revienta', function () {
     // Con todos los roles: lo que se busca son fallos de código, no de permisos.
     // Sale del enum para que un rol nuevo entre solo en el barrido.
     $usuario->assignRole(array_column(Rol::cases(), 'value'));
+
+    // Sirha7, el biométrico, es otro servidor (SQL Server) que aquí no existe:
+    // sin el doble, la lista de tipos de permiso respondería 503 «no se pudo
+    // conectar», que es una caída ajena y no un fallo de código. Lo que habla
+    // con Sirha7 se prueba en sus propios tests y contra Sirha7 a mano.
+    $this->mock(Sirha7PermisoService::class)->shouldReceive('tipos')->andReturn([]);
 
     $rotas = [];
 

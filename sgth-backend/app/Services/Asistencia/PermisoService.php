@@ -247,6 +247,15 @@ class PermisoService implements PermisoServiceInterface
             $this->exigirEstado($permiso, [EstadoPermiso::ACTIVO],
                 'El permiso debe estar ACTIVO para ser validado por Trabajo Social.');
 
+            // Desde la fecha de corte, validar es también registrarlo en
+            // Sirha7: un solo paso, «Validar y aprobar» (decisión del
+            // 2026-10-08). Validarlo suelto lo dejaría sin llegar al biométrico.
+            if ($permiso->estaPendienteDeSirha7()) {
+                throw new ReglaNegocioException(
+                    'Este permiso se valida con «Validar y aprobar en Sirha7», que además lo registra en el biométrico.'
+                );
+            }
+
             $permiso->estado          = EstadoPermiso::VALIDADO_TRABAJO_SOCIAL->value;
             $permiso->validado_ts_por = $tsUserId;
             $permiso->validado_ts_en  = now();

@@ -53,6 +53,10 @@ enum Permiso: string
     // Anular el permiso PENDIENTE de cualquier servidor; el propio lo anula
     // cualquiera. No incluye revertir confirmaciones: eso es `anular-permiso`.
     case ANULAR_PERMISO_PENDIENTE = 'anular-permiso-pendiente';
+    // Registrar en Sirha7 (el biométrico) un permiso personal u oficial ya
+    // confirmado. Enfermedad y calamidad las registra Trabajo Social al
+    // validarlas, con `validar-trabajo-social` (decisión del 2026-10-08).
+    case APROBAR_PERMISO_SIRHA7 = 'aprobar-permiso-sirha7';
     case GESTIONAR_VACACIONES = 'gestionar-vacaciones';
     case APROBAR_VACACIONES = 'aprobar-vacaciones';
     case VER_VACACIONES_UNIDAD = 'ver-vacaciones-unidad';
