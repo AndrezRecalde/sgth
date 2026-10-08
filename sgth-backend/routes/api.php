@@ -8,6 +8,7 @@ use App\Http\Controllers\Asistencia\MarcacionController;
 use App\Http\Controllers\Asistencia\PeriodoVacacionController;
 use App\Http\Controllers\Asistencia\PermisoServidorController;
 use App\Http\Controllers\Asistencia\PermisoSirha7Controller;
+use App\Http\Controllers\Asistencia\CertificadoAprobacionController;
 use App\Http\Controllers\Asistencia\VacacionController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\PasswordController;
@@ -590,6 +591,23 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::post('{id}/anular', [VacacionController::class, 'anular'])
                 ->whereNumber('id')
                 ->name('asistencia.vacaciones.anular');
+        });
+
+        // Certificados médicos del dispensario: Talento Humano y Trabajo Social
+        // los aprueban y los registran en Sirha7 (decisión del 2026-10-08). Lo
+        // decide la policy, como el resto del módulo.
+        Route::prefix('certificados-medicos')->group(function () {
+            Route::get('/', [CertificadoAprobacionController::class, 'index'])
+                ->name('asistencia.certificados.index');
+            Route::get('{id}/sirha7', [CertificadoAprobacionController::class, 'previa'])
+                ->whereNumber('id')
+                ->name('asistencia.certificados.sirha7.previa');
+            Route::post('{id}/aprobar-sirha7', [CertificadoAprobacionController::class, 'aprobar'])
+                ->whereNumber('id')
+                ->name('asistencia.certificados.sirha7.aprobar');
+            Route::post('{id}/aprobar-sin-sirha7', [CertificadoAprobacionController::class, 'aprobarSinSirha7'])
+                ->whereNumber('id')
+                ->name('asistencia.certificados.aprobar-sin-sirha7');
         });
 
         // Permisos

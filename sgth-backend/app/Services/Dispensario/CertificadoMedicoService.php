@@ -74,6 +74,7 @@ class CertificadoMedicoService
 
             $certificado = CertificadoMedico::create([
                 'consulta_medica_id'   => $consulta->id,
+                'servidor_id'          => $esServidor ? $historia->servidor_id : null,
                 'emitido_por'          => $emisorId,
                 'dias_reposo'          => $dias,
                 'fecha_inicio'         => $fechaInicio,
