@@ -2439,8 +2439,7 @@ test('el_folio_del_certificado_sale_del_mayor_no_de_contar_filas', function () {
     ));
     $this->actingAs($this->medico, 'sanctum');
 
-    // Un familiar: para el servidor titular el folio lo pone el permiso, así
-    // que la serie CERT- solo la usan los certificados de familiares.
+    // Un familiar. Desde el 2026-10-08 los del titular también llevan CERT-.
     $hija = App\Models\Expediente\CargaFamiliar::create([
         'servidor_id'      => $this->paciente->id,
         'cedula'           => '0801234571',
@@ -2462,12 +2461,14 @@ test('el_folio_del_certificado_sale_del_mayor_no_de_contar_filas', function () {
     $servicio = app(App\Services\Dispensario\CertificadoMedicoService::class);
     $anio = date('Y');
 
-    $emitir = function () use ($historia) {
+    // Cada uno en otra semana: dos reposos del mismo paciente no se solapan.
+    $semana = 0;
+    $emitir = function () use ($historia, &$semana) {
         $consulta = ConsultaMedica::create([
             'especialidad' => 'medicina_general',
             'historia_clinica_id' => $historia->id,
             'medico_id'           => $this->medico->id,
-            'fecha_consulta'      => now(),
+            'fecha_consulta'      => now()->addWeeks($semana++),
             'hora_consulta'       => now()->format('H:i:s'),
             'motivo_consulta'     => 'Gripe',
         ]);
@@ -2491,7 +2492,7 @@ test('el_folio_del_certificado_sale_del_mayor_no_de_contar_filas', function () {
     expect($emitir()->folio)->toBe("CERT-{$anio}-00003");
 });
 
-test('anular_un_certificado_anula_tambien_su_permiso_de_asistencia', function () {
+test('emitir_un_certificado_ya_no_crea_un_permiso_y_se_anula_solo', function () {
     $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
         ['name' => 'medico', 'guard_name' => 'sanctum']
     ));
@@ -2506,16 +2507,11 @@ test('anular_un_certificado_anula_tambien_su_permiso_de_asistencia', function ()
         'dias_reposo'        => 2,
     ])->assertCreated()->json('datos');
 
-    // El permiso nace ACTIVO porque el médico es fuente confiable, y eso lo
-    // dejaba fuera del alcance de la anulación de Asistencia, que solo acepta
-    // los PENDIENTE. Sin esto quedaban los dos para siempre.
-    expect($certificado['permiso_servidor_id'])->not->toBeNull();
-
-    $permiso = App\Models\Asistencia\PermisoServidor::find(
-        $certificado['permiso_servidor_id']
-    );
-    expect($permiso->estado->value ?? $permiso->estado)
-        ->toBe(App\Enums\EstadoPermiso::ACTIVO->value);
+    // Desde el 2026-10-08 el reposo lo aprueban TH y Trabajo Social sobre el
+    // certificado: no se crea ningún permiso de Asistencia.
+    expect(App\Models\Dispensario\CertificadoMedico::find($certificado['id'])->permiso_servidor_id)->toBeNull()
+        ->and($certificado['servidor_id'])->toBe($this->paciente->id)
+        ->and(App\Models\Asistencia\PermisoServidor::where('servidor_id', $this->paciente->id)->exists())->toBeFalse();
 
     $this->patchJson(
         "/api/v1/dispensario/certificados-medicos/{$certificado['id']}/anular",
@@ -2527,17 +2523,39 @@ test('anular_un_certificado_anula_tambien_su_permiso_de_asistencia', function ()
     expect($enBase->anulado_por)->toBe($this->medico->id);
     expect($enBase->motivo_anulacion)->toBe('Diagnóstico corregido');
 
-    // Y el permiso deja de justificar la ausencia.
-    $permiso->refresh();
-    expect($permiso->estado->value ?? $permiso->estado)
-        ->toBe(App\Enums\EstadoPermiso::ANULADO->value);
-    expect($permiso->anulado_por)->toBe($this->medico->id);
-
     // Anularlo dos veces no cuela.
     $this->patchJson(
         "/api/v1/dispensario/certificados-medicos/{$certificado['id']}/anular",
         ['motivo_anulacion' => 'Otra vez']
     )->assertStatus(422);
+});
+
+test('no_se_emiten_dos_reposos_que_se_cruzan_para_el_mismo_paciente', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'medico', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $consulta = consultaParaCertificado(
+        $this->paciente->id, $this->paciente->cedula, $this->medico->id
+    );
+    $emitir = fn (string $desde, string $hasta, int $dias) => $this->postJson('/api/v1/dispensario/certificados-medicos', [
+        'consulta_medica_id' => $consulta->id, 'dias_reposo' => $dias,
+        'fecha_inicio' => $desde, 'fecha_fin' => $hasta,
+    ]);
+
+    $primero = $emitir('2026-11-02', '2026-11-04', 3)->assertCreated()->json('datos');
+
+    expect($emitir('2026-11-04', '2026-11-05', 2)->assertStatus(422)->json('mensaje'))
+        ->toContain($primero['folio']);
+
+    // Contiguo sí: el reposo puede seguir con otro certificado.
+    $emitir('2026-11-05', '2026-11-06', 2)->assertCreated();
+
+    // Y anulado deja los días libres.
+    $this->patchJson("/api/v1/dispensario/certificados-medicos/{$primero['id']}/anular", ['motivo_anulacion' => 'Fechas mal'])
+        ->assertOk();
+    $emitir('2026-11-03', '2026-11-04', 2)->assertCreated();
 });
 
 test('otro_medico_no_anula_el_certificado_ajeno', function () {
@@ -2598,23 +2616,24 @@ test('el_certificado_se_puede_descargar_en_pdf', function () {
     expect($respuesta->getContent())->toStartWith("%PDF");
 });
 
-test('el_folio_del_permiso_del_certificado_tampoco_cuenta_filas', function () {
+test('el_certificado_del_titular_tambien_lleva_folio_cert', function () {
     $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
         ['name' => 'medico', 'guard_name' => 'sanctum']
     ));
     $this->actingAs($this->medico, 'sanctum');
 
-    $servicio = app(App\Services\Dispensario\CertificadoMedicoService::class);
-    $anio = now()->year;
+    historiaDePrueba($this->paciente->id, $this->paciente->cedula);
+    $anio = date('Y');
 
-    $emitir = function () {
+    $semana = 0;
+    $emitir = function () use (&$semana) {
         $consulta = ConsultaMedica::create([
             'especialidad' => 'medicina_general',
             'historia_clinica_id' => HistoriaClinica::where(
                 'servidor_id', $this->paciente->id
             )->value('id'),
             'medico_id'       => $this->medico->id,
-            'fecha_consulta'  => now(),
+            'fecha_consulta'  => now()->addWeeks($semana++),
             'hora_consulta'   => now()->format('H:i:s'),
             'motivo_consulta' => 'Gripe',
         ]);
@@ -2626,19 +2645,10 @@ test('el_folio_del_permiso_del_certificado_tampoco_cuenta_filas', function () {
             ], $this->medico->id);
     };
 
-    historiaDePrueba($this->paciente->id, $this->paciente->cedula);
-
-    // El permiso también arrancaba en 00000 y también contaba filas sobre una
-    // tabla que borra en blando y tiene el folio único.
-    $primero = $emitir();
-    expect($primero->permisoServidor->folio)->toBe("PER-{$anio}-00001");
-
-    $segundo = $emitir();
-    expect($segundo->permisoServidor->folio)->toBe("PER-{$anio}-00002");
-
-    $segundo->permisoServidor->delete();
-
-    expect($emitir()->permisoServidor->folio)->toBe("PER-{$anio}-00003");
+    // Hasta el 2026-10-08 el folio del titular lo ponía su permiso (PER-).
+    expect($emitir()->folio)->toBe("CERT-{$anio}-00001");
+    expect($emitir()->folio)->toBe("CERT-{$anio}-00002");
+    expect(App\Models\Asistencia\PermisoServidor::count())->toBe(0);
 });
 
 /**

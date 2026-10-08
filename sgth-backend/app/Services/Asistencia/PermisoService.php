@@ -77,6 +77,7 @@ class PermisoService implements PermisoServiceInterface
             $this->validarObservacion($tipo, $observacion);
             $this->validarDiaLaborable($tipo, $fecha);
             $this->validarCruceConVacaciones($servidorId, $fecha);
+            $this->validarCruceConReposo($servidorId, $fecha);
 
             // A partir de aquí se lee la jornada del servidor en esa fecha, así
             // que se bloquean sus permisos de ese día: dos solicitudes a la vez
@@ -498,6 +499,32 @@ class PermisoService implements PermisoServiceInterface
                 $vacacion->fecha_inicio->format('d/m/Y'),
                 $vacacion->fecha_fin->format('d/m/Y'),
                 $fecha->format('d/m/Y')
+            ));
+        }
+    }
+
+    /**
+     * Ningún permiso cae en un día de reposo médico del mismo servidor.
+     *
+     * Desde el 2026-10-08 el reposo ya no es un permiso, así que el
+     * solapamiento entre permisos no lo ve. El día está cubierto entero por el
+     * certificado desde que se emite, aprobado o no: un permiso encima no
+     * ampara nada. El de la consulta que llevó al reposo se pide antes, y lo
+     * decidido es anularlo (aviso en la aprobación del certificado).
+     */
+    private function validarCruceConReposo(int $servidorId, Carbon $fecha): void
+    {
+        $dia = $fecha->toDateString();
+        $reposo = \App\Models\Dispensario\CertificadoMedico::reposoDe($servidorId, $dia, $dia)->first();
+
+        if ($reposo) {
+            throw new ReglaNegocioException(sprintf(
+                'El %s está cubierto por el reposo médico del certificado %s (del %s al %s): '.
+                'ese día ya tiene una ausencia justificada.',
+                $fecha->format('d/m/Y'),
+                $reposo->folio,
+                $reposo->fecha_inicio->format('d/m/Y'),
+                $reposo->fecha_fin->format('d/m/Y')
             ));
         }
     }

@@ -8,7 +8,8 @@
 | - Personal y oficial, TH (`aprobar-permiso-sirha7`); enfermedad y
 |   calamidad, Trabajo Social, que al aprobarlas las valida.
 | - El tipo de Sirha7 lo elige quien aprueba.
-| - Un permiso del dispensario cubre los días del certificado.
+| - Los reposos del dispensario se aprueban como certificados
+|   (CertificadoAprobacionSirha7Test).
 |
 | Sirha7 se reemplaza con un doble: el CI no tiene SQL Server. Los
 | procedimientos se probaron contra Sirha7 en el PR #378.
@@ -246,64 +247,6 @@ test('los días omitidos quedan anotados', function () {
 });
 
 // ── El permiso del dispensario ───────────────────────────────────────
-
-test('un permiso del dispensario se registra con los días del certificado, de jornada completa', function () {
-    $p = permisoAprobacionSirha7($this->servidor, TipoPermiso::ENFERMEDAD, [
-        'fecha' => '2026-10-12', 'hora_inicio' => '00:00', 'hora_fin' => '23:59',
-    ]);
-    certificadoAprobacionSirha7($this, $p, '2026-10-12', '2026-10-14');
-
-    $this->sirha7->shouldReceive('registrar')
-        ->once()
-        ->with('0802704171', 14, '2026-10-12', '2026-10-14', null, null, "SGTH {$p->folio}")
-        ->andReturn(registroSirha7());
-
-    aprobarEnSirha7($this->ts, $p, 14)->assertOk();
-});
-
-test('la previa muestra el certificado sin diagnóstico y avisa del permiso de la consulta', function () {
-    $p = permisoAprobacionSirha7($this->servidor, TipoPermiso::ENFERMEDAD, [
-        'fecha' => '2026-10-12', 'hora_inicio' => '00:00', 'hora_fin' => '23:59',
-    ]);
-    certificadoAprobacionSirha7($this, $p, '2026-10-12', '2026-10-14');
-    $consulta = permisoAprobacionSirha7($this->servidor, TipoPermiso::ENFERMEDAD, [
-        'fecha' => '2026-10-12', 'hora_inicio' => '10:00', 'hora_fin' => '11:00', 'estado' => 'pendiente',
-    ]);
-
-    $previa = $this->actingAs($this->ts, 'sanctum')
-        ->getJson("/api/v1/asistencia/permisos/{$p->id}/sirha7")
-        ->assertOk()
-        ->json('datos');
-
-    expect($previa['pendiente'])->toBeTrue()
-        ->and($previa['desde'])->toBe('2026-10-12')
-        ->and($previa['hasta'])->toBe('2026-10-14')
-        ->and($previa['jornada_completa'])->toBeTrue()
-        ->and(array_keys($previa['certificado']))->toBe(['folio', 'fecha_inicio', 'fecha_fin', 'dias_reposo', 'medico'])
-        ->and($previa['certificado']['dias_reposo'])->toBe(3)
-        ->and(array_column($previa['cruces'], 'folio'))->toBe([$consulta->folio]);
-});
-
-function certificadoAprobacionSirha7($test, PermisoServidor $p, string $desde, string $hasta): void
-{
-    ConsultaMedica::unguard();
-    $medico = User::factory()->create();
-    $historia = HistoriaClinica::create([
-        'numero_historia' => '0802704171', 'cedula_paciente' => '0802704171',
-        'tipo_paciente' => 'servidor', 'servidor_id' => $p->servidor_id, 'estado' => true,
-    ]);
-    $consulta = ConsultaMedica::create([
-        'historia_clinica_id' => $historia->id, 'medico_id' => $medico->id, 'especialidad' => 'medicina_general',
-        'fecha_consulta' => $desde, 'hora_consulta' => '09:00:00',
-        'motivo_consulta' => 'Control', 'diagnostico_detallado' => 'Reservado',
-    ]);
-    DB::table('certificados_medicos')->insert([
-        'consulta_medica_id' => $consulta->id, 'emitido_por' => $medico->id, 'dias_reposo' => 3,
-        'fecha_inicio' => $desde, 'fecha_fin' => $hasta, 'permiso_servidor_id' => $p->id,
-        'observaciones' => 'Dato clínico que no debe salir', 'folio' => 'CM-2026-90001',
-        'tipo_paciente' => 'servidor', 'created_at' => now(), 'updated_at' => now(),
-    ]);
-}
 
 // ── Lo demás del módulo ──────────────────────────────────────────────
 

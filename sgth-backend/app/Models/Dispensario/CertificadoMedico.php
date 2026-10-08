@@ -5,6 +5,7 @@ namespace App\Models\Dispensario;
 use App\Models\User;
 use App\Models\Asistencia\PermisoServidor;
 use App\Models\Expediente\Servidor;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -62,6 +63,23 @@ class CertificadoMedico extends Model
             'sirha7_userid'        => 'integer',
             'sirha7_dias_omitidos' => 'array',
         ];
+    }
+
+    /**
+     * Los reposos vigentes de un servidor que tocan alguno de esos días.
+     *
+     * Bloquean desde que se emiten, aprobados o no (decisión del 2026-10-08):
+     * sobre un día de reposo no caben vacaciones ni otro permiso. Los anulados
+     * no cuentan.
+     */
+    public function scopeReposoDe(Builder $query, int $servidorId, string $desde, string $hasta): Builder
+    {
+        return $query->where('servidor_id', $servidorId)
+            ->whereNull('anulado_en')
+            ->whereDate('fecha_inicio', '<=', $hasta)
+            ->whereDate('fecha_fin', '>=', $desde)
+            ->orderBy('fecha_inicio')
+            ->orderBy('id');
     }
 
     /**

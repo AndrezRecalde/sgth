@@ -18,10 +18,15 @@ export interface CertificadoMedico {
   emisor?: {
     nombre_completo?: string
   } | null
-  permiso_servidor?: {
-    id:    number
-    folio: string
-  } | null
+  /**
+   * Del servidor titular: TH o Trabajo Social lo aprueban y lo registran en
+   * Sirha7 (desde el 2026-10-08 ya no se crea un permiso). Nulo en familiares.
+   */
+  servidor_id?:         number | null
+  aprobado_en?:         string | null
+  /** `sgth`: lo escribió el SGTH en Sirha7; `manual`: TH lo cargó a mano. */
+  registro_sirha7?:     'sgth' | 'manual' | null
+  sirha7_leave_nombre?: string | null
   /** Con fecha, el certificado está anulado: la fila se conserva, marcada. */
   anulado_en?:       string | null
   motivo_anulacion?: string | null

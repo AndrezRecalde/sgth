@@ -7,7 +7,6 @@ use App\Enums\TipoPermiso;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Asistencia\PermisoServidor;
 use App\Models\Asistencia\PermisoSirha7Fila;
-use App\Models\Dispensario\CertificadoMedico;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -21,8 +20,8 @@ use Illuminate\Support\Facades\DB;
  * - Quien aprueba elige siempre el tipo de Sirha7; el SGTH no lo deduce.
  * - Solo los confirmados desde la fecha de corte: lo anterior ya lo cargó TH a
  *   mano. Ver `PermisoServidor::estaPendienteDeSirha7()`.
- * - Un permiso que vino de un certificado médico cubre los días de reposo del
- *   certificado: el permiso guarda solo el primero.
+ * - Los reposos del dispensario no pasan por aquí: desde el 2026-10-08 se
+ *   aprueba el certificado médico (`AprobacionCertificadoSirha7Service`).
  *
  * No hay una transacción común con Sirha7. Se escribe allí primero y después
  * aquí, con la fila del permiso bloqueada: si lo segundo falla, el reintento
@@ -41,12 +40,8 @@ class AprobacionPermisoSirha7Service
 
     /**
      * Lo que se va a registrar, para el diálogo de aprobación: los días, si
-     * son de jornada completa, el certificado (sin diagnóstico) y los otros
-     * permisos de la persona en esos días.
-     *
-     * Los cruces son un aviso: el permiso de la consulta y el reposo del
-     * certificado suelen caer el mismo primer día, y lo decidido es que Trabajo
-     * Social anule el de la consulta antes de aprobar (2026-10-08).
+     * son de jornada completa y los otros permisos de la persona en esos días,
+     * como aviso.
      */
     public function previa(PermisoServidor $permiso): array
     {
@@ -61,7 +56,6 @@ class AprobacionPermisoSirha7Service
             'hora_fin'         => $rango['hora_fin'],
             'jornada_completa' => $rango['hora_inicio'] === null,
             'referencia'       => $this->referencia($permiso),
-            'certificado'      => $rango['certificado']?->resumenSinDatosClinicos(),
             'cruces'           => $this->cruces($permiso, $rango['desde'], $rango['hasta']),
         ];
     }
@@ -73,15 +67,6 @@ class AprobacionPermisoSirha7Service
 
             if (! $permiso->estaPendienteDeSirha7()) {
                 throw new ReglaNegocioException($this->porQueNo($permiso));
-            }
-
-            // Mientras los certificados se aprueban por su lado y todavía crean
-            // su permiso: el mismo reposo no se registra dos veces.
-            $certificado = $permiso->certificadoMedico()->first();
-            if ($certificado?->aprobado_en !== null) {
-                throw new ReglaNegocioException(
-                    "El reposo ya se aprobó desde el certificado médico {$certificado->folio}."
-                );
             }
 
             // Nadie aprueba su propio permiso. En el servicio y no en la policy:
@@ -140,9 +125,9 @@ class AprobacionPermisoSirha7Service
     /**
      * Quita el permiso de Sirha7 y deja de constar como aprobado.
      *
-     * Lo llaman revertir la confirmación y anular el certificado médico, cada
-     * uno con la fila del permiso ya bloqueada y dentro de su transacción
-     * (decisión del 2026-10-07: anular o revertir retira la fila de Sirha7).
+     * Lo llama revertir la confirmación, con la fila del permiso ya bloqueada
+     * y dentro de su transacción (decisión del 2026-10-07: revertir retira la
+     * fila de Sirha7). El certificado médico tiene su propio retiro.
      * Sirha7 va primero: si se niega o no responde, la excepción deshace la
      * transacción de quien llamó y el permiso queda como estaba. Si Sirha7 ya
      * retiró y lo de aquí falla después, repetir es seguro: el procedimiento
@@ -177,28 +162,13 @@ class AprobacionPermisoSirha7Service
     // ── Apoyos ───────────────────────────────────────────────────────
 
     /**
-     * Qué días y horas se escriben.
+     * Qué días y horas se escriben: el día del permiso, por horas; o de
+     * jornada completa si cubre el día entero (00:00–23:59).
      *
-     * Del certificado médico, si lo hay y no está anulado: sus días de reposo,
-     * de jornada completa. Si no, el día del permiso, por horas; o de jornada
-     * completa si cubre el día entero (00:00–23:59), como los del dispensario.
-     *
-     * @return array{desde: string, hasta: string, hora_inicio: ?string, hora_fin: ?string, certificado: ?CertificadoMedico}
+     * @return array{desde: string, hasta: string, hora_inicio: ?string, hora_fin: ?string}
      */
     private function rango(PermisoServidor $permiso): array
     {
-        $certificado = $permiso->certificadoMedico()->whereNull('anulado_en')->first();
-
-        if ($certificado && $certificado->fecha_inicio && $certificado->fecha_fin) {
-            return [
-                'desde'       => $certificado->fecha_inicio->toDateString(),
-                'hasta'       => $certificado->fecha_fin->toDateString(),
-                'hora_inicio' => null,
-                'hora_fin'    => null,
-                'certificado' => $certificado,
-            ];
-        }
-
         $inicio = substr((string) $permiso->getRawOriginal('hora_inicio'), 0, 5);
         $fin    = substr((string) $permiso->getRawOriginal('hora_fin'), 0, 5);
         $diaCompleto = $inicio === '00:00' && $fin >= '23:59';
@@ -209,7 +179,6 @@ class AprobacionPermisoSirha7Service
             'hasta'       => $dia,
             'hora_inicio' => $diaCompleto ? null : $inicio,
             'hora_fin'    => $diaCompleto ? null : $fin,
-            'certificado' => null,
         ];
     }
 

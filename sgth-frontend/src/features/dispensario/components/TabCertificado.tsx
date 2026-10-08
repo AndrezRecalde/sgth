@@ -94,10 +94,9 @@ export function TabCertificado({ turno, consulta }: Props) {
         onClose={() => setAAnular(null)}
         titulo="Anular certificado médico"
         descripcion={
-          aAnular?.permiso_servidor
-            ? `Se anulará ${aAnular.folio} y con él el permiso ` +
-              `${aAnular.permiso_servidor.folio}, que dejará de justificar ` +
-              'la ausencia.'
+          aAnular?.registro_sirha7 === 'sgth'
+            ? `Se anulará ${aAnular.folio} y se retirará de Sirha7, ` +
+              'donde dejará de justificar la ausencia.'
             : `Se anulará ${aAnular?.folio ?? ''}.`
         }
         motivos={MOTIVOS_ANULAR_CERTIFICADO}

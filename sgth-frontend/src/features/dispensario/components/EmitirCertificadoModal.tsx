@@ -121,8 +121,8 @@ export function EmitirCertificadoModal({
             Máximo <Text span fw={600}>{DIAS_MAX} días de reposo</Text>
             {' '}por certificado (normativa MSP Ecuador).
             {!esFamiliar && (
-              <> El permiso de asistencia se generará
-              automáticamente.</>
+              <> Talento Humano lo aprobará y lo registrará en
+              Sirha7.</>
             )}
           </Text>
         </Alert>

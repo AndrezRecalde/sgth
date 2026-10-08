@@ -101,14 +101,6 @@
     día{{ $certificado->dias_reposo === 1 ? '' : 's' }},
     desde el <strong>{{ $certificado->fecha_inicio->format('d/m/Y') }}</strong>
     hasta el <strong>{{ $certificado->fecha_fin->format('d/m/Y') }}</strong>, inclusive.
-
-    @if ($certificado->permisoServidor)
-        <br><br>
-        <span style="font-size: 10.5px; color: #555;">
-            Permiso de asistencia asociado:
-            <strong>{{ $certificado->permisoServidor->folio }}</strong>
-        </span>
-    @endif
 </div>
 
 @if ($certificado->observaciones)

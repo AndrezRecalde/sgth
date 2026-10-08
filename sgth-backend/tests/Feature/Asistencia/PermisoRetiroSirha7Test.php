@@ -2,7 +2,8 @@
 
 /*
 | Deshacer un permiso ya aprobado en Sirha7 lo retira de allí (decisión del
-| 2026-10-07): revertir la confirmación y anular el certificado médico.
+| 2026-10-07): revertir la confirmación, y anular el certificado médico, que
+| desde el 2026-10-08 se aprueba por su lado.
 |
 | Sirha7 va primero. Si se niega o no responde, no se deshace nada en el SGTH:
 | un permiso revertido aquí y todavía justificando la ausencia en el
@@ -19,6 +20,7 @@ use App\Exceptions\ReglaNegocioException;
 use App\Models\Asistencia\PermisoServidor;
 use App\Models\Asistencia\PermisoSirha7Fila;
 use App\Models\Dispensario\CertificadoMedico;
+use App\Models\Dispensario\CertificadoSirha7Fila;
 use App\Models\Dispensario\ConsultaMedica;
 use App\Models\Dispensario\HistoriaClinica;
 use App\Models\Estructura\Puesto;
@@ -160,39 +162,47 @@ test('un permiso revertido se puede volver a aprobar después', function () {
 });
 
 // ── Anular el certificado médico ─────────────────────────────────────
+// Desde el 2026-10-08 el reposo se aprueba sobre el certificado, sin permiso:
+// anularlo retira de Sirha7 lo que se registró desde el certificado.
 
 test('anular el certificado retira de Sirha7 los días de reposo aprobados', function () {
-    $p = permisoRetiroSirha7($this->servidor, TipoPermiso::ENFERMEDAD, 3, [
-        'estado' => EstadoPermiso::VALIDADO_TRABAJO_SOCIAL->value, 'hora_inicio' => '00:00', 'hora_fin' => '23:59',
-    ]);
-    [$certificado, $medico] = certificadoRetiroSirha7($p);
-    $this->sirha7->shouldReceive('retirar')->once()->with("SGTH {$p->folio}", 798, 3)->andReturn(3);
+    [$certificado, $medico] = certificadoRetiroSirha7($this->servidor, $this->uath, 'sgth', 3);
+    $this->sirha7->shouldReceive('retirar')->once()->with("SGTH {$certificado->folio}", 798, 3)->andReturn(3);
 
     anularCertificadoRetiroSirha7($medico, $certificado)->assertOk();
 
-    $p->refresh();
-    expect($p->estado)->toBe(EstadoPermiso::ANULADO)
-        ->and($p->sirha7_aprobado_en)->toBeNull()
-        ->and($p->filasSirha7()->count())->toBe(0)
-        ->and($certificado->fresh()->anulado_en)->not->toBeNull();
+    $certificado->refresh();
+    expect($certificado->anulado_en)->not->toBeNull()
+        ->and($certificado->filasSirha7()->count())->toBe(0)
+        ->and($certificado->registro_sirha7)->toBeNull();
 });
 
 test('si Sirha7 se niega, el certificado no se anula', function () {
-    $p = permisoRetiroSirha7($this->servidor, TipoPermiso::ENFERMEDAD, 3, [
-        'estado' => EstadoPermiso::VALIDADO_TRABAJO_SOCIAL->value,
-    ]);
-    [$certificado, $medico] = certificadoRetiroSirha7($p);
+    [$certificado, $medico] = certificadoRetiroSirha7($this->servidor, $this->uath, 'sgth', 3);
     $this->sirha7->shouldReceive('retirar')->andThrow(new ReglaNegocioException('Hay una solicitud del módulo web idéntica.'));
 
     anularCertificadoRetiroSirha7($medico, $certificado)->assertStatus(422);
 
     expect($certificado->fresh()->anulado_en)->toBeNull()
-        ->and($p->fresh()->estado)->toBe(EstadoPermiso::VALIDADO_TRABAJO_SOCIAL)
-        ->and($p->fresh()->filasSirha7()->count())->toBe(3);
+        ->and($certificado->fresh()->filasSirha7()->count())->toBe(3);
 });
 
-/** @return array{0: CertificadoMedico, 1: User} */
-function certificadoRetiroSirha7(PermisoServidor $p): array
+test('anular un certificado aprobado a mano no llama al biométrico', function () {
+    [$certificado, $medico] = certificadoRetiroSirha7($this->servidor, $this->uath, 'manual', 0);
+    $this->sirha7->shouldNotReceive('retirar');
+
+    anularCertificadoRetiroSirha7($medico, $certificado)->assertOk();
+
+    expect($certificado->fresh()->anulado_en)->not->toBeNull();
+});
+
+/**
+ * Un certificado ya aprobado: registrado en Sirha7 (`sgth`, con `$filas`
+ * filas) o a mano (`manual`).
+ *
+ * @return array{0: CertificadoMedico, 1: User}
+ */
+function certificadoRetiroSirha7(Servidor $s, User $aprobador, string $registro, int $filas): array
 {
     ConsultaMedica::unguard();
     $medico = User::factory()->create();
@@ -200,7 +210,7 @@ function certificadoRetiroSirha7(PermisoServidor $p): array
 
     $historia = HistoriaClinica::create([
         'numero_historia' => '0802704171', 'cedula_paciente' => '0802704171',
-        'tipo_paciente' => 'servidor', 'servidor_id' => $p->servidor_id, 'estado' => true,
+        'tipo_paciente' => 'servidor', 'servidor_id' => $s->id, 'estado' => true,
     ]);
     $consulta = ConsultaMedica::create([
         'historia_clinica_id' => $historia->id, 'medico_id' => $medico->id, 'especialidad' => 'medicina_general',
@@ -208,10 +218,22 @@ function certificadoRetiroSirha7(PermisoServidor $p): array
         'motivo_consulta' => 'Control', 'diagnostico_detallado' => 'Reservado',
     ]);
     $id = DB::table('certificados_medicos')->insertGetId([
-        'consulta_medica_id' => $consulta->id, 'emitido_por' => $medico->id, 'dias_reposo' => 3,
-        'fecha_inicio' => '2026-10-12', 'fecha_fin' => '2026-10-14', 'permiso_servidor_id' => $p->id,
-        'folio' => 'CM-2026-95001', 'tipo_paciente' => 'servidor', 'created_at' => now(), 'updated_at' => now(),
+        'consulta_medica_id' => $consulta->id, 'servidor_id' => $s->id, 'emitido_por' => $medico->id,
+        'dias_reposo' => 3, 'fecha_inicio' => '2026-10-12', 'fecha_fin' => '2026-10-14',
+        'folio' => 'CERT-2026-95001', 'tipo_paciente' => 'servidor',
+        'aprobado_por' => $aprobador->id, 'aprobado_en' => '2026-10-12 12:00:00', 'registro_sirha7' => $registro,
+        'sirha7_userid' => $registro === 'sgth' ? 798 : null,
+        'sirha7_referencia' => $registro === 'sgth' ? 'SGTH CERT-2026-95001' : null,
+        'nota_aprobacion' => $registro === 'manual' ? 'Cargado a mano en Sirha7' : null,
+        'created_at' => now(), 'updated_at' => now(),
     ]);
+
+    for ($i = 0; $i < $filas; $i++) {
+        CertificadoSirha7Fila::create([
+            'certificado_medico_id' => $id, 'sirha7_id' => 84400 + $i,
+            'inicio' => '2026-10-12 08:00:00', 'fin' => '2026-10-12 17:00:00',
+        ]);
+    }
 
     return [CertificadoMedico::findOrFail($id), $medico];
 }

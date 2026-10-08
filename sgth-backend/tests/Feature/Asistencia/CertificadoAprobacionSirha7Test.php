@@ -306,18 +306,13 @@ test('el filtro de fechas toma cualquier día del reposo', function () {
         ->assertStatus(422);
 });
 
-test('la previa avisa del permiso de la consulta, no del que creó el propio certificado', function () {
-    $delCertificado = PermisoServidor::create([
-        'servidor_id' => $this->servidor->id, 'tipo' => TipoPermiso::ENFERMEDAD->value, 'fecha' => '2026-10-12',
-        'hora_inicio' => '00:00', 'hora_fin' => '23:59', 'estado' => EstadoPermiso::ACTIVO->value,
-        'folio' => 'PER-2026-97001', 'vence_en' => '2026-10-14', 'confirmado_en' => '2026-10-12 09:30:00',
-    ]);
+test('la previa avisa del permiso de la consulta', function () {
     $consulta = PermisoServidor::create([
         'servidor_id' => $this->servidor->id, 'tipo' => TipoPermiso::ENFERMEDAD->value, 'fecha' => '2026-10-12',
         'hora_inicio' => '08:00', 'hora_fin' => '09:00', 'estado' => EstadoPermiso::PENDIENTE->value,
         'folio' => 'PER-2026-97002', 'vence_en' => '2026-10-15',
     ]);
-    $c = certificadoCertAprobacion($this->servidor, ['permiso_servidor_id' => $delCertificado->id]);
+    $c = certificadoCertAprobacion($this->servidor);
 
     $previa = $this->actingAs($this->ts, 'sanctum')
         ->getJson("/api/v1/asistencia/certificados-medicos/{$c->id}/sirha7")->assertOk()->json('datos');
@@ -330,34 +325,82 @@ test('la previa avisa del permiso de la consulta, no del que creó el propio cer
         ->and(array_column($previa['cruces'], 'folio'))->toBe([$consulta->folio]);
 });
 
-// ── Mientras los certificados todavía crean su permiso ───────────────
+// ── El reposo ocupa sus días desde que se emite ──────────────────────
 
-test('el mismo reposo no se registra dos veces: ni desde el certificado ni desde su permiso', function () {
+test('sobre un reposo no se piden vacaciones ni otro permiso, aunque no esté aprobado', function () {
+    $c = certificadoCertAprobacion($this->servidor, ['fecha_inicio' => '2026-11-16', 'fecha_fin' => '2026-11-18']);
+
+    $permiso = fn (string $fecha) => app(\App\Services\Asistencia\PermisoService::class)->crear([
+        'tipo' => TipoPermiso::OFICIAL->value, 'fecha' => $fecha, 'hora_inicio' => '09:00', 'hora_fin' => '10:00',
+        'observacion' => 'Diligencia',
+    ], $this->servidor->id);
+
+    $this->travelTo(Carbon\Carbon::parse('2026-11-16 08:00'));
+
+    expect(fn () => $permiso('2026-11-17'))->toThrow(ReglaNegocioException::class, $c->folio);
+    expect(fn () => app(\App\Services\Asistencia\VacacionService::class)->solicitar([
+        'fecha_inicio' => '2026-11-18', 'fecha_fin' => '2026-11-20',
+    ], $this->servidor->id))->toThrow(ReglaNegocioException::class, $c->folio);
+
+    // Anulado, deja los días libres.
+    DB::table('certificados_medicos')->where('id', $c->id)->update(['anulado_en' => now()]);
+    expect($permiso('2026-11-17')->folio)->not->toBeNull();
+});
+
+// ── La migración de los ya emitidos ──────────────────────────────────
+
+test('la migración pasa al certificado la aprobación y las filas de su permiso, y borra el permiso', function () {
     $permiso = PermisoServidor::create([
         'servidor_id' => $this->servidor->id, 'tipo' => TipoPermiso::ENFERMEDAD->value, 'fecha' => '2026-10-12',
-        'hora_inicio' => '00:00', 'hora_fin' => '23:59', 'estado' => EstadoPermiso::ACTIVO->value,
+        'hora_inicio' => '00:00', 'hora_fin' => '23:59', 'estado' => EstadoPermiso::VALIDADO_TRABAJO_SOCIAL->value,
         'folio' => 'PER-2026-97010', 'vence_en' => '2026-10-14', 'confirmado_en' => '2026-10-12 09:30:00',
-        'sirha7_aprobado_en' => '2026-10-12 10:00:00', 'sirha7_leave_id' => 13,
+        'sirha7_aprobado_en' => '2026-10-12 10:00:00', 'sirha7_aprobado_por' => $this->ts->id, 'sirha7_leave_id' => 13,
+        'sirha7_leave_nombre' => 'DISPENSARIO MÉDICO GADPE', 'sirha7_userid' => 798,
+        'validado_ts_por' => $this->ts->id, 'validado_ts_en' => '2026-10-12 10:00:00',
     ]);
-    $c = certificadoCertAprobacion($this->servidor, ['permiso_servidor_id' => $permiso->id]);
-    $this->sirha7->shouldNotReceive('registrar');
+    foreach ([84117, 84118] as $id) {
+        \App\Models\Asistencia\PermisoSirha7Fila::create([
+            'permiso_servidor_id' => $permiso->id, 'sirha7_id' => $id, 'inicio' => '2026-10-12 08:00', 'fin' => '2026-10-12 17:00',
+        ]);
+    }
+    $registrado = certificadoCertAprobacion($this->servidor, ['permiso_servidor_id' => $permiso->id, 'folio' => 'PER-2026-97010']);
 
-    expect(aprobarCertAprobacion($this->uath, $c)->assertStatus(422)->json('mensaje'))->toContain($permiso->folio);
-
-    // Y al revés: aprobado el certificado, su permiso ya no se aprueba.
-    $otroPermiso = PermisoServidor::create([
-        'servidor_id' => $this->servidor->id, 'tipo' => TipoPermiso::ENFERMEDAD->value, 'fecha' => '2026-10-20',
-        'hora_inicio' => '00:00', 'hora_fin' => '23:59', 'estado' => EstadoPermiso::ACTIVO->value,
-        'folio' => 'PER-2026-97011', 'vence_en' => '2026-10-21', 'confirmado_en' => '2026-10-12 09:30:00',
+    $validadoSinSirha7 = PermisoServidor::create([
+        'servidor_id' => $this->servidor->id, 'tipo' => TipoPermiso::ENFERMEDAD->value, 'fecha' => '2026-09-20',
+        'hora_inicio' => '00:00', 'hora_fin' => '23:59', 'estado' => EstadoPermiso::VALIDADO_TRABAJO_SOCIAL->value,
+        'folio' => 'PER-2026-97011', 'vence_en' => '2026-09-22', 'confirmado_en' => '2026-09-20 09:30:00',
+        'validado_ts_por' => $this->ts->id, 'validado_ts_en' => '2026-09-21 10:00:00',
     ]);
-    $aprobado = certificadoCertAprobacion($this->servidor, [
-        'permiso_servidor_id' => $otroPermiso->id, 'fecha_inicio' => '2026-10-20', 'fecha_fin' => '2026-10-21',
-        'dias_reposo' => 2, 'aprobado_en' => '2026-10-12 12:00:00', 'aprobado_por' => $this->uath->id,
+    $manual = certificadoCertAprobacion($this->servidor, [
+        'permiso_servidor_id' => $validadoSinSirha7->id, 'folio' => 'PER-2026-97011',
+        'fecha_inicio' => '2026-09-20', 'fecha_fin' => '2026-09-21', 'dias_reposo' => 2,
     ]);
 
-    expect($this->actingAs($this->ts, 'sanctum')
-        ->postJson("/api/v1/asistencia/permisos/{$otroPermiso->id}/aprobar-sirha7", ['leave_id' => 13])
-        ->assertStatus(422)->json('mensaje'))->toContain($aprobado->folio);
+    $migracion = require database_path('migrations/2026_10_08_130000_pasar_reposos_del_permiso_al_certificado.php');
+    $migracion->up();
+
+    $registrado->refresh();
+    expect($registrado->registro_sirha7)->toBe(CertificadoMedico::REGISTRO_SGTH)
+        ->and($registrado->aprobado_por)->toBe($this->ts->id)
+        ->and($registrado->sirha7_referencia)->toBe('SGTH PER-2026-97010')
+        ->and($registrado->sirha7_userid)->toBe(798)
+        ->and($registrado->filasSirha7()->pluck('sirha7_id')->sort()->values()->all())->toBe([84117, 84118])
+        ->and(PermisoServidor::find($permiso->id))->toBeNull()
+        ->and(PermisoServidor::withTrashed()->find($permiso->id))->not->toBeNull();
+
+    $manual->refresh();
+    expect($manual->registro_sirha7)->toBe(CertificadoMedico::REGISTRO_MANUAL)
+        ->and($manual->nota_aprobacion)->toContain('PER-2026-97011')
+        ->and($manual->aprobado_por)->toBe($this->ts->id);
+
+    // Y se puede deshacer.
+    $migracion->down();
+
+    expect(PermisoServidor::find($permiso->id))->not->toBeNull()
+        ->and($permiso->fresh()->filasSirha7()->count())->toBe(2)
+        ->and($registrado->fresh()->aprobado_en)->toBeNull()
+        ->and($registrado->fresh()->filasSirha7()->count())->toBe(0)
+        ->and($manual->fresh()->aprobado_en)->toBeNull();
 });
 
 test('al emitir, el certificado guarda su servidor; el de un familiar, ninguno', function () {

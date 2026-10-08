@@ -23,8 +23,8 @@ export function useAnularCertificado(consultaId: number) {
     onSuccess: (certificado) => {
       notificar.exito(
         'Certificado anulado',
-        certificado.permiso_servidor
-          ? 'El permiso de asistencia asociado también quedó anulado.'
+        certificado.registro_sirha7 === 'sgth'
+          ? 'Se retiró de Sirha7 y ya no justifica la ausencia.'
           : 'El certificado ya no es válido para justificar ausencia.',
       )
       qc.invalidateQueries({

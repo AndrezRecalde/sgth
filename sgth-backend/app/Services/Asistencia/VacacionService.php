@@ -10,6 +10,7 @@ use App\Enums\RegimenLaboral;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Asistencia\PermisoServidor;
 use App\Models\Asistencia\Vacacion;
+use App\Models\Dispensario\CertificadoMedico;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
 use App\Services\Asistencia\Motores\VacacionCodigoTrabajoService;
@@ -398,7 +399,9 @@ class VacacionService implements VacacionServiceInterface
      * vacación y como enfermedad o comisión.
      *
      * Bloquean los permisos vivos, de cualquier tipo. Los anulados, rechazados
-     * y las faltas injustificadas no ocupan el día.
+     * y las faltas injustificadas no ocupan el día. Y los reposos médicos, que
+     * desde el 2026-10-08 ya no son un permiso: un certificado del dispensario
+     * ocupa todos sus días desde que se emite, aprobado o no.
      */
     private function rechazarSiHayPermisos(int $servidorId, Carbon $inicio, Carbon $fin): void
     {
@@ -424,6 +427,18 @@ class VacacionService implements VacacionServiceInterface
                 $permiso->fecha->format('d/m/Y'),
                 substr((string) $permiso->hora_inicio, 0, 5),
                 substr((string) $permiso->hora_fin, 0, 5)
+            ));
+        }
+
+        $reposo = CertificadoMedico::reposoDe($servidorId, $inicio->toDateString(), $fin->toDateString())->first();
+
+        if ($reposo) {
+            throw new ReglaNegocioException(sprintf(
+                'Las fechas incluyen el reposo médico del certificado %s, del %s al %s: '.
+                'esos días ya tienen una ausencia. Elija otras fechas.',
+                $reposo->folio,
+                $reposo->fecha_inicio->format('d/m/Y'),
+                $reposo->fecha_fin->format('d/m/Y')
             ));
         }
     }

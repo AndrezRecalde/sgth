@@ -23,7 +23,6 @@ class CertificadoMedicoController extends Controller
             'consultaMedica.historiaClinica.cargaFamiliar',
             'emisor',
             'diagnosticoCie10',
-            'permisoServidor',
         ])
             // created_at es timestamp(0): sin desempate por id, dos páginas
             // del mismo resultado pueden solaparse.
@@ -84,14 +83,13 @@ class CertificadoMedicoController extends Controller
             'emisor',
             'anulador',
             'diagnosticoCie10',
-            'permisoServidor',
         ])->findOrFail($id);
 
         return ApiResponse::ok($certificado);
     }
 
     /**
-     * Anula el certificado y, con él, el permiso que creó.
+     * Anula el certificado y, si ya se registró en Sirha7, lo retira de allí.
      *
      * Lo puede hacer quien lo emitió o la administración del dispensario, la
      * misma regla que ya rige para anular una receta: el mostrador tiene que
@@ -125,10 +123,7 @@ class CertificadoMedicoController extends Controller
 
         return ApiResponse::ok(
             $certificado,
-            $certificado->permiso_servidor_id
-                ? 'Certificado anulado. El permiso de asistencia asociado ' .
-                  'también quedó anulado.'
-                : 'Certificado anulado correctamente.'
+            'Certificado anulado correctamente.'
         );
     }
 

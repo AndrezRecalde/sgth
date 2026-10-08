@@ -85,15 +85,16 @@ export function CertificadoItem({
           </Text>
         )}
 
-        {cert.permiso_servidor && (
+        {/* Lo aprueban TH o Trabajo Social; aquí el médico ve en qué quedó. */}
+        {cert.servidor_id && !anulado && (
           <Group gap="xs">
             <IconUser size={13} color="var(--mantine-color-slate-6)" />
             <Text size="xs" c="dimmed">
-              Permiso generado:{' '}
-              <Text span ff="monospace">
-                {cert.permiso_servidor.folio}
-              </Text>
-              {anulado && ' — anulado con el certificado'}
+              {!cert.aprobado_en
+                ? 'Pendiente de aprobación de Talento Humano'
+                : cert.registro_sirha7 === 'manual'
+                  ? 'Aprobado: cargado a mano en Sirha7'
+                  : `Aprobado: en Sirha7 como ${cert.sirha7_leave_nombre ?? '—'}`}
             </Text>
           </Group>
         )}
