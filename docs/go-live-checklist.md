@@ -95,8 +95,13 @@
 ## BIOMÉTRICO
 □ Conexión ODBC al SQL Server del biométrico verificada
 □ En Sirha7, en este orden (sgth-backend/database/sqlsrv/): fn_SGTH_UsuariosPorCedula,
-  sp_SGTH_MarcacionesPorCedula, sp_SGTH_RegistrarMarcacionOnline y usuario_sgth_app.
-  Ya aplicados el 2026-10-06; los scripts son idempotentes.
+  sp_SGTH_MarcacionesPorCedula, sp_SGTH_RegistrarMarcacionOnline, sp_SGTH_TiposPermiso,
+  sp_SGTH_RegistrarPermiso, sp_SGTH_RetirarPermiso y usuario_sgth_app.
+  Los de marcaciones, aplicados el 2026-10-06; los tres de permisos, el 2026-10-08
+  (probados antes en una transacción con ROLLBACK). Los scripts son idempotentes.
+□ Antes de abrir «Aprobar en Sirha7»: TH corrige en USERINFO los registros cuyo
+  BADGENUMBER no es la cédula (11 activos al 2026-10-08). El SGTH no les registra
+  permisos, para no cargárselos a otra persona.
 □ .env de producción: DB_SQLSRV_USERNAME=sgth_app (nunca sa), su contraseña,
   DB_SQLSRV_PORT con el puerto real de la instancia ATIEMPO (dinámico, no 1433)
   y BIOMETRICO_SENSOR_ONLINE

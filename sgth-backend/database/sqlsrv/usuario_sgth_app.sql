@@ -7,7 +7,7 @@
   SGTH: con ella se podía leer, cambiar o borrar cualquier base del servidor,
   incluida la del otro sistema que usa el biométrico. El SGTH solo necesita
   consultar marcaciones y registrar las online, así que sgth_app solo puede
-  EJECUTAR los dos procedimientos. No lee ni escribe ninguna tabla: los
+  EJECUTAR sus procedimientos. No lee ni escribe ninguna tabla: los
   procedimientos son de dbo, igual que las tablas, y SQL Server les deja
   usarlas sin pedirle permisos a quien los llama.
 
@@ -20,7 +20,8 @@
   .env del SGTH como DB_SQLSRV_PASSWORD, con DB_SQLSRV_USERNAME=sgth_app.
 
   Orden de despliegue: fn_SGTH_UsuariosPorCedula, sp_SGTH_MarcacionesPorCedula,
-  sp_SGTH_RegistrarMarcacionOnline y, al final, este script.
+  sp_SGTH_RegistrarMarcacionOnline, sp_SGTH_TiposPermiso,
+  sp_SGTH_RegistrarPermiso, sp_SGTH_RetirarPermiso y, al final, este script.
 
   Idempotente: si el login o el usuario ya existen no los toca; los GRANT se
   pueden repetir.
@@ -40,4 +41,9 @@ GO
 
 GRANT EXECUTE ON dbo.sp_SGTH_MarcacionesPorCedula     TO sgth_app;
 GRANT EXECUTE ON dbo.sp_SGTH_RegistrarMarcacionOnline TO sgth_app;
+-- Permisos aprobados en el SGTH (2026-10-08): listar tipos, registrar y
+-- retirar solo las filas propias. Sin permisos sobre ninguna tabla.
+GRANT EXECUTE ON dbo.sp_SGTH_TiposPermiso           TO sgth_app;
+GRANT EXECUTE ON dbo.sp_SGTH_RegistrarPermiso       TO sgth_app;
+GRANT EXECUTE ON dbo.sp_SGTH_RetirarPermiso         TO sgth_app;
 GO
