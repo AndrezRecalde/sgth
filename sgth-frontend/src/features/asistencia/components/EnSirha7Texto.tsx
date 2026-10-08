@@ -12,10 +12,13 @@ import type { PermisoServidor } from '@/types/api'
 export function EnSirha7Texto({ permiso }: { permiso: PermisoServidor }) {
   if (!permiso.sirha7_aprobado_en) return null
 
+  // Sin recortar: el tipo es lo que TH eligió y tiene que leerse entero.
+  // Recortado a una línea, «COMISION DE SERVICIOS» se quedaba en «COMISION…».
+  // Si no cabe en la columna, pasa a la línea siguiente.
   return (
-    <Group gap={4} wrap="nowrap">
-      <IconFingerprint size={12} color="var(--mantine-color-dimmed)" />
-      <Text size="xs" c="dimmed" lineClamp={1} title={permiso.sirha7_leave_nombre ?? undefined}>
+    <Group gap={4} wrap="nowrap" align="flex-start">
+      <IconFingerprint size={12} color="var(--mantine-color-dimmed)" style={{ flexShrink: 0, marginTop: 2 }} />
+      <Text size="xs" c="dimmed">
         En Sirha7: {permiso.sirha7_leave_nombre}
       </Text>
     </Group>
