@@ -47,6 +47,7 @@ class PermisoServidorController extends Controller
             'jefe',
             'creadoPor',
             'unidadAdministrativa',
+            PermisoServidor::RANGO_DEL_CERTIFICADO,
         ])
             // created_at es timestamp(0): sin desempate por id, dos páginas
             // del mismo resultado pueden solaparse.

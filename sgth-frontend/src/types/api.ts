@@ -1568,6 +1568,15 @@ export type PermisoServidor = {
   sirha7_dias_omitidos?: { dia: string; motivo: string }[] | null
   /** Activo, confirmado desde la fecha de corte y sin aprobar todavía. */
   pendiente_sirha7?:     boolean
+  /**
+   * Solo en los listados, y solo si vino de un certificado médico: el rango
+   * de reposo (`PermisoServidor::RANGO_DEL_CERTIFICADO`), sin el diagnóstico.
+   */
+  certificado_medico?: {
+    fecha_inicio: string
+    fecha_fin:    string
+    dias_reposo:  number
+  } | null
   servidor?:        ServidorConRelaciones
   unidad_administrativa_id?: number | null
   unidad_administrativa?:    { id: number; nombre?: string } | null

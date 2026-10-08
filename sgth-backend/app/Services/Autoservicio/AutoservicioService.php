@@ -66,7 +66,8 @@ final class AutoservicioService implements AutoservicioServiceInterface
      */
     public function obtenerMisPermisos(int $servidorId, array $filtros): LengthAwarePaginator
     {
-        $query = PermisoServidor::where('servidor_id', $servidorId);
+        $query = PermisoServidor::with(PermisoServidor::RANGO_DEL_CERTIFICADO)
+            ->where('servidor_id', $servidorId);
 
         if (!empty($filtros['estado'])) {
             $query->where('estado', $filtros['estado']);
