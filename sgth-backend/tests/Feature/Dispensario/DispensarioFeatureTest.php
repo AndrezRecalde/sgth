@@ -2509,7 +2509,7 @@ test('emitir_un_certificado_ya_no_crea_un_permiso_y_se_anula_solo', function () 
 
     // Desde el 2026-10-08 el reposo lo aprueban TH y Trabajo Social sobre el
     // certificado: no se crea ningún permiso de Asistencia.
-    expect($certificado['permiso_servidor_id'])->toBeNull()
+    expect(App\Models\Dispensario\CertificadoMedico::find($certificado['id'])->permiso_servidor_id)->toBeNull()
         ->and($certificado['servidor_id'])->toBe($this->paciente->id)
         ->and(App\Models\Asistencia\PermisoServidor::where('servidor_id', $this->paciente->id)->exists())->toBeFalse();
 
