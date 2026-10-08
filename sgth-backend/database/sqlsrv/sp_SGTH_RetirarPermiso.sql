@@ -76,7 +76,13 @@ BEGIN
     DECLARE @Filas    TABLE (ID INT PRIMARY KEY, STARTSPECDAY DATETIME, ENDSPECDAY DATETIME, DATEID SMALLINT);
     DECLARE @Borradas TABLE (ID INT PRIMARY KEY);
 
-    BEGIN TRANSACTION;
+    -- Dentro de una transacción ajena (una prueba que termina en ROLLBACK)
+    -- no se abre otra: un ROLLBACK de aquí desharía también la de afuera. Se
+    -- usa un punto de guardado y solo se deshace lo propio.
+    DECLARE @TranPropia BIT = CASE WHEN @@TRANCOUNT = 0 THEN 1 ELSE 0 END;
+
+    IF @TranPropia = 1 BEGIN TRANSACTION;
+    ELSE SAVE TRANSACTION sgth_retirar;
 
     INSERT INTO @Filas (ID, STARTSPECDAY, ENDSPECDAY, DATEID)
     SELECT  ID, STARTSPECDAY, ENDSPECDAY, DATEID
@@ -88,14 +94,14 @@ BEGIN
 
     IF @Hay = 0
     BEGIN
-        COMMIT TRANSACTION;
+        IF @TranPropia = 1 COMMIT TRANSACTION;
         SELECT 'nada_que_retirar' AS Resultado, CAST(NULL AS INT) AS ID;
         RETURN;
     END
 
     IF @Hay <> @Esperadas
     BEGIN
-        ROLLBACK TRANSACTION;
+        IF @TranPropia = 1 ROLLBACK TRANSACTION; ELSE ROLLBACK TRANSACTION sgth_retirar;
         RAISERROR('Se esperaban %d filas con la referencia %s y hay %d: no se borra ninguna. Revísese a mano en Sirha7.', 16, 1, @Esperadas, @Referencia, @Hay);
         RETURN;
     END
@@ -110,7 +116,7 @@ BEGIN
                 AND sw.DATEID       = f.DATEID
     )
     BEGIN
-        ROLLBACK TRANSACTION;
+        IF @TranPropia = 1 ROLLBACK TRANSACTION; ELSE ROLLBACK TRANSACTION sgth_retirar;
         RAISERROR('Hay una solicitud del módulo web idéntica a una fila del permiso %s, y el disparador de Sirha7 la borraría con ella: no se borra nada. Retírese a mano en Sirha7.', 16, 1, @Referencia);
         RETURN;
     END
@@ -139,12 +145,12 @@ BEGIN
 
     IF (SELECT COUNT(*) FROM @Borradas) <> @Esperadas
     BEGIN
-        ROLLBACK TRANSACTION;
+        IF @TranPropia = 1 ROLLBACK TRANSACTION; ELSE ROLLBACK TRANSACTION sgth_retirar;
         RAISERROR('El retiro del permiso %s no borró exactamente las filas esperadas: se deshizo y no se borró nada.', 16, 1, @Referencia);
         RETURN;
     END
 
-    COMMIT TRANSACTION;
+    IF @TranPropia = 1 COMMIT TRANSACTION;
 
     SELECT 'retirada' AS Resultado, ID FROM @Borradas ORDER BY ID;
 END

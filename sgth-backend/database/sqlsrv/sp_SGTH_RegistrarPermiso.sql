@@ -188,7 +188,13 @@ BEGIN
 
     DECLARE @Dia DATE = @Desde, @Ini DATETIME, @Fin DATETIME, @Omitida VARCHAR(400);
 
-    BEGIN TRANSACTION;
+    -- Dentro de una transacción ajena (una prueba que termina en ROLLBACK)
+    -- no se abre otra: un ROLLBACK de aquí desharía también la de afuera. Se
+    -- usa un punto de guardado y solo se deshace lo propio.
+    DECLARE @TranPropia BIT = CASE WHEN @@TRANCOUNT = 0 THEN 1 ELSE 0 END;
+
+    IF @TranPropia = 1 BEGIN TRANSACTION;
+    ELSE SAVE TRANSACTION sgth_registrar;
 
     WHILE @Dia <= @Hasta
     BEGIN
@@ -253,7 +259,7 @@ BEGIN
     IF @Desde = @Hasta AND EXISTS (SELECT 1 FROM @Filas WHERE Omitida IS NOT NULL)
     BEGIN
         SELECT @Omitida = Omitida FROM @Filas;
-        ROLLBACK TRANSACTION;
+        IF @TranPropia = 1 ROLLBACK TRANSACTION; ELSE ROLLBACK TRANSACTION sgth_registrar;
         DECLARE @DiaTexto VARCHAR(10) = CONVERT(VARCHAR(10), @Desde, 103);
         RAISERROR('No se registró el permiso del %s: %s.', 16, 1, @DiaTexto, @Omitida);
         RETURN;
@@ -261,7 +267,7 @@ BEGIN
 
     IF NOT EXISTS (SELECT 1 FROM @Filas WHERE Omitida IS NULL)
     BEGIN
-        ROLLBACK TRANSACTION;
+        IF @TranPropia = 1 ROLLBACK TRANSACTION; ELSE ROLLBACK TRANSACTION sgth_registrar;
         RAISERROR('Ningún día del permiso quedó por registrar: todos estaban cubiertos o sin jornada.', 16, 1);
         RETURN;
     END
@@ -272,7 +278,7 @@ BEGIN
     FROM   @Filas f
     WHERE  f.Omitida IS NULL;
 
-    COMMIT TRANSACTION;
+    IF @TranPropia = 1 COMMIT TRANSACTION;
 
     SELECT  CASE WHEN f.Omitida IS NULL THEN 'registrada' ELSE 'omitida' END AS Resultado,
             i.ID,
