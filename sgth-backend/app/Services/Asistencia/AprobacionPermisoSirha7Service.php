@@ -128,6 +128,43 @@ class AprobacionPermisoSirha7Service
         });
     }
 
+    /**
+     * Quita el permiso de Sirha7 y deja de constar como aprobado.
+     *
+     * Lo llaman revertir la confirmación y anular el certificado médico, cada
+     * uno con la fila del permiso ya bloqueada y dentro de su transacción
+     * (decisión del 2026-10-07: anular o revertir retira la fila de Sirha7).
+     * Sirha7 va primero: si se niega o no responde, la excepción deshace la
+     * transacción de quien llamó y el permiso queda como estaba. Si Sirha7 ya
+     * retiró y lo de aquí falla después, repetir es seguro: el procedimiento
+     * responde que no queda nada que retirar.
+     *
+     * Un permiso que no se aprobó en Sirha7 no se toca.
+     */
+    public function retirar(PermisoServidor $permiso): void
+    {
+        if ($permiso->sirha7_aprobado_en === null) {
+            return;
+        }
+
+        $esperadas = $permiso->filasSirha7()->count();
+
+        if ($esperadas > 0 && $permiso->sirha7_userid !== null) {
+            $this->sirha7->retirar($this->referencia($permiso), (int) $permiso->sirha7_userid, $esperadas);
+        }
+
+        $permiso->filasSirha7()->delete();
+
+        $permiso->forceFill([
+            'sirha7_leave_id'      => null,
+            'sirha7_leave_nombre'  => null,
+            'sirha7_userid'        => null,
+            'sirha7_aprobado_por'  => null,
+            'sirha7_aprobado_en'   => null,
+            'sirha7_dias_omitidos' => null,
+        ])->save();
+    }
+
     // ── Apoyos ───────────────────────────────────────────────────────
 
     /**

@@ -52,6 +52,7 @@ class PermisoService implements PermisoServiceInterface
     public function __construct(
         private PeriodoVacacionService $periodoService,
         private FirmanteAccionPersonalService $firmantes,
+        private AprobacionPermisoSirha7Service $sirha7,
     ) {}
 
     public function crear(array $datos, int $servidorId): PermisoServidor
@@ -345,6 +346,11 @@ class PermisoService implements PermisoServiceInterface
                 [EstadoPermiso::ACTIVO, EstadoPermiso::VALIDADO_TRABAJO_SOCIAL],
                 'Solo se puede revertir un permiso ya confirmado por Recepción.'
             );
+
+            // Si se aprobó en Sirha7, sale de allí primero: si el biométrico se
+            // niega o no responde, la reversión no ocurre y el permiso sigue
+            // como estaba (decisión del 2026-10-07).
+            $this->sirha7->retirar($permiso);
 
             // Cada tramo vuelve al período del que salió, tal como se anotó al
             // confirmar. Solo un permiso confirmado antes de que se anotaran
