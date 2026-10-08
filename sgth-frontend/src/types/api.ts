@@ -1587,11 +1587,50 @@ export type PermisoServidor = {
 /** Un tipo de permiso de Sirha7 (dbo.LeaveClass). */
 export type TipoPermisoSirha7 = { id: number; nombre: string }
 
+/**
+ * Un certificado médico como lo ven TH y Trabajo Social al aprobarlo
+ * (`GET asistencia/certificados-medicos`). Sin diagnóstico ni observaciones.
+ */
+export type CertificadoAprobacion = {
+  id:           number
+  folio:        string | null
+  servidor_id:  number
+  servidor: {
+    id:       number
+    nombre:   string
+    apellido: string
+    cedula:   string | null
+    unidad:   string | null
+  } | null
+  fecha_inicio: string
+  fecha_fin:    string
+  dias_reposo:  number
+  emitido_en:   string | null
+  medico:       string | null
+  anulado_en:   string | null
+  aprobado_en:  string | null
+  aprobado_por: string | null
+  /** `sgth`: lo escribió el SGTH; `manual`: TH lo cargó a mano en Sirha7. */
+  registro_sirha7:      'sgth' | 'manual' | null
+  nota_aprobacion:      string | null
+  sirha7_leave_nombre:  string | null
+  sirha7_dias_omitidos: { dia: string; motivo: string }[] | null
+  pendiente:             boolean
+  /** Pendiente y emitido desde la fecha de corte: el SGTH lo puede escribir en Sirha7. */
+  registrable_en_sirha7: boolean
+}
+
 /** Lo que se registrará en Sirha7 al aprobar un permiso (`GET permisos/{id}/sirha7`). */
 export type PreviaSirha7 = {
   pendiente:        boolean
   /** Por qué no se puede aprobar, cuando `pendiente` es falso. */
   motivo:           string | null
+  /**
+   * Solo en la de un certificado: si el SGTH lo puede escribir en Sirha7 y, si
+   * no, por qué (antes de la fecha de corte, o sin ella).
+   */
+  registrable_en_sirha7?: boolean
+  motivo_sin_sirha7?:     string | null
   desde:            string
   hasta:            string
   hora_inicio:      string | null

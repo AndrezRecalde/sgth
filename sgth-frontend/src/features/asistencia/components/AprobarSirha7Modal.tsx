@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Select, Stack } from '@mantine/core'
 import { Controller, useForm, type DefaultValues } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { DataState, FormModal } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
+import { useUltimoAbierto } from '@/hooks/useUltimoAbierto'
 import { erroresDeCampo } from '@/lib/erroresDeCampo'
 import { useAprobarSirha7, usePreviaSirha7, useTiposSirha7 } from '../hooks/usePermisoSirha7'
 import { aprobarSirha7Schema, type AprobarSirha7FormData } from './aprobarSirha7.schema'
@@ -21,21 +22,6 @@ interface Props {
 
 // El tipo se omite: lo elige siempre quien aprueba (decisión del 2026-10-07).
 const VALORES_INICIALES: DefaultValues<AprobarSirha7FormData> = {}
-
-/**
- * El último valor que tuvo `valor` con el diálogo abierto.
- *
- * El diálogo se anima al cerrarse, y para entonces el permiso ya es `null`:
- * sin esto, durante la animación el título pasaba a «Aprobar en Sirha7» y el
- * cuerpo se quedaba vacío. Visto el 2026-10-08 al aprobar un certificado.
- */
-function useUltimoAbierto<T>(valor: T | null | undefined, abierto: boolean): T | null {
-  const [ultimo, setUltimo] = useState<T | null>(valor ?? null)
-
-  if (abierto && valor != null && valor !== ultimo) setUltimo(valor)
-
-  return abierto ? (valor ?? null) : ultimo
-}
 
 /**
  * Aprobar un permiso registrándolo en Sirha7, el biométrico.
@@ -96,7 +82,11 @@ export function AprobarSirha7Modal({ permiso, onClose }: Props) {
       <DataState loading={abierto && previa.isLoading} error={abierto ? previa.error : null} empty={false}>
         {mostrado && previaMostrada && (
           <Stack gap="md">
-            <PreviaSirha7Detalle permiso={mostrado} previa={previaMostrada} />
+            <PreviaSirha7Detalle
+              servidor={[mostrado.servidor?.apellido, mostrado.servidor?.nombre].filter(Boolean).join(' ')}
+              folio={mostrado.folio}
+              previa={previaMostrada}
+            />
 
             <Controller
               name="leave_id"
