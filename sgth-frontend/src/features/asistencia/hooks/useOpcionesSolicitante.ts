@@ -25,7 +25,7 @@ export function useOpcionesSolicitante(unidadId: number | null) {
   const { data: unidadesRaw } = useUnidades({ nivel: 2 })
   const unidades = (unidadesRaw ?? []) as UnidadConRelaciones[]
 
-  const { data: servidoresData } = useServidores(
+  const { data: servidoresData, isLoading } = useServidores(
     unidadId ? { unidad_administrativa_id: unidadId, per_page: 100 } : undefined,
   )
   const servidores = unidadId
@@ -34,6 +34,8 @@ export function useOpcionesSolicitante(unidadId: number | null) {
 
   return {
     servidores,
+    /** Pidiendo los servidores de la unidad elegida: «sin servidores» todavía no es cierto. */
+    cargandoServidores: unidadId !== null && isLoading,
     opcionesUnidad: unidades.map(u => ({
       value: String(u.id),
       label: u.nombre ?? `Unidad ${u.id}`,

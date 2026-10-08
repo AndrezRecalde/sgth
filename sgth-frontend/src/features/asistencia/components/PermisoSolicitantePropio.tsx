@@ -29,7 +29,7 @@ const opcion = (c: CompaneroDeUnidad) => ({
  */
 export function PermisoSolicitantePropio({ form, nombrePropio }: Props) {
   const contained = useContainedInput()
-  const { data: companeros = [] } = useCompanerosDeUnidad()
+  const { data: companeros = [], isLoading } = useCompanerosDeUnidad()
 
   const jefes = companeros.filter(c => c.es_jefe).map(opcion)
   const resto = companeros.filter(c => !c.es_jefe).map(opcion)
@@ -59,6 +59,7 @@ export function PermisoSolicitantePropio({ form, nombrePropio }: Props) {
           form={form}
           opciones={opciones}
           cantidad={companeros.length}
+          cargando={isLoading}
           textoVacio="Sin más servidores en su unidad"
         />
       </Grid.Col>

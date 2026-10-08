@@ -24,7 +24,7 @@ interface Props {
 export function PermisoSolicitanteTalentoHumano({ form, unidadSelId, onUnidad }: Props) {
   const contained = useContainedInput()
   const { control, setValue, formState: { errors } } = form
-  const { servidores, opcionesUnidad, opcionesJefe } = useOpcionesSolicitante(unidadSelId)
+  const { servidores, opcionesUnidad, opcionesJefe, cargandoServidores } = useOpcionesSolicitante(unidadSelId)
   const opcionesServidor = servidores.map(opcionServidor)
   const jefesInstitucion = useJefesDeLaInstitucion()
   const servidorId = useWatch({ control, name: 'servidor_id' })
@@ -77,9 +77,11 @@ export function PermisoSolicitanteTalentoHumano({ form, unidadSelId, onUnidad }:
                 placeholder={
                   !unidadSelId
                     ? 'Seleccione primero la unidad'
-                    : opcionesServidor.length === 0
-                      ? 'Sin servidores en esta unidad'
-                      : 'Seleccionar servidor'
+                    : cargandoServidores
+                      ? 'Cargando…'
+                      : opcionesServidor.length === 0
+                        ? 'Sin servidores en esta unidad'
+                        : 'Seleccionar servidor'
                 }
                 data={opcionesServidor}
                 searchable
@@ -110,6 +112,7 @@ export function PermisoSolicitanteTalentoHumano({ form, unidadSelId, onUnidad }:
             cantidad={deLaUnidad.length + deOtras.length}
             textoVacio="Sin jefes en esta unidad"
             sinUnidad={!unidadSelId}
+            cargando={cargandoServidores}
           />
         </Grid.Col>
       </Grid>
