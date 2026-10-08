@@ -99,9 +99,17 @@
   sp_SGTH_RegistrarPermiso, sp_SGTH_RetirarPermiso y usuario_sgth_app.
   Los de marcaciones, aplicados el 2026-10-06; los tres de permisos, el 2026-10-08
   (probados antes en una transacción con ROLLBACK). Los scripts son idempotentes.
-□ Antes de abrir «Aprobar en Sirha7»: TH corrige en USERINFO los registros cuyo
-  BADGENUMBER no es la cédula (11 activos al 2026-10-08). El SGTH no les registra
-  permisos, para no cargárselos a otra persona.
+□ Antes de abrir «Aprobar en Sirha7»: TH corrige el SSN (la cédula) en USERINFO.
+  El SGTH busca a la persona por su cédula real y solo acepta un registro cuyo
+  BADGENUMBER sea esa cédula. Al 2026-10-08, de 655 registros activos, 307 no se
+  pueden registrar desde el SGTH:
+  - 296 con la cédula de relleno 1111111111: el SGTH no los encuentra («la
+    cédula no está en el biométrico»). Son sobre todo de Código del Trabajo.
+  - 11 con un BADGENUMBER que no es su cédula: el SGTH los rechaza, para no
+    cargarle el permiso a otra persona.
+  Quién es quién: sgth-backend/database/sqlsrv/diagnostico_ssn_userinfo.sql
+  (solo lectura, lo corre un administrador). Hasta que se corrijan, esos
+  permisos siguen cargándose a mano en Sirha7.
 □ .env de producción: DB_SQLSRV_USERNAME=sgth_app (nunca sa), su contraseña,
   DB_SQLSRV_PORT con el puerto real de la instancia ATIEMPO (dinámico, no 1433)
   y BIOMETRICO_SENSOR_ONLINE
