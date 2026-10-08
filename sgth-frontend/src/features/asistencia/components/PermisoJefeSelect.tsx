@@ -13,6 +13,11 @@ interface Props {
   textoVacio: string
   /** Talento Humano elige primero la unidad: hasta entonces no hay de quién elegir. */
   sinUnidad?: boolean
+  /**
+   * La lista todavía no llegó. Sin esto, mientras cargaba decía «Sin más
+   * servidores en su unidad», y parecía que no había a quién elegir.
+   */
+  cargando?:  boolean
 }
 
 /**
@@ -20,7 +25,7 @@ interface Props {
  * Talento Humano se bloquea: el firmante lo resuelve el backend.
  */
 export function PermisoJefeSelect({
-  form, opciones, cantidad, textoVacio, sinUnidad = false,
+  form, opciones, cantidad, textoVacio, sinUnidad = false, cargando = false,
 }: Props) {
   const contained = useContainedInput()
   const { control, formState: { errors } } = form
@@ -30,9 +35,11 @@ export function PermisoJefeSelect({
     ? 'Firma el jefe de Talento Humano'
     : sinUnidad
       ? 'Seleccione primero la unidad'
-      : cantidad === 0
-        ? textoVacio
-        : 'Seleccionar jefe'
+      : cargando
+        ? 'Cargando…'
+        : cantidad === 0
+          ? textoVacio
+          : 'Seleccionar jefe'
 
   return (
     <Controller
