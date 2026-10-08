@@ -11,6 +11,7 @@ import {
   SgthTable,
 } from "@/components/ui";
 import { PermisoModal } from "./PermisoModal";
+import { AprobarSirha7Modal } from "./AprobarSirha7Modal";
 import {
   PermisosFiltros,
   filtrosInicialesPara,
@@ -48,6 +49,7 @@ export function PermisosTab() {
   const { hasPermiso } = useAuth();
   const [filtros, setFiltros] = useState<FiltrosPermiso>(() => filtrosInicialesPara(hasPermiso));
   const { exportar, exportandoId } = useExportarPermiso();
+  const [aprobando, setAprobando] = useState<PermisoServidor | null>(null);
   const [conMotivo, setConMotivo] = useState<
     { accion: AccionConMotivo; permiso: PermisoServidor } | null
   >(null);
@@ -114,6 +116,7 @@ export function PermisosTab() {
     onAnular: (permiso) => setConMotivo({ accion: "anular", permiso }),
     onRechazar: (permiso) => setConMotivo({ accion: "rechazar", permiso }),
     onRevertir: (permiso) => setConMotivo({ accion: "revertir", permiso }),
+    onAprobarSirha7: setAprobando,
   });
 
   const accion = conMotivo?.accion ?? "rechazar";
@@ -129,6 +132,7 @@ export function PermisosTab() {
       <>
         El permiso <b>{folio}</b> volverá a pendiente y se devolverá al
         servidor el saldo de vacaciones descontado.
+        {conMotivo?.permiso.sirha7_aprobado_en && " También se retirará de Sirha7."}
       </>
     ),
     anular: (
@@ -173,6 +177,8 @@ export function PermisosTab() {
       </DataState>
 
       <PermisoModal opened={opened} onClose={close} />
+
+      <AprobarSirha7Modal permiso={aprobando} onClose={() => setAprobando(null)} />
 
       <MotivoModal
         opened={conMotivo !== null}

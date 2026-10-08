@@ -1,31 +1,15 @@
 'use client'
 
 import { Stack, Text } from '@mantine/core'
-import {
-  IconArrowBackUp, IconCheck, IconPrinter, IconShieldCheck, IconX,
-} from '@tabler/icons-react'
 import { StatusBadge, TableActions } from '@/components/ui'
-import {
-  ESTADOS_CONFIRMADOS, ESTADO_LABELS, TIPO_LABELS, TIPOS_TRABAJO_SOCIAL, TONO_ESTADO,
-} from './permisos.constants'
+import { ESTADO_LABELS, TIPO_LABELS, TONO_ESTADO } from './permisos.constants'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { PermisoServidor } from '@/types/api'
-import type { AccionesPermiso } from '../hooks/useAccionesPermiso'
+import { accionesDelPermiso, type ColumnActions } from './permisos.acciones'
 import { diasParaVencer, duracion } from '../utils/horarioPermiso'
 import { formatFecha } from '@/lib/fecha'
 import { MotivoDeEstadoTexto } from './MotivoDeEstadoTexto'
-
-interface ColumnActions {
-  exportandoId: number | null
-  /** Qué acciones le corresponden al usuario: la misma regla que la policy. */
-  puede:        AccionesPermiso
-  onExportar:   (id: number) => void
-  onConfirmar:  (folio: string) => void
-  onValidarTs:  (id: number) => void
-  onAnular:     (p: PermisoServidor) => void
-  onRechazar:   (p: PermisoServidor) => void
-  onRevertir:   (p: PermisoServidor) => void
-}
+import { EnSirha7Texto } from './EnSirha7Texto'
 
 export function getPermisosColumns(
   actions: ColumnActions
@@ -124,6 +108,7 @@ export function getPermisosColumns(
             {ESTADO_LABELS[p.estado as string] ?? p.estado}
           </StatusBadge>
           <MotivoDeEstadoTexto permiso={p} />
+          <EnSirha7Texto permiso={p} />
         </Stack>
       ),
     },
@@ -131,59 +116,7 @@ export function getPermisosColumns(
       accessor: 'acciones',
       title: '',
       width: 50,
-      render: (p) => {
-        const estado = p.estado as string
-        const pendiente = estado === 'pendiente'
-
-        return (
-          <TableActions
-            actions={[
-              {
-                label: actions.exportandoId === p.id ? 'Exportando...' : 'Imprimir permiso',
-                icon: <IconPrinter size={14} />,
-                onClick: () => actions.onExportar(p.id),
-              },
-              {
-                label: 'Confirmar recepción',
-                icon: <IconCheck size={14} />,
-                onClick: () => p.folio && actions.onConfirmar(p.folio),
-                hidden: !pendiente || !actions.puede.confirmar,
-              },
-              {
-                label: 'Rechazar documento',
-                icon: <IconX size={14} />,
-                color: 'red',
-                onClick: () => actions.onRechazar(p),
-                hidden: !pendiente || !actions.puede.rechazar,
-              },
-              {
-                label: 'Validar Trabajo Social',
-                icon: <IconShieldCheck size={14} />,
-                onClick: () => actions.onValidarTs(p.id),
-                hidden:
-                  !actions.puede.validarTs ||
-                  estado !== 'activo' ||
-                  !TIPOS_TRABAJO_SOCIAL.includes(p.tipo as string),
-              },
-              {
-                label: 'Revertir confirmación',
-                icon: <IconArrowBackUp size={14} />,
-                onClick: () => actions.onRevertir(p),
-                hidden: !actions.puede.revertir || !ESTADOS_CONFIRMADOS.includes(estado),
-              },
-              {
-                // Pide el motivo en el mismo modal que rechazar y revertir: el
-                // backend lo exige y lo guarda.
-                label: 'Anular',
-                icon: <IconX size={14} />,
-                color: 'red',
-                onClick: () => actions.onAnular(p),
-                hidden: !pendiente || !actions.puede.anular(p),
-              },
-            ]}
-          />
-        )
-      },
+      render: (p) => <TableActions actions={accionesDelPermiso(p, actions)} />,
     },
   ]
 }

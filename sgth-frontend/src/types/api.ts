@@ -1559,11 +1559,54 @@ export type PermisoServidor = {
   motivo_rechazo?:  string | null
   revertido_en?:    string | null
   motivo_reversion?: string | null
+  // Aprobación en Sirha7, el biométrico (PermisoSirha7Controller).
+  sirha7_leave_id?:      number | null
+  sirha7_leave_nombre?:  string | null
+  sirha7_userid?:        number | null
+  sirha7_aprobado_por?:  number | null
+  sirha7_aprobado_en?:   string | null
+  sirha7_dias_omitidos?: { dia: string; motivo: string }[] | null
+  /** Activo, confirmado desde la fecha de corte y sin aprobar todavía. */
+  pendiente_sirha7?:     boolean
   servidor?:        ServidorConRelaciones
   unidad_administrativa_id?: number | null
   unidad_administrativa?:    { id: number; nombre?: string } | null
   jefe?:            ServidorConRelaciones | null
   creadoPor?:       { id: number; name?: string } | null
+}
+
+/** Un tipo de permiso de Sirha7 (dbo.LeaveClass). */
+export type TipoPermisoSirha7 = { id: number; nombre: string }
+
+/** Lo que se registrará en Sirha7 al aprobar un permiso (`GET permisos/{id}/sirha7`). */
+export type PreviaSirha7 = {
+  pendiente:        boolean
+  /** Por qué no se puede aprobar, cuando `pendiente` es falso. */
+  motivo:           string | null
+  desde:            string
+  hasta:            string
+  hora_inicio:      string | null
+  hora_fin:         string | null
+  jornada_completa: boolean
+  referencia:       string
+  /** Sin diagnóstico ni observaciones: son datos de salud. */
+  certificado: {
+    folio:        string | null
+    fecha_inicio: string | null
+    fecha_fin:    string | null
+    dias_reposo:  number | null
+    medico:       string | null
+  } | null
+  /** Otros permisos vigentes de la persona en esos días. */
+  cruces: {
+    id:          number
+    folio:       string | null
+    tipo:        TipoPermiso
+    fecha:       string
+    hora_inicio: string
+    hora_fin:    string
+    estado:      EstadoPermiso
+  }[]
 }
 
 export type MotivoVacacion =

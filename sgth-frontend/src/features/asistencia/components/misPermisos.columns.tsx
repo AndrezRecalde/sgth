@@ -8,6 +8,7 @@ import { ESTADO_LABELS, TIPO_LABELS, TONO_ESTADO } from './permisos.constants'
 import { diasParaVencer, duracion } from '../utils/horarioPermiso'
 import { formatFecha } from '@/lib/fecha'
 import { MotivoDeEstadoTexto } from './MotivoDeEstadoTexto'
+import { EnSirha7Texto } from './EnSirha7Texto'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { PermisoServidor } from '@/types/api'
 
@@ -102,6 +103,7 @@ export function getMisPermisosColumns(acciones: Acciones): DataTableColumn<Permi
           )}
           {/* Por qué se rechazó o anuló: sin esto, el servidor no sabía qué corregir. */}
           <MotivoDeEstadoTexto permiso={p} />
+          <EnSirha7Texto permiso={p} />
         </Stack>
       ),
     },
