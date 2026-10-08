@@ -1568,15 +1568,6 @@ export type PermisoServidor = {
   sirha7_dias_omitidos?: { dia: string; motivo: string }[] | null
   /** Activo, confirmado desde la fecha de corte y sin aprobar todavía. */
   pendiente_sirha7?:     boolean
-  /**
-   * Solo en los listados, y solo si vino de un certificado médico: el rango
-   * de reposo (`PermisoServidor::RANGO_DEL_CERTIFICADO`), sin el diagnóstico.
-   */
-  certificado_medico?: {
-    fecha_inicio: string
-    fecha_fin:    string
-    dias_reposo:  number
-  } | null
   servidor?:        ServidorConRelaciones
   unidad_administrativa_id?: number | null
   unidad_administrativa?:    { id: number; nombre?: string } | null
@@ -1586,6 +1577,22 @@ export type PermisoServidor = {
 
 /** Un tipo de permiso de Sirha7 (dbo.LeaveClass). */
 export type TipoPermisoSirha7 = { id: number; nombre: string }
+
+/**
+ * Un reposo médico propio, en «Mis permisos» del portal
+ * (`GET autoservicio/mis-certificados-medicos`): días y estado, sin diagnóstico.
+ */
+export type MiCertificadoMedico = {
+  id:           number
+  folio:        string | null
+  fecha_inicio: string
+  fecha_fin:    string
+  dias_reposo:  number
+  emitido_en:   string | null
+  estado:       'pendiente' | 'aprobado' | 'anulado'
+  registro_sirha7:     'sgth' | 'manual' | null
+  sirha7_leave_nombre: string | null
+}
 
 /**
  * Un certificado médico como lo ven TH y Trabajo Social al aprobarlo

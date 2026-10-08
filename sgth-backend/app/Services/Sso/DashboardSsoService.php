@@ -8,7 +8,6 @@ use App\Enums\EstadoPermiso;
 use App\Enums\NivelRiesgoAssist;
 use App\Enums\NivelRiesgoPsicosocial;
 use App\Enums\TipoPermiso;
-use App\Models\Asistencia\PermisoServidor;
 use App\Models\Sso\AccidenteTrabajo;
 use App\Models\Sso\EppEntrega;
 use App\Models\Sso\EquipoProteccion;
@@ -18,7 +17,9 @@ use App\Models\Sso\RespuestaAssist;
 use App\Models\Sso\RespuestaPsicosocial;
 use App\Models\Sso\RiesgoLaboral;
 use App\Services\Asistencia\JornadaLaboral;
+use App\Services\Asistencia\ReposoMedicoAusentismo;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 final class DashboardSsoService
 {
@@ -228,20 +229,29 @@ final class DashboardSsoService
         // permisos que no se concedieron sumando días de ausencia. El tablero y
         // la pantalla de Ausentismo daban cifras distintas del mismo período, y
         // la del tablero era la más alta. Ver `EstadoPermiso::concedidos()`.
-        $fila = PermisoServidor::query()
-            ->whereBetween('fecha', [$inicio, $fin])
+        //
+        // Y los reposos médicos aprobados, que desde el 2026-10-08 son
+        // certificados y no permisos: en días calendario, como en el
+        // consolidado (`ReposoMedicoAusentismo`).
+        $ausencias = DB::table('permisos_servidor')
+            ->whereNull('deleted_at')
+            ->whereBetween('fecha', [$inicio->toDateString(), $fin->toDateString()])
             ->where('tipo', TipoPermiso::ENFERMEDAD->value)
             ->whereIn('estado', EstadoPermiso::concedidos())
+            ->selectRaw('servidor_id, fecha')
+            ->selectRaw('EXTRACT(EPOCH FROM (hora_fin - hora_inicio)) / 60 AS minutos')
+            ->unionAll(ReposoMedicoAusentismo::filasEntre($inicio->toDateString(), $fin->toDateString()));
+
+        $fila = DB::query()
+            ->fromSub($ausencias, 'ausencias')
             ->when(
                 $unidadAdministrativaId,
-                fn($q) => $q->whereHas(
-                    'servidor',
-                    fn($sq) => $sq->where('unidad_administrativa_id', $unidadAdministrativaId),
-                ),
+                fn($q) => $q->join('servidores', 'servidores.id', '=', 'ausencias.servidor_id')
+                    ->where('servidores.unidad_administrativa_id', $unidadAdministrativaId),
             )
             ->selectRaw('COUNT(*) AS total')
-            ->selectRaw('COUNT(DISTINCT servidor_id) AS servidores')
-            ->selectRaw('COALESCE(SUM(EXTRACT(EPOCH FROM (hora_fin - hora_inicio)) / 60), 0) AS minutos')
+            ->selectRaw('COUNT(DISTINCT ausencias.servidor_id) AS servidores')
+            ->selectRaw('COALESCE(SUM(ausencias.minutos), 0) AS minutos')
             ->first();
 
         return [

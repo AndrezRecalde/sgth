@@ -7,6 +7,9 @@ use App\Enums\TipoPermiso;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\Asistencia\PermisoServidor;
+use App\Services\Asistencia\JornadaLaboral;
+use App\Services\Asistencia\ReposoMedicoAusentismo;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 
 /**
@@ -23,6 +26,10 @@ use Illuminate\Http\JsonResponse;
  *    días seguidos puede haber presentado un solo permiso, y otro con tres
  *    molestias cortas, tres. La pantalla lo rotula como «permisos», nunca
  *    como «ausencias».
+ * 3. **Los reposos del dispensario van aparte.** Desde el 2026-10-08 son
+ *    certificados médicos y no permisos, y sí tienen un rango de días: se
+ *    cuentan los aprobados, con sus días calendario dentro de los doce meses
+ *    (`ReposoMedicoAusentismo`).
  *
  * El motivo de cada permiso NO viaja: `observacion` es texto libre y puede
  * llevar un diagnóstico escrito. La UATH eligió el resumen sin detalle.
@@ -64,8 +71,19 @@ final class AusentismoSaludController extends Controller
             ->whereBetween('fecha', [$desde->toDateString(), now()->toDateString()])
             ->count();
 
+        $reposos = DB::query()
+            ->fromSub(
+                ReposoMedicoAusentismo::filasEntre($desde->toDateString(), now()->toDateString())
+                    ->where('certificados_medicos.servidor_id', $servidorId),
+                'reposos'
+            )
+            ->selectRaw('COUNT(*) AS total, COALESCE(SUM(minutos), 0) AS minutos')
+            ->first();
+
         return ApiResponse::ok([
             'permisos' => $permisos,
+            'reposos'      => (int) $reposos->total,
+            'dias_reposo'  => (int) round($reposos->minutos / JornadaLaboral::MINUTOS),
             'meses'    => self::MESES,
             'desde'    => $desde->toDateString(),
         ], 'Ausentismo por salud del servidor.');

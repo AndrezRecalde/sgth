@@ -21,6 +21,9 @@ interface Props {
  * seguidos puede ser un solo permiso. De ahí que la cifra se rotule «permisos»
  * y nunca «ausencias».
  *
+ * Los reposos del dispensario van aparte: desde el 2026-10-08 son
+ * certificados médicos y no permisos, y esos sí traen sus días.
+ *
  * Sin fechas ni motivos: el detalle vive en el módulo de Permisos, y la
  * observación de un permiso es texto libre que puede llevar un diagnóstico.
  */
@@ -62,9 +65,17 @@ export function AusentismoSaludPanel({ servidorId }: Props) {
               {data?.permisos === 1 ? 'permiso por enfermedad' : 'permisos por enfermedad'}
             </Text>
           </Text>
+          <Text size="xl" fw={700} mt="xs">
+            {data?.reposos ?? 0}
+            <Text span size="sm" fw={400} c="dimmed" ml={6}>
+              {data?.reposos === 1 ? 'reposo médico' : 'reposos médicos'}
+              {!!data?.dias_reposo && ` · ${data.dias_reposo} ${data.dias_reposo === 1 ? 'día' : 'días'}`}
+            </Text>
+          </Text>
           <Text size="xs" c="dimmed" mt={4}>
-            En los últimos {data?.meses ?? 12} meses. Cuenta cuántas veces se
-            concedió un permiso, no cuánto tiempo estuvo fuera.
+            En los últimos {data?.meses ?? 12} meses. Los permisos cuentan cuántas
+            veces se concedieron, no cuánto tiempo estuvo fuera; los reposos son
+            los certificados del dispensario aprobados, con sus días calendario.
           </Text>
         </>
       )}

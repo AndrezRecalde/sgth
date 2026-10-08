@@ -13,6 +13,7 @@ use App\Http\Controllers\Asistencia\VacacionController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Autoservicio\AutoservicioController;
+use App\Http\Controllers\Autoservicio\MisCertificadosMedicosController;
 use App\Http\Controllers\Bienestar\EncuestaClimaController;
 use App\Http\Controllers\Bienestar\PlanBienestarController;
 use App\Http\Controllers\Capacitacion\CertificadoCapacitacionController;
@@ -753,6 +754,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
     // Módulo 06: Autoservicio
     Route::prefix('autoservicio')->group(function () {
         Route::get('mis-permisos', [AutoservicioController::class, 'misPermisos']);
+        // Los reposos del dispensario, que desde el 2026-10-08 no son permisos.
+        Route::get('mis-certificados-medicos', MisCertificadosMedicosController::class);
         // De dónde elige el servidor a su jefe inmediato al registrar un permiso
         // desde el portal: el listado de expedientes está cerrado a Talento Humano.
         Route::get('companeros-de-unidad', [AutoservicioController::class, 'companerosDeUnidad']);
