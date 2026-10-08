@@ -6,11 +6,19 @@ import { DetailList, SectionHeading } from '@/components/ui'
 import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import { formatFecha } from '@/lib/fecha'
 import { ESTADO_LABELS, TIPO_LABELS } from './permisos.constants'
-import type { PermisoServidor, PreviaSirha7 } from '@/types/api'
+import type { PreviaSirha7 } from '@/types/api'
 
 interface Props {
-  permiso: PermisoServidor
-  previa:  PreviaSirha7
+  /** «Apellido Nombre» de la persona. */
+  servidor: string
+  /** El folio del permiso o del certificado. */
+  folio:    string | null | undefined
+  previa:   PreviaSirha7
+  /**
+   * Falso si se aprueba sin escribir en Sirha7: el aviso de qué filas se
+   * escriben no aplica.
+   */
+  registra?: boolean
 }
 
 const dias = (p: PreviaSirha7) =>
@@ -18,10 +26,10 @@ const dias = (p: PreviaSirha7) =>
 
 /**
  * Qué se registrará en Sirha7: días, horario, el certificado del dispensario
- * (sin diagnóstico) y los otros permisos de la persona en esos días.
+ * (sin diagnóstico) y los otros permisos de la persona en esos días. Lo usan
+ * la aprobación de permisos y la de certificados médicos.
  */
-export function PreviaSirha7Detalle({ permiso, previa }: Props) {
-  const servidor = permiso.servidor
+export function PreviaSirha7Detalle({ servidor, folio, previa, registra = true }: Props) {
   const cert = previa.certificado
 
   return (
@@ -34,8 +42,8 @@ export function PreviaSirha7Detalle({ permiso, previa }: Props) {
 
       <DetailList
         items={[
-          { label: 'Servidor', value: [servidor?.apellido, servidor?.nombre].filter(Boolean).join(' ') },
-          { label: 'Folio', value: permiso.folio },
+          { label: 'Servidor', value: servidor },
+          { label: 'Folio', value: folio },
           { label: 'Días', value: dias(previa) },
           {
             label: 'Horario',
@@ -46,16 +54,18 @@ export function PreviaSirha7Detalle({ permiso, previa }: Props) {
         ]}
       />
 
-      <Alert color="ocean" variant="light" icon={<IconInfoCircle size={16} />} py={8}>
-        <Text size="xs">
-          Se escribe una fila por día con la referencia <b>{previa.referencia}</b>.
-          {previa.jornada_completa &&
-            ' Cada día toma el horario de la persona en Sirha7, o de 08:00 a 17:00 si no tiene; sábado y domingo se omiten.'}
-          {previa.desde === previa.hasta
-            ? ' Si ese horario ya tiene otro permiso en Sirha7, no se registra y se dirá con cuál choca.'
-            : ' Los días que ya tengan otro permiso en Sirha7, como un feriado, se omiten.'}
-        </Text>
-      </Alert>
+      {registra && (
+        <Alert color="ocean" variant="light" icon={<IconInfoCircle size={16} />} py={8}>
+          <Text size="xs">
+            Se escribe una fila por día con la referencia <b>{previa.referencia}</b>.
+            {previa.jornada_completa &&
+              ' Cada día toma el horario de la persona en Sirha7, o de 08:00 a 17:00 si no tiene; sábado y domingo se omiten.'}
+            {previa.desde === previa.hasta
+              ? ' Si ese horario ya tiene otro permiso en Sirha7, no se registra y se dirá con cuál choca.'
+              : ' Los días que ya tengan otro permiso en Sirha7, como un feriado, se omiten.'}
+          </Text>
+        </Alert>
+      )}
 
       {cert && (
         <>
