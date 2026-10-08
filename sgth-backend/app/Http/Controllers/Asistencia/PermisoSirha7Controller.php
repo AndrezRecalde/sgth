@@ -29,7 +29,8 @@ class PermisoSirha7Controller extends Controller
         $this->authorize('verTiposSirha7', PermisoServidor::class);
 
         return $this->conBiometrico(
-            fn () => ApiResponse::ok($this->aprobacion->tipos(), 'Tipos de permiso de Sirha7.')
+            fn () => ApiResponse::ok($this->aprobacion->tipos(), 'Tipos de permiso de Sirha7.'),
+            'No se pudo conectar al sistema biométrico para leer los tipos de permiso.'
         );
     }
 
@@ -55,14 +56,14 @@ class PermisoSirha7Controller extends Controller
                 $usuario->servidor_id,
             ),
             'Permiso aprobado y registrado en Sirha7.'
-        ));
+        ), 'No se pudo conectar al sistema biométrico. El permiso no cambió; inténtelo de nuevo.');
     }
 
     /**
      * Si el biométrico no responde, nada cambió en el SGTH (la transacción se
      * deshace) y se dice así, con un 503: no es un error de quien aprueba.
      */
-    private function conBiometrico(callable $accion): JsonResponse
+    private function conBiometrico(callable $accion, string $mensaje): JsonResponse
     {
         try {
             return $accion();
@@ -73,12 +74,9 @@ class PermisoSirha7Controller extends Controller
                 throw $e;
             }
 
-            Log::error('Sirha7 no respondió al aprobar un permiso: ' . $e->getMessage());
+            Log::error('Sirha7 no respondió (permisos): ' . $e->getMessage());
 
-            return ApiResponse::error(
-                'No se pudo conectar al sistema biométrico. El permiso no cambió; inténtelo de nuevo.',
-                codigo: 503
-            );
+            return ApiResponse::error($mensaje, codigo: 503);
         }
     }
 }
