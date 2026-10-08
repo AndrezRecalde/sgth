@@ -12,8 +12,8 @@ import {
 } from "@/components/ui";
 import { PermisoModal } from "./PermisoModal";
 import {
-  FILTROS_INICIALES,
   PermisosFiltros,
+  filtrosInicialesPara,
   type FiltrosPermiso,
 } from "./PermisosFiltros";
 import { getPermisosColumns } from "./permisos.columns";
@@ -21,6 +21,7 @@ import { usePermisos } from "../hooks/usePermisos";
 import { usePermisoMutations } from "../hooks/usePermisoMutations";
 import { useExportarPermiso } from "../hooks/useExportarPermiso";
 import { useAccionesPermiso } from "../hooks/useAccionesPermiso";
+import { useAuth } from "@/hooks/useAuth";
 import type { PermisoServidor } from "@/types/api";
 
 // El folio escrito entraba directo en la clave de consulta: cada tecla pediría
@@ -44,7 +45,8 @@ export function PermisosTab() {
   const [opened, { open, close }] = useDisclosure(false);
 
   const [page, setPage] = useState(1);
-  const [filtros, setFiltros] = useState<FiltrosPermiso>(FILTROS_INICIALES);
+  const { hasPermiso } = useAuth();
+  const [filtros, setFiltros] = useState<FiltrosPermiso>(() => filtrosInicialesPara(hasPermiso));
   const { exportar, exportandoId } = useExportarPermiso();
   const [conMotivo, setConMotivo] = useState<
     { accion: AccionConMotivo; permiso: PermisoServidor } | null

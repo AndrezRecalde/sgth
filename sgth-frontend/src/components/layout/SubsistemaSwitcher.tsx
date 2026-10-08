@@ -6,7 +6,7 @@ import {
 } from '@mantine/core'
 import { IconCheck, IconSelector } from '@tabler/icons-react'
 import { useAuth } from '@/hooks/useAuth'
-import { getSubsistemasDisponibles } from '@/config/nav'
+import { getSubsistemasDisponibles, inicioDelSubsistema } from '@/config/nav'
 import { SUBSISTEMAS } from '@/config/subsistemas'
 import type { Subsistema } from '@/config/routes'
 import classes from './Sidebar.module.css'
@@ -89,7 +89,7 @@ export function SubsistemaSwitcher({ actual, collapsed }: Props) {
           return (
             <Menu.Item
               key={key}
-              onClick={() => router.push(item.home)}
+              onClick={() => router.push(inicioDelSubsistema(key, usuario?.roles ?? []))}
               // `Menu.Item` no deja que su etiqueta interna encoja, así que un
               // texto largo empuja el ancho del menú en vez de recortarse.
               classNames={{ itemLabel: classes.menuItemLabel }}

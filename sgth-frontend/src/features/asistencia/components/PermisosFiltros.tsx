@@ -6,10 +6,9 @@ import { IconCubePlus, IconX } from '@tabler/icons-react'
 import { Toolbar } from '@/components/ui'
 import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { useUnidades } from '@/features/estructura/hooks/useUnidades'
+import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
 import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 import { ESTADO_LABELS, FILTROS_ESTADO, TIPO_LABELS, TONO_ESTADO } from './permisos.constants'
-import type { UnidadConRelaciones } from '@/types/api'
 
 /*
 | Los filtros del listado de permisos.
@@ -40,6 +39,22 @@ export const FILTROS_INICIALES: FiltrosPermiso = {
   folio: '',
 }
 
+/**
+ * Con qué filtro abre el listado, según el trabajo de quien entra.
+ *
+ * Recepción y Talento Humano confirman documentos: pendientes. Trabajo Social
+ * valida enfermedad y calamidad ya confirmadas, así que abre en activos; el
+ * backend ya le recorta el listado a esos dos tipos. Quien hace las dos cosas
+ * (admin-uath) sigue empezando por los pendientes.
+ */
+export function filtrosInicialesPara(
+  hasPermiso: (permiso: string) => boolean,
+): FiltrosPermiso {
+  const soloValida = hasPermiso('validar-trabajo-social') && !hasPermiso('confirmar-recepcion')
+
+  return soloValida ? { ...FILTROS_INICIALES, estado: 'activo' } : FILTROS_INICIALES
+}
+
 interface Props {
   filtros: FiltrosPermiso
   onCambiar: (filtros: Partial<FiltrosPermiso>) => void
@@ -48,9 +63,12 @@ interface Props {
 
 export function PermisosFiltros({ filtros, onCambiar, onNuevo }: Props) {
   const contained = useContainedInput('sm')
-  const { data: unidadesRaw } = useUnidades({ nivel: 2 })
+  // La lista pública de unidades y no el listado de Estructura, que exige
+  // `ver-estructura`: Recepción y Trabajo Social no lo tienen y el filtro les
+  // respondía 403 en cada carga.
+  const { data: unidades = [] } = useTodasUnidades({ nivel: 2 })
 
-  const unidadOptions = ((unidadesRaw ?? []) as UnidadConRelaciones[]).map((u) => ({
+  const unidadOptions = unidades.map((u) => ({
     value: String(u.id),
     label: u.nombre ?? `Unidad ${u.id}`,
   }))

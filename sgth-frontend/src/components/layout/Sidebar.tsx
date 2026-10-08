@@ -10,8 +10,7 @@ import { NavItemNested } from './NavItemNested'
 import { SubsistemaSwitcher } from './SubsistemaSwitcher'
 import { useAuth } from '@/hooks/useAuth'
 import { useStockBajoCount } from '@/features/dispensario/hooks/useInventarioMedicina'
-import { buildNav, ROLES_INVENTARIO_MED } from '@/config/nav'
-import { SUBSISTEMAS } from '@/config/subsistemas'
+import { buildNav, inicioDelSubsistema, ROLES_INVENTARIO_MED } from '@/config/nav'
 import { ROUTES, type Subsistema } from '@/config/routes'
 import classes from './Sidebar.module.css'
 
@@ -89,12 +88,11 @@ export function Sidebar({ subsistema, collapsed, onNavigate }: Props) {
   }, [grupos, pathname])
 
   const isActive = (href: string) => href === hrefActivo
-  const cfg = SUBSISTEMAS[subsistema]
 
   return (
     <nav className={classes.sidebar} aria-label="Navegación principal">
       <Link
-        href={cfg.home}
+        href={inicioDelSubsistema(subsistema, roles)}
         className={`${classes.brand} ${collapsed ? classes.brandCollapsed : ''}`}
       >
         <Image
