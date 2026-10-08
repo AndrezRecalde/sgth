@@ -128,6 +128,20 @@ return Application::configure(basePath: dirname(__DIR__))
         // la validación preventiva en el punto de origen — solo evita que
         // el usuario vea un 500 genérico con SQL crudo si algo se escapa.
         $exceptions->render(function (QueryException $e) {
+            // Sirha7, el biométrico, es otro servidor: que no responda no es un
+            // fallo del SGTH. Lo que pasa por él —aprobar, revertir o anular un
+            // permiso ya registrado allí— va en una transacción que se deshace,
+            // así que también se dice que no cambió nada. Los RAISERROR de sus
+            // procedimientos no llegan aquí: ya salen como regla de negocio.
+            if ($e->getConnectionName() === 'sqlsrv') {
+                \Illuminate\Support\Facades\Log::error('Sirha7 no respondió: ' . $e->getMessage());
+
+                return ApiResponse::error(
+                    'No se pudo completar la operación en el sistema biométrico (Sirha7). No se cambió nada; inténtelo de nuevo.',
+                    null, 503
+                );
+            }
+
             $sqlState = $e->errorInfo[0] ?? null;
 
             if ($sqlState === '23505') { // unique_violation (Postgres)

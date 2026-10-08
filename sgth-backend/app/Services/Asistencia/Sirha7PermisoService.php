@@ -96,4 +96,26 @@ class Sirha7PermisoService
             'ya_registrado' => $yaRegistrado,
         ];
     }
+
+    /**
+     * Retira las filas que el SGTH escribió para un permiso.
+     *
+     * El procedimiento solo borra referencias «SGTH …» de esa persona, fila
+     * por fila, y si en Sirha7 hay otra cantidad que `$esperadas` no borra
+     * ninguna. Devuelve cuántas borró; 0 si ya no quedaba ninguna (se retiró
+     * antes o TH la quitó a mano), que no es un error.
+     *
+     * @throws ReglaNegocioException si el procedimiento se niega: el número de
+     *         filas no cuadra, o una solicitud web idéntica se borraría con ellas.
+     * @throws QueryException si no se puede llegar al biométrico.
+     */
+    public function retirar(string $referencia, int $userId, int $esperadas): int
+    {
+        $resultado = $this->ejecutar(
+            'EXEC dbo.sp_SGTH_RetirarPermiso @Referencia = ?, @UserId = ?, @Esperadas = ?',
+            [$referencia, $userId, $esperadas]
+        );
+
+        return count(array_filter($resultado, fn (object $r) => $r->Resultado === 'retirada'));
+    }
 }
