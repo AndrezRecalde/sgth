@@ -2,20 +2,26 @@
 
 namespace App\Services\Dispensario;
 
-use App\Enums\EstadoPermiso;
-use App\Enums\TipoPermiso;
 use App\Exceptions\ReglaNegocioException;
-use App\Models\Asistencia\PermisoServidor;
 use App\Models\Dispensario\CertificadoMedico;
 use App\Models\Dispensario\ConsultaMedica;
-use App\Services\Asistencia\AprobacionPermisoSirha7Service;
+use App\Models\Dispensario\HistoriaClinica;
+use App\Services\Asistencia\AprobacionCertificadoSirha7Service;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Emitir, anular e imprimir los certificados médicos del dispensario.
+ *
+ * Desde el 2026-10-08 emitir ya no crea un permiso de Asistencia: Talento
+ * Humano y Trabajo Social aprueban el certificado mismo y lo registran en
+ * Sirha7 (`AprobacionCertificadoSirha7Service`). El permiso automático guardaba
+ * solo el primer día y se saltaba las reglas de los permisos.
+ */
 class CertificadoMedicoService
 {
-    public function __construct(private AprobacionPermisoSirha7Service $sirha7) {}
+    public function __construct(private AprobacionCertificadoSirha7Service $sirha7) {}
 
     public const DIAS_MAX_REPOSO = 3;
 
@@ -53,24 +59,10 @@ class CertificadoMedicoService
                 );
             }
 
-            $permisoId = null;
-            $folio     = null;
-
-            // Solo genera permiso de asistencia si el
-            // paciente es el servidor titular (no familiar)
-            if ($esServidor) {
-                $permiso = $this->crearPermisoAutomatico(
-                    $historia->servidor_id,
-                    $fechaInicio,
-                    $fechaFin,
-                    $emisorId,
-                    $datos['observaciones'] ?? null,
-                );
-                $permisoId = $permiso->id;
-                $folio     = $permiso->folio;
-            } else {
-                $folio = $this->generarFolioCertificado();
-            }
+            // Nadie tiene dos reposos a la vez. Con la historia bloqueada, dos
+            // emisiones simultáneas para el mismo paciente no se cuelan.
+            HistoriaClinica::lockForUpdate()->find($historia?->id);
+            $this->rechazarSiSeSolapa($consulta, $fechaInicio, $fechaFin);
 
             $certificado = CertificadoMedico::create([
                 'consulta_medica_id'   => $consulta->id,
@@ -81,8 +73,7 @@ class CertificadoMedicoService
                 'fecha_fin'            => $fechaFin,
                 'diagnostico_cie10_id' => $datos['diagnostico_cie10_id'] ?? null,
                 'observaciones'        => $datos['observaciones'] ?? null,
-                'permiso_servidor_id'  => $permisoId,
-                'folio'                => $folio,
+                'folio'                => $this->generarFolioCertificado(),
                 'tipo_paciente'        => $esServidor ? 'servidor' : 'beneficiario',
                 'created_by'           => $emisorId,
             ]);
@@ -91,52 +82,47 @@ class CertificadoMedicoService
                 'consultaMedica',
                 'emisor',
                 'diagnosticoCie10',
-                'permisoServidor',
             ]);
         });
     }
 
-    private function crearPermisoAutomatico(
-        int $servidorId,
-        Carbon $fecha,
-        Carbon $fechaFin,
-        int $emisorId,
-        ?string $observacion,
-    ): PermisoServidor {
-        $folio = $this->generarFolioPermiso($fecha->year);
+    /**
+     * Un certificado no se emite sobre días que ya cubre otro del mismo
+     * paciente: dos reposos a la vez no existen, y para un servidor serían
+     * dos aprobaciones y dos registros en Sirha7 del mismo día. Los anulados
+     * no cuentan.
+     */
+    private function rechazarSiSeSolapa(ConsultaMedica $consulta, Carbon $inicio, Carbon $fin): void
+    {
+        $otro = CertificadoMedico::query()
+            ->whereNull('anulado_en')
+            ->whereHas('consultaMedica', fn ($q) => $q->where('historia_clinica_id', $consulta->historia_clinica_id))
+            ->whereDate('fecha_inicio', '<=', $fin->toDateString())
+            ->whereDate('fecha_fin', '>=', $inicio->toDateString())
+            ->orderBy('fecha_inicio')
+            ->first();
 
-        return PermisoServidor::create([
-            'servidor_id' => $servidorId,
-            'tipo'        => TipoPermiso::ENFERMEDAD->value,
-            'fecha'       => $fecha,
-            'hora_inicio' => '00:00',
-            'hora_fin'    => '23:59',
-            'vence_en'    => $fechaFin->copy()->endOfDay(),
-            'observacion' => $observacion
-                ?? 'Certificado médico emitido por el dispensario.',
-            // Activo directo: el médico es fuente
-            // confiable, se salta confirmación de Recepción
-            'estado'        => EstadoPermiso::ACTIVO->value,
-            'folio'         => $folio,
-            'confirmado_por' => $emisorId,
-            'confirmado_en'  => now(),
-            'creado_por'     => $emisorId,
-        ]);
+        if ($otro) {
+            throw new ReglaNegocioException(sprintf(
+                'El paciente ya tiene el certificado %s, con reposo del %s al %s: '.
+                'los días se cruzan. Anúlelo si hay que corregirlo, o elija otras fechas.',
+                $otro->folio,
+                $otro->fecha_inicio->format('d/m/Y'),
+                $otro->fecha_fin->format('d/m/Y'),
+            ));
+        }
     }
 
     /**
-     * Anula un certificado, y con él el permiso que creó.
+     * Anula un certificado y, si ya se registró en Sirha7, lo retira de allí.
      *
-     * El permiso de Asistencia existe **por** el certificado: nace ACTIVO
-     * porque el médico es fuente confiable y se salta la confirmación de
-     * Recepción. Eso mismo lo dejaba fuera del alcance de la anulación de
-     * Asistencia, que solo acepta permisos PENDIENTE. Así que se retira desde
-     * aquí, que es de donde vino, o quedaría justificando una ausencia que ya
-     * no tiene certificado detrás.
+     * Sirha7 va primero, con la fila del certificado bloqueada: si se niega o
+     * no responde, el certificado no se anula, porque los días de reposo no
+     * pueden quedar justificando una ausencia en el biométrico. Lo aprobado a
+     * mano no se toca: el SGTH no lo escribió.
      *
      * No hay plazo. Un certificado equivocado hay que poder corregirlo aunque
-     * los días de reposo ya hayan pasado; lo que quede en Asistencia es una
-     * consecuencia que corresponde asumir, no una razón para no poder tocarlo.
+     * los días de reposo ya hayan pasado.
      */
     public function anular(
         int $id,
@@ -144,8 +130,7 @@ class CertificadoMedicoService
         int $anuladoPor
     ): CertificadoMedico {
         return DB::transaction(function () use ($id, $motivo, $anuladoPor) {
-            $certificado = CertificadoMedico::with('permisoServidor')
-                ->findOrFail($id);
+            $certificado = CertificadoMedico::lockForUpdate()->findOrFail($id);
 
             if ($certificado->anulado_en !== null) {
                 throw new ReglaNegocioException(
@@ -153,23 +138,7 @@ class CertificadoMedicoService
                 );
             }
 
-            if ($certificado->permisoServidor) {
-                // Con la fila bloqueada, y fuera de Sirha7 antes de anularlo:
-                // los días de reposo aprobados no pueden quedar justificando una
-                // ausencia en el biométrico. Si Sirha7 se niega o no responde,
-                // el certificado no se anula.
-                $permiso = PermisoServidor::lockForUpdate()->findOrFail($certificado->permiso_servidor_id);
-                $this->sirha7->retirar($permiso);
-                $certificado->setRelation('permisoServidor', $permiso);
-
-                $certificado->permisoServidor->update([
-                    'estado'      => EstadoPermiso::ANULADO->value,
-                    'anulado_por' => $anuladoPor,
-                    'anulado_en'  => now(),
-                    'observacion' => 'Anulado con su certificado médico — '
-                        . $motivo,
-                ]);
-            }
+            $this->sirha7->retirar($certificado);
 
             $certificado->update([
                 'anulado_en'       => now(),
@@ -178,8 +147,7 @@ class CertificadoMedicoService
             ]);
 
             return $certificado->load([
-                'consultaMedica', 'emisor', 'anulador',
-                'diagnosticoCie10', 'permisoServidor',
+                'consultaMedica', 'emisor', 'anulador', 'diagnosticoCie10',
             ]);
         });
     }
@@ -187,10 +155,8 @@ class CertificadoMedicoService
     /**
      * El PDF del certificado, para imprimirlo o entregarlo.
      *
-     * Sin esto el certificado solo existía como fila. Para un servidor medio
-     * funcionaba, porque el permiso aparece en Asistencia; para un familiar no
-     * se crea permiso, así que su certificado no tenía forma de salir del
-     * sistema y no cumplía su función, que es ser un papel.
+     * Sin esto el certificado solo existía como fila y no cumplía su función,
+     * que es ser un papel.
      *
      * @return array{content: string, filename: string}
      */
@@ -200,7 +166,7 @@ class CertificadoMedicoService
             'consultaMedica.historiaClinica.servidor',
             'consultaMedica.historiaClinica.cargaFamiliar.servidor',
             'emisor.servidor', 'anulador.servidor',
-            'diagnosticoCie10', 'permisoServidor',
+            'diagnosticoCie10',
         ])->findOrFail($id);
 
         $pdf = Pdf::loadView('pdf.dispensario.certificado-medico', [
@@ -255,40 +221,14 @@ class CertificadoMedicoService
     }
 
     /**
-     * El folio del permiso que acompaña al certificado, con el mismo criterio.
-     *
-     * Contaba filas de `permisos_servidor`, que también borra en blando y
-     * también tiene el folio único: un permiso retirado hacía repetir uno vivo.
-     * Y arrancaba en 00000. Se toca desde aquí porque es este servicio el que
-     * lo emite; el resto de Asistencia crea sus permisos por otro camino.
-     */
-    private function generarFolioPermiso(int $anio): string
-    {
-        DB::select('SELECT pg_advisory_xact_lock(?)', [
-            crc32("permiso_servidor_folio_{$anio}"),
-        ]);
-
-        $ultimoFolio = PermisoServidor::withTrashed()
-            ->where('folio', 'like', "PER-{$anio}-%")
-            ->max('folio');
-
-        $ultimoSecuencial = $ultimoFolio
-            ? (int) substr($ultimoFolio, strlen("PER-{$anio}-"))
-            : 0;
-
-        return "PER-{$anio}-" . str_pad(
-            (string) ($ultimoSecuencial + 1), 5, '0', STR_PAD_LEFT
-        );
-    }
-
-    /**
      * Siguiente folio del año, tomado del MÁXIMO ya emitido.
      *
      * Contaba filas, y aquí eso falla de tres maneras: la tabla borra en blando
      * y el folio es único, así que un certificado retirado hacía repetir uno
      * vivo; el conteo incluía los certificados de servidores, cuyo folio lo
-     * pone el permiso y no lleva este prefijo; y arrancaba en 00000 por no
-     * sumar uno.
+     * ponía su permiso y no lleva este prefijo (hasta el 2026-10-08); y
+     * arrancaba en 00000 por no sumar uno. Desde entonces todos los
+     * certificados llevan CERT-.
      *
      * El bloqueo de aviso serializa leer el máximo y escribir el folio entre
      * emisiones simultáneas, y lo suelta el cierre de la transacción.

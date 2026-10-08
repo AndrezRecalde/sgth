@@ -118,6 +118,16 @@
   los permisos confirmados desde ese día: los anteriores ya los cargó TH a mano.
   `php artisan migrate` crea el permiso aprobar-permiso-sirha7 (admin-uath y
   asistente-uath) y las columnas sirha7_* de los permisos.
+□ Los reposos médicos se aprueban como certificados, no como permisos (2026-10-08)
+  Emitir un certificado ya no crea un permiso de enfermedad. TH (admin-uath,
+  asistente-uath) y Trabajo Social los aprueban en Asistencia › Permisos ›
+  «Certificados médicos»: con el tipo de Sirha7, o «sin Sirha7» con una nota
+  si ya lo cargaron a mano (las cédulas que Sirha7 no reconoce, lo anterior
+  a SIRHA7_APROBACION_DESDE). `php artisan migrate` pasa los ya emitidos: la
+  aprobación y las filas de Sirha7 de su permiso van al certificado, y el
+  permiso se borra en blando. En Sirha7 no cambia nada.
+  Avisar a TH, Trabajo Social y al Dispensario antes de abrir: los reposos
+  dejan de verse en la lista de permisos.
 □ GET /api/v1/asistencia/marcaciones responde con una cédula conocida
   (no hay importación: las marcaciones se consultan en vivo en Sirha7)
 

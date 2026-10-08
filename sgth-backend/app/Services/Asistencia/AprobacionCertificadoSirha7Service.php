@@ -120,17 +120,6 @@ class AprobacionCertificadoSirha7Service
                 throw new ReglaNegocioException($this->porQueSinSirha7());
             }
 
-            // Mientras los certificados todavía crean su permiso: si el reposo
-            // ya se registró desde el permiso, no se registra otra vez.
-            $permiso = $certificado->permiso_servidor_id
-                ? PermisoServidor::lockForUpdate()->find($certificado->permiso_servidor_id)
-                : null;
-            if ($permiso?->sirha7_aprobado_en !== null) {
-                throw new ReglaNegocioException(
-                    "El reposo ya se registró en Sirha7 desde el permiso {$permiso->folio}."
-                );
-            }
-
             $tipo = collect($this->sirha7->tipos())->firstWhere('id', $leaveId)
                 ?? throw new ReglaNegocioException('El tipo de permiso elegido no existe en Sirha7.');
 
@@ -252,13 +241,12 @@ class AprobacionCertificadoSirha7Service
     /**
      * Los permisos vigentes de la persona en los días del reposo: el de la
      * consulta suele caer el primero, y lo decidido es anularlo antes de
-     * aprobar (2026-10-08). El que creó el propio certificado no cuenta.
+     * aprobar (2026-10-08).
      */
     private function cruces(CertificadoMedico $certificado): array
     {
         return PermisoServidor::query()
             ->where('servidor_id', $certificado->servidor_id)
-            ->when($certificado->permiso_servidor_id, fn (Builder $q, $id) => $q->whereKeyNot($id))
             ->whereDate('fecha', '>=', $certificado->fecha_inicio->toDateString())
             ->whereDate('fecha', '<=', $certificado->fecha_fin->toDateString())
             ->whereIn('estado', [
