@@ -62,6 +62,15 @@ class PermisoServidor extends Model
     /** Lo lee el frontend para ofrecer «Aprobar en Sirha7» solo donde cabe. */
     protected $appends = ['pendiente_sirha7'];
 
+    /**
+     * Lo único del certificado médico que va en los listados: el rango de
+     * reposo. El permiso guarda solo el primer día, y sin esto la tabla
+     * enseñaba un reposo de tres días como «19/11 · 23h 59m». Nada de
+     * diagnóstico ni observaciones: los listados los ven Recepción, Trabajo
+     * Social y los jefes.
+     */
+    public const RANGO_DEL_CERTIFICADO = 'certificadoMedico:id,permiso_servidor_id,fecha_inicio,fecha_fin,dias_reposo';
+
     protected function casts(): array
     {
         return [

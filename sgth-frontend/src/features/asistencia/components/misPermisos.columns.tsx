@@ -5,10 +5,11 @@ import { IconPrinter, IconX } from '@tabler/icons-react'
 import { StatusBadge, TableActions } from '@/components/ui'
 import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import { ESTADO_LABELS, TIPO_LABELS, TONO_ESTADO } from './permisos.constants'
-import { diasParaVencer, duracion } from '../utils/horarioPermiso'
-import { formatFecha } from '@/lib/fecha'
+import { diasParaVencer } from '../utils/horarioPermiso'
 import { MotivoDeEstadoTexto } from './MotivoDeEstadoTexto'
 import { EnSirha7Texto } from './EnSirha7Texto'
+import { PermisoFechaCelda } from './PermisoFechaCelda'
+import { PermisoHorarioCelda } from './PermisoHorarioCelda'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { PermisoServidor } from '@/types/api'
 
@@ -66,22 +67,13 @@ export function getMisPermisosColumns(acciones: Acciones): DataTableColumn<Permi
       accessor: 'fecha',
       title: 'Fecha',
       width: 110,
-      render: ({ fecha }) => <Text size="sm">{fecha ? formatFecha(fecha) : '—'}</Text>,
+      render: (p) => <PermisoFechaCelda permiso={p} />,
     },
     {
       accessor: 'hora_inicio',
       title: 'Horario',
       width: 140,
-      render: ({ hora_inicio, hora_fin }) => (
-        <Stack gap={2}>
-          <Text size="sm" ff="monospace">
-            {hora_inicio.substring(0, 5)} — {hora_fin.substring(0, 5)}
-          </Text>
-          <StatusBadge size="xs">
-            {duracion(hora_inicio, hora_fin)}
-          </StatusBadge>
-        </Stack>
-      ),
+      render: (p) => <PermisoHorarioCelda permiso={p} />,
     },
     {
       accessor: 'estado',
