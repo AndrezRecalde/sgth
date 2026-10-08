@@ -4,9 +4,9 @@ namespace App\Services\Asistencia;
 
 use App\Enums\EstadoPermiso;
 use App\Enums\TipoPermiso;
-use App\Models\Asistencia\PermisoServidor;
 use App\Services\Estructura\ArbolUnidades;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * El consolidado de permisos por servidor en un rango de fechas.
@@ -72,6 +72,12 @@ class ConsolidadoPermisoService
      * mismos —el permiso existió y las horas se tomaron—, pero la fila de un
      * servidor dado de baja deja de salir con el nombre y la cédula en blanco.
      *
+     * En enfermedad entran también los reposos médicos aprobados, que desde
+     * el 2026-10-08 son certificados y no permisos: cada uno cuenta como uno
+     * más, con sus días calendario dentro del período (`ReposoMedicoAusentismo`).
+     * Se suman con un `UNION ALL` para que el orden y los filtros sigan
+     * saliendo de la base.
+     *
      * @return Collection<int, array<string, mixed>>
      */
     private function filas(
@@ -81,18 +87,29 @@ class ConsolidadoPermisoService
         ?int $servidorId = null,
         ?int $unidadId = null
     ): Collection {
-        return PermisoServidor::query()
-            ->join('servidores', 'servidores.id', '=', 'permisos_servidor.servidor_id')
-            ->leftJoin(
-                'unidades_administrativas',
-                'unidades_administrativas.id', '=', 'servidores.unidad_administrativa_id'
-            )
+        $ausencias = DB::table('permisos_servidor')
+            ->whereNull('permisos_servidor.deleted_at')
             ->whereBetween('permisos_servidor.fecha', [$fechaInicio, $fechaFin])
             ->where('permisos_servidor.tipo', $tipo)
             // Los estados en los que el permiso se concedió, y el motivo de
             // decirlo en positivo, viven en `EstadoPermiso::concedidos()`: este
             // informe y el indicador de ausentismo del SSO tienen que coincidir.
             ->whereIn('permisos_servidor.estado', EstadoPermiso::concedidos())
+            ->selectRaw('permisos_servidor.servidor_id AS servidor_id')
+            ->selectRaw('permisos_servidor.fecha AS fecha')
+            ->selectRaw('EXTRACT(EPOCH FROM (permisos_servidor.hora_fin - permisos_servidor.hora_inicio)) / 60 AS minutos');
+
+        if ($tipo === TipoPermiso::ENFERMEDAD->value) {
+            $ausencias->unionAll(ReposoMedicoAusentismo::filasEntre($fechaInicio, $fechaFin));
+        }
+
+        return DB::query()
+            ->fromSub($ausencias, 'ausencias')
+            ->join('servidores', 'servidores.id', '=', 'ausencias.servidor_id')
+            ->leftJoin(
+                'unidades_administrativas',
+                'unidades_administrativas.id', '=', 'servidores.unidad_administrativa_id'
+            )
             // Opcional: sin servidor, el informe es de toda la institución.
             ->when($servidorId, fn ($q) => $q->where('servidores.id', $servidorId))
             /*
@@ -108,8 +125,8 @@ class ConsolidadoPermisoService
             | ENFERMEDAD va exenta. Su consolidado alimenta el indicador de
             | Ausentismo por Enfermedad de Riesgos Laborales, y ahí dejar fuera a
             | un enfermo por no marcar subestimaría el ausentismo institucional:
-            | la ausencia existió, marque o no. Además esos permisos no los pide
-            | el servidor, los crea el certificado médico del dispensario.
+            | la ausencia existió, marque o no. Y los reposos del dispensario
+            | no los pide el servidor: los emite el médico.
             */
             ->when(
                 $tipo !== TipoPermiso::ENFERMEDAD->value,
@@ -147,9 +164,7 @@ class ConsolidadoPermisoService
                 servidores.segundo_nombre        as segundo_nombre,
                 unidades_administrativas.nombre  as unidad,
                 COUNT(*)                         as total_permisos,
-                COALESCE(SUM(
-                    EXTRACT(EPOCH FROM (permisos_servidor.hora_fin - permisos_servidor.hora_inicio)) / 60
-                ), 0)                            as total_minutos
+                COALESCE(SUM(ausencias.minutos), 0) as total_minutos
             SQL)
             ->get()
             ->map(fn ($fila) => $this->componer($fila));

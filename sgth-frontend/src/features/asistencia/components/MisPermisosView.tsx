@@ -14,6 +14,7 @@ import {
   type FiltrosPantallaMisPermisos,
 } from './MisPermisosFiltros'
 import { getMisPermisosColumns } from './misPermisos.columns'
+import { MisRepososMedicos } from './MisRepososMedicos'
 import { PermisoModal } from './PermisoModal'
 import { useMisPermisos } from '../hooks/useMisPermisos'
 import { useExportarPermiso } from '../hooks/useExportarPermiso'
@@ -116,6 +117,8 @@ export function MisPermisosView() {
           minHeight={200}
         />
       </DataState>
+
+      <MisRepososMedicos anio={filtros.anio ? Number(filtros.anio) : undefined} />
 
       {puedeRegistrar && (
         <PermisoModal opened={modalAbierto} onClose={cerrarModal} soloPropio />

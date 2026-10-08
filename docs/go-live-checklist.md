@@ -128,6 +128,11 @@
   permiso se borra en blando. En Sirha7 no cambia nada.
   Avisar a TH, Trabajo Social y al Dispensario antes de abrir: los reposos
   dejan de verse en la lista de permisos.
+  El ausentismo por enfermedad (Consolidado, Riesgos Laborales › Ausentismo,
+  tablero de SSO, panel de salud del Expediente) cuenta los certificados
+  APROBADOS en días calendario, fines de semana incluidos; los pendientes no.
+  Un consolidado de enfermedad de un mes ya impreso no va a cuadrar: antes el
+  reposo contaba solo su primer día. El servidor los ve en «Mis permisos».
 □ GET /api/v1/asistencia/marcaciones responde con una cédula conocida
   (no hay importación: las marcaciones se consultan en vivo en Sirha7)
 

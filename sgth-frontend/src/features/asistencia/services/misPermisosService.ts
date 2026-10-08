@@ -2,6 +2,7 @@ import api from '@/lib/axios'
 import type {
   ApiResponse,
   CompaneroDeUnidad,
+  MiCertificadoMedico,
   PaginatedResponse,
   PermisoServidor,
 } from '@/types/api'
@@ -22,6 +23,15 @@ export const misPermisosService = {
   }) =>
     api.get<ApiResponse<PaginatedResponse<PermisoServidor>>>(
       '/autoservicio/mis-permisos', { params }
+    ).then(r => r.data.datos),
+
+  /**
+   * Los reposos médicos propios: desde el 2026-10-08 son certificados del
+   * dispensario y no permisos, así que no salen en `listar`.
+   */
+  misCertificados: (params: { page?: number; per_page?: number; anio?: number }) =>
+    api.get<ApiResponse<PaginatedResponse<MiCertificadoMedico>>>(
+      '/autoservicio/mis-certificados-medicos', { params }
     ).then(r => r.data.datos),
 
   /**

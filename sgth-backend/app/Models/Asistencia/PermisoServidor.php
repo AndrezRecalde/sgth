@@ -62,15 +62,6 @@ class PermisoServidor extends Model
     /** Lo lee el frontend para ofrecer «Aprobar en Sirha7» solo donde cabe. */
     protected $appends = ['pendiente_sirha7'];
 
-    /**
-     * Lo único del certificado médico que va en los listados: el rango de
-     * reposo. El permiso guarda solo el primer día, y sin esto la tabla
-     * enseñaba un reposo de tres días como «19/11 · 23h 59m». Nada de
-     * diagnóstico ni observaciones: los listados los ven Recepción, Trabajo
-     * Social y los jefes.
-     */
-    public const RANGO_DEL_CERTIFICADO = 'certificadoMedico:id,permiso_servidor_id,fecha_inicio,fecha_fin,dias_reposo';
-
     protected function casts(): array
     {
         return [
@@ -153,8 +144,9 @@ class PermisoServidor extends Model
     }
 
     /**
-     * El certificado médico que lo originó, si vino del dispensario. Ahí está
-     * el rango de días de reposo: el permiso guarda solo el primero.
+     * El certificado médico que lo originó. Solo los de antes del 2026-10-08,
+     * cuando emitir un certificado creaba un permiso; la migración que los pasó
+     * al flujo nuevo los dejó borrados en blando.
      */
     public function certificadoMedico(): HasOne
     {

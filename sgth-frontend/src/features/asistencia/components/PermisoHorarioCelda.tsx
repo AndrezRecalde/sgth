@@ -5,24 +5,9 @@ import { StatusBadge } from '@/components/ui'
 import { duracion } from '../utils/horarioPermiso'
 import type { PermisoServidor } from '@/types/api'
 
-/**
- * El horario del permiso en las dos tablas. El de un certificado médico cubre
- * la jornada entera de cada día de reposo: se guarda como 00:00–23:59, y la
- * tabla lo enseñaba así, con «23h 59m», en vez de los días.
- */
+/** El horario del permiso y su duración, en las dos tablas de permisos. */
 export function PermisoHorarioCelda({ permiso }: { permiso: PermisoServidor }) {
-  const { hora_inicio, hora_fin, certificado_medico: certificado } = permiso
-
-  if (certificado) {
-    return (
-      <Stack gap={2}>
-        <Text size="sm">Jornada completa</Text>
-        <StatusBadge size="xs">
-          {certificado.dias_reposo === 1 ? '1 día' : `${certificado.dias_reposo} días`}
-        </StatusBadge>
-      </Stack>
-    )
-  }
+  const { hora_inicio, hora_fin } = permiso
 
   if (!hora_inicio || !hora_fin) return <Text size="sm" c="dimmed">—</Text>
 
