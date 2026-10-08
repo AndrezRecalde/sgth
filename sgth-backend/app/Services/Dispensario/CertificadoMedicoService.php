@@ -8,12 +8,15 @@ use App\Exceptions\ReglaNegocioException;
 use App\Models\Asistencia\PermisoServidor;
 use App\Models\Dispensario\CertificadoMedico;
 use App\Models\Dispensario\ConsultaMedica;
+use App\Services\Asistencia\AprobacionPermisoSirha7Service;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class CertificadoMedicoService
 {
+    public function __construct(private AprobacionPermisoSirha7Service $sirha7) {}
+
     public const DIAS_MAX_REPOSO = 3;
 
     public function emitir(array $datos, int $emisorId): CertificadoMedico
@@ -150,6 +153,14 @@ class CertificadoMedicoService
             }
 
             if ($certificado->permisoServidor) {
+                // Con la fila bloqueada, y fuera de Sirha7 antes de anularlo:
+                // los días de reposo aprobados no pueden quedar justificando una
+                // ausencia en el biométrico. Si Sirha7 se niega o no responde,
+                // el certificado no se anula.
+                $permiso = PermisoServidor::lockForUpdate()->findOrFail($certificado->permiso_servidor_id);
+                $this->sirha7->retirar($permiso);
+                $certificado->setRelation('permisoServidor', $permiso);
+
                 $certificado->permisoServidor->update([
                     'estado'      => EstadoPermiso::ANULADO->value,
                     'anulado_por' => $anuladoPor,
