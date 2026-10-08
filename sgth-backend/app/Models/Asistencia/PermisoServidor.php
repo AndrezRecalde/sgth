@@ -8,7 +8,11 @@ use App\Models\Expediente\Servidor;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Dispensario\CertificadoMedico;
 use App\Models\Estructura\UnidadAdministrativa;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -47,7 +51,16 @@ class PermisoServidor extends Model
         'jefe_id',
         'dirigido_a_talento_humano',
         'creado_por',
+        'sirha7_leave_id',
+        'sirha7_leave_nombre',
+        'sirha7_userid',
+        'sirha7_aprobado_por',
+        'sirha7_aprobado_en',
+        'sirha7_dias_omitidos',
     ];
+
+    /** Lo lee el frontend para ofrecer «Aprobar en Sirha7» solo donde cabe. */
+    protected $appends = ['pendiente_sirha7'];
 
     protected function casts(): array
     {
@@ -64,6 +77,8 @@ class PermisoServidor extends Model
             'anulado_en'     => 'datetime',
             'revertido_en'   => 'datetime',
             'vence_en'       => 'datetime',
+            'sirha7_aprobado_en'   => 'datetime',
+            'sirha7_dias_omitidos' => 'array',
         ];
     }
 
@@ -114,6 +129,58 @@ class PermisoServidor extends Model
     public function creadoPor(): BelongsTo
     {
         return $this->belongsTo(\App\Models\User::class, 'creado_por');
+    }
+
+    /** Quien lo aprobó en Sirha7. */
+    public function aprobadoSirha7Por(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'sirha7_aprobado_por');
+    }
+
+    /** Las filas que se escribieron en dbo.USER_SPEDAY al aprobarlo, una por día. */
+    public function filasSirha7(): HasMany
+    {
+        return $this->hasMany(PermisoSirha7Fila::class, 'permiso_servidor_id');
+    }
+
+    /**
+     * El certificado médico que lo originó, si vino del dispensario. Ahí está
+     * el rango de días de reposo: el permiso guarda solo el primero.
+     */
+    public function certificadoMedico(): HasOne
+    {
+        return $this->hasOne(CertificadoMedico::class, 'permiso_servidor_id');
+    }
+
+    /**
+     * ¿Se le puede aprobar en Sirha7 ahora?
+     *
+     * Confirmado por Recepción (activo) y todavía sin aprobar, y confirmado
+     * desde la fecha de corte (`services.biometrico.aprobacion_permisos_desde`):
+     * lo anterior ya lo cargó TH a mano (decisión del 2026-10-07). Sin fecha de
+     * corte la función está apagada.
+     *
+     * Es la condición de estado; quién puede aprobar lo dice la policy.
+     */
+    public function estaPendienteDeSirha7(): bool
+    {
+        $corte = config('services.biometrico.aprobacion_permisos_desde');
+
+        if (! $corte || $this->sirha7_aprobado_en !== null || $this->confirmado_en === null) {
+            return false;
+        }
+
+        $estado = $this->estado instanceof EstadoPermiso
+            ? $this->estado
+            : EstadoPermiso::tryFrom((string) $this->estado);
+
+        return $estado === EstadoPermiso::ACTIVO
+            && $this->confirmado_en->greaterThanOrEqualTo(Carbon::parse($corte)->startOfDay());
+    }
+
+    protected function pendienteSirha7(): Attribute
+    {
+        return Attribute::get(fn (): bool => $this->estaPendienteDeSirha7());
     }
 
     /**

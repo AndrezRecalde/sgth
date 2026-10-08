@@ -168,6 +168,30 @@ class PermisoServidorPolicy
     }
 
     /**
+     * Aprobar el permiso en Sirha7, el biométrico (decisión del 2026-10-08).
+     *
+     * Personal y oficial, Talento Humano (`aprobar-permiso-sirha7`).
+     * Enfermedad y calamidad, Trabajo Social: para ellas aprobar es también
+     * validar, así que pide `validar-trabajo-social`.
+     *
+     * Que el permiso esté en condiciones (activo, confirmado desde el corte,
+     * sin aprobar) y que no sea el propio lo comprueba el servicio.
+     */
+    public function aprobarSirha7(User $user, PermisoServidor $permiso): bool
+    {
+        return $this->esDeTrabajoSocial($permiso)
+            ? $user->can(Permiso::VALIDAR_TRABAJO_SOCIAL->value)
+            : $user->can(Permiso::APROBAR_PERMISO_SIRHA7->value);
+    }
+
+    /** Los tipos de Sirha7, para quien aprueba en cualquiera de los dos casos. */
+    public function verTiposSirha7(User $user): bool
+    {
+        return $user->can(Permiso::APROBAR_PERMISO_SIRHA7->value)
+            || $user->can(Permiso::VALIDAR_TRABAJO_SOCIAL->value);
+    }
+
+    /**
      * Deshacer una confirmación devuelve saldo de vacaciones ya descontado, así
      * que no es una corrección de mostrador: se pide el mismo permiso que
      * anular, que hoy solo tiene admin-uath.

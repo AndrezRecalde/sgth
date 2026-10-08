@@ -7,6 +7,7 @@ use App\Http\Controllers\Asistencia\ConsolidadoPermisoController;
 use App\Http\Controllers\Asistencia\MarcacionController;
 use App\Http\Controllers\Asistencia\PeriodoVacacionController;
 use App\Http\Controllers\Asistencia\PermisoServidorController;
+use App\Http\Controllers\Asistencia\PermisoSirha7Controller;
 use App\Http\Controllers\Asistencia\VacacionController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\PasswordController;
@@ -621,6 +622,18 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::post('confirmar/{folio}', [PermisoServidorController::class, 'confirmar']);
             Route::post('{id}/validar-ts', [PermisoServidorController::class, 'validar'])
                 ->whereNumber('id');
+
+            // Aprobar en Sirha7, el biométrico (decisión de TH, 2026-10-08):
+            // los tipos para el selector, lo que se va a registrar y el
+            // registro. Lo decide la policy, como el resto del módulo.
+            Route::get('sirha7/tipos', [PermisoSirha7Controller::class, 'tipos'])
+                ->name('asistencia.permisos.sirha7.tipos');
+            Route::get('{id}/sirha7', [PermisoSirha7Controller::class, 'previa'])
+                ->whereNumber('id')
+                ->name('asistencia.permisos.sirha7.previa');
+            Route::post('{id}/aprobar-sirha7', [PermisoSirha7Controller::class, 'aprobar'])
+                ->whereNumber('id')
+                ->name('asistencia.permisos.sirha7.aprobar');
 
             // Recepción rechaza el documento físico que llega mal. El estado
             // RECHAZADO estaba en el enum desde el principio y nada lo asignaba.

@@ -4,9 +4,7 @@ namespace App\Services\Asistencia;
 
 use App\Exceptions\ReglaNegocioException;
 use Carbon\CarbonInterface;
-use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Marcaciones del biométrico (Sirha7, SQL Server), buscadas por cédula.
@@ -28,8 +26,7 @@ use Illuminate\Support\Facades\DB;
  */
 class MarcacionBiometricaService
 {
-    /** Número con que SQL Server marca los RAISERROR del procedimiento. */
-    private const ERROR_DEL_PROCEDIMIENTO = 50000;
+    use ProcedimientosSirha7;
 
     /**
      * Una fila por día con horario, marcaciones o permiso, en orden de fecha.
@@ -89,40 +86,5 @@ class MarcacionBiometricaService
         );
 
         return ($resultado[0]->Resultado ?? null) !== 'no_encontrada';
-    }
-
-    /**
-     * Ejecuta un procedimiento y convierte su RAISERROR en una regla de
-     * negocio con el mensaje tal cual. Los demás errores siguen su camino.
-     *
-     * @return list<object>
-     */
-    private function ejecutar(string $sql, array $parametros): array
-    {
-        try {
-            return $this->conexion()->select($sql, $parametros);
-        } catch (QueryException $e) {
-            if ((int) ($e->errorInfo[1] ?? 0) === self::ERROR_DEL_PROCEDIMIENTO) {
-                throw new ReglaNegocioException(self::mensajeDelProcedimiento($e));
-            }
-
-            throw $e;
-        }
-    }
-
-    /** Aparte para que las pruebas puedan darle una conexión simulada. */
-    protected function conexion(): ConnectionInterface
-    {
-        return DB::connection('sqlsrv');
-    }
-
-    /**
-     * El texto del RAISERROR, sin los prefijos del driver
-     * («[Microsoft][ODBC Driver 18 for SQL Server][SQL Server]»).
-     */
-    private static function mensajeDelProcedimiento(QueryException $e): string
-    {
-        return trim(preg_replace('/^(\[[^\]]*\])+/', '', (string) ($e->errorInfo[2] ?? '')))
-            ?: 'El biométrico rechazó la consulta.';
     }
 }

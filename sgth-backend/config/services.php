@@ -41,6 +41,11 @@ return [
         // ahora el 2 (decisión de TH, 2026-10-06); los relojes físicos van
         // del 1 al 5 en la tabla Machines.
         'sensor_online' => env('BIOMETRICO_SENSOR_ONLINE', '2'),
+        // Desde qué día se registran en Sirha7 los permisos que se aprueban en
+        // el SGTH (decisión del 2026-10-07): solo los confirmados desde esa
+        // fecha. Los anteriores ya los cargó TH a mano, y aprobarlos cambiaría
+        // meses cerrados. Sin fecha, la aprobación en Sirha7 está apagada.
+        'aprobacion_permisos_desde' => env('SIRHA7_APROBACION_DESDE'),
     ],
 
 ];

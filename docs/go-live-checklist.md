@@ -105,6 +105,11 @@
 □ .env de producción: DB_SQLSRV_USERNAME=sgth_app (nunca sa), su contraseña,
   DB_SQLSRV_PORT con el puerto real de la instancia ATIEMPO (dinámico, no 1433)
   y BIOMETRICO_SENSOR_ONLINE
+□ SIRHA7_APROBACION_DESDE en el .env de producción = el día de la publicación
+  (AAAA-MM-DD). Sin ella «Aprobar en Sirha7» está apagado. Solo se aprueban
+  los permisos confirmados desde ese día: los anteriores ya los cargó TH a mano.
+  `php artisan migrate` crea el permiso aprobar-permiso-sirha7 (admin-uath y
+  asistente-uath) y las columnas sirha7_* de los permisos.
 □ GET /api/v1/asistencia/marcaciones responde con una cédula conocida
   (no hay importación: las marcaciones se consultan en vivo en Sirha7)
 
