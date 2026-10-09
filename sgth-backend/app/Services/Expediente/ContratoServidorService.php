@@ -85,7 +85,10 @@ class ContratoServidorService
                     'id'                 => $m->id,
                     'tipo_movimiento'    => $m->tipo_movimiento?->value,
                     'subtipo_movimiento' => $m->subtipo_movimiento?->value,
-                    'etiqueta'           => $m->subtipoEfectivo()?->etiqueta() ?? $m->tipo_movimiento?->etiqueta(),
+                    'clase'              => $m->clase?->value,
+                    // La causal cuando la hay, y si no, el nombre de la clase:
+                    // el mismo que se ve en la bandeja y en el documento.
+                    'etiqueta'           => $m->causal()?->etiqueta() ?? $m->etiqueta(),
                     'codigo_registro'    => $m->codigo_registro,
                     'fecha_efectiva'     => $m->fecha_efectiva?->toDateString(),
                     'fecha_inicio'       => $m->fecha_inicio?->toDateString(),

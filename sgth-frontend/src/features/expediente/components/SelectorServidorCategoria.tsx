@@ -1,13 +1,14 @@
 'use client'
 
-import { Alert, SimpleGrid, Stack, Text, Tooltip, UnstyledButton } from '@mantine/core'
+import { Alert, SimpleGrid, Skeleton, Stack, Text, Tooltip, UnstyledButton } from '@mantine/core'
 import { IconAlertTriangle } from '@tabler/icons-react'
 import { BuscarServidorSelect } from './BuscarServidorSelect'
+import { useCatalogoAcciones } from '../hooks/useCatalogoAcciones'
 import {
-  CATEGORIAS_ACCION_PERSONAL, categoriaHabilitada,
-} from '../utils/categoriasAccionPersonal'
-import type { AccionTipo } from '../utils/taxonomiaAccionPersonal'
-import type { ServidorConRelaciones } from '@/types/api'
+  familiaDisponible, familiaRequiereVinculo, familiasDelFormulario, type VinculoDelServidor,
+} from '../utils/catalogoAcciones'
+import type { CatalogoAccionesPersonal, FamiliaDelCatalogo, ServidorConRelaciones } from '@/types/api'
+import { getApiErrorMessage } from '@/types/api'
 import { SectionHeading } from '@/components/ui'
 import { etiquetaNombramiento } from '../utils/tipoNombramientoOptions'
 import classes from './SelectorServidorCategoria.module.css'
@@ -15,18 +16,21 @@ import classes from './SelectorServidorCategoria.module.css'
 interface Props {
   servidor:          ServidorConRelaciones | null
   onServidorChange:  (servidor: ServidorConRelaciones | null) => void
-  onCategoriaSeleccionada: (categoria: AccionTipo) => void
+  onFamiliaSeleccionada: (familia: FamiliaDelCatalogo) => void
 }
 
 function tooltipDeshabilitado(
-  categoria: string,
+  catalogo: CatalogoAccionesPersonal,
+  familia: FamiliaDelCatalogo,
   pendienteVinculacion: boolean | null | undefined,
   tipoNombramiento?: string | null,
 ): string {
+  const exigeVinculo = familiaRequiereVinculo(catalogo, familia.codigo)
+
   if (pendienteVinculacion === true) {
     return 'Este servidor aún no tiene un vínculo laboral vigente — registre primero su Ingreso y Vinculación.'
   }
-  if (pendienteVinculacion === false && categoria === 'ingreso') {
+  if (pendienteVinculacion === false && !exigeVinculo) {
     return 'Este servidor ya tiene un vínculo laboral vigente — no aplica un nuevo ingreso.'
   }
   if (pendienteVinculacion === false) {
@@ -35,25 +39,25 @@ function tooltipDeshabilitado(
   return 'No se pudo determinar el estado de vínculo de este servidor.'
 }
 
-export function SelectorServidorCategoria({ servidor, onServidorChange, onCategoriaSeleccionada }: Props) {
+export function SelectorServidorCategoria({ servidor, onServidorChange, onFamiliaSeleccionada }: Props) {
+  const catalogo = useCatalogoAcciones()
+
   const pendienteVinculacion = servidor?.pendiente_vinculacion
   const tipoNombramiento = servidor?.contrato_vigente?.tipo_nombramiento
 
-  const ningunaAplica = CATEGORIAS_ACCION_PERSONAL.every(
-    (c) => !categoriaHabilitada(c, pendienteVinculacion, tipoNombramiento),
-  )
-
-  /**
-   * Todas las categorías abren el mismo formulario con el tipo ya fijado.
-   * Antes solo el ingreso lo hacía y el resto avisaba "formulario en
-   * construcción" — un mensaje que había quedado viejo: esos formularios ya
-   * existían y se llegaba a ellos desde el expediente del servidor.
-   */
-  const handleClickCategoria = (categoriaValue: AccionTipo, habilitada: boolean) => {
-    if (!habilitada) return
-
-    onCategoriaSeleccionada(categoriaValue)
+  // Con `pendiente_vinculacion` en null no se sabe si tiene vínculo, y sin
+  // saberlo no se ofrece nada: no hay con qué decidir.
+  const vinculo: VinculoDelServidor = {
+    sinVinculo: pendienteVinculacion === true,
+    tipoNombramiento: pendienteVinculacion === false ? tipoNombramiento : null,
   }
+
+  const datos = catalogo.data
+  const familias = datos ? familiasDelFormulario(datos) : []
+
+  const ningunaAplica = !!datos && familias.every(
+    (f) => !familiaDisponible(datos, f.codigo, vinculo),
+  )
 
   return (
     <Stack gap="lg">
@@ -67,6 +71,12 @@ export function SelectorServidorCategoria({ servidor, onServidorChange, onCatego
       {servidor && (
         <Stack gap="xs">
           <SectionHeading title="Categoría de la acción de personal" />
+
+          {catalogo.isError && (
+            <Alert variant="light" color="red" icon={<IconAlertTriangle size={16} />}>
+              {getApiErrorMessage(catalogo.error, 'No se pudo cargar el catálogo de acciones de personal.')}
+            </Alert>
+          )}
 
           {/* Un aviso es un aviso, no una etiqueta de estado: `StatusBadge`
               sirve para el estado de un registro o para una categoría, y esto es
@@ -83,8 +93,8 @@ export function SelectorServidorCategoria({ servidor, onServidorChange, onCatego
             </Alert>
           )}
 
-          {/* Ocho tarjetas en gris con su tooltip no son una respuesta: si
-              ninguna aplica, hay que decirlo de frente y nombrar el motivo. */}
+          {/* Tarjetas en gris con su tooltip no son una respuesta: si ninguna
+              aplica, hay que decirlo de frente y nombrar el motivo. */}
           {pendienteVinculacion === false && ningunaAplica && (
             <Alert
               variant="light"
@@ -98,37 +108,38 @@ export function SelectorServidorCategoria({ servidor, onServidorChange, onCatego
           )}
 
           <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
-            {CATEGORIAS_ACCION_PERSONAL.map((categoria) => {
-              const habilitada = categoriaHabilitada(
-                categoria, pendienteVinculacion, tipoNombramiento,
-              )
+            {catalogo.isPending && Array.from({ length: 6 }, (_, i) => (
+              <Skeleton key={i} height={52} radius="md" />
+            ))}
+
+            {datos && familias.map((familia) => {
+              const habilitada = familiaDisponible(datos, familia.codigo, vinculo)
 
               /*
               | Las no elegibles llevan `aria-disabled` y no `disabled`, y siguen
               | en el orden de tabulación a propósito: el motivo vive en el
               | tooltip, y un botón deshabilitado no se puede enfocar, así que
               | quien navega con teclado no tenía forma de leerlo. El `Tooltip`
-              | va directamente sobre el botón —antes envolvía un `Box`, que no
-              | es enfocable— y con `focus: true`, porque el ajuste de Mantine
-              | por defecto solo lo abre al pasar el ratón.
+              | va directamente sobre el botón y con `focus: true`, porque el
+              | ajuste de Mantine por defecto solo lo abre al pasar el ratón.
               */
               const boton = (
                 <UnstyledButton
-                  key={categoria.value}
-                  onClick={() => handleClickCategoria(categoria.value, habilitada)}
+                  key={familia.codigo}
+                  onClick={() => { if (habilitada) onFamiliaSeleccionada(familia) }}
                   aria-disabled={!habilitada || undefined}
                   className={habilitada
                     ? classes.tarjeta
                     : `${classes.tarjeta} ${classes.deshabilitada}`}
                 >
-                  <Text size="sm" fw={500}>{categoria.label}</Text>
+                  <Text size="sm" fw={500}>{familia.etiqueta}</Text>
                 </UnstyledButton>
               )
 
               return habilitada ? boton : (
                 <Tooltip
-                  key={categoria.value}
-                  label={tooltipDeshabilitado(categoria.value, pendienteVinculacion, tipoNombramiento)}
+                  key={familia.codigo}
+                  label={tooltipDeshabilitado(datos, familia, pendienteVinculacion, tipoNombramiento)}
                   events={{ hover: true, focus: true, touch: true }}
                   multiline
                   w={260}

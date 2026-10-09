@@ -60,8 +60,7 @@ export function remuneracionEsHeredada(
 | Los tres primeros eran una copia vieja de la taxonomía —cinco tipos, sin
 | Cesación de Funciones, sin Régimen Disciplinario y sin Incremento de
 | Remuneración, y con la comisión sin remuneración como tipo propio cuando ya es
-| subtipo de Cambio Administrativo—. La versión viva, derivada del enum del
-| backend, está en `utils/taxonomiaAccionPersonal.ts`: TIPO_LABELS y
-| tiposElegibles(), que es lo que usan el formulario y el asistente de
-| categorías.
+| subtipo de Cambio Administrativo—. Desde la fase 1.1 del rediseño esas reglas
+| ya no se copian en el frontend: las sirve el backend en el catálogo de
+| acciones (`hooks/useCatalogoAcciones.ts`, `utils/catalogoAcciones.ts`).
 */

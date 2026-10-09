@@ -1,11 +1,13 @@
 import api from '@/lib/axios'
-import type { ApiResponse, ContratoConRelaciones } from '@/types/api'
+import type { ApiResponse, ClaseAccionPersonal, ContratoConRelaciones } from '@/types/api'
 
 /** Una acción de personal ocurrida sobre un vínculo. */
 export type AccionSobreVinculo = {
   id: number
   tipo_movimiento: string | null
   subtipo_movimiento: string | null
+  clase: ClaseAccionPersonal | null
+  /** La causal cuando la hay; si no, el nombre de la clase. */
   etiqueta: string | null
   codigo_registro: string | null
   fecha_efectiva: string | null

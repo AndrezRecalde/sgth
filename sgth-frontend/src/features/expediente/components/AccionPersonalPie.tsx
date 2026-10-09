@@ -11,7 +11,6 @@ import { useMovimientoMutations } from '../hooks/useMovimientoMutations'
 import {
   ESTADO_LABELS, TRANSICIONES, puedeDescargarPdf, requiereCompletarVinculo,
 } from '../utils/estadoAccionPersonal'
-import { tieneEfectoEconomico, tocaElVinculo } from '../utils/taxonomiaAccionPersonal'
 import type { MovimientoPersonal } from '@/types/api'
 import { guardarArchivo } from '@/lib/archivo'
 
@@ -61,14 +60,14 @@ export function AccionPersonalPie({ m, onClose, onCompletarVinculo, onPedirDicta
   const avanzar = () => {
     // Un ingreso que pasa a registrada crea el contrato: se completan primero
     // sus datos en vez de fallar después.
-    if (siguiente === 'registrada' && requiereCompletarVinculo(estado, m.tipo_movimiento)) {
+    if (siguiente === 'registrada' && requiereCompletarVinculo(estado, m.clase)) {
       onCompletarVinculo()
       return
     }
     // Mismo criterio para el dictamen presupuestario: el backend rechaza
     // suscribir sin él, así que se pide antes en vez de dejar que la transición
     // falle.
-    if (siguiente === 'suscrita' && tieneEfectoEconomico(m.tipo_movimiento)) {
+    if (siguiente === 'suscrita' && m.tiene_efecto_economico) {
       onPedirDictamen()
       return
     }
@@ -122,7 +121,7 @@ export function AccionPersonalPie({ m, onClose, onCompletarVinculo, onPedirDicta
   | revierte lo que hizo sobre el vínculo del servidor. Quien anula tiene que
   | saber cuál de las dos cosas está a punto de pasar.
   */
-  const yaSurtioEfecto = Boolean(m.codigo_registro) && tocaElVinculo(m)
+  const yaSurtioEfecto = Boolean(m.codigo_registro) && m.toca_el_vinculo
 
   return (
     <>

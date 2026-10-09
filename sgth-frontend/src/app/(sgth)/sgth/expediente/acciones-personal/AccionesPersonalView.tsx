@@ -8,28 +8,25 @@ import { MovimientoModal } from '@/features/expediente/components/MovimientoModa
 import { BandejaAccionesPersonal } from '@/features/expediente/components/BandejaAccionesPersonal'
 import { FirmantesPanel } from '@/features/expediente/components/FirmantesPanel'
 import { AusenciasTemporalesPanel } from '@/features/expediente/components/AusenciasTemporalesPanel'
-import {
-  TIPO_LABELS, type AccionTipo,
-} from '@/features/expediente/utils/taxonomiaAccionPersonal'
-import type { ServidorConRelaciones } from '@/types/api'
+import type { FamiliaDelCatalogo, ServidorConRelaciones } from '@/types/api'
 import { PageHeader, PageShell } from '@/components/ui'
 
 export function AccionesPersonalView() {
   const [servidor, setServidor] = useState<ServidorConRelaciones | null>(null)
 
   /**
-   * La categoría elegida es lo que abre el formulario: no hace falta un
-   * disclosure aparte, y así no puede quedar abierto sin tipo ni con el tipo
-   * de la vez anterior.
+   * La familia elegida es lo que abre el formulario: no hace falta un
+   * disclosure aparte, y así no puede quedar abierto sin familia ni con la de
+   * la vez anterior.
    */
-  const [categoria, setCategoria] = useState<AccionTipo | null>(null)
+  const [familia, setFamilia] = useState<FamiliaDelCatalogo | null>(null)
 
   /**
    * Cerrar el formulario devuelve al grid con el servidor todavía elegido.
    * Limpiarlo obligaba a buscarlo de nuevo tras cancelar por error, y dejaba
    * el buscador mostrando un nombre que ya no estaba seleccionado.
    */
-  const handleCerrar = () => setCategoria(null)
+  const handleCerrar = () => setFamilia(null)
 
   return (
     <PageShell>
@@ -65,20 +62,21 @@ export function AccionesPersonalView() {
           <SelectorServidorCategoria
             servidor={servidor}
             onServidorChange={setServidor}
-            onCategoriaSeleccionada={setCategoria}
+            onFamiliaSeleccionada={setFamilia}
           />
 
-          {/* El mismo formulario de Registrar acción de personal, con el tipo
-              ya fijado: cualquier acción pide los mismos datos, y el ingreso
-              suma los de la contratación. */}
-          {servidor && categoria && (
+          {/* El mismo formulario de Registrar acción de personal, con la
+              familia ya elegida: cualquier acción pide los mismos datos, y el
+              ingreso suma los de la contratación. */}
+          {servidor && familia && (
             <MovimientoModal
               opened
               onClose={handleCerrar}
               servidorId={servidor.id}
               tipoNombramiento={servidor.contrato_vigente?.tipo_nombramiento}
-              tipoFijo={categoria}
-              titulo={`${TIPO_LABELS[categoria]} — ${[servidor.apellido, servidor.nombre].filter(Boolean).join(' ')}`}
+              sinVinculo={servidor.pendiente_vinculacion === true}
+              familia={familia.codigo}
+              titulo={`${familia.etiqueta} — ${[servidor.apellido, servidor.nombre].filter(Boolean).join(' ')}`}
             />
           )}
         </Tabs.Panel>

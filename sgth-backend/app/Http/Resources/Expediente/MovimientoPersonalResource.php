@@ -25,6 +25,26 @@ class MovimientoPersonalResource extends JsonResource
             'servidor_id'        => $this->servidor_id,
             'tipo_movimiento'    => $this->tipo_movimiento,
             'subtipo_movimiento' => $this->subtipo_movimiento,
+
+            // La clase legal y su nombre, que es lo que se muestra. La pantalla
+            // no arma etiquetas propias: las de la bitácora, que no tiene
+            // clase, también vienen de aquí.
+            'clase'           => $this->clase,
+            'familia'         => $this->clase?->familia(),
+            'etiqueta'        => $this->etiqueta(),
+            'causal'          => $this->causal(),
+            'causal_etiqueta' => $this->causal()?->etiqueta(),
+
+            // Lo que la pantalla decide con cada acción, respondido por el
+            // backend. Antes `taxonomiaAccionPersonal.ts` lo copiaba a mano, y
+            // cada regla nueva había que escribirla dos veces.
+            'toca_el_vinculo'            => $this->tocaElVinculo(),
+            'es_ausencia_temporal'       => $this->esAusenciaTemporal(),
+            'propone_situacion'          => $this->proponeSituacion(),
+            'tiene_efecto_economico'     => (bool) $this->tipo_movimiento?->tieneEfectoEconomico(),
+            'tiene_documento_imprimible' => (bool) $this->tipo_movimiento?->tieneDocumentoImprimible(),
+            'editable_en_formulario'     => $this->editableEnFormulario(),
+
             'categoria'          => $this->categoria,
             'estado'             => $this->estado,
             'descripcion'        => $this->descripcion,

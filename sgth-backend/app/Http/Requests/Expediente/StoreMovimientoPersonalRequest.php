@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests\Expediente;
 
-use App\Enums\SubtipoMovimientoPersonal;
-use App\Enums\TipoMovimientoPersonal;
+use App\Enums\ClaseAccionPersonal;
 use App\Enums\TipoNombramiento;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 
 class StoreMovimientoPersonalRequest extends FormRequest
@@ -15,15 +15,36 @@ class StoreMovimientoPersonalRequest extends FormRequest
         return true;
     }
 
+    /**
+     * `causal` ya tiene nombre en `lang/es/validation.php`, pero es el del visto
+     * bueno («causal del Art. 172 del Código del Trabajo»): aquí sería falso.
+     */
+    public function attributes(): array
+    {
+        return [
+            'clase'  => 'tipo de acción de personal',
+            'causal' => 'causal de la acción',
+        ];
+    }
+
     public function rules(): array
     {
         return [
-            'tipo_movimiento'   => ['required', new Enum(TipoMovimientoPersonal::class)],
-            // La correspondencia tipo ↔ subtipo (obligatoriedad incluida) la
-            // resuelve MovimientoPersonalService::resolverSubtipo(), que da un
-            // mensaje de negocio con los subtipos válidos del tipo elegido.
-            // Aquí solo se comprueba que el valor exista en el enum.
-            'subtipo_movimiento' => ['nullable', new Enum(SubtipoMovimientoPersonal::class)],
+            // La acción se pide por su clase legal. Solo las que se crean desde
+            // este formulario: la subrogación y el encargo nacen en su pantalla,
+            // y la bitácora del expediente no es un acto. Antes la API aceptaba
+            // los dieciocho tipos del enum, así que se podía crear por aquí una
+            // subrogación sin su fila en `subrogaciones` o una «novedad de
+            // contrato» que nacía registrada y sin efecto.
+            'clase' => ['required', Rule::in(array_map(
+                fn (ClaseAccionPersonal $c) => $c->value,
+                array_filter(ClaseAccionPersonal::cases(), fn (ClaseAccionPersonal $c) => $c->seCreaDesdeElFormulario())
+            ))],
+            // Que la causal sea obligatoria, que pertenezca a la clase y que
+            // aplique al nombramiento lo decide
+            // MovimientoPersonalService::registrarPorClase(), con un mensaje que
+            // nombra las causales válidas.
+            'causal' => ['nullable', 'string', 'max:40'],
             // Editable por Talento Humano; si no viene, el servicio aplica el
             // default del tipo/subtipo.
             'requiere_dictamen_medico' => ['nullable', 'boolean'],
@@ -40,7 +61,7 @@ class StoreMovimientoPersonalRequest extends FormRequest
             // 'ingreso' (creaVinculo()), que es el único tipo con formulario
             // hoy. MovimientoPersonalStateService::validarDatosPropuestos()
             // los exige igual al transicionar a 'registrada'.
-            'tipo_nombramiento_propuesto' => ['nullable', 'required_if:tipo_movimiento,ingreso', new Enum(TipoNombramiento::class)],
+            'tipo_nombramiento_propuesto' => ['nullable', 'required_if:clase,ingreso', new Enum(TipoNombramiento::class)],
             // La remuneración ya no se exige al crear: en Código del Trabajo y
             // Servicios Profesionales se negocia en el contrato y no se deriva
             // del puesto. Se pide al aprobar, junto al resto de datos del

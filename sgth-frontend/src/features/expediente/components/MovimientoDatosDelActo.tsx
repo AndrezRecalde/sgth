@@ -6,8 +6,8 @@ import { Controller, useWatch, type UseFormReturn } from 'react-hook-form'
 import { IconInfoCircle } from '@tabler/icons-react'
 import { SectionHeading } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { esComision } from '../utils/taxonomiaAccionPersonal'
 import type { MovimientoFormData } from '../schemas/movimiento.schema'
+import type { ClaseDelCatalogo } from '@/types/api'
 import { FirmantesPanel } from './FirmantesPanel'
 import { fromDateValue, fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 
@@ -16,21 +16,24 @@ import { fromDateValue, fromDateValueOrNull, toDateValue } from '@/lib/fecha'
  * cuándo rige, con qué resolución se respalda, si exige ficha de salud
  * ocupacional y si el puesto pide caución.
  *
- * El período aparte —«desde» y «hasta»— solo en las comisiones de servicios, que
- * es lo único que las define: el servidor no se mueve de puesto.
+ * El período aparte —«desde» y «hasta»— solo en la clase que lo pide —hoy las
+ * comisiones de servicios, que es lo único que las define: el servidor no se
+ * mueve de puesto—.
  */
 export function MovimientoDatosDelActo({
   form,
+  clase,
 }: {
   form: UseFormReturn<MovimientoFormData>
+  /** La clase elegida: de su ficha del catálogo sale si pide período y su aviso. */
+  clase?: ClaseDelCatalogo
 }) {
   const contained = useContainedInput()
   const { control, register, formState: { errors } } = form
 
-  const subtipo = useWatch({ control, name: 'subtipo_movimiento' })
   const caucionado = useWatch({ control, name: 'caucionado' })
 
-  const muestraFechas = esComision(subtipo)
+  const muestraFechas = !!clase?.pide_periodo
 
   return (
     <>
@@ -62,10 +65,11 @@ export function MovimientoDatosDelActo({
 
       {muestraFechas && (
         <>
-          <Alert icon={<IconInfoCircle size={16} />} color="ocean" variant="light">
-            La comisión de servicios dura entre 1 y 6 años, y el servidor
-            necesita al menos 2 años de antigüedad en la institución.
-          </Alert>
+          {clase?.aviso && (
+            <Alert icon={<IconInfoCircle size={16} />} color="ocean" variant="light">
+              {clase.aviso}
+            </Alert>
+          )}
           <Group grow>
             <Controller
               name="fecha_inicio"

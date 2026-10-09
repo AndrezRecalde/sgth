@@ -3427,6 +3427,12 @@
                                                     "type": "integer",
                                                     "minimum": 0
                                                 },
+                                                "reposos": {
+                                                    "type": "integer"
+                                                },
+                                                "dias_reposo": {
+                                                    "type": "integer"
+                                                },
                                                 "meses": {
                                                     "type": "integer",
                                                     "const": 12
@@ -3437,6 +3443,8 @@
                                             },
                                             "required": [
                                                 "permisos",
+                                                "reposos",
+                                                "dias_reposo",
                                                 "meses",
                                                 "desde"
                                             ]
@@ -6586,6 +6594,68 @@
                 }
             }
         },
+        "/v1/expediente/acciones-personal/catalogo": {
+            "get": {
+                "operationId": "expediente.catalogoAccionesPersonal",
+                "tags": [
+                    "CatalogoAccionesPersonal"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Cat\u00e1logo de acciones de personal."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "familias": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/FamiliaAccionPersonalResource"
+                                                    }
+                                                },
+                                                "clases": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/ClaseAccionPersonalResource"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "familias",
+                                                "clases"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/viaticos/catalogos/tipos-transporte": {
             "get": {
                 "operationId": "catalogoViatico.tiposTransporte",
@@ -6733,6 +6803,564 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/asistencia/certificados-medicos": {
+            "get": {
+                "operationId": "asistencia.certificados.index",
+                "tags": [
+                    "CertificadoAprobacion"
+                ],
+                "parameters": [
+                    {
+                        "name": "estado",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "pendiente",
+                                "aprobado",
+                                "anulado"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "folio",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 30
+                        }
+                    },
+                    {
+                        "name": "servidor_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "unidad_administrativa_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "fecha_desde",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "fecha_hasta",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Certificados m\u00e9dicos."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "description": "Sin desempate por id, dos p\u00e1ginas pueden repetir filas.",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/CertificadoMedico"
+                                                    }
+                                                },
+                                                "first_page_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "next_page_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "prev_page_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "data",
+                                                "first_page_url",
+                                                "from",
+                                                "last_page_url",
+                                                "last_page",
+                                                "links",
+                                                "next_page_url",
+                                                "path",
+                                                "per_page",
+                                                "prev_page_url",
+                                                "to",
+                                                "total"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/asistencia/certificados-medicos/{id}/sirha7": {
+            "get": {
+                "operationId": "asistencia.certificados.sirha7.previa",
+                "tags": [
+                    "CertificadoAprobacion"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Lo que se registrar\u00e1 en Sirha7."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "pendiente": {
+                                                    "type": "boolean"
+                                                },
+                                                "motivo": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "registrable_en_sirha7": {
+                                                    "type": "string"
+                                                },
+                                                "motivo_sin_sirha7": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "desde": {
+                                                    "type": "string"
+                                                },
+                                                "hasta": {
+                                                    "type": "string"
+                                                },
+                                                "hora_inicio": {
+                                                    "type": "null"
+                                                },
+                                                "hora_fin": {
+                                                    "type": "null"
+                                                },
+                                                "jornada_completa": {
+                                                    "type": "boolean"
+                                                },
+                                                "referencia": {
+                                                    "type": "string"
+                                                },
+                                                "certificado": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "folio": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "fecha_inicio": {
+                                                            "type": "string"
+                                                        },
+                                                        "fecha_fin": {
+                                                            "type": "string"
+                                                        },
+                                                        "dias_reposo": {
+                                                            "type": "integer"
+                                                        },
+                                                        "medico": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "folio",
+                                                        "fecha_inicio",
+                                                        "fecha_fin",
+                                                        "dias_reposo",
+                                                        "medico"
+                                                    ]
+                                                },
+                                                "cruces": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "folio": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "tipo": {
+                                                                "anyOf": [
+                                                                    {
+                                                                        "type": "string"
+                                                                    },
+                                                                    {
+                                                                        "$ref": "#/components/schemas/TipoPermiso"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "fecha": {
+                                                                "type": "string"
+                                                            },
+                                                            "hora_inicio": {
+                                                                "type": "string"
+                                                            },
+                                                            "hora_fin": {
+                                                                "type": "string"
+                                                            },
+                                                            "estado": {
+                                                                "anyOf": [
+                                                                    {
+                                                                        "type": "string"
+                                                                    },
+                                                                    {
+                                                                        "$ref": "#/components/schemas/EstadoPermiso"
+                                                                    }
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "folio",
+                                                            "tipo",
+                                                            "fecha",
+                                                            "hora_inicio",
+                                                            "hora_fin",
+                                                            "estado"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "pendiente",
+                                                "motivo",
+                                                "registrable_en_sirha7",
+                                                "motivo_sin_sirha7",
+                                                "desde",
+                                                "hasta",
+                                                "hora_inicio",
+                                                "hora_fin",
+                                                "jornada_completa",
+                                                "referencia",
+                                                "certificado",
+                                                "cruces"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/asistencia/certificados-medicos/{id}/aprobar-sirha7": {
+            "post": {
+                "operationId": "asistencia.certificados.sirha7.aprobar",
+                "tags": [
+                    "CertificadoAprobacion"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AprobarPermisoSirha7Request"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/asistencia/certificados-medicos/{id}/aprobar-sin-sirha7": {
+            "post": {
+                "operationId": "asistencia.certificados.aprobar-sin-sirha7",
+                "tags": [
+                    "CertificadoAprobacion"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AprobarCertificadoSinSirha7Request"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Certificado aprobado sin registrarlo en Sirha7."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {}
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -7332,7 +7960,7 @@
             "patch": {
                 "operationId": "dispensario.certificados.anular",
                 "description": "Lo puede hacer quien lo emiti\u00f3 o la administraci\u00f3n del dispensario, la\nmisma regla que ya rige para anular una receta: el mostrador tiene que\npoder corregir cuando el m\u00e9dico ya no est\u00e1.",
-                "summary": "Anula el certificado y, con \u00e9l, el permiso que cre\u00f3",
+                "summary": "Anula el certificado y, si ya se registr\u00f3 en Sirha7, lo retira de all\u00ed",
                 "tags": [
                     "CertificadoMedico"
                 ],
@@ -7377,17 +8005,8 @@
                                             "type": "boolean"
                                         },
                                         "mensaje": {
-                                            "anyOf": [
-                                                {
-                                                    "type": "string"
-                                                },
-                                                {
-                                                    "type": "string",
-                                                    "enum": [
-                                                        "Certificado anulado correctamente."
-                                                    ]
-                                                }
-                                            ]
+                                            "type": "string",
+                                            "const": "Certificado anulado correctamente."
                                         },
                                         "datos": {
                                             "$ref": "#/components/schemas/CertificadoMedico"
@@ -8047,52 +8666,7 @@
                                                     "type": "array",
                                                     "items": {
                                                         "type": "object",
-                                                        "properties": {
-                                                            "servidor_id": {
-                                                                "type": "integer"
-                                                            },
-                                                            "servidor_nombre": {
-                                                                "type": "string"
-                                                            },
-                                                            "cedula": {
-                                                                "type": "string"
-                                                            },
-                                                            "unidad": {
-                                                                "anyOf": [
-                                                                    {
-                                                                        "type": "string"
-                                                                    },
-                                                                    {
-                                                                        "type": "string",
-                                                                        "enum": [
-                                                                            "\u2014"
-                                                                        ]
-                                                                    }
-                                                                ]
-                                                            },
-                                                            "total_permisos": {
-                                                                "type": "integer"
-                                                            },
-                                                            "total_minutos": {
-                                                                "type": "integer"
-                                                            },
-                                                            "tiempo_total": {
-                                                                "type": "string"
-                                                            },
-                                                            "total_dias": {
-                                                                "type": "number"
-                                                            }
-                                                        },
-                                                        "required": [
-                                                            "servidor_id",
-                                                            "servidor_nombre",
-                                                            "cedula",
-                                                            "unidad",
-                                                            "total_permisos",
-                                                            "total_minutos",
-                                                            "tiempo_total",
-                                                            "total_dias"
-                                                        ]
+                                                        "additionalProperties": {}
                                                     }
                                                 },
                                                 "totales": {
@@ -9064,8 +9638,12 @@
                                                                 "subtipo_movimiento": {
                                                                     "type": "string"
                                                                 },
-                                                                "etiqueta": {
+                                                                "clase": {
                                                                     "type": "string"
+                                                                },
+                                                                "etiqueta": {
+                                                                    "type": "string",
+                                                                    "description": "La causal cuando la hay, y si no, el nombre de la clase:\nel mismo que se ve en la bandeja y en el documento."
                                                                 },
                                                                 "codigo_registro": {
                                                                     "type": [
@@ -9102,6 +9680,7 @@
                                                                 "id",
                                                                 "tipo_movimiento",
                                                                 "subtipo_movimiento",
+                                                                "clase",
                                                                 "etiqueta",
                                                                 "codigo_registro",
                                                                 "fecha_efectiva",
@@ -22517,7 +23096,8 @@
         "/v1/asistencia/marcaciones": {
             "get": {
                 "operationId": "marcacion.index",
-                "summary": "Consultar marcaciones de un servidor por c\u00e9dula.\nSolo servidores con puede_marcar = true",
+                "description": "Las de cualquier servidor, quien tiene `ver-asistencia-todos` (Talento\nHumano, m\u00e1xima autoridad, auditor\u00eda: la misma regla con la que se ven\nlas vacaciones de toda la instituci\u00f3n). Los dem\u00e1s, solo las propias.\nAntes bastaba con iniciar sesi\u00f3n para leer las de cualquier c\u00e9dula.\n\nTalento Humano ve tambi\u00e9n el historial de quien ya no marca o ya no\nest\u00e1 activo (decisi\u00f3n del 2026-10-06): antes se exig\u00eda `puede_marcar`,\ny quitarle la marcaci\u00f3n a alguien escond\u00eda todas sus marcaciones\npasadas. A uno mismo se le sigue exigiendo tenerla habilitada.\n\nEl permiso se comprueba antes de buscar al servidor, para que un 404\nno le diga a quien no puede consultar qu\u00e9 c\u00e9dulas existen.\n\nSi el biom\u00e9trico rechaza la c\u00e9dula (de relleno, repartida en varios\nusuarios\u2026) el procedimiento lanza una ReglaNegocioException, que sale\ncomo 422 con su mensaje.",
+                "summary": "Consultar marcaciones de un servidor por c\u00e9dula",
                 "tags": [
                     "Marcacion"
                 ],
@@ -22550,9 +23130,6 @@
                     }
                 ],
                 "responses": {
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "200": {
                         "description": "",
                         "content": {
@@ -22568,7 +23145,9 @@
                                             "const": "Marcaciones obtenidas correctamente."
                                         },
                                         "datos": {
-                                            "type": "string"
+                                            "type": "array",
+                                            "description": "Fechas en ISO b\u00e1sico: el servidor est\u00e1 en espa\u00f1ol (DATEFORMAT dmy).",
+                                            "items": {}
                                         },
                                         "meta": {
                                             "type": "null"
@@ -22584,6 +23163,105 @@
                             }
                         }
                     },
+                    "503": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "No se pudo conectar al sistema biom\u00e9trico."
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "errores": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "errores"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "enum": [
+                                                "No hay un servidor con esa c\u00e9dula en el SGTH.",
+                                                "Su perfil no tiene habilitada la marcaci\u00f3n biom\u00e9trica."
+                                            ]
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "errores": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "errores"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Solo puede consultar sus propias marcaciones."
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "errores": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "errores"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -22593,7 +23271,8 @@
         "/v1/asistencia/marcaciones/online": {
             "post": {
                 "operationId": "asistencia.marcaciones.online",
-                "summary": "Registrar marcaci\u00f3n online.\nUsa la c\u00e9dula del usuario autenticado.\nSolo si puede_marcar = true",
+                "description": "Exige `marcar-en-linea`, que TI asigna persona por persona a pedido de\nTalento Humano; antes bastaba con `puede_marcar` y se marcaba desde\ncualquier lugar. El permiso se comprueba primero, antes incluso de\nvalidar la petici\u00f3n: a quien no lo tiene no se le dice nada m\u00e1s.\n\nLa ubicaci\u00f3n es obligatoria (decisi\u00f3n del 2026-10-06) y se guarda en el\nbiom\u00e9trico. El procedimiento tambi\u00e9n la exige, porque es la \u00fanica\npuerta de escritura del SGTH.",
+                "summary": "Registrar marcaci\u00f3n online, a nombre del usuario autenticado",
                 "tags": [
                     "Marcacion"
                 ],
@@ -22612,59 +23291,38 @@
                                         ]
                                     },
                                     "latitud": {
-                                        "type": [
-                                            "number",
-                                            "null"
-                                        ]
+                                        "type": "number",
+                                        "minimum": -90,
+                                        "maximum": 90
                                     },
                                     "longitud": {
-                                        "type": [
-                                            "number",
-                                            "null"
-                                        ]
+                                        "type": "number",
+                                        "minimum": -180,
+                                        "maximum": 180
                                     }
                                 },
                                 "required": [
-                                    "checktype"
+                                    "checktype",
+                                    "latitud",
+                                    "longitud"
                                 ]
                             }
                         }
                     }
                 },
                 "responses": {
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "200": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Marcaci\u00f3n registrada correctamente."
-                                        },
-                                        "datos": {
-                                            "type": "null"
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
+                                    "type": "object"
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -22675,127 +23333,18 @@
         "/v1/asistencia/marcaciones/estado-hoy": {
             "get": {
                 "operationId": "asistencia.marcaciones.estado-hoy",
+                "description": "El procedimiento devuelve la fila de hoy aunque no haya marcaciones si\nel d\u00eda tiene horario o permiso; sin nada de eso, `datos` es null.",
                 "summary": "Estado de marcaci\u00f3n del d\u00eda para el usuario autenticado.\nUsa la c\u00e9dula del servidor vinculado al usuario",
                 "tags": [
                     "Marcacion"
                 ],
                 "responses": {
-                    "422": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "anyOf": [
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "exito": {
-                                                    "type": "boolean"
-                                                },
-                                                "mensaje": {
-                                                    "type": "string",
-                                                    "const": "No se pudo obtener el estado del d\u00eda."
-                                                },
-                                                "datos": {
-                                                    "type": "null"
-                                                },
-                                                "errores": {
-                                                    "type": "integer",
-                                                    "const": 503
-                                                }
-                                            },
-                                            "required": [
-                                                "exito",
-                                                "mensaje",
-                                                "datos",
-                                                "errores"
-                                            ]
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "exito": {
-                                                    "type": "boolean"
-                                                },
-                                                "mensaje": {
-                                                    "type": "string",
-                                                    "const": "Tu perfil no tiene habilitada la marcaci\u00f3n biom\u00e9trica."
-                                                },
-                                                "datos": {
-                                                    "type": "null"
-                                                },
-                                                "errores": {
-                                                    "type": "integer",
-                                                    "const": 403
-                                                }
-                                            },
-                                            "required": [
-                                                "exito",
-                                                "mensaje",
-                                                "datos",
-                                                "errores"
-                                            ]
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "exito": {
-                                                    "type": "boolean"
-                                                },
-                                                "mensaje": {
-                                                    "type": "string",
-                                                    "const": "Tu usuario no tiene un servidor vinculado."
-                                                },
-                                                "datos": {
-                                                    "type": "null"
-                                                },
-                                                "errores": {
-                                                    "type": "integer",
-                                                    "const": 404
-                                                }
-                                            },
-                                            "required": [
-                                                "exito",
-                                                "mensaje",
-                                                "datos",
-                                                "errores"
-                                            ]
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
                     "200": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Estado de marcaci\u00f3n del d\u00eda."
-                                        },
-                                        "datos": {
-                                            "type": [
-                                                "string",
-                                                "null"
-                                            ]
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
+                                    "type": "object"
                                 }
                             }
                         }
@@ -23053,6 +23602,190 @@
                 }
             }
         },
+        "/v1/autoservicio/mis-certificados-medicos": {
+            "get": {
+                "operationId": "autoservicio.misCertificadosMedicos",
+                "tags": [
+                    "MisCertificadosMedicos"
+                ],
+                "parameters": [
+                    {
+                        "name": "anio",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 2000,
+                            "maximum": 2100
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Mis certificados m\u00e9dicos."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/CertificadoMedico"
+                                                    }
+                                                },
+                                                "first_page_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "next_page_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "prev_page_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "data",
+                                                "first_page_url",
+                                                "from",
+                                                "last_page_url",
+                                                "last_page",
+                                                "links",
+                                                "next_page_url",
+                                                "path",
+                                                "per_page",
+                                                "prev_page_url",
+                                                "to",
+                                                "total"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/expediente/servidores/{servidorId}/movimientos": {
             "get": {
                 "operationId": "movimientoPersonal.index",
@@ -23184,7 +23917,7 @@
         "/v1/expediente/movimientos": {
             "get": {
                 "operationId": "movimientoPersonal.bandeja",
-                "summary": "Bandeja transversal de acciones de personal, para revisarlas y\naprobarlas sin tener que entrar servidor por servidor. A diferencia de\nindex(), no se ancla a un expediente: la autorizaci\u00f3n la da el rol de la\nruta, no la pol\u00edtica sobre un Servidor concreto",
+                "summary": "Bandeja transversal de acciones de personal, para revisarlas y\r\naprobarlas sin tener que entrar servidor por servidor. A diferencia de\r\nindex(), no se ancla a un expediente: la autorizaci\u00f3n la da el rol de la\r\nruta, no la pol\u00edtica sobre un Servidor concreto",
                 "tags": [
                     "MovimientoPersonal"
                 ],
@@ -23198,6 +23931,13 @@
                     },
                     {
                         "name": "tipo_movimiento",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "clase",
                         "in": "query",
                         "schema": {
                             "type": "string"
@@ -23230,7 +23970,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "Por el recurso y no el modelo crudo: el nombre de la acci\u00f3n y lo que\nla pantalla decide con ella \u2014si tiene documento, si se corrige con el\nformulario\u2014 los calcula el backend. `through()` conserva la forma del\npaginador que la bandeja ya lee.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -23244,120 +23984,7 @@
                                             "const": "Bandeja de acciones de personal."
                                         },
                                         "datos": {
-                                            "type": "object",
-                                            "properties": {
-                                                "current_page": {
-                                                    "type": "integer",
-                                                    "minimum": 1
-                                                },
-                                                "data": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "$ref": "#/components/schemas/MovimientoPersonal"
-                                                    }
-                                                },
-                                                "first_page_url": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
-                                                },
-                                                "from": {
-                                                    "type": [
-                                                        "integer",
-                                                        "null"
-                                                    ],
-                                                    "minimum": 1
-                                                },
-                                                "last_page_url": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
-                                                },
-                                                "last_page": {
-                                                    "type": "integer",
-                                                    "minimum": 1
-                                                },
-                                                "links": {
-                                                    "type": "array",
-                                                    "description": "Generated paginator links.",
-                                                    "items": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "url": {
-                                                                "type": [
-                                                                    "string",
-                                                                    "null"
-                                                                ]
-                                                            },
-                                                            "label": {
-                                                                "type": "string"
-                                                            },
-                                                            "active": {
-                                                                "type": "boolean"
-                                                            }
-                                                        },
-                                                        "required": [
-                                                            "url",
-                                                            "label",
-                                                            "active"
-                                                        ]
-                                                    }
-                                                },
-                                                "next_page_url": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
-                                                },
-                                                "path": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ],
-                                                    "description": "Base path for paginator generated URLs."
-                                                },
-                                                "per_page": {
-                                                    "type": "integer",
-                                                    "description": "Number of items shown per page.",
-                                                    "minimum": 0
-                                                },
-                                                "prev_page_url": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
-                                                },
-                                                "to": {
-                                                    "type": [
-                                                        "integer",
-                                                        "null"
-                                                    ],
-                                                    "description": "Number of the last item in the slice.",
-                                                    "minimum": 1
-                                                },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "description": "Total number of items being paginated.",
-                                                    "minimum": 0
-                                                }
-                                            },
-                                            "required": [
-                                                "current_page",
-                                                "data",
-                                                "first_page_url",
-                                                "from",
-                                                "last_page_url",
-                                                "last_page",
-                                                "links",
-                                                "next_page_url",
-                                                "path",
-                                                "per_page",
-                                                "prev_page_url",
-                                                "to",
-                                                "total"
-                                            ]
+                                            "$ref": "#/components/schemas/LengthAwarePaginator"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -23382,7 +24009,7 @@
         "/v1/expediente/movimientos/{movimiento}": {
             "get": {
                 "operationId": "movimientoPersonal.show",
-                "summary": "Detalle completo de una acci\u00f3n, para revisarla antes de aprobarla o\neditarla. Trae las relaciones que el listado omite por peso",
+                "summary": "Detalle completo de una acci\u00f3n, para revisarla antes de aprobarla o\r\neditarla. Trae las relaciones que el listado omite por peso",
                 "tags": [
                     "MovimientoPersonal"
                 ],
@@ -26172,11 +26799,69 @@
                 ],
                 "parameters": [
                     {
+                        "name": "estado",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/EstadoPermiso"
+                        }
+                    },
+                    {
+                        "name": "tipo",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/TipoPermiso"
+                        }
+                    },
+                    {
+                        "name": "servidor_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "unidad_administrativa_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "fecha_desde",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "fecha_hasta",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date-time"
+                        }
+                    },
+                    {
                         "name": "per_page",
                         "in": "query",
                         "schema": {
-                            "type": "integer",
-                            "default": 20
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
                         }
                     }
                 ],
@@ -26327,6 +27012,9 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -26860,6 +27548,239 @@
                                         "datos",
                                         "meta"
                                     ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/asistencia/permisos/sirha7/tipos": {
+            "get": {
+                "operationId": "asistencia.permisos.sirha7.tipos",
+                "tags": [
+                    "PermisoSirha7"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/asistencia/permisos/{id}/sirha7": {
+            "get": {
+                "operationId": "asistencia.permisos.sirha7.previa",
+                "tags": [
+                    "PermisoSirha7"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Lo que se registrar\u00e1 en Sirha7."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "pendiente": {
+                                                    "type": "boolean"
+                                                },
+                                                "motivo": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "desde": {
+                                                    "type": "string"
+                                                },
+                                                "hasta": {
+                                                    "type": "string"
+                                                },
+                                                "hora_inicio": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "hora_fin": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "jornada_completa": {
+                                                    "type": "boolean"
+                                                },
+                                                "referencia": {
+                                                    "type": "string"
+                                                },
+                                                "cruces": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "folio": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "tipo": {
+                                                                "anyOf": [
+                                                                    {
+                                                                        "type": "string"
+                                                                    },
+                                                                    {
+                                                                        "$ref": "#/components/schemas/TipoPermiso"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "fecha": {
+                                                                "type": "string"
+                                                            },
+                                                            "hora_inicio": {
+                                                                "type": "string"
+                                                            },
+                                                            "hora_fin": {
+                                                                "type": "string"
+                                                            },
+                                                            "estado": {
+                                                                "anyOf": [
+                                                                    {
+                                                                        "type": "string"
+                                                                    },
+                                                                    {
+                                                                        "$ref": "#/components/schemas/EstadoPermiso"
+                                                                    }
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "folio",
+                                                            "tipo",
+                                                            "fecha",
+                                                            "hora_inicio",
+                                                            "hora_fin",
+                                                            "estado"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "pendiente",
+                                                "motivo",
+                                                "desde",
+                                                "hasta",
+                                                "hora_inicio",
+                                                "hora_fin",
+                                                "jornada_completa",
+                                                "referencia",
+                                                "cruces"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/asistencia/permisos/{id}/aprobar-sirha7": {
+            "post": {
+                "operationId": "asistencia.permisos.sirha7.aprobar",
+                "tags": [
+                    "PermisoSirha7"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AprobarPermisoSirha7Request"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
                                 }
                             }
                         }
@@ -42178,6 +43099,35 @@
                 ],
                 "title": "AnularVacacionRequest"
             },
+            "AprobarCertificadoSinSirha7Request": {
+                "type": "object",
+                "description": "Aprobar un certificado m\u00e9dico sin que el SGTH escriba en Sirha7, porque TH\nya lo carg\u00f3 a mano all\u00ed. La nota lo deja dicho: qui\u00e9n, cu\u00e1ndo o por qu\u00e9.",
+                "properties": {
+                    "nota": {
+                        "type": "string",
+                        "minLength": 10,
+                        "maxLength": 500
+                    }
+                },
+                "required": [
+                    "nota"
+                ],
+                "title": "AprobarCertificadoSinSirha7Request"
+            },
+            "AprobarPermisoSirha7Request": {
+                "type": "object",
+                "description": "El tipo de Sirha7 con que se registra el permiso. Lo elige siempre quien\naprueba (decisi\u00f3n del 2026-10-07); que exista lo comprueba el servicio\ncontra la lista de Sirha7.",
+                "properties": {
+                    "leave_id": {
+                        "type": "integer",
+                        "minimum": 1
+                    }
+                },
+                "required": [
+                    "leave_id"
+                ],
+                "title": "AprobarPermisoSirha7Request"
+            },
             "AptitudMedica": {
                 "type": "string",
                 "enum": [
@@ -43397,6 +44347,99 @@
                 ],
                 "title": "CategoriaRiesgoLaboral"
             },
+            "CausalAccionPersonalResource": {
+                "type": "object",
+                "properties": {
+                    "codigo": {
+                        "$ref": "#/components/schemas/SubtipoMovimientoPersonal"
+                    },
+                    "etiqueta": {
+                        "type": "string",
+                        "enum": [
+                            "Traslado Administrativo",
+                            "Traspaso",
+                            "Comisi\u00f3n de Servicios con Remuneraci\u00f3n",
+                            "Comisi\u00f3n de Servicios sin Remuneraci\u00f3n",
+                            "Sanci\u00f3n Disciplinaria",
+                            "Renuncia",
+                            "Destituci\u00f3n",
+                            "Jubilaci\u00f3n",
+                            "Incapacidad",
+                            "Contrato Finalizado",
+                            "Visto Bueno"
+                        ]
+                    },
+                    "nombramientos_elegibles": {
+                        "anyOf": [
+                            {
+                                "type": "array",
+                                "prefixItems": [
+                                    {
+                                        "$ref": "#/components/schemas/TipoNombramiento"
+                                    }
+                                ],
+                                "minItems": 1,
+                                "maxItems": 1,
+                                "additionalItems": false
+                            },
+                            {
+                                "type": "array",
+                                "prefixItems": [
+                                    {
+                                        "$ref": "#/components/schemas/TipoNombramiento"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/TipoNombramiento"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/TipoNombramiento"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/TipoNombramiento"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/TipoNombramiento"
+                                    }
+                                ],
+                                "minItems": 5,
+                                "maxItems": 5,
+                                "additionalItems": false
+                            },
+                            {
+                                "type": "array",
+                                "prefixItems": [
+                                    {
+                                        "$ref": "#/components/schemas/TipoNombramiento"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/TipoNombramiento"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/TipoNombramiento"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/TipoNombramiento"
+                                    }
+                                ],
+                                "minItems": 4,
+                                "maxItems": 4,
+                                "additionalItems": false
+                            }
+                        ]
+                    },
+                    "dictamen_medico_por_defecto": {
+                        "type": "boolean",
+                        "description": "En la cesaci\u00f3n es lo mismo que pregunta\nClaseAccionPersonal::dictamenMedicoPorDefecto($causal), que delega\nen el subtipo: jubilaci\u00f3n e incapacidad abren marcadas."
+                    }
+                },
+                "required": [
+                    "codigo",
+                    "etiqueta",
+                    "nombramientos_elegibles",
+                    "dictamen_medico_por_defecto"
+                ],
+                "title": "CausalAccionPersonalResource"
+            },
             "CausalVistoBueno": {
                 "type": "string",
                 "description": "Causales por las que el empleador puede solicitar visto bueno para dar por terminado el contrato de un obrero \u2014 Art. 172 del C\u00f3digo del Trabajo, los siete numerales. No se modelan las del Art. 173 (visto bueno solicitado por el trabajador): confirmado con Talento Humano que el GAD no las registra en el sistema.\n",
@@ -43565,6 +44608,68 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "servidor_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "aprobado_por": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "aprobado_en": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "registro_sirha7": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "nota_aprobacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "sirha7_leave_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "sirha7_leave_nombre": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "sirha7_userid": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "sirha7_referencia": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "sirha7_dias_omitidos": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {}
                     }
                 },
                 "required": [
@@ -43586,9 +44691,117 @@
                     "deleted_at",
                     "anulado_en",
                     "anulado_por",
-                    "motivo_anulacion"
+                    "motivo_anulacion",
+                    "servidor_id",
+                    "aprobado_por",
+                    "aprobado_en",
+                    "registro_sirha7",
+                    "nota_aprobacion",
+                    "sirha7_leave_id",
+                    "sirha7_leave_nombre",
+                    "sirha7_userid",
+                    "sirha7_referencia",
+                    "sirha7_dias_omitidos"
                 ],
                 "title": "CertificadoMedico"
+            },
+            "ClaseAccionPersonal": {
+                "type": "string",
+                "description": "La clase legal de una acci\u00f3n de personal: el acto que se registra, con el nombre que le da la LOSEP (dise\u00f1o de Acciones de Personal, secci\u00f3n 4). Es la identidad p\u00fablica del cat\u00e1logo. El frontend elige una clase \u2014y, en la cesaci\u00f3n, una causal\u2014 y el backend la traduce al par tipo/subtipo con el que todav\u00eda se guarda y opera cada acci\u00f3n. Esa traducci\u00f3n vive aqu\u00ed, en `tipoYSubtipo()`, y su inversa en `desde()`: son las dos \u00fanicas puertas entre los dos vocabularios.  Las reglas no se repiten. La elegibilidad por nombramiento se pregunta a `TipoMovimientoPersonal` y `SubtipoMovimientoPersonal`, que siguen siendo su \u00fanica fuente: esta clase solo las agrupa con el nombre legal. Lo que es solo de formulario \u2014qu\u00e9 bloques pide, el aviso de la comisi\u00f3n\u2014 s\u00ed vive aqu\u00ed, y `CatalogoAccionesPersonalTest` comprueba que coincida con lo que el tipo/subtipo traducido hace de verdad.  Nombres que cambian respecto de los que ve\u00eda Talento Humano, todos aceptados el 2026-10-09 (cuestionario, preguntas N1, 9 y 15):  - el \u00abTraspaso\u00bb de los permanentes y la \u00abPrestaci\u00f3n de servicios\u00bb de los    dem\u00e1s son el mismo acto, el **traslado** del Art. 35;  - el \u00abTraslado administrativo\u00bb entre instituciones es el **intercambio    voluntario** del Art. 39;  - el \u00abCambio de denominaci\u00f3n\u00bb de los obreros es el **cambio de ocupaci\u00f3n**    del Art. 192 del C\u00f3digo del Trabajo.\n",
+                "enum": [
+                    "ingreso",
+                    "traslado",
+                    "intercambio_voluntario",
+                    "comision_con_remuneracion",
+                    "comision_sin_remuneracion",
+                    "licencia_sin_remuneracion",
+                    "subrogacion",
+                    "encargo",
+                    "incremento_remuneracion",
+                    "cambio_ocupacion",
+                    "sancion",
+                    "cesacion"
+                ],
+                "title": "ClaseAccionPersonal"
+            },
+            "ClaseAccionPersonalResource": {
+                "type": "object",
+                "properties": {
+                    "codigo": {
+                        "$ref": "#/components/schemas/ClaseAccionPersonal"
+                    },
+                    "etiqueta": {
+                        "type": "string",
+                        "enum": [
+                            "Ingreso y Vinculaci\u00f3n",
+                            "Traslado",
+                            "Intercambio Voluntario",
+                            "Comisi\u00f3n de Servicios con Remuneraci\u00f3n",
+                            "Comisi\u00f3n de Servicios sin Remuneraci\u00f3n",
+                            "Licencia sin Remuneraci\u00f3n",
+                            "Subrogaci\u00f3n",
+                            "Encargo",
+                            "Incremento de Remuneraci\u00f3n",
+                            "Cambio de Ocupaci\u00f3n",
+                            "Sanci\u00f3n Disciplinaria",
+                            "Cesaci\u00f3n de Funciones"
+                        ]
+                    },
+                    "familia": {
+                        "$ref": "#/components/schemas/FamiliaAccionPersonal"
+                    },
+                    "se_crea_desde_formulario": {
+                        "type": "boolean"
+                    },
+                    "requiere_vinculo": {
+                        "type": "boolean"
+                    },
+                    "nombramientos_elegibles": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TipoNombramiento"
+                        }
+                    },
+                    "causales": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CausalAccionPersonalResource"
+                        }
+                    },
+                    "pide_situacion_propuesta": {
+                        "type": "boolean"
+                    },
+                    "pide_periodo": {
+                        "type": "boolean"
+                    },
+                    "pide_contratacion": {
+                        "type": "boolean"
+                    },
+                    "dictamen_medico_por_defecto": {
+                        "type": "boolean"
+                    },
+                    "aviso": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "codigo",
+                    "etiqueta",
+                    "familia",
+                    "se_crea_desde_formulario",
+                    "requiere_vinculo",
+                    "nombramientos_elegibles",
+                    "causales",
+                    "pide_situacion_propuesta",
+                    "pide_periodo",
+                    "pide_contratacion",
+                    "dictamen_medico_por_defecto",
+                    "aviso"
+                ],
+                "title": "ClaseAccionPersonalResource"
             },
             "ComentarioTicket": {
                 "type": "object",
@@ -46391,6 +47604,45 @@
                 ],
                 "title": "FacturaViatico"
             },
+            "FamiliaAccionPersonal": {
+                "type": "string",
+                "description": "Las familias en que se agrupan las clases de acci\u00f3n de personal en pantalla (dise\u00f1o de Acciones de Personal, secci\u00f3n 4.1). No deciden ninguna regla: solo ordenan el selector de \u00abNueva acci\u00f3n de personal\u00bb. El orden de los casos es el orden en que se muestran.\n",
+                "enum": [
+                    "ingreso",
+                    "cambio_administrativo",
+                    "licencias",
+                    "reemplazo",
+                    "puesto_remuneracion",
+                    "regimen_disciplinario",
+                    "cesacion"
+                ],
+                "title": "FamiliaAccionPersonal"
+            },
+            "FamiliaAccionPersonalResource": {
+                "type": "object",
+                "properties": {
+                    "codigo": {
+                        "$ref": "#/components/schemas/FamiliaAccionPersonal"
+                    },
+                    "etiqueta": {
+                        "type": "string",
+                        "enum": [
+                            "Ingreso",
+                            "Cambio Administrativo",
+                            "Licencias",
+                            "Reemplazo de Autoridades",
+                            "Puesto y Remuneraci\u00f3n",
+                            "R\u00e9gimen Disciplinario",
+                            "Cesaci\u00f3n de Funciones"
+                        ]
+                    }
+                },
+                "required": [
+                    "codigo",
+                    "etiqueta"
+                ],
+                "title": "FamiliaAccionPersonalResource"
+            },
             "FaseProgramaDrogas": {
                 "type": "string",
                 "description": "Las 6 fases del Programa de prevenci\u00f3n integral del uso y consumo de alcohol, tabaco u otras drogas en espacios laborales, seg\u00fan el Instructivo MDT-MSP (Acuerdo Interministerial Nro. MDT-MSP-2019-038, Registro Oficial Nro. 114 del 06/01/2020), secci\u00f3n 5.\n",
@@ -47520,6 +48772,11 @@
                 ],
                 "title": "InventarioMedicina"
             },
+            "LengthAwarePaginator": {
+                "type": "array",
+                "items": {},
+                "title": "LengthAwarePaginator"
+            },
             "LiquidacionViatico": {
                 "type": "object",
                 "properties": {
@@ -48137,6 +49394,16 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "clase": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/ClaseAccionPersonal"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -48190,7 +49457,8 @@
                     "cubre_movimiento_id",
                     "remuneracion_origen",
                     "partida_origen_id",
-                    "motivo_anulacion"
+                    "motivo_anulacion",
+                    "clase"
                 ],
                 "title": "MovimientoPersonal"
             },
@@ -48215,6 +49483,55 @@
                                 "type": "null"
                             }
                         ]
+                    },
+                    "clase": {
+                        "anyOf": [
+                            {
+                                "description": "La clase legal y su nombre, que es lo que se muestra. La pantalla\nno arma etiquetas propias: las de la bit\u00e1cora, que no tiene\nclase, tambi\u00e9n vienen de aqu\u00ed.",
+                                "$ref": "#/components/schemas/ClaseAccionPersonal"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "familia": {
+                        "type": "string"
+                    },
+                    "etiqueta": {
+                        "type": "string"
+                    },
+                    "causal": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/SubtipoMovimientoPersonal"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "causal_etiqueta": {
+                        "type": "string"
+                    },
+                    "toca_el_vinculo": {
+                        "type": "boolean",
+                        "description": "Lo que la pantalla decide con cada acci\u00f3n, respondido por el\nbackend. Antes `taxonomiaAccionPersonal.ts` lo copiaba a mano, y\ncada regla nueva hab\u00eda que escribirla dos veces."
+                    },
+                    "es_ausencia_temporal": {
+                        "type": "boolean"
+                    },
+                    "propone_situacion": {
+                        "type": "boolean"
+                    },
+                    "tiene_efecto_economico": {
+                        "type": "boolean"
+                    },
+                    "tiene_documento_imprimible": {
+                        "type": "boolean"
+                    },
+                    "editable_en_formulario": {
+                        "type": "boolean"
                     },
                     "categoria": {
                         "anyOf": [
@@ -48661,6 +49978,17 @@
                     "servidor_id",
                     "tipo_movimiento",
                     "subtipo_movimiento",
+                    "clase",
+                    "familia",
+                    "etiqueta",
+                    "causal",
+                    "causal_etiqueta",
+                    "toca_el_vinculo",
+                    "es_ausencia_temporal",
+                    "propone_situacion",
+                    "tiene_efecto_economico",
+                    "tiene_documento_imprimible",
+                    "editable_en_formulario",
                     "categoria",
                     "estado",
                     "descripcion",
@@ -49360,6 +50688,66 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "revertido_por": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "revertido_en": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "motivo_reversion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "sirha7_leave_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "sirha7_leave_nombre": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "sirha7_userid": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "sirha7_aprobado_por": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "sirha7_aprobado_en": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "sirha7_dias_omitidos": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {}
+                    },
+                    "pendiente_sirha7": {
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -49389,7 +50777,17 @@
                     "rechazado_en",
                     "motivo_rechazo",
                     "dirigido_a_talento_humano",
-                    "motivo_anulacion"
+                    "motivo_anulacion",
+                    "revertido_por",
+                    "revertido_en",
+                    "motivo_reversion",
+                    "sirha7_leave_id",
+                    "sirha7_leave_nombre",
+                    "sirha7_userid",
+                    "sirha7_aprobado_por",
+                    "sirha7_aprobado_en",
+                    "sirha7_dias_omitidos",
+                    "pendiente_sirha7"
                 ],
                 "title": "PermisoServidor"
             },
@@ -54103,12 +55501,29 @@
             "StoreMovimientoPersonalRequest": {
                 "type": "object",
                 "properties": {
-                    "tipo_movimiento": {
-                        "$ref": "#/components/schemas/TipoMovimientoPersonal"
+                    "clase": {
+                        "type": "string",
+                        "description": "La acci\u00f3n se pide por su clase legal. Solo las que se crean desde\neste formulario: la subrogaci\u00f3n y el encargo nacen en su pantalla,\ny la bit\u00e1cora del expediente no es un acto. Antes la API aceptaba\nlos dieciocho tipos del enum, as\u00ed que se pod\u00eda crear por aqu\u00ed una\nsubrogaci\u00f3n sin su fila en `subrogaciones` o una \u00abnovedad de\ncontrato\u00bb que nac\u00eda registrada y sin efecto.",
+                        "enum": [
+                            "ingreso",
+                            "traslado",
+                            "intercambio_voluntario",
+                            "comision_con_remuneracion",
+                            "comision_sin_remuneracion",
+                            "licencia_sin_remuneracion",
+                            "incremento_remuneracion",
+                            "cambio_ocupacion",
+                            "sancion",
+                            "cesacion"
+                        ]
                     },
-                    "subtipo_movimiento": {
-                        "description": "La correspondencia tipo \u2194 subtipo (obligatoriedad incluida) la\nresuelve MovimientoPersonalService::resolverSubtipo(), que da un\nmensaje de negocio con los subtipos v\u00e1lidos del tipo elegido.\nAqu\u00ed solo se comprueba que el valor exista en el enum.",
-                        "$ref": "#/components/schemas/SubtipoMovimientoPersonal"
+                    "causal": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Que la causal sea obligatoria, que pertenezca a la clase y que\naplique al nombramiento lo decide\nMovimientoPersonalService::registrarPorClase(), con un mensaje que\nnombra las causales v\u00e1lidas.",
+                        "maxLength": 40
                     },
                     "requiere_dictamen_medico": {
                         "type": [
@@ -54266,7 +55681,7 @@
                     }
                 },
                 "required": [
-                    "tipo_movimiento",
+                    "clase",
                     "descripcion",
                     "fecha_efectiva"
                 ],
@@ -54390,17 +55805,12 @@
                         ],
                         "maxLength": 1000
                     },
-                    "unidad_administrativa_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    },
                     "servidor_id": {
                         "type": [
                             "integer",
                             "null"
-                        ]
+                        ],
+                        "description": "Sin `unidad_administrativa_id` ni `creado_por`: la unidad es la del\nservidor y el autor es quien tiene la sesi\u00f3n. Aceptarlos aqu\u00ed\ninvitaba a mandarlos, y la unidad lleg\u00f3 a usarse tal cual."
                     },
                     "jefe_id": {
                         "type": [
@@ -54411,13 +55821,7 @@
                     },
                     "dirigido_a_talento_humano": {
                         "type": "boolean",
-                        "description": "En true, el jefe lo resuelve el servicio y `jefe_id` se ignora:\nver PermisoService::jefeDeTalentoHumano()."
-                    },
-                    "creado_por": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
+                        "description": "En true, el jefe lo resuelve el servicio y `jefe_id` se ignora:\nver PermisoService::jefeDeTalentoHumano(). Solo Talento Humano\npuede pedirlo; lo autoriza el controlador con la policy."
                     }
                 },
                 "required": [

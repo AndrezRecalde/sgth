@@ -3,7 +3,6 @@
 import { Grid, Text } from '@mantine/core'
 import { DetailList, SectionHeading } from '@/components/ui'
 import { BloqueDetalle } from './BloqueDetalle'
-import { esAusenciaTemporal, proponeSituacion } from '../utils/taxonomiaAccionPersonal'
 import { dinero } from '../utils/dinero'
 import type { MovimientoPersonal } from '@/types/api'
 import { formatFecha } from '@/lib/fecha'
@@ -27,11 +26,12 @@ interface Props {
  * servidor entonces — no dónde está hoy.
  */
 export function AccionSituacionBloques({ m, botonEditar }: Props) {
-  const esIngreso = m.tipo_movimiento === 'ingreso'
-  const esSubrogacion = m.tipo_movimiento === 'subrogacion'
-  const subtipo = m.subtipo_movimiento
-  const propone = proponeSituacion(m.tipo_movimiento, subtipo)
-  const ausencia = esAusenciaTemporal(m.tipo_movimiento, subtipo)
+  const esIngreso = m.clase === 'ingreso'
+  // La subrogación y el encargo comparten bloque: los dos ejercen otro puesto
+  // y cobran la diferencia. Qué es cada acción lo responde el backend.
+  const esSubrogacion = m.clase === 'subrogacion' || m.clase === 'encargo'
+  const propone = m.propone_situacion
+  const ausencia = m.es_ausencia_temporal
 
   const diferencia = m.remuneracion_propuesta != null && m.remuneracion_origen != null
     ? Number(m.remuneracion_propuesta) - Number(m.remuneracion_origen)
@@ -80,7 +80,9 @@ export function AccionSituacionBloques({ m, botonEditar }: Props) {
         <Grid.Col span={{ base: 12, sm: 6 }}>
           <BloqueDetalle altoCompleto>
             <SectionHeading
-              title={esSubrogacion ? 'Puesto subrogado' : 'Situación propuesta'}
+              title={esSubrogacion
+                ? (m.clase === 'encargo' ? 'Puesto encargado' : 'Puesto subrogado')
+                : 'Situación propuesta'}
               mb="xs"
             />
             <DetailList columnas={1} items={[

@@ -3,6 +3,7 @@
 namespace App\Services\Expediente;
 
 use App\Enums\CategoriaEventoVinculo;
+use App\Enums\ClaseAccionPersonal;
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\EstadoContrato;
 use App\Enums\SubtipoMovimientoPersonal;
@@ -15,6 +16,92 @@ use Carbon\Carbon;
 
 class MovimientoPersonalService
 {
+    /**
+     * Registra una acción elegida por su clase legal, que es como la pide el
+     * formulario de «Nueva acción de personal».
+     *
+     * Valida lo que es de la clase —que se cree desde el formulario, que traiga
+     * su causal, que aplique al nombramiento vigente— con el nombre que ve
+     * Talento Humano, y la traduce al tipo/subtipo con el que se guarda. El
+     * resto lo hace `registrar()`, igual que para los módulos que crean por
+     * tipo (Disciplinario, reclutamiento, contratos vencidos).
+     */
+    public function registrarPorClase(
+        int $servidorId,
+        ClaseAccionPersonal $clase,
+        ?string $causal,
+        array $datos
+    ): MovimientoPersonal {
+        if (! $clase->seCreaDesdeElFormulario()) {
+            throw new ReglaNegocioException(
+                "\"{$clase->etiqueta()}\" se registra desde su propia pantalla, no desde aquí."
+            );
+        }
+
+        $causalElegida = $this->resolverCausal($clase, $causal);
+
+        $servidor = Servidor::with('contratoVigente')->findOrFail($servidorId);
+        $nombramiento = $servidor->contratoVigente?->tipo_nombramiento;
+
+        if ($clase->requiereVinculo()) {
+            if (! $nombramiento instanceof TipoNombramiento) {
+                throw new ReglaNegocioException(
+                    'El servidor no tiene un contrato vigente con tipo de nombramiento definido.'
+                );
+            }
+
+            if (! $clase->elegiblePara($nombramiento, $causalElegida)) {
+                $etiqueta = $causalElegida
+                    ? "{$clase->etiqueta()} por {$causalElegida->etiqueta()}"
+                    : $clase->etiqueta();
+
+                throw new ReglaNegocioException(
+                    "\"{$etiqueta}\" no aplica para el tipo de nombramiento vigente del servidor ({$nombramiento->etiqueta()})."
+                );
+            }
+        }
+
+        [$tipo, $subtipo] = $clase->tipoYSubtipo($nombramiento, $causalElegida);
+
+        return $this->registrar($servidorId, [
+            ...$datos,
+            'tipo_movimiento'    => $tipo->value,
+            'subtipo_movimiento' => $subtipo?->value,
+            'clase'              => $clase->value,
+        ]);
+    }
+
+    /**
+     * La causal es obligatoria donde la clase la tiene, y no se admite donde no.
+     */
+    private function resolverCausal(ClaseAccionPersonal $clase, ?string $causal): ?SubtipoMovimientoPersonal
+    {
+        if (! $clase->requiereCausal()) {
+            if ($causal !== null) {
+                throw new ReglaNegocioException(
+                    "\"{$clase->etiqueta()}\" no lleva causal."
+                );
+            }
+
+            return null;
+        }
+
+        $elegida = $causal !== null ? SubtipoMovimientoPersonal::tryFrom($causal) : null;
+
+        if (! $elegida || ! in_array($elegida, $clase->causales(), true)) {
+            $validas = implode(', ', array_map(
+                fn (SubtipoMovimientoPersonal $c) => $c->etiqueta(),
+                $clase->causales()
+            ));
+
+            throw new ReglaNegocioException(
+                "Indique la causal de la {$clase->etiqueta()}. Válidas: {$validas}."
+            );
+        }
+
+        return $elegida;
+    }
+
     public function registrar(int $servidorId, array $datos): MovimientoPersonal
     {
         $servidor = Servidor::with('contratoVigente.puesto')->findOrFail($servidorId);

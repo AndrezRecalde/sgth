@@ -6,23 +6,24 @@ import { IconInfoCircle } from '@tabler/icons-react'
 import { ModalFooter } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import type { MovimientoFormData } from '../schemas/movimiento.schema'
-import {
-  SUBTIPO_LABELS, TIPO_LABELS, requiereSubtipo,
-  type AccionSubtipo, type AccionTipo,
-} from '../utils/taxonomiaAccionPersonal'
+import type { CatalogoAccionesPersonal, CausalDelCatalogo, ClaseDelCatalogo } from '@/types/api'
 
 interface Props {
   form: UseFormReturn<MovimientoFormData>
-  /** Tipos ofrecibles para el nombramiento vigente del servidor. */
-  tipos: AccionTipo[]
-  /** Subtipos del tipo elegido, ya filtrados por nombramiento. */
-  subtipos: AccionSubtipo[]
-  tipo?: AccionTipo
-  subtipo?: AccionSubtipo | null
-  /** Con tipo fijo no se vuelve a preguntar: ya se eligió antes de abrir. */
-  tipoFijo?: AccionTipo
-  /** Elegir subtipo arrastra el default del dictamen médico. */
-  elegirSubtipo: (valor: AccionSubtipo | null) => void
+  catalogo: CatalogoAccionesPersonal
+  /** Las clases que se le pueden registrar al servidor, ya filtradas. */
+  clases: ClaseDelCatalogo[]
+  /** Las causales de la clase elegida que aplican a su nombramiento. */
+  causales: CausalDelCatalogo[]
+  claseElegida?: ClaseDelCatalogo
+  causalElegida?: string | null
+  /** Falso cuando la familia elegida deja una sola clase: ya no se pregunta. */
+  preguntaLaClase: boolean
+  /** Sin familia elegida de antemano, las clases se agrupan por la suya. */
+  agruparPorFamilia: boolean
+  /** Elegir arrastra el valor inicial de la ficha de salud ocupacional. */
+  elegirClase: (codigo: string | null) => void
+  elegirCausal: (codigo: string | null) => void
   onCancel: () => void
   onContinuar: () => void
 }
@@ -30,65 +31,75 @@ interface Props {
 /**
  * Primer paso: qué se va a registrar.
  *
- * Es el subtipo el que determina las reglas y el documento, así que este paso
- * sigue haciendo falta incluso con el tipo ya fijado desde el asistente de
- * categorías — saltárselo dejaba un formulario que el backend rechazaba por un
- * dato que nunca se pidió.
+ * Con causal —la cesación— este paso hace falta aunque la clase ya venga
+ * decidida: es la causal la que determina las reglas y el documento, y
+ * saltárselo dejaba un formulario que el backend rechazaba por un dato que
+ * nunca se pidió.
  */
 export function MovimientoPasoTipo({
-  form, tipos, subtipos, tipo, subtipo, tipoFijo, elegirSubtipo, onCancel, onContinuar,
+  form, catalogo, clases, causales, claseElegida, causalElegida, preguntaLaClase,
+  agruparPorFamilia, elegirClase, elegirCausal, onCancel, onContinuar,
 }: Props) {
   const contained = useContainedInput()
   const { control, formState: { errors } } = form
 
-  const puedeAvanzar = !!tipo && (!requiereSubtipo(tipo) || !!subtipo)
+  const pideCausal = !!claseElegida && claseElegida.causales.length > 0
+  const puedeAvanzar = !!claseElegida && (!pideCausal || !!causalElegida)
+
+  const opcion = (c: ClaseDelCatalogo) => ({ value: c.codigo, label: c.etiqueta })
+
+  // Agrupadas en el orden de las familias del catálogo, y sin grupos vacíos.
+  const opciones = agruparPorFamilia
+    ? catalogo.familias
+      .map((f) => ({
+        group: f.etiqueta,
+        items: clases.filter((c) => c.familia === f.codigo).map(opcion),
+      }))
+      .filter((g) => g.items.length > 0)
+    : clases.map(opcion)
 
   return (
     <Stack gap="sm" mt="md">
-      {/* Con tipo fijo no se vuelve a preguntar: ya se eligió en el grid, y
-          ofrecerlo otra vez permitiría contradecirlo. */}
-      {!tipoFijo && (
+      {preguntaLaClase && (
         <Controller
-          name="tipo_movimiento"
+          name="clase"
           control={control}
           render={({ field }) => (
             <Select
               label="Tipo de acción de personal"
-              data={tipos.map((t) => ({ value: t, label: TIPO_LABELS[t] }))}
-              value={field.value}
-              onChange={(v) => {
-                field.onChange(tipos.find((t) => t === v))
-                elegirSubtipo(null)
-              }}
-              error={errors.tipo_movimiento?.message}
+              placeholder="Seleccione el tipo de acción"
+              data={opciones}
+              value={field.value || null}
+              onChange={elegirClase}
+              error={errors.clase?.message}
               {...contained}
             />
           )}
         />
       )}
 
-      {tipo && requiereSubtipo(tipo) && (
+      {pideCausal && (
         <Controller
-          name="subtipo_movimiento"
+          name="causal"
           control={control}
           render={({ field }) => (
             <Select
-              label="Subtipo"
-              placeholder="Seleccione el subtipo"
-              description="Es el subtipo el que determina las reglas y el documento que se imprime."
-              data={subtipos.map((s) => ({ value: s, label: SUBTIPO_LABELS[s] }))}
+              label="Causal"
+              placeholder="Seleccione la causal"
+              description="Es la causal la que determina las reglas y el documento que se imprime."
+              data={causales.map((c) => ({ value: c.codigo, label: c.etiqueta }))}
               value={field.value ?? null}
-              onChange={(v) => elegirSubtipo(subtipos.find((s) => s === v) ?? null)}
-              error={errors.subtipo_movimiento?.message}
+              onChange={elegirCausal}
+              error={errors.causal?.message}
               {...contained}
             />
           )}
         />
       )}
 
-      {tipo && requiereSubtipo(tipo) && subtipos.length === 0 && (
+      {pideCausal && causales.length === 0 && (
         <Alert color="amber" variant="light" icon={<IconInfoCircle size={16} />}>
-          Ningún subtipo de {TIPO_LABELS[tipo]} aplica al nombramiento vigente
+          Ninguna causal de {claseElegida.etiqueta} aplica al nombramiento vigente
           de este servidor.
         </Alert>
       )}

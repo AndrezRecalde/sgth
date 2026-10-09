@@ -16,7 +16,6 @@ import { MovimientoModal } from './MovimientoModal'
 import { CompletarVinculoModal } from './CompletarVinculoModal'
 import { DictamenPresupuestarioModal } from './DictamenPresupuestarioModal'
 import { TONO_ACCION, ESTADO_LABELS } from '../utils/estadoAccionPersonal'
-import { SUBTIPO_LABELS, etiquetaTipoMovimiento } from '../utils/taxonomiaAccionPersonal'
 import type { MovimientoPersonal } from '@/types/api'
 import { formatFecha } from '@/lib/fecha'
 
@@ -49,19 +48,15 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
 
   const contenido = (m: MovimientoPersonal) => {
     const estado = m.estado
-    const esIngreso = m.tipo_movimiento === 'ingreso'
+    const esIngreso = m.clase === 'ingreso'
 
     return (
       <Stack gap="md">
         <Group justify="space-between" align="flex-start">
           <div>
-            <Text fw={600}>
-              {etiquetaTipoMovimiento(m.tipo_movimiento)}
-            </Text>
-            {m.subtipo_movimiento && (
-              <Text size="sm" c="dimmed">
-                {SUBTIPO_LABELS[m.subtipo_movimiento]}
-              </Text>
+            <Text fw={600}>{m.etiqueta}</Text>
+            {m.causal_etiqueta && (
+              <Text size="sm" c="dimmed">{m.causal_etiqueta}</Text>
             )}
           </div>
           {estado && (

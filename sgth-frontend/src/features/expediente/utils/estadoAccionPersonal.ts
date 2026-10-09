@@ -1,4 +1,4 @@
-import type { EstadoAccionPersonal, TipoMovimientoPersonal } from '@/types/api'
+import type { ClaseAccionPersonal, EstadoAccionPersonal } from '@/types/api'
 import type { SemanticTone } from '@/config/design.tokens'
 
 export const ESTADO_LABELS: Record<EstadoAccionPersonal, string> = {
@@ -37,24 +37,12 @@ export const TRANSICIONES: Record<EstadoAccionPersonal, EstadoAccionPersonal[]> 
 }
 
 /**
- * Movimientos históricos genéricos: registran un hecho en el expediente pero
- * no son actos administrativos, así que no tienen documento imprimible. El
- * backend los rechaza igual; esto evita ofrecer un botón que va a fallar.
- *
- * La subrogación salió de esta lista: sí es un acto formal (Art. 21 del
- * Reglamento a la LOSEP) y se imprime con el mismo formato de situación actual
- * y propuesta que las demás. Espeja TipoMovimientoPersonal::tieneDocumentoImprimible().
- */
-const SIN_DOCUMENTO: TipoMovimientoPersonal[] = [
-  'novedad_contrato', 'cambio_puesto', 'egreso', 'cambio_regimen',
-]
-
-/**
  * ¿Este movimiento tiene documento que descargar?
  *
- * Tres condiciones, y la tercera es la que faltaba: el tipo tiene que producir
- * documento, el acto tiene que estar registrado o notificado, y tiene que
- * **llevar correlativo**.
+ * Tres condiciones, y la tercera es la que faltaba: la acción tiene que producir
+ * documento —lo responde el backend en `tiene_documento_imprimible`; la bitácora
+ * del expediente no lo produce—, el acto tiene que estar registrado o
+ * notificado, y tiene que **llevar correlativo**.
  *
  * Sin la tercera, las constancias del expediente ofrecían el botón. Hay filas
  * que nacen directamente en 'registrada' sin pasar por la máquina de estados
@@ -70,12 +58,12 @@ const SIN_DOCUMENTO: TipoMovimientoPersonal[] = [
  */
 export function puedeDescargarPdf(movimiento: {
   estado?: EstadoAccionPersonal | null
-  tipo_movimiento?: TipoMovimientoPersonal | null
+  tiene_documento_imprimible?: boolean
   codigo_registro?: string | null
 }): boolean {
-  const { estado, tipo_movimiento: tipo, codigo_registro: correlativo } = movimiento
+  const { estado, tiene_documento_imprimible: conDocumento, codigo_registro: correlativo } = movimiento
 
-  if (tipo && SIN_DOCUMENTO.includes(tipo)) return false
+  if (!conDocumento) return false
   if (!correlativo) return false
 
   // 'anulada' entró el 2026-09-29: un acto que existió y se anuló sigue
@@ -93,7 +81,7 @@ export function puedeDescargarPdf(movimiento: {
  */
 export function requiereCompletarVinculo(
   estado?: EstadoAccionPersonal | null,
-  tipoMovimiento?: TipoMovimientoPersonal | null,
+  clase?: ClaseAccionPersonal | null,
 ): boolean {
-  return estado === 'suscrita' && tipoMovimiento === 'ingreso'
+  return estado === 'suscrita' && clase === 'ingreso'
 }
