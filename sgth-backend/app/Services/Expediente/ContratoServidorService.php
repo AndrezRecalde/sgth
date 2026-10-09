@@ -6,13 +6,16 @@ use App\Enums\CategoriaEventoVinculo;
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\EstadoContrato;
 use App\Enums\SubtipoMovimientoPersonal;
+use App\Enums\TipoEventoVinculo;
 use App\Enums\TipoMovimientoPersonal;
 use App\Enums\TipoNombramiento;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Estructura\Puesto;
 use App\Models\Expediente\ContratoServidor;
+use App\Models\Expediente\EventoVinculo;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
+use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -68,11 +71,26 @@ class ContratoServidorService
             ->orderBy('id')
             ->get();
 
+        $eventos = EventoVinculo::where('servidor_id', $servidorId)
+            ->with('registradoPor:id,email,servidor_id', 'registradoPor.servidor:id,nombre,apellido')
+            ->orderBy('fecha')
+            ->orderBy('id')
+            ->get();
+
         $cambios = $this->cambiosAuditados($contratos->pluck('id')->all());
 
-        return $contratos->map(function (ContratoServidor $contrato) use ($acciones, $cambios, $fecha) {
+        return $contratos->map(function (ContratoServidor $contrato) use ($acciones, $eventos, $cambios, $fecha) {
             $delContrato = $acciones->filter(
-                fn (MovimientoPersonal $m) => $this->ocurreDurante($m, $contrato)
+                fn (MovimientoPersonal $m) => $this->ocurreDurante($m->fecha_efectiva?->toDateString(), $contrato)
+            )->values();
+
+            // El evento que nombra su contrato va con ese; el que no —la
+            // constancia de una subrogación, que es del subrogante y no de un
+            // contrato— va con el que estaba vigente ese día.
+            $novedades = $eventos->filter(
+                fn (EventoVinculo $e) => $e->contrato_servidor_id !== null
+                    ? $e->contrato_servidor_id === $contrato->id
+                    : $this->ocurreDurante($e->fecha?->toDateString(), $contrato)
             )->values();
 
             $ausencia = $delContrato->first(
@@ -98,6 +116,17 @@ class ContratoServidorService
                     'unidad_destino'     => $m->unidadDestino?->nombre,
                     'puesto_origen'      => $m->puestoOrigen?->cargo?->nombre,
                     'puesto_destino'     => $m->puestoDestino?->cargo?->nombre,
+                ])->all(),
+                // La bitácora: lo que le pasó al vínculo sin ser un acto. Va
+                // aparte de las acciones para que nadie la tome por una.
+                'novedades' => $novedades->map(fn (EventoVinculo $e) => [
+                    'id'                     => $e->id,
+                    'tipo'                   => $e->tipo->value,
+                    'etiqueta'               => $e->tipo->etiqueta(),
+                    'fecha'                  => $e->fecha?->toDateString(),
+                    'descripcion'            => $e->descripcion,
+                    'movimiento_personal_id' => $e->movimiento_personal_id,
+                    'registrado_por'         => $e->registradoPor ? $this->nombreDelUsuario($e->registradoPor) : null,
                 ])->all(),
                 // Situación derivada, no almacenada: se calcula de las acciones
                 // vigentes hoy. Así nunca queda desincronizada cuando el
@@ -172,10 +201,11 @@ class ContratoServidorService
     {
         $usuario = $actividad->causer;
 
-        if (! $usuario) {
-            return null;
-        }
+        return $usuario instanceof User ? $this->nombreDelUsuario($usuario) : null;
+    }
 
+    private function nombreDelUsuario(User $usuario): string
+    {
         $servidor = $usuario->servidor ?? null;
 
         if ($servidor) {
@@ -186,10 +216,8 @@ class ContratoServidorService
     }
 
     /** Una acción pertenece al contrato cuyo período contiene su fecha efectiva. */
-    private function ocurreDurante(MovimientoPersonal $movimiento, ContratoServidor $contrato): bool
+    private function ocurreDurante(?string $fecha, ContratoServidor $contrato): bool
     {
-        $fecha = $movimiento->fecha_efectiva?->toDateString();
-
         if (! $fecha || ! $contrato->fecha_inicio) {
             return false;
         }
@@ -218,11 +246,10 @@ class ContratoServidorService
      * @param  ?MovimientoPersonal  $movimientoOrigen  Cuando este contrato
      *   materializa un MovimientoPersonal ya formal (ingreso vía
      *   creaVinculo(), traslado/ascenso/etc. vía modificaVinculo()), se
-     *   pasa aquí para que sincronizarRegimenServidor() no genere un
-     *   'novedad_contrato' redundante — ese movimiento ya es la bitácora
-     *   legal de mayor jerarquía. Si es null (alta de contrato "suelta",
-     *   sin acto formal previo), sincronizarRegimenServidor() sigue
-     *   generando su propio 'novedad_contrato' como red de seguridad.
+     *   pasa aquí para que sincronizarRegimenServidor() no anote nada más —
+     *   ese movimiento ya es la constancia legal de mayor jerarquía. Si es
+     *   null (alta de contrato "suelta", sin acto formal previo), se anota
+     *   en la bitácora del vínculo que el contrato nació sin acción.
      */
     public function crear(int $servidorId, array $data, ?MovimientoPersonal $movimientoOrigen = null)
     {
@@ -262,7 +289,7 @@ class ContratoServidorService
         $estado = $data['estado'] ?? $contrato->estado;
         $estadoVal = $estado instanceof \App\Enums\EstadoContrato ? $estado->value : (string)$estado;
         if ($estadoVal === 'vigente') {
-            $this->sincronizarRegimenServidor($servidorId, $data, $movimientoOrigen);
+            $this->sincronizarRegimenServidor($servidorId, $data, $movimientoOrigen, $contrato);
         }
 
         return $contrato->load(['puesto.cargo', 'unidadAdministrativa']);
@@ -614,15 +641,19 @@ class ContratoServidorService
      * sincronizarPuestoDesdeVinculo().
      *
      * Si $movimientoOrigen es null (alta de contrato sin acto formal
-     * previo), genera su propio 'novedad_contrato' como red de
-     * seguridad, igual que siempre. Si no es null, ese movimiento (ya
-     * registrado o en camino a registrarse) es la bitácora legal — no se
-     * duplica.
+     * previo), lo anota en la bitácora del vínculo, para que el expediente
+     * diga de dónde salió ese contrato. Si no es null, ese movimiento (ya
+     * registrado o en camino a registrarse) es la constancia — no se duplica.
+     *
+     * Hasta la fase 1.2 del rediseño esa anotación era un MovimientoPersonal
+     * de tipo 'novedad_contrato', que salía en el historial de acciones como
+     * si fuera un acto.
      */
     private function sincronizarRegimenServidor(
         int $servidorId,
         array $data,
-        ?MovimientoPersonal $movimientoOrigen = null
+        ?MovimientoPersonal $movimientoOrigen = null,
+        ?ContratoServidor $contrato = null
     ): void {
         $tipoNombramiento = $data['tipo_nombramiento'] ?? null;
         if (!$tipoNombramiento) return;
@@ -656,27 +687,26 @@ class ContratoServidorService
                 ? ($data['fecha_inicio'] ?? null)
                 : null;
 
-        DB::transaction(function () use ($servidorId, $data, $update, $tipoNombramientoEnum, $movimientoOrigen) {
+        DB::transaction(function () use ($servidorId, $data, $update, $tipoNombramientoEnum, $movimientoOrigen, $contrato) {
             if ($movimientoOrigen === null) {
                 $servidorActual = Servidor::findOrFail($servidorId);
 
-                MovimientoPersonal::create([
-                    'servidor_id'       => $servidorId,
-                    'tipo_movimiento'   => 'novedad_contrato',
-                    'categoria'         => CategoriaEventoVinculo::paraTipoNombramiento($tipoNombramientoEnum),
-                    // Registrada, no borrador: esto es la bitácora de un hecho
-                    // ya consumado —el contrato existe—, no una solicitud
-                    // esperando aprobación. En borrador aparecía en la bandeja
-                    // de Talento Humano pidiendo que alguien "aprobara" algo
-                    // que ya había ocurrido, y admitía editarse y anularse.
-                    'estado'            => EstadoAccionPersonal::REGISTRADA,
-                    'descripcion'       => "Sincronización de vínculo por contrato: {$tipoNombramientoEnum->etiqueta()}.",
-                    'fecha_efectiva'    => $data['fecha_inicio'] ?? now()->toDateString(),
-                    'unidad_origen_id'  => $servidorActual->unidad_administrativa_id,
-                    'unidad_destino_id' => $data['unidad_administrativa_id'] ?? $servidorActual->unidad_administrativa_id,
-                    'puesto_origen_id'  => $servidorActual->puesto_id,
-                    'puesto_destino_id' => $data['puesto_id'] ?? $servidorActual->puesto_id,
-                    'autorizado_por'    => auth()->id(),
+                // Bitácora de un hecho ya consumado —el contrato existe—, no un
+                // acto que alguien deba aprobar.
+                EventoVinculo::create([
+                    'servidor_id'          => $servidorId,
+                    'contrato_servidor_id' => $contrato?->id,
+                    'tipo'                 => TipoEventoVinculo::CONTRATO_REGISTRADO,
+                    'fecha'                => $data['fecha_inicio'] ?? now()->toDateString(),
+                    'descripcion'          => "Contrato registrado sin acción de personal: {$tipoNombramientoEnum->etiqueta()}.",
+                    'datos'                => [
+                        'categoria'         => CategoriaEventoVinculo::paraTipoNombramiento($tipoNombramientoEnum)->value,
+                        'unidad_origen_id'  => $servidorActual->unidad_administrativa_id,
+                        'unidad_destino_id' => $data['unidad_administrativa_id'] ?? $servidorActual->unidad_administrativa_id,
+                        'puesto_origen_id'  => $servidorActual->puesto_id,
+                        'puesto_destino_id' => $data['puesto_id'] ?? $servidorActual->puesto_id,
+                    ],
+                    'registrado_por'       => auth()->id(),
                 ]);
             }
 

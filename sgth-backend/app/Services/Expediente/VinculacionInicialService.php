@@ -19,8 +19,8 @@ use Illuminate\Support\Facades\DB;
  * y produciría un PDF imprimible de un acto que nunca existió. El acto ocurrió
  * en papel; el sistema registra el hecho, no inventa el documento.
  *
- * A cambio, el vínculo queda marcado con su origen y el contrato genera su
- * 'novedad_contrato' como bitácora —la red que ContratoServidorService ya
+ * A cambio, el vínculo queda marcado con su origen y el contrato deja su
+ * entrada en la bitácora del vínculo —la red que ContratoServidorService ya
  * tiende cuando un vínculo aparece sin acción que lo respalde—.
  *
  * Todo lo que ocurra DESPUÉS sobre este vínculo (traspasos, comisiones,
@@ -45,7 +45,7 @@ class VinculacionInicialService
             // No se usa ExpedienteService::crearServidorBasico() a propósito:
             // ese método fabrica un MovimientoPersonal de tipo 'ingreso'
             // fechado hoy, que es justo lo que esta vía existe para evitar.
-            // Aquí el rastro lo deja el 'novedad_contrato' del contrato.
+            // Aquí el rastro lo deja la bitácora del vínculo (EventoVinculo).
             $servidor = Servidor::create([
                 ...$datosServidor,
                 // La antigüedad gobierna comisiones y jubilación. Si no vino

@@ -4,12 +4,14 @@ namespace Tests\Feature\Expediente;
 
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\EstadoSubrogacion;
+use App\Enums\TipoEventoVinculo;
 use App\Enums\TipoSubrogacion;
 use App\Models\Estructura\Cargo;
 use App\Models\Estructura\PartidaPresupuestaria;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Expediente\ContratoServidor;
+use App\Models\Expediente\EventoVinculo;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
 use App\Models\Expediente\Subrogacion;
@@ -312,8 +314,8 @@ test('también si la acción ya estaba suscrita pero sin registrar', function ()
 /**
  * Con la acción ya registrada no se anula nada: un acto administrativo
  * registrado no se borra, y el grafo de estados tampoco lo permite
- * (registrada → [notificada]). Queda constancia, con el mismo criterio que la
- * finalización anticipada.
+ * (registrada → [notificada]). Queda constancia en la bitácora del vínculo, con
+ * el mismo criterio que la finalización anticipada.
  */
 test('cancelar una activa deja constancia en vez de anular el acto', function () {
     $subrogacion = ($this->registrar)();
@@ -329,21 +331,40 @@ test('cancelar una activa deja constancia en vez de anular el acto', function ()
 
     $this->service->cancelar($subrogacion->id, 'El titular se reincorporó.');
 
-    $constancia = MovimientoPersonal::latest('id')->first();
+    $constancia = EventoVinculo::where('subrogacion_id', $subrogacion->id)->sole();
 
-    expect(MovimientoPersonal::count())->toBe($antes + 1)
-        // El acto original no se toca.
+    // El acto original no se toca, y la constancia no es otro acto: hasta la
+    // fase 1.2 era una fila más de acciones de personal, con el mismo tipo que
+    // la de verdad y el botón del PDF.
+    expect(MovimientoPersonal::count())->toBe($antes)
         ->and($movimiento->fresh()->estado)->toBe(EstadoAccionPersonal::REGISTRADA)
-        // Y la constancia es bitácora, no un acto por aprobar: sin categoría y
-        // ya registrada, el mismo criterio que la de `finalizar()`. (Ojo: hoy
-        // la puerta del PDF decide por tipo y no mira la categoría, así que la
-        // fila igual ofrece descargar un documento; eso se arregla en esa
-        // puerta, no aquí.)
-        ->and($constancia->categoria)->toBeNull()
-        ->and($constancia->estado)->toBe(EstadoAccionPersonal::REGISTRADA)
-        ->and($constancia->codigo_registro)->toBeNull()
+        ->and($constancia->tipo)->toBe(TipoEventoVinculo::SUBROGACION_CANCELADA)
+        ->and($constancia->servidor_id)->toBe($subrogacion->servidor_subrogante_id)
+        ->and($constancia->movimiento_personal_id)->toBe($movimiento->id)
         ->and($constancia->descripcion)->toContain('Cancelación de Subrogación')
         ->and($constancia->descripcion)->toContain('El titular se reincorporó.');
+});
+
+test('terminar antes una activa también deja su constancia en la bitácora', function () {
+    $subrogacion = ($this->registrar)();
+    $movimiento  = $subrogacion->movimientoPersonal;
+
+    $movimiento->update(['dictamen_presupuestario_ref' => 'DICT-2026-001']);
+    $this->stateService->transicionar($movimiento->fresh(), EstadoAccionPersonal::SUSCRITA, []);
+    $this->stateService->transicionar($movimiento->fresh(), EstadoAccionPersonal::REGISTRADA, []);
+
+    $antes = MovimientoPersonal::count();
+
+    $this->service->finalizar($subrogacion->id);
+
+    $constancia = EventoVinculo::where('subrogacion_id', $subrogacion->id)->sole();
+
+    expect($subrogacion->fresh()->estado)->toBe(EstadoSubrogacion::FINALIZADA)
+        ->and(MovimientoPersonal::count())->toBe($antes)
+        ->and($constancia->tipo)->toBe(TipoEventoVinculo::SUBROGACION_FINALIZADA)
+        ->and($constancia->movimiento_personal_id)->toBe($movimiento->id)
+        ->and($constancia->fecha->toDateString())->toBe(now()->toDateString())
+        ->and($constancia->descripcion)->toContain('Finalización anticipada de Subrogación');
 });
 
 /**

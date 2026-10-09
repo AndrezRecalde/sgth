@@ -39,9 +39,6 @@ class ConfiguracionReporteMovimientoSeeder extends Seeder
                     'Mapea a "cesación de funciones" de la norma SIITH (renuncia, destitución, '
                         .'jubilación, incapacidad, contrato finalizado y visto bueno) — confirmar '
                         .'con UATH antes de marcarlo reportable.',
-                TipoMovimientoPersonal::EGRESO =>
-                    'Tipo genérico anterior a la taxonomía de dos niveles; las bajas nuevas se '
-                        .'registran como "cesacion_funciones". Se conserva por el histórico.',
                 TipoMovimientoPersonal::TRASPASO =>
                     'Hoy es también subtipo de "cambio administrativo" — confirmar con UATH cuál '
                         .'de los dos reporta SIITH para no duplicar.',

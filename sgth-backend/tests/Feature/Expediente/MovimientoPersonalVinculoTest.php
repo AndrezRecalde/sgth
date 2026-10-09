@@ -252,10 +252,12 @@ test('un traspaso reubica al servidor conservando el mismo contrato', function (
         ->toBe($servidor->contratoVigente->puesto_id)
         ->toBe($this->puestoB->id);
 
-    // Sin duplicado de 'novedad_contrato': solo existe el traspaso mismo.
+    // Sin constancia duplicada: solo existe el traspaso mismo, y el contrato
+    // no se anota en la bitácora como nacido sin acción, porque la tiene.
     $movimientosDelServidor = MovimientoPersonal::where('servidor_id', $servidor->id)->get();
     expect($movimientosDelServidor)->toHaveCount(1);
     expect($movimientosDelServidor->first()->tipo_movimiento->value)->toBe('traspaso');
+    expect(\App\Models\Expediente\EventoVinculo::where('servidor_id', $servidor->id)->exists())->toBeFalse();
 });
 
 // ── End-to-end: prestación de servicios (reubica sin subtipo) ────

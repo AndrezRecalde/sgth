@@ -148,27 +148,19 @@ class MovimientoPersonalService
 
         $datos['puede_marcar'] = $this->resolverPuedeMarcar($datos);
 
-        // Las acciones de personal formales, cualquier tipo con efecto
-        // económico, y cualquier tipo que cree o reestructure un vínculo
-        // (creaVinculo()/modificaVinculo()) nacen en BORRADOR y deben pasar por
+        // Todo lo que entra por aquí es un acto: nace en BORRADOR y pasa por
         // MovimientoPersonalStateService::transicionar() antes de considerarse
-        // registradas; el resto de movimientos históricos conserva el default
-        // de BD (REGISTRADA — ya son hechos consumados).
-        if ($tipoMovimiento->esAccionDePersonal()
-            || $tipoMovimiento->tieneEfectoEconomico()
-            || $tipoMovimiento->modificaVinculo()
-            || $tipoMovimiento->creaVinculo()
-        ) {
-            $datos['estado']    = EstadoAccionPersonal::BORRADOR;
-            $datos['categoria'] = CategoriaEventoVinculo::ACCION_DE_PERSONAL;
-        }
+        // registrado. Hasta la fase 1.2 los movimientos históricos genéricos
+        // —cambio de régimen, novedad de contrato— se saltaban esto y nacían
+        // con el default de BD (REGISTRADA); eran bitácora, y hoy viven en
+        // `eventos_vinculo`.
+        $datos['estado']    = EstadoAccionPersonal::BORRADOR;
+        $datos['categoria'] = CategoriaEventoVinculo::ACCION_DE_PERSONAL;
 
         $movimiento = MovimientoPersonal::create($datos);
 
-        // fresh(), no load(): cuando 'estado'/'categoria' no vienen en
-        // $datos, el modelo en memoria queda con esos atributos en null
-        // hasta releerlo — y el default de BD (estado='registrada') no se
-        // reflejaría en la respuesta que consume el controller/resource.
+        // fresh(), no load(): los defaults de BD que $datos no trae no se
+        // reflejarían en la respuesta que consume el controller/resource.
         return $movimiento->fresh([
             'unidadOrigen', 'unidadDestino', 'puestoOrigen.cargo', 'puestoDestino.cargo', 'autorizadoPor',
         ]);

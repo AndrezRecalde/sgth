@@ -4,6 +4,7 @@ namespace Tests\Feature\Expediente;
 
 use App\Enums\OrigenVinculo;
 use App\Enums\Permiso;
+use App\Enums\TipoEventoVinculo;
 use App\Enums\TipoMovimientoPersonal;
 use App\Enums\TipoNombramiento;
 use App\Exceptions\ReglaNegocioException;
@@ -11,6 +12,7 @@ use App\Models\Estructura\PartidaPresupuestaria;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Expediente\ContratoServidor;
+use App\Models\Expediente\EventoVinculo;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
@@ -145,7 +147,7 @@ test('no se fabrica ninguna acción de personal de ingreso', function () {
     expect($ingresos)->toBe(0);
 });
 
-test('queda la bitácora de novedad que respalda el alta directa', function () {
+test('queda la bitácora del vínculo que respalda el alta directa', function () {
     $datos = ($this->payload)();
 
     $servidor = $this->service->registrar(
@@ -153,19 +155,19 @@ test('queda la bitácora de novedad que respalda el alta directa', function () {
         $datos['vinculo'],
     );
 
-    $bitacora = MovimientoPersonal::where('servidor_id', $servidor->id)
-        ->where('tipo_movimiento', TipoMovimientoPersonal::NOVEDAD_CONTRATO->value)
-        ->exists();
+    $evento = EventoVinculo::where('servidor_id', $servidor->id)->sole();
 
-    expect($bitacora)->toBeTrue();
+    expect($evento->tipo)->toBe(TipoEventoVinculo::CONTRATO_REGISTRADO)
+        ->and($evento->contrato_servidor_id)->toBe($servidor->contratoVigente->id)
+        ->and($evento->fecha->toDateString())->toBe($datos['vinculo']['fecha_inicio']);
 });
 
 /**
- * La bitácora registra un hecho ya consumado: el contrato existe. En borrador
- * aparecía en la bandeja de Talento Humano pidiendo que alguien "aprobara" algo
- * que ya había ocurrido, y admitía editarse y anularse.
+ * Hasta la fase 1.2 la bitácora era un MovimientoPersonal 'novedad_contrato':
+ * salía en el historial de acciones, contaba en la bandeja y ofrecía el botón
+ * del PDF de un acto que nunca existió.
  */
-test('la bitácora nace registrada, no en borrador esperando aprobación', function () {
+test('la bitácora no es una acción de personal', function () {
     $datos = ($this->payload)();
 
     $servidor = $this->service->registrar(
@@ -173,14 +175,10 @@ test('la bitácora nace registrada, no en borrador esperando aprobación', funct
         $datos['vinculo'],
     );
 
-    $bitacora = MovimientoPersonal::where('servidor_id', $servidor->id)
-        ->where('tipo_movimiento', TipoMovimientoPersonal::NOVEDAD_CONTRATO->value)
-        ->firstOrFail();
-
-    expect($bitacora->estado)->toBe(\App\Enums\EstadoAccionPersonal::REGISTRADA);
+    expect(MovimientoPersonal::where('servidor_id', $servidor->id)->exists())->toBeFalse();
 });
 
-test('la bitácora no tiene documento imprimible', function () {
+test('la bitácora no se edita: se anota otra cosa encima', function () {
     $datos = ($this->payload)();
 
     $servidor = $this->service->registrar(
@@ -188,13 +186,10 @@ test('la bitácora no tiene documento imprimible', function () {
         $datos['vinculo'],
     );
 
-    $bitacora = MovimientoPersonal::where('servidor_id', $servidor->id)
-        ->where('tipo_movimiento', TipoMovimientoPersonal::NOVEDAD_CONTRATO->value)
-        ->firstOrFail();
+    $evento = EventoVinculo::where('servidor_id', $servidor->id)->sole();
 
-    expect(fn () => app(\App\Services\Expediente\AccionPersonalPdfService::class)
-        ->generarContent($bitacora->id))
-        ->toThrow(ReglaNegocioException::class, 'no tiene documento imprimible');
+    expect(fn () => $evento->update(['descripcion' => 'Otra cosa']))
+        ->toThrow(ReglaNegocioException::class, 'no se edita');
 });
 
 test('la antigüedad se toma del contrato cuando no se declara fecha de ingreso', function () {

@@ -6,11 +6,13 @@ use App\Contracts\Expediente\SubrogacionServiceInterface;
 use App\Enums\CategoriaEventoVinculo;
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\EstadoSubrogacion;
+use App\Enums\TipoEventoVinculo;
 use App\Enums\TipoSubrogacion;
 use App\Enums\PartidaPorModalidad;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Estructura\PartidaPresupuestaria;
 use App\Models\Estructura\Puesto;
+use App\Models\Expediente\EventoVinculo;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Subrogacion;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -377,22 +379,16 @@ class SubrogacionService implements SubrogacionServiceInterface
                 'estado' => EstadoSubrogacion::FINALIZADA
             ]);
 
-            // Bitácora del expediente, no un acto administrativo nuevo: va sin
-            // categoría a propósito —eso es lo que lo distingue de la acción
-            // que abrió la subrogación— y en REGISTRADA, que es un hecho
-            // consumado y no algo por aprobar. El estado se declara en vez de
-            // heredar el default de BD para que se lea aquí y no en una
-            // migración de hace meses.
-            MovimientoPersonal::create([
-                'servidor_id'     => $subrogacion->servidor_subrogante_id,
-                'tipo_movimiento' => 'subrogacion',
-                'clase'           => $subrogacion->tipo->value,
-                'estado'          => EstadoAccionPersonal::REGISTRADA,
-                'descripcion'     => "Finalización anticipada de {$subrogacion->tipo->etiqueta()}: "
+            // Bitácora del vínculo, no un acto administrativo nuevo: un hecho
+            // consumado que nadie tiene que aprobar. Hasta la fase 1.2 era un
+            // MovimientoPersonal de tipo 'subrogacion' sin correlativo, y en el
+            // historial no se distinguía de la acción que abrió la subrogación.
+            $this->anotarEnLaBitacora(
+                $subrogacion,
+                TipoEventoVinculo::SUBROGACION_FINALIZADA,
+                "Finalización anticipada de {$subrogacion->tipo->etiqueta()}: "
                     ."terminó antes del {$subrogacion->fecha_fin->format('d/m/Y')} previsto.",
-                'fecha_efectiva'  => now()->toDateString(),
-                'autorizado_por'  => auth()->id(),
-            ]);
+            );
 
             return $subrogacion;
         });
@@ -477,19 +473,11 @@ class SubrogacionService implements SubrogacionServiceInterface
      *   heredando el motivo de la cancelación.
      * - REGISTRADA o NOTIFICADA (la subrogación estaba ACTIVA): un acto
      *   administrativo registrado no se borra, y el grafo de estados tampoco lo
-     *   permite. Queda constancia en el historial con el mismo criterio que la
-     *   finalización anticipada: sin categoría y ya en REGISTRADA, que es un
-     *   hecho consumado y no algo por aprobar.
+     *   permite. Queda constancia en la bitácora del vínculo, igual que la
+     *   finalización anticipada.
      *
-     * Aviso sobre esa constancia, para que nadie se apoye en más de lo que hay:
-     * `categoria` en null la distingue en los datos, pero HOY no la distingue
-     * en la interfaz. Ni `TipoMovimientoPersonal::tieneDocumentoImprimible()`
-     * —que decide por tipo, y subrogación imprime— ni `puedeDescargarPdf()` en
-     * el frontend miran la categoría, así que la fila sale en el historial con
-     * el botón de descargar PDF activo y genera un documento de Acción de
-     * Personal con los firmantes en blanco, porque nunca se suscribió. Ya pasa
-     * con la bitácora de `finalizar()`: esto no lo introduce, lo repite. El
-     * arreglo va en esa puerta, no aquí.
+     * Hasta la fase 1.2 esa constancia era una fila de `movimientos_personal`
+     * con el tipo de la acción, y salía en el historial con el botón del PDF.
      *
      * Las subrogaciones anteriores al enlace (2026-08-04) no tienen acción: ahí
      * no hay nada que cerrar.
@@ -525,15 +513,32 @@ class SubrogacionService implements SubrogacionServiceInterface
             return;
         }
 
-        MovimientoPersonal::create([
-            'servidor_id'     => $subrogacion->servidor_subrogante_id,
-            'tipo_movimiento' => 'subrogacion',
-            'clase'           => $subrogacion->tipo->value,
-            'estado'          => EstadoAccionPersonal::REGISTRADA,
-            'descripcion'     => "Cancelación de {$subrogacion->tipo->etiqueta()}: dejó de surtir "
+        $this->anotarEnLaBitacora(
+            $subrogacion,
+            TipoEventoVinculo::SUBROGACION_CANCELADA,
+            "Cancelación de {$subrogacion->tipo->etiqueta()}: dejó de surtir "
                 ."efecto antes del {$subrogacion->fecha_fin->format('d/m/Y')} previsto. {$motivo}",
-            'fecha_efectiva'  => now()->toDateString(),
-            'autorizado_por'  => auth()->id(),
+        );
+    }
+
+    /**
+     * Constancia de lo que le pasó a una subrogación después de surtir efecto,
+     * en la bitácora del subrogante. Enlaza la subrogación y la acción que la
+     * respaldaba, que antes había que adivinar por la fecha.
+     */
+    private function anotarEnLaBitacora(
+        Subrogacion $subrogacion,
+        TipoEventoVinculo $tipo,
+        string $descripcion
+    ): void {
+        EventoVinculo::create([
+            'servidor_id'            => $subrogacion->servidor_subrogante_id,
+            'subrogacion_id'         => $subrogacion->id,
+            'movimiento_personal_id' => $subrogacion->movimiento_personal_id,
+            'tipo'                   => $tipo,
+            'fecha'                  => now()->toDateString(),
+            'descripcion'            => $descripcion,
+            'registrado_por'         => auth()->id(),
         ]);
     }
 

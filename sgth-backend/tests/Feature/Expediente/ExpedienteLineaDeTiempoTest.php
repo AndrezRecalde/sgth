@@ -4,7 +4,9 @@ namespace Tests\Feature\Expediente;
 
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
+use App\Enums\TipoEventoVinculo;
 use App\Models\Expediente\ContratoServidor;
+use App\Models\Expediente\EventoVinculo;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
@@ -38,7 +40,7 @@ beforeEach(function () {
 });
 
 /**
- * ContratoServidor y MovimientoPersonal tienen secuencias de id
+ * ContratoServidor, MovimientoPersonal y EventoVinculo tienen secuencias de id
  * independientes: no basta con filtrar por referencia.id (podrían
  * coincidir entre un vínculo y un evento). Se filtra también por
  * referencia.modelo.
@@ -82,18 +84,21 @@ test('la línea de tiempo une vínculos y eventos ordenados, con el régimen jur
         'autorizado_por' => $this->user->id,
     ]);
 
-    $eventoCodigoTrabajo = MovimientoPersonal::create([
+    // Una entrada de la bitácora del vínculo: entra en la línea, con su
+    // régimen, pero como 'novedad' y no como 'evento'.
+    $novedadCodigoTrabajo = EventoVinculo::create([
         'servidor_id' => $this->servidor->id,
-        'tipo_movimiento' => 'novedad_contrato',
+        'contrato_servidor_id' => $vinculo2->id,
+        'tipo' => TipoEventoVinculo::CONTRATO_REGISTRADO,
         'descripcion' => 'Cambio a código de trabajo',
-        'fecha_efectiva' => '2020-06-15',
-        'autorizado_por' => $this->user->id,
+        'fecha' => '2020-06-15',
+        'registrado_por' => $this->user->id,
     ]);
 
     $linea = $this->service->lineaDeTiempo($this->servidor->id);
 
-    // 6 ítems: 2 vínculos iniciados + 1 vínculo cerrado + 2 eventos... y el
-    // vínculo 2 (vigente) no genera 'vinculo_cerrado'.
+    // 5 ítems: 2 vínculos iniciados + 1 vínculo cerrado + 1 evento + 1
+    // novedad; el vínculo 2 (vigente) no genera 'vinculo_cerrado'.
     expect($linea)->toHaveCount(5);
 
     // Orden cronológico estricto.
@@ -105,7 +110,8 @@ test('la línea de tiempo une vínculos y eventos ordenados, con el régimen jur
     $porTipo = $linea->groupBy('tipo');
     expect($porTipo->get('vinculo_iniciado'))->toHaveCount(2);
     expect($porTipo->get('vinculo_cerrado'))->toHaveCount(1);
-    expect($porTipo->get('evento'))->toHaveCount(2);
+    expect($porTipo->get('evento'))->toHaveCount(1);
+    expect($porTipo->get('novedad'))->toHaveCount(1);
 
     // El vínculo cerrado es el de servicios ocasionales, con su motivo_fin.
     $cierre = $porTipo->get('vinculo_cerrado')->first();
@@ -117,10 +123,11 @@ test('la línea de tiempo une vínculos y eventos ordenados, con el régimen jur
     expect($eventoLosepItem['regimen_juridico'])->toBe('losep');
     expect($eventoLosepItem['regimen_resuelto_por'])->toBe('vinculo_exacto');
 
-    // El evento de 2020 cae dentro del vínculo de Código de Trabajo.
-    $eventoCtItem = itemDeLinea($linea, 'MovimientoPersonal', $eventoCodigoTrabajo->id);
-    expect($eventoCtItem['regimen_juridico'])->toBe('codigo_trabajo');
-    expect($eventoCtItem['regimen_resuelto_por'])->toBe('vinculo_exacto');
+    // La novedad de 2020 cae dentro del vínculo de Código de Trabajo.
+    $novedadCtItem = itemDeLinea($linea, 'EventoVinculo', $novedadCodigoTrabajo->id);
+    expect($novedadCtItem['regimen_juridico'])->toBe('codigo_trabajo');
+    expect($novedadCtItem['regimen_resuelto_por'])->toBe('vinculo_exacto');
+    expect($novedadCtItem['tipo_novedad'])->toBe('contrato_registrado');
 });
 
 test('un evento en un hueco entre contratos se resuelve como vinculo_mas_cercano, no como exacto', function () {
@@ -208,12 +215,13 @@ test('un vínculo de servicios profesionales se marca codigo_civil_losncp, no co
         'estado' => 'vigente',
     ]);
 
-    $evento = MovimientoPersonal::create([
+    $evento = EventoVinculo::create([
         'servidor_id' => $this->servidor->id,
-        'tipo_movimiento' => 'novedad_contrato',
+        'contrato_servidor_id' => $vinculoServiciosProfesionales->id,
+        'tipo' => TipoEventoVinculo::CONTRATO_REGISTRADO,
         'descripcion' => 'Evento durante el contrato de servicios profesionales',
-        'fecha_efectiva' => '2022-06-15',
-        'autorizado_por' => $this->user->id,
+        'fecha' => '2022-06-15',
+        'registrado_por' => $this->user->id,
     ]);
 
     $linea = $this->service->lineaDeTiempo($this->servidor->id);
@@ -224,7 +232,7 @@ test('un vínculo de servicios profesionales se marca codigo_civil_losncp, no co
     expect($vinculoItem['regimen_juridico'])->not->toBe('codigo_trabajo');
 
     // El evento resuelto vía ese vínculo (vinculo_exacto).
-    $eventoItem = itemDeLinea($linea, 'MovimientoPersonal', $evento->id);
+    $eventoItem = itemDeLinea($linea, 'EventoVinculo', $evento->id);
     expect($eventoItem['regimen_resuelto_por'])->toBe('vinculo_exacto');
     expect($eventoItem['regimen_juridico'])->toBe('codigo_civil_losncp');
     expect($eventoItem['regimen_juridico'])->not->toBe('codigo_trabajo');

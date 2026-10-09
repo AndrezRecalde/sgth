@@ -9694,6 +9694,59 @@
                                                             ]
                                                         }
                                                     },
+                                                    "novedades": {
+                                                        "type": "array",
+                                                        "description": "La bit\u00e1cora: lo que le pas\u00f3 al v\u00ednculo sin ser un acto. Va\naparte de las acciones para que nadie la tome por una.",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "tipo": {
+                                                                    "type": "string"
+                                                                },
+                                                                "etiqueta": {
+                                                                    "type": "string",
+                                                                    "enum": [
+                                                                        "Contrato registrado sin acci\u00f3n de personal",
+                                                                        "Fin anticipado de subrogaci\u00f3n o encargo",
+                                                                        "Cancelaci\u00f3n de subrogaci\u00f3n o encargo",
+                                                                        "Cambio de puesto",
+                                                                        "Cambio de r\u00e9gimen",
+                                                                        "Egreso"
+                                                                    ]
+                                                                },
+                                                                "fecha": {
+                                                                    "type": "string"
+                                                                },
+                                                                "descripcion": {
+                                                                    "type": "string"
+                                                                },
+                                                                "movimiento_personal_id": {
+                                                                    "type": [
+                                                                        "integer",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "registrado_por": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "id",
+                                                                "tipo",
+                                                                "etiqueta",
+                                                                "fecha",
+                                                                "descripcion",
+                                                                "movimiento_personal_id",
+                                                                "registrado_por"
+                                                            ]
+                                                        }
+                                                    },
                                                     "situacion": {
                                                         "type": [
                                                             "object",
@@ -9768,6 +9821,7 @@
                                                 "required": [
                                                     "contrato",
                                                     "acciones",
+                                                    "novedades",
                                                     "situacion",
                                                     "reemplaza_a",
                                                     "cambios"
@@ -57382,11 +57436,7 @@
                     "traslado",
                     "subrogacion",
                     "comision_servicios",
-                    "cambio_regimen",
-                    "cambio_puesto",
                     "ingreso",
-                    "egreso",
-                    "novedad_contrato",
                     "cambio_denominacion",
                     "prestacion_servicios",
                     "cambio_administrativo",

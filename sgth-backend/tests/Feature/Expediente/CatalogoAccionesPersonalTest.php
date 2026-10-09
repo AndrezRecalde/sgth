@@ -345,7 +345,7 @@ test('lo que los módulos crean por tipo recibe su clase sin pedirla', function 
         ->and($m->etiqueta())->toBe('Cambio de Ocupación');
 });
 
-test('los tipos antiguos y la bitácora se clasifican como el resto del módulo los opera', function () {
+test('los tipos antiguos se clasifican como el resto del módulo los opera', function () {
     $servidor = ($this->servidorCon)(TipoNombramiento::PERMANENTE);
 
     $crear = fn (TipoMovimientoPersonal $tipo) => MovimientoPersonal::create([
@@ -358,9 +358,7 @@ test('los tipos antiguos y la bitácora se clasifican como el resto del módulo 
     expect($crear(TipoMovimientoPersonal::TRASPASO)->clase)->toBe(ClaseAccionPersonal::TRASLADO)
         ->and($crear(TipoMovimientoPersonal::TRASLADO)->clase)->toBe(ClaseAccionPersonal::INTERCAMBIO_VOLUNTARIO)
         ->and($crear(TipoMovimientoPersonal::COMISION_SERVICIOS)->clase)->toBe(ClaseAccionPersonal::COMISION_CON_REMUNERACION)
-        ->and($crear(TipoMovimientoPersonal::DESTITUCION)->causal())->toBe(SubtipoMovimientoPersonal::DESTITUCION)
-        ->and($crear(TipoMovimientoPersonal::NOVEDAD_CONTRATO)->clase)->toBeNull()
-        ->and($crear(TipoMovimientoPersonal::NOVEDAD_CONTRATO)->etiqueta())->toBe('Novedad de Contrato');
+        ->and($crear(TipoMovimientoPersonal::DESTITUCION)->causal())->toBe(SubtipoMovimientoPersonal::DESTITUCION);
 });
 
 test('un encargo sigue siendo encargo aunque la acción se edite', function () {

@@ -53,9 +53,36 @@ export type CambioDeVinculo = {
   motivo: string | null
 }
 
+/** Lo que la bitácora del vínculo sabe anotar (TipoEventoVinculo). */
+export type TipoNovedadVinculo =
+  | 'contrato_registrado'
+  | 'subrogacion_finalizada'
+  | 'subrogacion_cancelada'
+  // Tipos anteriores que el sistema ya no genera; solo los trae el histórico.
+  | 'cambio_puesto'
+  | 'cambio_regimen'
+  | 'egreso'
+
+/**
+ * Una entrada de la bitácora del vínculo: algo que le pasó al contrato sin ser
+ * un acto —se registró sin acción de personal, una subrogación terminó antes—.
+ * Hasta la fase 1.2 venían mezcladas con las acciones.
+ */
+export type NovedadDelVinculo = {
+  id: number
+  tipo: TipoNovedadVinculo
+  etiqueta: string
+  fecha: string | null
+  descripcion: string
+  /** La acción a la que se refiere, si la hay: la de la subrogación. */
+  movimiento_personal_id: number | null
+  registrado_por: string | null
+}
+
 export type VinculoConActividad = {
   contrato: ContratoConRelaciones
   acciones: AccionSobreVinculo[]
+  novedades: NovedadDelVinculo[]
   situacion: SituacionVinculo | null
   reemplaza_a: ReemplazoDeVinculo | null
   cambios: CambioDeVinculo[]

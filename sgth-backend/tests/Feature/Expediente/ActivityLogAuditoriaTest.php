@@ -4,10 +4,12 @@ namespace Tests\Feature\Expediente;
 
 use App\Enums\CategoriaEventoVinculo;
 use App\Enums\EstadoAccionPersonal;
+use App\Enums\TipoEventoVinculo;
 use App\Models\Estructura\PartidaPresupuestaria;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Expediente\ContratoServidor;
+use App\Models\Expediente\EventoVinculo;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
@@ -168,7 +170,7 @@ test('el cierre automático de un contrato vigente al activar uno nuevo también
 
 // ── 3. sincronizarRegimenServidor(): MovimientoPersonal + activity_log ──
 
-test('sincronizarRegimenServidor genera el MovimientoPersonal (fase 1) Y la entrada de activity_log (fase 2c) en la misma llamada', function () {
+test('sincronizarRegimenServidor anota la bitácora del vínculo (fase 1) Y la entrada de activity_log (fase 2c) en la misma llamada', function () {
     expect(MovimientoPersonal::where('servidor_id', $this->servidor->id)->count())->toBe(0);
     Activity::query()->delete();
 
@@ -180,11 +182,12 @@ test('sincronizarRegimenServidor genera el MovimientoPersonal (fase 1) Y la entr
         'estado' => 'vigente',
     ]);
 
-    // Fase 1: el MovimientoPersonal de sincronización.
-    $movimiento = MovimientoPersonal::where('servidor_id', $this->servidor->id)
-        ->where('tipo_movimiento', 'novedad_contrato')
+    // Fase 1: la bitácora del vínculo (hasta la fase 1.2 del rediseño, un
+    // MovimientoPersonal 'novedad_contrato').
+    $evento = EventoVinculo::where('servidor_id', $this->servidor->id)
+        ->where('tipo', TipoEventoVinculo::CONTRATO_REGISTRADO->value)
         ->first();
-    expect($movimiento)->not->toBeNull();
+    expect($evento)->not->toBeNull();
 
     // Fase 2c: la entrada de activity_log sobre el Servidor mismo.
     $log = Activity::where('subject_type', Servidor::class)

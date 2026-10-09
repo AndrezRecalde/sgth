@@ -10624,7 +10624,7 @@ export interface components {
          * TipoMovimientoPersonal
          * @enum {string}
          */
-        TipoMovimientoPersonal: "traslado" | "subrogacion" | "comision_servicios" | "cambio_regimen" | "cambio_puesto" | "ingreso" | "egreso" | "novedad_contrato" | "cambio_denominacion" | "prestacion_servicios" | "cambio_administrativo" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "traspaso" | "destitucion" | "cesacion_funciones" | "regimen_disciplinario";
+        TipoMovimientoPersonal: "traslado" | "subrogacion" | "comision_servicios" | "ingreso" | "cambio_denominacion" | "prestacion_servicios" | "cambio_administrativo" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "traspaso" | "destitucion" | "cesacion_funciones" | "regimen_disciplinario";
         /**
          * TipoNombramiento
          * @enum {string}
@@ -15902,6 +15902,20 @@ export interface operations {
                                 unidad_destino: string;
                                 puesto_origen: string;
                                 puesto_destino: string;
+                            }[];
+                            /**
+                             * @description La bitácora: lo que le pasó al vínculo sin ser un acto. Va
+                             *     aparte de las acciones para que nadie la tome por una.
+                             */
+                            novedades: {
+                                id: number;
+                                tipo: string;
+                                /** @enum {string} */
+                                etiqueta: "Contrato registrado sin acción de personal" | "Fin anticipado de subrogación o encargo" | "Cancelación de subrogación o encargo" | "Cambio de puesto" | "Cambio de régimen" | "Egreso";
+                                fecha: string;
+                                descripcion: string;
+                                movimiento_personal_id: number | null;
+                                registrado_por: string | null;
                             }[];
                             /**
                              * @description Situación derivada, no almacenada: se calcula de las acciones
