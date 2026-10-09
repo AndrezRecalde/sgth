@@ -121,10 +121,14 @@ test('asistente-uath puede trabajar las acciones de personal que sus rutas le co
         'estado' => 'notificada',
     ])->assertOk();
 
+    // Desde la fase 1.1 la API crea por clase y solo las del formulario: la
+    // «novedad de contrato» que usaba esta prueba es bitácora y ya no entra.
     $this->postJson("/api/v1/expediente/servidores/{$this->servidorAjeno->id}/movimientos", [
-        'tipo_movimiento' => \App\Enums\TipoMovimientoPersonal::NOVEDAD_CONTRATO->value,
-        'descripcion'     => 'Registro de bitácora',
-        'fecha_efectiva'  => '2026-09-01',
+        'clase'                       => \App\Enums\ClaseAccionPersonal::INGRESO->value,
+        'tipo_nombramiento_propuesto' => \App\Enums\TipoNombramiento::SERVICIOS_OCASIONALES->value,
+        'requiere_dictamen_medico'    => false,
+        'descripcion'                 => 'Ingreso registrado por el asistente',
+        'fecha_efectiva'              => '2026-09-01',
     ])->assertCreated();
 });
 

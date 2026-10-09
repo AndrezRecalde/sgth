@@ -676,6 +676,27 @@ export type ContratoConRelaciones = ContratoServidor & {
 export type TipoMovimientoPersonal = components['schemas']['TipoMovimientoPersonal']
 export type SubtipoMovimientoPersonal = components['schemas']['SubtipoMovimientoPersonal']
 
+/**
+ * La clase legal de una acción —traslado, cesación, encargo…— y la familia en
+ * que se agrupa en pantalla. Es como se piden y se muestran las acciones desde
+ * la fase 1.1 del rediseño; el par tipo/subtipo queda para lo que el backend
+ * todavía opera con él. ←AUTO
+ */
+export type ClaseAccionPersonal = components['schemas']['ClaseAccionPersonal']
+export type FamiliaAccionPersonal = components['schemas']['FamiliaAccionPersonal']
+
+/**
+ * El catálogo de acciones de personal, servido por el backend. Sustituye a la
+ * copia a mano que vivía en `taxonomiaAccionPersonal.ts`. ←AUTO
+ */
+export type ClaseDelCatalogo = components['schemas']['ClaseAccionPersonalResource']
+export type CausalDelCatalogo = components['schemas']['CausalAccionPersonalResource']
+export type FamiliaDelCatalogo = components['schemas']['FamiliaAccionPersonalResource']
+export type CatalogoAccionesPersonal = {
+  familias: FamiliaDelCatalogo[]
+  clases: ClaseDelCatalogo[]
+}
+
 export type EstadoAccionPersonal =
   | 'borrador'
   | 'suscrita'
@@ -693,6 +714,22 @@ export type MovimientoPersonal = {
   servidor_id: number
   tipo_movimiento: TipoMovimientoPersonal
   subtipo_movimiento?: SubtipoMovimientoPersonal | null
+  /** Null en la bitácora del expediente, que no es un acto. */
+  clase?: ClaseAccionPersonal | null
+  familia?: FamiliaAccionPersonal | null
+  /** El nombre que se muestra: el de la clase, o el del tipo en la bitácora. */
+  etiqueta: string
+  /** Hoy solo en la cesación: renuncia, destitución, jubilación… */
+  causal?: SubtipoMovimientoPersonal | null
+  causal_etiqueta?: string | null
+  // Lo que la pantalla decide con cada acción. Lo calcula el backend; antes se
+  // copiaba a mano en el frontend.
+  toca_el_vinculo: boolean
+  es_ausencia_temporal: boolean
+  propone_situacion: boolean
+  tiene_efecto_economico: boolean
+  tiene_documento_imprimible: boolean
+  editable_en_formulario: boolean
   categoria?: CategoriaEventoVinculo | null
   estado?: EstadoAccionPersonal
   // Datos del vínculo que Talento Humano fija mientras está en borrador y que

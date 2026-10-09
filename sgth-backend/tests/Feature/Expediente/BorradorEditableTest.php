@@ -4,6 +4,7 @@ namespace Tests\Feature\Expediente;
 
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\SubtipoMovimientoPersonal;
+use App\Enums\ClaseAccionPersonal;
 use App\Enums\TipoMovimientoPersonal;
 use App\Enums\TipoNombramiento;
 use App\Exceptions\ReglaNegocioException;
@@ -471,7 +472,7 @@ test('la ruta de creación conserva todos los campos que envía el formulario', 
     $servidor = ($this->servidorNuevo)();
 
     $this->postJson("/api/v1/expediente/servidores/{$servidor->id}/movimientos", [
-        'tipo_movimiento'             => TipoMovimientoPersonal::INGRESO->value,
+        'clase'                       => ClaseAccionPersonal::INGRESO->value,
         'tipo_nombramiento_propuesto' => TipoNombramiento::SERVICIOS_OCASIONALES->value,
         'unidad_destino_id'           => $this->unidad->id,
         'puesto_destino_id'           => $this->puesto->id,
@@ -510,7 +511,7 @@ test('el número de contrato escrito al crear llega hasta el contrato', function
     $servidor = ($this->servidorNuevo)();
 
     $this->postJson("/api/v1/expediente/servidores/{$servidor->id}/movimientos", [
-        'tipo_movimiento'             => TipoMovimientoPersonal::INGRESO->value,
+        'clase'                       => ClaseAccionPersonal::INGRESO->value,
         'tipo_nombramiento_propuesto' => TipoNombramiento::PERMANENTE->value,
         'unidad_destino_id'           => $this->unidad->id,
         'puesto_destino_id'           => $this->puesto->id,
@@ -536,7 +537,7 @@ test('la partida elegida en el formulario llega a la acción', function () {
     $servidor = ($this->servidorNuevo)();
 
     $this->postJson("/api/v1/expediente/servidores/{$servidor->id}/movimientos", [
-        'tipo_movimiento'             => TipoMovimientoPersonal::INGRESO->value,
+        'clase'                       => ClaseAccionPersonal::INGRESO->value,
         'tipo_nombramiento_propuesto' => TipoNombramiento::PERMANENTE->value,
         'puesto_destino_id'           => $this->puesto->id,
         'unidad_destino_id'           => $this->unidad->id,

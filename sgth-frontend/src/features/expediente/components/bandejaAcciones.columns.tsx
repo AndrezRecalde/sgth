@@ -4,7 +4,6 @@ import type { DataTableColumn } from 'mantine-datatable'
 import { StatusBadge, TableActions } from '@/components/ui'
 import { formatFecha } from '@/lib/fecha'
 import { ESTADO_LABELS, TONO_ACCION } from '../utils/estadoAccionPersonal'
-import { SUBTIPO_LABELS, etiquetaTipoMovimiento } from '../utils/taxonomiaAccionPersonal'
 import type { MovimientoPersonal } from '@/types/api'
 
 type Handlers = {
@@ -32,17 +31,15 @@ export const getBandejaAccionesColumns = ({
     ),
   },
   {
-    accessor: 'tipo_movimiento',
+    accessor: 'etiqueta',
     title: 'Acción',
+    // El nombre lo pone el backend —el de la clase, o el del tipo en la
+    // bitácora—, y debajo la causal cuando la hay.
     render: (m) => (
       <div>
-        <Text size="sm">
-          {etiquetaTipoMovimiento(m.tipo_movimiento)}
-        </Text>
-        {m.subtipo_movimiento && (
-          <Text size="xs" c="dimmed">
-            {SUBTIPO_LABELS[m.subtipo_movimiento]}
-          </Text>
+        <Text size="sm">{m.etiqueta}</Text>
+        {m.causal_etiqueta && (
+          <Text size="xs" c="dimmed">{m.causal_etiqueta}</Text>
         )}
       </div>
     ),

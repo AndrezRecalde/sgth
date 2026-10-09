@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Expediente;
 
+use App\Enums\ClaseAccionPersonal;
 use App\Enums\EstadoAccionPersonal;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Expediente\StoreMovimientoPersonalRequest;
@@ -68,6 +69,7 @@ class MovimientoPersonalController extends Controller
         ])
             ->when($request->filled('estado'), fn ($q) => $q->where('estado', $request->input('estado')))
             ->when($request->filled('tipo_movimiento'), fn ($q) => $q->where('tipo_movimiento', $request->input('tipo_movimiento')))
+            ->when($request->filled('clase'), fn ($q) => $q->where('clase', $request->input('clase')))
             ->when($request->filled('servidor_id'), fn ($q) => $q->where('servidor_id', $request->integer('servidor_id')))
             ->when($request->filled('anio'), fn ($q) => $q->whereYear('fecha_efectiva', $request->integer('anio')))
             // created_at empata cuando se crean varias en el mismo segundo
@@ -75,8 +77,13 @@ class MovimientoPersonalController extends Controller
             ->orderByDesc('created_at')
             ->orderByDesc('id');
 
+        // Por el recurso y no el modelo crudo: el nombre de la acción y lo que
+        // la pantalla decide con ella —si tiene documento, si se corrige con el
+        // formulario— los calcula el backend. `through()` conserva la forma del
+        // paginador que la bandeja ya lee.
         return ApiResponse::ok(
-            $query->paginate($request->integer('per_page', 20)),
+            $query->paginate($request->integer('per_page', 20))
+                ->through(fn (MovimientoPersonal $m) => (new MovimientoPersonalResource($m))->resolve($request)),
             'Bandeja de acciones de personal.'
         );
     }
@@ -122,8 +129,13 @@ class MovimientoPersonalController extends Controller
 
         $this->authorize('actualizar', $servidor);
 
-        $movimiento = $this->movimientoService->registrar(
-            $servidorId, $request->validated()
+        $datos = $request->validated();
+
+        $movimiento = $this->movimientoService->registrarPorClase(
+            $servidorId,
+            ClaseAccionPersonal::from($datos['clase']),
+            $datos['causal'] ?? null,
+            collect($datos)->except(['clase', 'causal'])->all(),
         );
 
         return ApiResponse::created(

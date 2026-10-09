@@ -1130,6 +1130,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/expediente/acciones-personal/catalogo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["expediente.catalogoAccionesPersonal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/viaticos/catalogos/tipos-transporte": {
         parameters: {
             query?: never;
@@ -1172,6 +1188,70 @@ export interface paths {
         get: operations["catalogoViatico.categoriasFactura"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/asistencia/certificados-medicos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["asistencia.certificados.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/asistencia/certificados-medicos/{id}/sirha7": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["asistencia.certificados.sirha7.previa"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/asistencia/certificados-medicos/{id}/aprobar-sirha7": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["asistencia.certificados.sirha7.aprobar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/asistencia/certificados-medicos/{id}/aprobar-sin-sirha7": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["asistencia.certificados.aprobar-sin-sirha7"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1326,7 +1406,7 @@ export interface paths {
         options?: never;
         head?: never;
         /**
-         * Anula el certificado y, con él, el permiso que creó
+         * Anula el certificado y, si ya se registró en Sirha7, lo retira de allí
          * @description Lo puede hacer quien lo emitió o la administración del dispensario, la
          *     misma regla que ya rige para anular una receta: el mostrador tiene que
          *     poder corregir cuando el médico ya no está.
@@ -3613,8 +3693,23 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Consultar marcaciones de un servidor por cédula.
-         *     Solo servidores con puede_marcar = true
+         * Consultar marcaciones de un servidor por cédula
+         * @description Las de cualquier servidor, quien tiene `ver-asistencia-todos` (Talento
+         *     Humano, máxima autoridad, auditoría: la misma regla con la que se ven
+         *     las vacaciones de toda la institución). Los demás, solo las propias.
+         *     Antes bastaba con iniciar sesión para leer las de cualquier cédula.
+         *
+         *     Talento Humano ve también el historial de quien ya no marca o ya no
+         *     está activo (decisión del 2026-10-06): antes se exigía `puede_marcar`,
+         *     y quitarle la marcación a alguien escondía todas sus marcaciones
+         *     pasadas. A uno mismo se le sigue exigiendo tenerla habilitada.
+         *
+         *     El permiso se comprueba antes de buscar al servidor, para que un 404
+         *     no le diga a quien no puede consultar qué cédulas existen.
+         *
+         *     Si el biométrico rechaza la cédula (de relleno, repartida en varios
+         *     usuarios…) el procedimiento lanza una ReglaNegocioException, que sale
+         *     como 422 con su mensaje.
          */
         get: operations["marcacion.index"];
         put?: never;
@@ -3635,9 +3730,15 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Registrar marcación online.
-         *     Usa la cédula del usuario autenticado.
-         *     Solo si puede_marcar = true
+         * Registrar marcación online, a nombre del usuario autenticado
+         * @description Exige `marcar-en-linea`, que TI asigna persona por persona a pedido de
+         *     Talento Humano; antes bastaba con `puede_marcar` y se marcaba desde
+         *     cualquier lugar. El permiso se comprueba primero, antes incluso de
+         *     validar la petición: a quien no lo tiene no se le dice nada más.
+         *
+         *     La ubicación es obligatoria (decisión del 2026-10-06) y se guarda en el
+         *     biométrico. El procedimiento también la exige, porque es la única
+         *     puerta de escritura del SGTH.
          */
         post: operations["asistencia.marcaciones.online"];
         delete?: never;
@@ -3656,6 +3757,8 @@ export interface paths {
         /**
          * Estado de marcación del día para el usuario autenticado.
          *     Usa la cédula del servidor vinculado al usuario
+         * @description El procedimiento devuelve la fila de hoy aunque no haya marcaciones si
+         *     el día tiene horario o permiso; sin nada de eso, `datos` es null.
          */
         get: operations["asistencia.marcaciones.estado-hoy"];
         put?: never;
@@ -3675,6 +3778,22 @@ export interface paths {
         };
         /** Lo de quien pregunta: sus turnos, sus pendientes y su mes */
         get: operations["miJornada.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/autoservicio/mis-certificados-medicos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["autoservicio.misCertificadosMedicos"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4384,6 +4503,54 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["permisoServidor.revertirConfirmacion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/asistencia/permisos/sirha7/tipos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["asistencia.permisos.sirha7.tipos"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/asistencia/permisos/{id}/sirha7": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["asistencia.permisos.sirha7.previa"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/asistencia/permisos/{id}/aprobar-sirha7": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["asistencia.permisos.sirha7.aprobar"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6716,6 +6883,23 @@ export interface components {
             motivo: string;
         };
         /**
+         * AprobarCertificadoSinSirha7Request
+         * @description Aprobar un certificado médico sin que el SGTH escriba en Sirha7, porque TH
+         *     ya lo cargó a mano allí. La nota lo deja dicho: quién, cuándo o por qué.
+         */
+        AprobarCertificadoSinSirha7Request: {
+            nota: string;
+        };
+        /**
+         * AprobarPermisoSirha7Request
+         * @description El tipo de Sirha7 con que se registra el permiso. Lo elige siempre quien
+         *     aprueba (decisión del 2026-10-07); que exista lo comprueba el servicio
+         *     contra la lista de Sirha7.
+         */
+        AprobarPermisoSirha7Request: {
+            leave_id: number;
+        };
+        /**
          * AptitudMedica
          * @enum {string}
          */
@@ -7052,6 +7236,32 @@ export interface components {
          * @enum {string}
          */
         CategoriaRiesgoLaboral: "fisico" | "seguridad" | "quimico" | "biologico" | "ergonomico" | "psicosocial";
+        /** CausalAccionPersonalResource */
+        CausalAccionPersonalResource: {
+            codigo: components["schemas"]["SubtipoMovimientoPersonal"];
+            /** @enum {string} */
+            etiqueta: "Traslado Administrativo" | "Traspaso" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Sanción Disciplinaria" | "Renuncia" | "Destitución" | "Jubilación" | "Incapacidad" | "Contrato Finalizado" | "Visto Bueno";
+            nombramientos_elegibles: [
+                components["schemas"]["TipoNombramiento"]
+            ] | [
+                components["schemas"]["TipoNombramiento"],
+                components["schemas"]["TipoNombramiento"],
+                components["schemas"]["TipoNombramiento"],
+                components["schemas"]["TipoNombramiento"],
+                components["schemas"]["TipoNombramiento"]
+            ] | [
+                components["schemas"]["TipoNombramiento"],
+                components["schemas"]["TipoNombramiento"],
+                components["schemas"]["TipoNombramiento"],
+                components["schemas"]["TipoNombramiento"]
+            ];
+            /**
+             * @description En la cesación es lo mismo que pregunta
+             *     ClaseAccionPersonal::dictamenMedicoPorDefecto($causal), que delega
+             *     en el subtipo: jubilación e incapacidad abren marcadas.
+             */
+            dictamen_medico_por_defecto: boolean;
+        };
         /**
          * CausalVistoBueno
          * @description Causales por las que el empleador puede solicitar visto bueno para dar por terminado el contrato de un obrero — Art. 172 del Código del Trabajo, los siete numerales. No se modelan las del Art. 173 (visto bueno solicitado por el trabajador): confirmado con Talento Humano que el GAD no las registra en el sistema.
@@ -7100,6 +7310,39 @@ export interface components {
             anulado_en: string | null;
             anulado_por: number | null;
             motivo_anulacion: string | null;
+            servidor_id: number | null;
+            aprobado_por: number | null;
+            /** Format: date-time */
+            aprobado_en: string | null;
+            registro_sirha7: string | null;
+            nota_aprobacion: string | null;
+            sirha7_leave_id: number | null;
+            sirha7_leave_nombre: string | null;
+            sirha7_userid: number | null;
+            sirha7_referencia: string | null;
+            sirha7_dias_omitidos: unknown[] | null;
+        };
+        /**
+         * ClaseAccionPersonal
+         * @description La clase legal de una acción de personal: el acto que se registra, con el nombre que le da la LOSEP (diseño de Acciones de Personal, sección 4). Es la identidad pública del catálogo. El frontend elige una clase —y, en la cesación, una causal— y el backend la traduce al par tipo/subtipo con el que todavía se guarda y opera cada acción. Esa traducción vive aquí, en `tipoYSubtipo()`, y su inversa en `desde()`: son las dos únicas puertas entre los dos vocabularios.  Las reglas no se repiten. La elegibilidad por nombramiento se pregunta a `TipoMovimientoPersonal` y `SubtipoMovimientoPersonal`, que siguen siendo su única fuente: esta clase solo las agrupa con el nombre legal. Lo que es solo de formulario —qué bloques pide, el aviso de la comisión— sí vive aquí, y `CatalogoAccionesPersonalTest` comprueba que coincida con lo que el tipo/subtipo traducido hace de verdad.  Nombres que cambian respecto de los que veía Talento Humano, todos aceptados el 2026-10-09 (cuestionario, preguntas N1, 9 y 15):  - el «Traspaso» de los permanentes y la «Prestación de servicios» de los    demás son el mismo acto, el **traslado** del Art. 35;  - el «Traslado administrativo» entre instituciones es el **intercambio    voluntario** del Art. 39;  - el «Cambio de denominación» de los obreros es el **cambio de ocupación**    del Art. 192 del Código del Trabajo.
+         * @enum {string}
+         */
+        ClaseAccionPersonal: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "subrogacion" | "encargo" | "incremento_remuneracion" | "cambio_ocupacion" | "sancion" | "cesacion";
+        /** ClaseAccionPersonalResource */
+        ClaseAccionPersonalResource: {
+            codigo: components["schemas"]["ClaseAccionPersonal"];
+            /** @enum {string} */
+            etiqueta: "Ingreso y Vinculación" | "Traslado" | "Intercambio Voluntario" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Licencia sin Remuneración" | "Subrogación" | "Encargo" | "Incremento de Remuneración" | "Cambio de Ocupación" | "Sanción Disciplinaria" | "Cesación de Funciones";
+            familia: components["schemas"]["FamiliaAccionPersonal"];
+            se_crea_desde_formulario: boolean;
+            requiere_vinculo: boolean;
+            nombramientos_elegibles: components["schemas"]["TipoNombramiento"][];
+            causales: components["schemas"]["CausalAccionPersonalResource"][];
+            pide_situacion_propuesta: boolean;
+            pide_periodo: boolean;
+            pide_contratacion: boolean;
+            dictamen_medico_por_defecto: boolean;
+            aviso: string | null;
         };
         /** ComentarioTicket */
         ComentarioTicket: {
@@ -7856,6 +8099,18 @@ export interface components {
             revisado_en: string | null;
         };
         /**
+         * FamiliaAccionPersonal
+         * @description Las familias en que se agrupan las clases de acción de personal en pantalla (diseño de Acciones de Personal, sección 4.1). No deciden ninguna regla: solo ordenan el selector de «Nueva acción de personal». El orden de los casos es el orden en que se muestran.
+         * @enum {string}
+         */
+        FamiliaAccionPersonal: "ingreso" | "cambio_administrativo" | "licencias" | "reemplazo" | "puesto_remuneracion" | "regimen_disciplinario" | "cesacion";
+        /** FamiliaAccionPersonalResource */
+        FamiliaAccionPersonalResource: {
+            codigo: components["schemas"]["FamiliaAccionPersonal"];
+            /** @enum {string} */
+            etiqueta: "Ingreso" | "Cambio Administrativo" | "Licencias" | "Reemplazo de Autoridades" | "Puesto y Remuneración" | "Régimen Disciplinario" | "Cesación de Funciones";
+        };
+        /**
          * FaseProgramaDrogas
          * @description Las 6 fases del Programa de prevención integral del uso y consumo de alcohol, tabaco u otras drogas en espacios laborales, según el Instructivo MDT-MSP (Acuerdo Interministerial Nro. MDT-MSP-2019-038, Registro Oficial Nro. 114 del 06/01/2020), sección 5.
          * @enum {string}
@@ -8116,6 +8371,8 @@ export interface components {
             /** Format: date-time */
             deleted_at: string | null;
         };
+        /** LengthAwarePaginator */
+        LengthAwarePaginator: unknown[];
         /** LiquidacionViatico */
         LiquidacionViatico: {
             id: number;
@@ -8269,6 +8526,7 @@ export interface components {
             remuneracion_origen: string | null;
             partida_origen_id: number | null;
             motivo_anulacion: string | null;
+            clase: components["schemas"]["ClaseAccionPersonal"] | null;
         };
         /** MovimientoPersonalResource */
         MovimientoPersonalResource: {
@@ -8276,6 +8534,22 @@ export interface components {
             servidor_id: number;
             tipo_movimiento: components["schemas"]["TipoMovimientoPersonal"];
             subtipo_movimiento: components["schemas"]["SubtipoMovimientoPersonal"] | null;
+            clase: components["schemas"]["ClaseAccionPersonal"] | null;
+            familia: string;
+            etiqueta: string;
+            causal: components["schemas"]["SubtipoMovimientoPersonal"] | null;
+            causal_etiqueta: string;
+            /**
+             * @description Lo que la pantalla decide con cada acción, respondido por el
+             *     backend. Antes `taxonomiaAccionPersonal.ts` lo copiaba a mano, y
+             *     cada regla nueva había que escribirla dos veces.
+             */
+            toca_el_vinculo: boolean;
+            es_ausencia_temporal: boolean;
+            propone_situacion: boolean;
+            tiene_efecto_economico: boolean;
+            tiene_documento_imprimible: boolean;
+            editable_en_formulario: boolean;
             categoria: components["schemas"]["CategoriaEventoVinculo"] | null;
             estado: components["schemas"]["EstadoAccionPersonal"];
             descripcion: string;
@@ -8597,6 +8871,18 @@ export interface components {
             motivo_rechazo: string | null;
             dirigido_a_talento_humano: boolean;
             motivo_anulacion: string | null;
+            revertido_por: number | null;
+            /** Format: date-time */
+            revertido_en: string | null;
+            motivo_reversion: string | null;
+            sirha7_leave_id: number | null;
+            sirha7_leave_nombre: string | null;
+            sirha7_userid: number | null;
+            sirha7_aprobado_por: number | null;
+            /** Format: date-time */
+            sirha7_aprobado_en: string | null;
+            sirha7_dias_omitidos: unknown[] | null;
+            pendiente_sirha7: string;
         };
         /** PlanBienestar */
         PlanBienestar: {
@@ -9741,14 +10027,23 @@ export interface components {
         };
         /** StoreMovimientoPersonalRequest */
         StoreMovimientoPersonalRequest: {
-            tipo_movimiento: components["schemas"]["TipoMovimientoPersonal"];
             /**
-             * @description La correspondencia tipo ↔ subtipo (obligatoriedad incluida) la
-             *     resuelve MovimientoPersonalService::resolverSubtipo(), que da un
-             *     mensaje de negocio con los subtipos válidos del tipo elegido.
-             *     Aquí solo se comprueba que el valor exista en el enum.
+             * @description La acción se pide por su clase legal. Solo las que se crean desde
+             *     este formulario: la subrogación y el encargo nacen en su pantalla,
+             *     y la bitácora del expediente no es un acto. Antes la API aceptaba
+             *     los dieciocho tipos del enum, así que se podía crear por aquí una
+             *     subrogación sin su fila en `subrogaciones` o una «novedad de
+             *     contrato» que nacía registrada y sin efecto.
+             * @enum {string}
              */
-            subtipo_movimiento?: components["schemas"]["SubtipoMovimientoPersonal"];
+            clase: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "cambio_ocupacion" | "sancion" | "cesacion";
+            /**
+             * @description Que la causal sea obligatoria, que pertenezca a la clase y que
+             *     aplique al nombramiento lo decide
+             *     MovimientoPersonalService::registrarPorClase(), con un mensaje que
+             *     nombra las causales válidas.
+             */
+            causal?: string | null;
             /**
              * @description Editable por Talento Humano; si no viene, el servicio aplica el
              *     default del tipo/subtipo.
@@ -9860,7 +10155,11 @@ export interface components {
             hora_inicio: string;
             hora_fin: string;
             observacion?: string | null;
-            unidad_administrativa_id?: number | null;
+            /**
+             * @description Sin `unidad_administrativa_id` ni `creado_por`: la unidad es la del
+             *     servidor y el autor es quien tiene la sesión. Aceptarlos aquí
+             *     invitaba a mandarlos, y la unidad llegó a usarse tal cual.
+             */
             servidor_id?: number | null;
             /**
              * @description Alguien tiene que firmar: el jefe inmediato elegido o, con la
@@ -9870,10 +10169,10 @@ export interface components {
             jefe_id?: number | null;
             /**
              * @description En true, el jefe lo resuelve el servicio y `jefe_id` se ignora:
-             *     ver PermisoService::jefeDeTalentoHumano().
+             *     ver PermisoService::jefeDeTalentoHumano(). Solo Talento Humano
+             *     puede pedirlo; lo autoriza el controlador con la policy.
              */
             dirigido_a_talento_humano?: boolean;
-            creado_por?: number | null;
         };
         /** StorePuestoRequest */
         StorePuestoRequest: {
@@ -12790,6 +13089,8 @@ export interface operations {
                         mensaje: "Ausentismo por salud del servidor.";
                         datos: {
                             permisos: number;
+                            reposos: number;
+                            dias_reposo: number;
                             /** @constant */
                             meses: 12;
                             desde: string;
@@ -14312,6 +14613,35 @@ export interface operations {
             };
         };
     };
+    "expediente.catalogoAccionesPersonal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Catálogo de acciones de personal.";
+                        datos: {
+                            familias: components["schemas"]["FamiliaAccionPersonalResource"][];
+                            clases: components["schemas"]["ClaseAccionPersonalResource"][];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "catalogoViatico.tiposTransporte": {
         parameters: {
             query?: never;
@@ -14390,6 +14720,184 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "asistencia.certificados.index": {
+        parameters: {
+            query?: {
+                estado?: "pendiente" | "aprobado" | "anulado" | null;
+                folio?: string | null;
+                servidor_id?: number | null;
+                unidad_administrativa_id?: number | null;
+                fecha_desde?: string | null;
+                fecha_hasta?: string | null;
+                per_page?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Certificados médicos.";
+                        /** @description Sin desempate por id, dos páginas pueden repetir filas. */
+                        datos: {
+                            current_page: number;
+                            data: components["schemas"]["CertificadoMedico"][];
+                            first_page_url: string | null;
+                            from: number | null;
+                            last_page_url: string | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            next_page_url: string | null;
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            prev_page_url: string | null;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "asistencia.certificados.sirha7.previa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Lo que se registrará en Sirha7.";
+                        datos: {
+                            pendiente: boolean;
+                            motivo: string | null;
+                            registrable_en_sirha7: string;
+                            motivo_sin_sirha7: string | null;
+                            desde: string;
+                            hasta: string;
+                            hora_inicio: null;
+                            hora_fin: null;
+                            jornada_completa: boolean;
+                            referencia: string;
+                            certificado: {
+                                folio: string | null;
+                                fecha_inicio: string;
+                                fecha_fin: string;
+                                dias_reposo: number;
+                                medico: string;
+                            };
+                            cruces: {
+                                id: number;
+                                folio: string | null;
+                                tipo: string | components["schemas"]["TipoPermiso"];
+                                fecha: string;
+                                hora_inicio: string;
+                                hora_fin: string;
+                                estado: string | components["schemas"]["EstadoPermiso"];
+                            }[];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "asistencia.certificados.sirha7.aprobar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AprobarPermisoSirha7Request"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "asistencia.certificados.aprobar-sin-sirha7": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AprobarCertificadoSinSirha7Request"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Certificado aprobado sin registrarlo en Sirha7.";
+                        datos: unknown[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "certificadoAptitud.generar": {
@@ -14667,7 +15175,8 @@ export interface operations {
                 content: {
                     "application/json": {
                         exito: boolean;
-                        mensaje: string | "Certificado anulado correctamente.";
+                        /** @constant */
+                        mensaje: "Certificado anulado correctamente.";
                         datos: components["schemas"]["CertificadoMedico"];
                         meta: null;
                     };
@@ -14970,14 +15479,7 @@ export interface operations {
                         mensaje: "Consolidado de permisos";
                         datos: {
                             consolidado: {
-                                servidor_id: number;
-                                servidor_nombre: string;
-                                cedula: string;
-                                unidad: string | "—";
-                                total_permisos: number;
-                                total_minutos: number;
-                                tiempo_total: string;
-                                total_dias: number;
+                                [key: string]: unknown;
                             }[];
                             totales: {
                                 total_permisos: string;
@@ -15385,6 +15887,11 @@ export interface operations {
                                 id: number;
                                 tipo_movimiento: string;
                                 subtipo_movimiento: string;
+                                clase: string;
+                                /**
+                                 * @description La causal cuando la hay, y si no, el nombre de la clase:
+                                 *     el mismo que se ve en la bandeja y en el documento.
+                                 */
                                 etiqueta: string;
                                 codigo_registro: string | null;
                                 fecha_efectiva: string;
@@ -21365,13 +21872,56 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Marcaciones obtenidas correctamente.";
-                        datos: string;
+                        /** @description Fechas en ISO básico: el servidor está en español (DATEFORMAT dmy). */
+                        datos: unknown[];
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Solo puede consultar sus propias marcaciones.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @enum {string} */
+                        mensaje: "No hay un servidor con esa cédula en el SGTH." | "Su perfil no tiene habilitada la marcación biométrica.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
             422: components["responses"]["ValidationException"];
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "No se pudo conectar al sistema biométrico.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
         };
     };
     "asistencia.marcaciones.online": {
@@ -21386,8 +21936,8 @@ export interface operations {
                 "application/json": {
                     /** @enum {string} */
                     checktype: "I" | "O";
-                    latitud?: number | null;
-                    longitud?: number | null;
+                    latitud: number;
+                    longitud: number;
                 };
             };
         };
@@ -21397,13 +21947,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Marcación registrada correctamente.";
-                        datos: null;
-                        meta: null;
-                    };
+                    "application/json": Record<string, never>;
                 };
             };
             401: components["responses"]["AuthenticationException"];
@@ -21424,45 +21968,10 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Estado de marcación del día.";
-                        datos: string | null;
-                        meta: null;
-                    };
+                    "application/json": Record<string, never>;
                 };
             };
             401: components["responses"]["AuthenticationException"];
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "No se pudo obtener el estado del día.";
-                        datos: null;
-                        /** @constant */
-                        errores: 503;
-                    } | {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Tu perfil no tiene habilitada la marcación biométrica.";
-                        datos: null;
-                        /** @constant */
-                        errores: 403;
-                    } | {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Tu usuario no tiene un servidor vinculado.";
-                        datos: null;
-                        /** @constant */
-                        errores: 404;
-                    };
-                };
-            };
         };
     };
     "miJornada.index": {
@@ -21529,6 +22038,59 @@ export interface operations {
                             };
                         } | {
                             perfil: null;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "autoservicio.misCertificadosMedicos": {
+        parameters: {
+            query?: {
+                anio?: number | null;
+                per_page?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Mis certificados médicos.";
+                        datos: {
+                            current_page: number;
+                            data: components["schemas"]["CertificadoMedico"][];
+                            first_page_url: string | null;
+                            from: number | null;
+                            last_page_url: string | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            next_page_url: string | null;
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            prev_page_url: string | null;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
                         };
                         meta: null;
                     };
@@ -21606,6 +22168,7 @@ export interface operations {
             query?: {
                 estado?: string;
                 tipo_movimiento?: string;
+                clase?: string;
                 servidor_id?: number;
                 anio?: number;
                 per_page?: number;
@@ -21616,6 +22179,12 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /**
+             * @description Por el recurso y no el modelo crudo: el nombre de la acción y lo que
+             *     la pantalla decide con ella —si tiene documento, si se corrige con el
+             *     formulario— los calcula el backend. `through()` conserva la forma del
+             *     paginador que la bandeja ya lee.
+             */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -21625,30 +22194,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Bandeja de acciones de personal.";
-                        datos: {
-                            current_page: number;
-                            data: components["schemas"]["MovimientoPersonal"][];
-                            first_page_url: string | null;
-                            from: number | null;
-                            last_page_url: string | null;
-                            last_page: number;
-                            /** @description Generated paginator links. */
-                            links: {
-                                url: string | null;
-                                label: string;
-                                active: boolean;
-                            }[];
-                            next_page_url: string | null;
-                            /** @description Base path for paginator generated URLs. */
-                            path: string | null;
-                            /** @description Number of items shown per page. */
-                            per_page: number;
-                            prev_page_url: string | null;
-                            /** @description Number of the last item in the slice. */
-                            to: number | null;
-                            /** @description Total number of items being paginated. */
-                            total: number;
-                        };
+                        datos: components["schemas"]["LengthAwarePaginator"];
                         meta: null;
                     };
                 };
@@ -22911,7 +23457,13 @@ export interface operations {
     "permisoServidor.index": {
         parameters: {
             query?: {
-                per_page?: number;
+                estado?: components["schemas"]["EstadoPermiso"];
+                tipo?: components["schemas"]["TipoPermiso"];
+                servidor_id?: number | null;
+                unidad_administrativa_id?: number | null;
+                fecha_desde?: string | null;
+                fecha_hasta?: string | null;
+                per_page?: number | null;
             };
             header?: never;
             path?: never;
@@ -22958,6 +23510,7 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "permisoServidor.store": {
@@ -23228,6 +23781,102 @@ export interface operations {
                         datos: components["schemas"]["PermisoServidor"];
                         meta: null;
                     };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "asistencia.permisos.sirha7.tipos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "asistencia.permisos.sirha7.previa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Lo que se registrará en Sirha7.";
+                        datos: {
+                            pendiente: boolean;
+                            motivo: string | null;
+                            desde: string;
+                            hasta: string;
+                            hora_inicio: string | null;
+                            hora_fin: string | null;
+                            jornada_completa: boolean;
+                            referencia: string;
+                            cruces: {
+                                id: number;
+                                folio: string | null;
+                                tipo: string | components["schemas"]["TipoPermiso"];
+                                fecha: string;
+                                hora_inicio: string;
+                                hora_fin: string;
+                                estado: string | components["schemas"]["EstadoPermiso"];
+                            }[];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "asistencia.permisos.sirha7.aprobar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AprobarPermisoSirha7Request"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
                 };
             };
             401: components["responses"]["AuthenticationException"];

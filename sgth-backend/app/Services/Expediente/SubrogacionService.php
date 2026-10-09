@@ -74,6 +74,9 @@ class SubrogacionService implements SubrogacionServiceInterface
             $movimiento = MovimientoPersonal::create([
                 'servidor_id'       => $subrogacion->servidor_subrogante_id,
                 'tipo_movimiento'   => 'subrogacion',
+                // Si es un encargo solo lo sabe esta fila: desde el tipo, que
+                // los dos comparten, la clase saldría siempre «subrogación».
+                'clase'             => $subrogacion->tipo->value,
                 'categoria'         => CategoriaEventoVinculo::ACCION_DE_PERSONAL,
                 'estado'            => EstadoAccionPersonal::BORRADOR,
                 'descripcion'       => $this->explicacion($subrogacion),
@@ -383,6 +386,7 @@ class SubrogacionService implements SubrogacionServiceInterface
             MovimientoPersonal::create([
                 'servidor_id'     => $subrogacion->servidor_subrogante_id,
                 'tipo_movimiento' => 'subrogacion',
+                'clase'           => $subrogacion->tipo->value,
                 'estado'          => EstadoAccionPersonal::REGISTRADA,
                 'descripcion'     => "Finalización anticipada de {$subrogacion->tipo->etiqueta()}: "
                     ."terminó antes del {$subrogacion->fecha_fin->format('d/m/Y')} previsto.",
@@ -524,6 +528,7 @@ class SubrogacionService implements SubrogacionServiceInterface
         MovimientoPersonal::create([
             'servidor_id'     => $subrogacion->servidor_subrogante_id,
             'tipo_movimiento' => 'subrogacion',
+            'clase'           => $subrogacion->tipo->value,
             'estado'          => EstadoAccionPersonal::REGISTRADA,
             'descripcion'     => "Cancelación de {$subrogacion->tipo->etiqueta()}: dejó de surtir "
                 ."efecto antes del {$subrogacion->fecha_fin->format('d/m/Y')} previsto. {$motivo}",

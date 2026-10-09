@@ -1,4 +1,4 @@
-import type { EstadoAccionPersonal, TipoMovimientoPersonal } from '@/types/api'
+import type { ClaseAccionPersonal, EstadoAccionPersonal, TipoMovimientoPersonal } from '@/types/api'
 
 // Los tipos de las peticiones de acciones de personal, fuera del servicio
 // para que este no pase de 100 líneas (regla 02).
@@ -11,6 +11,7 @@ import type { EstadoAccionPersonal, TipoMovimientoPersonal } from '@/types/api'
 export type FiltrosBandeja = {
   estado?: EstadoAccionPersonal
   tipo_movimiento?: TipoMovimientoPersonal
+  clase?: ClaseAccionPersonal
   servidor_id?: number
   anio?: number
   page?: number
@@ -39,9 +40,9 @@ export type TransicionarData = {
 }
 
 /**
- * Campos editables mientras la acción de personal está en borrador. Excluye
- * 'tipo_movimiento' y 'subtipo_movimiento' a propósito: cambiar la naturaleza
- * del acto no es editarlo — el backend tampoco los acepta.
+ * Campos editables mientras la acción de personal está en borrador. Excluye la
+ * clase y la causal a propósito: cambiar la naturaleza del acto no es editarlo
+ * — el backend tampoco las acepta.
  */
 export type ActualizarBorradorData = {
   descripcion?: string

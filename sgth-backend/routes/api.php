@@ -80,6 +80,7 @@ use App\Http\Controllers\Expediente\EnfermedadCargaFamiliarController;
 use App\Http\Controllers\Expediente\EnfermedadCatastroficaServidorController;
 use App\Http\Controllers\Expediente\HistorialAcademicoController;
 use App\Http\Controllers\Expediente\AusenciaTemporalController;
+use App\Http\Controllers\Expediente\CatalogoAccionesPersonalController;
 use App\Http\Controllers\Expediente\MovimientoPersonalController;
 use App\Http\Controllers\Expediente\VerificacionCertificadoController;
 use App\Http\Controllers\Expediente\VinculacionInicialController;
@@ -384,6 +385,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::post('servidores/{servidorId}/movimientos', [MovimientoPersonalController::class, 'store'])
             ->middleware('role:admin-uath|asistente-uath');
         Route::get('movimientos', [MovimientoPersonalController::class, 'bandeja'])
+            ->middleware('role:admin-uath|asistente-uath');
+        // Qué acciones existen y qué pide cada una. Lo leen la bandeja y el
+        // formulario de «Nueva acción de personal», nadie más.
+        Route::get('acciones-personal/catalogo', CatalogoAccionesPersonalController::class)
             ->middleware('role:admin-uath|asistente-uath');
 
         // Quién está temporalmente fuera (comisión de servicios, licencia sin

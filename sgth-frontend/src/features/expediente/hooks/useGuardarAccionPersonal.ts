@@ -1,17 +1,19 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { notificar } from '@/components/ui'
-import { getApiErrorMessage } from '@/types/api'
+import { getApiErrorMessage, type CatalogoAccionesPersonal } from '@/types/api'
 import { movimientoService } from '../services/movimientoService'
 import type { MovimientoFormData } from '../schemas/movimiento.schema'
 import { admiteMarcacion } from '../utils/nombramiento'
+import { buscarClase } from '../utils/catalogoAcciones'
 
 /**
- * Los campos de contratación solo viajan en el ingreso. Enviarlos en un traspaso
- * los grabaría en una acción que nunca creará un contrato, y el documento
- * impreso acabaría con un número que no corresponde a nada.
+ * Los campos de contratación solo viajan en la clase que los pide —el ingreso—.
+ * Enviarlos en un traslado los grabaría en una acción que nunca creará un
+ * contrato, y el documento impreso acabaría con un número que no corresponde a
+ * nada.
  */
-function soloLoQueAplica(data: MovimientoFormData): MovimientoFormData {
-  if (data.tipo_movimiento === 'ingreso') {
+function soloLoQueAplica(data: MovimientoFormData, pideContratacion: boolean): MovimientoFormData {
+  if (pideContratacion) {
     // Cinturón, además del `setValue` al cambiar de nombramiento: un borrador
     // que ya venía con la marcación puesta y un nombramiento que no marca se
     // edita sin tocar ese selector, y entonces el `onChange` no corre. La
@@ -40,11 +42,14 @@ function soloLoQueAplica(data: MovimientoFormData): MovimientoFormData {
 export function useGuardarAccionPersonal({
   servidorId,
   movimientoId,
+  catalogo,
   onGuardado,
 }: {
   servidorId: number
   /** Presente = se edita un borrador; ausente = se registra uno nuevo. */
   movimientoId?: number | null
+  /** De aquí sale qué campos aplican a la clase elegida. */
+  catalogo: CatalogoAccionesPersonal
   onGuardado: () => void
 }) {
   const qc = useQueryClient()
@@ -52,14 +57,14 @@ export function useGuardarAccionPersonal({
 
   return useMutation({
     mutationFn: (data: MovimientoFormData) => {
-      const limpio = soloLoQueAplica(data)
+      const limpio = soloLoQueAplica(
+        data, !!buscarClase(catalogo, data.clase)?.pide_contratacion,
+      )
 
       if (edicion) {
-        // tipo y subtipo no se envían: el backend los rechaza en la edición
-        // porque cambiar la naturaleza del acto exige anular y registrar otro.
-        const editable = { ...limpio }
-        delete (editable as Partial<MovimientoFormData>).tipo_movimiento
-        delete (editable as Partial<MovimientoFormData>).subtipo_movimiento
+        // La clase y la causal no se envían: cambiar la naturaleza del acto no
+        // es editarlo, sino anularlo y registrar otro.
+        const { clase: _clase, causal: _causal, ...editable } = limpio
 
         return movimientoService.actualizarBorrador(movimientoId, editable)
       }

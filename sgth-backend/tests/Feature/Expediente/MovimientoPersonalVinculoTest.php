@@ -592,7 +592,9 @@ test('la actividad laboral agrupa las acciones bajo el contrato al que pertenece
     // de la comisión vigente hoy.
     expect($vinculo['contrato']->numero_contrato)->toBe('CT-2018-0100')
         ->and($vinculo['acciones'])->toHaveCount(2)
-        ->and($vinculo['acciones'][0]['etiqueta'])->toBe('Traspaso')
+        // El nombre legal desde la fase 1.1: el «Traspaso» de un permanente es
+        // el traslado del Art. 35 de la LOSEP.
+        ->and($vinculo['acciones'][0]['etiqueta'])->toBe('Traslado')
         ->and($vinculo['situacion'])->not->toBeNull()
         ->and($vinculo['situacion']['etiqueta'])->toBe('Comisión de Servicios sin Remuneración');
 });

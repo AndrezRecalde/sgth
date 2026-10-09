@@ -187,7 +187,8 @@ export function ExpedienteView() {
           opened={ingresoOpened}
           onClose={() => { setServidorReciente(null); cerrarIngreso() }}
           servidorId={Number(servidorReciente.id)}
-          tipoFijo="ingreso"
+          familia="ingreso"
+          sinVinculo
           titulo={`Ingreso y Vinculación — ${[servidorReciente.apellido, servidorReciente.nombre].filter(Boolean).join(' ')}`}
         />
       )}

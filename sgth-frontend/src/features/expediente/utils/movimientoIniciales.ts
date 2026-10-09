@@ -1,10 +1,10 @@
 import type { DefaultValues } from 'react-hook-form'
 import type { MovimientoPersonal } from '@/types/api'
 import type { MovimientoFormData } from '../schemas/movimiento.schema'
-import type { AccionTipo } from './taxonomiaAccionPersonal'
 
 /** Valores de un formulario nuevo. */
 export const VALORES_EN_BLANCO: DefaultValues<MovimientoFormData> = {
+  causal: null,
   descripcion: '',
   fecha_efectiva: '',
   fecha_inicio: null,
@@ -34,21 +34,17 @@ export const VALORES_EN_BLANCO: DefaultValues<MovimientoFormData> = {
  * `YYYY-MM-DD`; los importes, como cadena decimal de Postgres. Va aparte del
  * componente porque es traducción de formas, no interfaz.
  *
- * `tipoDelBorrador` lo resuelve quien llama con `esTipoDelFormulario()`: no todo
- * borrador es de un tipo que este formulario represente —los planos legados
- * traslado, traspaso, comision_servicios y destitucion también nacen en
- * borrador—, y afirmarlo con un `as AccionTipo` era lo que dejaba entrar un tipo
- * que el esquema Zod rechaza, con el envío muriendo en silencio.
+ * Solo se llama con borradores que el formulario corrige
+ * (`editable_en_formulario`), que son los que tienen una clase del catálogo.
  */
 export function valoresDelBorrador(
   movimiento: MovimientoPersonal,
-  tipoDelBorrador: AccionTipo | null,
 ): DefaultValues<MovimientoFormData> {
   const soloFecha = (v?: string | null) => v?.split('T')[0] ?? null
 
   return {
-    tipo_movimiento: tipoDelBorrador ?? undefined,
-    subtipo_movimiento: movimiento.subtipo_movimiento ?? null,
+    clase: movimiento.clase ?? undefined,
+    causal: movimiento.causal ?? null,
     descripcion: movimiento.descripcion ?? '',
     fecha_efectiva: soloFecha(movimiento.fecha_efectiva) ?? '',
     fecha_inicio: soloFecha(movimiento.fecha_inicio),

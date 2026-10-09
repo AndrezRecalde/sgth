@@ -6,9 +6,6 @@ import { formatFecha } from '@/lib/fecha'
 import {
   ESTADO_LABELS, TONO_ACCION, puedeDescargarPdf,
 } from '../utils/estadoAccionPersonal'
-import {
-  SUBTIPO_LABELS, etiquetaTipoMovimiento,
-} from '../utils/taxonomiaAccionPersonal'
 import type { MovimientoPersonal } from '@/types/api'
 
 type Handlers = {
@@ -22,17 +19,13 @@ export const getMovimientoColumns = ({
   onVerDetalle, onDescargarPdf, descargandoId,
 }: Handlers): DataTableColumn<MovimientoPersonal>[] => [
   {
-    accessor: 'tipo_movimiento',
+    accessor: 'etiqueta',
     title: 'Tipo',
-    render: ({ tipo_movimiento, subtipo_movimiento }) => (
+    render: ({ etiqueta, causal_etiqueta }) => (
       <div>
-        <Text size="sm" fw={500}>
-          {etiquetaTipoMovimiento(tipo_movimiento)}
-        </Text>
-        {subtipo_movimiento && (
-          <Text size="xs" c="dimmed">
-            {SUBTIPO_LABELS[subtipo_movimiento]}
-          </Text>
+        <Text size="sm" fw={500}>{etiqueta}</Text>
+        {causal_etiqueta && (
+          <Text size="xs" c="dimmed">{causal_etiqueta}</Text>
         )}
       </div>
     ),

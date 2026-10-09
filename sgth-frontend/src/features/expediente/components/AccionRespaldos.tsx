@@ -14,7 +14,7 @@ import { formatFecha } from '@/lib/fecha'
  * la resolución y el dictamen médico, y quiénes firmaron.
  */
 export function AccionRespaldos({ m }: { m: MovimientoPersonal }) {
-  const esIngreso = m.tipo_movimiento === 'ingreso'
+  const esIngreso = m.clase === 'ingreso'
 
   return (
     <>

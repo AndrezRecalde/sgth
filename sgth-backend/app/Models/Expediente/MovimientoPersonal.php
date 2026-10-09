@@ -3,6 +3,7 @@
 namespace App\Models\Expediente;
 
 use App\Enums\CategoriaEventoVinculo;
+use App\Enums\ClaseAccionPersonal;
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\SubtipoMovimientoPersonal;
 use App\Enums\TipoMovimientoPersonal;
@@ -42,6 +43,7 @@ class MovimientoPersonal extends Model
             ->logOnly([
                 'tipo_movimiento',
                 'subtipo_movimiento',
+                'clase',
                 'estado',
                 'codigo_registro',
                 'fecha_registro',
@@ -78,6 +80,47 @@ class MovimientoPersonal extends Model
      */
     protected static function booted(): void
     {
+        /*
+        | La clase se deriva del tipo y el subtipo cuando nadie la fija. La fija
+        | quien la conoce mejor que el par tipo/subtipo: el formulario, que
+        | crea por clase, y `SubrogacionService`, que es el único que sabe si
+        | una subrogación es en realidad un encargo.
+        |
+        | Así no hace falta tocar cada servicio que crea acciones —Disciplinario,
+        | visto bueno, reclutamiento, contratos vencidos—: siguen creando por
+        | tipo y la clase les llega igual.
+        */
+        static::saving(function (MovimientoPersonal $movimiento) {
+            $fijadaAMano = $movimiento->isDirty('clase') && $movimiento->clase !== null;
+
+            // Un modelo leído con `select` parcial no trae la columna: derivarla
+            // ahí la marcaría como cambiada, y en una acción registrada la
+            // guarda de inmutabilidad lo rechazaría sin que nadie la tocara.
+            $sinLaColumna = $movimiento->exists
+                && ! array_key_exists('clase', $movimiento->getAttributes());
+
+            if ($fijadaAMano || $sinLaColumna) {
+                return;
+            }
+
+            if ($movimiento->clase === null
+                || $movimiento->isDirty(['tipo_movimiento', 'subtipo_movimiento'])
+            ) {
+                // Una subrogación ya clasificada no se reclasifica: si es un
+                // encargo, desde el tipo no hay forma de saberlo.
+                if ($movimiento->clase !== null
+                    && $movimiento->tipo_movimiento === TipoMovimientoPersonal::SUBROGACION
+                ) {
+                    return;
+                }
+
+                $movimiento->clase = ClaseAccionPersonal::desde(
+                    $movimiento->tipo_movimiento,
+                    $movimiento->subtipoEfectivo()
+                );
+            }
+        });
+
         static::updating(function (MovimientoPersonal $movimiento) {
             $estadoOriginal = $movimiento->getOriginal('estado');
             $estadoOriginal = $estadoOriginal instanceof EstadoAccionPersonal
@@ -89,7 +132,7 @@ class MovimientoPersonal extends Model
             }
 
             $inmutables = [
-                'tipo_movimiento', 'subtipo_movimiento', 'fecha_registro', 'codigo_registro',
+                'tipo_movimiento', 'subtipo_movimiento', 'clase', 'fecha_registro', 'codigo_registro',
                 // Quién firmó y cuándo: sellado al suscribir, es la prueba de
                 // auditoría del documento y no puede reescribirse después.
                 'fecha_suscripcion',
@@ -142,6 +185,7 @@ class MovimientoPersonal extends Model
         'servidor_id',
         'tipo_movimiento',
         'subtipo_movimiento',
+        'clase',
         'requiere_dictamen_medico',
         'categoria',
         'estado',
@@ -194,6 +238,7 @@ class MovimientoPersonal extends Model
         return [
             'tipo_movimiento'             => TipoMovimientoPersonal::class,
             'subtipo_movimiento'          => SubtipoMovimientoPersonal::class,
+            'clase'                       => ClaseAccionPersonal::class,
             'requiere_dictamen_medico'    => 'boolean',
             'categoria'                   => CategoriaEventoVinculo::class,
             'estado'                      => EstadoAccionPersonal::class,
@@ -341,8 +386,9 @@ class MovimientoPersonal extends Model
      * prestación de servicios se registraba sin reubicar a nadie.
      *
      * Es el único sitio donde se decide: lo consultan tanto la exigencia de
-     * puesto de destino como la reubicación en sí, y el frontend lo espeja en
-     * `reubicaAlServidor()` para enseñar la columna de situación propuesta.
+     * puesto de destino como la reubicación en sí. La pantalla ya no lo
+     * copia: le llega en `propone_situacion` del recurso y, al crear, en
+     * `pide_situacion_propuesta` del catálogo.
      */
     public function reubicaAlServidor(): bool
     {
@@ -368,6 +414,54 @@ class MovimientoPersonal extends Model
         return (bool) $this->tipo_movimiento?->creaVinculo()
             || $this->reubicaAlServidor()
             || (bool) $this->subtipoEfectivo()?->cierraVinculo();
+    }
+
+    /**
+     * La causal de la acción, si su clase la tiene. Hoy solo la cesación, y es
+     * su subtipo: renuncia, destitución, jubilación…
+     */
+    public function causal(): ?SubtipoMovimientoPersonal
+    {
+        return $this->clase?->requiereCausal() ? $this->subtipoEfectivo() : null;
+    }
+
+    /**
+     * Cómo se llama la acción en pantalla y en el documento: el nombre de su
+     * clase. La bitácora del expediente no tiene clase y conserva el de su tipo.
+     */
+    public function etiqueta(): string
+    {
+        return $this->clase?->etiqueta()
+            ?? $this->tipo_movimiento?->etiqueta()
+            ?? '—';
+    }
+
+    /**
+     * ¿Esta acción deja al servidor en una situación nueva que el documento
+     * deba mostrar frente a la actual?
+     *
+     * El ingreso —que crea el vínculo—, lo que reubica dentro de él, y la
+     * subrogación o el encargo: aunque el vínculo original se conserva, el
+     * servidor pasa a ejercer otro puesto y a cobrar por él. Una cesación, una
+     * comisión, una licencia o una sanción no proponen nada.
+     */
+    public function proponeSituacion(): bool
+    {
+        return $this->tipo_movimiento === TipoMovimientoPersonal::INGRESO
+            || $this->tipo_movimiento === TipoMovimientoPersonal::SUBROGACION
+            || $this->reubicaAlServidor();
+    }
+
+    /**
+     * ¿Se corrige con el formulario de «Nueva acción de personal»?
+     *
+     * Solo las acciones con una clase que ese formulario crea: la subrogación y
+     * el encargo se corrigen cancelándolos en su pantalla, y la bitácora del
+     * expediente no se edita.
+     */
+    public function editableEnFormulario(): bool
+    {
+        return (bool) $this->clase?->seCreaDesdeElFormulario();
     }
 
     /**
