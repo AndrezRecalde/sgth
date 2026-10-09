@@ -15,6 +15,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * describa su forma: dentro de un `array_map` la ve como `unknown[]` y el tipo
  * llegaba inservible al frontend.
  *
+ * @mixin \App\Enums\ClaseAccionPersonal
  * @property ClaseAccionPersonal $resource
  */
 class ClaseAccionPersonalResource extends JsonResource

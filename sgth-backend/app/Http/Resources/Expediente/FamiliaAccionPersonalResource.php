@@ -10,6 +10,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * Una familia del catálogo de acciones de personal, en el orden en que se
  * muestra.
  *
+ * @mixin \App\Enums\FamiliaAccionPersonal
  * @property FamiliaAccionPersonal $resource
  */
 class FamiliaAccionPersonalResource extends JsonResource

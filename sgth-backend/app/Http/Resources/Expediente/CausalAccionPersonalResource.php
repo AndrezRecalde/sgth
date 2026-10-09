@@ -10,6 +10,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * Una causal de una clase del catálogo. Hoy solo la cesación de funciones tiene
  * causales, y son sus subtipos: renuncia, destitución, jubilación…
  *
+ * @mixin \App\Enums\SubtipoMovimientoPersonal
  * @property SubtipoMovimientoPersonal $resource
  */
 class CausalAccionPersonalResource extends JsonResource
