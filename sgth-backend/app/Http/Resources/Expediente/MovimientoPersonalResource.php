@@ -91,6 +91,10 @@ class MovimientoPersonalResource extends JsonResource
             'codigo'                      => $this->codigo,
             'codigo_registro'             => $this->codigo_registro,
             'fecha_registro'              => $this->fecha_registro,
+            // Registrada pero sin efecto todavía, porque rige más tarde (fase
+            // 1.6): el vínculo no cambia hasta su fecha.
+            'efecto_aplicado_en'          => $this->efecto_aplicado_en,
+            'pendiente_de_vigencia'       => $this->pendienteDeVigencia(),
             'resolucion_numero'           => $this->resolucion_numero,
             'documento_respaldo'          => $this->documento_respaldo,
             'dictamen_presupuestario_ref' => $this->dictamen_presupuestario_ref,

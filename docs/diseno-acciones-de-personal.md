@@ -888,6 +888,12 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
    - `sgth:servidores:conciliar-estado` corrige lo que quedó antes (8.6 punto 6): con `--simular` informa sin guardar; con `--responsable` aplica y deja la bitácora.
    - En la ficha, `regimen_laboral` ya no se edita y `fecha_ingreso_institucion` pide `corregir-datos-laborales` (admin-uath). Lo que depende de la fecha en que rige la acción queda para el motor de efectos (punto 6).
 6. Motor de efectos con fecha y comando diario.
+   - Columna `efecto_aplicado_en` (lo ya registrado se rellenó con su fecha de registro). Registrada y sin efecto es «pendiente de vigencia».
+   - Al registrar se valida lo que el efecto va a necesitar; si rige hoy o antes se aplica en la misma transacción, y si rige más tarde lo aplica `sgth:acciones:aplicar-vigentes` (00:30) el día en que rige. Lo que falla queda pendiente con su motivo.
+   - El «ascenso»: el ingreso se admite si la cesación del puesto actual ya está registrada para ese día o antes, y el comando aplica los cierres antes que los ingresos.
+   - Un ingreso pendiente cuenta como plaza ocupada.
+   - Anular revierte solo lo que ya surtió efecto; el orden «de la última hacia atrás» cuenta también las pendientes.
+   - Los avisos de lo que vence en 30 días salen, por ahora, en la salida del comando. El reintegro en borrador y el cierre de los períodos de las autoridades electas llegan con sus clases (fase 2).
 
 **Fase 2 — Completar la LOSEP**
 1. Cesación con las causales de 4.3 (incluida la remoción), cascadas (plaza, subrogaciones, reemplazos) y borrador automático del ocasional vencido.

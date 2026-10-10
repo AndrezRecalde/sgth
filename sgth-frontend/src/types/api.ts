@@ -748,6 +748,12 @@ export type MovimientoPersonal = {
   puede_editar: boolean
   /** Si quien mira puede anotar en ella: no en borrador ni en las propias. */
   puede_anotar: boolean
+  /**
+   * Registrada pero sin efecto todavía, porque rige más tarde (fase 1.6): el
+   * vínculo no cambia hasta `fecha_efectiva`.
+   */
+  pendiente_de_vigencia: boolean
+  efecto_aplicado_en?: string | null
   /** Lo que se le anotó después de emitida (fase 1.4). Solo en el detalle. */
   anotaciones?: AnotacionAccion[]
   categoria?: CategoriaEventoVinculo | null

@@ -8562,6 +8562,8 @@ export interface components {
             partida_origen_id: number | null;
             motivo_anulacion: string | null;
             clase: components["schemas"]["ClaseAccionPersonal"] | null;
+            /** Format: date-time */
+            efecto_aplicado_en: string | null;
         };
         /** MovimientoPersonalResource */
         MovimientoPersonalResource: {
@@ -8629,6 +8631,13 @@ export interface components {
             codigo_registro: string | null;
             /** Format: date-time */
             fecha_registro: string | null;
+            /**
+             * Format: date-time
+             * @description Registrada pero sin efecto todavía, porque rige más tarde (fase
+             *     1.6): el vínculo no cambia hasta su fecha.
+             */
+            efecto_aplicado_en: string | null;
+            pendiente_de_vigencia: boolean;
             resolucion_numero: string | null;
             documento_respaldo: string | null;
             dictamen_presupuestario_ref: string | null;
