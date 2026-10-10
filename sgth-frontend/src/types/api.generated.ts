@@ -3880,6 +3880,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/expediente/movimientos/{movimiento}/reintegro": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Prepara en borrador el reintegro de la ausencia: el servidor vuelve de
+         *     su comisión o su licencia (fase 2.4)
+         */
+        post: operations["movimientoPersonal.reintegrar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/expediente/movimientos/{movimiento}/transicionar": {
         parameters: {
             query?: never;
@@ -7367,12 +7387,12 @@ export interface components {
          * @description La clase legal de una acción de personal: el acto que se registra, con el nombre que le da la LOSEP (diseño de Acciones de Personal, sección 4). Es la identidad pública del catálogo. El frontend elige una clase —y, en la cesación, una causal— y el backend la traduce al par tipo/subtipo con el que todavía se guarda y opera cada acción. Esa traducción vive aquí, en `tipoYSubtipo()`, y su inversa en `desde()`: son las dos únicas puertas entre los dos vocabularios.  Las reglas no se repiten. La elegibilidad por nombramiento se pregunta a `TipoMovimientoPersonal` y `SubtipoMovimientoPersonal`, que siguen siendo su única fuente: esta clase solo las agrupa con el nombre legal. Lo que es solo de formulario —qué bloques pide, el aviso de la comisión— sí vive aquí, y `CatalogoAccionesPersonalTest` comprueba que coincida con lo que el tipo/subtipo traducido hace de verdad.  Nombres que cambian respecto de los que veía Talento Humano, todos aceptados el 2026-10-09 (cuestionario, preguntas N1, 9 y 15):  - el «Traspaso» de los permanentes y la «Prestación de servicios» de los    demás son el mismo acto, el **traslado** del Art. 35;  - el «Traslado administrativo» entre instituciones es el **intercambio    voluntario** del Art. 39;  - el «Cambio de denominación» de los obreros es el **cambio de ocupación**    del Art. 192 del Código del Trabajo.
          * @enum {string}
          */
-        ClaseAccionPersonal: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "subrogacion" | "encargo" | "incremento_remuneracion" | "cambio_ocupacion" | "sancion" | "cesacion";
+        ClaseAccionPersonal: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "subrogacion" | "encargo" | "incremento_remuneracion" | "cambio_ocupacion" | "sancion" | "cesacion" | "reintegro";
         /** ClaseAccionPersonalResource */
         ClaseAccionPersonalResource: {
             codigo: components["schemas"]["ClaseAccionPersonal"];
             /** @enum {string} */
-            etiqueta: "Ingreso y Vinculación" | "Traslado" | "Intercambio Voluntario" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Licencia sin Remuneración" | "Subrogación" | "Encargo" | "Incremento de Remuneración" | "Cambio de Ocupación" | "Sanción Disciplinaria" | "Cesación de Funciones";
+            etiqueta: "Ingreso y Vinculación" | "Traslado" | "Intercambio Voluntario" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Licencia sin Remuneración" | "Subrogación" | "Encargo" | "Incremento de Remuneración" | "Cambio de Ocupación" | "Sanción Disciplinaria" | "Cesación de Funciones" | "Reintegro";
             familia: components["schemas"]["FamiliaAccionPersonal"];
             se_crea_desde_formulario: boolean;
             requiere_vinculo: boolean;
@@ -8573,6 +8593,7 @@ export interface components {
             efecto_aplicado_en: string | null;
             institucion_destino: string | null;
             para_estudios_o_eventos: boolean;
+            movimiento_relacionado_id: number | null;
         };
         /** MovimientoPersonalResource */
         MovimientoPersonalResource: {
@@ -8648,6 +8669,19 @@ export interface components {
             movimiento_previo_id: number | null;
             /** @description Ausencia temporal que este ingreso viene a cubrir. */
             cubre_movimiento_id: number | null;
+            /**
+             * @description El acto con que se enlaza (fase 2.4): la ausencia que cierra un
+             *     reintegro, o el reintegro del que salió la cesación de un
+             *     reemplazo.
+             */
+            movimiento_relacionado_id: number | null;
+            relacionado: {
+                id: number;
+                codigo_registro: string | null;
+                etiqueta: string;
+                fecha_inicio: string;
+                fecha_fin: string;
+            } | null;
             codigo: string | null;
             codigo_registro: string | null;
             /** Format: date-time */
@@ -9272,6 +9306,18 @@ export interface components {
             fecha_fin: string;
             motivo: components["schemas"]["MotivoSubrogacion"];
             resolucion_numero?: string | null;
+            observacion?: string | null;
+        };
+        /**
+         * ReintegrarAusenciaRequest
+         * @description El reintegro que se prepara desde la ausencia (fase 2.4): cuándo vuelve el
+         *     servidor y la explicación del documento. El rango de la fecha lo valida
+         *     ReintegroService, que conoce la ausencia.
+         */
+        ReintegrarAusenciaRequest: {
+            /** Format: date-time */
+            fecha_regreso: string;
+            descripcion: string;
             observacion?: string | null;
         };
         /** ReprogramarPlazoContratoRequest */
@@ -10718,7 +10764,7 @@ export interface components {
          * TipoMovimientoPersonal
          * @enum {string}
          */
-        TipoMovimientoPersonal: "traslado" | "subrogacion" | "comision_servicios" | "ingreso" | "cambio_denominacion" | "prestacion_servicios" | "cambio_administrativo" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "traspaso" | "destitucion" | "cesacion_funciones" | "regimen_disciplinario";
+        TipoMovimientoPersonal: "traslado" | "subrogacion" | "comision_servicios" | "ingreso" | "cambio_denominacion" | "prestacion_servicios" | "cambio_administrativo" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "traspaso" | "destitucion" | "cesacion_funciones" | "regimen_disciplinario" | "reintegro";
         /**
          * TipoNombramiento
          * @enum {string}
@@ -13136,8 +13182,18 @@ export interface operations {
                             subtipo_movimiento: string;
                             etiqueta: string | null;
                             desde: string;
+                            /**
+                             * @description La fecha en que termina de verdad: si el titular ya tiene su
+                             *     reintegro, el día anterior al regreso (fase 2.4).
+                             */
                             hasta: string;
                             dias_restantes: number | null;
+                            reintegro: {
+                                id: number;
+                                estado: string;
+                                codigo_registro: string | null;
+                                fecha_regreso: string;
+                            } | null;
                             servidor: {
                                 id: string;
                                 nombre: string;
@@ -22407,6 +22463,42 @@ export interface operations {
                         /** @constant */
                         mensaje: "Anotación registrada.";
                         datos: components["schemas"]["AnotacionAccionPersonalResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "movimientoPersonal.reintegrar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The movimiento ID */
+                movimiento: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReintegrarAusenciaRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Reintegro preparado en borrador.";
+                        datos: components["schemas"]["MovimientoPersonalResource"];
                         meta: null;
                     };
                 };

@@ -30,6 +30,9 @@ enum TipoMovimientoPersonal: string
     // vía subtipoEquivalente().
     case CESACION_FUNCIONES        = 'cesacion_funciones';
     case REGIMEN_DISCIPLINARIO     = 'regimen_disciplinario';
+    // Cierra una comisión o una licencia cuando el servidor vuelve (LOSEP 32;
+    // fase 2.4). Va enlazado a la ausencia que cierra (movimiento_relacionado_id).
+    case REINTEGRO                 = 'reintegro';
     // 'ascenso' se retiró (2026-07-23): confirmado con Talento Humano/UATH
     // que no existe como acción de personal en la operación real del GAD
     // (cero registros, sin mecanismo formal de registro). También era uno
@@ -53,6 +56,7 @@ enum TipoMovimientoPersonal: string
             self::DESTITUCION               => 'Destitución',
             self::CESACION_FUNCIONES        => 'Cesación de Funciones',
             self::REGIMEN_DISCIPLINARIO     => 'Régimen Disciplinario',
+            self::REINTEGRO                 => 'Reintegro',
         };
     }
 
@@ -222,6 +226,7 @@ enum TipoMovimientoPersonal: string
             self::INCREMENTO_REMUNERACION,
             self::CESACION_FUNCIONES,
             self::REGIMEN_DISCIPLINARIO,
+            self::REINTEGRO,
         ], true) || $this->subtipoEquivalente() !== null;
     }
 
@@ -344,6 +349,15 @@ enum TipoMovimientoPersonal: string
             // aceptaba.
             self::INCREMENTO_REMUNERACION =>
                 $tipo === TipoNombramiento::CODIGO_TRABAJO,
+            // De quien puede tener la ausencia que cierra: los permanentes, y
+            // obreros y dignatarios por su licencia «según su régimen» (fase
+            // 2.2). Se deduce de las causales para no quedarse atrás si cambian.
+            // El del provisional ascendido que vuelve a su puesto llega con el
+            // ascenso (fase 3).
+            self::REINTEGRO => array_filter(
+                SubtipoMovimientoPersonal::cases(),
+                fn (SubtipoMovimientoPersonal $s) => $s->esAusenciaTemporal() && $s->elegiblePara($tipo)
+            ) !== [],
             default => true,
         };
     }

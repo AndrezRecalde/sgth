@@ -425,6 +425,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // Anotar en lugar de corregir lo ya emitido (fase 1.4).
         Route::post('movimientos/{movimiento}/anotaciones', [MovimientoPersonalController::class, 'anotar'])
             ->middleware('permission:preparar-accion-personal');
+        // El reintegro nace de la ausencia que cierra (fase 2.4).
+        Route::post('movimientos/{movimiento}/reintegro', [MovimientoPersonalController::class, 'reintegrar'])
+            ->middleware('permission:preparar-accion-personal');
         // El permiso del paso concreto lo mira TransicionarMovimientoRequest.
         Route::put('movimientos/{movimiento}/transicionar', [MovimientoPersonalController::class, 'transicionar'])
             ->middleware('permission:suscribir-accion-personal|registrar-accion-personal|notificar-accion-personal|anular-accion-personal');

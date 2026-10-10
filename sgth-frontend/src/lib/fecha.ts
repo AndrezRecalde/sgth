@@ -78,6 +78,14 @@ export function hoyIso(): string {
   return fromDateValue(new Date())
 }
 
+/** `YYYY-MM-DD` más (o menos, con negativos) tantos días, en la hora local. */
+export function sumarDias(fecha: string, dias: number): string {
+  const d = toDateValue(fecha)
+  if (!d) return ''
+  d.setDate(d.getDate() + dias)
+  return fromDateValue(d)
+}
+
 /**
  * ¿La fecha `YYYY-MM-DD` es de hoy o anterior?
  *

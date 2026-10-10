@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Expediente;
 use App\Enums\ClaseAccionPersonal;
 use App\Enums\EstadoAccionPersonal;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Expediente\ReintegrarAusenciaRequest;
 use App\Http\Requests\Expediente\StoreAnotacionAccionRequest;
 use App\Http\Requests\Expediente\StoreMovimientoPersonalRequest;
 use App\Http\Requests\Expediente\TransicionarMovimientoRequest;
@@ -18,6 +19,7 @@ use App\Services\Disciplinario\AvisoFinancieroSancionService;
 use App\Services\Expediente\AnotacionAccionPersonalService;
 use App\Services\Expediente\MovimientoPersonalService;
 use App\Services\Expediente\MovimientoPersonalStateService;
+use App\Services\Expediente\ReintegroService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -28,6 +30,7 @@ class MovimientoPersonalController extends Controller
         private MovimientoPersonalStateService $stateService,
         private AvisoFinancieroSancionService $avisoFinanciero,
         private AnotacionAccionPersonalService $anotaciones,
+        private ReintegroService $reintegros,
     ) {
     }
 
@@ -197,6 +200,22 @@ class MovimientoPersonalController extends Controller
         return ApiResponse::created(
             new AnotacionAccionPersonalResource($anotacion->load('registradoPor.servidor:id,nombre,apellido')),
             'Anotación registrada.'
+        );
+    }
+
+    /**
+     * Prepara en borrador el reintegro de la ausencia: el servidor vuelve de
+     * su comisión o su licencia (fase 2.4).
+     */
+    public function reintegrar(ReintegrarAusenciaRequest $request, MovimientoPersonal $movimiento): JsonResponse
+    {
+        $this->authorize('actualizar', $movimiento->servidor);
+
+        $reintegro = $this->reintegros->preparar($movimiento, $request->validated());
+
+        return ApiResponse::created(
+            new MovimientoPersonalResource($reintegro),
+            'Reintegro preparado en borrador.'
         );
     }
 
