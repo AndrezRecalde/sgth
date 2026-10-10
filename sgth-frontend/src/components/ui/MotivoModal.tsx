@@ -39,6 +39,9 @@ interface Props {
   cargando?: boolean
   /** Texto con el que abre el campo, para editarlo en vez de escribirlo. */
   valorInicial?: string
+  /** El nombre del campo, cuando lo que se escribe no es un motivo (una anotación). */
+  etiqueta?: string
+  placeholder?: string
   onConfirm: (motivo: string) => void
 }
 
@@ -51,6 +54,8 @@ export function MotivoModal({
   destructiva = false,
   cargando = false,
   valorInicial = '',
+  etiqueta = 'Motivo',
+  placeholder = 'Por qué se realiza esta acción',
   onConfirm,
 }: Props) {
   const contained = useContainedInput()
@@ -104,8 +109,8 @@ export function MotivoModal({
         </Alert>
 
         <Textarea
-          label="Motivo"
-          placeholder="Por qué se realiza esta acción"
+          label={etiqueta}
+          placeholder={placeholder}
           autosize
           minRows={3}
           maxRows={6}

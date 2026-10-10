@@ -127,27 +127,49 @@ class MovimientoPersonal extends Model
                 ? $estadoOriginal
                 : EstadoAccionPersonal::tryFrom((string) $estadoOriginal);
 
+            // Una acción anulada es el final del camino: no cambia nada más,
+            // ni el estado.
+            if ($estadoOriginal === EstadoAccionPersonal::ANULADA) {
+                throw new ReglaNegocioException(
+                    'Una acción de personal anulada no se modifica. Si hace falta dejar '
+                        .'constancia de algo, anótelo.'
+                );
+            }
+
             if (!in_array($estadoOriginal, [EstadoAccionPersonal::REGISTRADA, EstadoAccionPersonal::NOTIFICADA], true)) {
                 return;
             }
 
-            $inmutables = [
-                'tipo_movimiento', 'subtipo_movimiento', 'clase', 'fecha_registro', 'codigo_registro',
-                // Quién firmó y cuándo: sellado al suscribir, es la prueba de
-                // auditoría del documento y no puede reescribirse después.
-                'fecha_suscripcion',
-                'firmante_autoridad_id', 'firmante_autoridad_nombre',
-                'firmante_autoridad_cargo', 'firmante_autoridad_cedula',
-                'firmante_th_id', 'firmante_th_nombre',
-                'firmante_th_cargo', 'firmante_th_cedula',
+            /*
+            | Desde que está registrada, de la acción solo cambia el estado, con
+            | los datos de ese paso. Todo lo demás —la explicación, las fechas,
+            | los puestos, la remuneración, el dictamen— es el acto emitido, y no
+            | se reescribe (diseño, 8.1). Lo que pase después se anota aparte,
+            | en `anotaciones_accion_personal`.
+            |
+            | Hasta la fase 1.4 esto era una lista de campos prohibidos —tipo,
+            | clase, número y firmantes— y todo lo que no estaba en ella se podía
+            | cambiar: el visto bueno impugnado reescribía la explicación de una
+            | cesación ya registrada. Una lista de lo permitido no deja huecos
+            | cuando se añade una columna.
+            */
+            $permitidos = [
+                'estado', 'updated_at',
+                ...match ($movimiento->estado) {
+                    EstadoAccionPersonal::NOTIFICADA => ['notificado_por', 'fecha_notificacion'],
+                    EstadoAccionPersonal::ANULADA    => ['motivo_anulacion'],
+                    default                          => [],
+                },
             ];
 
-            foreach ($inmutables as $campo) {
-                if ($movimiento->isDirty($campo)) {
-                    throw new ReglaNegocioException(
-                        "No se puede modificar '{$campo}' de un evento ya registrado."
-                    );
-                }
+            $cambiados = array_values(array_diff(array_keys($movimiento->getDirty()), $permitidos));
+
+            if ($cambiados !== []) {
+                throw new ReglaNegocioException(
+                    'Una acción de personal registrada no se modifica (campos: '
+                        .implode(', ', $cambiados).'). Si hace falta dejar constancia de '
+                        .'algo, anótelo; si el acto tiene un error, anúlelo y emita uno nuevo.'
+                );
             }
 
             /*
@@ -363,6 +385,12 @@ class MovimientoPersonal extends Model
     public function solicitudCertificacion(): HasOne
     {
         return $this->hasOne(SolicitudCertificacionMedica::class, 'movimiento_personal_id');
+    }
+
+    /** Lo que se le anotó después de emitida, en el orden en que pasó. */
+    public function anotaciones(): HasMany
+    {
+        return $this->hasMany(AnotacionAccionPersonal::class)->orderBy('created_at')->orderBy('id');
     }
 
     /**

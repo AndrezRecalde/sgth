@@ -273,12 +273,23 @@ test('un evento registrado no puede volver hacia atrás con un update() directo'
         ->toThrow(ReglaNegocioException::class);
 });
 
-test('un evento registrado sigue permitiendo editar campos no protegidos', function () {
+/*
+| Hasta la fase 1.4 esta prueba decía lo contrario: que tras registrar se podía
+| seguir editando lo que no estuviera en la lista de campos prohibidos. Así el
+| visto bueno impugnado reescribía la explicación de una cesación registrada.
+| Ahora la nota va a una anotación.
+*/
+test('un evento registrado ya no admite editar ningún campo de contenido', function () {
     $movimiento = crearMovimiento(['estado' => EstadoAccionPersonal::REGISTRADA]);
 
-    $movimiento->update(['observacion' => 'Nota administrativa añadida después del registro.']);
-
-    expect($movimiento->fresh()->observacion)->toBe('Nota administrativa añadida después del registro.');
+    foreach ([
+        'observacion'    => 'Nota administrativa añadida después del registro.',
+        'descripcion'    => 'Explicación reescrita',
+        'fecha_efectiva' => '2027-01-01',
+    ] as $campo => $valor) {
+        expect(fn () => $movimiento->fresh()->update([$campo => $valor]))
+            ->toThrow(ReglaNegocioException::class, "campos: {$campo}");
+    }
 });
 
 test('un evento notificado tampoco permite cambiar de estado por update() directo', function () {

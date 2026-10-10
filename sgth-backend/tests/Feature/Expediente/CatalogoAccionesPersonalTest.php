@@ -395,18 +395,17 @@ test('la clase de una acción registrada no se reescribe', function () {
     ]);
 
     $m->update(['clase' => ClaseAccionPersonal::TRASLADO]);
-})->throws(ReglaNegocioException::class, "'clase'");
+})->throws(ReglaNegocioException::class, 'campos: clase');
 
 test('una acción leída con select parcial se guarda sin tocar su clase', function () {
     $servidor = ($this->servidorCon)(TipoNombramiento::PERMANENTE);
 
+    // En borrador: una registrada ya no se guarda con cambios (fase 1.4).
     $m = MovimientoPersonal::create([
         'servidor_id'     => $servidor->id,
         'tipo_movimiento' => TipoMovimientoPersonal::LICENCIA_SIN_REMUNERACION,
-        'estado'          => EstadoAccionPersonal::REGISTRADA,
-        'codigo_registro' => 'AP-2026-0902',
-        'fecha_registro'  => now(),
-        'descripcion'     => 'Licencia registrada',
+        'estado'          => EstadoAccionPersonal::BORRADOR,
+        'descripcion'     => 'Licencia en borrador',
         'fecha_efectiva'  => '2026-10-15',
     ]);
 

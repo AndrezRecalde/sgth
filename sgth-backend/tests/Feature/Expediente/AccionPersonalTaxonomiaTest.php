@@ -509,7 +509,7 @@ test('el subtipo no se puede modificar una vez registrada la acción', function 
 
     expect(fn () => $movimiento->update([
         'subtipo_movimiento' => SubtipoMovimientoPersonal::JUBILACION->value,
-    ]))->toThrow(ReglaNegocioException::class, "No se puede modificar 'subtipo_movimiento'");
+    ]))->toThrow(ReglaNegocioException::class, 'campos: subtipo_movimiento');
 });
 
 // ── Qué produce documento imprimible ────────────────────────────

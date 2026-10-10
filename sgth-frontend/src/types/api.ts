@@ -709,6 +709,14 @@ export type CategoriaEventoVinculo =
   | 'adenda_contractual'
   | 'movimiento_codigo_trabajo'
 
+/**
+ * Lo que se le anota a una acción de personal después de emitida, en vez de
+ * reescribirla (fase 1.4). `registrado_por` es null si la anotó el sistema.
+ */
+export type AnotacionAccion = Omit<
+  components['schemas']['AnotacionAccionPersonalResource'], 'registrado_por'
+> & { registrado_por?: string | null }
+
 export type MovimientoPersonal = {
   id: number
   servidor_id: number
@@ -738,6 +746,10 @@ export type MovimientoPersonal = {
   transiciones_permitidas: EstadoAccionPersonal[]
   /** Si quien mira puede corregir el borrador con el formulario. */
   puede_editar: boolean
+  /** Si quien mira puede anotar en ella: no en borrador ni en las propias. */
+  puede_anotar: boolean
+  /** Lo que se le anotó después de emitida (fase 1.4). Solo en el detalle. */
+  anotaciones?: AnotacionAccion[]
   categoria?: CategoriaEventoVinculo | null
   estado?: EstadoAccionPersonal
   // Datos del vínculo que Talento Humano fija mientras está en borrador y que

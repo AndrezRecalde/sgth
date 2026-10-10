@@ -331,7 +331,7 @@ test('el sello no se puede modificar una vez registrada la acción', function ()
     $registrado = $this->stateService->transicionar($movimiento->fresh(), EstadoAccionPersonal::REGISTRADA);
 
     expect(fn () => $registrado->update(['firmante_autoridad_nombre' => 'OTRA PERSONA']))
-        ->toThrow(ReglaNegocioException::class, "No se puede modificar 'firmante_autoridad_nombre'");
+        ->toThrow(ReglaNegocioException::class, 'campos: firmante_autoridad_nombre');
 });
 
 // ── El documento impreso ────────────────────────────────────────

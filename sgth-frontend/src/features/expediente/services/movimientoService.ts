@@ -1,5 +1,7 @@
 import api from '@/lib/axios'
-import type { ApiResponse, MovimientoPersonal, PaginatedResponse } from '@/types/api'
+import type {
+  AnotacionAccion, ApiResponse, MovimientoPersonal, PaginatedResponse,
+} from '@/types/api'
 import type { MovimientoFormData } from '../schemas/movimiento.schema'
 import type { ActualizarBorradorData, FiltrosBandeja, TransicionarData } from './movimiento.types'
 
@@ -68,6 +70,17 @@ export const movimientoService = {
     api
       .put<ApiResponse<MovimientoPersonal>>(
         `/expediente/movimientos/${movimientoId}`, data,
+      )
+      .then((r) => r.data.datos),
+
+  /**
+   * Anota en una acción ya emitida, en vez de corregirla: el documento sigue
+   * diciendo lo que se firmó (fase 1.4).
+   */
+  anotar: (movimientoId: number, texto: string) =>
+    api
+      .post<ApiResponse<AnotacionAccion>>(
+        `/expediente/movimientos/${movimientoId}/anotaciones`, { texto },
       )
       .then((r) => r.data.datos),
 

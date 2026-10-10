@@ -23971,7 +23971,7 @@
         "/v1/expediente/movimientos": {
             "get": {
                 "operationId": "movimientoPersonal.bandeja",
-                "summary": "Bandeja transversal de acciones de personal, para revisarlas y\r\naprobarlas sin tener que entrar servidor por servidor. A diferencia de\r\nindex(), no se ancla a un expediente: la autorizaci\u00f3n la da el rol de la\r\nruta, no la pol\u00edtica sobre un Servidor concreto",
+                "summary": "Bandeja transversal de acciones de personal, para revisarlas y\naprobarlas sin tener que entrar servidor por servidor. A diferencia de\nindex(), no se ancla a un expediente: la autorizaci\u00f3n la da el rol de la\nruta, no la pol\u00edtica sobre un Servidor concreto",
                 "tags": [
                     "MovimientoPersonal"
                 ],
@@ -24063,7 +24063,7 @@
         "/v1/expediente/movimientos/{movimiento}": {
             "get": {
                 "operationId": "movimientoPersonal.show",
-                "summary": "Detalle completo de una acci\u00f3n, para revisarla antes de aprobarla o\r\neditarla. Trae las relaciones que el listado omite por peso",
+                "summary": "Detalle completo de una acci\u00f3n, para revisarla antes de aprobarla o\neditarla. Trae las relaciones que el listado omite por peso",
                 "tags": [
                     "MovimientoPersonal"
                 ],
@@ -24163,6 +24163,81 @@
                                         },
                                         "datos": {
                                             "$ref": "#/components/schemas/MovimientoPersonalResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/movimientos/{movimiento}/anotaciones": {
+            "post": {
+                "operationId": "movimientoPersonal.anotar",
+                "summary": "Anotar en una acci\u00f3n ya emitida, en vez de corregirla (fase 1.4). El\ndocumento sigue diciendo lo que se firm\u00f3; la anotaci\u00f3n queda al lado",
+                "tags": [
+                    "MovimientoPersonal"
+                ],
+                "parameters": [
+                    {
+                        "name": "movimiento",
+                        "in": "path",
+                        "required": true,
+                        "description": "The movimiento ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreAnotacionAccionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Anotaci\u00f3n registrada."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/AnotacionAccionPersonalResource"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -43029,6 +43104,46 @@
                 ],
                 "title": "AlergiaPaciente"
             },
+            "AnotacionAccionPersonalResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "tipo": {
+                        "$ref": "#/components/schemas/TipoAnotacionAccion"
+                    },
+                    "etiqueta": {
+                        "type": "string",
+                        "enum": [
+                            "Impugnaci\u00f3n del visto bueno",
+                            "Nota de Talento Humano"
+                        ]
+                    },
+                    "texto": {
+                        "type": "string"
+                    },
+                    "registrado_por": {
+                        "type": "string",
+                        "description": "El nombre del servidor detr\u00e1s del usuario, como en el resto del\nexpediente; null si la anot\u00f3 el sistema o una migraci\u00f3n."
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "tipo",
+                    "etiqueta",
+                    "texto",
+                    "created_at"
+                ],
+                "title": "AnotacionAccionPersonalResource"
+            },
             "AntecedentePaciente": {
                 "type": "object",
                 "properties": {
@@ -49597,6 +49712,9 @@
                     "puede_editar": {
                         "type": "boolean"
                     },
+                    "puede_anotar": {
+                        "type": "boolean"
+                    },
                     "categoria": {
                         "anyOf": [
                             {
@@ -50021,6 +50139,13 @@
                         "description": "La ausencia que este ingreso cubre, con el titular ausente: es\nlo que hace legible \"reemplaza a X\" sin una consulta extra.",
                         "$ref": "#/components/schemas/MovimientoPersonal"
                     },
+                    "anotaciones": {
+                        "type": "array",
+                        "description": "Lo que se le anot\u00f3 despu\u00e9s de emitida (fase 1.4).",
+                        "items": {
+                            "$ref": "#/components/schemas/AnotacionAccionPersonalResource"
+                        }
+                    },
                     "autorizado_por_usuario": {
                         "type": "object",
                         "properties": {
@@ -50055,6 +50180,7 @@
                     "editable_en_formulario",
                     "transiciones_permitidas",
                     "puede_editar",
+                    "puede_anotar",
                     "categoria",
                     "estado",
                     "descripcion",
@@ -53922,6 +54048,21 @@
                 ],
                 "title": "StoreAlergiaPacienteRequest"
             },
+            "StoreAnotacionAccionRequest": {
+                "type": "object",
+                "properties": {
+                    "texto": {
+                        "type": "string",
+                        "description": "Los mismos l\u00edmites que el modal de motivo con que se escribe.",
+                        "minLength": 5,
+                        "maxLength": 500
+                    }
+                },
+                "required": [
+                    "texto"
+                ],
+                "title": "StoreAnotacionAccionRequest"
+            },
             "StoreAntecedentePacienteRequest": {
                 "type": "object",
                 "properties": {
@@ -57342,6 +57483,15 @@
                     "categoria_id"
                 ],
                 "title": "Ticket"
+            },
+            "TipoAnotacionAccion": {
+                "type": "string",
+                "description": "Lo que se le anota a una acci\u00f3n de personal despu\u00e9s de emitida (dise\u00f1o de Acciones de Personal, 8.1; fase 1.4). Un acto registrado no se reescribe: lo que pasa despu\u00e9s va aqu\u00ed, aparte, con qui\u00e9n y cu\u00e1ndo.\n| |\n|---|\n| `impugnacion_visto_bueno` <br/> El trabajador impugn\u00f3 el visto bueno que origin\u00f3 la cesaci\u00f3n. Hasta la fase 1.4 se a\u00f1ad\u00eda al final de la explicaci\u00f3n de la acci\u00f3n, aunque ya estuviera registrada. |\n| `nota` <br/> Una nota de Talento Humano: lo que antes se habr\u00eda corregido a mano. |",
+                "enum": [
+                    "impugnacion_visto_bueno",
+                    "nota"
+                ],
+                "title": "TipoAnotacionAccion"
             },
             "TipoAntecedenteFemo": {
                 "type": "string",
