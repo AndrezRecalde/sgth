@@ -7380,6 +7380,8 @@ export interface components {
             causales: components["schemas"]["CausalAccionPersonalResource"][];
             pide_situacion_propuesta: boolean;
             pide_periodo: boolean;
+            pide_institucion_destino: boolean;
+            admite_para_estudios_o_eventos: boolean;
             pide_contratacion: boolean;
             dictamen_medico_por_defecto: boolean;
             aviso: string | null;
@@ -8569,6 +8571,8 @@ export interface components {
             clase: components["schemas"]["ClaseAccionPersonal"] | null;
             /** Format: date-time */
             efecto_aplicado_en: string | null;
+            institucion_destino: string | null;
+            para_estudios_o_eventos: boolean;
         };
         /** MovimientoPersonalResource */
         MovimientoPersonalResource: {
@@ -8622,6 +8626,8 @@ export interface components {
             fecha_fin: string | null;
             unidad_origen_id: number | null;
             unidad_destino_id: number | null;
+            institucion_destino: string | null;
+            para_estudios_o_eventos: boolean;
             puesto_origen_id: number | null;
             puesto_destino_id: number | null;
             tipo_nombramiento_propuesto: components["schemas"]["TipoNombramiento"] | null;
@@ -10133,6 +10139,9 @@ export interface components {
             /** @description una licencia de un día empieza y termina el mismo día */
             unidad_origen_id?: number | null;
             unidad_destino_id?: number | null;
+            /** @description Comisiones e intercambio: la entidad del Estado a la que va (fase 2.3). */
+            institucion_destino?: string | null;
+            para_estudios_o_eventos?: boolean | null;
             puesto_origen_id?: number | null;
             puesto_destino_id?: number | null;
             /**
@@ -11219,6 +11228,9 @@ export interface components {
             /** @description una licencia de un día empieza y termina el mismo día */
             unidad_origen_id?: number | null;
             unidad_destino_id?: number | null;
+            /** @description Comisiones e intercambio: la entidad del Estado a la que va (fase 2.3). */
+            institucion_destino?: string | null;
+            para_estudios_o_eventos?: boolean | null;
             puesto_origen_id?: number | null;
             puesto_destino_id?: number | null;
             tipo_nombramiento_propuesto?: components["schemas"]["TipoNombramiento"];

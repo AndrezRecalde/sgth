@@ -372,6 +372,25 @@
 <div class="bloque-titulo">Explicación</div>
 <div class="explicacion">
     {{ $movimiento->descripcion }}
+    {{-- Fase 2.3: a dónde va y cuánto dura. Hasta aquí la institución iba,
+         si iba, en la explicación, y el período solo salía en la suspensión. --}}
+    @if($movimiento->institucion_destino)
+        <div class="respaldo">
+            <strong>Institución de destino:</strong> {{ $movimiento->institucion_destino }}
+        </div>
+    @endif
+    @if($movimiento->esAusenciaTemporal() && $movimiento->fecha_inicio)
+        <div class="respaldo">
+            <strong>Período:</strong> del {{ $fmtFecha($movimiento->fecha_inicio) }}
+            al {{ $fmtFecha($movimiento->fecha_fin) }}
+        </div>
+    @endif
+    @if($movimiento->para_estudios_o_eventos)
+        <div class="respaldo">
+            Al terminar la comisión, el servidor debe servir en la institución un tiempo igual
+            al de su duración (LOSEP Art. 30).
+        </div>
+    @endif
     @if($movimiento->resolucion_numero)
         <div class="respaldo">
             <strong>Documento de respaldo:</strong> {{ $movimiento->resolucion_numero }}

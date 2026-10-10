@@ -60,6 +60,12 @@ class Puesto extends Model
         return $this->belongsTo(GrupoOcupacional::class);
     }
 
+    /** ¿Es del nivel jerárquico superior? Lo dice su grupo ocupacional. */
+    public function esNivelJerarquicoSuperior(): bool
+    {
+        return (bool) $this->grupoOcupacional?->esNivelJerarquicoSuperior();
+    }
+
     public function partidaPresupuestaria(): BelongsTo
     {
         return $this->belongsTo(PartidaPresupuestaria::class);

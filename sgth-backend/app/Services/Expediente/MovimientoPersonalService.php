@@ -150,6 +150,20 @@ class MovimientoPersonalService
             $this->validarComisionDeServicios($servidor, $subtipo, $datos);
         }
 
+        // A qué entidad va: la comisión es servir en otra, y el intercambio es
+        // entre instituciones (fase 2.3).
+        if ($subtipo && self::vaAOtraInstitucion($subtipo) && blank($datos['institucion_destino'] ?? null)) {
+            throw new ReglaNegocioException(
+                "Indique la institución de destino de la {$subtipo->etiqueta()}."
+            );
+        }
+
+        // La obligación de devengar al volver es solo de la comisión con
+        // remuneración (LOSEP 30); en cualquier otra acción no significa nada.
+        if ($subtipo !== SubtipoMovimientoPersonal::COMISION_CON_REMUNERACION) {
+            $datos['para_estudios_o_eventos'] = false;
+        }
+
         if ($subtipo?->esLicenciaSinRemuneracion()) {
             $this->validarLicenciaSinRemuneracion($servidor, $subtipo, $datos);
         }
@@ -272,6 +286,15 @@ class MovimientoPersonalService
 
         $this->revalidarPeriodoDeComision($movimiento, $datos);
         $this->revalidarPeriodoDeLicencia($movimiento, $datos);
+
+        $subtipoActual = $movimiento->subtipoEfectivo();
+        if ($subtipoActual && self::vaAOtraInstitucion($subtipoActual)
+            && array_key_exists('institucion_destino', $datos) && blank($datos['institucion_destino'])
+        ) {
+            throw new ReglaNegocioException(
+                "Indique la institución de destino de la {$subtipoActual->etiqueta()}."
+            );
+        }
         $this->revalidarReemplazo($movimiento, $datos);
 
         $movimiento->update($datos);
@@ -450,7 +473,13 @@ class MovimientoPersonalService
         $this->validarComisionDeServicios($servidor, $subtipo, [
             'fecha_inicio' => $datos['fecha_inicio'] ?? $movimiento->fecha_inicio?->toDateString(),
             'fecha_fin'    => $datos['fecha_fin'] ?? $movimiento->fecha_fin?->toDateString(),
-        ]);
+        ], $movimiento->id);
+    }
+
+    /** La comisión y el intercambio van a otra entidad del Estado (fase 2.3). */
+    private static function vaAOtraInstitucion(SubtipoMovimientoPersonal $subtipo): bool
+    {
+        return $subtipo->esComisionDeServicios() || $subtipo === SubtipoMovimientoPersonal::TRASLADO_ADMINISTRATIVO;
     }
 
     /**
@@ -596,21 +625,38 @@ class MovimientoPersonalService
     }
 
     /**
-     * Antigüedad ≥ 2 años en la institución y duración de 1 a 6 años. Aplica
-     * por igual a la comisión con y sin remuneración — confirmado con Talento
-     * Humano (2026-07-27).
+     * La regla legal de la comisión de servicios (fase 2.3; TH N5):
+     *
+     * - Con remuneración (LOSEP 30): 1 año de servicio a la fecha de inicio, y
+     *   hasta 2 años.
+     * - Sin remuneración (LOSEP 31): 1 año de servicio, hasta 6 años sumados en
+     *   toda la carrera, y nunca para un puesto del nivel jerárquico superior.
+     *
+     * Las dos son de servidores de carrera, y eso ya lo dice la elegibilidad:
+     * solo permanentes. Hasta la fase 2.3 se exigían 2 años de antigüedad —a
+     * hoy, no a la fecha de inicio— y de 1 a 6 años de duración para las dos:
+     * venía de la LOIP, que la Corte Constitucional anuló (52-25-IN/25).
      */
     private function validarComisionDeServicios(
         Servidor $servidor,
         SubtipoMovimientoPersonal $subtipo,
-        array $datos
+        array $datos,
+        ?int $excepto = null
     ): void {
         $etiqueta = $subtipo->etiqueta();
+        $articulo = $subtipo === SubtipoMovimientoPersonal::COMISION_CON_REMUNERACION ? '30' : '31';
 
         if (empty($datos['fecha_inicio']) || empty($datos['fecha_fin'])) {
             throw new ReglaNegocioException(
                 "La {$etiqueta} requiere fecha de inicio y fecha de fin."
             );
+        }
+
+        $inicio = Carbon::parse($datos['fecha_inicio'])->startOfDay();
+        $fin    = Carbon::parse($datos['fecha_fin'])->startOfDay();
+
+        if ($fin->lt($inicio)) {
+            throw new ReglaNegocioException('La fecha de fin no puede ser anterior a la de inicio.');
         }
 
         if (!$servidor->fecha_ingreso_institucion) {
@@ -619,23 +665,47 @@ class MovimientoPersonalService
             );
         }
 
-        // diffInYears() devuelve float en Carbon 3, así que exactamente 2 años
-        // cumple el umbral "2 años o más" que fijó Talento Humano.
-        $aniosAntiguedad = Carbon::parse($servidor->fecha_ingreso_institucion)
-            ->diffInYears(now());
-
-        if ($aniosAntiguedad < 2) {
+        if ($servidor->fecha_ingreso_institucion->copy()->addYear()->gt($inicio)) {
             throw new ReglaNegocioException(
-                "La {$etiqueta} requiere al menos 2 años de antigüedad en la institución."
+                "La {$etiqueta} exige al menos 1 año de servicio en la institución a la fecha de inicio (LOSEP Art. {$articulo})."
             );
         }
 
-        $duracionAnios = Carbon::parse($datos['fecha_inicio'])
-            ->diffInYears(Carbon::parse($datos['fecha_fin']));
+        if ($subtipo === SubtipoMovimientoPersonal::COMISION_CON_REMUNERACION) {
+            if ($fin->gt($inicio->copy()->addYears(2)->subDay())) {
+                throw new ReglaNegocioException("La {$etiqueta} dura hasta 2 años (LOSEP Art. 30).");
+            }
 
-        if ($duracionAnios < 1 || $duracionAnios > 6) {
+            return;
+        }
+
+        if ($servidor->contratoVigente?->puesto?->esNivelJerarquicoSuperior()) {
             throw new ReglaNegocioException(
-                "La {$etiqueta} debe durar entre 1 y 6 años."
+                "La {$etiqueta} no es para un puesto del nivel jerárquico superior (LOSEP Art. 31)."
+            );
+        }
+
+        // Seis años en toda la carrera: esta y las anteriores que no se
+        // anularon, también las que se registraron con el tipo plano de antes.
+        $previas = MovimientoPersonal::where('servidor_id', $servidor->id)
+            ->where(fn ($q) => $q->where('subtipo_movimiento', SubtipoMovimientoPersonal::COMISION_SIN_REMUNERACION->value)
+                ->orWhere(fn ($legado) => $legado->whereNull('subtipo_movimiento')
+                    ->where('tipo_movimiento', TipoMovimientoPersonal::COMISION_SIN_REMUNERACION->value)))
+            ->where('estado', '!=', EstadoAccionPersonal::ANULADA->value)
+            ->when($excepto, fn ($q) => $q->where('id', '!=', $excepto))
+            ->whereNotNull('fecha_inicio')
+            ->whereNotNull('fecha_fin')
+            ->get(['id', 'fecha_inicio', 'fecha_fin']);
+
+        $dias = (int) $inicio->diffInDays($fin) + 1
+            + (int) $previas->sum(fn (MovimientoPersonal $m) => $m->fecha_inicio->diffInDays($m->fecha_fin) + 1);
+
+        $tope = (int) $inicio->diffInDays($inicio->copy()->addYears(6));
+
+        if ($dias > $tope) {
+            throw new ReglaNegocioException(
+                "La {$etiqueta} no puede pasar de 6 años en toda la carrera: con esta serían "
+                    ."{$dias} días, y el tope es de {$tope} (LOSEP Art. 31)."
             );
         }
     }

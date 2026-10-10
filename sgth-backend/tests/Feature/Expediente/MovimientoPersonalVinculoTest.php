@@ -520,6 +520,7 @@ test('una comisión de servicios no mueve al servidor de puesto', function () {
         ->registrar($servidor->id, [
             'tipo_movimiento'    => \App\Enums\TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO->value,
             'subtipo_movimiento' => \App\Enums\SubtipoMovimientoPersonal::COMISION_SIN_REMUNERACION->value,
+            'institucion_destino' => 'Ministerio del Trabajo',
             'descripcion'        => 'Comisión de servicios en otra institución',
             'fecha_efectiva'     => '2026-01-01',
             'fecha_inicio'       => '2026-01-01',
@@ -575,6 +576,7 @@ test('la actividad laboral agrupa las acciones bajo el contrato al que pertenece
     $comision = $servicio->registrar($servidor->id, [
         'tipo_movimiento'    => \App\Enums\TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO->value,
         'subtipo_movimiento' => \App\Enums\SubtipoMovimientoPersonal::COMISION_SIN_REMUNERACION->value,
+        'institucion_destino' => 'Ministerio del Trabajo',
         'descripcion'        => 'Comisión',
         'fecha_efectiva'     => now()->subMonth()->toDateString(),
         'fecha_inicio'       => now()->subMonth()->toDateString(),

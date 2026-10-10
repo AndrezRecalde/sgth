@@ -61,6 +61,8 @@ export type ActualizarBorradorData = {
   resolucion_numero?: string | null
   observacion?: string | null
   lugar_trabajo?: string | null
+  institucion_destino?: string | null
+  para_estudios_o_eventos?: boolean | null
   caucionado?: boolean | null
   caucion_numero?: string | null
   caucion_fecha?: string | null

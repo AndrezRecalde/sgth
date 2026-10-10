@@ -289,6 +289,7 @@ test('editar el borrador no permite estirar la comisión más allá del límite'
     $comision = $this->service->registrar($servidor->id, [
         'tipo_movimiento'    => TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO->value,
         'subtipo_movimiento' => SubtipoMovimientoPersonal::COMISION_CON_REMUNERACION->value,
+        'institucion_destino' => 'Ministerio del Trabajo',
         'descripcion'        => 'Comisión válida de 2 años',
         'fecha_efectiva'     => '2026-08-01',
         'fecha_inicio'       => '2026-08-01',
@@ -297,7 +298,7 @@ test('editar el borrador no permite estirar la comisión más allá del límite'
 
     expect(fn () => $this->service->actualizarBorrador($comision, [
         'fecha_fin' => '2036-07-31',
-    ]))->toThrow(ReglaNegocioException::class, 'entre 1 y 6 años');
+    ]))->toThrow(ReglaNegocioException::class, 'dura hasta 2 años');
 
     // Y el borrador no quedó modificado a medias.
     expect($comision->fresh()->fecha_fin->toDateString())->toBe('2028-07-31');
@@ -309,6 +310,7 @@ test('editar un borrador sin tocar las fechas no revalida la comisión', functio
     $comision = $this->service->registrar($servidor->id, [
         'tipo_movimiento'    => TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO->value,
         'subtipo_movimiento' => SubtipoMovimientoPersonal::COMISION_CON_REMUNERACION->value,
+        'institucion_destino' => 'Ministerio del Trabajo',
         'descripcion'        => 'Comisión válida',
         'fecha_efectiva'     => '2026-08-01',
         'fecha_inicio'       => '2026-08-01',
@@ -320,17 +322,20 @@ test('editar un borrador sin tocar las fechas no revalida la comisión', functio
     expect($comision->fresh()->descripcion)->toBe('Descripción corregida');
 });
 
-test('la comisión con remuneración hereda las reglas de duración', function () {
+// La regla legal desde la fase 2.3 (LOSEP 30): hasta 2 años. Antes era «entre 1
+// y 6 años» para las dos comisiones, de la LOIP anulada.
+test('la comisión con remuneración dura hasta 2 años', function () {
     $servidor = ($this->servidorCon)(TipoNombramiento::PERMANENTE);
 
     expect(fn () => $this->service->registrar($servidor->id, [
         'tipo_movimiento'    => TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO->value,
         'subtipo_movimiento' => SubtipoMovimientoPersonal::COMISION_CON_REMUNERACION->value,
-        'descripcion'        => 'Comisión de 7 años',
+        'institucion_destino' => 'Ministerio del Trabajo',
+        'descripcion'        => 'Comisión de dos años y un día',
         'fecha_efectiva'     => '2026-08-01',
         'fecha_inicio'       => '2026-08-01',
-        'fecha_fin'          => '2033-08-01',
-    ]))->toThrow(ReglaNegocioException::class, 'entre 1 y 6 años');
+        'fecha_fin'          => '2028-08-01',
+    ]))->toThrow(ReglaNegocioException::class, 'dura hasta 2 años');
 });
 
 test('la comisión con remuneración exige antigüedad mínima', function () {
@@ -339,20 +344,23 @@ test('la comisión con remuneración exige antigüedad mínima', function () {
     expect(fn () => $this->service->registrar($servidor->id, [
         'tipo_movimiento'    => TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO->value,
         'subtipo_movimiento' => SubtipoMovimientoPersonal::COMISION_CON_REMUNERACION->value,
+        'institucion_destino' => 'Ministerio del Trabajo',
         'descripcion'        => 'Comisión sin antigüedad',
         'fecha_efectiva'     => '2026-08-01',
         'fecha_inicio'       => '2026-08-01',
         'fecha_fin'          => '2028-08-01',
-    ]))->toThrow(ReglaNegocioException::class, 'al menos 2 años de antigüedad');
+    ]))->toThrow(ReglaNegocioException::class, 'al menos 1 año de servicio en la institución a la fecha de inicio');
 });
 
-test('exactamente 2 años de antigüedad cumple el umbral de la comisión', function () {
-    $servidor = ($this->servidorCon)(TipoNombramiento::PERMANENTE, now()->subYears(2)->toDateString());
+// Se mide a la fecha de inicio, no a hoy (fase 2.3): exactamente un año antes.
+test('exactamente 1 año de servicio a la fecha de inicio cumple el umbral de la comisión', function () {
+    $servidor = ($this->servidorCon)(TipoNombramiento::PERMANENTE, '2025-08-01');
 
     $movimiento = $this->service->registrar($servidor->id, [
         'tipo_movimiento'    => TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO->value,
         'subtipo_movimiento' => SubtipoMovimientoPersonal::COMISION_SIN_REMUNERACION->value,
-        'descripcion'        => 'Comisión con exactamente 2 años de antigüedad',
+        'institucion_destino' => 'Ministerio del Trabajo',
+        'descripcion'        => 'Comisión con exactamente 1 año de servicio',
         'fecha_efectiva'     => '2026-08-01',
         'fecha_inicio'       => '2026-08-01',
         'fecha_fin'          => '2028-08-01',
@@ -686,6 +694,7 @@ test('un traslado se registra sin puesto de destino', function () {
     $movimiento = $this->service->registrar($servidor->id, [
         'tipo_movimiento'    => TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO->value,
         'subtipo_movimiento' => SubtipoMovimientoPersonal::TRASLADO_ADMINISTRATIVO->value,
+        'institucion_destino' => 'Ministerio del Trabajo',
         'descripcion'        => 'Traslado al Ministerio de Salud Pública.',
         'fecha_efectiva'     => '2026-10-01',
         // Sin puesto_destino_id: no hay puesto del GAD que ocupar.

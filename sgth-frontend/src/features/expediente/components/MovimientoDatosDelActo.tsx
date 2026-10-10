@@ -34,6 +34,7 @@ export function MovimientoDatosDelActo({
   const caucionado = useWatch({ control, name: 'caucionado' })
 
   const muestraFechas = !!clase?.pide_periodo
+  const pideInstitucion = !!clase?.pide_institucion_destino
 
   return (
     <>
@@ -101,6 +102,32 @@ export function MovimientoDatosDelActo({
             />
           </Group>
         </>
+      )}
+
+      {pideInstitucion && (
+        <TextInput
+          label="Institución de destino"
+          placeholder="La entidad del Estado a la que va el servidor"
+          withAsterisk
+          error={errors.institucion_destino?.message}
+          {...contained}
+          {...register('institucion_destino')}
+        />
+      )}
+
+      {clase?.admite_para_estudios_o_eventos && (
+        <Controller
+          name="para_estudios_o_eventos"
+          control={control}
+          render={({ field }) => (
+            <Switch
+              label="Para estudios o eventos"
+              description="Al volver, el servidor debe servir en la institución un tiempo igual al de la comisión (LOSEP Art. 30)."
+              checked={!!field.value}
+              onChange={(e) => field.onChange(e.currentTarget.checked)}
+            />
+          )}
+        />
       )}
 
       <TextInput

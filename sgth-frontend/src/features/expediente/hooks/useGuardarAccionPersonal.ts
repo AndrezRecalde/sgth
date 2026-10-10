@@ -57,9 +57,14 @@ export function useGuardarAccionPersonal({
 
   return useMutation({
     mutationFn: (data: MovimientoFormData) => {
-      const limpio = soloLoQueAplica(
-        data, !!buscarClase(catalogo, data.clase)?.pide_contratacion,
-      )
+      const clase = buscarClase(catalogo, data.clase)
+      const limpio = {
+        ...soloLoQueAplica(data, !!clase?.pide_contratacion),
+        // La institución y la marca de estudios solo viajan en las clases que
+        // las piden (fase 2.3): en otra acción se grabarían sin significar nada.
+        institucion_destino: clase?.pide_institucion_destino ? (data.institucion_destino?.trim() || null) : null,
+        para_estudios_o_eventos: clase?.admite_para_estudios_o_eventos ? !!data.para_estudios_o_eventos : false,
+      }
 
       if (edicion) {
         // La clase y la causal no se envían: cambiar la naturaleza del acto no
