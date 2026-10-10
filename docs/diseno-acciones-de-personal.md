@@ -869,6 +869,9 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
    - `causal` no tiene columna todavía: hoy es el subtipo de la cesación. La tendrá cuando lleguen causales que no son subtipos (fase 2.1).
    - `instrumento` llega con el primer instrumento distinto de la acción de personal (fase 2.7).
 2. Bitácora fuera de `movimientos_personal` (`eventos_vinculo`); la API solo acepta clases creables a mano.
+   - Pasan la novedad de contrato (ahora «contrato registrado sin acción», que cubre la carga inicial y el alta directa), las constancias de una subrogación terminada o cancelada antes, y los tipos `cambio_puesto`, `cambio_regimen` y `egreso`, que salen del catálogo. El expediente las muestra como «Novedades del vínculo», aparte de las acciones.
+   - La reprogramación del plazo se queda en el registro de auditoría, de donde ya la lee la pantalla. Las correcciones llegan con las anotaciones del punto 4.
+   - La API dejó de aceptar clases no creables a mano en la fase 1.1.
 3. Permisos de Spatie y gates en la pantalla; el titular no ve borradores; nadie tramita sobre sí mismo.
 4. Inmutabilidad completa tras registrar; anotaciones en lugar de reescrituras.
 5. Estado de la persona derivado del vínculo; `fecha_ingreso_institucion` no se pisa; antigüedad calculada con la regla de 8.3.

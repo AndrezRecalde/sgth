@@ -3,10 +3,11 @@
 namespace Tests\Feature\Expediente;
 
 use App\Enums\CategoriaEventoVinculo;
-use App\Enums\EstadoAccionPersonal;
+use App\Enums\TipoEventoVinculo;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Expediente\ContratoServidor;
+use App\Models\Expediente\EventoVinculo;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
@@ -98,7 +99,7 @@ test('un vínculo no se cierra por API sin acción de personal — la ruta fue r
         ->and($this->contrato->fecha_fin)->toBeNull();
 });
 
-test('sincronizarRegimenServidor genera un MovimientoPersonal en vez de mutar Servidor en silencio', function () {
+test('sincronizarRegimenServidor anota el contrato en la bitácora del vínculo en vez de mutar Servidor en silencio', function () {
     $this->actingAs($this->adminUath, 'sanctum');
 
     $servidor = Servidor::create([
@@ -122,17 +123,18 @@ test('sincronizarRegimenServidor genera un MovimientoPersonal en vez de mutar Se
         'estado'                   => 'vigente',
     ]);
 
-    $movimiento = MovimientoPersonal::where('servidor_id', $servidor->id)
-        ->where('tipo_movimiento', 'novedad_contrato')
-        ->first();
+    // Hasta la fase 1.2 era un MovimientoPersonal 'novedad_contrato' en
+    // REGISTRADA: la bitácora documenta un hecho consumado —el contrato ya
+    // existe—, no una acción que alguien deba aprobar, y ya no comparte tabla
+    // con ellas.
+    expect(MovimientoPersonal::where('servidor_id', $servidor->id)->count())->toBe(0);
 
-    expect($movimiento)->not->toBeNull();
-    // Registrada desde 2026-08-04: la bitácora documenta un hecho consumado
-    // —el contrato ya existe—, no una solicitud pendiente de aprobación. En
-    // borrador aparecía en la bandeja pidiendo aprobar algo ya ocurrido.
-    expect($movimiento->estado)->toBe(EstadoAccionPersonal::REGISTRADA);
-    expect($movimiento->categoria)->toBe(CategoriaEventoVinculo::ACCION_DE_PERSONAL);
-    expect($movimiento->puesto_destino_id)->toBe($this->puesto->id);
+    $evento = EventoVinculo::where('servidor_id', $servidor->id)->sole();
+
+    expect($evento->tipo)->toBe(TipoEventoVinculo::CONTRATO_REGISTRADO);
+    expect($evento->contrato_servidor_id)->toBe($servidor->contratoVigente->id);
+    expect($evento->datos['categoria'])->toBe(CategoriaEventoVinculo::ACCION_DE_PERSONAL->value);
+    expect($evento->datos['puesto_destino_id'])->toBe($this->puesto->id);
 
     $servidor->refresh();
     expect($servidor->tipo_nombramiento->value)->toBe('nombramiento_provisional');

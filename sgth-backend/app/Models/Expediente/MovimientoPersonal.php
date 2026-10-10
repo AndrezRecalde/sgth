@@ -427,7 +427,7 @@ class MovimientoPersonal extends Model
 
     /**
      * Cómo se llama la acción en pantalla y en el documento: el nombre de su
-     * clase. La bitácora del expediente no tiene clase y conserva el de su tipo.
+     * clase, y el de su tipo en el raro caso de que no tenga una.
      */
     public function etiqueta(): string
     {
@@ -456,8 +456,7 @@ class MovimientoPersonal extends Model
      * ¿Se corrige con el formulario de «Nueva acción de personal»?
      *
      * Solo las acciones con una clase que ese formulario crea: la subrogación y
-     * el encargo se corrigen cancelándolos en su pantalla, y la bitácora del
-     * expediente no se edita.
+     * el encargo se corrigen cancelándolos en su pantalla.
      */
     public function editableEnFormulario(): bool
     {

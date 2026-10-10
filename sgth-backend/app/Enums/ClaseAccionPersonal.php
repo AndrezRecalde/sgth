@@ -231,8 +231,8 @@ enum ClaseAccionPersonal: string
 
     /**
      * La clase de una acción ya guardada, a partir de su tipo y su subtipo
-     * efectivo. Null para la bitácora del expediente —novedad de contrato,
-     * cambio de puesto, cambio de régimen, egreso—, que no es un acto.
+     * efectivo. Null solo si el tipo no tiene clase: hasta la fase 1.2 era la
+     * bitácora del expediente, que desde entonces vive en `eventos_vinculo`.
      *
      * La subrogación devuelve SUBROGACION: si es un encargo solo lo sabe la fila
      * de `subrogaciones`, así que `SubrogacionService` fija la clase al crear la

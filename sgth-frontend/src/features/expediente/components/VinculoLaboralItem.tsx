@@ -10,7 +10,9 @@ import { dinero } from '../utils/dinero'
 import { etiquetaNombramiento } from '../utils/tipoNombramientoOptions'
 import { partidaDelVinculo } from '../utils/partidaPorModalidad'
 import type { VinculoConActividad } from '../services/actividadLaboralService'
-import { AccionesSobreVinculo, ReprogramacionesDelPlazo } from './AccionesSobreVinculo'
+import {
+  AccionesSobreVinculo, NovedadesDelVinculo, ReprogramacionesDelPlazo,
+} from './AccionesSobreVinculo'
 
 const TONO_CONTRATO: Record<EstadoContrato, SemanticTone> = {
   vigente: 'success',
@@ -128,6 +130,7 @@ export function VinculoLaboralItem({ vinculo, onReprogramar }: Props) {
 
           <ReprogramacionesDelPlazo cambios={vinculo.cambios} />
           <AccionesSobreVinculo acciones={vinculo.acciones} />
+          <NovedadesDelVinculo novedades={vinculo.novedades} />
         </Stack>
       </Accordion.Panel>
     </Accordion.Item>

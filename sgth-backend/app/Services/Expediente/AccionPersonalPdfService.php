@@ -33,11 +33,10 @@ class AccionPersonalPdfService
             'subrogacion.subrogado',
         ])->findOrFail($movimientoId);
 
-        // El formato impreso es el de una Acción de Personal. Los movimientos
-        // históricos genéricos —novedad de contrato, cambio de puesto— son
-        // bitácora interna: registran un hecho, no son un acto administrativo
-        // con firmantes. Imprimirlos produciría un documento de apariencia
-        // oficial que nunca existió.
+        // El formato impreso es el de una Acción de Personal. Desde la fase 1.2
+        // todos los tipos que quedan en esta tabla son actos —la bitácora pasó
+        // a `eventos_vinculo`—, pero la puerta se queda: un tipo nuevo que no
+        // lo sea no debe imprimir un documento de apariencia oficial.
         if (! $movimiento->tipo_movimiento->tieneDocumentoImprimible()) {
             throw new ReglaNegocioException(
                 "\"{$movimiento->tipo_movimiento->etiqueta()}\" es un registro interno del "
@@ -72,13 +71,14 @@ class AccionPersonalPdfService
         /*
         | Sin correlativo no hay documento.
         |
-        | El estado por sí solo no basta: hay filas que nacen directamente en
-        | REGISTRADA sin pasar por la máquina de estados, porque son constancia
-        | de un hecho consumado y no un acto que alguien apruebe —la
+        | El estado por sí solo no basta. Hasta la fase 1.2 había filas que
+        | nacían directamente en REGISTRADA sin pasar por la máquina de estados,
+        | porque eran constancia de un hecho consumado y no un acto —la
         | finalización anticipada de una subrogación, su cancelación, la novedad
-        | de contrato—. Con el guard anterior, esas filas ofrecían y generaban
-        | un documento oficial de Acción de Personal, con los firmantes en
-        | blanco porque nunca se suscribieron y `sellarEn()` no corrió.
+        | de contrato—, y con el guard anterior generaban un documento oficial
+        | de Acción de Personal con los firmantes en blanco. Esas filas ya viven
+        | en `eventos_vinculo`; el guard se queda para cualquier acto al que le
+        | falte el flujo, que es lo que de verdad mide.
         |
         | El correlativo AP-AAAA-NNNN lo estampa `aplicarRegistro()` y nadie
         | más, así que su presencia es exactamente «esto pasó por el flujo
@@ -87,10 +87,9 @@ class AccionPersonalPdfService
         | movimiento sin él no puede producir un documento identificable.
         |
         | `categoria` parecía el candidato natural —null en las constancias— y
-        | no sirve: `ContratoServidorService` la deriva del nombramiento con
-        | `CategoriaEventoVinculo::paraTipoNombramiento()`, así que una novedad
-        | de contrato de un servidor LOSEP es bitácora y lleva
-        | 'accion_de_personal' igualmente.
+        | no servía: `ContratoServidorService` la derivaba del nombramiento, así
+        | que una novedad de contrato de un servidor LOSEP era bitácora y
+        | llevaba 'accion_de_personal' igualmente.
         */
         if (blank($movimiento->codigo_registro)) {
             throw new ReglaNegocioException(

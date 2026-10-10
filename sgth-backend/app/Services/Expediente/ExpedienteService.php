@@ -7,6 +7,7 @@ use App\Enums\TipoNombramiento;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\DocumentoServidor;
+use App\Models\Expediente\EventoVinculo;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
 use App\Services\Estructura\ArbolUnidades;
@@ -116,7 +117,8 @@ class ExpedienteService implements ExpedienteServiceInterface
 
     /**
      * Línea de tiempo del expediente: une el historial de ContratoServidor
-     * (vínculos) y MovimientoPersonal (eventos) de un servidor en una sola
+     * (vínculos), MovimientoPersonal (eventos) y la bitácora del vínculo
+     * (novedades) de un servidor en una sola
      * secuencia cronológica, incluso cuando cambió de régimen jurídico
      * entre vínculos. Pensada para ser la base del reporte a SIITH/SUT:
      * lista plana (no agrupada por vínculo) con 'regimen_juridico' en
@@ -141,6 +143,11 @@ class ExpedienteService implements ExpedienteServiceInterface
 
         $movimientos = MovimientoPersonal::where('servidor_id', $servidorId)
             ->orderBy('fecha_efectiva')
+            ->get();
+
+        $eventos = EventoVinculo::where('servidor_id', $servidorId)
+            ->orderBy('fecha')
+            ->orderBy('id')
             ->get();
 
         $linea = collect();
@@ -183,6 +190,23 @@ class ExpedienteService implements ExpedienteServiceInterface
                 'tipo_movimiento'      => $movimiento->tipo_movimiento?->value,
                 'estado'               => $movimiento->estado?->value,
                 'categoria'            => $movimiento->categoria?->value,
+            ]);
+        }
+
+        // La bitácora entra con su propio 'tipo': quien filtra por 'evento'
+        // —el reporte a SIITH/SUT— sigue viendo solo actos.
+        foreach ($eventos as $evento) {
+            $fecha = $evento->fecha?->toDateString();
+            [$regimen, $resueltoPor] = $this->resolverRegimenEnFecha($contratos, $fecha);
+
+            $linea->push([
+                'tipo'                 => 'novedad',
+                'fecha'                => $fecha,
+                'regimen_juridico'     => $regimen,
+                'regimen_resuelto_por' => $resueltoPor,
+                'descripcion'          => $evento->descripcion,
+                'referencia'           => ['modelo' => 'EventoVinculo', 'id' => $evento->id],
+                'tipo_novedad'         => $evento->tipo->value,
             ]);
         }
 

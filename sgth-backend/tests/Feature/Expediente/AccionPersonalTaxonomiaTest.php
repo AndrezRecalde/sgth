@@ -520,7 +520,7 @@ test('el subtipo no se puede modificar una vez registrada la acción', function 
 | botón «PDF»: las dos listas tienen que decir lo mismo, o la pantalla ofrece
 | una descarga que responde 422.
 */
-test('tieneDocumentoImprimible() cubre todo acto formal y ningún registro interno', function () {
+test('tieneDocumentoImprimible() cubre todo acto formal, que es todo lo que queda', function () {
     $conDocumento = [
         // Los ocho de esAccionDePersonal()…
         TipoMovimientoPersonal::CAMBIO_DENOMINACION,
@@ -541,27 +541,16 @@ test('tieneDocumentoImprimible() cubre todo acto formal y ningún registro inter
         TipoMovimientoPersonal::INGRESO,
     ];
 
-    // Bitácora del expediente: registran un hecho, no son actos administrativos
-    // con firmantes. Imprimirlos produciría un documento de apariencia oficial
-    // que nunca existió.
-    $sinDocumento = [
-        TipoMovimientoPersonal::NOVEDAD_CONTRATO,
-        TipoMovimientoPersonal::CAMBIO_PUESTO,
-        TipoMovimientoPersonal::CAMBIO_REGIMEN,
-        TipoMovimientoPersonal::EGRESO,
-    ];
-
+    // La bitácora del expediente —novedad de contrato, cambio de puesto,
+    // cambio de régimen, egreso— no tenía documento, y desde la fase 1.2 ni
+    // siquiera es un tipo de esta tabla: vive en `eventos_vinculo`.
+    //
     // Sin tipos huérfanos: si mañana nace uno, esta prueba lo señala en vez de
-    // dejarlo caer en cualquiera de los dos lados por descuido.
-    expect(count($conDocumento) + count($sinDocumento))
-        ->toBe(count(TipoMovimientoPersonal::cases()));
+    // dejarlo sin decidir por descuido.
+    expect(count($conDocumento))->toBe(count(TipoMovimientoPersonal::cases()));
 
     foreach ($conDocumento as $tipo) {
         expect($tipo->tieneDocumentoImprimible())->toBeTrue("Tipo '{$tipo->value}'");
-    }
-
-    foreach ($sinDocumento as $tipo) {
-        expect($tipo->tieneDocumentoImprimible())->toBeFalse("Tipo '{$tipo->value}'");
     }
 });
 

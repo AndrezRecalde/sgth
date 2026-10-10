@@ -105,9 +105,9 @@ test('el seeder crea una fila por cada tipo_movimiento, con los 3 mapeos confirm
     expect($cesacion->reportable_siith)->toBeFalse();
     expect($cesacion->descripcion)->toContain('cesación de funciones');
 
-    $egreso = ConfiguracionReporteMovimiento::where('tipo_movimiento', 'egreso')->first();
-    expect($egreso->reportable_siith)->toBeFalse();
-    expect($egreso->descripcion)->toContain('cesacion_funciones');
+    // 'egreso' era bitácora y salió del catálogo en la fase 1.2: ya no tiene
+    // fila que configurar.
+    expect(ConfiguracionReporteMovimiento::where('tipo_movimiento', 'egreso')->exists())->toBeFalse();
 
     // reportable_sut queda en false para absolutamente todo (sin lista confirmada).
     expect(ConfiguracionReporteMovimiento::where('reportable_sut', true)->count())->toBe(0);
@@ -134,7 +134,7 @@ test('un movimiento en borrador no aparece en el reporte aunque su tipo sea repo
 });
 
 test('un tipo_movimiento no marcado como reportable no aparece aunque esté registrado', function () {
-    crearServidorConMovimiento('nombramiento_permanente', 'cambio_puesto', 'registrada', '2026-03-10');
+    crearServidorConMovimiento('nombramiento_permanente', 'licencia_sin_remuneracion', 'registrada', '2026-03-10');
 
     $resultado = $this->service->movimientosReportables(['portal' => 'siith']);
 
@@ -197,7 +197,7 @@ test('GET /reportes/siith-sut/configuracion y PATCH actualizan un flag', functio
     $response->assertStatus(200);
     expect($response->json('datos'))->toHaveCount(count(\App\Enums\TipoMovimientoPersonal::cases()));
 
-    $config = ConfiguracionReporteMovimiento::where('tipo_movimiento', 'egreso')->first();
+    $config = ConfiguracionReporteMovimiento::where('tipo_movimiento', 'licencia_sin_remuneracion')->first();
 
     $update = $this->patchJson(
         "/api/v1/reportes/siith-sut/configuracion/{$config->id}",

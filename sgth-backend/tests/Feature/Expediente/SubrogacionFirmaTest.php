@@ -501,15 +501,15 @@ test('el borrador de cualquier otro tipo se sigue editando', function () {
 
     $movimiento = MovimientoPersonal::create([
         'servidor_id'     => $servidor->id,
-        'tipo_movimiento' => 'novedad_contrato',
+        'tipo_movimiento' => 'licencia_sin_remuneracion',
         'estado'          => EstadoAccionPersonal::BORRADOR,
-        'descripcion'     => 'Novedad de prueba',
+        'descripcion'     => 'Licencia de prueba',
         'fecha_efectiva'  => now()->toDateString(),
     ]);
 
     $this->putJson("/api/v1/expediente/movimientos/{$movimiento->id}", [
-        'descripcion' => 'Novedad corregida',
+        'descripcion' => 'Licencia corregida',
     ])->assertOk();
 
-    expect($movimiento->fresh()->descripcion)->toBe('Novedad corregida');
+    expect($movimiento->fresh()->descripcion)->toBe('Licencia corregida');
 });

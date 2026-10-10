@@ -7,11 +7,10 @@ enum TipoMovimientoPersonal: string
     case TRASLADO                  = 'traslado';
     case SUBROGACION               = 'subrogacion';
     case COMISION_SERVICIOS        = 'comision_servicios';
-    case CAMBIO_REGIMEN            = 'cambio_regimen';
-    case CAMBIO_PUESTO             = 'cambio_puesto';
     case INGRESO                   = 'ingreso';
-    case EGRESO                    = 'egreso';
-    case NOVEDAD_CONTRATO          = 'novedad_contrato';
+    // 'novedad_contrato', 'cambio_puesto', 'cambio_regimen' y 'egreso' se
+    // retiraron en la fase 1.2 del rediseño (2026-10-09): eran bitácora del
+    // expediente, no actos, y pasaron a `eventos_vinculo` (TipoEventoVinculo).
     // Acciones de personal formales (Sprint E-04)
     case CAMBIO_DENOMINACION       = 'cambio_denominacion';
     case PRESTACION_SERVICIOS      = 'prestacion_servicios';
@@ -43,11 +42,7 @@ enum TipoMovimientoPersonal: string
             self::TRASLADO                  => 'Traslado',
             self::SUBROGACION               => 'Subrogación',
             self::COMISION_SERVICIOS        => 'Comisión de Servicios',
-            self::CAMBIO_REGIMEN            => 'Cambio de Régimen',
-            self::CAMBIO_PUESTO             => 'Cambio de Puesto',
             self::INGRESO                   => 'Ingreso',
-            self::EGRESO                    => 'Egreso',
-            self::NOVEDAD_CONTRATO          => 'Novedad de Contrato',
             self::CAMBIO_DENOMINACION       => 'Cambio de Denominación',
             self::PRESTACION_SERVICIOS      => 'Prestación de Servicios',
             self::CAMBIO_ADMINISTRATIVO     => 'Cambio Administrativo',
@@ -186,8 +181,9 @@ enum TipoMovimientoPersonal: string
     /**
      * Las "acciones de personal" formales tienen restricción de elegibilidad
      * por tipo de nombramiento y nacen en estado BORRADOR (deben pasar por el
-     * flujo guardado de MovimientoPersonalStateService); los movimientos
-     * históricos genéricos (cambio_puesto, novedad_contrato, etc.) no.
+     * flujo guardado de MovimientoPersonalStateService). La bitácora del
+     * expediente, que antes compartía este enum, vive desde la fase 1.2 en
+     * `eventos_vinculo`.
      *
      * Desde la taxonomía de dos niveles se suman CESACION_FUNCIONES y
      * REGIMEN_DISCIPLINARIO, y también los tipos planos legados que tienen
@@ -233,8 +229,9 @@ enum TipoMovimientoPersonal: string
      * contemplaba desde el principio: accion-personal.blade.php imprime «Sin
      * vínculo laboral previo — este es el primer ingreso del servidor».
      *
-     * Los movimientos históricos genéricos —novedad de contrato, cambio de
-     * puesto— siguen sin documento: son bitácora del expediente, no actos.
+     * La bitácora del expediente —la novedad de contrato, las constancias de
+     * una subrogación terminada antes— nunca tuvo documento, y desde la fase
+     * 1.2 ni siquiera está en esta tabla: vive en `eventos_vinculo`.
      */
     public function tieneDocumentoImprimible(): bool
     {

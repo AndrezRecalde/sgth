@@ -64,6 +64,38 @@ export function AccionesSobreVinculo({ acciones }: { acciones: AccionSobreVincul
 }
 
 /**
+ * La bitácora del vínculo: lo que le pasó sin ser un acto. Va aparte de las
+ * acciones, sin correlativo ni PDF, para que nadie la tome por una — hasta la
+ * fase 1.2 la novedad de contrato salía en el historial como acción de
+ * personal y la constancia de una subrogación ofrecía su documento.
+ */
+export function NovedadesDelVinculo({ novedades }: { novedades: VinculoConActividad['novedades'] }) {
+  if ((novedades ?? []).length === 0) return null
+
+  return (
+    <div>
+      <SectionHeading title="Novedades del vínculo" mb="xs" />
+      <Stack gap="xs">
+        {novedades.map((n) => (
+          <Paper key={n.id} withBorder p="xs" radius="sm">
+            <Group justify="space-between" wrap="nowrap" align="flex-start">
+              <div style={{ minWidth: 0 }}>
+                <Text size="sm" fw={500}>{n.etiqueta}</Text>
+                <Text size="xs" c="dimmed">{n.descripcion}</Text>
+              </div>
+              <div style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                <Text size="xs">{formatFecha(n.fecha)}</Text>
+                {n.registrado_por && <Text size="xs" c="dimmed">{n.registrado_por}</Text>}
+              </div>
+            </Group>
+          </Paper>
+        ))}
+      </Stack>
+    </div>
+  )
+}
+
+/**
  * Quién movió el plazo y por qué. El plazo es lo único editable de un vínculo,
  * y moverlo cambia cuándo cesa el servidor — antes el motivo se exigía, se
  * guardaba y no lo veía nadie.

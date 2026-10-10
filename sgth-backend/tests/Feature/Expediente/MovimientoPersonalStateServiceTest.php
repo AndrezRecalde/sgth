@@ -310,19 +310,6 @@ test('MovimientoPersonalService::registrar crea en borrador los tipos formales d
     expect($movimiento->categoria)->toBe(CategoriaEventoVinculo::ACCION_DE_PERSONAL);
 });
 
-test('MovimientoPersonalService::registrar sigue creando en registrada los movimientos históricos genéricos', function () {
-    // 'traslado' ahora es modificaVinculo() (nace en borrador) — se usa
-    // 'cambio_regimen' aquí, que sigue sin serlo, para probar que el
-    // resto de tipos genéricos conserva el comportamiento de siempre.
-    $movimiento = app(MovimientoPersonalService::class)->registrar($this->servidor->id, [
-        'tipo_movimiento' => 'cambio_regimen',
-        'descripcion' => 'Cambio de régimen administrativo',
-        'fecha_efectiva' => now()->toDateString(),
-    ]);
-
-    expect($movimiento->estado)->toBe(EstadoAccionPersonal::REGISTRADA);
-});
-
 test('SubrogacionService::registrar crea el movimiento asociado en borrador, no registrada', function () {
     $subrogado = Servidor::create([
         'user_id' => User::factory()->create()->id,
@@ -517,23 +504,23 @@ test('un motivo de menos de cinco caracteres no pasa', function () {
 // ── La constancia no es un acto: no tiene documento ─────────────
 
 /*
-| Hay filas que nacen directamente en REGISTRADA sin pasar por la máquina de
-| estados, porque son constancia de un hecho consumado y no un acto que alguien
-| apruebe: la finalización anticipada de una subrogación y su cancelación
+| Hasta la fase 1.2 había filas que nacían directamente en REGISTRADA sin pasar
+| por la máquina de estados, porque eran constancia de un hecho consumado y no
+| un acto: la finalización anticipada de una subrogación y su cancelación
 | (SubrogacionService), o la novedad de contrato (ContratoServidorService).
 |
-| Comparten `tipo_movimiento` con la acción de verdad, así que el filtro por tipo
-| no las distinguía, y hasta el 2026-09-28 ofrecían y emitían un documento
-| oficial de Acción de Personal — con los firmantes en blanco, porque nunca se
-| suscribieron. Lo que las separa es el correlativo, que solo estampa
-| aplicarRegistro().
+| Compartían `tipo_movimiento` con la acción de verdad, y hasta el 2026-09-28
+| ofrecían y emitían un documento oficial de Acción de Personal con los
+| firmantes en blanco. Hoy viven en `eventos_vinculo`, pero la puerta del PDF
+| sigue midiendo el correlativo —que solo estampa aplicarRegistro()— y esta
+| prueba la fija: cualquier fila que llegue a REGISTRADA sin el flujo, no emite.
 */
 test('una constancia en registrada sin correlativo no emite documento', function () {
     $constancia = crearMovimiento([
         'tipo_movimiento' => TipoMovimientoPersonal::SUBROGACION->value,
         'estado'          => EstadoAccionPersonal::REGISTRADA,
         'descripcion'     => 'Cancelación de Subrogación: dejó de surtir efecto.',
-        // Sin codigo_registro y sin categoria, como las crea SubrogacionService.
+        // Sin codigo_registro y sin categoria, como las creaba SubrogacionService.
     ]);
 
     expect($constancia->codigo_registro)->toBeNull();
@@ -560,24 +547,3 @@ test('la acción de verdad de una subrogación sí emite su documento', function
     expect($resultado['filename'])->toBe('accion_personal_AP-2026-0777.pdf');
 });
 
-/*
-| `categoria` parecía el discriminante natural y no lo es: ContratoServidorService
-| la deriva del nombramiento con CategoriaEventoVinculo::paraTipoNombramiento(),
-| así que una novedad de contrato de un servidor LOSEP es bitácora y lleva
-| 'accion_de_personal' igualmente. Esta prueba fija el porqué de haber ido por el
-| correlativo, para que nadie cambie el guard a la categoría creyendo que es más
-| expresivo.
-*/
-test('la categoría no distingue el acto de la constancia', function () {
-    expect(CategoriaEventoVinculo::paraTipoNombramiento(\App\Enums\TipoNombramiento::PERMANENTE))
-        ->toBe(CategoriaEventoVinculo::ACCION_DE_PERSONAL);
-
-    $bitacora = crearMovimiento([
-        'tipo_movimiento' => TipoMovimientoPersonal::NOVEDAD_CONTRATO->value,
-        'estado'          => EstadoAccionPersonal::REGISTRADA,
-        'categoria'       => CategoriaEventoVinculo::ACCION_DE_PERSONAL,
-    ]);
-
-    expect($bitacora->categoria)->toBe(CategoriaEventoVinculo::ACCION_DE_PERSONAL)
-        ->and($bitacora->codigo_registro)->toBeNull();
-});
