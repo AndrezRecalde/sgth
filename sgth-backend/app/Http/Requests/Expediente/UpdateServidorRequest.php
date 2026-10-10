@@ -2,12 +2,11 @@
 
 namespace App\Http\Requests\Expediente;
 
-use App\Enums\RegimenLaboral;
+use App\Enums\Permiso;
 use App\Enums\TipoDiscapacidad;
 use App\Models\Expediente\Servidor;
 use App\Models\Geografia\Canton;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
@@ -73,7 +72,10 @@ class UpdateServidorRequest extends FormRequest
             'segundo_apellido' => 'nullable|string|max:100',
             
             // Relaciones y datos base
-            'regimen_laboral'          => ['sometimes', 'required', new Enum(RegimenLaboral::class)],
+            // El régimen sale del contrato vigente (sincronizarRegimenServidor),
+            // como el tipo de nombramiento: escrito a mano en la ficha quedaba
+            // diciendo otra cosa que el vínculo (fase 1.5; diseño, 8.3).
+            'regimen_laboral'          => ['prohibited'],
             // puesto_id/unidad_administrativa_id NUNCA se editan aquí: la
             // única vía es ContratoServidorService::sincronizarPuestoDesdeVinculo(),
             // derivado siempre del ContratoServidor vigente. Un cambio de
@@ -132,7 +134,12 @@ class UpdateServidorRequest extends FormRequest
             // registrar el MovimientoPersonal correspondiente, nunca por
             // un update() directo sobre Servidor.
             'tipo_nombramiento'            => ['prohibited'],
-            'fecha_ingreso_institucion'    => 'sometimes|required|date',
+            // Sale de la historia de vínculos desde la fase 1.5 (diseño, 8.3).
+            // Corregirla a mano —un error de la carga inicial— pide su propio
+            // permiso, y el cambio queda en la auditoría de la ficha.
+            'fecha_ingreso_institucion'    => $this->user()->can(Permiso::CORREGIR_DATOS_LABORALES->value)
+                ? 'sometimes|required|date|before_or_equal:today'
+                : ['prohibited'],
             'fecha_ingreso_sector_publico' => 'nullable|date',
             'fecha_nombramiento'           => 'nullable|date',
             // Aquí estaban numero_contrato y las fechas del último contrato:

@@ -33,6 +33,10 @@ enum Permiso: string
     case REGISTRAR_ACCION_PERSONAL = 'registrar-accion-personal';
     case NOTIFICAR_ACCION_PERSONAL = 'notificar-accion-personal';
     case ANULAR_ACCION_PERSONAL = 'anular-accion-personal';
+    // Corregir a mano la fecha de ingreso a la institución, que desde la fase
+    // 1.5 sale de la historia de vínculos. Para errores de la carga inicial;
+    // el cambio queda en el registro de auditoría de la ficha.
+    case CORREGIR_DATOS_LABORALES = 'corregir-datos-laborales';
 
     // ── MÓDULO 03: Nómina ────────────────────────────────────────
     case VER_ROL_PAGO_PROPIO = 'ver-rol-pago-propio';

@@ -329,6 +329,10 @@ class ContratoServidorService
             'movimiento_cierre_id' => $data['movimiento_cierre_id'] ?? null,
         ]);
 
+        // Sin esto el cesado conservaba puesto, unidad y `estado = true`: el
+        // contrato decía una cosa y la ficha otra.
+        $this->sincronizarPuestoDesdeVinculo($contrato->servidor_id);
+
         return $contrato->fresh(['puesto.cargo', 'unidadAdministrativa']);
     }
 
@@ -676,11 +680,6 @@ class ContratoServidorService
             'tipo_nombramiento' => $tipoNombramientoEnum->value,
         ];
 
-        // Fecha de ingreso al GAD = fecha_inicio del contrato vigente actual.
-        if (!empty($data['fecha_inicio'])) {
-            $update['fecha_ingreso_institucion'] = $data['fecha_inicio'];
-        }
-
         // Fecha de nombramiento oficial solo aplica a Nombramiento Permanente.
         $update['fecha_nombramiento'] =
             $tipoNombramientoEnum === TipoNombramiento::PERMANENTE
@@ -715,26 +714,31 @@ class ContratoServidorService
             // auditoría de este método — el hallazgo crítico original.
             $servidor = Servidor::findOrFail($servidorId);
 
-            // Reactivación automática: un servidor inactivo que acaba de
-            // obtener un ContratoServidor vigente vuelve a estado=true aquí
-            // mismo, nunca con un update() suelto aparte. Cubre tanto al
-            // candidato interno reactivado (concurso a otro puesto) como al
-            // reingreso de un ex-servidor — mismo mecanismo para ambos.
-            if ($servidor->estado === false) {
-                $update['estado'] = true;
-            }
+            // La antigüedad sale de la historia de vínculos, con este ya dentro
+            // (diseño, 8.3). Hasta la fase 1.5 cada contrato nuevo la pisaba con
+            // su fecha de inicio, y una cesación seguida de un ingreso la
+            // reiniciaba.
+            $update['fecha_ingreso_institucion'] = $servidor->inicioDelServicioContinuo()
+                ?? ($data['fecha_inicio'] ?? null);
 
             $servidor->update($update);
+
+            // También devuelve `estado = true` a quien reingresa: lo deriva del
+            // vínculo, como el puesto. Antes era un caso aparte aquí.
 
             $this->sincronizarPuestoDesdeVinculo($servidorId);
         });
     }
 
     /**
-     * Única vía permitida para escribir Servidor.puesto_id y
-     * Servidor.unidad_administrativa_id. Deriva ambos siempre del
-     * ContratoServidor vigente — nunca de un payload suelto. Si no hay
-     * vínculo vigente, los deja en null (no asume nada).
+     * Única vía permitida para escribir Servidor.puesto_id,
+     * Servidor.unidad_administrativa_id y Servidor.estado. Deriva los tres
+     * siempre del ContratoServidor vigente — nunca de un payload suelto. Si no
+     * hay vínculo vigente, deja puesto y unidad en null y al servidor inactivo.
+     *
+     * `estado` entró aquí en la fase 1.5 (diseño, 8.3): significa «tiene un
+     * vínculo vigente». Hasta entonces nadie lo ponía en false, y un cesado
+     * seguía en la nómina y en la generación de vacaciones, que lo consultan.
      */
     public function sincronizarPuestoDesdeVinculo(int $servidorId): void
     {
@@ -744,6 +748,7 @@ class ContratoServidorService
         $servidor->update([
             'puesto_id'                => $vigente?->puesto_id,
             'unidad_administrativa_id' => $vigente?->unidad_administrativa_id,
+            'estado'                   => $vigente !== null,
         ]);
     }
 
