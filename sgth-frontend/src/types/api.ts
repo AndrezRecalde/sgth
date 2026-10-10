@@ -730,6 +730,14 @@ export type MovimientoPersonal = {
   tiene_efecto_economico: boolean
   tiene_documento_imprimible: boolean
   editable_en_formulario: boolean
+  /**
+   * Los pasos que puede dar quien mira (fase 1.3): los que el grafo permite,
+   * para los que tiene permiso, y ninguno si la acción es suya. La pantalla no
+   * decide por rol.
+   */
+  transiciones_permitidas: EstadoAccionPersonal[]
+  /** Si quien mira puede corregir el borrador con el formulario. */
+  puede_editar: boolean
   categoria?: CategoriaEventoVinculo | null
   estado?: EstadoAccionPersonal
   // Datos del vínculo que Talento Humano fija mientras está en borrador y que

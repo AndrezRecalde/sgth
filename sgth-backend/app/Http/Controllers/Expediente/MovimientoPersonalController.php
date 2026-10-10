@@ -27,17 +27,23 @@ class MovimientoPersonalController extends Controller
     ) {
     }
 
-    public function index(int $servidorId): JsonResponse
+    public function index(Request $request, int $servidorId): JsonResponse
     {
         $servidor = Servidor::findOrFail($servidorId);
 
         $this->authorize('ver', $servidor);
+
+        // El titular ve sus actos, no lo que Talento Humano le está preparando
+        // (diseño, 6.3). Vale también para quien trabaja en Talento Humano y
+        // abre su propio expediente.
+        $esElTitular = (int) $request->user()?->servidor_id === $servidorId;
 
         $movimientos = MovimientoPersonal::with(['unidadOrigen', 'unidadDestino', 'puestoOrigen.cargo', 'puestoDestino.cargo', 'puestoDestino.grupoOcupacional:id,rmu',
                 // El nombre del autorizador lo arma el accesor de User desde su
                 // servidor: sin cargarlo, una consulta por cada fila.
                 'autorizadoPor.servidor:id,nombre,apellido'])
             ->where('servidor_id', $servidorId)
+            ->when($esElTitular, fn ($q) => $q->visibleParaElTitular())
             // El id desempata: varias acciones del mismo día es lo normal
             // (una cesación y el ingreso que la sigue, por ejemplo), y sin
             // criterio secundario Postgres las devuelve en orden arbitrario —
@@ -72,6 +78,13 @@ class MovimientoPersonalController extends Controller
             ->when($request->filled('clase'), fn ($q) => $q->where('clase', $request->input('clase')))
             ->when($request->filled('servidor_id'), fn ($q) => $q->where('servidor_id', $request->integer('servidor_id')))
             ->when($request->filled('anio'), fn ($q) => $q->whereYear('fecha_efectiva', $request->integer('anio')))
+            // Quien revisa la bandeja no ve lo que se le está preparando a él:
+            // no puede tramitarlo, y es justo lo que no debe ver antes de tiempo.
+            ->when($request->user()?->servidor_id, fn ($q, $propio) => $q->where(
+                fn ($w) => $w->where('servidor_id', '!=', $propio)->orWhere(
+                    fn ($suyas) => $suyas->visibleParaElTitular()
+                )
+            ))
             // created_at empata cuando se crean varias en el mismo segundo
             // (seeders, cargas masivas): el id garantiza orden estable.
             ->orderByDesc('created_at')
@@ -92,8 +105,14 @@ class MovimientoPersonalController extends Controller
      * Detalle completo de una acción, para revisarla antes de aprobarla o
      * editarla. Trae las relaciones que el listado omite por peso.
      */
-    public function show(MovimientoPersonal $movimiento): JsonResponse
+    public function show(Request $request, MovimientoPersonal $movimiento): JsonResponse
     {
+        // Un 404 y no un 403: para el titular, el borrador no existe todavía.
+        abort_if(
+            $movimiento->esSobre($request->user()) && ! $movimiento->esVisibleParaElTitular(),
+            404
+        );
+
         $movimiento->load([
             'servidor:id,nombre,segundo_nombre,apellido,segundo_apellido,cedula,numero_papeleta_votacion,puesto_id,unidad_administrativa_id',
             'servidor.puesto.cargo:id,nombre',

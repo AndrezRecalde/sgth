@@ -9,7 +9,7 @@ import { getApiErrorMessage } from '@/types/api'
 import { movimientoService } from '../services/movimientoService'
 import { useMovimientoMutations } from '../hooks/useMovimientoMutations'
 import {
-  ESTADO_LABELS, TRANSICIONES, puedeDescargarPdf, requiereCompletarVinculo,
+  ESTADO_LABELS, puedeDescargarPdf, requiereCompletarVinculo,
 } from '../utils/estadoAccionPersonal'
 import type { MovimientoPersonal } from '@/types/api'
 import { guardarArchivo } from '@/lib/archivo'
@@ -31,6 +31,11 @@ interface Props {
  * derecha el único paso hacia adelante que el grafo permite desde este estado,
  * porque es uno o ninguno: borrador→suscrita, suscrita→registrada,
  * registrada→notificada.
+ *
+ * Qué pasos se ofrecen lo responde el backend en `transiciones_permitidas`: el
+ * grafo, menos lo que el usuario no tiene permiso de hacer y todo si la acción
+ * es suya (fase 1.3). Antes la pantalla leía solo el grafo y al asistente le
+ * ofrecía suscribir, registrar y anular.
  */
 export function AccionPersonalPie({ m, onClose, onCompletarVinculo, onPedirDictamen }: Props) {
   const { transicionar } = useMovimientoMutations()
@@ -38,7 +43,7 @@ export function AccionPersonalPie({ m, onClose, onCompletarVinculo, onPedirDicta
   const [anularOpened, { open: abrirAnular, close: cerrarAnular }] = useDisclosure(false)
 
   const estado = m.estado
-  const posibles = estado ? TRANSICIONES[estado] : []
+  const posibles = m.transiciones_permitidas ?? []
   const siguiente = posibles.find((e) => e !== 'anulada')
   const puedeAnular = posibles.includes('anulada')
 

@@ -75,6 +75,12 @@ class RolPermisoSeeder extends Seeder
             Permiso::GESTIONAR_EXPEDIENTE,
             Permiso::CARGAR_DOCUMENTOS,
             Permiso::GESTIONAR_CARGAS_FAMILIARES,
+            // El trámite entero de una acción de personal (diseño, 6.3).
+            Permiso::PREPARAR_ACCION_PERSONAL,
+            Permiso::SUSCRIBIR_ACCION_PERSONAL,
+            Permiso::REGISTRAR_ACCION_PERSONAL,
+            Permiso::NOTIFICAR_ACCION_PERSONAL,
+            Permiso::ANULAR_ACCION_PERSONAL,
             Permiso::VER_NOMINA_UNIDAD,
             Permiso::VER_NOMINA_TODAS,
             Permiso::PROCESAR_NOMINA,
@@ -128,6 +134,10 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_EXPEDIENTE_TODOS,
             Permiso::GESTIONAR_EXPEDIENTE,
             Permiso::GESTIONAR_CARGAS_FAMILIARES,
+            // Prepara y notifica; suscribir, registrar y anular son del
+            // director (TH 22).
+            Permiso::PREPARAR_ACCION_PERSONAL,
+            Permiso::NOTIFICAR_ACCION_PERSONAL,
             Permiso::VER_NOMINA_UNIDAD,
             Permiso::VER_NOMINA_TODAS,
             Permiso::PROCESAR_NOMINA,

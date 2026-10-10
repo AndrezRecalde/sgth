@@ -381,15 +381,18 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 [DocumentoServidorController::class, 'descargar'])
                 ->name('documentos.descargar');
         });
+        // Acciones de personal: cada paso del trámite con su permiso (diseño,
+        // 6.3), no con el rol. Hasta la fase 1.3 el asistente suscribía,
+        // registraba y anulaba como el director.
         Route::get('servidores/{servidor}/movimientos', [MovimientoPersonalController::class, 'index']);
         Route::post('servidores/{servidorId}/movimientos', [MovimientoPersonalController::class, 'store'])
-            ->middleware('role:admin-uath|asistente-uath');
+            ->middleware('permission:preparar-accion-personal');
         Route::get('movimientos', [MovimientoPersonalController::class, 'bandeja'])
-            ->middleware('role:admin-uath|asistente-uath');
+            ->middleware('permission:preparar-accion-personal|suscribir-accion-personal|registrar-accion-personal|notificar-accion-personal|anular-accion-personal');
         // Qué acciones existen y qué pide cada una. Lo leen la bandeja y el
         // formulario de «Nueva acción de personal», nadie más.
         Route::get('acciones-personal/catalogo', CatalogoAccionesPersonalController::class)
-            ->middleware('role:admin-uath|asistente-uath');
+            ->middleware('permission:preparar-accion-personal|suscribir-accion-personal|registrar-accion-personal|notificar-accion-personal|anular-accion-personal');
 
         // Quién está temporalmente fuera (comisión de servicios, licencia sin
         // remuneración) y qué hueco falta cubrir con personal de apoyo.
@@ -415,10 +418,13 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::get('firmantes-accion-personal/vigentes', [FirmanteAccionPersonalController::class, 'vigentes']);
         Route::get('movimientos/{movimientoId}/accion-personal-pdf', [AccionPersonalPdfController::class, 'generar']);
         Route::get('movimientos/{movimiento}', [MovimientoPersonalController::class, 'show']);
+        // Editar un borrador es prepararlo: lo hace también el asistente, que
+        // hasta la fase 1.3 lo creaba y no podía corregirlo.
         Route::put('movimientos/{movimiento}', [MovimientoPersonalController::class, 'update'])
-            ->middleware('role:admin-uath');
+            ->middleware('permission:preparar-accion-personal');
+        // El permiso del paso concreto lo mira TransicionarMovimientoRequest.
         Route::put('movimientos/{movimiento}/transicionar', [MovimientoPersonalController::class, 'transicionar'])
-            ->middleware('role:admin-uath|asistente-uath');
+            ->middleware('permission:suscribir-accion-personal|registrar-accion-personal|notificar-accion-personal|anular-accion-personal');
 
         // El certificado laboral lo emite Talento Humano, nunca el propio
         // servidor: así lo pidió la UATH el 2026-09-25 —quieren decidir ellos

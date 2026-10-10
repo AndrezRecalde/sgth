@@ -98,6 +98,7 @@ test('un servidor no puede listar los servidores de la institución', function (
 */
 test('asistente-uath puede trabajar las acciones de personal que sus rutas le conceden', function () {
     Role::firstOrCreate(['name' => 'asistente-uath', 'guard_name' => 'sanctum']);
+    permisosDeAccionesPersonal();
     $asistente = User::factory()->create();
     $asistente->assignRole('asistente-uath');
     $this->actingAs($asistente, 'sanctum');

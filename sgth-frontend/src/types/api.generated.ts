@@ -7917,7 +7917,7 @@ export interface components {
         EspecialidadAtencion: "medicina_general" | "odontologia";
         /**
          * EstadoAccionPersonal
-         * @description Estados de una Acción de Personal: borrador → suscrita → registrada → notificada, más anulada como salida antes de registrarse. Los estados intermedios 'informe_uath' y 'dictamen_presupuestario' se retiraron el 2026-07-29: no capturaban ningún dato y el flujo real de Talento Humano no los usa. La verificación presupuestaria sigue existiendo como guarda al suscribir (ver MovimientoPersonalStateService), no como estado.
+         * @description Estados de una Acción de Personal: borrador → suscrita → registrada → notificada, más anulada, a la que se llega desde cualquiera de ellos. Los estados intermedios 'informe_uath' y 'dictamen_presupuestario' se retiraron el 2026-07-29: no capturaban ningún dato y el flujo real de Talento Humano no los usa. La verificación presupuestaria sigue existiendo como guarda al suscribir (ver MovimientoPersonalStateService), no como estado.
          * @enum {string}
          */
         EstadoAccionPersonal: "borrador" | "suscrita" | "registrada" | "notificada" | "anulada";
@@ -8550,6 +8550,13 @@ export interface components {
             tiene_efecto_economico: boolean;
             tiene_documento_imprimible: boolean;
             editable_en_formulario: boolean;
+            /**
+             * @description Lo que puede hacer con ella quien pregunta (fase 1.3): los pasos
+             *     del trámite para los que tiene permiso, y ninguno si la acción es
+             *     suya. La pantalla pone los botones según esto, no según el rol.
+             */
+            transiciones_permitidas: components["schemas"]["EstadoAccionPersonal"][];
+            puede_editar: boolean;
             categoria: components["schemas"]["CategoriaEventoVinculo"] | null;
             estado: components["schemas"]["EstadoAccionPersonal"];
             descripcion: string;

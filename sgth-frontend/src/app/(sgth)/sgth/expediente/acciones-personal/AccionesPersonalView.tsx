@@ -8,11 +8,16 @@ import { MovimientoModal } from '@/features/expediente/components/MovimientoModa
 import { BandejaAccionesPersonal } from '@/features/expediente/components/BandejaAccionesPersonal'
 import { FirmantesPanel } from '@/features/expediente/components/FirmantesPanel'
 import { AusenciasTemporalesPanel } from '@/features/expediente/components/AusenciasTemporalesPanel'
+import { usePuedePrepararAccion } from '@/features/expediente/hooks/usePuedePrepararAccion'
 import type { FamiliaDelCatalogo, ServidorConRelaciones } from '@/types/api'
 import { PageHeader, PageShell } from '@/components/ui'
 
 export function AccionesPersonalView() {
   const [servidor, setServidor] = useState<ServidorConRelaciones | null>(null)
+
+  // La pestaña de registrar es de quien prepara acciones (diseño, 6.3). A
+  // quien solo suscribe o registra le queda la bandeja.
+  const puedePreparar = usePuedePrepararAccion()
 
   /**
    * La familia elegida es lo que abre el formulario: no hace falta un
@@ -43,9 +48,11 @@ export function AccionesPersonalView() {
           <Tabs.Tab value="bandeja" leftSection={<IconInbox size={16} />}>
             Bandeja de acciones
           </Tabs.Tab>
-          <Tabs.Tab value="nueva" leftSection={<IconUserPlus size={16} />}>
-            Nueva acción de personal
-          </Tabs.Tab>
+          {puedePreparar && (
+            <Tabs.Tab value="nueva" leftSection={<IconUserPlus size={16} />}>
+              Nueva acción de personal
+            </Tabs.Tab>
+          )}
           <Tabs.Tab value="ausencias" leftSection={<IconUserOff size={16} />}>
             Ausencias y reemplazos
           </Tabs.Tab>

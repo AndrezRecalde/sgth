@@ -23,6 +23,10 @@ class SubrogacionService implements SubrogacionServiceInterface
 {
     public function registrar(array $datos): Subrogacion
     {
+        // La subrogación nace con su acción de personal, y esa acción es del
+        // subrogante.
+        TramiteSobreSiMismo::impedir((int) $datos['servidor_subrogante_id']);
+
         // 1. Validación condicional de encargo vs subrogación
         if ($datos['tipo'] === TipoSubrogacion::ENCARGO->value) {
             $datos['servidor_subrogado_id'] = null;

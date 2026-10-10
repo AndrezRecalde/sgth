@@ -528,4 +528,37 @@ class MovimientoPersonal extends Model
                 $q->whereNull('fecha_fin')->orWhereDate('fecha_fin', '>=', $fecha);
             });
     }
+
+    /**
+     * Lo que el titular puede ver de sus propias acciones (diseño, 6.3): los
+     * actos registrados o notificados, y los anulados que llegaron a tener
+     * número —esos circularon y su anulación también le concierne—. Un
+     * borrador anulado nunca fue nada.
+     */
+    public function scopeVisibleParaElTitular(Builder $query): Builder
+    {
+        return $query->whereIn('estado', array_map(
+            fn (EstadoAccionPersonal $e) => $e->value,
+            EstadoAccionPersonal::visiblesParaElTitular(),
+        ))->where(function (Builder $q) {
+            $q->where('estado', '!=', EstadoAccionPersonal::ANULADA->value)
+                ->orWhereNotNull('codigo_registro');
+        });
+    }
+
+    public function esVisibleParaElTitular(): bool
+    {
+        if (! in_array($this->estado, EstadoAccionPersonal::visiblesParaElTitular(), true)) {
+            return false;
+        }
+
+        return $this->estado !== EstadoAccionPersonal::ANULADA || filled($this->codigo_registro);
+    }
+
+    /** ¿La persona que pregunta es aquella sobre quien versa la acción? */
+    public function esSobre(?User $usuario): bool
+    {
+        return $usuario?->servidor_id !== null
+            && (int) $usuario->servidor_id === (int) $this->servidor_id;
+    }
 }

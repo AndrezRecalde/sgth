@@ -29,6 +29,7 @@ uses(Tests\TestCase::class, RefreshDatabase::class);
 
 beforeEach(function () {
     Role::firstOrCreate(['name' => 'admin-uath', 'guard_name' => 'sanctum']);
+    permisosDeAccionesPersonal();
     $this->admin = User::factory()->create();
     $this->admin->assignRole('admin-uath');
     $this->actingAs($this->admin, 'sanctum');

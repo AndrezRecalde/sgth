@@ -24110,11 +24110,11 @@
                             }
                         }
                     },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -47071,7 +47071,7 @@
             },
             "EstadoAccionPersonal": {
                 "type": "string",
-                "description": "Estados de una Acci\u00f3n de Personal: borrador \u2192 suscrita \u2192 registrada \u2192 notificada, m\u00e1s anulada como salida antes de registrarse. Los estados intermedios 'informe_uath' y 'dictamen_presupuestario' se retiraron el 2026-07-29: no capturaban ning\u00fan dato y el flujo real de Talento Humano no los usa. La verificaci\u00f3n presupuestaria sigue existiendo como guarda al suscribir (ver MovimientoPersonalStateService), no como estado.\n",
+                "description": "Estados de una Acci\u00f3n de Personal: borrador \u2192 suscrita \u2192 registrada \u2192 notificada, m\u00e1s anulada, a la que se llega desde cualquiera de ellos. Los estados intermedios 'informe_uath' y 'dictamen_presupuestario' se retiraron el 2026-07-29: no capturaban ning\u00fan dato y el flujo real de Talento Humano no los usa. La verificaci\u00f3n presupuestaria sigue existiendo como guarda al suscribir (ver MovimientoPersonalStateService), no como estado.\n",
                 "enum": [
                     "borrador",
                     "suscrita",
@@ -49541,7 +49541,7 @@
                     "clase": {
                         "anyOf": [
                             {
-                                "description": "La clase legal y su nombre, que es lo que se muestra. La pantalla\nno arma etiquetas propias: las de la bit\u00e1cora, que no tiene\nclase, tambi\u00e9n vienen de aqu\u00ed.",
+                                "description": "La clase legal y su nombre, que es lo que se muestra. La pantalla\nno arma etiquetas propias.",
                                 "$ref": "#/components/schemas/ClaseAccionPersonal"
                             },
                             {
@@ -49585,6 +49585,16 @@
                         "type": "boolean"
                     },
                     "editable_en_formulario": {
+                        "type": "boolean"
+                    },
+                    "transiciones_permitidas": {
+                        "type": "array",
+                        "description": "Lo que puede hacer con ella quien pregunta (fase 1.3): los pasos\ndel tr\u00e1mite para los que tiene permiso, y ninguno si la acci\u00f3n es\nsuya. La pantalla pone los botones seg\u00fan esto, no seg\u00fan el rol.",
+                        "items": {
+                            "$ref": "#/components/schemas/EstadoAccionPersonal"
+                        }
+                    },
+                    "puede_editar": {
                         "type": "boolean"
                     },
                     "categoria": {
@@ -50043,6 +50053,8 @@
                     "tiene_efecto_economico",
                     "tiene_documento_imprimible",
                     "editable_en_formulario",
+                    "transiciones_permitidas",
+                    "puede_editar",
                     "categoria",
                     "estado",
                     "descripcion",

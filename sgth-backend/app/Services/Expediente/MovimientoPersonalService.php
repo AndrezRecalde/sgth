@@ -104,6 +104,10 @@ class MovimientoPersonalService
 
     public function registrar(int $servidorId, array $datos): MovimientoPersonal
     {
+        // Aquí y no en el controlador: por este método crean sus borradores
+        // también Disciplinario y Reclutamiento.
+        TramiteSobreSiMismo::impedir($servidorId);
+
         $servidor = Servidor::with('contratoVigente.puesto')->findOrFail($servidorId);
         $tipoMovimiento = TipoMovimientoPersonal::from($datos['tipo_movimiento']);
 
@@ -174,6 +178,8 @@ class MovimientoPersonalService
      */
     public function actualizarBorrador(MovimientoPersonal $movimiento, array $datos): MovimientoPersonal
     {
+        TramiteSobreSiMismo::impedir($movimiento->servidor_id);
+
         if ($movimiento->estado !== EstadoAccionPersonal::BORRADOR) {
             throw new ReglaNegocioException(
                 "Solo se puede editar una acción de personal en borrador. "

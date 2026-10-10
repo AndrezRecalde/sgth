@@ -11,6 +11,7 @@ use App\Models\Dispensario\SolicitudCertificacionMedica;
 use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class MovimientoPersonalStateService
@@ -55,6 +56,11 @@ class MovimientoPersonalStateService
     ): MovimientoPersonal {
         $origen = $movimiento->estado;
 
+        // También en las cascadas —anular una sanción desde Disciplinario, una
+        // subrogación desde su pantalla—: quien las dispara sobre sí mismo
+        // sigue tramitando su propia acción.
+        TramiteSobreSiMismo::impedir($movimiento->servidor_id);
+
         $this->assertTransicionPermitida($origen, $destino);
 
         return DB::transaction(function () use ($movimiento, $destino, $datos) {
@@ -77,6 +83,32 @@ class MovimientoPersonalStateService
 
             return $movimiento->fresh();
         });
+    }
+
+    /**
+     * A qué estados puede llevar esta acción quien pregunta: los que el grafo
+     * permite desde el actual y para los que tiene el permiso, y ninguno si la
+     * acción es suya. Lo lee la pantalla, para no ofrecer un botón que
+     * respondería 403 o 422.
+     *
+     * @return list<EstadoAccionPersonal>
+     */
+    public function destinosPara(MovimientoPersonal $movimiento, ?User $usuario): array
+    {
+        if ($usuario === null || $movimiento->estado === null || $movimiento->esSobre($usuario)) {
+            return [];
+        }
+
+        $destinos = array_map(
+            fn (string $estado) => EstadoAccionPersonal::from($estado),
+            self::TRANSICIONES[$movimiento->estado->value] ?? [],
+        );
+
+        return array_values(array_filter(
+            $destinos,
+            fn (EstadoAccionPersonal $destino) => ($permiso = $destino->permisoParaLlegar()) === null
+                || $usuario->can($permiso->value),
+        ));
     }
 
     private function assertTransicionPermitida(EstadoAccionPersonal $origen, EstadoAccionPersonal $destino): void

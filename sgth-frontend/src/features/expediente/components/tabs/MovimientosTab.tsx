@@ -13,6 +13,7 @@ import { movimientoService } from '../../services/movimientoService'
 import { getApiErrorMessage } from '@/types/api'
 import type { MovimientoPersonal } from '@/types/api'
 import { guardarArchivo } from '@/lib/archivo'
+import { usePuedePrepararAccion } from '../../hooks/usePuedePrepararAccion'
 
 interface Props {
   servidorId: number
@@ -25,6 +26,9 @@ export function MovimientosTab({ servidorId, tipoNombramiento }: Props) {
   const [detalleId, setDetalleId] = useState<number | null>(null)
   const { data: lista = [], isLoading, error } = useMovimientos(servidorId)
   const [descargandoId, setDescargandoId] = useState<number | null>(null)
+  // Sin el permiso de preparar, o en el expediente propio, no hay acción que
+  // registrar: nadie tramita sus propios actos.
+  const puedePreparar = usePuedePrepararAccion(servidorId)
 
   const handleDescargarPdf = async (movimiento: MovimientoPersonal) => {
     setDescargandoId(Number(movimiento.id))
@@ -57,7 +61,7 @@ export function MovimientosTab({ servidorId, tipoNombramiento }: Props) {
       <SectionCard
         title="Historial de acciones"
         description="Registro inmutable de los movimientos y acciones de personal del servidor."
-        actions={
+        actions={puedePreparar && (
           <Button
             size="xs" variant="light"
             leftSection={<IconPlus size={14} />}
@@ -65,12 +69,12 @@ export function MovimientosTab({ servidorId, tipoNombramiento }: Props) {
           >
             Nueva acción de personal
           </Button>
-        }
+        )}
       >
         {/* Un aviso, no una etiqueta: `StatusBadge` es para el estado de un
             registro o para una categoría, y esto es una frase que explica por
             qué el botón de arriba no va a llevar a ninguna parte. */}
-        {!tipoNombramiento && (
+        {puedePreparar && !tipoNombramiento && (
           <Alert
             variant="light"
             color="amber"
