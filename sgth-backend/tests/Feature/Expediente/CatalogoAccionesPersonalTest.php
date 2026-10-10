@@ -219,8 +219,10 @@ test('lo que pide el formulario coincide con lo que la acción hace al registrar
 
             expect($clase->pideSituacionPropuesta())
                 ->toBe($tipo->creaVinculo() || $movimiento->reubicaAlServidor(), "Situación propuesta de «{$nombre}»")
+                // El período lo piden las ausencias: las comisiones y, desde la
+                // fase 2.2, la licencia sin remuneración.
                 ->and($clase->pidePeriodo())
-                ->toBe((bool) $subtipo?->esComisionDeServicios(), "Período de «{$nombre}»")
+                ->toBe($movimiento->esAusenciaTemporal(), "Período de «{$nombre}»")
                 ->and($clase->pideContratacion())
                 ->toBe($tipo->creaVinculo(), "Contratación de «{$nombre}»");
         }
@@ -311,8 +313,9 @@ test('una clase que no aplica al nombramiento se rechaza con el nombre de la cla
 test('una clase sin causal no admite una', function () {
     $permanente = ($this->servidorCon)(TipoNombramiento::PERMANENTE);
 
+    // La comisión no tiene causal; la licencia sí, desde la fase 2.2.
     $respuesta = ($this->crear)($permanente, [
-        'clase' => 'licencia_sin_remuneracion', 'causal' => 'renuncia',
+        'clase' => 'comision_con_remuneracion', 'causal' => 'renuncia',
     ]);
 
     $respuesta->assertStatus(422);
@@ -448,7 +451,10 @@ test('la bandeja entrega el nombre y lo que la pantalla decide con cada acción'
 test('la bandeja filtra por clase', function () {
     $servidor = ($this->servidorCon)(TipoNombramiento::PERMANENTE);
 
-    ($this->crear)($servidor, ['clase' => 'licencia_sin_remuneracion'])->assertCreated();
+    ($this->crear)($servidor, [
+        'clase' => 'licencia_sin_remuneracion', 'causal' => 'servicio_militar',
+        'fecha_inicio' => '2026-10-15', 'fecha_fin' => '2026-11-15',
+    ])->assertCreated();
     ($this->crear)($servidor, ['clase' => 'cesacion', 'causal' => 'jubilacion'])->assertCreated();
 
     $filas = $this->getJson('/api/v1/expediente/movimientos?clase=cesacion')->json('datos.data');

@@ -94,6 +94,7 @@ beforeEach(function () {
         "/api/v1/expediente/servidores/{$servidor->id}/movimientos",
         [
             'clase'                    => 'licencia_sin_remuneracion',
+            'causal'                   => 'servicio_militar',
             'descripcion'              => 'Licencia de prueba',
             'fecha_efectiva'           => '2026-10-15',
             'fecha_inicio'             => '2026-10-15',

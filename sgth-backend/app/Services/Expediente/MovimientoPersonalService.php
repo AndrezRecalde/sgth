@@ -9,7 +9,9 @@ use App\Enums\EstadoContrato;
 use App\Enums\SubtipoMovimientoPersonal;
 use App\Enums\TipoMovimientoPersonal;
 use App\Enums\TipoNombramiento;
+use App\Enums\TipoParentesco;
 use App\Exceptions\ReglaNegocioException;
+use App\Models\Expediente\CargaFamiliar;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
 use Carbon\Carbon;
@@ -148,6 +150,10 @@ class MovimientoPersonalService
             $this->validarComisionDeServicios($servidor, $subtipo, $datos);
         }
 
+        if ($subtipo?->esLicenciaSinRemuneracion()) {
+            $this->validarLicenciaSinRemuneracion($servidor, $subtipo, $datos);
+        }
+
         if (!empty($datos['movimiento_previo_id'])) {
             $this->validarMovimientoPrevio($servidorId, (int) $datos['movimiento_previo_id']);
         }
@@ -265,6 +271,7 @@ class MovimientoPersonalService
         }
 
         $this->revalidarPeriodoDeComision($movimiento, $datos);
+        $this->revalidarPeriodoDeLicencia($movimiento, $datos);
         $this->revalidarReemplazo($movimiento, $datos);
 
         $movimiento->update($datos);
@@ -444,6 +451,148 @@ class MovimientoPersonalService
             'fecha_inicio' => $datos['fecha_inicio'] ?? $movimiento->fecha_inicio?->toDateString(),
             'fecha_fin'    => $datos['fecha_fin'] ?? $movimiento->fecha_fin?->toDateString(),
         ]);
+    }
+
+    /**
+     * Corregir las fechas de una licencia en borrador pasa por los mismos topes
+     * que crearla, sin contarse a sí misma.
+     */
+    private function revalidarPeriodoDeLicencia(MovimientoPersonal $movimiento, array $datos): void
+    {
+        $causal = $movimiento->subtipoEfectivo();
+
+        if (! $causal?->esLicenciaSinRemuneracion()) {
+            return;
+        }
+
+        if (! array_key_exists('fecha_inicio', $datos) && ! array_key_exists('fecha_fin', $datos)) {
+            return;
+        }
+
+        $this->validarLicenciaSinRemuneracion(
+            $movimiento->servidor()->firstOrFail(),
+            $causal,
+            [
+                'fecha_inicio' => $datos['fecha_inicio'] ?? $movimiento->fecha_inicio?->toDateString(),
+                'fecha_fin'    => $datos['fecha_fin'] ?? $movimiento->fecha_fin?->toDateString(),
+            ],
+            $movimiento->id,
+        );
+    }
+
+    /**
+     * La licencia sin remuneración lleva siempre fechas y el tope de su causal
+     * (LOSEP Art. 28; diseño, 4.4; TH 16; fase 2.2). Sin fechas no salía en
+     * «Ausencias y reemplazos» y no se le podía contratar reemplazo.
+     */
+    private function validarLicenciaSinRemuneracion(
+        Servidor $servidor,
+        SubtipoMovimientoPersonal $causal,
+        array $datos,
+        ?int $excepto = null
+    ): void {
+        $etiqueta = 'La licencia por '.mb_strtolower($causal->etiqueta());
+
+        if (empty($datos['fecha_inicio']) || empty($datos['fecha_fin'])) {
+            throw new ReglaNegocioException(
+                'La licencia sin remuneración lleva siempre fecha de inicio y fecha de fin.'
+            );
+        }
+
+        $inicio = Carbon::parse($datos['fecha_inicio'])->startOfDay();
+        $fin    = Carbon::parse($datos['fecha_fin'])->startOfDay();
+
+        if ($fin->lt($inicio)) {
+            throw new ReglaNegocioException('La fecha de fin no puede ser anterior a la de inicio.');
+        }
+
+        match ($causal) {
+            SubtipoMovimientoPersonal::ASUNTOS_PARTICULARES => $this->validarTopeDeAsuntosParticulares($servidor, $inicio, $fin, $excepto),
+            SubtipoMovimientoPersonal::ESTUDIOS_POSGRADO    => $this->validarServicioParaPosgrado($servidor, $inicio, $etiqueta),
+            SubtipoMovimientoPersonal::CUIDADO_HIJOS        => $this->validarCuidadoDeHijos($servidor, $inicio, $fin, $etiqueta),
+            // Servicio militar, reemplazo de un dignatario y candidatura duran lo
+            // que dure su causa; la transitoria de obreros y autoridades no
+            // tiene los topes de la LOSEP.
+            default => null,
+        };
+    }
+
+    /**
+     * LOSEP 28 a: hasta 15 días con permiso del jefe y hasta 60 al año con la
+     * autoridad nominadora. La acción la suscribe la autoridad, así que el tope
+     * que se controla es el de 60 días por año calendario, sumando las de esta
+     * causal que no se anularon.
+     */
+    private function validarTopeDeAsuntosParticulares(Servidor $servidor, Carbon $inicio, Carbon $fin, ?int $excepto): void
+    {
+        $previas = MovimientoPersonal::where('servidor_id', $servidor->id)
+            ->where('tipo_movimiento', TipoMovimientoPersonal::LICENCIA_SIN_REMUNERACION->value)
+            ->where('subtipo_movimiento', SubtipoMovimientoPersonal::ASUNTOS_PARTICULARES->value)
+            ->where('estado', '!=', EstadoAccionPersonal::ANULADA->value)
+            ->when($excepto, fn ($q) => $q->where('id', '!=', $excepto))
+            ->whereNotNull('fecha_inicio')
+            ->whereNotNull('fecha_fin')
+            ->get(['id', 'fecha_inicio', 'fecha_fin']);
+
+        for ($anio = $inicio->year; $anio <= $fin->year; $anio++) {
+            $total = self::diasEnElAnio($inicio, $fin, $anio)
+                + $previas->sum(fn (MovimientoPersonal $m) => self::diasEnElAnio($m->fecha_inicio, $m->fecha_fin, $anio));
+
+            if ($total > 60) {
+                throw new ReglaNegocioException(
+                    "La licencia por asuntos particulares no puede pasar de 60 días al año: en {$anio} "
+                        ."serían {$total} con esta (LOSEP Art. 28 a)."
+                );
+            }
+        }
+    }
+
+    /** Días del período [inicio, fin] que caen en ese año, contando los dos extremos. */
+    private static function diasEnElAnio(Carbon $inicio, Carbon $fin, int $anio): int
+    {
+        $desde = $inicio->copy()->max(Carbon::create($anio, 1, 1));
+        $hasta = $fin->copy()->min(Carbon::create($anio, 12, 31));
+
+        return $hasta->lt($desde) ? 0 : (int) $desde->diffInDays($hasta) + 1;
+    }
+
+    /** LOSEP 28 b: el posgrado exige 2 años de servicio a la fecha de inicio. */
+    private function validarServicioParaPosgrado(Servidor $servidor, Carbon $inicio, string $etiqueta): void
+    {
+        if (! $servidor->fecha_ingreso_institucion
+            || $servidor->fecha_ingreso_institucion->copy()->addYears(2)->gt($inicio)
+        ) {
+            throw new ReglaNegocioException(
+                "{$etiqueta} exige al menos 2 años de servicio en la institución a la fecha de inicio (LOSEP Art. 28 b)."
+            );
+        }
+    }
+
+    /**
+     * LOSEP 28 f: hasta 12 meses, dentro de los primeros 15 meses de vida del
+     * hijo. El nacimiento sale de Cargas familiares; sin el hijo registrado no
+     * hay contra qué medir.
+     */
+    private function validarCuidadoDeHijos(Servidor $servidor, Carbon $inicio, Carbon $fin, string $etiqueta): void
+    {
+        if ($fin->gt($inicio->copy()->addMonths(12)->subDay())) {
+            throw new ReglaNegocioException("{$etiqueta} dura hasta 12 meses (LOSEP Art. 28 f).");
+        }
+
+        $cabe = CargaFamiliar::where('servidor_id', $servidor->id)
+            ->where('parentesco', TipoParentesco::HIJO->value)
+            ->where('estado', true)
+            ->whereNotNull('fecha_nacimiento')
+            ->get(['id', 'fecha_nacimiento'])
+            ->contains(fn (CargaFamiliar $hijo) => $hijo->fecha_nacimiento->lte($inicio)
+                && $fin->lte($hijo->fecha_nacimiento->copy()->addMonths(15)));
+
+        if (! $cabe) {
+            throw new ReglaNegocioException(
+                "{$etiqueta} tiene que terminar dentro de los primeros 15 meses de vida de un hijo "
+                    .'registrado en Cargas familiares (LOSEP Art. 28 f).'
+            );
+        }
     }
 
     /**

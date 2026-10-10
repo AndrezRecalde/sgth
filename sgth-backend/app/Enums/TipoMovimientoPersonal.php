@@ -93,6 +93,16 @@ enum TipoMovimientoPersonal: string
                 SubtipoMovimientoPersonal::CONTRATO_FINALIZADO,
                 SubtipoMovimientoPersonal::VISTO_BUENO,
             ],
+            // LOSEP Art. 28, y la transitoria de obreros y autoridades (fase 2.2).
+            self::LICENCIA_SIN_REMUNERACION => [
+                SubtipoMovimientoPersonal::ASUNTOS_PARTICULARES,
+                SubtipoMovimientoPersonal::ESTUDIOS_POSGRADO,
+                SubtipoMovimientoPersonal::SERVICIO_MILITAR,
+                SubtipoMovimientoPersonal::REEMPLAZO_DIGNATARIO,
+                SubtipoMovimientoPersonal::CANDIDATURA,
+                SubtipoMovimientoPersonal::CUIDADO_HIJOS,
+                SubtipoMovimientoPersonal::SEGUN_SU_REGIMEN,
+            ],
             default => [],
         };
     }

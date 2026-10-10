@@ -43,6 +43,21 @@ enum SubtipoMovimientoPersonal: string
     case PERDIDA_DERECHOS           = 'perdida_derechos_ciudadania';
     case FALLECIMIENTO              = 'fallecimiento';
 
+    // ── Licencia sin remuneración ────────────────────────────
+    // Las causales de LOSEP Art. 28 (diseño, 4.4; fase 2.2), con su tope. Solo
+    // para permanentes [TH N9].
+    case ASUNTOS_PARTICULARES = 'asuntos_particulares';
+    case ESTUDIOS_POSGRADO    = 'estudios_posgrado';
+    case SERVICIO_MILITAR     = 'servicio_militar';
+    case REEMPLAZO_DIGNATARIO = 'reemplazo_dignatario';
+    case CANDIDATURA          = 'candidatura';
+    case CUIDADO_HIJOS        = 'cuidado_hijos';
+    // Transitoria: obreros y autoridades electas tienen su licencia en su
+    // propio régimen (Código del Trabajo; el Consejo, COOTAD), y sus bloques
+    // todavía no existen. Hasta que lleguen conservan la que tenían, sin los
+    // topes de la LOSEP (decisión del 2026-10-10).
+    case SEGUN_SU_REGIMEN     = 'segun_su_regimen';
+
     public function etiqueta(): string
     {
         return match ($this) {
@@ -66,6 +81,13 @@ enum SubtipoMovimientoPersonal: string
             self::RETIRO_VOLUNTARIO          => 'Retiro voluntario o compra de renuncia',
             self::PERDIDA_DERECHOS           => 'Pérdida de los derechos de ciudadanía',
             self::FALLECIMIENTO              => 'Fallecimiento',
+            self::ASUNTOS_PARTICULARES       => 'Asuntos particulares',
+            self::ESTUDIOS_POSGRADO          => 'Estudios de posgrado',
+            self::SERVICIO_MILITAR           => 'Servicio militar',
+            self::REEMPLAZO_DIGNATARIO       => 'Reemplazo de un dignatario electo',
+            self::CANDIDATURA                => 'Candidatura a elección popular',
+            self::CUIDADO_HIJOS              => 'Cuidado de hijos',
+            self::SEGUN_SU_REGIMEN           => 'Según su régimen (Código del Trabajo o Consejo)',
         };
     }
 
@@ -90,6 +112,12 @@ enum SubtipoMovimientoPersonal: string
             self::PERDIDA_DERECHOS           => 'LOSEP Art. 47 d',
             self::FALLECIMIENTO              => 'LOSEP Art. 47 l',
             self::VISTO_BUENO                => 'Código del Trabajo Art. 172',
+            self::ASUNTOS_PARTICULARES       => 'LOSEP Art. 28 a',
+            self::ESTUDIOS_POSGRADO          => 'LOSEP Art. 28 b',
+            self::SERVICIO_MILITAR           => 'LOSEP Art. 28 c',
+            self::REEMPLAZO_DIGNATARIO       => 'LOSEP Art. 28 d',
+            self::CANDIDATURA                => 'LOSEP Art. 28 e',
+            self::CUIDADO_HIJOS              => 'LOSEP Art. 28 f',
             default                          => null,
         };
     }
@@ -184,6 +212,15 @@ enum SubtipoMovimientoPersonal: string
 
             self::RETIRO_VOLUNTARIO => [TipoNombramiento::PERMANENTE],
 
+            self::ASUNTOS_PARTICULARES,
+            self::ESTUDIOS_POSGRADO,
+            self::SERVICIO_MILITAR,
+            self::REEMPLAZO_DIGNATARIO,
+            self::CANDIDATURA,
+            self::CUIDADO_HIJOS => [TipoNombramiento::PERMANENTE],
+
+            self::SEGUN_SU_REGIMEN => [TipoNombramiento::CODIGO_TRABAJO, TipoNombramiento::ELECCION_POPULAR],
+
             self::CONTRATO_FINALIZADO => [TipoNombramiento::SERVICIOS_PROFESIONALES],
 
             // Exclusivo de obreros: es el procedimiento del Código del
@@ -246,7 +283,13 @@ enum SubtipoMovimientoPersonal: string
      */
     public function esAusenciaTemporal(): bool
     {
-        return $this->esComisionDeServicios();
+        return $this->esComisionDeServicios() || $this->esLicenciaSinRemuneracion();
+    }
+
+    /** Las causales de la licencia sin remuneración (fase 2.2). */
+    public function esLicenciaSinRemuneracion(): bool
+    {
+        return in_array($this, TipoMovimientoPersonal::LICENCIA_SIN_REMUNERACION->subtiposPermitidos(), true);
     }
 
     /**

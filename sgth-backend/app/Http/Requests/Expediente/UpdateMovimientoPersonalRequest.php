@@ -26,7 +26,7 @@ class UpdateMovimientoPersonalRequest extends FormRequest
             'descripcion'       => 'sometimes|string|max:1000',
             'fecha_efectiva'    => 'sometimes|date',
             'fecha_inicio'      => 'nullable|date',
-            'fecha_fin'         => 'nullable|date|after:fecha_inicio',
+            'fecha_fin'         => 'nullable|date|after_or_equal:fecha_inicio', // una licencia de un día empieza y termina el mismo día
             'unidad_origen_id'  => 'nullable|exists:unidades_administrativas,id',
             'unidad_destino_id' => 'nullable|exists:unidades_administrativas,id',
             'puesto_origen_id'  => 'nullable|exists:puestos,id',
