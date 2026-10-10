@@ -162,6 +162,69 @@ class Servidor extends Model
         return $this->hasMany(DeclaracionJuramentada::class);
     }
 
+    /**
+     * ¿Tiene un vínculo vigente? Es lo que significa `estado` desde la fase 1.5
+     * del diseño de Acciones de Personal (8.3): hasta entonces una cesación
+     * cerraba el contrato y nadie apagaba al servidor, que seguía en la nómina.
+     */
+    public function tieneVinculoVigente(): bool
+    {
+        return $this->contratos()->where('estado', 'vigente')->exists();
+    }
+
+    /**
+     * Desde cuándo trabaja sin interrupción en la institución (diseño, 8.3;
+     * TH 12 y 13). Es la antigüedad que usan la comisión de servicios y las
+     * vacaciones de los obreros.
+     *
+     * Se recorren sus vínculos del más nuevo al más viejo: uno que empieza a
+     * más tardar el día siguiente al cierre del anterior es servicio continuo y
+     * conserva la fecha original; si hubo tiempo fuera, la antigüedad cuenta
+     * desde el reingreso. Hasta la fase 1.5 cada contrato nuevo pisaba la
+     * fecha, así que una cesación seguida de un ingreso —el «ascenso» de TH—
+     * reiniciaba la antigüedad.
+     *
+     * Si la cadena llega sin cortes hasta el primer vínculo, vale la fecha ya
+     * guardada cuando es anterior: es la que se declaró en la carga inicial,
+     * de quien ingresó antes de que existiera el sistema. Los contratos
+     * cancelados no cuentan: nunca existieron.
+     */
+    public function inicioDelServicioContinuo(): ?string
+    {
+        $vinculos = $this->contratos()
+            ->where('estado', '!=', 'cancelado')
+            ->whereNotNull('fecha_inicio')
+            ->orderByDesc('fecha_inicio')
+            ->orderByDesc('id')
+            ->get(['id', 'fecha_inicio', 'fecha_fin']);
+
+        if ($vinculos->isEmpty()) {
+            return $this->fecha_ingreso_institucion?->toDateString();
+        }
+
+        $inicio = null;
+
+        foreach ($vinculos as $vinculo) {
+            $desde = $vinculo->fecha_inicio->toDateString();
+
+            if ($inicio !== null) {
+                $fin = $vinculo->fecha_fin?->toDateString();
+                $continua = $fin === null
+                    || $fin >= \Carbon\Carbon::parse($inicio)->subDay()->toDateString();
+
+                if (! $continua) {
+                    return $inicio;
+                }
+            }
+
+            $inicio = $inicio === null ? $desde : min($inicio, $desde);
+        }
+
+        $declarada = $this->fecha_ingreso_institucion?->toDateString();
+
+        return $declarada !== null && $declarada < $inicio ? $declarada : $inicio;
+    }
+
     public function contratoVigente(): HasOne
     {
         return $this->hasOne(ContratoServidor::class)

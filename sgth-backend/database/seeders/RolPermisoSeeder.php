@@ -81,6 +81,8 @@ class RolPermisoSeeder extends Seeder
             Permiso::REGISTRAR_ACCION_PERSONAL,
             Permiso::NOTIFICAR_ACCION_PERSONAL,
             Permiso::ANULAR_ACCION_PERSONAL,
+            // Corregir a mano la fecha de ingreso (fase 1.5).
+            Permiso::CORREGIR_DATOS_LABORALES,
             Permiso::VER_NOMINA_UNIDAD,
             Permiso::VER_NOMINA_TODAS,
             Permiso::PROCESAR_NOMINA,

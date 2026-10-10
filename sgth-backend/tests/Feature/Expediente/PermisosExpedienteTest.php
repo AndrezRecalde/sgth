@@ -167,14 +167,19 @@ test('el titular solo cambia su contacto; cédula, régimen y fechas quedan para
     expect($this->propio->fresh()->telefono_celular)->toBe('0999999999');
 });
 
-test('talento humano sigue editando toda la ficha', function () {
+test('talento humano sigue editando la ficha, salvo lo que sale del vínculo', function () {
     $this->actingAs($this->uath, 'sanctum');
 
     $this->putJson("/api/v1/expediente/servidores/{$this->propio->id}", [
-        'cedula' => '3333333333', 'regimen_laboral' => 'codigo_trabajo',
+        'cedula' => '3333333333',
     ])->assertOk();
 
     expect($this->propio->fresh()->cedula)->toBe('3333333333');
+
+    // El régimen lo dice el contrato vigente desde la fase 1.5.
+    $this->putJson("/api/v1/expediente/servidores/{$this->propio->id}", [
+        'regimen_laboral' => 'codigo_trabajo',
+    ])->assertUnprocessable()->assertJsonStructure(['errores' => ['regimen_laboral']]);
 });
 
 test('una cédula repetida se explica en español, no como validation.unique', function () {

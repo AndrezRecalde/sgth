@@ -883,6 +883,10 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
    - La impugnación del visto bueno deja una anotación en vez de añadir texto a la explicación. Las que ya existían se copian desde `vistos_buenos`; el texto ya añadido no se toca, porque si la acción se registró después es parte del acto.
    - Las anotaciones se ven en el cajón de la acción y no salen en el documento.
 5. Estado de la persona derivado del vínculo; `fecha_ingreso_institucion` no se pisa; antigüedad calculada con la regla de 8.3.
+   - `estado`, puesto y unidad salen juntos del contrato vigente cada vez que uno nace, se cierra o se reabre. Hasta aquí una cesación dejaba al servidor activo y con puesto.
+   - La antigüedad la calcula `Servidor::inicioDelServicioContinuo()`: conserva la fecha si el vínculo nuevo empieza a más tardar el día siguiente al cierre del anterior, cuenta desde el reingreso si hubo tiempo fuera, y respeta la fecha declarada en la carga inicial si la cadena llega sin cortes al primer vínculo.
+   - `sgth:servidores:conciliar-estado` corrige lo que quedó antes (8.6 punto 6): con `--simular` informa sin guardar; con `--responsable` aplica y deja la bitácora.
+   - En la ficha, `regimen_laboral` ya no se edita y `fecha_ingreso_institucion` pide `corregir-datos-laborales` (admin-uath). Lo que depende de la fecha en que rige la acción queda para el motor de efectos (punto 6).
 6. Motor de efectos con fecha y comando diario.
 
 **Fase 2 — Completar la LOSEP**

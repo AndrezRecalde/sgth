@@ -60,20 +60,12 @@ class VinculacionInicialService
                 'origen' => OrigenVinculo::VINCULACION_INICIAL->value,
             ]);
 
-            // Crear el contrato sincroniza fecha_ingreso_institucion con su
-            // fecha de inicio. En el alta ordinaria eso es correcto —el primer
-            // contrato ES el ingreso—, pero aquí no: quien se migra suele
-            // llevar años en la institución con vínculos anteriores. Si TH
-            // declaró la fecha real, se restituye.
-            //
-            // Se escribe con una consulta directa y no con save(): el modelo
-            // en memoria conserva el valor original, así que Eloquent no lo
-            // vería sucio y no llegaría a escribir nada.
-            if (filled($datosServidor['fecha_ingreso_institucion'] ?? null)) {
-                Servidor::whereKey($servidor->id)->update([
-                    'fecha_ingreso_institucion' => $datosServidor['fecha_ingreso_institucion'],
-                ]);
-            }
+            // Quien se migra suele llevar años en la institución con vínculos
+            // anteriores al sistema, y la fecha que TH declaró se conserva: el
+            // contrato calcula la antigüedad con la historia de vínculos, y al
+            // llegar al primero respeta la ya guardada si es anterior
+            // (Servidor::inicioDelServicioContinuo). Hasta la fase 1.5 el
+            // contrato la pisaba y aquí se restituía a mano.
 
             return $servidor->fresh([
                 'contratoVigente.puesto.cargo',
