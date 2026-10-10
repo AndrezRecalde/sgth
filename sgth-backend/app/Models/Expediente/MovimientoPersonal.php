@@ -245,6 +245,9 @@ class MovimientoPersonal extends Model
         'fecha_fin',
         'unidad_origen_id',
         'unidad_destino_id',
+        // A qué entidad del Estado va, en comisiones e intercambio (fase 2.3).
+        'institucion_destino',
+        'para_estudios_o_eventos',
         'puesto_origen_id',
         'remuneracion_origen',
         'partida_origen_id',
@@ -276,6 +279,7 @@ class MovimientoPersonal extends Model
             'remuneracion_origen'         => 'decimal:2',
             'fecha_fin_propuesta'         => 'date',
             'puede_marcar'                => 'boolean',
+            'para_estudios_o_eventos'     => 'boolean',
             'fecha_registro'     => 'date',
             'efecto_aplicado_en' => 'datetime',
             'fecha_suscripcion'  => 'date',

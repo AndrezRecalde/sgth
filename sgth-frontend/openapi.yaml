@@ -45004,6 +45004,12 @@
                     "pide_periodo": {
                         "type": "boolean"
                     },
+                    "pide_institucion_destino": {
+                        "type": "boolean"
+                    },
+                    "admite_para_estudios_o_eventos": {
+                        "type": "boolean"
+                    },
                     "pide_contratacion": {
                         "type": "boolean"
                     },
@@ -45027,6 +45033,8 @@
                     "causales",
                     "pide_situacion_propuesta",
                     "pide_periodo",
+                    "pide_institucion_destino",
+                    "admite_para_estudios_o_eventos",
                     "pide_contratacion",
                     "dictamen_medico_por_defecto",
                     "aviso"
@@ -49641,6 +49649,15 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "institucion_destino": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "para_estudios_o_eventos": {
+                        "type": "boolean"
                     }
                 },
                 "required": [
@@ -49696,7 +49713,9 @@
                     "partida_origen_id",
                     "motivo_anulacion",
                     "clase",
-                    "efecto_aplicado_en"
+                    "efecto_aplicado_en",
+                    "institucion_destino",
+                    "para_estudios_o_eventos"
                 ],
                 "title": "MovimientoPersonal"
             },
@@ -49859,6 +49878,15 @@
                             "integer",
                             "null"
                         ]
+                    },
+                    "institucion_destino": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "para_estudios_o_eventos": {
+                        "type": "boolean"
                     },
                     "puesto_origen_id": {
                         "type": [
@@ -50296,6 +50324,8 @@
                     "fecha_fin",
                     "unidad_origen_id",
                     "unidad_destino_id",
+                    "institucion_destino",
+                    "para_estudios_o_eventos",
                     "puesto_origen_id",
                     "puesto_destino_id",
                     "tipo_nombramiento_propuesto",
@@ -55882,6 +55912,20 @@
                             "null"
                         ]
                     },
+                    "institucion_destino": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Comisiones e intercambio: la entidad del Estado a la que va (fase 2.3).",
+                        "maxLength": 255
+                    },
+                    "para_estudios_o_eventos": {
+                        "type": [
+                            "boolean",
+                            "null"
+                        ]
+                    },
                     "puesto_origen_id": {
                         "type": [
                             "integer",
@@ -59776,6 +59820,20 @@
                     "unidad_destino_id": {
                         "type": [
                             "integer",
+                            "null"
+                        ]
+                    },
+                    "institucion_destino": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Comisiones e intercambio: la entidad del Estado a la que va (fase 2.3).",
+                        "maxLength": 255
+                    },
+                    "para_estudios_o_eventos": {
+                        "type": [
+                            "boolean",
                             "null"
                         ]
                     },

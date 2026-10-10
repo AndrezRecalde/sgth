@@ -432,7 +432,7 @@ test('una acción leída con select parcial se guarda sin tocar su clase', funct
 test('la bandeja entrega el nombre y lo que la pantalla decide con cada acción', function () {
     $servidor = ($this->servidorCon)(TipoNombramiento::PERMANENTE);
 
-    ($this->crear)($servidor, ['clase' => 'comision_con_remuneracion',
+    ($this->crear)($servidor, ['clase' => 'comision_con_remuneracion', 'institucion_destino' => 'Ministerio del Trabajo',
         'fecha_inicio' => '2026-11-01', 'fecha_fin' => '2027-11-01'])->assertCreated();
 
     $fila = $this->getJson('/api/v1/expediente/movimientos')->json('datos.data.0');

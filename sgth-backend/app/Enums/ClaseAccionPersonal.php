@@ -314,6 +314,29 @@ enum ClaseAccionPersonal: string
             || (bool) $this->tipoYSubtipo()[1]?->esComisionDeServicios();
     }
 
+    /**
+     * La entidad del Estado a la que va el servidor: la comisión de servicios
+     * es servir en otra (LOSEP 30 y 31), y el intercambio voluntario es entre
+     * instituciones (LOSEP 39). Fase 2.3.
+     */
+    public function pideInstitucionDestino(): bool
+    {
+        return in_array($this, [
+            self::COMISION_CON_REMUNERACION,
+            self::COMISION_SIN_REMUNERACION,
+            self::INTERCAMBIO_VOLUNTARIO,
+        ], true);
+    }
+
+    /**
+     * Si la comisión con remuneración es para estudios o eventos: al volver,
+     * el servidor debe servir un tiempo igual al de la comisión (LOSEP 30).
+     */
+    public function admiteParaEstudiosOEventos(): bool
+    {
+        return $this === self::COMISION_CON_REMUNERACION;
+    }
+
     /** Nombramiento, contrato, plazo y marcación: solo existen en el ingreso. */
     public function pideContratacion(): bool
     {
@@ -345,9 +368,16 @@ enum ClaseAccionPersonal: string
                 'Siempre con fechas, y con el tope de su causal: asuntos particulares hasta '
                     .'60 días al año; estudios de posgrado con 2 años de servicio; cuidado de '
                     .'hijos hasta 12 meses, dentro de los primeros 15 meses de vida.',
-            $this->pidePeriodo() =>
-                'La comisión de servicios dura entre 1 y 6 años, y el servidor necesita '
-                    .'al menos 2 años de antigüedad en la institución.',
+            // La regla legal desde la fase 2.3 [TH N5]. La de 2 años de
+            // antigüedad y 1 a 6 de duración para las dos venía de la LOIP,
+            // anulada por la Corte Constitucional (52-25-IN/25).
+            $this === self::COMISION_CON_REMUNERACION =>
+                'Con 1 año de servicio a la fecha de inicio, y hasta 2 años. Si es para estudios '
+                    .'o eventos, al volver el servidor debe servir un tiempo igual al de la comisión '
+                    .'(LOSEP Art. 30).',
+            $this === self::COMISION_SIN_REMUNERACION =>
+                'Con 1 año de servicio a la fecha de inicio, y hasta 6 años sumados en toda la '
+                    .'carrera. Nunca para un puesto del nivel jerárquico superior (LOSEP Art. 31).',
             default => null,
         };
     }

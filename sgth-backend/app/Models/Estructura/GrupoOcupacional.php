@@ -40,6 +40,17 @@ class GrupoOcupacional extends Model
         return $this->hasMany(Puesto::class);
     }
 
+    /**
+     * Los grupos NJS-1 a NJS-10 (diseño de Acciones de Personal, 8.4). No hay
+     * columna: lo dice el código del grado, que es el de la escala del
+     * Ministerio del Trabajo. Lo usan la comisión sin remuneración, que nunca
+     * es para estos puestos (LOSEP 31), y más adelante la subrogación.
+     */
+    public function esNivelJerarquicoSuperior(): bool
+    {
+        return str_starts_with(strtoupper((string) $this->grado_codigo), 'NJS');
+    }
+
     public function esLosep(): bool
     {
         return $this->regimen === 'losep';

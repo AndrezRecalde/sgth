@@ -909,6 +909,10 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
    - Topes: asuntos particulares, 60 días por año calendario sumando los de esa causal no anulados; estudios de posgrado, 2 años de servicio a la fecha de inicio; cuidado de hijos, hasta 12 meses y dentro de los 15 primeros de vida de un hijo de Cargas familiares.
    - Fuera: el bloqueo de vacaciones y permisos durante una ausencia (también de las comisiones) y la novedad de nómina.
 3. Comisiones con la regla legal y la institución de destino.
+   - Con remuneración (LOSEP 30): 1 año de servicio a la fecha de inicio y hasta 2 años; la marca «para estudios o eventos» deja en el documento la obligación de servir al volver un tiempo igual.
+   - Sin remuneración (LOSEP 31): 1 año de servicio, hasta 6 años sumados en la carrera (con las del tipo plano de antes, sin las anuladas) y nunca para un puesto NJS (`GrupoOcupacional::esNivelJerarquicoSuperior`, por el código del grado).
+   - `institucion_destino` obligatoria en las dos comisiones y en el intercambio voluntario; las registradas antes la tienen en su explicación.
+   - El documento imprime la institución, el período de las ausencias y la obligación de volver.
 4. Reintegro y fin anticipado, con la salida del reemplazo; no se anula una ausencia con reemplazo vigente.
 5. Sanción solo desde Disciplinario, con sus datos; amonestación escrita con acción; anular ↔ sanción.
 6. Restitución con datos judiciales.

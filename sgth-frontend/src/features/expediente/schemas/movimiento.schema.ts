@@ -21,6 +21,10 @@ const camposDelFormulario = z.object({
   partida_presupuestaria_id: z.number().optional().nullable(),
   lugar_trabajo:   z.string().max(255).optional().nullable(),
 
+  // Comisiones e intercambio: la entidad del Estado a la que va (fase 2.3).
+  institucion_destino: z.string().max(255).optional().nullable(),
+  para_estudios_o_eventos: z.boolean().optional().nullable(),
+
   // Datos de la contratación. Solo existen en el ingreso, que es la única
   // acción que da origen a un contrato; en el resto ni se muestran ni se
   // envían.
@@ -72,6 +76,13 @@ export function crearMovimientoSchema(catalogo: CatalogoAccionesPersonal) {
           message: `La ${clase.etiqueta} requiere fecha de fin`,
         })
       }
+    }
+
+    if (clase.pide_institucion_destino && !data.institucion_destino?.trim()) {
+      ctx.addIssue({
+        path: ['institucion_destino'], code: 'custom',
+        message: 'Indique la institución de destino',
+      })
     }
 
     // Lo que reubica al servidor necesita a dónde: sin puesto destino no hay

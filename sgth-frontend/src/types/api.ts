@@ -753,6 +753,10 @@ export type MovimientoPersonal = {
    * vínculo no cambia hasta `fecha_efectiva`.
    */
   pendiente_de_vigencia: boolean
+  /** A qué entidad del Estado va, en comisiones e intercambio (fase 2.3). */
+  institucion_destino?: string | null
+  /** Comisión con remuneración para estudios o eventos: debe volver a servir. */
+  para_estudios_o_eventos?: boolean
   /** La base legal de la causal, cuando la acción la tiene (fase 2.1). */
   causal_base_legal?: string | null
   /**

@@ -73,6 +73,8 @@ class MovimientoPersonalResource extends JsonResource
 
             'unidad_origen_id'  => $this->unidad_origen_id,
             'unidad_destino_id' => $this->unidad_destino_id,
+            'institucion_destino'     => $this->institucion_destino,
+            'para_estudios_o_eventos' => (bool) $this->para_estudios_o_eventos,
             'puesto_origen_id'  => $this->puesto_origen_id,
             'puesto_destino_id' => $this->puesto_destino_id,
 

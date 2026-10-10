@@ -29,6 +29,9 @@ class UpdateMovimientoPersonalRequest extends FormRequest
             'fecha_fin'         => 'nullable|date|after_or_equal:fecha_inicio', // una licencia de un día empieza y termina el mismo día
             'unidad_origen_id'  => 'nullable|exists:unidades_administrativas,id',
             'unidad_destino_id' => 'nullable|exists:unidades_administrativas,id',
+            // Comisiones e intercambio: la entidad del Estado a la que va (fase 2.3).
+            'institucion_destino' => 'nullable|string|max:255',
+            'para_estudios_o_eventos' => 'nullable|boolean',
             'puesto_origen_id'  => 'nullable|exists:puestos,id',
             'puesto_destino_id' => 'nullable|exists:puestos,id',
 

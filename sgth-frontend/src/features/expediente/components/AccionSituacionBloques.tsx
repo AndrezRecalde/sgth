@@ -130,7 +130,14 @@ export function AccionSituacionBloques({ m, botonEditar }: Props) {
                 label: 'Hasta',
                 value: m.fecha_fin ? formatFecha(m.fecha_fin) : 'Sin fecha de fin',
               },
-              { label: 'Destino', value: m.unidad_destino?.nombre },
+              // A qué entidad va, desde la fase 2.3; las de antes lo dicen en
+              // su explicación.
+              ...(m.institucion_destino
+                ? [{ label: 'Institución de destino', value: m.institucion_destino }]
+                : [{ label: 'Destino', value: m.unidad_destino?.nombre }]),
+              ...(m.para_estudios_o_eventos
+                ? [{ label: 'Al volver', value: 'Debe servir un tiempo igual al de la comisión' }]
+                : []),
             ]} />
             <Text size="xs" c="dimmed" mt="xs">
               El servidor conserva su puesto y su plaza; regresa al vencer

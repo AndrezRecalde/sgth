@@ -80,6 +80,7 @@ beforeEach(function () {
         $comision = $this->service->registrar($titular->id, [
             'tipo_movimiento'    => TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO->value,
             'subtipo_movimiento' => SubtipoMovimientoPersonal::COMISION_CON_REMUNERACION->value,
+            'institucion_destino' => 'Ministerio del Trabajo',
             'descripcion'        => 'Comisión de servicios en el Ministerio',
             'fecha_efectiva'     => '2026-08-01',
             'fecha_inicio'       => '2026-08-01',
@@ -135,6 +136,7 @@ test('una comisión que sigue en borrador todavía no cuenta como ausencia', fun
     $this->service->registrar($titular->id, [
         'tipo_movimiento'    => TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO->value,
         'subtipo_movimiento' => SubtipoMovimientoPersonal::COMISION_CON_REMUNERACION->value,
+        'institucion_destino' => 'Ministerio del Trabajo',
         'descripcion'        => 'Comisión sin aprobar',
         'fecha_efectiva'     => '2026-08-01',
         'fecha_inicio'       => '2026-08-01',
@@ -262,6 +264,7 @@ test('solo un ingreso puede declararse reemplazo', function () {
     expect(fn () => $this->service->registrar($otro->id, [
         'tipo_movimiento'     => TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO->value,
         'subtipo_movimiento'  => SubtipoMovimientoPersonal::TRASLADO_ADMINISTRATIVO->value,
+        'institucion_destino' => 'Ministerio del Trabajo',
         'descripcion'         => 'Traslado que pretende cubrir',
         'fecha_efectiva'      => '2026-09-01',
         'cubre_movimiento_id' => $comision->id,
@@ -292,6 +295,7 @@ test('la ausencia debe estar registrada antes de contratar quien la cubra', func
     $borrador = $this->service->registrar($titular->id, [
         'tipo_movimiento'    => TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO->value,
         'subtipo_movimiento' => SubtipoMovimientoPersonal::COMISION_SIN_REMUNERACION->value,
+        'institucion_destino' => 'Ministerio del Trabajo',
         'descripcion'        => 'Comisión aún en borrador',
         'fecha_efectiva'     => '2026-08-01',
         'fecha_inicio'       => '2026-08-01',

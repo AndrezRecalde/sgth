@@ -35,6 +35,8 @@ class ClaseAccionPersonalResource extends JsonResource
             'causales'                    => CausalAccionPersonalResource::collection($clase->causales()),
             'pide_situacion_propuesta'    => $clase->pideSituacionPropuesta(),
             'pide_periodo'                => $clase->pidePeriodo(),
+            'pide_institucion_destino'    => $clase->pideInstitucionDestino(),
+            'admite_para_estudios_o_eventos' => $clase->admiteParaEstudiosOEventos(),
             'pide_contratacion'           => $clase->pideContratacion(),
             'dictamen_medico_por_defecto' => $clase->dictamenMedicoPorDefecto(),
             'aviso'                       => $clase->aviso(),
