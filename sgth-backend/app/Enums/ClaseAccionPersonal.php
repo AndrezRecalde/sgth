@@ -107,10 +107,14 @@ enum ClaseAccionPersonal: string
     }
 
     /**
-     * Las causales que se eligen en el formulario. Hoy solo la cesación las
-     * tiene, y son los subtipos de Cesación de Funciones con el mismo valor,
-     * menos la destitución y el visto bueno, que nacen en Disciplinario con su
-     * procedimiento detrás (diseño, 4.3; fase 2.1).
+     * Las causales que se eligen en el formulario: los subtipos de la clase con
+     * el mismo valor.
+     *
+     * - Cesación: los de Cesación de Funciones, menos la destitución y el visto
+     *   bueno, que nacen en Disciplinario con su procedimiento detrás (diseño,
+     *   4.3; fase 2.1).
+     * - Licencia sin remuneración: las de LOSEP Art. 28, y la transitoria de
+     *   obreros y autoridades (diseño, 4.4; fase 2.2).
      *
      * @return list<SubtipoMovimientoPersonal>
      */
@@ -121,6 +125,7 @@ enum ClaseAccionPersonal: string
                 TipoMovimientoPersonal::CESACION_FUNCIONES->subtiposPermitidos(),
                 fn (SubtipoMovimientoPersonal $c) => $c->seRegistraDesdeElFormulario(),
             )),
+            self::LICENCIA_SIN_REMUNERACION => TipoMovimientoPersonal::LICENCIA_SIN_REMUNERACION->subtiposPermitidos(),
             default        => [],
         };
     }
@@ -218,7 +223,7 @@ enum ClaseAccionPersonal: string
                 SubtipoMovimientoPersonal::COMISION_SIN_REMUNERACION,
             ],
 
-            self::LICENCIA_SIN_REMUNERACION => [TipoMovimientoPersonal::LICENCIA_SIN_REMUNERACION, null],
+            self::LICENCIA_SIN_REMUNERACION => [TipoMovimientoPersonal::LICENCIA_SIN_REMUNERACION, $causal],
 
             self::SUBROGACION,
             self::ENCARGO => [TipoMovimientoPersonal::SUBROGACION, null],
@@ -258,6 +263,10 @@ enum ClaseAccionPersonal: string
             return self::CESACION;
         }
 
+        if ($subtipo?->esLicenciaSinRemuneracion()) {
+            return self::LICENCIA_SIN_REMUNERACION;
+        }
+
         return match ($subtipo) {
             SubtipoMovimientoPersonal::TRASPASO                  => self::TRASLADO,
             SubtipoMovimientoPersonal::TRASLADO_ADMINISTRATIVO   => self::INTERCAMBIO_VOLUNTARIO,
@@ -294,9 +303,15 @@ enum ClaseAccionPersonal: string
     }
 
     /** Desde y hasta: lo que define a una comisión de servicios. */
+    /**
+     * Desde y hasta: las comisiones y, desde la fase 2.2, la licencia sin
+     * remuneración, que siempre lleva fechas [TH 16]. Sin ellas la licencia no
+     * salía en «Ausencias y reemplazos», que lista por período.
+     */
     public function pidePeriodo(): bool
     {
-        return (bool) $this->tipoYSubtipo()[1]?->esComisionDeServicios();
+        return $this === self::LICENCIA_SIN_REMUNERACION
+            || (bool) $this->tipoYSubtipo()[1]?->esComisionDeServicios();
     }
 
     /** Nombramiento, contrato, plazo y marcación: solo existen en el ingreso. */
@@ -325,9 +340,15 @@ enum ClaseAccionPersonal: string
      */
     public function aviso(): ?string
     {
-        return $this->pidePeriodo()
-            ? 'La comisión de servicios dura entre 1 y 6 años, y el servidor necesita '
-                .'al menos 2 años de antigüedad en la institución.'
-            : null;
+        return match (true) {
+            $this === self::LICENCIA_SIN_REMUNERACION =>
+                'Siempre con fechas, y con el tope de su causal: asuntos particulares hasta '
+                    .'60 días al año; estudios de posgrado con 2 años de servicio; cuidado de '
+                    .'hijos hasta 12 meses, dentro de los primeros 15 meses de vida.',
+            $this->pidePeriodo() =>
+                'La comisión de servicios dura entre 1 y 6 años, y el servidor necesita '
+                    .'al menos 2 años de antigüedad en la institución.',
+            default => null,
+        };
     }
 }

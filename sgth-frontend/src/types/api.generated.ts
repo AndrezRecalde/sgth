@@ -7275,9 +7275,9 @@ export interface components {
         CausalAccionPersonalResource: {
             codigo: components["schemas"]["SubtipoMovimientoPersonal"];
             /** @enum {string} */
-            etiqueta: "Traslado Administrativo" | "Traspaso" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Sanción Disciplinaria" | "Renuncia" | "Destitución" | "Jubilación" | "Incapacidad absoluta y permanente" | "Contrato Finalizado" | "Visto Bueno" | "Remoción" | "No superar el período de prueba" | "Terminación por cumplimiento del plazo" | "Terminación unilateral" | "Mutuo acuerdo" | "Evaluación regular o insuficiente" | "Retiro voluntario o compra de renuncia" | "Pérdida de los derechos de ciudadanía" | "Fallecimiento";
+            etiqueta: "Traslado Administrativo" | "Traspaso" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Sanción Disciplinaria" | "Renuncia" | "Destitución" | "Jubilación" | "Incapacidad absoluta y permanente" | "Contrato Finalizado" | "Visto Bueno" | "Remoción" | "No superar el período de prueba" | "Terminación por cumplimiento del plazo" | "Terminación unilateral" | "Mutuo acuerdo" | "Evaluación regular o insuficiente" | "Retiro voluntario o compra de renuncia" | "Pérdida de los derechos de ciudadanía" | "Fallecimiento" | "Asuntos particulares" | "Estudios de posgrado" | "Servicio militar" | "Reemplazo de un dignatario electo" | "Candidatura a elección popular" | "Cuidado de hijos" | "Según su régimen (Código del Trabajo o Consejo)";
             /** @enum {string|null} */
-            base_legal: "LOSEP Art. 47 a; Reglamento Art. 102" | "LOSEP Art. 47 e; Reglamento Art. 105" | "LOSEP Art. 17 b.5" | "Reglamento a la LOSEP Art. 146 a" | "Reglamento a la LOSEP Art. 146 f" | "Reglamento a la LOSEP Art. 146 b" | "Reglamento a la LOSEP Art. 146 g" | "LOSEP Arts. 47 f y 48" | "LOSEP Art. 47 j" | "LOSEP Art. 47 i y k; Mandato Constituyente 2" | "LOSEP Art. 47 b" | "LOSEP Art. 47 d" | "LOSEP Art. 47 l" | "Código del Trabajo Art. 172" | null;
+            base_legal: "LOSEP Art. 47 a; Reglamento Art. 102" | "LOSEP Art. 47 e; Reglamento Art. 105" | "LOSEP Art. 17 b.5" | "Reglamento a la LOSEP Art. 146 a" | "Reglamento a la LOSEP Art. 146 f" | "Reglamento a la LOSEP Art. 146 b" | "Reglamento a la LOSEP Art. 146 g" | "LOSEP Arts. 47 f y 48" | "LOSEP Art. 47 j" | "LOSEP Art. 47 i y k; Mandato Constituyente 2" | "LOSEP Art. 47 b" | "LOSEP Art. 47 d" | "LOSEP Art. 47 l" | "Código del Trabajo Art. 172" | "LOSEP Art. 28 a" | "LOSEP Art. 28 b" | "LOSEP Art. 28 c" | "LOSEP Art. 28 d" | "LOSEP Art. 28 e" | "LOSEP Art. 28 f" | null;
             nombramientos_elegibles: [
                 components["schemas"]["TipoNombramiento"]
             ] | [
@@ -8580,7 +8580,11 @@ export interface components {
             familia: string;
             etiqueta: string;
             causal: components["schemas"]["SubtipoMovimientoPersonal"] | null;
-            causal_etiqueta: string;
+            /**
+             * @description Una licencia registrada antes de la fase 2.2 no tiene causal: se
+             *     dice así en vez de dejar el hueco (diseño, 4.5).
+             */
+            causal_etiqueta: string | null | "No indicada (histórico)";
             causal_base_legal: string;
             /**
              * @description La terminación de una ocasional protegida por embarazo o
@@ -10126,6 +10130,7 @@ export interface components {
             fecha_inicio?: string | null;
             /** Format: date-time */
             fecha_fin?: string | null;
+            /** @description una licencia de un día empieza y termina el mismo día */
             unidad_origen_id?: number | null;
             unidad_destino_id?: number | null;
             puesto_origen_id?: number | null;
@@ -10574,7 +10579,7 @@ export interface components {
          * @description Subtipos de acción de personal. Talento Humano opera con dos niveles: un tipo "paraguas" (Cambio Administrativo, Régimen Disciplinario, Cesación de Funciones) y un subtipo que es el que realmente determina la elegibilidad por tipo de nombramiento y el texto del documento impreso. Confirmado con TH (2026-07-27). Ver TipoMovimientoPersonal::subtiposPermitidos().
          * @enum {string}
          */
-        SubtipoMovimientoPersonal: "traslado_administrativo" | "traspaso" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "sancion_disciplinaria" | "renuncia" | "destitucion" | "jubilacion" | "incapacidad" | "contrato_finalizado" | "visto_bueno" | "remocion" | "periodo_prueba_no_superado" | "fin_del_plazo" | "terminacion_unilateral" | "mutuo_acuerdo" | "evaluacion_insuficiente" | "retiro_voluntario" | "perdida_derechos_ciudadania" | "fallecimiento";
+        SubtipoMovimientoPersonal: "traslado_administrativo" | "traspaso" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "sancion_disciplinaria" | "renuncia" | "destitucion" | "jubilacion" | "incapacidad" | "contrato_finalizado" | "visto_bueno" | "remocion" | "periodo_prueba_no_superado" | "fin_del_plazo" | "terminacion_unilateral" | "mutuo_acuerdo" | "evaluacion_insuficiente" | "retiro_voluntario" | "perdida_derechos_ciudadania" | "fallecimiento" | "asuntos_particulares" | "estudios_posgrado" | "servicio_militar" | "reemplazo_dignatario" | "candidatura" | "cuidado_hijos" | "segun_su_regimen";
         /** Sumario */
         Sumario: {
             id: number;
@@ -11211,6 +11216,7 @@ export interface components {
             fecha_inicio?: string | null;
             /** Format: date-time */
             fecha_fin?: string | null;
+            /** @description una licencia de un día empieza y termina el mismo día */
             unidad_origen_id?: number | null;
             unidad_destino_id?: number | null;
             puesto_origen_id?: number | null;

@@ -140,8 +140,12 @@ test('una acción que no crea vínculo no opina sobre la marcación', function (
 
     $movimiento = $this->service->registrar($servidor->id, [
         'tipo_movimiento' => TipoMovimientoPersonal::LICENCIA_SIN_REMUNERACION->value,
+        // Con causal y fechas desde la fase 2.2.
+        'subtipo_movimiento' => 'servicio_militar',
         'descripcion'     => 'Licencia',
         'fecha_efectiva'  => '2026-08-01',
+        'fecha_inicio'    => '2026-08-01',
+        'fecha_fin'       => '2026-09-01',
     ]);
 
     expect($movimiento->puede_marcar)->toBeNull();

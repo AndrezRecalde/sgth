@@ -903,6 +903,11 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
    - `sgth:contratos:detectar-vencidos` prepara también la «Terminación por cumplimiento del plazo» del ocasional vencido.
    - Al surtir efecto la cesación: la plaza se libera sola; las subrogaciones del cesado (subrogante o titular) terminan con su constancia, o se cancelan si no habían empezado; el reemplazo que cubría una ausencia suya queda anotado en su bitácora y en la salida de `sgth:acciones:aplicar-vigentes` hasta que TH decida.
 2. Licencia sin remuneración con causal, fechas y topes, solo para permanentes.
+   - Las seis causales de LOSEP Art. 28 como subtipos de la licencia, obligatorias en el formulario y solo para permanentes [TH N9]. Las ya registradas quedan sin causal: «No indicada (histórico)».
+   - Transitoria «Según su régimen (Código del Trabajo o Consejo)» para obreros y autoridades electas, sin los topes de la LOSEP, hasta que lleguen sus bloques (decisión del 2026-10-10).
+   - Siempre con fechas, al crear y al corregir el borrador; un día basta. Así sale en «Ausencias y reemplazos».
+   - Topes: asuntos particulares, 60 días por año calendario sumando los de esa causal no anulados; estudios de posgrado, 2 años de servicio a la fecha de inicio; cuidado de hijos, hasta 12 meses y dentro de los 15 primeros de vida de un hijo de Cargas familiares.
+   - Fuera: el bloqueo de vacaciones y permisos durante una ausencia (también de las comisiones) y la novedad de nómina.
 3. Comisiones con la regla legal y la institución de destino.
 4. Reintegro y fin anticipado, con la salida del reemplazo; no se anula una ausencia con reemplazo vigente.
 5. Sanción solo desde Disciplinario, con sus datos; amonestación escrita con acción; anular ↔ sanción.

@@ -521,6 +521,14 @@ class MovimientoPersonal extends Model
             return null;
         }
 
+        // La licencia dice qué es y por qué: «asuntos particulares» solo, junto
+        // al contrato, no decía que el servidor estaba de licencia.
+        if ($this->tipo_movimiento === TipoMovimientoPersonal::LICENCIA_SIN_REMUNERACION) {
+            $causal = $this->subtipoEfectivo()?->etiqueta();
+
+            return $this->tipo_movimiento->etiqueta().($causal ? " ({$causal})" : '');
+        }
+
         return $this->subtipoEfectivo()?->etiqueta()
             ?? $this->tipo_movimiento?->etiqueta();
     }
@@ -539,7 +547,11 @@ class MovimientoPersonal extends Model
             $q->whereIn('subtipo_movimiento', [
                 SubtipoMovimientoPersonal::COMISION_CON_REMUNERACION->value,
                 SubtipoMovimientoPersonal::COMISION_SIN_REMUNERACION->value,
-            ])->orWhere(function (Builder $legado) {
+            ])
+            // La licencia es ausencia con causal o sin ella: desde la fase 2.2
+            // lleva subtipo, y las anteriores no.
+            ->orWhere('tipo_movimiento', TipoMovimientoPersonal::LICENCIA_SIN_REMUNERACION->value)
+            ->orWhere(function (Builder $legado) {
                 $legado->whereNull('subtipo_movimiento')->whereIn('tipo_movimiento', [
                     TipoMovimientoPersonal::LICENCIA_SIN_REMUNERACION->value,
                     TipoMovimientoPersonal::COMISION_SERVICIOS->value,

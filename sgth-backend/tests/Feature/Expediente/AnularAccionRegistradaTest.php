@@ -99,6 +99,8 @@ test('una acción registrada y una notificada se pueden anular', function () {
         // probar el grafo sin arrastrar la reversión.
         $accion = $this->service->registrar($servidor->id, [
             'tipo_movimiento' => TipoMovimientoPersonal::LICENCIA_SIN_REMUNERACION->value,
+            // Con causal desde la fase 2.2; el servicio militar no tiene tope.
+            'subtipo_movimiento' => 'servicio_militar',
             'descripcion'     => 'Licencia sin remuneración',
             'fecha_efectiva'  => '2026-05-01',
             'fecha_inicio'    => '2026-05-01',
@@ -123,6 +125,8 @@ test('de anulada no se sale', function () {
 
     $accion = $this->service->registrar($servidor->id, [
         'tipo_movimiento' => TipoMovimientoPersonal::LICENCIA_SIN_REMUNERACION->value,
+        // Con causal desde la fase 2.2; el servicio militar no tiene tope.
+        'subtipo_movimiento' => 'servicio_militar',
         'descripcion'     => 'Licencia',
         'fecha_efectiva'  => '2026-05-01',
         'fecha_inicio'    => '2026-05-01',
@@ -361,6 +365,8 @@ test('una acción posterior que no toca el vínculo no impide anular', function 
 
     ($this->registrar)($this->service->registrar($servidor->id, [
         'tipo_movimiento' => TipoMovimientoPersonal::LICENCIA_SIN_REMUNERACION->value,
+        // Con causal desde la fase 2.2; el servicio militar no tiene tope.
+        'subtipo_movimiento' => 'servicio_militar',
         'descripcion'     => 'Licencia posterior',
         'fecha_efectiva'  => '2026-08-01',
         'fecha_inicio'    => '2026-08-01',

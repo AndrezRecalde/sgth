@@ -44545,7 +44545,14 @@
                             "Evaluaci\u00f3n regular o insuficiente",
                             "Retiro voluntario o compra de renuncia",
                             "P\u00e9rdida de los derechos de ciudadan\u00eda",
-                            "Fallecimiento"
+                            "Fallecimiento",
+                            "Asuntos particulares",
+                            "Estudios de posgrado",
+                            "Servicio militar",
+                            "Reemplazo de un dignatario electo",
+                            "Candidatura a elecci\u00f3n popular",
+                            "Cuidado de hijos",
+                            "Seg\u00fan su r\u00e9gimen (C\u00f3digo del Trabajo o Consejo)"
                         ]
                     },
                     "base_legal": {
@@ -44568,6 +44575,12 @@
                             "LOSEP Art. 47 d",
                             "LOSEP Art. 47 l",
                             "C\u00f3digo del Trabajo Art. 172",
+                            "LOSEP Art. 28 a",
+                            "LOSEP Art. 28 b",
+                            "LOSEP Art. 28 c",
+                            "LOSEP Art. 28 d",
+                            "LOSEP Art. 28 e",
+                            "LOSEP Art. 28 f",
                             null
                         ]
                     },
@@ -49737,7 +49750,21 @@
                         ]
                     },
                     "causal_etiqueta": {
-                        "type": "string"
+                        "description": "Una licencia registrada antes de la fase 2.2 no tiene causal: se\ndice as\u00ed en vez de dejar el hueco (dise\u00f1o, 4.5).",
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "type": "string",
+                                "enum": [
+                                    "No indicada (hist\u00f3rico)"
+                                ]
+                            }
+                        ]
                     },
                     "causal_base_legal": {
                         "type": "string"
@@ -55846,7 +55873,8 @@
                         "type": [
                             "integer",
                             "null"
-                        ]
+                        ],
+                        "description": "una licencia de un d\u00eda empieza y termina el mismo d\u00eda"
                     },
                     "unidad_destino_id": {
                         "type": [
@@ -57314,7 +57342,14 @@
                     "evaluacion_insuficiente",
                     "retiro_voluntario",
                     "perdida_derechos_ciudadania",
-                    "fallecimiento"
+                    "fallecimiento",
+                    "asuntos_particulares",
+                    "estudios_posgrado",
+                    "servicio_militar",
+                    "reemplazo_dignatario",
+                    "candidatura",
+                    "cuidado_hijos",
+                    "segun_su_regimen"
                 ],
                 "title": "SubtipoMovimientoPersonal"
             },
@@ -59735,7 +59770,8 @@
                         "type": [
                             "integer",
                             "null"
-                        ]
+                        ],
+                        "description": "una licencia de un d\u00eda empieza y termina el mismo d\u00eda"
                     },
                     "unidad_destino_id": {
                         "type": [

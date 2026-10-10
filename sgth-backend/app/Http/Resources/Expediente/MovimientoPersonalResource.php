@@ -36,7 +36,10 @@ class MovimientoPersonalResource extends JsonResource
             'familia'         => $this->clase?->familia(),
             'etiqueta'        => $this->etiqueta(),
             'causal'          => $this->causal(),
-            'causal_etiqueta' => $this->causal()?->etiqueta(),
+            // Una licencia registrada antes de la fase 2.2 no tiene causal: se
+            // dice así en vez de dejar el hueco (diseño, 4.5).
+            'causal_etiqueta' => $this->causal()?->etiqueta()
+                ?? ($this->clase?->requiereCausal() ? 'No indicada (histórico)' : null),
             'causal_base_legal' => $this->causal()?->baseLegal(),
             // La terminación de una ocasional protegida por embarazo o
             // lactancia, mientras todavía se puede detener (fase 2.1).

@@ -79,11 +79,14 @@ beforeEach(function () {
 
 // ── Coherencia tipo ↔ subtipo ───────────────────────────────────
 
-test('los tres tipos paraguas exigen subtipo y el resto no lo admite', function () {
+// La licencia sin remuneración se sumó en la fase 2.2: su subtipo es la causal
+// de LOSEP Art. 28.
+test('los tipos paraguas exigen subtipo y el resto no lo admite', function () {
     $conSubtipo = [
         TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO,
         TipoMovimientoPersonal::REGIMEN_DISCIPLINARIO,
         TipoMovimientoPersonal::CESACION_FUNCIONES,
+        TipoMovimientoPersonal::LICENCIA_SIN_REMUNERACION,
     ];
 
     foreach (TipoMovimientoPersonal::cases() as $tipo) {
