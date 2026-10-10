@@ -31,6 +31,17 @@ enum SubtipoMovimientoPersonal: string
     // Trabajo (Art. 172 CT). Es el equivalente de la destitución para el
     // régimen de Código del Trabajo — ver VistoBuenoService.
     case VISTO_BUENO         = 'visto_bueno';
+    // Las de la tabla 4.3 del diseño de Acciones de Personal (fase 2.1), cada
+    // una con su base legal: LOSEP 47 y Reglamento 105 y 146.
+    case REMOCION                   = 'remocion';
+    case PERIODO_PRUEBA_NO_SUPERADO = 'periodo_prueba_no_superado';
+    case FIN_DEL_PLAZO              = 'fin_del_plazo';
+    case TERMINACION_UNILATERAL     = 'terminacion_unilateral';
+    case MUTUO_ACUERDO              = 'mutuo_acuerdo';
+    case EVALUACION_INSUFICIENTE    = 'evaluacion_insuficiente';
+    case RETIRO_VOLUNTARIO          = 'retiro_voluntario';
+    case PERDIDA_DERECHOS           = 'perdida_derechos_ciudadania';
+    case FALLECIMIENTO              = 'fallecimiento';
 
     public function etiqueta(): string
     {
@@ -43,10 +54,66 @@ enum SubtipoMovimientoPersonal: string
             self::RENUNCIA                  => 'Renuncia',
             self::DESTITUCION               => 'Destitución',
             self::JUBILACION                => 'Jubilación',
-            self::INCAPACIDAD               => 'Incapacidad',
+            self::INCAPACIDAD               => 'Incapacidad absoluta y permanente',
             self::CONTRATO_FINALIZADO       => 'Contrato Finalizado',
             self::VISTO_BUENO               => 'Visto Bueno',
+            self::REMOCION                   => 'Remoción',
+            self::PERIODO_PRUEBA_NO_SUPERADO => 'No superar el período de prueba',
+            self::FIN_DEL_PLAZO              => 'Terminación por cumplimiento del plazo',
+            self::TERMINACION_UNILATERAL     => 'Terminación unilateral',
+            self::MUTUO_ACUERDO              => 'Mutuo acuerdo',
+            self::EVALUACION_INSUFICIENTE    => 'Evaluación regular o insuficiente',
+            self::RETIRO_VOLUNTARIO          => 'Retiro voluntario o compra de renuncia',
+            self::PERDIDA_DERECHOS           => 'Pérdida de los derechos de ciudadanía',
+            self::FALLECIMIENTO              => 'Fallecimiento',
         };
+    }
+
+    /**
+     * Base legal de la causal, para el documento y la ayuda del formulario
+     * (diseño, 4.3). Null en las que no son de cesación.
+     */
+    public function baseLegal(): ?string
+    {
+        return match ($this) {
+            self::RENUNCIA                   => 'LOSEP Art. 47 a; Reglamento Art. 102',
+            self::REMOCION                   => 'LOSEP Art. 47 e; Reglamento Art. 105',
+            self::PERIODO_PRUEBA_NO_SUPERADO => 'LOSEP Art. 17 b.5',
+            self::FIN_DEL_PLAZO              => 'Reglamento a la LOSEP Art. 146 a',
+            self::TERMINACION_UNILATERAL     => 'Reglamento a la LOSEP Art. 146 f',
+            self::MUTUO_ACUERDO              => 'Reglamento a la LOSEP Art. 146 b',
+            self::EVALUACION_INSUFICIENTE    => 'Reglamento a la LOSEP Art. 146 g',
+            self::DESTITUCION                => 'LOSEP Arts. 47 f y 48',
+            self::JUBILACION                 => 'LOSEP Art. 47 j',
+            self::RETIRO_VOLUNTARIO          => 'LOSEP Art. 47 i y k; Mandato Constituyente 2',
+            self::INCAPACIDAD                => 'LOSEP Art. 47 b',
+            self::PERDIDA_DERECHOS           => 'LOSEP Art. 47 d',
+            self::FALLECIMIENTO              => 'LOSEP Art. 47 l',
+            self::VISTO_BUENO                => 'Código del Trabajo Art. 172',
+            default                          => null,
+        };
+    }
+
+    /**
+     * ¿Se registra desde el formulario de «Nueva acción de personal»? La
+     * destitución y el visto bueno no: tienen un procedimiento previo y solo
+     * los crea Disciplinario (diseño, 4.3). Hasta la fase 2.1 se podían
+     * registrar a mano, sin sumario ni resolución del Inspector detrás.
+     */
+    public function seRegistraDesdeElFormulario(): bool
+    {
+        return ! in_array($this, [self::DESTITUCION, self::VISTO_BUENO], true);
+    }
+
+    /**
+     * Las causales en que una ocasional embarazada o en lactancia está
+     * protegida: la Corte Constitucional (309-16-SEP-CC) condiciona el
+     * Art. 146 del Reglamento. La terminación unilateral se bloquea; el fin
+     * del plazo se avisa (TH 11).
+     */
+    public function protegeEmbarazoYLactancia(): bool
+    {
+        return in_array($this, [self::TERMINACION_UNILATERAL, self::FIN_DEL_PLAZO], true);
     }
 
     /**
@@ -97,7 +164,25 @@ enum SubtipoMovimientoPersonal: string
             self::RENUNCIA,
             self::DESTITUCION,
             self::JUBILACION,
-            self::INCAPACIDAD => $conSancionYCesacionLosep,
+            self::INCAPACIDAD,
+            self::PERDIDA_DERECHOS,
+            self::FALLECIMIENTO => $conSancionYCesacionLosep,
+
+            // La remoción es del provisional cuyo supuesto terminó y del de
+            // libre nombramiento (LOSEP 47 e; Reg. 105; TH 8).
+            self::REMOCION => [TipoNombramiento::PROVISIONAL, TipoNombramiento::LIBRE_NOMBRAMIENTO],
+
+            // Del provisional de prueba (b.5). Mientras el vínculo no diga el
+            // supuesto del provisional (fase 3.2), vale para todo provisional.
+            self::PERIODO_PRUEBA_NO_SUPERADO => [TipoNombramiento::PROVISIONAL],
+
+            // Las del Reglamento Art. 146: solo del contrato ocasional.
+            self::FIN_DEL_PLAZO,
+            self::TERMINACION_UNILATERAL,
+            self::MUTUO_ACUERDO,
+            self::EVALUACION_INSUFICIENTE => [TipoNombramiento::SERVICIOS_OCASIONALES],
+
+            self::RETIRO_VOLUNTARIO => [TipoNombramiento::PERMANENTE],
 
             self::CONTRATO_FINALIZADO => [TipoNombramiento::SERVICIOS_PROFESIONALES],
 
@@ -170,14 +255,7 @@ enum SubtipoMovimientoPersonal: string
      */
     public function cierraVinculo(): bool
     {
-        return in_array($this, [
-            self::RENUNCIA,
-            self::DESTITUCION,
-            self::JUBILACION,
-            self::INCAPACIDAD,
-            self::CONTRATO_FINALIZADO,
-            self::VISTO_BUENO,
-        ], true);
+        return in_array($this, TipoMovimientoPersonal::CESACION_FUNCIONES->subtiposPermitidos(), true);
     }
 
     /**

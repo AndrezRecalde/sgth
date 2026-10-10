@@ -107,15 +107,20 @@ enum ClaseAccionPersonal: string
     }
 
     /**
-     * Las causales de la clase. Hoy solo la cesación las tiene, y son los
-     * subtipos de Cesación de Funciones con el mismo valor.
+     * Las causales que se eligen en el formulario. Hoy solo la cesación las
+     * tiene, y son los subtipos de Cesación de Funciones con el mismo valor,
+     * menos la destitución y el visto bueno, que nacen en Disciplinario con su
+     * procedimiento detrás (diseño, 4.3; fase 2.1).
      *
      * @return list<SubtipoMovimientoPersonal>
      */
     public function causales(): array
     {
         return match ($this) {
-            self::CESACION => TipoMovimientoPersonal::CESACION_FUNCIONES->subtiposPermitidos(),
+            self::CESACION => array_values(array_filter(
+                TipoMovimientoPersonal::CESACION_FUNCIONES->subtiposPermitidos(),
+                fn (SubtipoMovimientoPersonal $c) => $c->seRegistraDesdeElFormulario(),
+            )),
             default        => [],
         };
     }
@@ -246,19 +251,19 @@ enum ClaseAccionPersonal: string
         ?TipoMovimientoPersonal $tipo,
         ?SubtipoMovimientoPersonal $subtipo
     ): ?self {
+        // Toda causal de cesación —las de la tabla 4.3 y las que vengan— es una
+        // cesación: se pregunta por la regla y no por la lista, que en la fase
+        // 2.1 creció de seis a quince.
+        if ($subtipo?->cierraVinculo()) {
+            return self::CESACION;
+        }
+
         return match ($subtipo) {
             SubtipoMovimientoPersonal::TRASPASO                  => self::TRASLADO,
             SubtipoMovimientoPersonal::TRASLADO_ADMINISTRATIVO   => self::INTERCAMBIO_VOLUNTARIO,
             SubtipoMovimientoPersonal::COMISION_CON_REMUNERACION => self::COMISION_CON_REMUNERACION,
             SubtipoMovimientoPersonal::COMISION_SIN_REMUNERACION => self::COMISION_SIN_REMUNERACION,
             SubtipoMovimientoPersonal::SANCION_DISCIPLINARIA     => self::SANCION,
-
-            SubtipoMovimientoPersonal::RENUNCIA,
-            SubtipoMovimientoPersonal::DESTITUCION,
-            SubtipoMovimientoPersonal::JUBILACION,
-            SubtipoMovimientoPersonal::INCAPACIDAD,
-            SubtipoMovimientoPersonal::CONTRATO_FINALIZADO,
-            SubtipoMovimientoPersonal::VISTO_BUENO => self::CESACION,
 
             null => match ($tipo) {
                 TipoMovimientoPersonal::INGRESO                   => self::INGRESO,

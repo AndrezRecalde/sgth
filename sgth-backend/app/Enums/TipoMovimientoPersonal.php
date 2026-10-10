@@ -74,11 +74,22 @@ enum TipoMovimientoPersonal: string
             self::REGIMEN_DISCIPLINARIO => [
                 SubtipoMovimientoPersonal::SANCION_DISCIPLINARIA,
             ],
+            // El orden es el del formulario: las de todos primero, las de un
+            // solo régimen después (diseño, 4.3).
             self::CESACION_FUNCIONES => [
                 SubtipoMovimientoPersonal::RENUNCIA,
+                SubtipoMovimientoPersonal::REMOCION,
+                SubtipoMovimientoPersonal::PERIODO_PRUEBA_NO_SUPERADO,
+                SubtipoMovimientoPersonal::FIN_DEL_PLAZO,
+                SubtipoMovimientoPersonal::TERMINACION_UNILATERAL,
+                SubtipoMovimientoPersonal::MUTUO_ACUERDO,
+                SubtipoMovimientoPersonal::EVALUACION_INSUFICIENTE,
                 SubtipoMovimientoPersonal::DESTITUCION,
                 SubtipoMovimientoPersonal::JUBILACION,
+                SubtipoMovimientoPersonal::RETIRO_VOLUNTARIO,
                 SubtipoMovimientoPersonal::INCAPACIDAD,
+                SubtipoMovimientoPersonal::PERDIDA_DERECHOS,
+                SubtipoMovimientoPersonal::FALLECIMIENTO,
                 SubtipoMovimientoPersonal::CONTRATO_FINALIZADO,
                 SubtipoMovimientoPersonal::VISTO_BUENO,
             ],

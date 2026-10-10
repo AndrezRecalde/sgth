@@ -27,6 +27,13 @@ enum TipoEventoVinculo: string
     /** La subrogación o el encargo se canceló después de surtir efecto. */
     case SUBROGACION_CANCELADA = 'subrogacion_cancelada';
 
+    /**
+     * El titular cuya ausencia cubría este contrato de reemplazo cesó (fase
+     * 2.1). El contrato sigue —tiene su propio plazo—, pero ya no cubre a
+     * nadie: Talento Humano decide si sigue o termina.
+     */
+    case TITULAR_CESADO = 'titular_cesado';
+
     // Tipos de bitácora anteriores que el sistema ya no genera. Se conservan
     // solo para que el histórico migrado conserve su nombre.
     case CAMBIO_PUESTO  = 'cambio_puesto';
@@ -39,6 +46,7 @@ enum TipoEventoVinculo: string
             self::CONTRATO_REGISTRADO    => 'Contrato registrado sin acción de personal',
             self::SUBROGACION_FINALIZADA => 'Fin anticipado de subrogación o encargo',
             self::SUBROGACION_CANCELADA  => 'Cancelación de subrogación o encargo',
+            self::TITULAR_CESADO         => 'El titular al que cubría cesó',
             self::CAMBIO_PUESTO          => 'Cambio de puesto',
             self::CAMBIO_REGIMEN         => 'Cambio de régimen',
             self::EGRESO                 => 'Egreso',

@@ -22,6 +22,7 @@ class CausalAccionPersonalResource extends JsonResource
         return [
             'codigo'                      => $causal,
             'etiqueta'                    => $causal->etiqueta(),
+            'base_legal'                  => $causal->baseLegal(),
             'nombramientos_elegibles'     => $causal->nombramientosElegibles(),
             // En la cesación es lo mismo que pregunta
             // ClaseAccionPersonal::dictamenMedicoPorDefecto($causal), que delega

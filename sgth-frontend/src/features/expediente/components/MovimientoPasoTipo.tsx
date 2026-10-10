@@ -44,6 +44,9 @@ export function MovimientoPasoTipo({
   const { control, formState: { errors } } = form
 
   const pideCausal = !!claseElegida && claseElegida.causales.length > 0
+  // La base legal de la causal elegida, que es lo que cambia de una a otra
+  // desde que la cesación tiene las causales de la tabla 4.3 (fase 2.1).
+  const baseLegal = causales.find((c) => c.codigo === causalElegida)?.base_legal
   const puedeAvanzar = !!claseElegida && (!pideCausal || !!causalElegida)
 
   const opcion = (c: ClaseDelCatalogo) => ({ value: c.codigo, label: c.etiqueta })
@@ -86,7 +89,9 @@ export function MovimientoPasoTipo({
             <Select
               label="Causal"
               placeholder="Seleccione la causal"
-              description="Es la causal la que determina las reglas y el documento que se imprime."
+              description={baseLegal
+                ? `Base legal: ${baseLegal}.`
+                : 'Es la causal la que determina las reglas y el documento que se imprime.'}
               data={causales.map((c) => ({ value: c.codigo, label: c.etiqueta }))}
               value={field.value ?? null}
               onChange={elegirCausal}

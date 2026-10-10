@@ -122,8 +122,13 @@ test('el catálogo trae todas las familias y todas las clases, con su familia', 
     $cesacion = collect($datos['clases'])->firstWhere('codigo', 'cesacion');
 
     expect($cesacion['familia'])->toBe('cesacion')
+        // Las de la tabla 4.3 desde la fase 2.1, sin la destitución ni el visto
+        // bueno, que nacen en Disciplinario.
         ->and(array_column($cesacion['causales'], 'codigo'))->toBe([
-            'renuncia', 'destitucion', 'jubilacion', 'incapacidad', 'contrato_finalizado', 'visto_bueno',
+            'renuncia', 'remocion', 'periodo_prueba_no_superado', 'fin_del_plazo',
+            'terminacion_unilateral', 'mutuo_acuerdo', 'evaluacion_insuficiente', 'jubilacion',
+            'retiro_voluntario', 'incapacidad', 'perdida_derechos_ciudadania', 'fallecimiento',
+            'contrato_finalizado',
         ])
         // El dictamen médico abre marcado en las dos causales que son
         // determinaciones médicas, igual que antes.
@@ -160,9 +165,12 @@ test('cada clase aplica exactamente a los nombramientos de antes', function () {
             'nombramiento_permanente', 'nombramiento_provisional', 'servicios_ocasionales',
             'libre_nombramiento_remocion', 'codigo_trabajo',
         ],
+        // Sin obreros desde la fase 2.1: su única causal era el visto bueno,
+        // que ya no se elige en el formulario —lo crea Disciplinario—. Sus
+        // terminaciones propias llegan con el bloque del Código del Trabajo.
         'cesacion' => [
             'nombramiento_permanente', 'nombramiento_provisional', 'servicios_ocasionales',
-            'libre_nombramiento_remocion', 'codigo_trabajo', 'servicios_profesionales',
+            'libre_nombramiento_remocion', 'servicios_profesionales',
         ],
         // El ingreso no depende del nombramiento: se registra a quien no tiene
         // vínculo. Y la subrogación y el encargo los decide su propio módulo.

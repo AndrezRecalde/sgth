@@ -52,10 +52,39 @@ class AplicarAccionesVigentesCommand extends Command
         }
 
         $this->avisarVencimientos($fecha);
+        $this->avisarReemplazosSinTitular();
 
         // Lo que no se pudo aplicar no hace fallar el comando: el resto se
         // aplicó, y lo pendiente sigue a la vista en la lista de arriba.
         return self::SUCCESS;
+    }
+
+    /**
+     * Contratos de reemplazo cuyo titular ya cesó (fase 2.1): la ausencia que
+     * cubrían terminó con la salida del titular. Salen aquí cada día hasta que
+     * Talento Humano decida si siguen o terminan.
+     */
+    private function avisarReemplazosSinTitular(): void
+    {
+        $huerfanos = ContratoServidor::where('estado', 'vigente')
+            ->whereNotNull('cubre_movimiento_id')
+            ->whereHas('cubreMovimiento.servidor', fn ($q) => $q->whereDoesntHave(
+                'contratos', fn ($c) => $c->where('estado', 'vigente')
+            ))
+            ->with('servidor:id,nombre,apellido', 'cubreMovimiento.servidor:id,nombre,apellido')
+            ->orderBy('id')
+            ->get();
+
+        if ($huerfanos->isEmpty()) {
+            return;
+        }
+
+        $this->warn($huerfanos->count().' reemplazo(s) cubren a alguien que ya cesó: decida si siguen o terminan.');
+        $this->table(['Reemplazo', 'Cubría a', 'Contrato hasta'], $huerfanos->map(fn (ContratoServidor $c) => [
+            trim(($c->servidor?->apellido ?? '').' '.($c->servidor?->nombre ?? '')),
+            trim(($c->cubreMovimiento?->servidor?->apellido ?? '').' '.($c->cubreMovimiento?->servidor?->nombre ?? '')),
+            $c->fecha_fin?->format('d/m/Y') ?? 'sin plazo',
+        ])->all());
     }
 
     private function avisarVencimientos(string $fecha): void

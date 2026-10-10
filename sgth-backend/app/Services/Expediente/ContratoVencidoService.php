@@ -12,8 +12,16 @@ use App\Models\Expediente\MovimientoPersonal;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Detecta contratos de Servicios Profesionales cuyo plazo venció y genera la
- * Cesación de Funciones correspondiente en BORRADOR.
+ * Detecta contratos de Servicios Profesionales y de servicios ocasionales cuyo
+ * plazo venció, y genera la Cesación de Funciones correspondiente en BORRADOR:
+ * «Contrato finalizado» para el contrato civil, «Terminación por cumplimiento
+ * del plazo» (Reglamento 146 a) para el ocasional. Los ocasionales entraron en
+ * la fase 2.1 del diseño de Acciones de Personal (4.3; TH 11): ninguna tarea
+ * cesaba al ocasional cuyo plazo pasaba.
+ *
+ * Si consta que una ocasional está embarazada o en lactancia, el borrador se
+ * genera igual —Talento Humano tiene que saber que el plazo venció— pero con el
+ * aviso de que la ley la protege.
  *
  * No cierra el vínculo: eso lo hace la acción de personal cuando Talento
  * Humano la revisa y la registra. Aquí solo se levanta la alerta en forma de
@@ -34,7 +42,10 @@ class ContratoVencidoService
         $hasta = $hasta ?? now()->toDateString();
 
         $vencidos = ContratoServidor::with('servidor')
-            ->where('tipo_nombramiento', TipoNombramiento::SERVICIOS_PROFESIONALES->value)
+            ->whereIn('tipo_nombramiento', [
+                TipoNombramiento::SERVICIOS_PROFESIONALES->value,
+                TipoNombramiento::SERVICIOS_OCASIONALES->value,
+            ])
             ->where('estado', EstadoContrato::VIGENTE->value)
             ->whereNotNull('fecha_fin')
             ->whereDate('fecha_fin', '<', $hasta)
@@ -45,11 +56,15 @@ class ContratoVencidoService
 
         foreach ($vencidos as $contrato) {
             $fechaFin = $contrato->fecha_fin->toDateString();
+            $ocasional = $contrato->tipo_nombramiento === TipoNombramiento::SERVICIOS_OCASIONALES;
+            $causal = $ocasional
+                ? SubtipoMovimientoPersonal::FIN_DEL_PLAZO
+                : SubtipoMovimientoPersonal::CONTRATO_FINALIZADO;
 
-            if ($this->yaTieneCesacion($contrato->servidor_id, $fechaFin)) {
+            if ($this->yaTieneCesacion($contrato->servidor_id, $fechaFin, $causal)) {
                 $omitidas[] = [
                     'contrato_id' => $contrato->id,
-                    'motivo'      => 'Ya existe una cesación por contrato finalizado para este período.',
+                    'motivo'      => "Ya existe una cesación por «{$causal->etiqueta()}» para este período.",
                 ];
 
                 continue;
@@ -58,10 +73,15 @@ class ContratoVencidoService
             try {
                 $movimiento = $this->movimientoPersonalService->registrar($contrato->servidor_id, [
                     'tipo_movimiento'    => TipoMovimientoPersonal::CESACION_FUNCIONES->value,
-                    'subtipo_movimiento' => SubtipoMovimientoPersonal::CONTRATO_FINALIZADO->value,
-                    'descripcion'        => 'Terminación del contrato de Servicios Profesionales por '
-                        ."vencimiento del plazo el {$fechaFin}. Generada automáticamente para revisión "
-                        .'de Talento Humano.',
+                    'subtipo_movimiento' => $causal->value,
+                    'descripcion'        => ($ocasional
+                        ? 'Terminación del contrato de servicios ocasionales por cumplimiento del plazo '
+                        : 'Terminación del contrato de Servicios Profesionales por vencimiento del plazo ')
+                        ."el {$fechaFin}. Generada automáticamente para revisión de Talento Humano.",
+                    // La observación no se imprime: es para quien revisa.
+                    'observacion'        => $ocasional && ProteccionMaternidad::consta($contrato->servidor_id)
+                        ? ProteccionMaternidad::aviso()
+                        : null,
                     'fecha_efectiva'     => $fechaFin,
                 ]);
 
@@ -92,11 +112,11 @@ class ContratoVencidoService
      * que un servidor recontratado al año siguiente sí genera una cesación
      * nueva cuando ese contrato vence. Las anuladas no cuentan.
      */
-    private function yaTieneCesacion(int $servidorId, string $fechaFin): bool
+    private function yaTieneCesacion(int $servidorId, string $fechaFin, SubtipoMovimientoPersonal $causal): bool
     {
         return MovimientoPersonal::where('servidor_id', $servidorId)
             ->where('tipo_movimiento', TipoMovimientoPersonal::CESACION_FUNCIONES->value)
-            ->where('subtipo_movimiento', SubtipoMovimientoPersonal::CONTRATO_FINALIZADO->value)
+            ->where('subtipo_movimiento', $causal->value)
             ->where('estado', '!=', EstadoAccionPersonal::ANULADA->value)
             ->whereDate('fecha_efectiva', $fechaFin)
             ->exists();
