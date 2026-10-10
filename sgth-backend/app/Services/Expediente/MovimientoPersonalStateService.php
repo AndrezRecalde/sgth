@@ -228,10 +228,122 @@ class MovimientoPersonalStateService
         $movimiento->codigo_registro = $this->generarCodigoRegistro();
         $movimiento->fecha_registro  = now()->toDateString();
 
+        /*
+        | Registrar no es lo mismo que surtir efecto (diseño, 6.2; fase 1.6).
+        | Lo que rige hoy o antes se aplica aquí mismo; lo que rige más tarde
+        | queda pendiente de vigencia y lo aplica `aplicarVigentes()`, desde el
+        | comando diario, el día en que rige. Hasta aquí todo se aplicaba al
+        | registrar: una cesación que regía el mes próximo cerraba hoy el
+        | vínculo y sacaba hoy al servidor de la nómina.
+        |
+        | Lo que el efecto necesita se comprueba ahora, rija cuando rija, para
+        | que el día en que se aplique no aparezca un obstáculo que nadie vio.
+        */
+        $this->validarQueElEfectoSePodraAplicar($movimiento);
+
+        $hoy = now()->toDateString();
+
+        if ($movimiento->rigeEn($hoy)) {
+            // Antes, lo que ya debía regir para este servidor y el comando aún
+            // no aplicó: la cesación del «ascenso» va antes que su ingreso. Si
+            // algo de eso falla, este registro no sigue sobre un vínculo a medias.
+            $previas = $this->aplicarVigentes($hoy, $movimiento->servidor_id, $movimiento->id);
+
+            if ($previas['fallidas'] !== []) {
+                throw new ReglaNegocioException(
+                    "Antes de esta acción hay que aplicar '{$previas['fallidas'][0]['codigo']}', "
+                        .'que ya rige, y no se pudo: '.$previas['fallidas'][0]['motivo']
+                );
+            }
+
+            $this->aplicarEfecto($movimiento);
+        }
+    }
+
+    /**
+     * Aplica los efectos pendientes de lo que ya rige en `$fecha`: crea, mueve
+     * o cierra los vínculos y activa las subrogaciones (fase 1.6). Lo llama
+     * el comando diario `sgth:acciones:aplicar-vigentes`, y también el registro
+     * de una acción que rige ya, para que nada quede atrás.
+     *
+     * En orden de fecha, y en un mismo día los cierres antes que los ingresos:
+     * es el «ascenso» de Talento Humano —cesación y nuevo ingreso el mismo
+     * día—, y el ingreso no puede nacer con el vínculo anterior abierto.
+     *
+     * Cada acción va en su propia transacción: si una falla, queda pendiente
+     * con su motivo y las demás siguen.
+     *
+     * @return array{aplicadas: list<array{id: int, codigo: string, servidor_id: int}>, fallidas: list<array{id: int, codigo: string, servidor_id: int, motivo: string}>}
+     */
+    public function aplicarVigentes(string $fecha, ?int $servidorId = null, ?int $excepto = null): array
+    {
+        $pendientes = MovimientoPersonal::pendientesDeVigencia()
+            ->whereDate('fecha_efectiva', '<=', $fecha)
+            ->when($servidorId, fn ($q) => $q->where('servidor_id', $servidorId))
+            ->when($excepto, fn ($q) => $q->where('id', '!=', $excepto))
+            ->orderBy('fecha_efectiva')
+            ->orderBy('id')
+            ->get()
+            ->sortBy(fn (MovimientoPersonal $m) => [
+                $m->fecha_efectiva->toDateString(),
+                match (true) {
+                    $m->cierraElVinculo()                  => 0,
+                    $m->reubicaAlServidor()                => 1,
+                    $m->tipo_movimiento->creaVinculo()     => 3,
+                    default                                => 2,
+                },
+                $m->id,
+            ])
+            ->values();
+
+        $resultado = ['aplicadas' => [], 'fallidas' => []];
+
+        foreach ($pendientes as $movimiento) {
+            $fila = [
+                'id'          => $movimiento->id,
+                'codigo'      => (string) $movimiento->codigo_registro,
+                'servidor_id' => $movimiento->servidor_id,
+            ];
+
+            try {
+                DB::transaction(function () use ($movimiento) {
+                    $this->aplicarEfecto($movimiento);
+                    $movimiento->save();
+                });
+
+                $resultado['aplicadas'][] = $fila;
+            } catch (ReglaNegocioException $e) {
+                $resultado['fallidas'][] = [...$fila, 'motivo' => $e->getMessage()];
+            }
+        }
+
+        return $resultado;
+    }
+
+    /**
+     * Lo que el registro de una acción le hace al vínculo, una sola vez.
+     */
+    private function aplicarEfecto(MovimientoPersonal $movimiento): void
+    {
+        if ($movimiento->efecto_aplicado_en !== null) {
+            return;
+        }
+
         $tipo = $movimiento->tipo_movimiento;
 
         if ($tipo->creaVinculo()) {
-            // El vínculo vigente ya se descartó en validarDatosPropuestos().
+            // Al registrar se admitió un vínculo abierto si su cesación ya
+            // estaba registrada para antes; el día en que rige el ingreso, esa
+            // cesación tiene que haberse aplicado (`aplicarVigentes()` va por
+            // fecha y con los cierres primero). Si no, no se crea un segundo
+            // vínculo encima del primero.
+            if (Servidor::with('contratoVigente')->find($movimiento->servidor_id)?->contratoVigente) {
+                throw new ReglaNegocioException(
+                    'El servidor todavía tiene un vínculo vigente: aplique o revise primero la '
+                        .'Cesación de Funciones del puesto actual.'
+                );
+            }
+
             $this->contratoServidorService->crear($movimiento->servidor_id, [
                 'tipo_nombramiento'        => $movimiento->tipo_nombramiento_propuesto->value,
                 'numero_contrato'          => $movimiento->numero_contrato,
@@ -277,6 +389,44 @@ class MovimientoPersonalStateService
         // firmar que FirmanteAccionPersonalService le reconoce al subrogante.
         if ($tipo === TipoMovimientoPersonal::SUBROGACION) {
             $this->subrogacionService->activarPorMovimiento($movimiento);
+        }
+
+        $movimiento->efecto_aplicado_en = now();
+    }
+
+    /**
+     * Lo que el efecto va a necesitar el día en que rija, comprobado al
+     * registrar. El ingreso ya lo valida `validarDatosPropuestos()`; aquí, la
+     * plaza del ingreso que espera su fecha, y el vínculo que una cesación o un
+     * traslado van a tocar.
+     */
+    private function validarQueElEfectoSePodraAplicar(MovimientoPersonal $movimiento): void
+    {
+        $hoy = now()->toDateString();
+
+        if ($movimiento->tipo_movimiento->creaVinculo()) {
+            // Si rige ya, `crear()` lo comprueba al materializarlo.
+            if (! $movimiento->rigeEn($hoy) && $movimiento->puesto_destino_id && $movimiento->tipo_nombramiento_propuesto) {
+                $this->contratoServidorService->validarVacante(
+                    (int) $movimiento->puesto_destino_id,
+                    $movimiento->tipo_nombramiento_propuesto->value,
+                    null,
+                    $movimiento->cubre_movimiento_id ? (int) $movimiento->cubre_movimiento_id : null,
+                    $movimiento->id,
+                );
+            }
+
+            return;
+        }
+
+        if (($movimiento->cierraElVinculo() || $movimiento->reubicaAlServidor())
+            && ! Servidor::with('contratoVigente')->find($movimiento->servidor_id)?->contratoVigente
+        ) {
+            throw new ReglaNegocioException(
+                $movimiento->cierraElVinculo()
+                    ? 'El servidor no tiene un vínculo laboral vigente que cesar.'
+                    : 'El servidor no tiene un vínculo vigente para reubicar.'
+            );
         }
     }
 
@@ -324,7 +474,15 @@ class MovimientoPersonalStateService
             return;
         }
 
+        // También para la que aún espera su fecha: otra posterior —el ingreso
+        // que sigue a una cesación— puede haberla dado por supuesta.
         $this->assertEsLaUltimaQueTocaElVinculo($movimiento);
+
+        // Pendiente de vigencia: no le hizo nada al vínculo todavía, así que no
+        // hay nada que deshacer (fase 1.6).
+        if ($movimiento->efecto_aplicado_en === null) {
+            return;
+        }
 
         if ($movimiento->tipo_movimiento->creaVinculo()) {
             $this->deshacerVinculoCreado($movimiento);
@@ -466,6 +624,20 @@ class MovimientoPersonalStateService
         $servidor = Servidor::with('contratoVigente')->find($movimiento->servidor_id);
 
         if (!$servidor?->contratoVigente) {
+            return;
+        }
+
+        // El «ascenso»: la cesación del puesto actual ya está registrada y rige
+        // a más tardar el día en que rige este ingreso. El vínculo se cierra
+        // antes de que este nazca (`aplicarVigentes()` aplica los cierres
+        // primero), así que no hay dos vínculos a la vez.
+        $cesacionPendiente = MovimientoPersonal::pendientesDeVigencia()
+            ->where('servidor_id', $movimiento->servidor_id)
+            ->whereDate('fecha_efectiva', '<=', $movimiento->fecha_efectiva)
+            ->get()
+            ->contains(fn (MovimientoPersonal $m) => $m->cierraElVinculo());
+
+        if ($cesacionPendiente) {
             return;
         }
 

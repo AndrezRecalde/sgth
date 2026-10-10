@@ -47,6 +47,9 @@ class MovimientoPersonal extends Model
                 'estado',
                 'codigo_registro',
                 'fecha_registro',
+                // Cuándo surtió efecto: con fecha futura, no al registrarse
+                // sino el día en que rige (fase 1.6).
+                'efecto_aplicado_en',
                 'dictamen_presupuestario_ref',
                 'notificado_por',
                 'fecha_notificacion',
@@ -155,6 +158,9 @@ class MovimientoPersonal extends Model
             */
             $permitidos = [
                 'estado', 'updated_at',
+                // El efecto de una acción que rige más tarde se aplica el día
+                // en que rige, una sola vez: de vacío a fecha, nunca al revés.
+                ...($movimiento->getOriginal('efecto_aplicado_en') === null ? ['efecto_aplicado_en'] : []),
                 ...match ($movimiento->estado) {
                     EstadoAccionPersonal::NOTIFICADA => ['notificado_por', 'fecha_notificacion'],
                     EstadoAccionPersonal::ANULADA    => ['motivo_anulacion'],
@@ -220,6 +226,7 @@ class MovimientoPersonal extends Model
         'codigo',
         'codigo_registro',
         'fecha_registro',
+        'efecto_aplicado_en',
         'fecha_suscripcion',
         'firmante_autoridad_id',
         'firmante_autoridad_nombre',
@@ -270,6 +277,7 @@ class MovimientoPersonal extends Model
             'fecha_fin_propuesta'         => 'date',
             'puede_marcar'                => 'boolean',
             'fecha_registro'     => 'date',
+            'efecto_aplicado_en' => 'datetime',
             'fecha_suscripcion'  => 'date',
             'fecha_efectiva'  => 'date',
             'fecha_inicio'    => 'date',
@@ -572,6 +580,40 @@ class MovimientoPersonal extends Model
             $q->where('estado', '!=', EstadoAccionPersonal::ANULADA->value)
                 ->orWhereNotNull('codigo_registro');
         });
+    }
+
+    /**
+     * Registrada, pero su efecto todavía no se aplicó porque rige más tarde
+     * (diseño, 6.1 y 6.2; fase 1.6). No es un estado: es una situación que se
+     * deduce, y el comando diario la cierra el día en que rige.
+     */
+    public function scopePendientesDeVigencia(Builder $query): Builder
+    {
+        return $query->whereIn('estado', [
+            EstadoAccionPersonal::REGISTRADA->value,
+            EstadoAccionPersonal::NOTIFICADA->value,
+        ])
+            ->whereNotNull('codigo_registro')
+            ->whereNull('efecto_aplicado_en');
+    }
+
+    public function pendienteDeVigencia(): bool
+    {
+        return in_array($this->estado, [EstadoAccionPersonal::REGISTRADA, EstadoAccionPersonal::NOTIFICADA], true)
+            && filled($this->codigo_registro)
+            && $this->efecto_aplicado_en === null;
+    }
+
+    /** ¿Ya rige en esa fecha? */
+    public function rigeEn(string $fecha): bool
+    {
+        return $this->fecha_efectiva !== null && $this->fecha_efectiva->toDateString() <= $fecha;
+    }
+
+    /** Las cesaciones: renuncia, destitución, jubilación… */
+    public function cierraElVinculo(): bool
+    {
+        return (bool) $this->subtipoEfectivo()?->cierraVinculo();
     }
 
     public function esVisibleParaElTitular(): bool

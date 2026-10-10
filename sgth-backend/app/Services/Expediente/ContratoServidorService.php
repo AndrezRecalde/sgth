@@ -263,6 +263,9 @@ class ContratoServidorService
                 $this->valorTipoNombramiento($data['tipo_nombramiento']),
                 null,
                 isset($data['cubre_movimiento_id']) ? (int) $data['cubre_movimiento_id'] : null,
+                // El ingreso que se está materializando ya contaba como plaza
+                // reservada mientras esperaba su fecha: no compite consigo.
+                $movimientoOrigen?->id,
             );
         }
 
@@ -609,11 +612,12 @@ class ContratoServidorService
      * ocupa. Contarlas dos veces dejaría el puesto bloqueado justo cuando
      * Talento Humano necesita cubrir el hueco.
      */
-    private function validarVacante(
+    public function validarVacante(
         int $puestoId,
         string $tipoNombramiento,
         ?int $exceptoContratoId = null,
-        ?int $cubreMovimientoId = null
+        ?int $cubreMovimientoId = null,
+        ?int $exceptoMovimientoId = null
     ): void {
         if (! TipoNombramiento::from($tipoNombramiento)->ocupaPlaza()) {
             return;
@@ -628,6 +632,18 @@ class ContratoServidorService
         $ocupadas = $puesto->contratos()
             ->queOcupanPlaza()
             ->when($exceptoContratoId, fn ($q) => $q->where('id', '!=', $exceptoContratoId))
+            ->count();
+
+        // Un ingreso registrado que rige más tarde todavía no tiene contrato,
+        // pero la plaza ya es suya (fase 1.6): sin contarlo, otro ingreso podía
+        // ocuparla mientras tanto, y el primero fallaba el día en que regía.
+        $ocupadas += MovimientoPersonal::pendientesDeVigencia()
+            ->where('puesto_destino_id', $puestoId)
+            ->whereNull('cubre_movimiento_id')
+            ->when($exceptoMovimientoId, fn ($q) => $q->where('id', '!=', $exceptoMovimientoId))
+            ->get(['id', 'tipo_movimiento', 'tipo_nombramiento_propuesto'])
+            ->filter(fn (MovimientoPersonal $m) => $m->tipo_movimiento->creaVinculo()
+                && (bool) $m->tipo_nombramiento_propuesto?->ocupaPlaza())
             ->count();
 
         if ($ocupadas >= $puesto->plazas) {

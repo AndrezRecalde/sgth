@@ -1,10 +1,10 @@
 import { Text } from '@mantine/core'
 import { IconEye } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
-import { StatusBadge, TableActions } from '@/components/ui'
+import { TableActions } from '@/components/ui'
 import { formatFecha } from '@/lib/fecha'
-import { ESTADO_LABELS, TONO_ACCION } from '../utils/estadoAccionPersonal'
 import type { MovimientoPersonal } from '@/types/api'
+import { EstadoAccionBadge } from './EstadoAccionBadge'
 
 type Handlers = {
   onVerDetalle: (movimiento: MovimientoPersonal) => void
@@ -62,13 +62,7 @@ export const getBandejaAccionesColumns = ({
     accessor: 'estado',
     title: 'Estado',
     width: 150,
-    render: (m) => m.estado
-      ? (
-        <StatusBadge tone={TONO_ACCION[m.estado]}>
-          {ESTADO_LABELS[m.estado]}
-        </StatusBadge>
-      )
-      : <Text size="sm" c="dimmed">—</Text>,
+    render: (m) => <EstadoAccionBadge m={m} />,
   },
   {
     accessor: 'acciones',

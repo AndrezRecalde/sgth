@@ -60,6 +60,13 @@ Schedule::command('sgth:disciplinario:control-plazos')
     ->dailyAt('07:15')
     ->onOneServer();
 
+// El motor de efectos con fecha (fase 1.6): lo registrado que rige hoy surte
+// efecto al empezar el día, antes que los demás comandos lean el vínculo. La
+// fecha ya venía autorizada en la Acción de Personal: no hay nada que revisar.
+Schedule::command('sgth:acciones:aplicar-vigentes')
+    ->dailyAt('00:30')
+    ->onOneServer();
+
 // Vencimiento de contratos de Servicios Profesionales: genera la cesación en
 // borrador para que Talento Humano la revise. Nada se da de baja sin aprobación.
 Schedule::command('sgth:contratos:detectar-vencidos')

@@ -49573,6 +49573,13 @@
                                 "type": "null"
                             }
                         ]
+                    },
+                    "efecto_aplicado_en": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
                     }
                 },
                 "required": [
@@ -49627,7 +49634,8 @@
                     "remuneracion_origen",
                     "partida_origen_id",
                     "motivo_anulacion",
-                    "clase"
+                    "clase",
+                    "efecto_aplicado_en"
                 ],
                 "title": "MovimientoPersonal"
             },
@@ -49868,6 +49876,17 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "efecto_aplicado_en": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "Registrada pero sin efecto todav\u00eda, porque rige m\u00e1s tarde (fase\n1.6): el v\u00ednculo no cambia hasta su fecha."
+                    },
+                    "pendiente_de_vigencia": {
+                        "type": "boolean"
                     },
                     "resolucion_numero": {
                         "type": [
@@ -50206,6 +50225,8 @@
                     "codigo",
                     "codigo_registro",
                     "fecha_registro",
+                    "efecto_aplicado_en",
+                    "pendiente_de_vigencia",
                     "resolucion_numero",
                     "documento_respaldo",
                     "dictamen_presupuestario_ref",

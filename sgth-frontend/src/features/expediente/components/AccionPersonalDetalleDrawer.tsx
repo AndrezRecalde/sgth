@@ -1,13 +1,14 @@
 'use client'
 
 import {
-  DataState, DetailList, SectionHeading, SgthDrawer, StatusBadge,
+  DataState, DetailList, SectionHeading, SgthDrawer,
 } from '@/components/ui'
 import { Alert, Group, Stack, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconAlertTriangle, IconFileOff, IconUserOff } from '@tabler/icons-react'
 import { useMovimiento } from '../hooks/useMovimientoMutations'
 import { AccionAnotaciones } from './AccionAnotaciones'
+import { EstadoAccionBadge } from './EstadoAccionBadge'
 import { AccionBotonEditar } from './AccionBotonEditar'
 import { AccionPersonalPie } from './AccionPersonalPie'
 import { AccionRespaldos } from './AccionRespaldos'
@@ -16,7 +17,6 @@ import { BloqueDetalle } from './BloqueDetalle'
 import { MovimientoModal } from './MovimientoModal'
 import { CompletarVinculoModal } from './CompletarVinculoModal'
 import { DictamenPresupuestarioModal } from './DictamenPresupuestarioModal'
-import { TONO_ACCION, ESTADO_LABELS } from '../utils/estadoAccionPersonal'
 import type { MovimientoPersonal } from '@/types/api'
 import { formatFecha } from '@/lib/fecha'
 
@@ -60,11 +60,7 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
               <Text size="sm" c="dimmed">{m.causal_etiqueta}</Text>
             )}
           </div>
-          {estado && (
-            <StatusBadge tone={TONO_ACCION[estado]}>
-              {ESTADO_LABELS[estado]}
-            </StatusBadge>
-          )}
+          <EstadoAccionBadge m={m} />
         </Group>
 
         <BloqueDetalle>
