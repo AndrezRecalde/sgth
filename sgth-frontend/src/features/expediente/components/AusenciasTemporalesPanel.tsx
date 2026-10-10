@@ -6,7 +6,10 @@ import { IconInfoCircle, IconUserOff } from '@tabler/icons-react'
 import { DataState, SgthTable, Toolbar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useAusenciasTemporales } from '../hooks/useAusenciasTemporales'
+import { usePuedePrepararAcciones } from '../hooks/usePuedePrepararAccion'
+import type { AusenciaTemporal } from '../services/ausenciaTemporalService'
 import { getAusenciaColumns } from './ausenciasTemporales.columns'
+import { ReintegroModal } from './ReintegroModal'
 
 const COBERTURA_OPTIONS = [
   { value: 'pendientes', label: 'Sin cubrir' },
@@ -20,17 +23,23 @@ const COBERTURA_OPTIONS = [
  * la licencia, así que al vencer sale sola de este listado. El contrato del
  * titular sigue vigente todo el tiempo — no se libera la plaza, se autoriza un
  * apoyo temporal encima de ella.
+ *
+ * Cuando el titular vuelve, el reintegro se prepara desde aquí (fase 2.4): es
+ * el acto que cierra la ausencia, y nace de ella porque sin ella no sabe qué
+ * cerrar.
  */
 export function AusenciasTemporalesPanel() {
   // Compacta: es la altura que pide el contrato de `Toolbar`.
   const contained = useContainedInput('sm')
   const [cobertura, setCobertura] = useState<string | null>(null)
+  const [aReintegrar, setAReintegrar] = useState<AusenciaTemporal | null>(null)
+  const puedePreparar = usePuedePrepararAcciones()
 
   const { data: ausencias = [], isLoading, error, refetch } = useAusenciasTemporales(
     cobertura ? { cubiertas: cobertura === 'cubiertas' } : {},
   )
 
-  const columns = getAusenciaColumns()
+  const columns = getAusenciaColumns({ puedePreparar, onReintegrar: setAReintegrar })
 
   return (
     <Stack gap="md">
@@ -87,6 +96,12 @@ export function AusenciasTemporalesPanel() {
       >
         <SgthTable records={ausencias} columns={columns} minHeight={200} />
       </DataState>
+
+      <ReintegroModal
+        opened={aReintegrar !== null}
+        onClose={() => setAReintegrar(null)}
+        ausencia={aReintegrar}
+      />
     </Stack>
   )
 }

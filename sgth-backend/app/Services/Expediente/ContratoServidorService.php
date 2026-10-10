@@ -63,7 +63,7 @@ class ContratoServidorService
                 TipoMovimientoPersonal::INGRESO->value,
                 TipoMovimientoPersonal::CESACION_FUNCIONES->value,
             ])
-            ->with(['unidadOrigen:id,nombre', 'unidadDestino:id,nombre', 'puestoOrigen.cargo:id,nombre', 'puestoDestino.cargo:id,nombre'])
+            ->with(['unidadOrigen:id,nombre', 'unidadDestino:id,nombre', 'puestoOrigen.cargo:id,nombre', 'puestoDestino.cargo:id,nombre', 'reintegro'])
             // Ascendente aquí: es la secuencia de lo que le fue pasando al
             // vínculo. El id desempata las del mismo día para que el relato no
             // cambie de orden entre recargas.
@@ -237,7 +237,8 @@ class ContratoServidorService
             return false;
         }
 
-        $fin = $movimiento->fecha_fin?->toDateString();
+        // La que cerró un reintegro termina el día anterior al regreso.
+        $fin = $movimiento->finEfectivo()?->toDateString();
 
         return ! $fin || $fin >= $fecha;
     }
@@ -522,7 +523,7 @@ class ContratoServidorService
         $ausencia = ! empty($datos['cubre_movimiento_id'])
             ? MovimientoPersonal::find($datos['cubre_movimiento_id'])
             : null;
-        $finAusencia = $ausencia?->fecha_fin?->toDateString();
+        $finAusencia = $ausencia?->finEfectivo()?->toDateString();
         if ($finAusencia && (! $fin || $fin > $finAusencia)) {
             throw new ReglaNegocioException(
                 "El reemplazo no puede extenderse más allá del {$finAusencia}, "

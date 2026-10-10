@@ -35,6 +35,7 @@ class AusenciaTemporalService
                 'unidadOrigen:id,nombre',
                 'puestoOrigen.cargo:id,nombre',
                 'unidadDestino:id,nombre',
+                'reintegro',
             ])
             ->orderBy('fecha_fin')
             ->get();
@@ -51,8 +52,11 @@ class AusenciaTemporalService
                 'subtipo_movimiento' => $ausencia->subtipo_movimiento?->value,
                 'etiqueta'         => $ausencia->etiquetaAusencia(),
                 'desde'            => $ausencia->fecha_inicio?->toDateString(),
-                'hasta'            => $ausencia->fecha_fin?->toDateString(),
+                // La fecha en que termina de verdad: si el titular ya tiene su
+                // reintegro, el día anterior al regreso (fase 2.4).
+                'hasta'            => $ausencia->finEfectivo()?->toDateString(),
                 'dias_restantes'   => $this->diasRestantes($ausencia),
+                'reintegro'        => $this->reintegroDe($ausencia),
                 'servidor'         => [
                     'id'       => $ausencia->servidor?->id,
                     'nombre'   => trim(($ausencia->servidor?->apellido ?? '').' '.($ausencia->servidor?->nombre ?? '')),
@@ -116,10 +120,34 @@ class AusenciaTemporalService
     /** Null cuando la ausencia no tiene fecha de fin pactada. */
     private function diasRestantes(MovimientoPersonal $ausencia): ?int
     {
-        if (! $ausencia->fecha_fin) {
+        $fin = $ausencia->finEfectivo();
+
+        if (! $fin) {
             return null;
         }
 
-        return (int) now()->startOfDay()->diffInDays($ausencia->fecha_fin, false);
+        return (int) now()->startOfDay()->diffInDays($fin, false);
+    }
+
+    /**
+     * El reintegro de la ausencia, en trámite o emitido, para que la pantalla
+     * no ofrezca preparar otro.
+     *
+     * @return array{id: int, estado: string, codigo_registro: ?string, fecha_regreso: ?string}|null
+     */
+    private function reintegroDe(MovimientoPersonal $ausencia): ?array
+    {
+        $reintegro = $ausencia->reintegro;
+
+        if (! $reintegro) {
+            return null;
+        }
+
+        return [
+            'id'              => $reintegro->id,
+            'estado'          => $reintegro->estado->value,
+            'codigo_registro' => $reintegro->codigo_registro,
+            'fecha_regreso'   => $reintegro->fecha_efectiva?->toDateString(),
+        ];
     }
 }

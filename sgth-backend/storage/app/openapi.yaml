@@ -3290,12 +3290,42 @@
                                                         "type": "string"
                                                     },
                                                     "hasta": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "description": "La fecha en que termina de verdad: si el titular ya tiene su\nreintegro, el d\u00eda anterior al regreso (fase 2.4)."
                                                     },
                                                     "dias_restantes": {
                                                         "type": [
                                                             "integer",
                                                             "null"
+                                                        ]
+                                                    },
+                                                    "reintegro": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "estado": {
+                                                                "type": "string"
+                                                            },
+                                                            "codigo_registro": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "fecha_regreso": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "estado",
+                                                            "codigo_registro",
+                                                            "fecha_regreso"
                                                         ]
                                                     },
                                                     "servidor": {
@@ -3356,6 +3386,7 @@
                                                     "desde",
                                                     "hasta",
                                                     "dias_restantes",
+                                                    "reintegro",
                                                     "servidor",
                                                     "unidad",
                                                     "unidad_id",
@@ -24269,6 +24300,81 @@
                 }
             }
         },
+        "/v1/expediente/movimientos/{movimiento}/reintegro": {
+            "post": {
+                "operationId": "movimientoPersonal.reintegrar",
+                "summary": "Prepara en borrador el reintegro de la ausencia: el servidor vuelve de\nsu comisi\u00f3n o su licencia (fase 2.4)",
+                "tags": [
+                    "MovimientoPersonal"
+                ],
+                "parameters": [
+                    {
+                        "name": "movimiento",
+                        "in": "path",
+                        "required": true,
+                        "description": "The movimiento ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ReintegrarAusenciaRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Reintegro preparado en borrador."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/MovimientoPersonalResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/v1/expediente/movimientos/{movimiento}/transicionar": {
             "put": {
                 "operationId": "movimientoPersonal.transicionar",
@@ -44950,7 +45056,8 @@
                     "incremento_remuneracion",
                     "cambio_ocupacion",
                     "sancion",
-                    "cesacion"
+                    "cesacion",
+                    "reintegro"
                 ],
                 "title": "ClaseAccionPersonal"
             },
@@ -44974,7 +45081,8 @@
                             "Incremento de Remuneraci\u00f3n",
                             "Cambio de Ocupaci\u00f3n",
                             "Sanci\u00f3n Disciplinaria",
-                            "Cesaci\u00f3n de Funciones"
+                            "Cesaci\u00f3n de Funciones",
+                            "Reintegro"
                         ]
                     },
                     "familia": {
@@ -49658,6 +49766,12 @@
                     },
                     "para_estudios_o_eventos": {
                         "type": "boolean"
+                    },
+                    "movimiento_relacionado_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -49715,7 +49829,8 @@
                     "clase",
                     "efecto_aplicado_en",
                     "institucion_destino",
-                    "para_estudios_o_eventos"
+                    "para_estudios_o_eventos",
+                    "movimiento_relacionado_id"
                 ],
                 "title": "MovimientoPersonal"
             },
@@ -49970,6 +50085,46 @@
                             "null"
                         ],
                         "description": "Ausencia temporal que este ingreso viene a cubrir."
+                    },
+                    "movimiento_relacionado_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "El acto con que se enlaza (fase 2.4): la ausencia que cierra un\nreintegro, o el reintegro del que sali\u00f3 la cesaci\u00f3n de un\nreemplazo."
+                    },
+                    "relacionado": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "codigo_registro": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "etiqueta": {
+                                "type": "string"
+                            },
+                            "fecha_inicio": {
+                                "type": "string"
+                            },
+                            "fecha_fin": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "codigo_registro",
+                            "etiqueta",
+                            "fecha_inicio",
+                            "fecha_fin"
+                        ]
                     },
                     "codigo": {
                         "type": [
@@ -50339,6 +50494,8 @@
                     "partida_origen_id",
                     "movimiento_previo_id",
                     "cubre_movimiento_id",
+                    "movimiento_relacionado_id",
+                    "relacionado",
                     "codigo",
                     "codigo_registro",
                     "fecha_registro",
@@ -52366,6 +52523,32 @@
                     "motivo"
                 ],
                 "title": "RegistrarSubrogacionRequest"
+            },
+            "ReintegrarAusenciaRequest": {
+                "type": "object",
+                "description": "El reintegro que se prepara desde la ausencia (fase 2.4): cu\u00e1ndo vuelve el\nservidor y la explicaci\u00f3n del documento. El rango de la fecha lo valida\nReintegroService, que conoce la ausencia.",
+                "properties": {
+                    "fecha_regreso": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "descripcion": {
+                        "type": "string",
+                        "maxLength": 1000
+                    },
+                    "observacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 1000
+                    }
+                },
+                "required": [
+                    "fecha_regreso",
+                    "descripcion"
+                ],
+                "title": "ReintegrarAusenciaRequest"
             },
             "ReprogramarPlazoContratoRequest": {
                 "type": "object",
@@ -57777,7 +57960,8 @@
                     "traspaso",
                     "destitucion",
                     "cesacion_funciones",
-                    "regimen_disciplinario"
+                    "regimen_disciplinario",
+                    "reintegro"
                 ],
                 "title": "TipoMovimientoPersonal"
             },
