@@ -5,10 +5,13 @@ namespace App\Services\Expediente;
 use App\Enums\AptitudMedica;
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\PartidaPorModalidad;
+use App\Enums\SubtipoMovimientoPersonal;
+use App\Enums\TipoEventoVinculo;
 use App\Enums\TipoMovimientoPersonal;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Dispensario\SolicitudCertificacionMedica;
 use App\Models\Expediente\ContratoServidor;
+use App\Models\Expediente\EventoVinculo;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
@@ -382,6 +385,7 @@ class MovimientoPersonalStateService
             $this->contratoServidorService->reestructurarDesdeMovimiento($movimiento);
         } elseif ($movimiento->subtipoEfectivo()?->cierraVinculo()) {
             $this->cerrarVinculo($movimiento);
+            $this->aplicarCascadasDeLaCesacion($movimiento);
         }
 
         // La subrogación no crea vínculo: reemplaza temporalmente al titular
@@ -395,6 +399,48 @@ class MovimientoPersonalStateService
     }
 
     /**
+     * Lo que arrastra la salida de alguien (diseño de Acciones de Personal,
+     * 9.5 y fase 2.1). La plaza no necesita nada: se libera sola al cerrarse el
+     * contrato, y quien cubre un reemplazo —ocasional o profesional— no la
+     * consume.
+     *
+     * - Las subrogaciones en que es subrogante o titular se cierran.
+     * - Los contratos de reemplazo que cubrían una ausencia suya pierden su
+     *   razón de ser. No se inventa un acto: se anota en la bitácora del
+     *   reemplazo, y el comando diario lo lista hasta que Talento Humano decida
+     *   si sigue o termina.
+     */
+    private function aplicarCascadasDeLaCesacion(MovimientoPersonal $cesacion): void
+    {
+        $this->subrogacionService->cerrarPorCesacion($cesacion);
+
+        $reemplazos = ContratoServidor::where('estado', 'vigente')
+            ->whereIn('cubre_movimiento_id', MovimientoPersonal::where('servidor_id', $cesacion->servidor_id)->select('id'))
+            ->get();
+
+        if ($reemplazos->isEmpty()) {
+            return;
+        }
+
+        $titular = Servidor::find($cesacion->servidor_id);
+        $nombre = trim(($titular?->apellido ?? '').' '.($titular?->nombre ?? ''));
+
+        foreach ($reemplazos as $contrato) {
+            EventoVinculo::create([
+                'servidor_id'            => $contrato->servidor_id,
+                'contrato_servidor_id'   => $contrato->id,
+                'movimiento_personal_id' => $cesacion->id,
+                'tipo'                   => TipoEventoVinculo::TITULAR_CESADO,
+                'fecha'                  => $cesacion->fecha_efectiva->toDateString(),
+                'descripcion'            => "{$nombre}, a quien cubría este contrato, cesó el "
+                    .$cesacion->fecha_efectiva->format('d/m/Y').' ('.$cesacion->codigo_registro.'). '
+                    .'Decida si el contrato sigue o termina.',
+                'registrado_por'         => auth()->id(),
+            ]);
+        }
+    }
+
+    /**
      * Lo que el efecto va a necesitar el día en que rija, comprobado al
      * registrar. El ingreso ya lo valida `validarDatosPropuestos()`; aquí, la
      * plaza del ingreso que espera su fecha, y el vínculo que una cesación o un
@@ -403,6 +449,10 @@ class MovimientoPersonalStateService
     private function validarQueElEfectoSePodraAplicar(MovimientoPersonal $movimiento): void
     {
         $hoy = now()->toDateString();
+
+        if ($movimiento->subtipoEfectivo() === SubtipoMovimientoPersonal::TERMINACION_UNILATERAL) {
+            MovimientoPersonalService::impedirTerminacionDeProtegida($movimiento->servidor_id);
+        }
 
         if ($movimiento->tipo_movimiento->creaVinculo()) {
             // Si rige ya, `crear()` lo comprueba al materializarlo.

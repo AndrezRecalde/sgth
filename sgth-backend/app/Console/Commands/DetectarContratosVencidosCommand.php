@@ -9,13 +9,13 @@ class DetectarContratosVencidosCommand extends Command
 {
     protected $signature = 'sgth:contratos:detectar-vencidos {--fecha= : Fecha de corte (Y-m-d), por defecto hoy}';
 
-    protected $description = 'Genera en borrador la Cesación de Funciones de los contratos de Servicios Profesionales cuyo plazo venció.';
+    protected $description = 'Genera en borrador la Cesación de Funciones de los contratos de Servicios Profesionales y de servicios ocasionales cuyo plazo venció.';
 
     public function handle(ContratoVencidoService $servicio): int
     {
         $fecha = $this->option('fecha');
 
-        $this->info('Detectando contratos de Servicios Profesionales vencidos...');
+        $this->info('Detectando contratos de Servicios Profesionales y de servicios ocasionales vencidos...');
 
         $resultado = $servicio->generarCesacionesPendientes($fecha);
 

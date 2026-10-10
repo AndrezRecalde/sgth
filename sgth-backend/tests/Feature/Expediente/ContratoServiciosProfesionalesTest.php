@@ -220,11 +220,13 @@ test('una cesación anulada no bloquea que se vuelva a generar', function () {
     expect($segunda['generadas'])->toHaveCount(1);
 });
 
+// Los ocasionales vencidos sí reciben su borrador desde la fase 2.1
+// (CausalesDeCesacionTest); los demás nombramientos con fecha de fin, no.
 test('los contratos de otros nombramientos no se tocan', function () {
     $servidor = ($this->servidorNuevo)();
 
     $this->contratoService->crear($servidor->id, [
-        'tipo_nombramiento'        => TipoNombramiento::SERVICIOS_OCASIONALES->value,
+        'tipo_nombramiento'        => TipoNombramiento::PROVISIONAL->value,
         'unidad_administrativa_id' => $this->unidad->id,
         'puesto_id'                => $this->puesto->id,
         'fecha_inicio'             => '2025-01-01',

@@ -67,8 +67,9 @@ Schedule::command('sgth:acciones:aplicar-vigentes')
     ->dailyAt('00:30')
     ->onOneServer();
 
-// Vencimiento de contratos de Servicios Profesionales: genera la cesación en
-// borrador para que Talento Humano la revise. Nada se da de baja sin aprobación.
+// Vencimiento de contratos de Servicios Profesionales y, desde la fase 2.1, de
+// servicios ocasionales: genera la cesación en borrador para que Talento Humano
+// la revise. Nada se da de baja sin aprobación.
 Schedule::command('sgth:contratos:detectar-vencidos')
     ->dailyAt('05:00')
     ->onOneServer();

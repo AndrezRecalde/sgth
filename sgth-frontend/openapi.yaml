@@ -9712,6 +9712,7 @@
                                                                         "Contrato registrado sin acci\u00f3n de personal",
                                                                         "Fin anticipado de subrogaci\u00f3n o encargo",
                                                                         "Cancelaci\u00f3n de subrogaci\u00f3n o encargo",
+                                                                        "El titular al que cubr\u00eda ces\u00f3",
                                                                         "Cambio de puesto",
                                                                         "Cambio de r\u00e9gimen",
                                                                         "Egreso"
@@ -44533,9 +44534,41 @@
                             "Renuncia",
                             "Destituci\u00f3n",
                             "Jubilaci\u00f3n",
-                            "Incapacidad",
+                            "Incapacidad absoluta y permanente",
                             "Contrato Finalizado",
-                            "Visto Bueno"
+                            "Visto Bueno",
+                            "Remoci\u00f3n",
+                            "No superar el per\u00edodo de prueba",
+                            "Terminaci\u00f3n por cumplimiento del plazo",
+                            "Terminaci\u00f3n unilateral",
+                            "Mutuo acuerdo",
+                            "Evaluaci\u00f3n regular o insuficiente",
+                            "Retiro voluntario o compra de renuncia",
+                            "P\u00e9rdida de los derechos de ciudadan\u00eda",
+                            "Fallecimiento"
+                        ]
+                    },
+                    "base_legal": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "LOSEP Art. 47 a; Reglamento Art. 102",
+                            "LOSEP Art. 47 e; Reglamento Art. 105",
+                            "LOSEP Art. 17 b.5",
+                            "Reglamento a la LOSEP Art. 146 a",
+                            "Reglamento a la LOSEP Art. 146 f",
+                            "Reglamento a la LOSEP Art. 146 b",
+                            "Reglamento a la LOSEP Art. 146 g",
+                            "LOSEP Arts. 47 f y 48",
+                            "LOSEP Art. 47 j",
+                            "LOSEP Art. 47 i y k; Mandato Constituyente 2",
+                            "LOSEP Art. 47 b",
+                            "LOSEP Art. 47 d",
+                            "LOSEP Art. 47 l",
+                            "C\u00f3digo del Trabajo Art. 172",
+                            null
                         ]
                     },
                     "nombramientos_elegibles": {
@@ -44593,6 +44626,20 @@
                                 "minItems": 4,
                                 "maxItems": 4,
                                 "additionalItems": false
+                            },
+                            {
+                                "type": "array",
+                                "prefixItems": [
+                                    {
+                                        "$ref": "#/components/schemas/TipoNombramiento"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/TipoNombramiento"
+                                    }
+                                ],
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "additionalItems": false
                             }
                         ]
                     },
@@ -44604,6 +44651,7 @@
                 "required": [
                     "codigo",
                     "etiqueta",
+                    "base_legal",
                     "nombramientos_elegibles",
                     "dictamen_medico_por_defecto"
                 ],
@@ -49691,6 +49739,16 @@
                     "causal_etiqueta": {
                         "type": "string"
                     },
+                    "causal_base_legal": {
+                        "type": "string"
+                    },
+                    "aviso_proteccion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "La terminaci\u00f3n de una ocasional protegida por embarazo o\nlactancia, mientras todav\u00eda se puede detener (fase 2.1)."
+                    },
                     "toca_el_vinculo": {
                         "type": "boolean",
                         "description": "Lo que la pantalla decide con cada acci\u00f3n, respondido por el\nbackend. Antes `taxonomiaAccionPersonal.ts` lo copiaba a mano, y\ncada regla nueva hab\u00eda que escribirla dos veces."
@@ -50191,6 +50249,8 @@
                     "etiqueta",
                     "causal",
                     "causal_etiqueta",
+                    "causal_base_legal",
+                    "aviso_proteccion",
                     "toca_el_vinculo",
                     "es_ausencia_temporal",
                     "propone_situacion",
@@ -57245,7 +57305,16 @@
                     "jubilacion",
                     "incapacidad",
                     "contrato_finalizado",
-                    "visto_bueno"
+                    "visto_bueno",
+                    "remocion",
+                    "periodo_prueba_no_superado",
+                    "fin_del_plazo",
+                    "terminacion_unilateral",
+                    "mutuo_acuerdo",
+                    "evaluacion_insuficiente",
+                    "retiro_voluntario",
+                    "perdida_derechos_ciudadania",
+                    "fallecimiento"
                 ],
                 "title": "SubtipoMovimientoPersonal"
             },

@@ -58,6 +58,8 @@ export type TipoNovedadVinculo =
   | 'contrato_registrado'
   | 'subrogacion_finalizada'
   | 'subrogacion_cancelada'
+  // Cesó el titular cuya ausencia cubría este contrato de reemplazo (fase 2.1).
+  | 'titular_cesado'
   // Tipos anteriores que el sistema ya no genera; solo los trae el histórico.
   | 'cambio_puesto'
   | 'cambio_regimen'

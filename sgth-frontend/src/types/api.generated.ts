@@ -7275,7 +7275,9 @@ export interface components {
         CausalAccionPersonalResource: {
             codigo: components["schemas"]["SubtipoMovimientoPersonal"];
             /** @enum {string} */
-            etiqueta: "Traslado Administrativo" | "Traspaso" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Sanción Disciplinaria" | "Renuncia" | "Destitución" | "Jubilación" | "Incapacidad" | "Contrato Finalizado" | "Visto Bueno";
+            etiqueta: "Traslado Administrativo" | "Traspaso" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Sanción Disciplinaria" | "Renuncia" | "Destitución" | "Jubilación" | "Incapacidad absoluta y permanente" | "Contrato Finalizado" | "Visto Bueno" | "Remoción" | "No superar el período de prueba" | "Terminación por cumplimiento del plazo" | "Terminación unilateral" | "Mutuo acuerdo" | "Evaluación regular o insuficiente" | "Retiro voluntario o compra de renuncia" | "Pérdida de los derechos de ciudadanía" | "Fallecimiento";
+            /** @enum {string|null} */
+            base_legal: "LOSEP Art. 47 a; Reglamento Art. 102" | "LOSEP Art. 47 e; Reglamento Art. 105" | "LOSEP Art. 17 b.5" | "Reglamento a la LOSEP Art. 146 a" | "Reglamento a la LOSEP Art. 146 f" | "Reglamento a la LOSEP Art. 146 b" | "Reglamento a la LOSEP Art. 146 g" | "LOSEP Arts. 47 f y 48" | "LOSEP Art. 47 j" | "LOSEP Art. 47 i y k; Mandato Constituyente 2" | "LOSEP Art. 47 b" | "LOSEP Art. 47 d" | "LOSEP Art. 47 l" | "Código del Trabajo Art. 172" | null;
             nombramientos_elegibles: [
                 components["schemas"]["TipoNombramiento"]
             ] | [
@@ -7287,6 +7289,9 @@ export interface components {
             ] | [
                 components["schemas"]["TipoNombramiento"],
                 components["schemas"]["TipoNombramiento"],
+                components["schemas"]["TipoNombramiento"],
+                components["schemas"]["TipoNombramiento"]
+            ] | [
                 components["schemas"]["TipoNombramiento"],
                 components["schemas"]["TipoNombramiento"]
             ];
@@ -8576,6 +8581,12 @@ export interface components {
             etiqueta: string;
             causal: components["schemas"]["SubtipoMovimientoPersonal"] | null;
             causal_etiqueta: string;
+            causal_base_legal: string;
+            /**
+             * @description La terminación de una ocasional protegida por embarazo o
+             *     lactancia, mientras todavía se puede detener (fase 2.1).
+             */
+            aviso_proteccion: string | null;
             /**
              * @description Lo que la pantalla decide con cada acción, respondido por el
              *     backend. Antes `taxonomiaAccionPersonal.ts` lo copiaba a mano, y
@@ -10563,7 +10574,7 @@ export interface components {
          * @description Subtipos de acción de personal. Talento Humano opera con dos niveles: un tipo "paraguas" (Cambio Administrativo, Régimen Disciplinario, Cesación de Funciones) y un subtipo que es el que realmente determina la elegibilidad por tipo de nombramiento y el texto del documento impreso. Confirmado con TH (2026-07-27). Ver TipoMovimientoPersonal::subtiposPermitidos().
          * @enum {string}
          */
-        SubtipoMovimientoPersonal: "traslado_administrativo" | "traspaso" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "sancion_disciplinaria" | "renuncia" | "destitucion" | "jubilacion" | "incapacidad" | "contrato_finalizado" | "visto_bueno";
+        SubtipoMovimientoPersonal: "traslado_administrativo" | "traspaso" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "sancion_disciplinaria" | "renuncia" | "destitucion" | "jubilacion" | "incapacidad" | "contrato_finalizado" | "visto_bueno" | "remocion" | "periodo_prueba_no_superado" | "fin_del_plazo" | "terminacion_unilateral" | "mutuo_acuerdo" | "evaluacion_insuficiente" | "retiro_voluntario" | "perdida_derechos_ciudadania" | "fallecimiento";
         /** Sumario */
         Sumario: {
             id: number;
@@ -15980,7 +15991,7 @@ export interface operations {
                                 id: number;
                                 tipo: string;
                                 /** @enum {string} */
-                                etiqueta: "Contrato registrado sin acción de personal" | "Fin anticipado de subrogación o encargo" | "Cancelación de subrogación o encargo" | "Cambio de puesto" | "Cambio de régimen" | "Egreso";
+                                etiqueta: "Contrato registrado sin acción de personal" | "Fin anticipado de subrogación o encargo" | "Cancelación de subrogación o encargo" | "El titular al que cubría cesó" | "Cambio de puesto" | "Cambio de régimen" | "Egreso";
                                 fecha: string;
                                 descripcion: string;
                                 movimiento_personal_id: number | null;

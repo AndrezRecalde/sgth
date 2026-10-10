@@ -57,7 +57,10 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
           <div>
             <Text fw={600}>{m.etiqueta}</Text>
             {m.causal_etiqueta && (
-              <Text size="sm" c="dimmed">{m.causal_etiqueta}</Text>
+              <Text size="sm" c="dimmed">
+                {m.causal_etiqueta}
+                {m.causal_base_legal ? ` · ${m.causal_base_legal}` : ''}
+              </Text>
             )}
           </div>
           <EstadoAccionBadge m={m} />
@@ -74,6 +77,14 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
             { label: 'Código', value: m.codigo_registro },
           ]} />
         </BloqueDetalle>
+
+        {m.aviso_proteccion && (
+          // Un aviso que detiene el trámite va en amber, como los demás
+          // bloqueos del cajón (regla 03).
+          <Alert variant="light" color="amber" icon={<IconAlertTriangle size={16} />}>
+            {m.aviso_proteccion}
+          </Alert>
+        )}
 
         <div>
           <SectionHeading title="Explicación" mb={4} />

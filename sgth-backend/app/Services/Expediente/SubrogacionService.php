@@ -461,6 +461,57 @@ class SubrogacionService implements SubrogacionServiceInterface
     }
 
     /**
+     * Cuando el subrogante o el titular cesan, la subrogación se cierra sola
+     * (diseño de Acciones de Personal, 9.5; fase 2.1). Hasta aquí seguía activa:
+     * el cesado conservaba la firma del puesto, o el subrogante seguía
+     * reemplazando a alguien que ya no estaba.
+     *
+     * La activa termina el día en que rige la cesación, con su constancia en la
+     * bitácora; la pendiente se cancela, y con ella su acción si aún no se
+     * registró. Lo llama el motor de efectos al cerrar el vínculo.
+     *
+     * @return int Cuántas se cerraron.
+     */
+    public function cerrarPorCesacion(MovimientoPersonal $cesacion): int
+    {
+        $servidorId = $cesacion->servidor_id;
+
+        $afectadas = Subrogacion::whereIn('estado', [
+            EstadoSubrogacion::PENDIENTE->value,
+            EstadoSubrogacion::ACTIVA->value,
+        ])
+            ->where(fn ($q) => $q->where('servidor_subrogante_id', $servidorId)
+                ->orWhere('servidor_subrogado_id', $servidorId))
+            ->orderBy('id')
+            ->get();
+
+        foreach ($afectadas as $subrogacion) {
+            $papel = $subrogacion->servidor_subrogante_id === $servidorId ? 'del subrogante' : 'del titular';
+            $motivo = "Cesación {$papel} ({$cesacion->codigo_registro}).";
+
+            if ($subrogacion->estado === EstadoSubrogacion::PENDIENTE) {
+                $this->cancelar($subrogacion->id, $motivo);
+
+                continue;
+            }
+
+            $subrogacion->update([
+                'estado'      => EstadoSubrogacion::FINALIZADA,
+                'observacion' => $this->conNota($subrogacion->observacion, "Finalizada: {$motivo}"),
+            ]);
+
+            $this->anotarEnLaBitacora(
+                $subrogacion,
+                TipoEventoVinculo::SUBROGACION_FINALIZADA,
+                "Fin de {$subrogacion->tipo->etiqueta()}: terminó el "
+                    .$cesacion->fecha_efectiva->format('d/m/Y')." por la cesación {$papel}.",
+            );
+        }
+
+        return $afectadas->count();
+    }
+
+    /**
      * Cancelar la subrogación también cierra su Acción de Personal.
      *
      * El enlace funcionaba en una sola dirección: anular la acción cancelaba la

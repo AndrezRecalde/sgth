@@ -753,6 +753,13 @@ export type MovimientoPersonal = {
    * vínculo no cambia hasta `fecha_efectiva`.
    */
   pendiente_de_vigencia: boolean
+  /** La base legal de la causal, cuando la acción la tiene (fase 2.1). */
+  causal_base_legal?: string | null
+  /**
+   * La terminación de una ocasional protegida por embarazo o lactancia,
+   * mientras todavía se puede detener (fase 2.1). Sin detalle clínico.
+   */
+  aviso_proteccion?: string | null
   efecto_aplicado_en?: string | null
   /** Lo que se le anotó después de emitida (fase 1.4). Solo en el detalle. */
   anotaciones?: AnotacionAccion[]

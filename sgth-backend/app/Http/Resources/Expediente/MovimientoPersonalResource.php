@@ -5,6 +5,7 @@ namespace App\Http\Resources\Expediente;
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\Permiso;
 use App\Services\Expediente\MovimientoPersonalStateService;
+use App\Services\Expediente\ProteccionMaternidad;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -36,6 +37,10 @@ class MovimientoPersonalResource extends JsonResource
             'etiqueta'        => $this->etiqueta(),
             'causal'          => $this->causal(),
             'causal_etiqueta' => $this->causal()?->etiqueta(),
+            'causal_base_legal' => $this->causal()?->baseLegal(),
+            // La terminación de una ocasional protegida por embarazo o
+            // lactancia, mientras todavía se puede detener (fase 2.1).
+            'aviso_proteccion' => $this->avisoDeProteccion(),
 
             // Lo que la pantalla decide con cada acción, respondido por el
             // backend. Antes `taxonomiaAccionPersonal.ts` lo copiaba a mano, y
@@ -161,6 +166,17 @@ class MovimientoPersonalResource extends JsonResource
                 ]
             ),
         ];
+    }
+
+    private function avisoDeProteccion(): ?string
+    {
+        $porVenir = in_array($this->estado, [EstadoAccionPersonal::BORRADOR, EstadoAccionPersonal::SUSCRITA], true);
+
+        return $porVenir
+            && $this->causal()?->protegeEmbarazoYLactancia()
+            && ProteccionMaternidad::consta($this->servidor_id)
+                ? ProteccionMaternidad::aviso()
+                : null;
     }
 
     /**

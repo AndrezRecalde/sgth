@@ -88,6 +88,15 @@ class MovimientoPersonalService
 
         $elegida = $causal !== null ? SubtipoMovimientoPersonal::tryFrom($causal) : null;
 
+        // La destitución y el visto bueno existen, pero no se registran a mano:
+        // nacen en Disciplinario con su sumario o la resolución del Inspector.
+        if ($elegida && ! $elegida->seRegistraDesdeElFormulario()) {
+            throw new ReglaNegocioException(
+                "\"{$elegida->etiqueta()}\" se registra desde Disciplinario, con su procedimiento, "
+                    .'y no desde aquí.'
+            );
+        }
+
         if (! $elegida || ! in_array($elegida, $clase->causales(), true)) {
             $validas = implode(', ', array_map(
                 fn (SubtipoMovimientoPersonal $c) => $c->etiqueta(),
@@ -100,6 +109,20 @@ class MovimientoPersonalService
         }
 
         return $elegida;
+    }
+
+    /**
+     * A una ocasional embarazada o en lactancia no se le termina el contrato
+     * unilateralmente (diseño, 4.3; TH 11). Se comprueba al crear la acción y
+     * otra vez al registrarla, por si el dato apareció entre medias.
+     */
+    public static function impedirTerminacionDeProtegida(int $servidorId): void
+    {
+        if (ProteccionMaternidad::consta($servidorId)) {
+            throw new ReglaNegocioException(
+                ProteccionMaternidad::aviso().' La terminación unilateral no procede.'
+            );
+        }
     }
 
     public function registrar(int $servidorId, array $datos): MovimientoPersonal
@@ -115,6 +138,10 @@ class MovimientoPersonalService
 
         if ($tipoMovimiento->esAccionDePersonal()) {
             $this->validarElegibilidad($servidor, $tipoMovimiento, $subtipo);
+        }
+
+        if ($subtipo === SubtipoMovimientoPersonal::TERMINACION_UNILATERAL) {
+            self::impedirTerminacionDeProtegida($servidorId);
         }
 
         if ($subtipo?->esComisionDeServicios()) {

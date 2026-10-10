@@ -897,6 +897,11 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
 
 **Fase 2 — Completar la LOSEP**
 1. Cesación con las causales de 4.3 (incluida la remoción), cascadas (plaza, subrogaciones, reemplazos) y borrador automático del ocasional vencido.
+   - Nueve causales nuevas con su base legal y su elegibilidad de 4.3; la supresión sigue aplazada [TH N16]. «Incapacidad» pasa a «Incapacidad absoluta y permanente». El «período de prueba no superado» vale para todo provisional hasta que el vínculo diga su supuesto (fase 3.2).
+   - La destitución y el visto bueno ya no se eligen en el formulario: solo los crea Disciplinario.
+   - Embarazo o lactancia: se lee solo el sí o no de la ficha de salud ocupacional. La terminación unilateral se bloquea al crearla y al registrarla; el fin del plazo se avisa (en la observación del borrador y en el detalle).
+   - `sgth:contratos:detectar-vencidos` prepara también la «Terminación por cumplimiento del plazo» del ocasional vencido.
+   - Al surtir efecto la cesación: la plaza se libera sola; las subrogaciones del cesado (subrogante o titular) terminan con su constancia, o se cancelan si no habían empezado; el reemplazo que cubría una ausencia suya queda anotado en su bitácora y en la salida de `sgth:acciones:aplicar-vigentes` hasta que TH decida.
 2. Licencia sin remuneración con causal, fechas y topes, solo para permanentes.
 3. Comisiones con la regla legal y la institución de destino.
 4. Reintegro y fin anticipado, con la salida del reemplazo; no se anula una ausencia con reemplazo vigente.

@@ -606,17 +606,38 @@ test('la prestación de servicios es para provisionales, ocasionales, servicios 
 | El test no enumera: compara contra el ocasional. Así, el día que cambie una
 | regla del ocasional, esto falla si alguien no movió la de al lado — que es
 | justo la forma en que las dos listas se separarían sin que nadie lo note.
+|
+| Salvo las causales de cesación propias de cada uno, desde la fase 2.1
+| (diseño, 4.3): la remoción es del libre nombramiento, y las cuatro del
+| Reglamento Art. 146, del contrato ocasional.
 */
-test('libre nombramiento tiene exactamente las mismas acciones que un ocasional', function () {
+test('libre nombramiento tiene las mismas acciones que un ocasional, salvo sus causales de cesación', function () {
+    $propias = [
+        SubtipoMovimientoPersonal::REMOCION,
+        SubtipoMovimientoPersonal::FIN_DEL_PLAZO,
+        SubtipoMovimientoPersonal::TERMINACION_UNILATERAL,
+        SubtipoMovimientoPersonal::MUTUO_ACUERDO,
+        SubtipoMovimientoPersonal::EVALUACION_INSUFICIENTE,
+    ];
+
     foreach (TipoMovimientoPersonal::cases() as $tipo) {
         expect($tipo->elegiblePara(TipoNombramiento::LIBRE_NOMBRAMIENTO))
             ->toBe($tipo->elegiblePara(TipoNombramiento::SERVICIOS_OCASIONALES), $tipo->value);
     }
 
     foreach (SubtipoMovimientoPersonal::cases() as $subtipo) {
+        if (in_array($subtipo, $propias, true)) {
+            continue;
+        }
+
         expect($subtipo->elegiblePara(TipoNombramiento::LIBRE_NOMBRAMIENTO))
             ->toBe($subtipo->elegiblePara(TipoNombramiento::SERVICIOS_OCASIONALES), $subtipo->value);
     }
+
+    expect(SubtipoMovimientoPersonal::REMOCION->elegiblePara(TipoNombramiento::LIBRE_NOMBRAMIENTO))->toBeTrue()
+        ->and(SubtipoMovimientoPersonal::REMOCION->elegiblePara(TipoNombramiento::SERVICIOS_OCASIONALES))->toBeFalse()
+        ->and(SubtipoMovimientoPersonal::FIN_DEL_PLAZO->elegiblePara(TipoNombramiento::SERVICIOS_OCASIONALES))->toBeTrue()
+        ->and(SubtipoMovimientoPersonal::FIN_DEL_PLAZO->elegiblePara(TipoNombramiento::LIBRE_NOMBRAMIENTO))->toBeFalse();
 });
 
 /*
