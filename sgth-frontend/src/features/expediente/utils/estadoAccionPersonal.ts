@@ -17,24 +17,9 @@ export const TONO_ACCION: Record<EstadoAccionPersonal, SemanticTone> = {
   anulada: 'danger',
 }
 
-/**
- * Espeja MovimientoPersonalStateService::TRANSICIONES. Los estados
- * intermedios 'informe_uath' y 'dictamen_presupuestario' se retiraron: no
- * capturaban ningún dato y el flujo real no los usa.
- *
- * Anular desde 'registrada' y desde 'notificada' se abrió el 2026-09-29. Antes
- * solo se anulaba lo que aún no había surtido efecto, y cuando el error
- * aparecía después —que es cuando aparece, al leer el documento impreso— no
- * había ninguna salida: el botón decía «Solo se edita en borrador» y ahí
- * terminaba. TH: lo correcto es anular y emitir uno nuevo.
- */
-export const TRANSICIONES: Record<EstadoAccionPersonal, EstadoAccionPersonal[]> = {
-  borrador: ['suscrita', 'anulada'],
-  suscrita: ['registrada', 'anulada'],
-  registrada: ['notificada', 'anulada'],
-  notificada: ['anulada'],
-  anulada: [],
-}
+// `TRANSICIONES` vivía aquí como copia del grafo del backend. Desde la fase
+// 1.3 cada acción trae `transiciones_permitidas`, que además descuenta los
+// permisos de quien mira y la regla de no tramitar lo propio.
 
 /**
  * ¿Este movimiento tiene documento que descargar?
@@ -44,13 +29,12 @@ export const TRANSICIONES: Record<EstadoAccionPersonal, EstadoAccionPersonal[]> 
  * del expediente no lo produce—, el acto tiene que estar registrado o
  * notificado, y tiene que **llevar correlativo**.
  *
- * Sin la tercera, las constancias del expediente ofrecían el botón. Hay filas
- * que nacen directamente en 'registrada' sin pasar por la máquina de estados
- * —la finalización anticipada de una subrogación, su cancelación— porque son
- * constancia de un hecho consumado y no algo que alguien apruebe. Comparten el
- * `tipo_movimiento` con la acción de verdad, así que el filtro por tipo no las
- * distingue, y el botón acababa emitiendo un documento oficial con los
- * firmantes en blanco.
+ * Sin la tercera, las constancias del expediente ofrecían el botón: nacían
+ * directamente en 'registrada' —la finalización anticipada de una subrogación,
+ * su cancelación— con el `tipo_movimiento` de la acción de verdad, y el botón
+ * emitía un documento oficial con los firmantes en blanco. Desde la fase 1.2
+ * esas constancias viven en la bitácora del vínculo, pero la condición sigue
+ * siendo la que mide lo que importa: que el acto pasó por el flujo.
  *
  * El correlativo AP-AAAA-NNNN lo estampa el backend al registrar y nadie más, y
  * es el identificador que el documento imprime: sin él no hay documento que

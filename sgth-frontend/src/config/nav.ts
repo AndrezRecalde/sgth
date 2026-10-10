@@ -116,7 +116,8 @@ export const NAV_SGTH: NavGroup[] = [
             label: 'Nueva acción de personal',
             href:  ROUTES.SGTH.ACCIONES_PERSONAL,
             icon:  'IconUserPlus',
-            // La bandeja y el registro piden `role:admin-uath|asistente-uath`.
+            // Desde la fase 1.3 la bandeja y el registro piden los permisos del
+            // trámite (preparar, suscribir…), y hoy solo los tienen estos roles.
             roles: ['admin-uath', 'asistente-uath'],
           },
         ],

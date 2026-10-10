@@ -24,6 +24,15 @@ enum Permiso: string
     case VINCULAR_SERVIDOR_INICIAL = 'vincular-servidor-inicial';
     case CARGAR_DOCUMENTOS = 'cargar-documentos';
     case GESTIONAR_CARGAS_FAMILIARES = 'gestionar-cargas-familiares';
+    // El trámite de una acción de personal, paso por paso (diseño de Acciones
+    // de Personal, 6.3; TH 22). El asistente prepara y notifica; el director
+    // suscribe, registra y anula. Hasta la fase 1.3 lo decidía el rol, y el
+    // asistente podía todo.
+    case PREPARAR_ACCION_PERSONAL = 'preparar-accion-personal';
+    case SUSCRIBIR_ACCION_PERSONAL = 'suscribir-accion-personal';
+    case REGISTRAR_ACCION_PERSONAL = 'registrar-accion-personal';
+    case NOTIFICAR_ACCION_PERSONAL = 'notificar-accion-personal';
+    case ANULAR_ACCION_PERSONAL = 'anular-accion-personal';
 
     // ── MÓDULO 03: Nómina ────────────────────────────────────────
     case VER_ROL_PAGO_PROPIO = 'ver-rol-pago-propio';

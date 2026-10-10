@@ -394,11 +394,11 @@ Hoy todo va por roles (`admin-uath`, `asistente-uath`). Se crean permisos de Spa
 
 | Permiso | Para qué | Rol |
 |---|---|---|
-| `acciones-personal.preparar` | crear y editar borradores | asistente-uath, admin-uath |
-| `acciones-personal.suscribir` | pasar a suscrita (sella firmantes y dictamen presupuestario) | admin-uath |
-| `acciones-personal.registrar` | pasar a registrada (numera y aplica efectos) | admin-uath |
-| `acciones-personal.notificar` | notificar | asistente-uath, admin-uath |
-| `acciones-personal.anular` | anular | admin-uath |
+| `preparar-accion-personal` | crear y editar borradores | asistente-uath, admin-uath |
+| `suscribir-accion-personal` | pasar a suscrita (sella firmantes y dictamen presupuestario) | admin-uath |
+| `registrar-accion-personal` | pasar a registrada (numera y aplica efectos) | admin-uath |
+| `notificar-accion-personal` | notificar | asistente-uath, admin-uath |
+| `anular-accion-personal` | anular | admin-uath |
 
 Reglas añadidas:
 - **Nadie tramita actos sobre sí mismo** [TH 24]. No vale como guarda en la policy, por el `Gate::before` de admin-ti; va en el servicio.
@@ -873,6 +873,10 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
    - La reprogramación del plazo se queda en el registro de auditoría, de donde ya la lee la pantalla. Las correcciones llegan con las anotaciones del punto 4.
    - La API dejó de aceptar clases no creables a mano en la fase 1.1.
 3. Permisos de Spatie y gates en la pantalla; el titular no ve borradores; nadie tramita sobre sí mismo.
+   - Los cinco permisos de 6.3 se reparten por migración, como los demás, para no pisar los ajustes hechos desde Usuarios. Cada ruta pide el suyo; la de transición, el del paso concreto.
+   - La regla de no tramitar lo propio está en los servicios (crear, editar, transicionar y registrar una subrogación), así que el `Gate::before` de admin-ti no se la salta. No aplica sin usuario autenticado (comandos).
+   - El titular ve sus acciones registradas, notificadas y anuladas con número, también si trabaja en Talento Humano: en su expediente, en el detalle (un borrador responde 404) y en la bandeja.
+   - Cada acción trae `transiciones_permitidas` y `puede_editar` para quien la mira, y la pantalla dibuja los botones con eso. La copia del grafo que tenía el frontend se borró.
 4. Inmutabilidad completa tras registrar; anotaciones en lugar de reescrituras.
 5. Estado de la persona derivado del vínculo; `fecha_ingreso_institucion` no se pisa; antigüedad calculada con la regla de 8.3.
 6. Motor de efectos con fecha y comando diario.

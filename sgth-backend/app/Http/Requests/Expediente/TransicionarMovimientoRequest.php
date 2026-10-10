@@ -8,9 +8,22 @@ use Illuminate\Validation\Rules\Enum;
 
 class TransicionarMovimientoRequest extends FormRequest
 {
+    /**
+     * Cada paso tiene su permiso (diseño, 6.3): el asistente notifica, pero no
+     * suscribe, registra ni anula. La ruta solo pide tener alguno de los cuatro.
+     */
     public function authorize(): bool
     {
-        return true;
+        $destino = EstadoAccionPersonal::tryFrom((string) $this->input('estado'));
+
+        // Un estado que no existe lo rechaza la validación, con su 422.
+        if ($destino === null) {
+            return true;
+        }
+
+        $permiso = $destino->permisoParaLlegar();
+
+        return $permiso === null || (bool) $this->user()?->can($permiso->value);
     }
 
     public function rules(): array

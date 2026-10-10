@@ -2,6 +2,9 @@
 
 namespace App\Http\Resources\Expediente;
 
+use App\Enums\EstadoAccionPersonal;
+use App\Enums\Permiso;
+use App\Services\Expediente\MovimientoPersonalStateService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -27,8 +30,7 @@ class MovimientoPersonalResource extends JsonResource
             'subtipo_movimiento' => $this->subtipo_movimiento,
 
             // La clase legal y su nombre, que es lo que se muestra. La pantalla
-            // no arma etiquetas propias: las de la bitácora, que no tiene
-            // clase, también vienen de aquí.
+            // no arma etiquetas propias.
             'clase'           => $this->clase,
             'familia'         => $this->clase?->familia(),
             'etiqueta'        => $this->etiqueta(),
@@ -44,6 +46,12 @@ class MovimientoPersonalResource extends JsonResource
             'tiene_efecto_economico'     => (bool) $this->tipo_movimiento?->tieneEfectoEconomico(),
             'tiene_documento_imprimible' => (bool) $this->tipo_movimiento?->tieneDocumentoImprimible(),
             'editable_en_formulario'     => $this->editableEnFormulario(),
+
+            // Lo que puede hacer con ella quien pregunta (fase 1.3): los pasos
+            // del trámite para los que tiene permiso, y ninguno si la acción es
+            // suya. La pantalla pone los botones según esto, no según el rol.
+            'transiciones_permitidas' => $this->transicionesPermitidas($request),
+            'puede_editar'            => $this->puedeEditar($request),
 
             'categoria'          => $this->categoria,
             'estado'             => $this->estado,
@@ -144,5 +152,33 @@ class MovimientoPersonalResource extends JsonResource
                 ]
             ),
         ];
+    }
+
+    /**
+     * En un método propio y no en línea: Scramble no sigue el tipo a través de
+     * `app()`, y sin esto la lista llegaba al frontend como `string`.
+     *
+     * @return list<EstadoAccionPersonal>
+     */
+    private function transicionesPermitidas(Request $request): array
+    {
+        return app(MovimientoPersonalStateService::class)
+            ->destinosPara($this->resource, $request->user());
+    }
+
+    /**
+     * Corregir un borrador es prepararlo: hace falta el permiso, que la acción
+     * se corrija con el formulario y no en su propia pantalla, y que no sea
+     * del mismo usuario.
+     */
+    private function puedeEditar(Request $request): bool
+    {
+        $usuario = $request->user();
+
+        return $usuario !== null
+            && $this->estado === EstadoAccionPersonal::BORRADOR
+            && $this->editableEnFormulario()
+            && ! $this->resource->esSobre($usuario)
+            && $usuario->can(Permiso::PREPARAR_ACCION_PERSONAL->value);
     }
 }
