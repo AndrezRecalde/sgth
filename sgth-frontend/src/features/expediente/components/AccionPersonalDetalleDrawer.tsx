@@ -7,6 +7,7 @@ import { Alert, Group, Stack, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconAlertTriangle, IconFileOff, IconUserOff } from '@tabler/icons-react'
 import { useMovimiento } from '../hooks/useMovimientoMutations'
+import { AccionAnotaciones } from './AccionAnotaciones'
 import { AccionBotonEditar } from './AccionBotonEditar'
 import { AccionPersonalPie } from './AccionPersonalPie'
 import { AccionRespaldos } from './AccionRespaldos'
@@ -89,6 +90,8 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
         <AccionSituacionBloques m={m} botonEditar={<AccionBotonEditar m={m} onEditar={abrirEditar} />} />
 
         <AccionRespaldos m={m} />
+
+        <AccionAnotaciones m={m} />
 
         {m.cubre_movimiento && (
           <Alert variant="light" color="ocean" icon={<IconUserOff size={16} />}>

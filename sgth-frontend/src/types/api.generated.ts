@@ -3860,6 +3860,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/expediente/movimientos/{movimiento}/anotaciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Anotar en una acción ya emitida, en vez de corregirla (fase 1.4). El
+         *     documento sigue diciendo lo que se firmó; la anotación queda al lado
+         */
+        post: operations["movimientoPersonal.anotar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/expediente/movimientos/{movimiento}/transicionar": {
         parameters: {
             query?: never;
@@ -6845,6 +6865,21 @@ export interface components {
             anulado_por: number | null;
             motivo_anulacion: string | null;
         };
+        /** AnotacionAccionPersonalResource */
+        AnotacionAccionPersonalResource: {
+            id: number;
+            tipo: components["schemas"]["TipoAnotacionAccion"];
+            /** @enum {string} */
+            etiqueta: "Impugnación del visto bueno" | "Nota de Talento Humano";
+            texto: string;
+            /**
+             * @description El nombre del servidor detrás del usuario, como en el resto del
+             *     expediente; null si la anotó el sistema o una migración.
+             */
+            registrado_por?: string;
+            /** Format: date-time */
+            created_at: string | null;
+        };
         /** AntecedentePaciente */
         AntecedentePaciente: {
             id: number;
@@ -8557,6 +8592,7 @@ export interface components {
              */
             transiciones_permitidas: components["schemas"]["EstadoAccionPersonal"][];
             puede_editar: boolean;
+            puede_anotar: boolean;
             categoria: components["schemas"]["CategoriaEventoVinculo"] | null;
             estado: components["schemas"]["EstadoAccionPersonal"];
             descripcion: string;
@@ -8669,6 +8705,8 @@ export interface components {
              *     lo que hace legible "reemplaza a X" sin una consulta extra.
              */
             cubre_movimiento?: components["schemas"]["MovimientoPersonal"];
+            /** @description Lo que se le anotó después de emitida (fase 1.4). */
+            anotaciones?: components["schemas"]["AnotacionAccionPersonalResource"][];
             autorizado_por_usuario?: {
                 id: number;
                 nombre_completo: string;
@@ -9636,6 +9674,11 @@ export interface components {
             severidad: "leve" | "moderada" | "grave";
             observacion?: string | null;
         };
+        /** StoreAnotacionAccionRequest */
+        StoreAnotacionAccionRequest: {
+            /** @description Los mismos límites que el modal de motivo con que se escribe. */
+            texto: string;
+        };
         /** StoreAntecedentePacienteRequest */
         StoreAntecedentePacienteRequest: {
             /** @enum {string} */
@@ -10576,6 +10619,16 @@ export interface components {
             deleted_at: string | null;
             categoria_id: number | null;
         };
+        /**
+         * TipoAnotacionAccion
+         * @description Lo que se le anota a una acción de personal después de emitida (diseño de Acciones de Personal, 8.1; fase 1.4). Un acto registrado no se reescribe: lo que pasa después va aquí, aparte, con quién y cuándo.
+         *     | |
+         *     |---|
+         *     | `impugnacion_visto_bueno` <br/> El trabajador impugnó el visto bueno que originó la cesación. Hasta la fase 1.4 se añadía al final de la explicación de la acción, aunque ya estuviera registrada. |
+         *     | `nota` <br/> Una nota de Talento Humano: lo que antes se habría corregido a mano. |
+         * @enum {string}
+         */
+        TipoAnotacionAccion: "impugnacion_visto_bueno" | "nota";
         /**
          * TipoAntecedenteFemo
          * @enum {string}
@@ -22280,6 +22333,42 @@ export interface operations {
                         /** @constant */
                         mensaje: "Borrador actualizado.";
                         datos: components["schemas"]["MovimientoPersonalResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "movimientoPersonal.anotar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The movimiento ID */
+                movimiento: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreAnotacionAccionRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Anotación registrada.";
+                        datos: components["schemas"]["AnotacionAccionPersonalResource"];
                         meta: null;
                     };
                 };

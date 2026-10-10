@@ -52,6 +52,7 @@ class MovimientoPersonalResource extends JsonResource
             // suya. La pantalla pone los botones según esto, no según el rol.
             'transiciones_permitidas' => $this->transicionesPermitidas($request),
             'puede_editar'            => $this->puedeEditar($request),
+            'puede_anotar'            => $this->puedeAnotar($request),
 
             'categoria'          => $this->categoria,
             'estado'             => $this->estado,
@@ -143,6 +144,10 @@ class MovimientoPersonalResource extends JsonResource
             // La ausencia que este ingreso cubre, con el titular ausente: es
             // lo que hace legible "reemplaza a X" sin una consulta extra.
             'cubre_movimiento'        => $this->whenLoaded('cubreMovimiento'),
+            // Lo que se le anotó después de emitida (fase 1.4).
+            'anotaciones'             => AnotacionAccionPersonalResource::collection(
+                $this->whenLoaded('anotaciones')
+            ),
 
             'autorizado_por_usuario' => $this->whenLoaded(
                 'autorizadoPor',
@@ -164,6 +169,21 @@ class MovimientoPersonalResource extends JsonResource
     {
         return app(MovimientoPersonalStateService::class)
             ->destinosPara($this->resource, $request->user());
+    }
+
+    /**
+     * Anotar es lo que queda en lugar de corregir lo ya suscrito: lo hace quien
+     * prepara acciones, y no en las propias.
+     */
+    private function puedeAnotar(Request $request): bool
+    {
+        $usuario = $request->user();
+
+        return $usuario !== null
+            && $this->estado !== null
+            && $this->estado !== EstadoAccionPersonal::BORRADOR
+            && ! $this->resource->esSobre($usuario)
+            && $usuario->can(Permiso::PREPARAR_ACCION_PERSONAL->value);
     }
 
     /**

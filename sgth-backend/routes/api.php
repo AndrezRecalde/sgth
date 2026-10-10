@@ -422,6 +422,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // hasta la fase 1.3 lo creaba y no podía corregirlo.
         Route::put('movimientos/{movimiento}', [MovimientoPersonalController::class, 'update'])
             ->middleware('permission:preparar-accion-personal');
+        // Anotar en lugar de corregir lo ya emitido (fase 1.4).
+        Route::post('movimientos/{movimiento}/anotaciones', [MovimientoPersonalController::class, 'anotar'])
+            ->middleware('permission:preparar-accion-personal');
         // El permiso del paso concreto lo mira TransicionarMovimientoRequest.
         Route::put('movimientos/{movimiento}/transicionar', [MovimientoPersonalController::class, 'transicionar'])
             ->middleware('permission:suscribir-accion-personal|registrar-accion-personal|notificar-accion-personal|anular-accion-personal');

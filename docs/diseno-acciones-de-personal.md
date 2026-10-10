@@ -878,6 +878,10 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
    - El titular ve sus acciones registradas, notificadas y anuladas con número, también si trabaja en Talento Humano: en su expediente, en el detalle (un borrador responde 404) y en la bandeja.
    - Cada acción trae `transiciones_permitidas` y `puede_editar` para quien la mira, y la pantalla dibuja los botones con eso. La copia del grafo que tenía el frontend se borró.
 4. Inmutabilidad completa tras registrar; anotaciones en lugar de reescrituras.
+   - El candado del modelo pasa de una lista de campos prohibidos a una de permitidos: de una acción registrada o notificada solo cambia el estado, con los datos de ese paso (quién notificó y cuándo; el motivo de anulación). Una anulada no cambia nada más.
+   - Tabla `anotaciones_accion_personal` (impugnación del visto bueno y nota de Talento Humano), que tampoco se edita. Anotar pide `preparar-accion-personal`, no vale sobre lo propio ni sobre un borrador.
+   - La impugnación del visto bueno deja una anotación en vez de añadir texto a la explicación. Las que ya existían se copian desde `vistos_buenos`; el texto ya añadido no se toca, porque si la acción se registró después es parte del acto.
+   - Las anotaciones se ven en el cajón de la acción y no salen en el documento.
 5. Estado de la persona derivado del vínculo; `fecha_ingreso_institucion` no se pisa; antigüedad calculada con la regla de 8.3.
 6. Motor de efectos con fecha y comando diario.
 

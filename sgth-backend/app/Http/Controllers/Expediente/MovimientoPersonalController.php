@@ -5,14 +5,17 @@ namespace App\Http\Controllers\Expediente;
 use App\Enums\ClaseAccionPersonal;
 use App\Enums\EstadoAccionPersonal;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Expediente\StoreAnotacionAccionRequest;
 use App\Http\Requests\Expediente\StoreMovimientoPersonalRequest;
 use App\Http\Requests\Expediente\TransicionarMovimientoRequest;
 use App\Http\Requests\Expediente\UpdateMovimientoPersonalRequest;
+use App\Http\Resources\Expediente\AnotacionAccionPersonalResource;
 use App\Http\Resources\Expediente\MovimientoPersonalResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
 use App\Services\Disciplinario\AvisoFinancieroSancionService;
+use App\Services\Expediente\AnotacionAccionPersonalService;
 use App\Services\Expediente\MovimientoPersonalService;
 use App\Services\Expediente\MovimientoPersonalStateService;
 use Illuminate\Http\JsonResponse;
@@ -24,6 +27,7 @@ class MovimientoPersonalController extends Controller
         private MovimientoPersonalService $movimientoService,
         private MovimientoPersonalStateService $stateService,
         private AvisoFinancieroSancionService $avisoFinanciero,
+        private AnotacionAccionPersonalService $anotaciones,
     ) {
     }
 
@@ -132,6 +136,7 @@ class MovimientoPersonalController extends Controller
             'cubreMovimiento:id,servidor_id,tipo_movimiento,subtipo_movimiento,codigo_registro,fecha_inicio,fecha_fin',
             'cubreMovimiento.servidor:id,nombre,apellido,cedula',
             'solicitudCertificacion:id,estado,dictamen,fecha_limite',
+            'anotaciones.registradoPor.servidor:id,nombre,apellido',
         ]);
 
         $this->authorize('ver', $movimiento->servidor);
@@ -176,6 +181,22 @@ class MovimientoPersonalController extends Controller
         return ApiResponse::ok(
             new MovimientoPersonalResource($actualizado),
             'Borrador actualizado.'
+        );
+    }
+
+    /**
+     * Anotar en una acción ya emitida, en vez de corregirla (fase 1.4). El
+     * documento sigue diciendo lo que se firmó; la anotación queda al lado.
+     */
+    public function anotar(StoreAnotacionAccionRequest $request, MovimientoPersonal $movimiento): JsonResponse
+    {
+        $this->authorize('actualizar', $movimiento->servidor);
+
+        $anotacion = $this->anotaciones->anotar($movimiento, $request->validated('texto'));
+
+        return ApiResponse::created(
+            new AnotacionAccionPersonalResource($anotacion->load('registradoPor.servidor:id,nombre,apellido')),
+            'Anotación registrada.'
         );
     }
 

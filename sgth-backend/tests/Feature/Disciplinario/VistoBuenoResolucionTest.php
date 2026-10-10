@@ -117,7 +117,7 @@ test('una ruta escrita a mano ya no se guarda', function () {
     expect(VistoBueno::find($this->tramite->id)->documento_respaldo)->toBeNull();
 });
 
-test('impugnar pide el juicio y su fecha, y los deja en la cesación', function () {
+test('impugnar pide el juicio y su fecha, y los anota en la cesación', function () {
     $resuelto = ($this->resolver)();
     $cesacion = $resuelto->movimientoPersonal;
 
@@ -137,6 +137,9 @@ test('impugnar pide el juicio y su fecha, y los deja en la cesación', function 
         ->assertOk()
         ->assertJsonPath('datos.impugnacion_referencia', 'Juicio 08281-2026-00123');
 
-    expect($cesacion->fresh()->descripcion)
-        ->toContain('IMPUGNADO por el trabajador (Juicio 08281-2026-00123, 25/09/2026)');
+    // Desde la fase 1.4 en una anotación, no en la explicación de la acción.
+    expect($cesacion->fresh()->anotaciones->pluck('texto')->all())
+        ->toBe(['Impugnado por el trabajador (Juicio 08281-2026-00123, 25/09/2026): '
+            .'revísese con Asesoría Jurídica antes de continuar con esta cesación.'])
+        ->and($cesacion->fresh()->descripcion)->not->toContain('Impugnado');
 });

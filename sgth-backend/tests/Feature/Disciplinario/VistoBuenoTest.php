@@ -265,7 +265,9 @@ test('impugnar el visto bueno deja la cesación avisada, no borrada', function (
     expect($tramite->estado)->toBe(EstadoVistoBueno::IMPUGNADO)
         ->and($cesacion->fresh())->not->toBeNull()
         ->and($cesacion->fresh()->estado)->toBe(EstadoAccionPersonal::BORRADOR)
-        ->and($cesacion->fresh()->descripcion)->toContain('IMPUGNADO');
+        ->and($cesacion->fresh()->anotaciones)->toHaveCount(1)
+        ->and($cesacion->fresh()->anotaciones->first()->tipo)
+        ->toBe(\App\Enums\TipoAnotacionAccion::IMPUGNACION_VISTO_BUENO);
 });
 
 test('impugnar un visto bueno negado no toca ninguna acción de personal', function () {

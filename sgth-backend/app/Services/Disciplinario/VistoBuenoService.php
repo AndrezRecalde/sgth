@@ -10,6 +10,7 @@ use App\Exceptions\ReglaNegocioException;
 use App\Helpers\DiasHabilesHelper;
 use App\Models\Disciplinario\VistoBueno;
 use App\Models\Expediente\Servidor;
+use App\Services\Expediente\AnotacionAccionPersonalService;
 use App\Services\Expediente\MovimientoPersonalService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -30,6 +31,7 @@ class VistoBuenoService
 
     public function __construct(
         private readonly MovimientoPersonalService $movimientoPersonalService,
+        private readonly AnotacionAccionPersonalService $anotaciones,
     ) {
     }
 
@@ -170,7 +172,7 @@ class VistoBuenoService
             }
 
             if ($destino === EstadoVistoBueno::IMPUGNADO) {
-                $this->anotarImpugnacionEnLaCesacion($vistoBueno);
+                $this->avisarImpugnacionEnLaCesacion($vistoBueno);
             }
 
             return $vistoBueno->fresh(['servidor', 'movimientoPersonal']);
@@ -350,26 +352,20 @@ class VistoBuenoService
      * ocurría: el borrador se quedaba en la bandeja de acciones de personal
      * sin una sola señal de que el trabajador había impugnado, y registrarla
      * cierra el vínculo. Así que la señal se deja donde Talento Humano mira,
-     * en la descripción de la acción, y además en el log.
+     * en las anotaciones de la acción, y además en el log.
+     *
+     * Hasta la fase 1.4 se añadía al final de la explicación de la acción, y si
+     * ya estaba registrada eso reescribía un acto emitido.
      */
-    private function anotarImpugnacionEnLaCesacion(VistoBueno $vistoBueno): void
+    private function avisarImpugnacionEnLaCesacion(VistoBueno $vistoBueno): void
     {
-        $movimiento = $vistoBueno->movimientoPersonal;
-
         // Impugnar un visto bueno NEGADO no tiene cesación que anotar: no se
         // generó ninguna.
-        if (!$movimiento) {
+        if (! $this->anotaciones->anotarImpugnacion($vistoBueno)) {
             return;
         }
 
-        $aviso = ' IMPUGNADO por el trabajador ('.$vistoBueno->impugnacion_referencia
-            .', '.$vistoBueno->fecha_impugnacion?->format('d/m/Y').'): revísese con Asesoría '
-            .'Jurídica antes de continuar con esta cesación.';
-
-        if (!str_contains((string) $movimiento->descripcion, 'IMPUGNADO')) {
-            $movimiento->descripcion = $movimiento->descripcion.$aviso;
-            $movimiento->save();
-        }
+        $movimiento = $vistoBueno->movimientoPersonal;
 
         Log::warning(
             "Visto bueno #{$vistoBueno->id} impugnado. La Cesación de Funciones "

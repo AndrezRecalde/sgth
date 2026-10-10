@@ -90,10 +90,12 @@ test('una transición de estado genera una entrada en activity_log con causer, t
 });
 
 test('un guardado que no toca campos auditables no genera fila en activity_log', function () {
+    // En borrador: desde la fase 1.4 una registrada no admite ningún cambio de
+    // contenido, ni siquiera de la observación.
     $movimiento = MovimientoPersonal::create([
         'servidor_id'     => $this->servidor->id,
         'tipo_movimiento' => 'traslado',
-        'estado'          => EstadoAccionPersonal::REGISTRADA,
+        'estado'          => EstadoAccionPersonal::BORRADOR,
         'descripcion'     => 'Movimiento de prueba',
         'fecha_efectiva'  => now()->toDateString(),
         'autorizado_por'  => $this->user->id,

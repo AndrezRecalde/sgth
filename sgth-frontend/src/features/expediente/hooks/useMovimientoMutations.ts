@@ -96,7 +96,24 @@ export function useMovimientoMutations() {
     },
   })
 
-  return { actualizarBorrador, transicionar }
+  const anotar = useMutation({
+    mutationFn: ({ id, texto }: { id: number; texto: string }) =>
+      movimientoService.anotar(id, texto),
+    onSuccess: () => {
+      notificar.exito('Anotación registrada', 'Quedó junto a la acción, sin cambiar el documento.')
+      qc.invalidateQueries({ queryKey: ['movimiento'] })
+    },
+    // Todo error a la notificación: el modal valida lo mismo que el backend, y
+    // lo que este rechaza —una acción propia, un borrador— no es de un campo.
+    onError: (error) => {
+      notificar.error(
+        'No se pudo registrar la anotación',
+        getApiErrorMessage(error, 'Inténtelo de nuevo en unos segundos.'),
+      )
+    },
+  })
+
+  return { actualizarBorrador, transicionar, anotar }
 }
 
 export function useMovimiento(id: number | null) {
