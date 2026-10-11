@@ -74,6 +74,8 @@ class UpdateMovimientoPersonalRequest extends FormRequest
             'lugar_trabajo'            => 'nullable|string|max:255',
             // El consentimiento escrito del cambio de ocupación (CT 192; fase 4.3).
             'fecha_consentimiento'     => 'nullable|date|before_or_equal:today',
+            // Cuándo presentó el obrero su renuncia (CT 184; fase 4.5).
+            'fecha_presentacion_renuncia' => 'nullable|date|before_or_equal:today',
             'caucionado'               => 'nullable|boolean',
             'caucion_numero'           => 'nullable|string|max:100',
             'caucion_fecha'            => 'nullable|date',

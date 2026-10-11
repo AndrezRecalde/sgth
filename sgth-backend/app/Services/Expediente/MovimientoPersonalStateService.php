@@ -629,8 +629,16 @@ class MovimientoPersonalStateService
     {
         $hoy = now()->toDateString();
 
-        if ($movimiento->subtipoEfectivo() === SubtipoMovimientoPersonal::TERMINACION_UNILATERAL) {
-            MovimientoPersonalService::impedirTerminacionDeProtegida($movimiento->servidor_id);
+        if ($movimiento->subtipoEfectivo()?->seImpideAProtegida()) {
+            MovimientoPersonalService::impedirTerminacionDeProtegida($movimiento->servidor_id, $movimiento->subtipoEfectivo());
+        }
+
+        // El período de prueba del obrero no pasa de 90 días (fase 4.5).
+        if ($movimiento->subtipoEfectivo() === SubtipoMovimientoPersonal::PRUEBA_NO_SUPERADA_CT) {
+            app(TerminacionObreroService::class)->validarPeriodoDePrueba(
+                Servidor::with('contratoVigente')->find($movimiento->servidor_id)?->contratoVigente,
+                $movimiento->fecha_efectiva?->toDateString(),
+            );
         }
 
         // El nombramiento definitivo: del provisional de prueba, cumplidos los

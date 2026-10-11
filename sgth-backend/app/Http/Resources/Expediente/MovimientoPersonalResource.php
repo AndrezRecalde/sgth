@@ -6,6 +6,7 @@ use App\Enums\EstadoAccionPersonal;
 use App\Enums\Permiso;
 use App\Services\Expediente\MovimientoPersonalStateService;
 use App\Services\Expediente\ProteccionMaternidad;
+use App\Services\Expediente\TerminacionObreroService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -163,6 +164,13 @@ class MovimientoPersonalResource extends JsonResource
             // ocupación de un obrero (fase 4.3).
             'lugar_trabajo_origen' => $this->lugar_trabajo_origen,
             'fecha_consentimiento' => $this->fecha_consentimiento,
+            // La terminación de un obrero (fase 4.5): cuándo presentó la
+            // renuncia, si el desahucio rige antes de los 15 días de aviso, la
+            // liquidación referencial y el acta de finiquito.
+            'fecha_presentacion_renuncia' => $this->fecha_presentacion_renuncia,
+            'desahucio_sin_el_aviso'      => TerminacionObreroService::desahucioSinElAviso($this->resource),
+            'liquidacion_referencial'     => app(TerminacionObreroService::class)->liquidacion($this->resource),
+            'acta_finiquito'              => $this->whenLoaded('actaFiniquito'),
             'caucionado'     => $this->caucionado,
             'caucion_numero' => $this->caucion_numero,
             'caucion_fecha'  => $this->caucion_fecha,

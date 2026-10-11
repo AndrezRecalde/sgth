@@ -59,6 +59,17 @@ enum SubtipoMovimientoPersonal: string
     // vencimiento del plazo es «Contrato finalizado».
     case TERMINACION_MUTUO_ACUERDO  = 'terminacion_mutuo_acuerdo';
     case TERMINACION_ANTICIPADA     = 'terminacion_anticipada';
+    // Las del obrero (diseño, 9.15; fase 4.5), con base en el Código del
+    // Trabajo. El visto bueno sigue naciendo en Disciplinario.
+    case DESAHUCIO                  = 'desahucio';
+    case ACUERDO_DE_PARTES          = 'acuerdo_de_partes';
+    case CONCLUSION_DE_OBRA         = 'conclusion_de_obra';
+    case PRUEBA_NO_SUPERADA_CT      = 'prueba_no_superada_ct';
+    case DESPIDO_INTEMPESTIVO       = 'despido_intempestivo';
+    case JUBILACION_CT              = 'jubilacion_ct';
+    case RETIRO_VOLUNTARIO_CT       = 'retiro_voluntario_ct';
+    case MUERTE_O_INCAPACIDAD       = 'muerte_o_incapacidad';
+    case CASO_FORTUITO              = 'caso_fortuito';
 
     // ── Licencia sin remuneración ────────────────────────────
     // Las causales de LOSEP Art. 28 (diseño, 4.4; fase 2.2), con su tope. Solo
@@ -107,6 +118,15 @@ enum SubtipoMovimientoPersonal: string
             self::REMOCION_POR_EL_CONSEJO    => 'Remoción por el Consejo Provincial',
             self::TERMINACION_MUTUO_ACUERDO  => 'Terminación por mutuo acuerdo',
             self::TERMINACION_ANTICIPADA     => 'Terminación anticipada según el contrato',
+            self::DESAHUCIO                  => 'Renuncia (desahucio)',
+            self::ACUERDO_DE_PARTES          => 'Acuerdo de las partes',
+            self::CONCLUSION_DE_OBRA         => 'Conclusión de la obra o del servicio',
+            self::PRUEBA_NO_SUPERADA_CT      => 'No superar el período de prueba',
+            self::DESPIDO_INTEMPESTIVO       => 'Despido intempestivo',
+            self::JUBILACION_CT              => 'Jubilación',
+            self::RETIRO_VOLUNTARIO_CT       => 'Retiro voluntario o compra de renuncia',
+            self::MUERTE_O_INCAPACIDAD       => 'Muerte o incapacidad permanente',
+            self::CASO_FORTUITO              => 'Caso fortuito o fuerza mayor',
             self::ASUNTOS_PARTICULARES       => 'Asuntos particulares',
             self::ESTUDIOS_POSGRADO          => 'Estudios de posgrado',
             self::SERVICIO_MILITAR           => 'Servicio militar',
@@ -145,6 +165,15 @@ enum SubtipoMovimientoPersonal: string
             self::CONTRATO_FINALIZADO        => 'El plazo del contrato',
             self::TERMINACION_MUTUO_ACUERDO  => 'Código Civil Art. 1561',
             self::TERMINACION_ANTICIPADA     => 'La cláusula de terminación del contrato',
+            self::DESAHUCIO                  => 'Código del Trabajo, Arts. 184 y 185',
+            self::ACUERDO_DE_PARTES          => 'Código del Trabajo, Art. 169 núm. 2',
+            self::CONCLUSION_DE_OBRA         => 'Código del Trabajo, Art. 169 núm. 3',
+            self::PRUEBA_NO_SUPERADA_CT      => 'Código del Trabajo, Art. 15',
+            self::DESPIDO_INTEMPESTIVO       => 'Código del Trabajo, Arts. 185 y 188',
+            self::JUBILACION_CT              => 'Código del Trabajo, Art. 216; Mandato Constituyente 2',
+            self::RETIRO_VOLUNTARIO_CT       => 'Mandato Constituyente 2, art. 8',
+            self::MUERTE_O_INCAPACIDAD       => 'Código del Trabajo, Art. 169 núm. 5',
+            self::CASO_FORTUITO              => 'Código del Trabajo, Art. 169 núm. 6',
             self::ASUNTOS_PARTICULARES       => 'LOSEP Art. 28 a',
             self::ESTUDIOS_POSGRADO          => 'LOSEP Art. 28 b',
             self::SERVICIO_MILITAR           => 'LOSEP Art. 28 c',
@@ -187,7 +216,48 @@ enum SubtipoMovimientoPersonal: string
      */
     public function protegeEmbarazoYLactancia(): bool
     {
-        return in_array($this, [self::TERMINACION_UNILATERAL, self::FIN_DEL_PLAZO], true);
+        return in_array($this, [self::TERMINACION_UNILATERAL, self::FIN_DEL_PLAZO, self::DESPIDO_INTEMPESTIVO], true);
+    }
+
+    /**
+     * Las que no proceden si consta el embarazo o la lactancia: la terminación
+     * unilateral de la ocasional (309-16-SEP-CC) y el despido intempestivo de
+     * la obrera, que la ley hace ineficaz (Código del Trabajo, Art. 195.1;
+     * fase 4.5). El fin del plazo solo se avisa.
+     */
+    public function seImpideAProtegida(): bool
+    {
+        return in_array($this, [self::TERMINACION_UNILATERAL, self::DESPIDO_INTEMPESTIVO], true);
+    }
+
+    /**
+     * Las causales del obrero, con su base en el Código del Trabajo: las de su
+     * terminación (fase 4.5) y el visto bueno. La hoja de registro interno
+     * imprime su base legal.
+     */
+    public function esDelCodigoDelTrabajo(): bool
+    {
+        return in_array($this, [
+            self::VISTO_BUENO,
+            self::DESAHUCIO,
+            self::ACUERDO_DE_PARTES,
+            self::CONCLUSION_DE_OBRA,
+            self::PRUEBA_NO_SUPERADA_CT,
+            self::DESPIDO_INTEMPESTIVO,
+            self::JUBILACION_CT,
+            self::RETIRO_VOLUNTARIO_CT,
+            self::MUERTE_O_INCAPACIDAD,
+            self::CASO_FORTUITO,
+        ], true);
+    }
+
+    /**
+     * Las que pagan la bonificación por desahucio, el 25 % de la última
+     * remuneración por año de servicio (Código del Trabajo, Art. 185; fase 4.5).
+     */
+    public function pagaBonificacionPorDesahucio(): bool
+    {
+        return in_array($this, [self::DESAHUCIO, self::ACUERDO_DE_PARTES, self::DESPIDO_INTEMPESTIVO], true);
     }
 
     /**
@@ -290,6 +360,17 @@ enum SubtipoMovimientoPersonal: string
             self::CONTRATO_FINALIZADO,
             self::TERMINACION_MUTUO_ACUERDO,
             self::TERMINACION_ANTICIPADA => [TipoNombramiento::SERVICIOS_PROFESIONALES],
+
+            // Las del obrero (fase 4.5).
+            self::DESAHUCIO,
+            self::ACUERDO_DE_PARTES,
+            self::CONCLUSION_DE_OBRA,
+            self::PRUEBA_NO_SUPERADA_CT,
+            self::DESPIDO_INTEMPESTIVO,
+            self::JUBILACION_CT,
+            self::RETIRO_VOLUNTARIO_CT,
+            self::MUERTE_O_INCAPACIDAD,
+            self::CASO_FORTUITO => [TipoNombramiento::CODIGO_TRABAJO],
 
             // Exclusivo de obreros: es el procedimiento del Código del
             // Trabajo, no de la LOSEP.

@@ -44,6 +44,12 @@ export function MovimientoDatosDelActo({
   const caucionado = useWatch({ control, name: 'caucionado' })
   const nombramiento = useWatch({ control, name: 'tipo_nombramiento_propuesto' })
   const causal = useWatch({ control, name: 'causal' })
+  const rige = useWatch({ control, name: 'fecha_efectiva' })
+  const renunciaPresentada = useWatch({ control, name: 'fecha_presentacion_renuncia' })
+
+  // El desahucio con menos de 15 días de aviso se avisa, no se impide (fase 4.5).
+  const desahucioSinElAviso = !!rige && !!renunciaPresentada
+    && (new Date(rige).getTime() - new Date(renunciaPresentada).getTime()) / 86_400_000 < 15
 
   // El ingreso de un ocasional es el registro de su contrato (fase 2.7): el
   // contrato se firma aparte y aquí nadie firma.
@@ -96,6 +102,35 @@ export function MovimientoDatosDelActo({
           />
         )}
       />
+
+      {/* El desahucio del obrero: cuándo presentó la renuncia, con 15 días de
+          aviso (Código del Trabajo, Art. 184; fase 4.5). */}
+      {causal === 'desahucio' && (
+        <>
+          <Controller
+            name="fecha_presentacion_renuncia"
+            control={control}
+            render={({ field }) => (
+              <DatePickerInput
+                label="Presentó la renuncia el"
+                withAsterisk
+                valueFormat="DD/MM/YYYY"
+                maxDate={new Date()}
+                value={toDateValue(field.value)}
+                onChange={(d) => field.onChange(fromDateValueOrNull(d))}
+                error={errors.fecha_presentacion_renuncia?.message}
+                {...contained}
+              />
+            )}
+          />
+          {desahucioSinElAviso && (
+            <Alert icon={<IconInfoCircle size={16} />} color="amber" variant="light">
+              Rige antes de los 15 días de aviso del desahucio (Código del Trabajo,
+              Art. 184). Procede si el empleador aceptó la renuncia antes.
+            </Alert>
+          )}
+        </>
+      )}
 
       {muestraFechas && (
         <>

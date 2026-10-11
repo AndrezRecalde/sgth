@@ -182,9 +182,8 @@ test('el catálogo dice qué cambia cada acto del obrero', function () {
         ->and($clases['incremento_remuneracion']['cambio_del_obrero'])->toBe('remuneracion')
         ->and($clases['ingreso']['documento_ct_para'])->toBe(['codigo_trabajo'])
         ->and($clases['licencia_sin_remuneracion']['documento_ct_para'])->toBe(['codigo_trabajo'])
-        // Su terminación nace del visto bueno, en Disciplinario, hasta que
-        // lleguen sus causales (fase 4.5).
-        ->and($clases['cesacion']['documento_ct_para'])->toBe([])
+        // Y su terminación, desde que tiene sus causales (fase 4.5).
+        ->and($clases['cesacion']['documento_ct_para'])->toBe(['codigo_trabajo'])
         ->and($clases['traslado']['documento_ct_para'])->toBe([])
         ->and($clases['traslado']['cambio_del_obrero'])->toBeNull();
 });

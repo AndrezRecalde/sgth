@@ -131,6 +131,9 @@ test('el catálogo trae todas las familias y todas las clases, con su familia', 
             'contrato_finalizado',
             // Las del contrato civil (fase 4.2).
             'terminacion_mutuo_acuerdo', 'terminacion_anticipada',
+            // Las del obrero (fase 4.5).
+            'desahucio', 'acuerdo_de_partes', 'conclusion_de_obra', 'prueba_no_superada_ct',
+            'despido_intempestivo', 'jubilacion_ct', 'retiro_voluntario_ct', 'muerte_o_incapacidad', 'caso_fortuito',
             // Las de la autoridad electa (4.1); el fin del período lo pone el sistema.
             'revocatoria_del_mandato', 'remocion_por_el_consejo',
         ])
@@ -170,10 +173,11 @@ test('cada clase aplica exactamente a los nombramientos de antes', function () {
         // Sin obreros desde la fase 2.1: su única causal era el visto bueno,
         // que ya no se elige en el formulario —lo crea Disciplinario—. Sus
         // terminaciones propias llegan con el bloque del Código del Trabajo.
-        // Y las autoridades electas desde la fase 4.1, con sus causales.
+        // Y las autoridades electas desde la fase 4.1, con sus causales. Los
+        // obreros vuelven en la fase 4.5, con las suyas del Código del Trabajo.
         'cesacion' => [
             'nombramiento_permanente', 'nombramiento_provisional', 'servicios_ocasionales',
-            'libre_nombramiento_remocion', 'servicios_profesionales', 'eleccion_popular',
+            'libre_nombramiento_remocion', 'servicios_profesionales', 'eleccion_popular', 'codigo_trabajo',
         ],
         // El ingreso no depende del nombramiento: se registra a quien no tiene
         // vínculo. Y la subrogación, el encargo, el reintegro (fase 2.4) y la

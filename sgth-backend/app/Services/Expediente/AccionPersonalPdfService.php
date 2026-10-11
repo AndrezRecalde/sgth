@@ -150,6 +150,8 @@ class AccionPersonalPdfService
             $pdf = Pdf::loadView('pdf.expediente.registro-interno', [
                 'movimiento'         => $movimiento,
                 'descuento'          => $descuento,
+                // La liquidación referencial de su terminación (fase 4.5).
+                'liquidacion'        => app(TerminacionObreroService::class)->liquidacion($movimiento),
                 'anulada'            => $movimiento->estado === EstadoAccionPersonal::ANULADA,
                 'servidor'           => $movimiento->servidor,
                 'firmaTalentoHumano' => $this->firma($movimiento, 'firmante_th', RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO),

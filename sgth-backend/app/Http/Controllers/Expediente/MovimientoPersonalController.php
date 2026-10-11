@@ -16,6 +16,7 @@ use App\Http\Responses\ApiResponse;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
 use App\Services\Disciplinario\AvisoFinancieroSancionService;
+use App\Services\Expediente\AvisoLiquidacionObreroService;
 use App\Services\Expediente\AnotacionAccionPersonalService;
 use App\Services\Expediente\MovimientoPersonalService;
 use App\Services\Expediente\MovimientoPersonalStateService;
@@ -29,6 +30,7 @@ class MovimientoPersonalController extends Controller
         private MovimientoPersonalService $movimientoService,
         private MovimientoPersonalStateService $stateService,
         private AvisoFinancieroSancionService $avisoFinanciero,
+        private AvisoLiquidacionObreroService $avisoLiquidacion,
         private AnotacionAccionPersonalService $anotaciones,
         private ReintegroService $reintegros,
     ) {
@@ -236,7 +238,9 @@ class MovimientoPersonalController extends Controller
         // Una multa o una suspensión registrada sale por correo a Financiero
         // (y su anulación también). La pantalla necesita saber si salió o si
         // le toca enviarla a mano.
-        $aviso = $this->avisoFinanciero->trasTransicion($actualizado, $origen);
+        // Y la liquidación de la terminación de un obrero (fase 4.5).
+        $aviso = $this->avisoFinanciero->trasTransicion($actualizado, $origen)
+            ?? $this->avisoLiquidacion->trasTransicion($actualizado, $origen);
 
         return ApiResponse::ok(
             new MovimientoPersonalResource($actualizado),

@@ -49,6 +49,9 @@ const camposDelFormulario = z.object({
   // El consentimiento escrito del cambio de ocupación de un obrero (CT 192;
   // fase 4.3).
   fecha_consentimiento: z.string().optional().nullable(),
+  // Cuándo presentó el obrero su renuncia: el desahucio pide 15 días de aviso
+  // (CT 184; fase 4.5).
+  fecha_presentacion_renuncia: z.string().optional().nullable(),
   // La licencia del Consejo: con o sin remuneración y su prórroga (fase 4.1b).
   con_remuneracion: z.boolean().optional().nullable(),
   prorroga_causa: z.string().optional().nullable(),
@@ -212,6 +215,21 @@ export function crearMovimientoSchema(
         ctx.addIssue({
           path: ['remuneracion_propuesta'], code: 'custom',
           message: 'Indique la remuneración nueva, mayor que la actual',
+        })
+      }
+    }
+
+    // El desahucio del obrero dice cuándo presentó la renuncia (fase 4.5).
+    if (data.causal === 'desahucio') {
+      if (!data.fecha_presentacion_renuncia) {
+        ctx.addIssue({
+          path: ['fecha_presentacion_renuncia'], code: 'custom',
+          message: 'Indique cuándo presentó la renuncia',
+        })
+      } else if (data.fecha_efectiva && data.fecha_presentacion_renuncia > data.fecha_efectiva) {
+        ctx.addIssue({
+          path: ['fecha_presentacion_renuncia'], code: 'custom',
+          message: 'La renuncia se presenta antes de que rija la terminación',
         })
       }
     }

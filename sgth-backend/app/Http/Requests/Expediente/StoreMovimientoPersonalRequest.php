@@ -31,6 +31,7 @@ class StoreMovimientoPersonalRequest extends FormRequest
             'fecha_ejecutoria'      => 'fecha de ejecutoría',
             'remuneraciones_dejadas_de_percibir' => 'remuneraciones dejadas de percibir',
             'fecha_consentimiento'  => 'fecha del consentimiento',
+            'fecha_presentacion_renuncia' => 'fecha en que presentó la renuncia',
         ];
     }
 
@@ -120,6 +121,8 @@ class StoreMovimientoPersonalRequest extends FormRequest
             // (CT 192; fase 4.3). Que sea obligatorio ahí lo decide
             // ContratoDeTrabajoService.
             'fecha_consentimiento' => 'nullable|date|before_or_equal:today',
+            // Cuándo presentó el obrero su renuncia (CT 184; fase 4.5).
+            'fecha_presentacion_renuncia' => 'nullable|date|before_or_equal:today',
             'caucionado'        => 'nullable|boolean',
             'caucion_numero'    => 'nullable|string|max:100',
             'caucion_fecha'     => 'nullable|date',

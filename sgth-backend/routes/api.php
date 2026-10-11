@@ -84,6 +84,7 @@ use App\Http\Controllers\Expediente\AusenciaTemporalController;
 use App\Http\Controllers\Expediente\CatalogoAccionesPersonalController;
 use App\Http\Controllers\Expediente\MovimientoPersonalController;
 use App\Http\Controllers\Expediente\AutoridadElectaController;
+use App\Http\Controllers\Expediente\TerminacionObreroController;
 use App\Http\Controllers\Expediente\PeriodoDePruebaController;
 use App\Http\Controllers\Expediente\VerificacionCertificadoController;
 use App\Http\Controllers\Expediente\VinculacionInicialController;
@@ -416,6 +417,14 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // La subrogación por ley del Viceprefecto (fase 4.1b).
         Route::post('autoridades-electas/subrogacion-por-ley', [AutoridadElectaController::class, 'subrogacionPorLey'])
             ->middleware('permission:preparar-accion-personal');
+
+        // Las terminaciones de obreros y sus actas de finiquito (fase 4.5).
+        Route::get('terminaciones-obreros', [TerminacionObreroController::class, 'index'])
+            ->middleware('role:admin-uath|asistente-uath');
+        Route::post('movimientos/{movimiento}/acta-finiquito', [TerminacionObreroController::class, 'guardarActa'])
+            ->middleware('permission:preparar-accion-personal');
+        Route::get('movimientos/{movimiento}/acta-finiquito/documento', [TerminacionObreroController::class, 'descargarActa'])
+            ->middleware('role:admin-uath|asistente-uath');
 
         // El ascendido que no superó la prueba vuelve a su puesto (fase 3.3).
         Route::post('contratos/{contrato}/reintegro-del-ascenso', [PeriodoDePruebaController::class, 'reintegroDelAscenso'])
