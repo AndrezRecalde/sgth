@@ -253,6 +253,11 @@ return [
         'servidor_id' => 'servidor',
         'puede_marcar' => 'marcación',
         'resolucion_numero' => 'número de resolución',
+        'causa_judicial_numero' => 'número de la causa judicial',
+        'unidad_judicial' => 'unidad judicial',
+        'fecha_sentencia' => 'fecha de la sentencia',
+        'fecha_ejecutoria' => 'fecha de ejecutoría',
+        'remuneraciones_dejadas_de_percibir' => 'remuneraciones dejadas de percibir',
 
         // Subrogaciones y encargos
         'servidor_subrogante_id' => 'servidor subrogante',

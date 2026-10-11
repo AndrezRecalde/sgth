@@ -25,6 +25,13 @@ const camposDelFormulario = z.object({
   institucion_destino: z.string().max(255).optional().nullable(),
   para_estudios_o_eventos: z.boolean().optional().nullable(),
 
+  // La sentencia de una restitución (fase 2.6).
+  causa_judicial_numero: z.string().max(100).optional().nullable(),
+  unidad_judicial: z.string().max(255).optional().nullable(),
+  fecha_sentencia: z.string().optional().nullable(),
+  fecha_ejecutoria: z.string().optional().nullable(),
+  remuneraciones_dejadas_de_percibir: z.number().min(0, 'No puede ser negativo').optional().nullable(),
+
   // Datos de la contratación. Solo existen en el ingreso, que es la única
   // acción que da origen a un contrato; en el resto ni se muestran ni se
   // envían.
@@ -83,6 +90,36 @@ export function crearMovimientoSchema(catalogo: CatalogoAccionesPersonal) {
         path: ['institucion_destino'], code: 'custom',
         message: 'Indique la institución de destino',
       })
+    }
+
+    // La restitución, con los cuatro datos de la causa y las remuneraciones
+    // [TH N15]. Que la ejecutoría no sea futura ni anterior al cese lo dice el
+    // backend, que conoce la cesación.
+    if (clase.pide_datos_judiciales) {
+      const obligatorios = [
+        ['causa_judicial_numero', 'Indique el número de la causa'],
+        ['unidad_judicial', 'Indique la unidad judicial o tribunal'],
+        ['fecha_sentencia', 'Indique la fecha de la sentencia'],
+        ['fecha_ejecutoria', 'Indique la fecha de ejecutoría'],
+      ] as const
+
+      for (const [campo, mensaje] of obligatorios) {
+        if (!data[campo]?.trim()) ctx.addIssue({ path: [campo], code: 'custom', message: mensaje })
+      }
+
+      if (data.remuneraciones_dejadas_de_percibir == null) {
+        ctx.addIssue({
+          path: ['remuneraciones_dejadas_de_percibir'], code: 'custom',
+          message: 'Indique las remuneraciones dejadas de percibir (0 si no hay)',
+        })
+      }
+
+      if (data.fecha_sentencia && data.fecha_ejecutoria && data.fecha_ejecutoria < data.fecha_sentencia) {
+        ctx.addIssue({
+          path: ['fecha_ejecutoria'], code: 'custom',
+          message: 'La ejecutoría no puede ser anterior a la sentencia',
+        })
+      }
     }
 
     // Lo que reubica al servidor necesita a dónde: sin puesto destino no hay

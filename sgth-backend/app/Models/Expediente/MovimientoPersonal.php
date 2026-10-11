@@ -258,6 +258,12 @@ class MovimientoPersonal extends Model
         'partida_origen_id',
         'puesto_destino_id',
         'resolucion_numero',
+        // La sentencia de una restitución [TH N15; fase 2.6].
+        'causa_judicial_numero',
+        'unidad_judicial',
+        'fecha_sentencia',
+        'fecha_ejecutoria',
+        'remuneraciones_dejadas_de_percibir',
         'documento_respaldo',
         'autorizado_por',
         'observacion',
@@ -293,6 +299,9 @@ class MovimientoPersonal extends Model
             'fecha_fin'       => 'date',
             'caucionado'      => 'boolean',
             'caucion_fecha'   => 'date',
+            'fecha_sentencia'  => 'date',
+            'fecha_ejecutoria' => 'date',
+            'remuneraciones_dejadas_de_percibir' => 'decimal:2',
         ];
     }
 
@@ -357,6 +366,17 @@ class MovimientoPersonal extends Model
     {
         return $this->hasOne(MovimientoPersonal::class, 'movimiento_relacionado_id')
             ->where('tipo_movimiento', TipoMovimientoPersonal::REINTEGRO->value)
+            ->where('estado', '!=', EstadoAccionPersonal::ANULADA->value);
+    }
+
+    /**
+     * La restitución que deja sin efecto esta cesación por sentencia (fase
+     * 2.6): la que no está anulada, en trámite o emitida.
+     */
+    public function restitucion(): HasOne
+    {
+        return $this->hasOne(MovimientoPersonal::class, 'movimiento_relacionado_id')
+            ->where('tipo_movimiento', TipoMovimientoPersonal::RESTITUCION->value)
             ->where('estado', '!=', EstadoAccionPersonal::ANULADA->value);
     }
 
@@ -535,7 +555,9 @@ class MovimientoPersonal extends Model
      */
     public function proponeSituacion(): bool
     {
-        return $this->tipo_movimiento === TipoMovimientoPersonal::INGRESO
+        // Lo que crea un vínculo: el ingreso y, desde la fase 2.6, la
+        // restitución, que propone el puesto al que vuelve.
+        return (bool) $this->tipo_movimiento?->creaVinculo()
             || $this->tipo_movimiento === TipoMovimientoPersonal::SUBROGACION
             || $this->reubicaAlServidor();
     }

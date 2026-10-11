@@ -2,8 +2,10 @@
 
 namespace App\Models\Expediente;
 
+use App\Enums\EstadoAccionPersonal;
 use App\Enums\RegimenLaboral;
 use App\Enums\TipoDiscapacidad;
+use App\Enums\TipoMovimientoPersonal;
 use App\Enums\TipoNombramiento;
 use App\Models\Dispensario\HistoriaClinica;
 use App\Models\Estructura\Puesto;
@@ -188,6 +190,9 @@ class Servidor extends Model
      * guardada cuando es anterior: es la que se declaró en la carga inicial,
      * de quien ingresó antes de que existiera el sistema. Los contratos
      * cancelados no cuentan: nunca existieron.
+     *
+     * El vínculo que crea una restitución tampoco corta (fase 2.6): la
+     * sentencia dejó sin efecto la cesación, y el tiempo fuera es servicio.
      */
     public function inicioDelServicioContinuo(): ?string
     {
@@ -196,18 +201,25 @@ class Servidor extends Model
             ->whereNotNull('fecha_inicio')
             ->orderByDesc('fecha_inicio')
             ->orderByDesc('id')
-            ->get(['id', 'fecha_inicio', 'fecha_fin']);
+            ->get(['id', 'fecha_inicio', 'fecha_fin', 'movimiento_origen_id']);
 
         if ($vinculos->isEmpty()) {
             return $this->fecha_ingreso_institucion?->toDateString();
         }
 
+        $porSentencia = MovimientoPersonal::whereIn('id', $vinculos->pluck('movimiento_origen_id')->filter())
+            ->where('tipo_movimiento', TipoMovimientoPersonal::RESTITUCION->value)
+            ->where('estado', '!=', EstadoAccionPersonal::ANULADA->value)
+            ->pluck('id')
+            ->all();
+
         $inicio = null;
+        $restituido = false;
 
         foreach ($vinculos as $vinculo) {
             $desde = $vinculo->fecha_inicio->toDateString();
 
-            if ($inicio !== null) {
+            if ($inicio !== null && ! $restituido) {
                 $fin = $vinculo->fecha_fin?->toDateString();
                 $continua = $fin === null
                     || $fin >= \Carbon\Carbon::parse($inicio)->subDay()->toDateString();
@@ -218,6 +230,7 @@ class Servidor extends Model
             }
 
             $inicio = $inicio === null ? $desde : min($inicio, $desde);
+            $restituido = in_array($vinculo->movimiento_origen_id, $porSentencia, true);
         }
 
         $declarada = $this->fecha_ingreso_institucion?->toDateString();

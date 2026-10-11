@@ -64,6 +64,19 @@ export function useGuardarAccionPersonal({
         // las piden (fase 2.3): en otra acción se grabarían sin significar nada.
         institucion_destino: clase?.pide_institucion_destino ? (data.institucion_destino?.trim() || null) : null,
         para_estudios_o_eventos: clase?.admite_para_estudios_o_eventos ? !!data.para_estudios_o_eventos : false,
+        // La sentencia, solo en la restitución (fase 2.6).
+        ...(clase?.pide_datos_judiciales
+          ? {
+              causa_judicial_numero: data.causa_judicial_numero?.trim() || null,
+              unidad_judicial: data.unidad_judicial?.trim() || null,
+            }
+          : {
+              causa_judicial_numero: null,
+              unidad_judicial: null,
+              fecha_sentencia: null,
+              fecha_ejecutoria: null,
+              remuneraciones_dejadas_de_percibir: null,
+            }),
       }
 
       if (edicion) {

@@ -25,6 +25,11 @@ class StoreMovimientoPersonalRequest extends FormRequest
             'clase'  => 'tipo de acción de personal',
             'causal' => 'causal de la acción',
             'institucion_destino' => 'institución de destino',
+            'causa_judicial_numero' => 'número de la causa judicial',
+            'unidad_judicial'       => 'unidad judicial',
+            'fecha_sentencia'       => 'fecha de la sentencia',
+            'fecha_ejecutoria'      => 'fecha de ejecutoría',
+            'remuneraciones_dejadas_de_percibir' => 'remuneraciones dejadas de percibir',
         ];
     }
 
@@ -58,6 +63,13 @@ class StoreMovimientoPersonalRequest extends FormRequest
             // Comisiones e intercambio: la entidad del Estado a la que va (fase 2.3).
             'institucion_destino' => 'nullable|string|max:255',
             'para_estudios_o_eventos' => 'nullable|boolean',
+            // La sentencia de una restitución (fase 2.6). Que sean obligatorios
+            // en ella lo decide RestitucionService.
+            'causa_judicial_numero' => 'nullable|string|max:100',
+            'unidad_judicial'       => 'nullable|string|max:255',
+            'fecha_sentencia'       => 'nullable|date',
+            'fecha_ejecutoria'      => 'nullable|date|after_or_equal:fecha_sentencia',
+            'remuneraciones_dejadas_de_percibir' => 'nullable|numeric|min:0|max:9999999999',
             'puesto_origen_id'  => 'nullable|exists:puestos,id',
             'puesto_destino_id' => 'nullable|exists:puestos,id',
             // "Datos propuestos" de MovimientoPersonal (ver migración

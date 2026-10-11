@@ -37,6 +37,7 @@ class ClaseAccionPersonalResource extends JsonResource
             'pide_periodo'                => $clase->pidePeriodo(),
             'pide_institucion_destino'    => $clase->pideInstitucionDestino(),
             'admite_para_estudios_o_eventos' => $clase->admiteParaEstudiosOEventos(),
+            'pide_datos_judiciales'       => $clase->pideDatosJudiciales(),
             'pide_contratacion'           => $clase->pideContratacion(),
             'dictamen_medico_por_defecto' => $clase->dictamenMedicoPorDefecto(),
             'aviso'                       => $clase->aviso(),

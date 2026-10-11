@@ -9,6 +9,7 @@ import { useContainedInput } from '@/hooks/useContainedInput'
 import type { MovimientoFormData } from '../schemas/movimiento.schema'
 import type { ClaseDelCatalogo } from '@/types/api'
 import { FirmantesPanel } from './FirmantesPanel'
+import { MovimientoDatosJudiciales } from './MovimientoDatosJudiciales'
 import { fromDateValue, fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 
 /**
@@ -114,6 +115,8 @@ export function MovimientoDatosDelActo({
           {...register('institucion_destino')}
         />
       )}
+
+      {clase?.pide_datos_judiciales && <MovimientoDatosJudiciales form={form} />}
 
       {clase?.admite_para_estudios_o_eventos && (
         <Controller

@@ -177,6 +177,8 @@ test('cada clase aplica exactamente a los nombramientos de antes', function () {
         'encargo'     => [],
         'reintegro'   => [],
         'sancion'     => [],
+        // Como el ingreso: quien vuelve por sentencia no tiene vínculo (2.6).
+        'restitucion' => [],
     ];
 
     foreach (ClaseAccionPersonal::cases() as $clase) {
@@ -217,14 +219,18 @@ test('lo que pide el formulario coincide con lo que la acción hace al registrar
 
             $nombre = $clase->etiqueta();
 
+            // La restitución crea el vínculo sin pedir puesto ni contratación:
+            // vuelve al que tenía, con el mismo nombramiento (fase 2.6).
+            $creaUnoNuevo = $tipo->creaVinculo() && $clase !== ClaseAccionPersonal::RESTITUCION;
+
             expect($clase->pideSituacionPropuesta())
-                ->toBe($tipo->creaVinculo() || $movimiento->reubicaAlServidor(), "Situación propuesta de «{$nombre}»")
+                ->toBe($creaUnoNuevo || $movimiento->reubicaAlServidor(), "Situación propuesta de «{$nombre}»")
                 // El período lo piden las ausencias: las comisiones y, desde la
                 // fase 2.2, la licencia sin remuneración.
                 ->and($clase->pidePeriodo())
                 ->toBe($movimiento->esAusenciaTemporal(), "Período de «{$nombre}»")
                 ->and($clase->pideContratacion())
-                ->toBe($tipo->creaVinculo(), "Contratación de «{$nombre}»");
+                ->toBe($creaUnoNuevo, "Contratación de «{$nombre}»");
         }
     }
 });

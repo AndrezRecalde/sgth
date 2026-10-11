@@ -15,6 +15,7 @@ use App\Models\Expediente\CargaFamiliar;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class MovimientoPersonalService
 {
@@ -138,6 +139,15 @@ class MovimientoPersonalService
 
         $subtipo = $this->resolverSubtipo($tipoMovimiento, $datos);
 
+        // La restitución se completa sola: deja sin efecto la cesación que
+        // cerró su último vínculo y vuelve al puesto que tenía (fase 2.6). Por
+        // el contenedor y no por el constructor, porque ella crea por aquí la
+        // remoción del provisional.
+        $provisional = null;
+        if ($tipoMovimiento === TipoMovimientoPersonal::RESTITUCION) {
+            [$datos, $provisional] = app(RestitucionService::class)->completar($servidor, $datos);
+        }
+
         if ($tipoMovimiento->esAccionDePersonal()) {
             $this->validarElegibilidad($servidor, $tipoMovimiento, $subtipo);
         }
@@ -208,7 +218,16 @@ class MovimientoPersonalService
         $datos['estado']    = EstadoAccionPersonal::BORRADOR;
         $datos['categoria'] = CategoriaEventoVinculo::ACCION_DE_PERSONAL;
 
-        $movimiento = MovimientoPersonal::create($datos);
+        // La restitución y la remoción del provisional que la hace caber nacen
+        // juntas o no nace ninguna.
+        $movimiento = $tipoMovimiento === TipoMovimientoPersonal::RESTITUCION
+            ? DB::transaction(function () use ($datos, $provisional) {
+                $restitucion = MovimientoPersonal::create($datos);
+                app(RestitucionService::class)->prepararRemocionDelProvisional($restitucion, $provisional);
+
+                return $restitucion;
+            })
+            : MovimientoPersonal::create($datos);
 
         // fresh(), no load(): los defaults de BD que $datos no trae no se
         // reflejarían en la respuesta que consume el controller/resource.
@@ -297,12 +316,59 @@ class MovimientoPersonalService
         }
         $this->revalidarReemplazo($movimiento, $datos);
 
+        if ($movimiento->tipo_movimiento === TipoMovimientoPersonal::RESTITUCION) {
+            $datos = $this->revalidarRestitucion($movimiento, $datos);
+        }
+
         $movimiento->update($datos);
 
         return $movimiento->fresh([
             'unidadOrigen', 'unidadDestino', 'puestoOrigen.cargo',
             'puestoDestino.cargo', 'partidaPresupuestaria', 'autorizadoPor',
         ]);
+    }
+
+    /**
+     * Corregir el borrador de una restitución: los datos de la causa siguen
+     * obligatorios, y el puesto y el nombramiento no se tocan —vuelve al que
+     * tenía—. Si cambia la fecha, la remoción del provisional se mueve con
+     * ella mientras siga en borrador (fase 2.6).
+     *
+     * @param  array<string, mixed>  $datos
+     * @return array<string, mixed>
+     */
+    private function revalidarRestitucion(MovimientoPersonal $movimiento, array $datos): array
+    {
+        // Ni los de la contratación, que se copiaron del nombramiento que tenía
+        // y se completan al aprobarla: el formulario los manda vacíos y los
+        // borraría.
+        unset(
+            $datos['puesto_destino_id'], $datos['unidad_destino_id'], $datos['tipo_nombramiento_propuesto'],
+            $datos['movimiento_relacionado_id'], $datos['cubre_movimiento_id'],
+            $datos['numero_contrato'], $datos['remuneracion_propuesta'], $datos['partida_presupuestaria_id'],
+            $datos['puede_marcar'], $datos['fecha_fin_propuesta'],
+        );
+
+        $campos = [
+            'causa_judicial_numero', 'unidad_judicial', 'fecha_sentencia', 'fecha_ejecutoria',
+            'remuneraciones_dejadas_de_percibir', 'fecha_efectiva',
+        ];
+
+        $restituciones = app(RestitucionService::class);
+        $restituciones->validarDatosJudiciales(
+            [...$movimiento->only($campos), ...array_intersect_key($datos, array_flip($campos))],
+            $movimiento->movimientoRelacionado,
+        );
+
+        if (! empty($datos['fecha_efectiva'])) {
+            $vispera = Carbon::parse($datos['fecha_efectiva'])->subDay()->toDateString();
+
+            $restituciones->remociones($movimiento)
+                ->where('estado', EstadoAccionPersonal::BORRADOR)
+                ->each(fn (MovimientoPersonal $r) => $r->update(['fecha_efectiva' => $vispera]));
+        }
+
+        return $datos;
     }
 
     /**

@@ -61,11 +61,13 @@ export function puedeDescargarPdf(movimiento: {
 
 /**
  * Un ingreso que pasa a registrada materializa el contrato, así que ahí se
- * completan los datos del vínculo (número, remuneración, resolución).
+ * completan los datos del vínculo (número, remuneración, resolución). La
+ * restitución también crea el vínculo (fase 2.6): llega con los datos del
+ * nombramiento que tenía, y aquí se revisan.
  */
 export function requiereCompletarVinculo(
   estado?: EstadoAccionPersonal | null,
   clase?: ClaseAccionPersonal | null,
 ): boolean {
-  return estado === 'suscrita' && clase === 'ingreso'
+  return estado === 'suscrita' && (clase === 'ingreso' || clase === 'restitucion')
 }

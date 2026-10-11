@@ -786,11 +786,25 @@ export type MovimientoPersonal = {
   movimiento_relacionado_id?: number | null
   relacionado?: {
     id: number
+    clase: ClaseAccionPersonal | null
     codigo_registro: string | null
     etiqueta: string | null
+    fecha_efectiva: string | null
     fecha_inicio: string | null
     fecha_fin: string | null
   } | null
+  /** La restitución que deja sin efecto esta cesación por sentencia (fase 2.6). */
+  restituida_por?: {
+    id: number
+    codigo_registro: string | null
+    estado: EstadoAccionPersonal
+  } | null
+  // La sentencia de una restitución (fase 2.6).
+  causa_judicial_numero?: string | null
+  unidad_judicial?: string | null
+  fecha_sentencia?: string | null
+  fecha_ejecutoria?: string | null
+  remuneraciones_dejadas_de_percibir?: string | number | null
   numero_contrato?: string | null
   partida_presupuestaria_id?: number | null
   puede_marcar?: boolean | null

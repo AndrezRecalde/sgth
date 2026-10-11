@@ -929,6 +929,13 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
    - Anular la acción de una sanción, o la cesación de una destitución, deja la sanción sin efecto (cuándo, por qué y quién; no se borra) y devuelve el sumario resuelto a «Con informe» para dictar la correcta. Apelado o cerrado no se mueve. Se anula solo desde la acción. El sumario admite una sanción vigente a la vez y enseña las que quedaron sin efecto.
    - Fuera: el bloqueo de asistencia y la novedad de nómina de la suspensión (fases 5 y 7), y el visto bueno ↔ su cesación (bloque de obreros).
 6. Restitución con datos judiciales.
+   - Clase y tipo `restitucion` (familia Ingreso, número AP): crea el vínculo como el ingreso, desde el formulario, para quien no tiene vínculo. Deja sin efecto la cesación que cerró su último vínculo, que tiene que haber sido un nombramiento permanente; se toma sola (`movimiento_relacionado_id`).
+   - Columnas de 8.1: `causa_judicial_numero`, `unidad_judicial`, `fecha_sentencia`, `fecha_ejecutoria` y `remuneraciones_dejadas_de_percibir`, obligatorias [TH N15]. La ejecutoría no es futura ni anterior a la sentencia, la sentencia es posterior al cese, y la restitución rige desde la ejecutoría.
+   - Vuelve al mismo puesto con el mismo nombramiento; el número y la partida se copian del que tenía, y la remuneración es la de la escala. Se revisan al aprobarla, como en el ingreso.
+   - La antigüedad no se corta: `inicioDelServicioContinuo()` salta el hueco cuando el vínculo nuevo nace de una restitución.
+   - Si el puesto lo ocupa un provisional (17 b.1), se le prepara la remoción en borrador con fecha de la víspera, y hay que registrarla antes. Si lo ocupa un permanente, no cabe.
+   - Al surtir efecto, la sanción de la destitución queda sin efecto por sentencia (`sin_efecto_por_movimiento_id`); el sumario no se mueve. Anular la restitución borra el vínculo, devuelve la sanción y anula la remoción que siga en borrador.
+   - Fuera: el pago de las remuneraciones (novedad de nómina, fase 7) y los períodos de vacaciones del tiempo fuera.
 7. Ocasionales: ingreso como registro del contrato, sin acción.
 
 **Fase 3 — Movilidad y carrera**

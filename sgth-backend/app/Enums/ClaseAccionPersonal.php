@@ -43,6 +43,7 @@ enum ClaseAccionPersonal: string
     case SANCION                   = 'sancion';
     case CESACION                  = 'cesacion';
     case REINTEGRO                 = 'reintegro';
+    case RESTITUCION               = 'restitucion';
 
     public function etiqueta(): string
     {
@@ -60,6 +61,7 @@ enum ClaseAccionPersonal: string
             self::SANCION                   => 'Sanción Disciplinaria',
             self::CESACION                  => 'Cesación de Funciones',
             self::REINTEGRO                 => 'Reintegro',
+            self::RESTITUCION               => 'Restitución',
         };
     }
 
@@ -67,7 +69,8 @@ enum ClaseAccionPersonal: string
     {
         return match ($this) {
             self::INGRESO,
-            self::REINTEGRO => FamiliaAccionPersonal::INGRESO,
+            self::REINTEGRO,
+            self::RESTITUCION => FamiliaAccionPersonal::INGRESO,
 
             self::TRASLADO,
             self::INTERCAMBIO_VOLUNTARIO,
@@ -113,7 +116,9 @@ enum ClaseAccionPersonal: string
      */
     public function requiereVinculo(): bool
     {
-        return $this !== self::INGRESO;
+        // Quien vuelve por sentencia tampoco tiene vínculo: la cesación lo
+        // cerró (fase 2.6).
+        return ! in_array($this, [self::INGRESO, self::RESTITUCION], true);
     }
 
     /**
@@ -251,6 +256,7 @@ enum ClaseAccionPersonal: string
             self::SANCION => [TipoMovimientoPersonal::REGIMEN_DISCIPLINARIO, $causal],
             self::CESACION => [TipoMovimientoPersonal::CESACION_FUNCIONES, $causal],
             self::REINTEGRO => [TipoMovimientoPersonal::REINTEGRO, null],
+            self::RESTITUCION => [TipoMovimientoPersonal::RESTITUCION, null],
         };
     }
 
@@ -304,6 +310,7 @@ enum ClaseAccionPersonal: string
                 TipoMovimientoPersonal::CESACION_FUNCIONES        => self::CESACION,
                 TipoMovimientoPersonal::REGIMEN_DISCIPLINARIO     => self::SANCION,
                 TipoMovimientoPersonal::REINTEGRO                 => self::REINTEGRO,
+                TipoMovimientoPersonal::RESTITUCION               => self::RESTITUCION,
                 default                                           => null,
             },
         };
@@ -362,6 +369,16 @@ enum ClaseAccionPersonal: string
     }
 
     /**
+     * La causa judicial —número, unidad judicial, sentencia y ejecutoría— y
+     * las remuneraciones dejadas de percibir [TH N15; fase 2.6]. El puesto y
+     * el nombramiento no se piden: vuelve al que tenía.
+     */
+    public function pideDatosJudiciales(): bool
+    {
+        return $this === self::RESTITUCION;
+    }
+
+    /**
      * Si la casilla «Requiere ficha de salud ocupacional» abre marcada. Es el
      * mismo valor que aplica el servicio cuando la petición no lo trae.
      */
@@ -396,6 +413,10 @@ enum ClaseAccionPersonal: string
             $this === self::COMISION_SIN_REMUNERACION =>
                 'Con 1 año de servicio a la fecha de inicio, y hasta 6 años sumados en toda la '
                     .'carrera. Nunca para un puesto del nivel jerárquico superior (LOSEP Art. 31).',
+            $this === self::RESTITUCION =>
+                'Por sentencia ejecutoriada (LOSEP Art. 46): deja sin efecto la cesación que cerró '
+                    .'su último nombramiento permanente y lo devuelve al mismo puesto, sin perder la '
+                    .'antigüedad. Si lo ocupa un provisional, se le prepara la remoción.',
             default => null,
         };
     }

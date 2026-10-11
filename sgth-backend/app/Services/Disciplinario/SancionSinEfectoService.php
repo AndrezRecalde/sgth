@@ -45,6 +45,7 @@ final class SancionSinEfectoService
                 500
             ),
             'anulada_por'      => auth()->id(),
+            'sin_efecto_por_movimiento_id' => $accion->id,
             'updated_by'       => auth()->id(),
         ]);
 
@@ -57,5 +58,53 @@ final class SancionSinEfectoService
                 'updated_by'       => auth()->id(),
             ]);
         }
+    }
+
+    /**
+     * La restitución deja sin efecto la destitución por sentencia (fase 2.6),
+     * y con ella la sanción. El sumario no se mueve: lo decidió un juez, y no
+     * hay otra sanción que dictar.
+     */
+    public function porSentencia(MovimientoPersonal $restitucion): void
+    {
+        if (! $restitucion->movimiento_relacionado_id) {
+            return;
+        }
+
+        $sancion = SancionDisciplinaria::where('movimiento_personal_id', $restitucion->movimiento_relacionado_id)
+            ->whereNull('anulada_en')
+            ->first();
+
+        if (! $sancion) {
+            return;
+        }
+
+        $sancion->update([
+            'anulada_en'       => now(),
+            'motivo_anulacion' => Str::limit(
+                "Dejada sin efecto por sentencia: causa {$restitucion->causa_judicial_numero}, "
+                    ."{$restitucion->unidad_judicial}, ejecutoriada el "
+                    .$restitucion->fecha_ejecutoria?->format('d/m/Y')
+                    .($restitucion->codigo_registro ? " (restitución {$restitucion->codigo_registro})." : '.'),
+                500
+            ),
+            'anulada_por'      => auth()->id(),
+            'sin_efecto_por_movimiento_id' => $restitucion->id,
+            'updated_by'       => auth()->id(),
+        ]);
+    }
+
+    /** Anular la restitución devuelve la sanción a su sitio. */
+    public function revertirSentencia(MovimientoPersonal $restitucion): void
+    {
+        SancionDisciplinaria::where('sin_efecto_por_movimiento_id', $restitucion->id)
+            ->get()
+            ->each(fn (SancionDisciplinaria $s) => $s->update([
+                'anulada_en'       => null,
+                'motivo_anulacion' => null,
+                'anulada_por'      => null,
+                'sin_efecto_por_movimiento_id' => null,
+                'updated_by'       => auth()->id(),
+            ]));
     }
 }
