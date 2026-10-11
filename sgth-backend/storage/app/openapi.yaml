@@ -14761,7 +14761,10 @@
                                         },
                                         "mensaje": {
                                             "type": "string",
-                                            "const": "Sumario administrativo abierto."
+                                            "enum": [
+                                                "Procedimiento del reglamento interno abierto.",
+                                                "Sumario administrativo abierto."
+                                            ]
                                         },
                                         "datos": {
                                             "$ref": "#/components/schemas/Sumario"
@@ -14899,7 +14902,10 @@
                                         },
                                         "mensaje": {
                                             "type": "string",
-                                            "const": "Sumario Administrativo resuelto exitosamente y sanci\u00f3n aplicada."
+                                            "enum": [
+                                                "Procedimiento del reglamento interno resuelto y sanci\u00f3n aplicada.",
+                                                "Sumario Administrativo resuelto exitosamente y sanci\u00f3n aplicada."
+                                            ]
                                         },
                                         "datos": {
                                             "$ref": "#/components/schemas/Sumario"
@@ -19247,6 +19253,203 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/disciplinario/reglamento-interno/faltas": {
+            "get": {
+                "operationId": "faltaReglamentoInterno.index",
+                "tags": [
+                    "FaltaReglamentoInterno"
+                ],
+                "parameters": [
+                    {
+                        "name": "activas",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Faltas del reglamento interno."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/FaltaReglamentoInterno"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "faltaReglamentoInterno.store",
+                "tags": [
+                    "FaltaReglamentoInterno"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GuardarFaltaReglamentoRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Falta agregada al reglamento interno."
+                                        },
+                                        "datos": {
+                                            "anyOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/FaltaReglamentoInterno"
+                                                },
+                                                {
+                                                    "type": "null"
+                                                }
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/disciplinario/reglamento-interno/faltas/{falta}": {
+            "put": {
+                "operationId": "faltaReglamentoInterno.update",
+                "tags": [
+                    "FaltaReglamentoInterno"
+                ],
+                "parameters": [
+                    {
+                        "name": "falta",
+                        "in": "path",
+                        "required": true,
+                        "description": "The falta ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GuardarFaltaReglamentoRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Falta del reglamento interno actualizada."
+                                        },
+                                        "datos": {
+                                            "anyOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/FaltaReglamentoInterno"
+                                                },
+                                                {
+                                                    "type": "null"
+                                                }
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -48925,6 +49128,86 @@
                 ],
                 "title": "FacturaViatico"
             },
+            "FaltaReglamentoInterno": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "articulo": {
+                        "type": "string"
+                    },
+                    "descripcion": {
+                        "type": "string"
+                    },
+                    "gravedad": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "admite_amonestacion_verbal": {
+                        "type": "boolean"
+                    },
+                    "admite_amonestacion_escrita": {
+                        "type": "boolean"
+                    },
+                    "admite_multa": {
+                        "type": "boolean"
+                    },
+                    "porcentaje_maximo_multa": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "activo": {
+                        "type": "boolean"
+                    },
+                    "created_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "updated_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "articulo",
+                    "descripcion",
+                    "gravedad",
+                    "admite_amonestacion_verbal",
+                    "admite_amonestacion_escrita",
+                    "admite_multa",
+                    "porcentaje_maximo_multa",
+                    "activo",
+                    "created_by",
+                    "updated_by",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "FaltaReglamentoInterno"
+            },
             "FamiliaAccionPersonal": {
                 "type": "string",
                 "description": "Las familias en que se agrupan las clases de acci\u00f3n de personal en pantalla (dise\u00f1o de Acciones de Personal, secci\u00f3n 4.1). No deciden ninguna regla: solo ordenan el selector de \u00abNueva acci\u00f3n de personal\u00bb. El orden de los casos es el orden en que se muestran.\n",
@@ -49411,6 +49694,52 @@
                     "updated_at"
                 ],
                 "title": "GrupoOcupacional"
+            },
+            "GuardarFaltaReglamentoRequest": {
+                "type": "object",
+                "description": "Una falta del cat\u00e1logo del reglamento interno (fase 4.4): su art\u00edculo, su\ndescripci\u00f3n, las sanciones que admite y el tope de la multa, que nunca pasa\ndel 10 % de la remuneraci\u00f3n.",
+                "properties": {
+                    "articulo": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "descripcion": {
+                        "type": "string",
+                        "maxLength": 1000
+                    },
+                    "gravedad": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 40
+                    },
+                    "admite_amonestacion_verbal": {
+                        "type": "boolean"
+                    },
+                    "admite_amonestacion_escrita": {
+                        "type": "boolean"
+                    },
+                    "admite_multa": {
+                        "type": "boolean"
+                    },
+                    "porcentaje_maximo_multa": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "minimum": 0.01,
+                        "maximum": 10
+                    },
+                    "activo": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "articulo",
+                    "descripcion"
+                ],
+                "title": "GuardarFaltaReglamentoRequest"
             },
             "HandoffErp": {
                 "type": "object",
@@ -53019,6 +53348,15 @@
                 ],
                 "title": "PresentacionMedicamento"
             },
+            "ProcedimientoDisciplinario": {
+                "type": "string",
+                "description": "Por qu\u00e9 procedimiento se sanciona (dise\u00f1o de Acciones de Personal, 9.15; fase 4.4). Lo decide el r\u00e9gimen del servidor al abrirlo: - el **sumario administrativo** es el de la LOSEP (Arts. 42 a 44), con su   gravedad leve o grave; - el **procedimiento del reglamento interno** es el del obrero: la falta sale   del cat\u00e1logo de su reglamento interno de trabajo, porque el C\u00f3digo del   Trabajo proh\u00edbe sancionar lo que el reglamento no prevea (Art. 44 a).  Los dos comparten los hitos \u2014apertura, notificaci\u00f3n, descargos, informe y resoluci\u00f3n\u2014 y el debido proceso (Constituci\u00f3n Art. 76).\n",
+                "enum": [
+                    "sumario_administrativo",
+                    "reglamento_interno"
+                ],
+                "title": "ProcedimientoDisciplinario"
+            },
             "ProcedimientoOdontologico": {
                 "type": "string",
                 "enum": [
@@ -54007,7 +54345,14 @@
                 "type": "object",
                 "properties": {
                     "tipo_falta": {
+                        "description": "La gravedad es del sumario de la LOSEP; el procedimiento del\nreglamento interno de un obrero lleva su falta del cat\u00e1logo\n(fase 4.4). Cu\u00e1l se exige lo decide DisciplinarioService, que\nsabe de qu\u00e9 procedimiento es el sumario.",
                         "$ref": "#/components/schemas/TipoFalta"
+                    },
+                    "falta_reglamento_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     },
                     "tipo_sancion": {
                         "$ref": "#/components/schemas/TipoSancion"
@@ -54044,7 +54389,6 @@
                     }
                 },
                 "required": [
-                    "tipo_falta",
                     "tipo_sancion"
                 ],
                 "title": "ResolverSumarioRequest"
@@ -58442,6 +58786,13 @@
                         ],
                         "format": "date-time",
                         "description": "Un sumario no se abre en el futuro, y si se abriera, el l\u00edmite\nde notificaci\u00f3n quedar\u00eda tambi\u00e9n en el futuro y\n`controlarPlazosLegales()` no lo ver\u00eda caducar nunca."
+                    },
+                    "falta_reglamento_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "La falta del reglamento interno que se imputa a un obrero (fase\n4.4). Que sea obligatoria ah\u00ed lo decide DisciplinarioService."
                     }
                 },
                 "required": [
@@ -59222,6 +59573,15 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "procedimiento": {
+                        "$ref": "#/components/schemas/ProcedimientoDisciplinario"
+                    },
+                    "falta_reglamento_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -59239,7 +59599,9 @@
                     "updated_by",
                     "created_at",
                     "updated_at",
-                    "deleted_at"
+                    "deleted_at",
+                    "procedimiento",
+                    "falta_reglamento_id"
                 ],
                 "title": "Sumario"
             },

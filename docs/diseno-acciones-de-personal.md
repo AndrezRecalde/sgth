@@ -994,7 +994,14 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
    - Incremento individual [TH 14]: un monto mayor que el actual, con su dictamen presupuestario. El incremento en lote queda para la 4.6.
    - Los tres cambian el vínculo al surtir efecto y piden al suscribir el número de su adenda en «Número de resolución». Lo que no cambia queda vacío. Anularlos lo devuelve, y al puesto de antes solo si queda plaza. Los cambios de ocupación e incrementos de antes eran acciones de personal que no tocaban el vínculo, y anularlos sigue sin moverlo (`MovimientoPersonal::cambiaElContratoDeTrabajo`).
    - Pendiente: la nómina sigue leyendo el sueldo del puesto y no el del vínculo (fase 7).
-4. Obreros: sanciones con el catálogo del reglamento interno; visto bueno y aviso a Financiero con el registro interno. Depende del reglamento interno.
+4. Obreros: sanciones con el catálogo del reglamento interno; visto bueno y aviso a Financiero con el registro interno.
+   - Hasta aquí a un obrero no se le podía sancionar desde la aplicación: «Abrir sumario» lo rechazaba, por ser el procedimiento de la LOSEP, y la multa que la resolución le admitía nunca se alcanzaba.
+   - Catálogo `faltas_reglamento_interno`, en la pestaña «Reglamento interno» de Disciplinario. Cada falta guarda el artículo o numeral, la descripción, la gravedad como la nombre el reglamento, las sanciones que admite (amonestación verbal, escrita o multa) y el tope de la multa, que nunca pasa del 10 %. No se borra: se desactiva. La que ya se imputó no se reescribe. **Sin catálogo cargado no se le abre procedimiento al obrero** (CT 44 a), y así queda en producción hasta que TH cargue su reglamento.
+   - El sumario guarda su `procedimiento` (enum `ProcedimientoDisciplinario`): el sumario administrativo de la LOSEP, o el procedimiento del reglamento interno, que se le abre al obrero con la falta imputada. Mismos hitos, mismo debido proceso (Constitución Art. 76).
+   - Resolución del obrero: la falta probada —la imputada u otra del catálogo vigente— y una sanción que el reglamento le dé, con la multa dentro de su tope. Su sanción guarda la falta del catálogo, sin la gravedad de la LOSEP. Nunca suspensión ni destitución: lo grave sigue siendo visto bueno.
+   - La amonestación escrita y la multa dejan su hoja de registro interno; la verbal, nada. La multa sigue yendo a Financiero con esa hoja, y el correo ya no la llama acción de personal.
+   - Los plazos de la LOSEP no se le vigilan al procedimiento del reglamento interno: los fija el reglamento, que aún no tenemos. Sus fechas se guardan igual.
+   - El visto bueno no cambia: su cesación ya lleva la hoja de registro interno desde la 4.3.
 5. Obreros: terminación con sus causales, liquidación y acta de finiquito; reintegro por despido ineficaz.
 6. Obreros: contrato colectivo parametrizado e incremento en lote. Depende del contrato colectivo.
 

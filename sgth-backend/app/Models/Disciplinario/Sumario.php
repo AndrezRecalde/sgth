@@ -3,6 +3,7 @@
 namespace App\Models\Disciplinario;
 
 use App\Enums\EstadoSumario;
+use App\Enums\ProcedimientoDisciplinario;
 use App\Models\Expediente\Servidor;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -21,6 +22,10 @@ class Sumario extends Model
 
     protected $fillable = [
         'servidor_id',
+        // El sumario de la LOSEP o el procedimiento del reglamento interno de
+        // un obrero, con la falta que se le imputa (fase 4.4).
+        'procedimiento',
+        'falta_reglamento_id',
         'motivo',
         'estado',
         'fecha_apertura',
@@ -37,6 +42,7 @@ class Sumario extends Model
     {
         return [
             'estado'               => EstadoSumario::class,
+            'procedimiento'        => ProcedimientoDisciplinario::class,
             'fecha_apertura'       => 'date',
             'notificado_sn'        => 'boolean',
             'fecha_notificacion'   => 'date',
@@ -71,6 +77,17 @@ class Sumario extends Model
     public function servidor(): BelongsTo
     {
         return $this->belongsTo(Servidor::class);
+    }
+
+    /** La falta del reglamento interno que se imputa al obrero (fase 4.4). */
+    public function faltaReglamento(): BelongsTo
+    {
+        return $this->belongsTo(FaltaReglamentoInterno::class, 'falta_reglamento_id');
+    }
+
+    public function esDelReglamentoInterno(): bool
+    {
+        return $this->procedimiento === ProcedimientoDisciplinario::REGLAMENTO_INTERNO;
     }
 
     /**

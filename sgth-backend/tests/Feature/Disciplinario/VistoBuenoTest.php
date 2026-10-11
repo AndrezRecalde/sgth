@@ -127,13 +127,16 @@ test('a un obrero sí se le puede aplicar una sanción menor por sumario', funct
     expect($resuelto->estado)->toBe(EstadoSumario::RESUELTO);
 });
 
-test('no se puede abrir un sumario administrativo a un obrero', function () {
+// Hasta la fase 4.4 se le rechazaba y se le mandaba al visto bueno; ahora se le
+// abre el procedimiento de su reglamento interno, que sin catálogo no se abre
+// (ReglamentoInternoTest).
+test('al obrero no se le abre el sumario de la LOSEP, sino el de su reglamento interno', function () {
     $obrero = ($this->servidorCon)(TipoNombramiento::CODIGO_TRABAJO);
 
     expect(fn () => $this->disciplinarioService->abrirSumario($obrero->id, [
         'motivo' => 'Indisciplina',
     ], $this->user->id))
-        ->toThrow(ReglaNegocioException::class, 'visto bueno ante el Inspector del Trabajo');
+        ->toThrow(ReglaNegocioException::class, 'reglamento interno todavía no tiene faltas');
 });
 
 test('el visto bueno no aplica a un servidor LOSEP', function () {

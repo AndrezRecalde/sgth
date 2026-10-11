@@ -2,6 +2,8 @@ import type {
   CausalVistoBueno,
   EstadoSumario,
   EstadoVistoBueno,
+  FaltaReglamentoInterno,
+  ProcedimientoDisciplinario,
   ServidorResumen,
   TipoFalta,
   TipoSancion,
@@ -87,6 +89,31 @@ export const TIPO_FALTA_LABELS: Record<TipoFalta, string> = {
 export const SANCIONES_POR_FALTA: Record<TipoFalta, readonly TipoSancion[]> = {
   leve: ['amonestacion_verbal', 'amonestacion_escrita', 'multa'],
   grave: ['suspension', 'destitucion'],
+}
+
+/** Espeja `App\Enums\ProcedimientoDisciplinario::etiqueta()` (fase 4.4). */
+export const PROCEDIMIENTO_LABELS: Record<ProcedimientoDisciplinario, string> = {
+  sumario_administrativo: 'Sumario administrativo',
+  reglamento_interno: 'Procedimiento del reglamento interno',
+}
+
+/**
+ * Las sanciones que el reglamento interno da a una falta de su catálogo.
+ * Espeja `FaltaReglamentoInterno::sancionesAdmitidas()`.
+ */
+export function sancionesDeLaFalta(falta?: FaltaReglamentoInterno | null): TipoSancion[] {
+  if (!falta) return []
+
+  return [
+    ...(falta.admite_amonestacion_verbal ? ['amonestacion_verbal' as const] : []),
+    ...(falta.admite_amonestacion_escrita ? ['amonestacion_escrita' as const] : []),
+    ...(falta.admite_multa ? ['multa' as const] : []),
+  ]
+}
+
+/** «Art. 45, núm. 3 — Atrasos injustificados…», para los selectores. */
+export function citaDeLaFalta(falta: FaltaReglamentoInterno): string {
+  return `${falta.articulo} — ${falta.descripcion}`
 }
 
 /** Espeja `App\Enums\TipoSancion::etiqueta()`. */

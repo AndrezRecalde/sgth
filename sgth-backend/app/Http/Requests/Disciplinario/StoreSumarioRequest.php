@@ -20,6 +20,9 @@ class StoreSumarioRequest extends FormRequest
             // de notificación quedaría también en el futuro y
             // `controlarPlazosLegales()` no lo vería caducar nunca.
             'fecha_apertura' => ['nullable', 'date', 'before_or_equal:today'],
+            // La falta del reglamento interno que se imputa a un obrero (fase
+            // 4.4). Que sea obligatoria ahí lo decide DisciplinarioService.
+            'falta_reglamento_id' => ['nullable', 'integer', 'exists:faltas_reglamento_interno,id'],
         ];
     }
 

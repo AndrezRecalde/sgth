@@ -3,6 +3,7 @@ import type {
   ApiResponse,
   EstadoSumario,
   EstadoVistoBueno,
+  FaltaReglamentoInterno,
   PaginatedResponse,
   Sumario,
   SumarioFormData,
@@ -35,9 +36,14 @@ export type AvanzarSumarioData = {
   fecha_informe?: string | null
 }
 
-/** Cuerpo de `POST sumarios/{id}/resolver`: la falta probada y su sanción. */
+/**
+ * Cuerpo de `POST sumarios/{id}/resolver`: la falta probada y su sanción. En el
+ * sumario de la LOSEP, su gravedad; en el del reglamento interno de un obrero,
+ * su falta del catálogo (fase 4.4).
+ */
 export type ResolverSumarioData = {
-  tipo_falta: TipoFalta
+  tipo_falta?: TipoFalta | null
+  falta_reglamento_id?: number | null
   tipo_sancion: TipoSancion
   porcentaje_multa?: number | null
   dias_suspension?: number | null
@@ -57,6 +63,18 @@ export type TransicionarVistoBuenoData = {
   fecha_impugnacion?: string | null
 }
 
+/** Una falta del catálogo del reglamento interno, al crearla o corregirla (fase 4.4). */
+export type FaltaReglamentoData = {
+  articulo: string
+  descripcion: string
+  gravedad?: string | null
+  admite_amonestacion_verbal: boolean
+  admite_amonestacion_escrita: boolean
+  admite_multa: boolean
+  porcentaje_maximo_multa?: number | null
+  activo: boolean
+}
+
 const BASE = '/disciplinario'
 
 export const disciplinarioService = {
@@ -73,6 +91,19 @@ export const disciplinarioService = {
 
   resolverSumario: (id: number, data: ResolverSumarioData) =>
     api.post<ApiResponse<Sumario>>(`${BASE}/sumarios/${id}/resolver`, data).then(r => r.data.datos),
+
+  listarFaltasReglamento: (params?: { activas?: boolean }) =>
+    api.get<ApiResponse<FaltaReglamentoInterno[]>>(
+      `${BASE}/reglamento-interno/faltas`, { params }
+    ).then(r => r.data.datos),
+
+  crearFaltaReglamento: (data: FaltaReglamentoData) =>
+    api.post<ApiResponse<FaltaReglamentoInterno>>(`${BASE}/reglamento-interno/faltas`, data)
+      .then(r => r.data.datos),
+
+  actualizarFaltaReglamento: (id: number, data: FaltaReglamentoData) =>
+    api.put<ApiResponse<FaltaReglamentoInterno>>(`${BASE}/reglamento-interno/faltas/${id}`, data)
+      .then(r => r.data.datos),
 
   listarVistosBuenos: (params?: VistoBuenoParams) =>
     api.get<ApiResponse<PaginatedResponse<VistoBueno>>>(

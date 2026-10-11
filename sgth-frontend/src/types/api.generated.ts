@@ -3086,6 +3086,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/disciplinario/reglamento-interno/faltas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["faltaReglamentoInterno.index"];
+        put?: never;
+        post: operations["faltaReglamentoInterno.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/disciplinario/reglamento-interno/faltas/{falta}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["faltaReglamentoInterno.update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/dispensario/fichas-sso/{id}/pdf": {
         parameters: {
             query?: never;
@@ -8301,6 +8333,24 @@ export interface components {
             /** Format: date-time */
             revisado_en: string | null;
         };
+        /** FaltaReglamentoInterno */
+        FaltaReglamentoInterno: {
+            id: number;
+            articulo: string;
+            descripcion: string;
+            gravedad: string | null;
+            admite_amonestacion_verbal: boolean;
+            admite_amonestacion_escrita: boolean;
+            admite_multa: boolean;
+            porcentaje_maximo_multa: string | null;
+            activo: boolean;
+            created_by: number | null;
+            updated_by: number | null;
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
         /**
          * FamiliaAccionPersonal
          * @description Las familias en que se agrupan las clases de acción de personal en pantalla (diseño de Acciones de Personal, sección 4.1). No deciden ninguna regla: solo ordenan el selector de «Nueva acción de personal». El orden de los casos es el orden en que se muestran.
@@ -8409,6 +8459,22 @@ export interface components {
             created_at: string | null;
             /** Format: date-time */
             updated_at: string | null;
+        };
+        /**
+         * GuardarFaltaReglamentoRequest
+         * @description Una falta del catálogo del reglamento interno (fase 4.4): su artículo, su
+         *     descripción, las sanciones que admite y el tope de la multa, que nunca pasa
+         *     del 10 % de la remuneración.
+         */
+        GuardarFaltaReglamentoRequest: {
+            articulo: string;
+            descripcion: string;
+            gravedad?: string | null;
+            admite_amonestacion_verbal?: boolean;
+            admite_amonestacion_escrita?: boolean;
+            admite_multa?: boolean;
+            porcentaje_maximo_multa?: number | null;
+            activo?: boolean;
         };
         /** HandoffErp */
         HandoffErp: {
@@ -9322,6 +9388,12 @@ export interface components {
          */
         PresentacionMedicamento: "tableta" | "capsula" | "jarabe" | "gotas" | "inyectable" | "crema" | "supositorio" | "spray" | "parche" | "solucion" | "polvo" | "otro";
         /**
+         * ProcedimientoDisciplinario
+         * @description Por qué procedimiento se sanciona (diseño de Acciones de Personal, 9.15; fase 4.4). Lo decide el régimen del servidor al abrirlo: - el **sumario administrativo** es el de la LOSEP (Arts. 42 a 44), con su   gravedad leve o grave; - el **procedimiento del reglamento interno** es el del obrero: la falta sale   del catálogo de su reglamento interno de trabajo, porque el Código del   Trabajo prohíbe sancionar lo que el reglamento no prevea (Art. 44 a).  Los dos comparten los hitos —apertura, notificación, descargos, informe y resolución— y el debido proceso (Constitución Art. 76).
+         * @enum {string}
+         */
+        ProcedimientoDisciplinario: "sumario_administrativo" | "reglamento_interno";
+        /**
          * ProcedimientoOdontologico
          * @enum {string}
          */
@@ -9606,7 +9678,14 @@ export interface components {
         };
         /** ResolverSumarioRequest */
         ResolverSumarioRequest: {
-            tipo_falta: components["schemas"]["TipoFalta"];
+            /**
+             * @description La gravedad es del sumario de la LOSEP; el procedimiento del
+             *     reglamento interno de un obrero lleva su falta del catálogo
+             *     (fase 4.4). Cuál se exige lo decide DisciplinarioService, que
+             *     sabe de qué procedimiento es el sumario.
+             */
+            tipo_falta?: components["schemas"]["TipoFalta"];
+            falta_reglamento_id?: number | null;
             tipo_sancion: components["schemas"]["TipoSancion"];
             porcentaje_multa?: number | null;
             dias_suspension?: number | null;
@@ -10752,6 +10831,11 @@ export interface components {
              *     `controlarPlazosLegales()` no lo vería caducar nunca.
              */
             fecha_apertura?: string | null;
+            /**
+             * @description La falta del reglamento interno que se imputa a un obrero (fase
+             *     4.4). Que sea obligatoria ahí lo decide DisciplinarioService.
+             */
+            falta_reglamento_id?: number | null;
         };
         /** StoreTriajeRequest */
         StoreTriajeRequest: {
@@ -10965,6 +11049,8 @@ export interface components {
             updated_at: string | null;
             /** Format: date-time */
             deleted_at: string | null;
+            procedimiento: components["schemas"]["ProcedimientoDisciplinario"];
+            falta_reglamento_id: number | null;
         };
         /**
          * SupuestoProvisional
@@ -18501,8 +18587,8 @@ export interface operations {
                 content: {
                     "application/json": {
                         exito: boolean;
-                        /** @constant */
-                        mensaje: "Sumario administrativo abierto.";
+                        /** @enum {string} */
+                        mensaje: "Procedimiento del reglamento interno abierto." | "Sumario administrativo abierto.";
                         datos: components["schemas"]["Sumario"];
                         meta: null;
                     };
@@ -18569,8 +18655,8 @@ export interface operations {
                 content: {
                     "application/json": {
                         exito: boolean;
-                        /** @constant */
-                        mensaje: "Sumario Administrativo resuelto exitosamente y sanción aplicada.";
+                        /** @enum {string} */
+                        mensaje: "Procedimiento del reglamento interno resuelto y sanción aplicada." | "Sumario Administrativo resuelto exitosamente y sanción aplicada.";
                         datos: components["schemas"]["Sumario"];
                         meta: null;
                     };
@@ -20616,6 +20702,100 @@ export interface operations {
                     };
                 };
             };
+        };
+    };
+    "faltaReglamentoInterno.index": {
+        parameters: {
+            query?: {
+                activas?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Faltas del reglamento interno.";
+                        datos: components["schemas"]["FaltaReglamentoInterno"][];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "faltaReglamentoInterno.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuardarFaltaReglamentoRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Falta agregada al reglamento interno.";
+                        datos: components["schemas"]["FaltaReglamentoInterno"] | null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "faltaReglamentoInterno.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The falta ID */
+                falta: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuardarFaltaReglamentoRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Falta del reglamento interno actualizada.";
+                        datos: components["schemas"]["FaltaReglamentoInterno"] | null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "femoPdf.generar": {

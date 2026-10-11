@@ -22,6 +22,10 @@ class DisciplinarioController extends Controller
             'servidor:id,nombre,segundo_nombre,apellido,segundo_apellido,cedula',
             // A un obrero no se le ofrece suspensión ni destitución (2026-10-04).
             'servidor.contratoVigente:id,servidor_id,tipo_nombramiento',
+            // La falta del reglamento interno que se imputa al obrero, y la de
+            // su sanción (fase 4.4).
+            'faltaReglamento',
+            'sancion.faltaReglamento',
             // La acción que nació de la sanción y lo que descuenta (2026-10-04).
             'sancion.movimientoPersonal:id,codigo_registro,estado,remuneracion_origen',
             // Las que quedaron sin efecto al anularse su acción (fase 2.5).
@@ -59,8 +63,10 @@ class DisciplinarioController extends Controller
         );
 
         return ApiResponse::created(
-            $sumario->load('servidor'),
-            'Sumario administrativo abierto.'
+            $sumario->load(['servidor', 'faltaReglamento']),
+            $sumario->esDelReglamentoInterno()
+                ? 'Procedimiento del reglamento interno abierto.'
+                : 'Sumario administrativo abierto.'
         );
     }
 
@@ -87,16 +93,22 @@ class DisciplinarioController extends Controller
         );
 
         $sumario->load([
+            'faltaReglamento',
+            'sancion.faltaReglamento',
             'sancion.movimientoPersonal:id,codigo_registro,estado,remuneracion_origen',
             'sancionesSinEfecto.movimientoPersonal:id,codigo_registro,estado,remuneracion_origen',
         ]);
 
-        $mensaje = 'Sumario Administrativo resuelto exitosamente y sanción aplicada.';
+        $mensaje = $sumario->esDelReglamentoInterno()
+            ? 'Procedimiento del reglamento interno resuelto y sanción aplicada.'
+            : 'Sumario Administrativo resuelto exitosamente y sanción aplicada.';
         if ($request->validated('tipo_sancion') === 'destitucion') {
             $mensaje .= ' El servidor fue destituido: se generó la Cesación de Funciones en '
                 .'borrador para revisión de Talento Humano.';
         } elseif ($sumario->sancion?->movimiento_personal_id) {
-            $mensaje .= ' Su acción de personal quedó en borrador para revisión de Talento Humano.';
+            $mensaje .= $sumario->esDelReglamentoInterno()
+                ? ' Su hoja de registro interno quedó en borrador para revisión de Talento Humano.'
+                : ' Su acción de personal quedó en borrador para revisión de Talento Humano.';
         }
 
         return ApiResponse::ok($sumario, $mensaje);

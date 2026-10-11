@@ -59,6 +59,13 @@ test('las etiquetas de los estados del visto bueno están fijadas', function () 
     ], $aviso);
 });
 
+test('las etiquetas de los procedimientos están fijadas', function () use ($aviso) {
+    expect(array_map(
+        fn (\App\Enums\ProcedimientoDisciplinario $p) => $p->etiqueta(),
+        \App\Enums\ProcedimientoDisciplinario::cases()
+    ))->toBe(['Sumario administrativo', 'Procedimiento del reglamento interno'], $aviso);
+});
+
 test('las etiquetas de las sanciones y las faltas están fijadas', function () use ($aviso) {
     expect(array_map(fn (TipoFalta $f) => $f->etiqueta(), TipoFalta::cases()))
         ->toBe(['Leve', 'Grave'], $aviso);
