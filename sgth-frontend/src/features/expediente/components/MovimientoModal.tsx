@@ -32,6 +32,8 @@ interface Props {
   tipoNombramiento?: string | null
   /** El servidor todavía no tiene vínculo: solo cabe el ingreso, que lo crea. */
   sinVinculo?: boolean
+  /** Sin vínculo, el nombramiento del último que tuvo: decide qué restitución es (fase 4.5b). */
+  ultimoNombramiento?: string | null
   /**
    * Presente = modo edición sobre un borrador. El mismo formulario sirve para
    * crear y para corregir: separarlos era lo que producía dos pantallas con
@@ -49,7 +51,7 @@ interface Props {
 }
 
 export function MovimientoModal({
-  opened, onClose, servidorId, tipoNombramiento, sinVinculo, movimiento = null,
+  opened, onClose, servidorId, tipoNombramiento, sinVinculo, ultimoNombramiento, movimiento = null,
   familia, titulo,
 }: Props) {
   const catalogo = useCatalogoAcciones()
@@ -97,7 +99,7 @@ export function MovimientoModal({
             key={movimiento?.id ?? familia ?? 'nuevo'}
             catalogo={catalogo.data}
             servidorId={servidorId}
-            vinculo={{ sinVinculo, tipoNombramiento }}
+            vinculo={{ sinVinculo, tipoNombramiento, ultimoNombramiento }}
             movimiento={movimiento}
             familia={familia}
             onClose={onClose}
@@ -156,9 +158,14 @@ function FormularioAccion({
       requiere_dictamen_medico: unicaClase?.dictamen_medico_por_defecto ?? false,
     }
 
+  // Al corregir el borrador de una restitución, el nombramiento al que vuelve
+  // dice si es el reintegro del obrero (fase 4.5b).
+  const ultimoNombramiento = vinculo.ultimoNombramiento
+    ?? (movimiento?.clase === 'restitucion' ? movimiento.tipo_nombramiento_propuesto : null)
+
   const schema = React.useMemo(
-    () => crearMovimientoSchema(catalogo, vinculo.tipoNombramiento),
-    [catalogo, vinculo.tipoNombramiento],
+    () => crearMovimientoSchema(catalogo, vinculo.tipoNombramiento, ultimoNombramiento),
+    [catalogo, vinculo.tipoNombramiento, ultimoNombramiento],
   )
 
   const form = useForm<MovimientoFormData>({
@@ -284,7 +291,12 @@ function FormularioAccion({
               <MovimientoDatosCambioObrero form={form} servidorId={servidorId} clase={claseElegida} />
             )}
 
-            <MovimientoDatosDelActo form={form} clase={claseElegida} tipoNombramiento={vinculo.tipoNombramiento} />
+            <MovimientoDatosDelActo
+              form={form}
+              clase={claseElegida}
+              tipoNombramiento={vinculo.tipoNombramiento}
+              ultimoNombramiento={ultimoNombramiento}
+            />
 
             {/* Red de seguridad: si algo no valida, se dice. Con el error en
                 cada campo bastaría, pero esto cubre también lo que valide el

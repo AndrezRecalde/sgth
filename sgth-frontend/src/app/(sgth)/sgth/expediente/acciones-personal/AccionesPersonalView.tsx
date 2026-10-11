@@ -96,6 +96,7 @@ export function AccionesPersonalView() {
               servidorId={servidor.id}
               tipoNombramiento={servidor.contrato_vigente?.tipo_nombramiento}
               sinVinculo={servidor.pendiente_vinculacion === true}
+              ultimoNombramiento={servidor.ultimo_nombramiento}
               familia={familia.codigo}
               titulo={`${familia.etiqueta} — ${[servidor.apellido, servidor.nombre].filter(Boolean).join(' ')}`}
             />

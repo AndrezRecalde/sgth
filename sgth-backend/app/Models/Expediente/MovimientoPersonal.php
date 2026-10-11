@@ -293,6 +293,9 @@ class MovimientoPersonal extends Model
         'fecha_sentencia',
         'fecha_ejecutoria',
         'remuneraciones_dejadas_de_percibir',
+        // La providencia que ordena el reintegro inmediato del obrero, como
+        // medida cautelar (CT 195.2; fase 4.5b).
+        'fecha_providencia',
         'documento_respaldo',
         'autorizado_por',
         'observacion',
@@ -346,6 +349,7 @@ class MovimientoPersonal extends Model
             'caucion_fecha'   => 'date',
             'fecha_sentencia'  => 'date',
             'fecha_ejecutoria' => 'date',
+            'fecha_providencia' => 'date',
             'remuneraciones_dejadas_de_percibir' => 'decimal:2',
         ];
     }
@@ -632,9 +636,42 @@ class MovimientoPersonal extends Model
      */
     public function etiqueta(): string
     {
+        // La restitución del obrero es el reintegro del Código (fase 4.5b).
+        if ($this->esReintegroPorDespidoIneficaz()) {
+            return 'Reintegro por despido ineficaz';
+        }
+
         return $this->clase?->etiqueta()
             ?? $this->tipo_movimiento?->etiqueta()
             ?? '—';
+    }
+
+    /**
+     * ¿Es la restitución de un obrero? La del Código del Trabajo es el
+     * reintegro por despido ineficaz (Arts. 195.1 a 195.3; fase 4.5b), y
+     * deja, como todo acto del obrero, su hoja de registro interno.
+     */
+    public function esReintegroPorDespidoIneficaz(): bool
+    {
+        return $this->tipo_movimiento === TipoMovimientoPersonal::RESTITUCION
+            && $this->instrumento === InstrumentoActo::DOCUMENTO_CT;
+    }
+
+    /**
+     * La orden del juez que la sustenta, para los textos: la sentencia
+     * ejecutoriada o, en el reintegro del obrero, la providencia que lo
+     * ordena como medida cautelar (CT 195.2; fase 4.5b).
+     */
+    public function ordenJudicial(): ?string
+    {
+        if ($this->fecha_sentencia) {
+            return 'sentencia del '.$this->fecha_sentencia->format('d/m/Y')
+                .($this->fecha_ejecutoria ? ', ejecutoriada el '.$this->fecha_ejecutoria->format('d/m/Y') : '');
+        }
+
+        return $this->fecha_providencia
+            ? 'providencia del '.$this->fecha_providencia->format('d/m/Y').', que ordena el reintegro inmediato'
+            : null;
     }
 
     /**

@@ -90,8 +90,11 @@
 </head>
 <body>
 @php
-    // La de una terminación con algo que pagar (fase 4.5); las demás no la traen.
+    // La de una terminación con algo que pagar (fase 4.5) y la del reintegro
+    // por despido ineficaz (fase 4.5b); las demás no la traen.
     $liquidacion ??= null;
+    $reintegro = $movimiento->esReintegroPorDespidoIneficaz();
+    $terminacion = $reintegro ? $movimiento->movimientoRelacionado : null;
     $fmtFecha = fn ($f) => $f ? \Carbon\Carbon::parse($f)->format('d/m/Y') : '—';
     $dinero = fn ($v) => $v !== null ? '$ '.number_format((float) $v, 2) : '—';
     $nombre = trim(($servidor?->apellido ?? '').' '.($servidor?->segundo_apellido ?? '').' '.($servidor?->nombre ?? '').' '.($servidor?->segundo_nombre ?? ''));
@@ -201,6 +204,16 @@
     @if($movimiento->resolucion_numero)
         <tr><td class="label">{{ $cambia ? 'Adenda' : 'Documento de origen' }}</td><td>N.º {{ $movimiento->resolucion_numero }}</td></tr>
     @endif
+    @if($reintegro)
+        <tr>
+            <td class="label">Deja sin efecto</td>
+            <td>{{ $terminacion?->causal()?->etiqueta() ?? $terminacion?->etiqueta() ?? '—' }}{{ $terminacion?->codigo_registro ? ' ('.$terminacion->codigo_registro.')' : '' }}, del {{ $fmtFecha($terminacion?->fecha_efectiva) }}</td>
+        </tr>
+        <tr>
+            <td class="label">Orden judicial</td>
+            <td>Causa N.º {{ $movimiento->causa_judicial_numero }}, {{ $movimiento->unidad_judicial }}: {{ $movimiento->ordenJudicial() }}</td>
+        </tr>
+    @endif
     @if($movimiento->fecha_presentacion_renuncia)
         <tr><td class="label">Renuncia presentada</td><td>El {{ $fmtFecha($movimiento->fecha_presentacion_renuncia) }}</td></tr>
     @endif
@@ -216,7 +229,7 @@
 </table>
 
 @if($liquidacion)
-    <div class="bloque-titulo">Liquidación referencial</div>
+    <div class="bloque-titulo">{{ $liquidacion['tipo'] === 'reintegro' ? 'Remuneraciones pendientes (referencial)' : 'Liquidación referencial' }}</div>
     <table class="datos">
         <tr>
             <th>Rubro</th>
@@ -236,8 +249,18 @@
         </tr>
     </table>
     <div class="nota">
-        Sobre una remuneración de {{ $dinero($liquidacion['remuneracion']) }} y servicio desde el
-        {{ $fmtFecha($liquidacion['desde']) }}. {{ $liquidacion['nota'] }}
+        @if($liquidacion['tipo'] === 'reintegro')
+            Con una remuneración de {{ $dinero($liquidacion['remuneracion']) }}
+            @if($liquidacion['dias_fuera'])
+                y {{ $liquidacion['dias_fuera'] }} días fuera, del {{ $fmtFecha($liquidacion['desde']) }} al {{ $fmtFecha($liquidacion['hasta']) }}.
+            @else
+                y sin días fuera.
+            @endif
+        @else
+            Sobre una remuneración de {{ $dinero($liquidacion['remuneracion']) }} y servicio desde el
+            {{ $fmtFecha($liquidacion['desde']) }}.
+        @endif
+        {{ $liquidacion['nota'] }}
     </div>
 @endif
 

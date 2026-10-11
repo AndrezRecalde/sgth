@@ -29,6 +29,7 @@ class StoreMovimientoPersonalRequest extends FormRequest
             'unidad_judicial'       => 'unidad judicial',
             'fecha_sentencia'       => 'fecha de la sentencia',
             'fecha_ejecutoria'      => 'fecha de ejecutoría',
+            'fecha_providencia'     => 'fecha de la providencia',
             'remuneraciones_dejadas_de_percibir' => 'remuneraciones dejadas de percibir',
             'fecha_consentimiento'  => 'fecha del consentimiento',
             'fecha_presentacion_renuncia' => 'fecha en que presentó la renuncia',
@@ -83,6 +84,8 @@ class StoreMovimientoPersonalRequest extends FormRequest
             'unidad_judicial'       => 'nullable|string|max:255',
             'fecha_sentencia'       => 'nullable|date',
             'fecha_ejecutoria'      => 'nullable|date|after_or_equal:fecha_sentencia',
+            // La providencia que ordena el reintegro del obrero (CT 195.2; fase 4.5b).
+            'fecha_providencia'     => 'nullable|date|before_or_equal:today',
             'remuneraciones_dejadas_de_percibir' => 'nullable|numeric|min:0|max:9999999999',
             'puesto_origen_id'  => 'nullable|exists:puestos,id',
             'puesto_destino_id' => 'nullable|exists:puestos,id',

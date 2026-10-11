@@ -81,11 +81,14 @@ final class SancionSinEfectoService
 
         $sancion->update([
             'anulada_en'       => now(),
+            // La del obrero puede ser la providencia que ordena el reintegro
+            // (CT 195.2; fase 4.5b), y su visto bueno queda sin efecto igual.
             'motivo_anulacion' => Str::limit(
-                "Dejada sin efecto por sentencia: causa {$restitucion->causa_judicial_numero}, "
-                    ."{$restitucion->unidad_judicial}, ejecutoriada el "
-                    .$restitucion->fecha_ejecutoria?->format('d/m/Y')
-                    .($restitucion->codigo_registro ? " (restitución {$restitucion->codigo_registro})." : '.'),
+                "Dejada sin efecto por orden judicial: causa {$restitucion->causa_judicial_numero}, "
+                    ."{$restitucion->unidad_judicial}, {$restitucion->ordenJudicial()}"
+                    .($restitucion->codigo_registro
+                        ? ' ('.mb_strtolower($restitucion->etiqueta())." {$restitucion->codigo_registro})."
+                        : '.'),
                 500
             ),
             'anulada_por'      => auth()->id(),

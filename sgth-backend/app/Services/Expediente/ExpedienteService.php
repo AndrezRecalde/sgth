@@ -109,6 +109,9 @@ class ExpedienteService implements ExpedienteServiceInterface
             // La que paga el vínculo; la del puesto queda de respaldo.
             'contratoVigente.partidaPresupuestaria',
             'contratoVigente.unidadAdministrativa',
+            // Si no tiene vínculo, el último: su restitución es la de la LOSEP
+            // o el reintegro del obrero (fase 4.5b).
+            'ultimoContrato',
             // Sin 'documentos' ni 'movimientos': nadie los lee de aquí —las
             // pestañas del expediente y la bandeja tienen sus propios
             // endpoints— y este detalle se pide cada vez que se abre la ficha.
@@ -277,7 +280,10 @@ class ExpedienteService implements ExpedienteServiceInterface
     public function listarServidores(array $filtros): mixed
     {
         $query = $this->filtrarServidores(
-            Servidor::query()->with(['unidadAdministrativa', 'puesto.cargo', 'puesto.grupoOcupacional', 'contratoVigente']),
+            // El último vínculo, para la restitución de quien no tiene uno (fase 4.5b).
+            Servidor::query()->with([
+                'unidadAdministrativa', 'puesto.cargo', 'puesto.grupoOcupacional', 'contratoVigente', 'ultimoContrato',
+            ]),
             $filtros
         );
 

@@ -22,7 +22,15 @@ import { ActaFiniquitoModal } from './ActaFiniquitoModal'
  * Las terminaciones de obreros ya registradas y su acta de finiquito (diseño,
  * 9.15; fase 4.5). El acta se genera y se legaliza en el sistema del
  * Ministerio del Trabajo; aquí se registra y se ve cuáles faltan.
+ *
+ * La que el juez dejó sin efecto con un reintegro ya registrado no espera su
+ * acta (fase 4.5b).
  */
+/** ¿El juez la dejó sin efecto con un reintegro ya registrado? */
+function reintegrado(t: TerminacionObrero): boolean {
+  return t.reintegro?.estado === 'registrada' || t.reintegro?.estado === 'notificada'
+}
+
 export function TerminacionesObrerosPanel() {
   const [soloSinActa, setSoloSinActa] = useState(true)
   const { data: terminaciones = [], isLoading, error, refetch } = useTerminacionesObreros(soloSinActa)
@@ -84,16 +92,29 @@ export function TerminacionesObrerosPanel() {
       accessor: 'acta',
       title: 'Acta de finiquito',
       width: 220,
-      render: (t) => t.acta
-        ? (
-          <div>
-            <StatusBadge tone="success">N.º {t.acta.numero}</StatusBadge>
+      render: (t) => (
+        <div>
+          {t.acta
+            ? (
+              <>
+                <StatusBadge tone="success">N.º {t.acta.numero}</StatusBadge>
+                <Text size="xs" c="dimmed" mt={2}>
+                  {formatFecha(t.acta.fecha)} · {dinero(t.acta.valor_pagado)}
+                </Text>
+              </>
+            )
+            : reintegrado(t)
+              ? <StatusBadge tone="info">Reintegrado</StatusBadge>
+              : <StatusBadge tone="warning">Pendiente</StatusBadge>}
+          {t.reintegro && (
             <Text size="xs" c="dimmed" mt={2}>
-              {formatFecha(t.acta.fecha)} · {dinero(t.acta.valor_pagado)}
+              {reintegrado(t)
+                ? `Sin efecto por el reintegro ${t.reintegro.codigo_registro}`
+                : 'Reintegro por despido ineficaz en trámite'}
             </Text>
-          </div>
-        )
-        : <StatusBadge tone="warning">Pendiente</StatusBadge>,
+          )}
+        </div>
+      ),
     },
     {
       accessor: 'acciones',

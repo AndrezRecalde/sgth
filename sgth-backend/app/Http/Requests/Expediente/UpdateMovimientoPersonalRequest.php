@@ -50,6 +50,7 @@ class UpdateMovimientoPersonalRequest extends FormRequest
             'unidad_judicial'       => 'nullable|string|max:255',
             'fecha_sentencia'       => 'nullable|date',
             'fecha_ejecutoria'      => 'nullable|date|after_or_equal:fecha_sentencia',
+            'fecha_providencia'     => 'nullable|date|before_or_equal:today',
             'remuneraciones_dejadas_de_percibir' => 'nullable|numeric|min:0|max:9999999999',
             'puesto_origen_id'  => 'nullable|exists:puestos,id',
             'puesto_destino_id' => 'nullable|exists:puestos,id',

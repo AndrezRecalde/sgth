@@ -266,6 +266,7 @@ return [
         'unidad_judicial' => 'unidad judicial',
         'fecha_sentencia' => 'fecha de la sentencia',
         'fecha_ejecutoria' => 'fecha de ejecutoría',
+        'fecha_providencia' => 'fecha de la providencia',
         'remuneraciones_dejadas_de_percibir' => 'remuneraciones dejadas de percibir',
 
         // Subrogaciones y encargos

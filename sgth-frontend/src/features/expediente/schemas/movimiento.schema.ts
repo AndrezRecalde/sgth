@@ -32,6 +32,11 @@ const camposDelFormulario = z.object({
   unidad_judicial: z.string().max(255).optional().nullable(),
   fecha_sentencia: z.string().optional().nullable(),
   fecha_ejecutoria: z.string().optional().nullable(),
+  // O, en el reintegro del obrero, la providencia que lo ordena como medida
+  // cautelar (CT 195.2; fase 4.5b). `orden_judicial` es solo del formulario:
+  // el backend lo deduce de las fechas.
+  fecha_providencia: z.string().optional().nullable(),
+  orden_judicial: z.enum(['providencia', 'sentencia']).optional().nullable(),
   remuneraciones_dejadas_de_percibir: z.number().min(0, 'No puede ser negativo').optional().nullable(),
 
   // Datos de la contratación. Solo existen en el ingreso, que es la única
@@ -80,6 +85,8 @@ export function crearMovimientoSchema(
   catalogo: CatalogoAccionesPersonal,
   /** El nombramiento vigente del servidor: de él depende si el traslado pide el informe. */
   tipoNombramiento?: string | null,
+  /** El de su último vínculo, para quien no tiene uno: la restitución del obrero es otra (fase 4.5b). */
+  ultimoNombramiento?: string | null,
 ) {
   return camposDelFormulario.superRefine((data, ctx) => {
     const clase = buscarClase(catalogo, data.clase)
@@ -259,10 +266,36 @@ export function crearMovimientoSchema(
       })
     }
 
-    // La restitución, con los cuatro datos de la causa y las remuneraciones
-    // [TH N15]. Que la ejecutoría no sea futura ni anterior al cese lo dice el
-    // backend, que conoce la cesación.
-    if (clase.pide_datos_judiciales) {
+    // El reintegro del obrero: la causa, la unidad judicial y la providencia
+    // que lo ordena, o la sentencia con su ejecutoría. Las remuneraciones, si
+    // la sentencia no las fija, se calculan (CT 195.2 y 195.3; fase 4.5b).
+    if (esReintegroDelObrero(clase, ultimoNombramiento)) {
+      const conSentencia = data.orden_judicial === 'sentencia'
+      const obligatorios = [
+        ['causa_judicial_numero', 'Indique el número de la causa'],
+        ['unidad_judicial', 'Indique la unidad judicial'],
+        ...(conSentencia
+          ? [
+            ['fecha_sentencia', 'Indique la fecha de la sentencia'],
+            ['fecha_ejecutoria', 'Indique la fecha de ejecutoría'],
+          ] as const
+          : [['fecha_providencia', 'Indique la fecha de la providencia que ordena el reintegro']] as const),
+      ] as const
+
+      for (const [campo, mensaje] of obligatorios) {
+        if (!data[campo]?.trim()) ctx.addIssue({ path: [campo], code: 'custom', message: mensaje })
+      }
+
+      if (conSentencia && data.fecha_sentencia && data.fecha_ejecutoria && data.fecha_ejecutoria < data.fecha_sentencia) {
+        ctx.addIssue({
+          path: ['fecha_ejecutoria'], code: 'custom',
+          message: 'La ejecutoría no puede ser anterior a la sentencia',
+        })
+      }
+    } else if (clase.pide_datos_judiciales) {
+      // La restitución, con los cuatro datos de la causa y las remuneraciones
+      // [TH N15]. Que la ejecutoría no sea futura ni anterior al cese lo dice
+      // el backend, que conoce la cesación.
       const obligatorios = [
         ['causa_judicial_numero', 'Indique el número de la causa'],
         ['unidad_judicial', 'Indique la unidad judicial o tribunal'],
@@ -394,6 +427,21 @@ export function pideDocumentoFirmado(
   return !clase?.pide_contratacion
     && causal !== 'contrato_finalizado'
     && esDelContratoCivil(clase, tipoNombramiento)
+}
+
+/**
+ * ¿Es la restitución de quien fue obrero? Es su reintegro por despido ineficaz
+ * (Código del Trabajo, Arts. 195.1 a 195.3; fase 4.5b), con la hoja de registro
+ * interno. Lo dice el nombramiento del vínculo que se cerró, porque quien
+ * vuelve no tiene uno vigente.
+ */
+export function esReintegroDelObrero(
+  clase: ClaseDelCatalogo | undefined,
+  ultimoNombramiento?: string | null,
+): boolean {
+  return !!clase?.pide_datos_judiciales
+    && !!ultimoNombramiento
+    && clase.documento_ct_para.some((n) => n === ultimoNombramiento)
 }
 
 /**

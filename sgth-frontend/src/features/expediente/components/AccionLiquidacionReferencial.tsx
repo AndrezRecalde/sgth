@@ -13,6 +13,9 @@ import { BloqueDetalle } from './BloqueDetalle'
  * el Código del Trabajo fija para su causal —la bonificación por desahucio y,
  * en el despido, la indemnización—, sobre la remuneración y los años de
  * servicio del acto. Financiero establece el valor definitivo.
+ *
+ * En su reintegro por despido ineficaz, las remuneraciones pendientes de los
+ * días fuera con el 10 % de recargo (Art. 195.3; fase 4.5b).
  */
 export function AccionLiquidacionReferencial({ m }: { m: MovimientoPersonal }) {
   const liquidacion = m.liquidacion_referencial
@@ -30,7 +33,10 @@ export function AccionLiquidacionReferencial({ m }: { m: MovimientoPersonal }) {
 
       {liquidacion && (
         <BloqueDetalle>
-          <SectionHeading title="Liquidación referencial" mb="xs" />
+          <SectionHeading
+            title={liquidacion.tipo === 'reintegro' ? 'Remuneraciones pendientes (referencial)' : 'Liquidación referencial'}
+            mb="xs"
+          />
           <DetailList
             columnas={1}
             items={[
@@ -42,8 +48,13 @@ export function AccionLiquidacionReferencial({ m }: { m: MovimientoPersonal }) {
             ]}
           />
           <Text size="xs" c="dimmed" mt="xs">
-            Sobre una remuneración de {dinero(liquidacion.remuneracion)} y servicio desde el{' '}
-            {formatFecha(liquidacion.desde)}. {liquidacion.nota}
+            {liquidacion.tipo === 'reintegro'
+              ? `Con una remuneración de ${dinero(liquidacion.remuneracion)} y `
+                + (liquidacion.dias_fuera
+                  ? `${liquidacion.dias_fuera} días fuera, del ${formatFecha(liquidacion.desde)} al ${formatFecha(liquidacion.hasta)}.`
+                  : 'sin días fuera.')
+              : `Sobre una remuneración de ${dinero(liquidacion.remuneracion)} y servicio desde el ${formatFecha(liquidacion.desde)}.`}
+            {' '}{liquidacion.nota}
           </Text>
         </BloqueDetalle>
       )}

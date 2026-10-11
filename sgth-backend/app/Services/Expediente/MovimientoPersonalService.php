@@ -698,19 +698,21 @@ class MovimientoPersonalService
             $datos['puesto_destino_id'], $datos['unidad_destino_id'], $datos['tipo_nombramiento_propuesto'],
             $datos['movimiento_relacionado_id'], $datos['cubre_movimiento_id'],
             $datos['numero_contrato'], $datos['remuneracion_propuesta'], $datos['partida_presupuestaria_id'],
-            $datos['puede_marcar'], $datos['fecha_fin_propuesta'],
+            $datos['puede_marcar'], $datos['fecha_fin_propuesta'], $datos['lugar_trabajo'],
         );
 
         $campos = [
             'causa_judicial_numero', 'unidad_judicial', 'fecha_sentencia', 'fecha_ejecutoria',
-            'remuneraciones_dejadas_de_percibir', 'fecha_efectiva',
+            'fecha_providencia', 'remuneraciones_dejadas_de_percibir', 'fecha_efectiva',
         ];
 
         $restituciones = app(RestitucionService::class);
-        $restituciones->validarDatosJudiciales(
-            [...$movimiento->only($campos), ...array_intersect_key($datos, array_flip($campos))],
-            $movimiento->movimientoRelacionado,
-        );
+        $completos = [...$movimiento->only($campos), ...array_intersect_key($datos, array_flip($campos))];
+        $restituciones->validarDatosJudiciales($completos, $movimiento->movimientoRelacionado);
+
+        // La providencia o la sentencia del reintegro del obrero, no las dos
+        // (fase 4.5b).
+        $datos = [...$datos, ...$restituciones->ordenNormalizada($completos, $movimiento->movimientoRelacionado)];
 
         if (! empty($datos['fecha_efectiva'])) {
             $vispera = Carbon::parse($datos['fecha_efectiva'])->subDay()->toDateString();

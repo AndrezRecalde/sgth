@@ -248,6 +248,19 @@ class Servidor extends Model
     }
 
     /**
+     * El último vínculo que tuvo, vigente o no; los cancelados nunca
+     * existieron. A quien ya no tiene uno, dice si su restitución es la de la
+     * LOSEP o el reintegro del obrero (fase 4.5b).
+     */
+    public function ultimoContrato(): HasOne
+    {
+        return $this->hasOne(ContratoServidor::class)->ofMany(
+            ['fecha_inicio' => 'max', 'id' => 'max'],
+            fn (Builder $q) => $q->where('estado', '!=', 'cancelado'),
+        );
+    }
+
+    /**
      * Tiempo de servicio EN LA INSTITUCIÓN, en años cumplidos.
      *
      * Son dos conceptos distintos y los dos son legítimos, así que conviene no

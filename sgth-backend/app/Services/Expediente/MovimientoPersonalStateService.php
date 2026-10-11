@@ -317,6 +317,12 @@ class MovimientoPersonalStateService
         $this->validarDatosPropuestos($movimiento);
         $this->validarDictamenMedico($movimiento);
 
+        // La remuneración del obrero que vuelve por despido ineficaz, ya
+        // fijada al aprobarlo, no baja (CT 195.3; fase 4.5b).
+        if ($movimiento->tipo_movimiento === TipoMovimientoPersonal::RESTITUCION) {
+            $this->restituciones->validarAlRegistrar($movimiento);
+        }
+
         // El registro del contrato lleva el número del contrato, no el
         // correlativo AP, que solo cuenta acciones de personal (fase 2.7). El
         // acto de autoridad lleva el suyo, AU [TH 6; fase 4.1]. Y el contrato

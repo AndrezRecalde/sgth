@@ -66,7 +66,8 @@ export function AccionSituacionBloques({ m, botonEditar }: Props) {
           ) : m.clase === 'restitucion' ? (
             <Text size="sm" c="dimmed">
               Sin vínculo desde el {formatFecha(m.relacionado?.fecha_efectiva)}, por la
-              cesación que esta restitución deja sin efecto.
+              {m.instrumento === 'documento_ct' ? ' terminación que este reintegro' : ' cesación que esta restitución'}
+              {' '}deja sin efecto.
             </Text>
           ) : (
             <DetailList columnas={1} items={[

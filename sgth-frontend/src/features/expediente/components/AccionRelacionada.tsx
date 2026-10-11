@@ -30,8 +30,9 @@ export function AccionRelacionada({ m }: { m: MovimientoPersonal }) {
 function textoDelEnlace(m: MovimientoPersonal): string | null {
   const restitucion = m.restituida_por
   if (restitucion) {
-    return `Dejada sin efecto por sentencia: restitución ${restitucion.codigo_registro ?? 'en trámite'}`
-      + ` (${ESTADO_LABELS[restitucion.estado].toLowerCase()}).`
+    // En el obrero, el reintegro por despido ineficaz (fase 4.5b).
+    return `Dejada sin efecto por orden judicial: ${restitucion.etiqueta.toLowerCase()}`
+      + ` ${restitucion.codigo_registro ?? 'en trámite'} (${ESTADO_LABELS[restitucion.estado].toLowerCase()}).`
   }
 
   const otro = m.relacionado
@@ -47,7 +48,7 @@ function textoDelEnlace(m: MovimientoPersonal): string | null {
   }
 
   if (m.clase === 'restitucion') {
-    return `Deja sin efecto por sentencia la ${otro.etiqueta?.toLowerCase() ?? 'cesación'}${codigo}`
+    return `Deja sin efecto por orden judicial la ${otro.etiqueta?.toLowerCase() ?? 'cesación'}${codigo}`
       + (otro.fecha_efectiva ? `, que rigió desde el ${formatFecha(otro.fecha_efectiva)}.` : '.')
   }
 

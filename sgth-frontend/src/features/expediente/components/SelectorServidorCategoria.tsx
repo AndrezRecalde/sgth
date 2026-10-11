@@ -28,7 +28,7 @@ function tooltipDeshabilitado(
   const exigeVinculo = familiaRequiereVinculo(catalogo, familia.codigo)
 
   if (pendienteVinculacion === true) {
-    return 'Este servidor no tiene un vínculo laboral vigente: solo cabe su Ingreso y Vinculación o, si vuelve por sentencia, su Restitución.'
+    return 'Este servidor no tiene un vínculo laboral vigente: solo cabe su Ingreso y Vinculación o, si vuelve por orden judicial, su Restitución (en el obrero, el reintegro por despido ineficaz).'
   }
   if (pendienteVinculacion === false && !exigeVinculo) {
     return 'Este servidor ya tiene un vínculo laboral vigente — no aplica un nuevo ingreso.'

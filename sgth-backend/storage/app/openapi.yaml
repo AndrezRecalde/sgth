@@ -38873,6 +38873,31 @@
                                                     },
                                                     "acta": {
                                                         "$ref": "#/components/schemas/ActaFiniquito"
+                                                    },
+                                                    "reintegro": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "codigo_registro": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "estado": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "codigo_registro",
+                                                            "estado"
+                                                        ]
                                                     }
                                                 },
                                                 "required": [
@@ -38883,7 +38908,8 @@
                                                     "causal_etiqueta",
                                                     "fecha_efectiva",
                                                     "total_referencial",
-                                                    "acta"
+                                                    "acta",
+                                                    "reintegro"
                                                 ]
                                             }
                                         },
@@ -51593,6 +51619,13 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "fecha_providencia": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
                     }
                 },
                 "required": [
@@ -51670,7 +51703,8 @@
                     "fecha_fin_origen",
                     "lugar_trabajo_origen",
                     "fecha_consentimiento",
-                    "fecha_presentacion_renuncia"
+                    "fecha_presentacion_renuncia",
+                    "fecha_providencia"
                 ],
                 "title": "MovimientoPersonal"
             },
@@ -52075,12 +52109,16 @@
                             },
                             "estado": {
                                 "type": "string"
+                            },
+                            "etiqueta": {
+                                "type": "string"
                             }
                         },
                         "required": [
                             "id",
                             "codigo_registro",
-                            "estado"
+                            "estado",
+                            "etiqueta"
                         ]
                     },
                     "codigo": {
@@ -52152,6 +52190,14 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "fecha_providencia": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "O la providencia que ordena el reintegro del obrero (fase 4.5b)."
                     },
                     "remuneraciones_dejadas_de_percibir": {
                         "type": [
@@ -52549,6 +52595,7 @@
                     "unidad_judicial",
                     "fecha_sentencia",
                     "fecha_ejecutoria",
+                    "fecha_providencia",
                     "remuneraciones_dejadas_de_percibir",
                     "documento_respaldo",
                     "dictamen_presupuestario_ref",
@@ -55958,6 +56005,10 @@
                         ],
                         "description": "Derivado, no una columna: true si el servidor no tiene ning\u00fan\nContratoServidor vigente. No confundir con Servidor.estado\n(activo/inactivo) \u2014 son conceptos independientes. C\u00e1lculo\ndirecto (no whenLoaded con closure) para no depender de su\nresoluci\u00f3n interna."
                     },
+                    "ultimo_nombramiento": {
+                        "type": "string",
+                        "description": "El nombramiento de su \u00faltimo v\u00ednculo, vigente o no: a quien no\ntiene uno, el formulario le ofrece la restituci\u00f3n, y la del\nobrero es el reintegro por despido ineficaz (fase 4.5b)."
+                    },
                     "documentos": {
                         "type": "array",
                         "items": {
@@ -58358,6 +58409,14 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "fecha_providencia": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "La providencia que ordena el reintegro del obrero (CT 195.2; fase 4.5b)."
                     },
                     "remuneraciones_dejadas_de_percibir": {
                         "type": [
@@ -62480,6 +62539,13 @@
                         "format": "date-time"
                     },
                     "fecha_ejecutoria": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "fecha_providencia": {
                         "type": [
                             "string",
                             "null"

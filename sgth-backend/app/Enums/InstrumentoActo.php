@@ -114,7 +114,12 @@ enum InstrumentoActo: string
     {
         return array_values(array_filter(
             self::nombramientosCon($clase, self::DOCUMENTO_CT),
-            fn (TipoNombramiento $n) => $clase->pideContratacion() || $clase->elegiblePara($n),
+            // La restitución se le registra a quien ya no tiene vínculo, y la
+            // del obrero es su reintegro por despido ineficaz (fase 4.5b): el
+            // nombramiento que cuenta es el del vínculo que se cerró.
+            fn (TipoNombramiento $n) => $clase->pideContratacion()
+                || $clase === ClaseAccionPersonal::RESTITUCION
+                || $clase->elegiblePara($n),
         ));
     }
 

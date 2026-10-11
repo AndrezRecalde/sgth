@@ -142,6 +142,8 @@ class MovimientoPersonalResource extends JsonResource
             'unidad_judicial'             => $this->unidad_judicial,
             'fecha_sentencia'             => $this->fecha_sentencia,
             'fecha_ejecutoria'            => $this->fecha_ejecutoria,
+            // O la providencia que ordena el reintegro del obrero (fase 4.5b).
+            'fecha_providencia'           => $this->fecha_providencia,
             'remuneraciones_dejadas_de_percibir' => $this->remuneraciones_dejadas_de_percibir,
             'documento_respaldo'          => $this->documento_respaldo,
             'dictamen_presupuestario_ref' => $this->dictamen_presupuestario_ref,
@@ -248,9 +250,10 @@ class MovimientoPersonalResource extends JsonResource
     }
 
     /**
-     * La restitución que deja sin efecto esta cesación, si la hay.
+     * La restitución que deja sin efecto esta cesación, si la hay: en el
+     * obrero, su reintegro por despido ineficaz (fase 4.5b).
      *
-     * @return array{id: int, codigo_registro: ?string, estado: string}|null
+     * @return array{id: int, codigo_registro: ?string, estado: string, etiqueta: string}|null
      */
     private function restituidaPor(): ?array
     {
@@ -264,6 +267,7 @@ class MovimientoPersonalResource extends JsonResource
             'id'              => $restitucion->id,
             'codigo_registro' => $restitucion->codigo_registro,
             'estado'          => $restitucion->estado->value,
+            'etiqueta'        => $restitucion->etiqueta(),
         ] : null;
     }
 
