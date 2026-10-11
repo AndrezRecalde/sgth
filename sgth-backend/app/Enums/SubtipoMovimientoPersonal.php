@@ -54,6 +54,11 @@ enum SubtipoMovimientoPersonal: string
     case FIN_DEL_PERIODO            = 'fin_del_periodo';
     case REVOCATORIA_DEL_MANDATO    = 'revocatoria_del_mandato';
     case REMOCION_POR_EL_CONSEJO    = 'remocion_por_el_consejo';
+    // Las del contrato civil de Servicios Profesionales (diseño, 9.10; fase
+    // 4.2), con base en el contrato y el Código Civil, no en la LOSEP. El
+    // vencimiento del plazo es «Contrato finalizado».
+    case TERMINACION_MUTUO_ACUERDO  = 'terminacion_mutuo_acuerdo';
+    case TERMINACION_ANTICIPADA     = 'terminacion_anticipada';
 
     // ── Licencia sin remuneración ────────────────────────────
     // Las causales de LOSEP Art. 28 (diseño, 4.4; fase 2.2), con su tope. Solo
@@ -100,6 +105,8 @@ enum SubtipoMovimientoPersonal: string
             self::FIN_DEL_PERIODO            => 'Fin del período',
             self::REVOCATORIA_DEL_MANDATO    => 'Revocatoria del mandato',
             self::REMOCION_POR_EL_CONSEJO    => 'Remoción por el Consejo Provincial',
+            self::TERMINACION_MUTUO_ACUERDO  => 'Terminación por mutuo acuerdo',
+            self::TERMINACION_ANTICIPADA     => 'Terminación anticipada según el contrato',
             self::ASUNTOS_PARTICULARES       => 'Asuntos particulares',
             self::ESTUDIOS_POSGRADO          => 'Estudios de posgrado',
             self::SERVICIO_MILITAR           => 'Servicio militar',
@@ -133,6 +140,11 @@ enum SubtipoMovimientoPersonal: string
             self::VISTO_BUENO                => 'Código del Trabajo Art. 172',
             self::REVOCATORIA_DEL_MANDATO    => 'Constitución Art. 105',
             self::REMOCION_POR_EL_CONSEJO    => 'COOTAD Arts. 333–336',
+            // El contrato es ley para las partes, y solo lo invalida su
+            // consentimiento mutuo o una causa legal (Código Civil Art. 1561).
+            self::CONTRATO_FINALIZADO        => 'El plazo del contrato',
+            self::TERMINACION_MUTUO_ACUERDO  => 'Código Civil Art. 1561',
+            self::TERMINACION_ANTICIPADA     => 'La cláusula de terminación del contrato',
             self::ASUNTOS_PARTICULARES       => 'LOSEP Art. 28 a',
             self::ESTUDIOS_POSGRADO          => 'LOSEP Art. 28 b',
             self::SERVICIO_MILITAR           => 'LOSEP Art. 28 c',
@@ -187,7 +199,8 @@ enum SubtipoMovimientoPersonal: string
      * - Cesación por renuncia/destitución/jubilación/incapacidad: Permanente,
      *   Provisional y Ocasional.
      * - Contrato finalizado: exclusivo de Servicios Profesionales, porque es
-     *   el vencimiento del contrato civil de un año calendario.
+     *   el vencimiento del contrato civil de un año calendario. Con él, desde
+     *   la fase 4.2, sus otras dos terminaciones y el fallecimiento.
      */
     public function elegiblePara(TipoNombramiento $nombramiento): bool
     {
@@ -235,9 +248,12 @@ enum SubtipoMovimientoPersonal: string
             self::PERDIDA_DERECHOS => $conSancionYCesacionLosep,
 
             // La renuncia y el fallecimiento también cierran el período de una
-            // autoridad electa (diseño, 9.14; fase 4.1).
-            self::RENUNCIA,
-            self::FALLECIMIENTO => [...$conSancionYCesacionLosep, TipoNombramiento::ELECCION_POPULAR],
+            // autoridad electa (diseño, 9.14; fase 4.1). Y el fallecimiento, el
+            // contrato civil (fase 4.2).
+            self::RENUNCIA => [...$conSancionYCesacionLosep, TipoNombramiento::ELECCION_POPULAR],
+            self::FALLECIMIENTO => [
+                ...$conSancionYCesacionLosep, TipoNombramiento::ELECCION_POPULAR, TipoNombramiento::SERVICIOS_PROFESIONALES,
+            ],
 
             // Las propias de la autoridad electa.
             self::FIN_DEL_PERIODO,
@@ -269,7 +285,9 @@ enum SubtipoMovimientoPersonal: string
 
             self::SEGUN_SU_REGIMEN => [TipoNombramiento::CODIGO_TRABAJO],
 
-            self::CONTRATO_FINALIZADO => [TipoNombramiento::SERVICIOS_PROFESIONALES],
+            self::CONTRATO_FINALIZADO,
+            self::TERMINACION_MUTUO_ACUERDO,
+            self::TERMINACION_ANTICIPADA => [TipoNombramiento::SERVICIOS_PROFESIONALES],
 
             // Exclusivo de obreros: es el procedimiento del Código del
             // Trabajo, no de la LOSEP.

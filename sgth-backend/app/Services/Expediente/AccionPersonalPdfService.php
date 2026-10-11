@@ -44,6 +44,15 @@ class AccionPersonalPdfService
             );
         }
 
+        // Quien tiene Servicios Profesionales no es servidor (fase 4.2): su
+        // contrato, sus adendas y su terminación los firmaron las partes.
+        if ($movimiento->esDelContratoCivil()) {
+            throw new ReglaNegocioException(
+                'Un acto del contrato civil no tiene documento de acción de personal: el contrato, sus adendas y '
+                    .'su terminación los firman las partes, y aquí solo se registran.'
+            );
+        }
+
         if (! $movimiento->tieneDocumentoImprimible()) {
             throw new ReglaNegocioException(
                 "\"{$movimiento->tipo_movimiento->etiqueta()}\" es un registro interno del "

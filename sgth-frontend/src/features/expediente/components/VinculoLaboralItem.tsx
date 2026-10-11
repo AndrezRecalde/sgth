@@ -102,8 +102,9 @@ export function VinculoLaboralItem({ vinculo, onReprogramar }: Props) {
                     {c.fecha_fin ? formatFecha(c.fecha_fin) : 'Sin plazo'}
                     {/* El plazo es lo único editable de un vínculo ya creado,
                         y solo mientras siga vigente: en uno terminado la fecha
-                        de fin ya es un hecho histórico. */}
-                    {estado === 'vigente' && (
+                        de fin ya es un hecho histórico. El del contrato civil
+                        lo cambia una adenda firmada (fase 4.2). */}
+                    {estado === 'vigente' && c.tipo_nombramiento !== 'servicios_profesionales' && (
                       <Tooltip label="Prórroga o corrección del vencimiento" withArrow>
                         <ActionIcon
                           variant="subtle"

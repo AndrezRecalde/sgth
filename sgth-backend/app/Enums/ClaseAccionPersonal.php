@@ -49,6 +49,7 @@ enum ClaseAccionPersonal: string
     case INICIO_PERIODO            = 'inicio_periodo';
     case LICENCIA_CONSEJO          = 'licencia_consejo';
     case ASUNCION_DEFINITIVA       = 'asuncion_definitiva';
+    case ADENDA                    = 'adenda';
 
     public function etiqueta(): string
     {
@@ -72,6 +73,7 @@ enum ClaseAccionPersonal: string
             self::INICIO_PERIODO            => 'Inicio del Período',
             self::LICENCIA_CONSEJO          => 'Licencia concedida por el Consejo',
             self::ASUNCION_DEFINITIVA       => 'Asunción Definitiva',
+            self::ADENDA                    => 'Adenda al contrato',
         };
     }
 
@@ -86,6 +88,7 @@ enum ClaseAccionPersonal: string
 
             self::TRASLADO,
             self::ASCENSO,
+            self::ADENDA,
             self::INTERCAMBIO_VOLUNTARIO,
             self::COMISION_CON_REMUNERACION,
             self::COMISION_SIN_REMUNERACION => FamiliaAccionPersonal::CAMBIO_ADMINISTRATIVO,
@@ -293,6 +296,7 @@ enum ClaseAccionPersonal: string
             self::INICIO_PERIODO => [TipoMovimientoPersonal::INICIO_PERIODO, null],
             self::LICENCIA_CONSEJO => [TipoMovimientoPersonal::LICENCIA_CONSEJO, null],
             self::ASUNCION_DEFINITIVA => [TipoMovimientoPersonal::ASUNCION_DEFINITIVA, null],
+            self::ADENDA => [TipoMovimientoPersonal::ADENDA, null],
         };
     }
 
@@ -352,6 +356,7 @@ enum ClaseAccionPersonal: string
                 TipoMovimientoPersonal::INICIO_PERIODO            => self::INICIO_PERIODO,
                 TipoMovimientoPersonal::LICENCIA_CONSEJO          => self::LICENCIA_CONSEJO,
                 TipoMovimientoPersonal::ASUNCION_DEFINITIVA       => self::ASUNCION_DEFINITIVA,
+                TipoMovimientoPersonal::ADENDA                    => self::ADENDA,
                 default                                           => null,
             },
         };
@@ -367,6 +372,16 @@ enum ClaseAccionPersonal: string
     public function pideSituacionPropuesta(): bool
     {
         return in_array($this, [self::INGRESO, self::TRASLADO, self::ASCENSO, self::INICIO_PERIODO], true);
+    }
+
+    /**
+     * Lo que cambia la adenda del contrato civil (fase 4.2): la unidad y el
+     * puesto, el plazo y los honorarios, cada uno si cambia. No es la situación
+     * propuesta, que exige el puesto: la adenda puede no tocarlo.
+     */
+    public function pideAdenda(): bool
+    {
+        return $this === self::ADENDA;
     }
 
     /**
@@ -450,22 +465,15 @@ enum ClaseAccionPersonal: string
 
     /**
      * A quién le pide el traslado el informe técnico de la UATH, y con él las
-     * demás reglas del Art. 35 (fase 3.1): a los nombramientos de la LOSEP.
-     * Servicios Profesionales conserva su «Prestación de servicios» sin ellas
-     * hasta su bloque (fase 4.2).
+     * demás reglas del Art. 35 (fase 3.1): a todos los que lo tienen, que son
+     * de la LOSEP. Servicios Profesionales, que no lo es, se cambia de unidad
+     * con la adenda de su contrato desde la fase 4.2.
      *
      * @return list<TipoNombramiento>
      */
     public function pideInformeUathPara(): array
     {
-        if ($this !== self::TRASLADO) {
-            return [];
-        }
-
-        return array_values(array_filter(
-            $this->nombramientosElegibles(),
-            fn (TipoNombramiento $n) => $n !== TipoNombramiento::SERVICIOS_PROFESIONALES,
-        ));
+        return $this === self::TRASLADO ? $this->nombramientosElegibles() : [];
     }
 
     /**
@@ -506,6 +514,10 @@ enum ClaseAccionPersonal: string
             $this === self::TRASLADO =>
                 'A otro puesto vacante de la institución, con igual remuneración y previo informe de la UATH '
                     .'(LOSEP Art. 35), que deja constancia de que el servidor cumple el perfil (Art. 36).',
+            $this === self::ADENDA =>
+                'Cambia el contrato de Servicios Profesionales en lo que diga la adenda firmada: la unidad y el '
+                    .'puesto, el plazo —dentro del año calendario del contrato— o los honorarios. No lleva acción de '
+                    .'personal ni firmantes: el número de la adenda va en el documento firmado.',
             $this === self::ASCENSO =>
                 'Al puesto ganado en concurso, de una escala superior a la del que ocupa (LOSEP Art. 68). '
                     .'Entra con nombramiento provisional de prueba por seis meses y su puesto queda reservado: '

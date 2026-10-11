@@ -193,6 +193,11 @@ class MovimientoPersonalService
             $datos = app(AscensoService::class)->completar($servidor, $datos);
         }
 
+        // La adenda del contrato civil: lo que cambia, y nada más (fase 4.2).
+        if ($tipoMovimiento->esAdenda()) {
+            $datos = app(ContratoCivilService::class)->completarAdenda($servidor, $datos);
+        }
+
         if ($subtipo === SubtipoMovimientoPersonal::TERMINACION_UNILATERAL) {
             self::impedirTerminacionDeProtegida($servidorId);
         }
@@ -250,12 +255,21 @@ class MovimientoPersonalService
             $datos['subtipo_movimiento'] = $subtipo->value;
         }
 
+        // El ingreso de un ocasional es el registro de su contrato, sin acción
+        // [TH N7; fase 2.7], y lo de Servicios Profesionales, del contrato
+        // civil (fase 4.2). Se decide aquí, por donde entran también el
+        // reemplazo y Reclutamiento, y antes de la ficha médica, que depende
+        // de él.
+        $datos['instrumento'] = $this->instrumentoPara(
+            $tipoMovimiento, $datos['tipo_nombramiento_propuesto'] ?? null, $servidor->contratoVigente?->tipo_nombramiento,
+        );
+
         // Default de dictamen médico por tipo/subtipo. Si el llamador lo trae
         // explícito (Talento Humano lo editó, o el ingreso de reclutamiento que
         // ya tiene su dictamen en mano), se respeta.
         $datos['requiere_dictamen_medico'] = array_key_exists('requiere_dictamen_medico', $datos)
             ? (bool) $datos['requiere_dictamen_medico']
-            : $this->requiereDictamenPorDefecto($tipoMovimiento, $subtipo);
+            : $this->requiereDictamenPorDefecto($tipoMovimiento, $subtipo, InstrumentoActo::from($datos['instrumento']));
 
         $datos['puede_marcar'] = $this->resolverPuedeMarcar($datos);
 
@@ -267,13 +281,6 @@ class MovimientoPersonalService
         // `eventos_vinculo`.
         $datos['estado']    = EstadoAccionPersonal::BORRADOR;
         $datos['categoria'] = CategoriaEventoVinculo::ACCION_DE_PERSONAL;
-
-        // El ingreso de un ocasional es el registro de su contrato, sin acción
-        // [TH N7; fase 2.7]. Se decide aquí, por donde entran también el
-        // reemplazo y Reclutamiento.
-        $datos['instrumento'] = $this->instrumentoPara(
-            $tipoMovimiento, $datos['tipo_nombramiento_propuesto'] ?? null, $servidor->contratoVigente?->tipo_nombramiento,
-        );
 
         // La restitución y la remoción del provisional que la hace caber nacen
         // juntas o no nace ninguna.
@@ -429,6 +436,21 @@ class MovimientoPersonalService
                     'fecha_efectiva'        => $movimiento->fecha_efectiva?->toDateString(),
                     'fecha_fin_propuesta'   => $movimiento->fecha_fin_propuesta?->toDateString(),
                     'puesto_destino_id'     => $movimiento->puesto_destino_id,
+                    ...$datos,
+                ],
+            );
+        }
+
+        // La adenda, con lo corregido (fase 4.2).
+        if ($movimiento->tipo_movimiento->esAdenda()) {
+            $datos = app(ContratoCivilService::class)->completarAdenda(
+                Servidor::with('contratoVigente')->findOrFail($movimiento->servidor_id),
+                [
+                    'puesto_destino_id'      => $movimiento->puesto_destino_id,
+                    'unidad_destino_id'      => $movimiento->unidad_destino_id,
+                    'remuneracion_propuesta' => $movimiento->remuneracion_propuesta,
+                    'fecha_fin_propuesta'    => $movimiento->fecha_fin_propuesta?->toDateString(),
+                    'fecha_efectiva'         => $movimiento->fecha_efectiva?->toDateString(),
                     ...$datos,
                 ],
             );
@@ -1245,10 +1267,19 @@ class MovimientoPersonalService
         return $nombramiento?->puedeMarcarPorDefecto();
     }
 
+    /**
+     * En el contrato civil la ficha médica es opcional [TH 25; fase 4.2]: quien
+     * tiene Servicios Profesionales no es servidor. Se puede marcar igual.
+     */
     private function requiereDictamenPorDefecto(
         TipoMovimientoPersonal $tipo,
-        ?SubtipoMovimientoPersonal $subtipo
+        ?SubtipoMovimientoPersonal $subtipo,
+        InstrumentoActo $instrumento,
     ): bool {
+        if ($instrumento === InstrumentoActo::CONTRATO_CIVIL) {
+            return false;
+        }
+
         return $subtipo
             ? $subtipo->requiereDictamenMedicoPorDefecto()
             : $tipo->requiereDictamenMedicoPorDefecto();

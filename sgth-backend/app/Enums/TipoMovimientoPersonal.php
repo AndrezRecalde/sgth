@@ -56,6 +56,11 @@ enum TipoMovimientoPersonal: string
     // El Viceprefecto pasa a Prefecto hasta terminar el período, por la
     // ausencia definitiva del titular (COOTAD Art. 51; fase 4.1b).
     case ASUNCION_DEFINITIVA       = 'asuncion_definitiva';
+    // Lo que cambia del contrato civil de Servicios Profesionales —la unidad y
+    // el puesto, el plazo, los honorarios— lo cambia una adenda que firman las
+    // partes, no una acción de personal (diseño, 9.10; fase 4.2). Reemplaza a
+    // su «Prestación de servicios».
+    case ADENDA                    = 'adenda';
 
     public function etiqueta(): string
     {
@@ -81,6 +86,7 @@ enum TipoMovimientoPersonal: string
             self::INICIO_PERIODO            => 'Inicio del Período',
             self::LICENCIA_CONSEJO          => 'Licencia del Consejo',
             self::ASUNCION_DEFINITIVA       => 'Asunción Definitiva',
+            self::ADENDA                    => 'Adenda',
         };
     }
 
@@ -123,6 +129,9 @@ enum TipoMovimientoPersonal: string
                 SubtipoMovimientoPersonal::PERDIDA_DERECHOS,
                 SubtipoMovimientoPersonal::FALLECIMIENTO,
                 SubtipoMovimientoPersonal::CONTRATO_FINALIZADO,
+                // Las del contrato civil (fase 4.2).
+                SubtipoMovimientoPersonal::TERMINACION_MUTUO_ACUERDO,
+                SubtipoMovimientoPersonal::TERMINACION_ANTICIPADA,
                 SubtipoMovimientoPersonal::VISTO_BUENO,
                 // Las de la autoridad electa (fase 4.1).
                 SubtipoMovimientoPersonal::REVOCATORIA_DEL_MANDATO,
@@ -199,6 +208,7 @@ enum TipoMovimientoPersonal: string
             self::TRASPASO,
             self::CAMBIO_ADMINISTRATIVO,
             self::PRESTACION_SERVICIOS,
+            self::ADENDA,
         ], true);
     }
 
@@ -264,6 +274,15 @@ enum TipoMovimientoPersonal: string
     }
 
     /**
+     * Cambia el contrato civil vigente en lo que diga: la unidad y el puesto, el
+     * plazo, los honorarios (fase 4.2).
+     */
+    public function esAdenda(): bool
+    {
+        return $this === self::ADENDA;
+    }
+
+    /**
      * Las "acciones de personal" formales tienen restricción de elegibilidad
      * por tipo de nombramiento y nacen en estado BORRADOR (deben pasar por el
      * flujo guardado de MovimientoPersonalStateService). La bitácora del
@@ -291,6 +310,7 @@ enum TipoMovimientoPersonal: string
             self::ASCENSO,
             self::LICENCIA_CONSEJO,
             self::ASUNCION_DEFINITIVA,
+            self::ADENDA,
         ], true) || $this->subtipoEquivalente() !== null;
     }
 
@@ -360,8 +380,9 @@ enum TipoMovimientoPersonal: string
      * vigente del servidor (revisadas con TH el 2026-09-28):
      * - Cambio de denominación: solo obreros (Código de Trabajo).
      * - Incremento de remuneración: solo obreros (Código de Trabajo).
-     * - Prestación de servicios: Provisional, Servicios Ocasionales y
-     *   Servicios Profesionales.
+     * - Prestación de servicios: Provisional y Servicios Ocasionales. Servicios
+     *   Profesionales la tuvo hasta la fase 4.2: su cambio de unidad es la
+     *   adenda del contrato.
      * - Cambio administrativo: solo Nombramiento Permanente.
      * - Comisión de servicios sin remuneración: solo Permanente
      *   (+ validación de antigüedad y duración en el servicio).
@@ -400,12 +421,17 @@ enum TipoMovimientoPersonal: string
             // acciones que tiene este último», y el ocasional la tiene. Es lo
             // único de esta respuesta que choca con la lista del 2026-09-28:
             // conviene que TH lo confirme viéndolo en pantalla.
+            //
+            // Servicios Profesionales salió en la fase 4.2: su contrato civil
+            // se cambia con una adenda.
             self::PRESTACION_SERVICIOS => in_array($tipo, [
                 TipoNombramiento::PROVISIONAL,
                 TipoNombramiento::SERVICIOS_OCASIONALES,
-                TipoNombramiento::SERVICIOS_PROFESIONALES,
                 TipoNombramiento::LIBRE_NOMBRAMIENTO,
             ], true),
+            // La adenda, solo del contrato civil (fase 4.2).
+            self::ADENDA =>
+                $tipo === TipoNombramiento::SERVICIOS_PROFESIONALES,
             self::CAMBIO_ADMINISTRATIVO =>
                 $tipo === TipoNombramiento::PERMANENTE,
             self::LICENCIA_SIN_REMUNERACION => in_array($tipo, [

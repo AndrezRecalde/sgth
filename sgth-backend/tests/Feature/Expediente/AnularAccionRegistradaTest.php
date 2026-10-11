@@ -476,6 +476,8 @@ test('tocaElVinculo() cubre exactamente las ramas que aplican un efecto al regis
             || $tipo->asciende()
             // Y la asunción definitiva, al puesto del Prefecto (fase 4.1b).
             || $tipo->asumeLaPrimeraAutoridad()
+            // Y la adenda cambia el contrato civil (fase 4.2).
+            || $tipo->esAdenda()
             || $movimiento->reubicaAlServidor()
             || (bool) $movimiento->subtipoEfectivo()?->cierraVinculo();
 

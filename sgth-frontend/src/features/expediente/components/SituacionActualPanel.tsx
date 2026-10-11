@@ -4,6 +4,7 @@ import { Alert, Box, Grid, Skeleton, Text } from '@mantine/core'
 import { IconAlertTriangle } from '@tabler/icons-react'
 import { SectionHeading } from '@/components/ui'
 import { getApiErrorMessage } from '@/types/api'
+import { formatFecha } from '@/lib/fecha'
 import { useServidor } from '../hooks/useServidor'
 import { BloqueDetalle } from './BloqueDetalle'
 import { partidaDelVinculo } from '../utils/partidaPorModalidad'
@@ -19,6 +20,8 @@ interface Props {
   titulo?: string
   /** Oculta identidad y papeleta: útil cuando ya se ve en otra parte. */
   soloVinculo?: boolean
+  /** Muestra hasta cuándo va el vínculo: la adenda puede cambiarlo (fase 4.2). */
+  conPlazo?: boolean
 }
 
 function Campo({ etiqueta, valor }: { etiqueta: string; valor?: string | null }) {
@@ -36,7 +39,7 @@ function Campo({ etiqueta, valor }: { etiqueta: string; valor?: string | null })
  * el formulario — son datos que ya existen y que nadie debería re-teclear.
  */
 export function SituacionActualPanel({
-  servidorId, titulo = 'Situación actual', soloVinculo = false,
+  servidorId, titulo = 'Situación actual', soloVinculo = false, conPlazo = false,
 }: Props) {
   const { data: servidor, isLoading, error } = useServidor(servidorId)
 
@@ -119,6 +122,14 @@ export function SituacionActualPanel({
                 valor={partidaDelVinculo(contrato)}
               />
             </Grid.Col>
+            {conPlazo && (
+              <Grid.Col span={12}>
+                <Campo
+                  etiqueta="Plazo"
+                  valor={contrato?.fecha_fin ? `Hasta el ${formatFecha(contrato.fecha_fin)}` : 'Sin plazo'}
+                />
+              </Grid.Col>
+            )}
           </>
         )}
       </Grid>

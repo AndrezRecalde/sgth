@@ -32,8 +32,11 @@ const fechaCorta = (f?: string | null): string => (f ? formatFecha(f) : 'sin fin
  */
 export function MovimientoDatosContratacion({
   form,
+  contratoCivilPara = [],
 }: {
   form: UseFormReturn<MovimientoFormData>
+  /** Con estos nombramientos el ingreso es del contrato civil (fase 4.2): la ficha médica es opcional. */
+  contratoCivilPara?: readonly string[]
 }) {
   const contained = useContainedInput()
   const { control, register, setValue, formState: { errors } } = form
@@ -85,6 +88,9 @@ export function MovimientoDatosContratacion({
               if (!admiteMarcacion(v)) {
                 setValue('puede_marcar', false)
               }
+              // En el contrato civil la ficha médica es opcional: abre
+              // desmarcada, y se puede marcar igual.
+              setValue('requiere_dictamen_medico', !contratoCivilPara.includes(v ?? ''))
             }}
             error={errors.tipo_nombramiento_propuesto?.message}
             {...contained}

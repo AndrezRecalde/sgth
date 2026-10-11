@@ -837,6 +837,8 @@ export type MovimientoPersonal = {
   requiere_dictamen_medico?: boolean | null
   movimiento_previo_id?: number | null
   fecha_fin_propuesta?: string | null
+  // El plazo que tenía el contrato civil antes de la adenda (fase 4.2).
+  fecha_fin_origen?: string | null
   // Firmantes sellados al suscribir: se copian dentro de la acción para que
   // una reimpresión no atribuya la firma a quien ocupe hoy el cargo.
   fecha_suscripcion?: string | null

@@ -70,6 +70,20 @@ beforeEach(function () {
             'estado'                   => 'vigente',
         ]);
     };
+
+    // El ocasional, para la reprogramación del plazo (fase 4.2).
+    $this->contratoOcasional = function (string $inicio, string $fin): ContratoServidor {
+        $servidor = ($this->servidorNuevo)();
+
+        return $this->contratoService->crear($servidor->id, [
+            'tipo_nombramiento'        => TipoNombramiento::SERVICIOS_OCASIONALES->value,
+            'unidad_administrativa_id' => $this->unidad->id,
+            'puesto_id'                => $this->puesto->id,
+            'fecha_inicio'             => $inicio,
+            'fecha_fin'                => $fin,
+            'estado'                   => 'vigente',
+        ]);
+    };
 });
 
 // ── Derivación del plazo ────────────────────────────────────────
@@ -271,8 +285,23 @@ test('aprobar la cesación generada cierra el contrato vencido', function () {
 
 // ── Reprogramación del plazo ────────────────────────────────────
 
-test('se puede prorrogar el plazo de un contrato vigente', function () {
+/*
+| Desde la fase 4.2 el plazo del contrato civil lo cambia una adenda firmada
+| (ContratoCivilTest). Lo que sigue es la del ocasional, que tiene las mismas
+| reglas del plazo.
+*/
+
+test('el plazo del contrato civil no se reprograma: se cambia con una adenda', function () {
     $contrato = ($this->contratoProfesional)('2026-03-01');
+
+    expect(fn () => $this->contratoService->reprogramarPlazo($contrato, [
+        'fecha_fin' => '2026-09-30',
+        'motivo'    => 'Acortado de común acuerdo.',
+    ]))->toThrow(ReglaNegocioException::class, 'se cambia con una adenda');
+});
+
+test('se puede prorrogar el plazo de un contrato vigente', function () {
+    $contrato = ($this->contratoOcasional)('2026-03-01', '2026-12-31');
 
     $actualizado = $this->contratoService->reprogramarPlazo($contrato, [
         'fecha_fin' => '2027-06-30',
@@ -283,7 +312,7 @@ test('se puede prorrogar el plazo de un contrato vigente', function () {
 });
 
 test('la reprogramación queda auditada con el valor anterior y el motivo', function () {
-    $contrato = ($this->contratoProfesional)('2026-03-01');
+    $contrato = ($this->contratoOcasional)('2026-03-01', '2026-12-31');
 
     $this->contratoService->reprogramarPlazo($contrato, [
         'fecha_fin' => '2027-06-30',
@@ -316,8 +345,8 @@ test('no se puede reprogramar el plazo de un contrato terminado', function () {
     ]))->toThrow(ReglaNegocioException::class, 'contrato vigente');
 });
 
-test('no se puede dejar sin vencimiento un contrato de servicios profesionales', function () {
-    $contrato = ($this->contratoProfesional)('2026-03-01');
+test('no se puede dejar sin vencimiento un contrato ocasional', function () {
+    $contrato = ($this->contratoOcasional)('2026-03-01', '2026-12-31');
 
     expect(fn () => $this->contratoService->reprogramarPlazo($contrato, [
         'fecha_fin' => null,
@@ -326,7 +355,7 @@ test('no se puede dejar sin vencimiento un contrato de servicios profesionales',
 });
 
 test('la nueva fecha no puede ser anterior al inicio del contrato', function () {
-    $contrato = ($this->contratoProfesional)('2026-03-01');
+    $contrato = ($this->contratoOcasional)('2026-03-01', '2026-12-31');
 
     expect(fn () => $this->contratoService->reprogramarPlazo($contrato, [
         'fecha_fin' => '2026-01-01',
@@ -334,8 +363,9 @@ test('la nueva fecha no puede ser anterior al inicio del contrato', function () 
     ]))->toThrow(ReglaNegocioException::class, 'anterior a la fecha de inicio');
 });
 
+// La del ocasional es el fin del plazo, y hasta la fase 4.2 no la detenía.
 test('una cesación ya generada bloquea la reprogramación hasta anularla', function () {
-    $contrato = ($this->contratoProfesional)('2025-03-01');
+    $contrato = ($this->contratoOcasional)('2025-03-01', '2025-12-31');
 
     $resultado = $this->vencidoService->generarCesacionesPendientes('2026-02-01');
     $movimientoId = $resultado['generadas'][0]['movimiento_id'];
@@ -357,7 +387,7 @@ test('una cesación ya generada bloquea la reprogramación hasta anularla', func
 });
 
 test('prorrogar saca al contrato de la detección de vencidos', function () {
-    $contrato = ($this->contratoProfesional)('2025-03-01');
+    $contrato = ($this->contratoOcasional)('2025-03-01', '2025-12-31');
 
     $this->contratoService->reprogramarPlazo($contrato, [
         'fecha_fin' => '2027-12-31',
@@ -373,7 +403,7 @@ test('prorrogar saca al contrato de la detección de vencidos', function () {
  * formalidad — la trazabilidad existía en la base y no llegaba a nadie.
  */
 test('la actividad laboral muestra la reprogramación con su motivo y su autor', function () {
-    $contrato = ($this->contratoProfesional)('2026-03-01');
+    $contrato = ($this->contratoOcasional)('2026-03-01', '2026-12-31');
 
     $this->contratoService->reprogramarPlazo($contrato, [
         'fecha_fin' => '2027-06-30',
@@ -394,8 +424,8 @@ test('la actividad laboral muestra la reprogramación con su motivo y su autor',
 });
 
 test('los cambios de un contrato no se mezclan con los de otro', function () {
-    $unContrato  = ($this->contratoProfesional)('2026-03-01');
-    $otroServidor = ($this->contratoProfesional)('2026-04-01');
+    $unContrato  = ($this->contratoOcasional)('2026-03-01', '2026-12-31');
+    $otroServidor = ($this->contratoOcasional)('2026-04-01', '2026-12-31');
 
     $this->contratoService->reprogramarPlazo($unContrato, [
         'fecha_fin' => '2027-06-30',
@@ -410,7 +440,7 @@ test('los cambios de un contrato no se mezclan con los de otro', function () {
 });
 
 test('el endpoint reprograma el plazo y exige motivo', function () {
-    $contrato = ($this->contratoProfesional)('2026-03-01');
+    $contrato = ($this->contratoOcasional)('2026-03-01', '2026-12-31');
     $ruta = "/api/v1/expediente/servidores/{$contrato->servidor_id}/contratos/{$contrato->id}/plazo";
 
     $this->putJson($ruta, ['fecha_fin' => '2027-06-30'])->assertStatus(422);

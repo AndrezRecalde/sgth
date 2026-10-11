@@ -110,8 +110,11 @@ test('cada causal nueva aplica a los nombramientos de la tabla 4.3', function ()
         'evaluacion_insuficiente'     => ['servicios_ocasionales'],
         'retiro_voluntario'           => ['nombramiento_permanente'],
         'perdida_derechos_ciudadania' => ['nombramiento_permanente', 'nombramiento_provisional', 'servicios_ocasionales', 'libre_nombramiento_remocion'],
-        // Y el de una autoridad electa (fase 4.1).
-        'fallecimiento'               => ['nombramiento_permanente', 'nombramiento_provisional', 'servicios_ocasionales', 'libre_nombramiento_remocion', 'eleccion_popular'],
+        // Y el de una autoridad electa (fase 4.1), y el del contrato civil (4.2).
+        'fallecimiento'               => ['nombramiento_permanente', 'nombramiento_provisional', 'servicios_ocasionales', 'libre_nombramiento_remocion', 'eleccion_popular', 'servicios_profesionales'],
+        // Las del contrato civil (fase 4.2).
+        'terminacion_mutuo_acuerdo'   => ['servicios_profesionales'],
+        'terminacion_anticipada'      => ['servicios_profesionales'],
     ];
 
     foreach ($matriz as $causal => $esperados) {

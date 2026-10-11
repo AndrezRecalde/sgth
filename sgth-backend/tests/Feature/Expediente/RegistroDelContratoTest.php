@@ -103,15 +103,16 @@ test('el ingreso de un ocasional es el registro de su contrato', function () {
         ->assertJsonPath('datos.tiene_documento_imprimible', false);
 });
 
-test('el de un permanente o un profesional sigue siendo acción de personal', function () {
+test('el de un permanente sigue siendo acción de personal, y el de un profesional es del contrato civil', function () {
     ($this->ingreso)(($this->persona)(), 'nombramiento_permanente', ['fecha_fin_propuesta' => null])
         ->assertCreated()
         ->assertJsonPath('datos.instrumento', 'accion_personal')
         ->assertJsonPath('datos.tiene_documento_imprimible', true);
 
+    // Desde la fase 4.2 (ContratoCivilTest).
     ($this->ingreso)(($this->persona)(), 'servicios_profesionales')
         ->assertCreated()
-        ->assertJsonPath('datos.instrumento', 'accion_personal');
+        ->assertJsonPath('datos.instrumento', 'contrato_civil');
 });
 
 test('cambiar el nombramiento del borrador cambia el instrumento', function () {
@@ -241,8 +242,9 @@ test('el catálogo dice con qué nombramiento el ingreso es registro del contrat
     expect($ingreso['registro_de_contrato_para'])->toBe(['servicios_ocasionales'])
         ->and($traslado['registro_de_contrato_para'])->toBe([])
         ->and(collect($catalogo->json('datos.instrumentos'))->pluck('codigo')->all())
-        // Y el acto de autoridad electa desde la fase 4.1.
-        ->toBe(['accion_personal', 'registro_contrato', 'acto_autoridad']);
+        // Y el acto de autoridad electa desde la fase 4.1, y el contrato civil
+        // desde la 4.2.
+        ->toBe(['accion_personal', 'registro_contrato', 'acto_autoridad', 'contrato_civil']);
 });
 
 test('la bandeja se filtra por instrumento', function () {

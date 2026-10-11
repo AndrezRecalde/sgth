@@ -379,7 +379,9 @@ test('una prestación de servicios reubica al servidor conservando el mismo cont
         ->toBe($this->puestoB->id);
 });
 
-test('una prestación de servicios de Servicios Profesionales no compite por la plaza', function () {
+// Era la prestación de servicios hasta la fase 4.2; ahora es la adenda del
+// contrato civil, que también lo reubica.
+test('la adenda de Servicios Profesionales no compite por la plaza', function () {
     $puestoUnico = Puesto::create([
         'codigo' => 'P-UNICO', 'unidad_administrativa_id' => $this->unidad->id, 'plazas' => 1,
     ]);
@@ -425,9 +427,9 @@ test('una prestación de servicios de Servicios Profesionales no compite por la 
 
     $movimiento = app(\App\Services\Expediente\MovimientoPersonalService::class)
         ->registrar($profesional->id, [
-            'tipo_movimiento'   => TipoMovimientoPersonal::PRESTACION_SERVICIOS->value,
-            'informe_uath_numero' => 'INF-UATH-PRUEBA',
-            'descripcion'       => 'Prestación de servicios al puesto único',
+            'tipo_movimiento'   => TipoMovimientoPersonal::ADENDA->value,
+            'resolucion_numero' => 'ADENDA-PRUEBA',
+            'descripcion'       => 'Adenda al puesto único',
             'fecha_efectiva'    => '2026-08-01',
             'puesto_destino_id' => $puestoUnico->id,
             'unidad_destino_id' => $this->unidad->id,
@@ -438,7 +440,7 @@ test('una prestación de servicios de Servicios Profesionales no compite por la 
 
     // Servicios Profesionales no ocupa plaza (TipoNombramiento::ocupaPlaza()),
     // así que la plaza única del permanente no le estorba: es justamente el
-    // caso que la prestación de servicios tiene que poder resolver.
+    // caso que la adenda tiene que poder resolver.
     $contrato->refresh();
     expect($contrato->puesto_id)->toBe($puestoUnico->id)
         ->and($contrato->estado->value)->toBe('vigente');

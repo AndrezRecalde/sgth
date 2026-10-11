@@ -21,6 +21,8 @@ interface Props {
   tipoNombramiento?: string | null
   /** Lo que la clase dice de la R.M.U., si tiene regla propia: el ascenso (fase 3.3). */
   notaRmu?: string
+  /** Con estos nombramientos el ingreso es del contrato civil (fase 4.2). */
+  contratoCivilPara?: readonly string[]
 }
 
 /**
@@ -31,7 +33,7 @@ interface Props {
  * nada y una comisión deja al servidor en su puesto, así que ahí este bloque no
  * se monta.
  */
-export function MovimientoSituacionPropuesta({ form, esIngreso, tipoNombramiento, notaRmu }: Props) {
+export function MovimientoSituacionPropuesta({ form, esIngreso, tipoNombramiento, notaRmu, contratoCivilPara }: Props) {
   const contained = useContainedInput()
   const { control, setValue, formState: { errors } } = form
 
@@ -206,7 +208,7 @@ export function MovimientoSituacionPropuesta({ form, esIngreso, tipoNombramiento
           )}
         />
 
-        {esIngreso && <MovimientoDatosContratacion form={form} />}
+        {esIngreso && <MovimientoDatosContratacion form={form} contratoCivilPara={contratoCivilPara} />}
       </Stack>
     </BloqueDetalle>
   )

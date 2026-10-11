@@ -104,6 +104,8 @@ class MovimientoPersonalResource extends JsonResource
             'puede_marcar'                => $this->puede_marcar,
             'requiere_dictamen_medico'    => $this->requiere_dictamen_medico,
             'fecha_fin_propuesta'         => $this->fecha_fin_propuesta,
+            // El plazo que tenía el contrato civil antes de la adenda (fase 4.2).
+            'fecha_fin_origen'            => $this->fecha_fin_origen,
 
             // Situación actual congelada al crear la acción: no se deriva del
             // puesto de origen, que pudo cambiar de escala o de partida desde

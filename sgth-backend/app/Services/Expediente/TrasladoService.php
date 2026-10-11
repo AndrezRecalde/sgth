@@ -17,9 +17,8 @@ use App\Models\Expediente\ContratoServidor;
  *
  * La clase «Traslado» se guarda todavía de dos formas —«Traspaso» en los
  * permanentes y «Prestación de servicios» en los demás— y las dos pasan por
- * aquí. Servicios Profesionales conserva su «Prestación de servicios» sin estas
- * reglas, que son de la LOSEP, hasta que su bloque la vuelva adenda del
- * contrato (fase 4.2).
+ * aquí. Servicios Profesionales ya no la tiene: su cambio de unidad es la
+ * adenda del contrato civil (fase 4.2).
  */
 class TrasladoService
 {
