@@ -167,6 +167,13 @@ class MovimientoPersonalService
             );
         }
 
+        // El ascenso: al puesto ganado, de escala superior y antes de los 65
+        // años; el nombramiento de prueba y la remuneración los fija la regla
+        // (LOSEP Arts. 17 b.5, 68 y 81; fase 3.3).
+        if ($tipoMovimiento->asciende()) {
+            $datos = app(AscensoService::class)->completar($servidor, $datos);
+        }
+
         if ($subtipo === SubtipoMovimientoPersonal::TERMINACION_UNILATERAL) {
             self::impedirTerminacionDeProtegida($servidorId);
         }
@@ -373,6 +380,21 @@ class MovimientoPersonalService
             $datos = $this->revalidarRestitucion($movimiento, $datos);
         }
 
+        // El ascenso se vuelve a comprobar con lo corregido, y su remuneración
+        // se recalcula si cambió el puesto (fase 3.3).
+        if ($movimiento->tipo_movimiento->asciende()) {
+            $datos = app(AscensoService::class)->completar(
+                Servidor::with('contratoVigente.puesto')->findOrFail($movimiento->servidor_id),
+                [
+                    'puesto_destino_id'         => $movimiento->puesto_destino_id,
+                    'unidad_destino_id'         => $movimiento->unidad_destino_id,
+                    'fecha_efectiva'            => $movimiento->fecha_efectiva?->toDateString(),
+                    'partida_presupuestaria_id' => $movimiento->partida_presupuestaria_id,
+                    ...$datos,
+                ],
+            );
+        }
+
         $movimiento->update($datos);
 
         return $movimiento->fresh([
@@ -426,6 +448,9 @@ class MovimientoPersonalService
      * La remoción es del provisional cuyo supuesto terminó (b.1, b.3, b.4), y
      * el no superar la prueba, del de prueba (b.5) [diseño, 4.3; fase 3.2]. Los
      * provisionales de antes no dicen su supuesto: conservan las dos.
+     *
+     * Al ascendido no le vale ninguna de las dos (fase 3.3): si no supera la
+     * prueba vuelve a su puesto anterior con el reintegro, no cesa.
      */
     private function validarCausalSegunSupuesto(Servidor $servidor, ?SubtipoMovimientoPersonal $subtipo): void
     {
@@ -433,6 +458,16 @@ class MovimientoPersonalService
 
         if ($vigente?->tipo_nombramiento !== TipoNombramiento::PROVISIONAL || $vigente->supuesto_provisional === null) {
             return;
+        }
+
+        if ($vigente->supuesto_provisional === SupuestoProvisional::ASCENSO && in_array($subtipo, [
+            SubtipoMovimientoPersonal::PERIODO_PRUEBA_NO_SUPERADO, SubtipoMovimientoPersonal::REMOCION,
+        ], true)) {
+            throw new ReglaNegocioException(
+                'El servidor está en el período de prueba de un ascenso: si no lo supera, vuelve a su puesto '
+                    .'anterior con su remuneración anterior (LOSEP Art. 17 b.5). Prepare el reintegro desde '
+                    .'«Períodos de prueba».'
+            );
         }
 
         $dePrueba = $vigente->supuesto_provisional === SupuestoProvisional::DE_PRUEBA;

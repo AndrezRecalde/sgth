@@ -336,7 +336,7 @@ class MovimientoPersonal extends Model
     /**
      * La acción que habilitó a esta. Hoy solo se usa para encadenar el
      * Ingreso y Vinculación con la Cesación de Funciones previa, que es como
-     * Talento Humano opera lo que en otras instituciones sería un ascenso.
+     * Talento Humano operaba el ascenso antes de que existiera (fase 3.3).
      */
     public function movimientoPrevio(): BelongsTo
     {
@@ -390,6 +390,28 @@ class MovimientoPersonal extends Model
         return $this->hasOne(MovimientoPersonal::class, 'movimiento_relacionado_id')
             ->where('tipo_movimiento', TipoMovimientoPersonal::REINTEGRO->value)
             ->where('estado', '!=', EstadoAccionPersonal::ANULADA->value);
+    }
+
+    /**
+     * El nombramiento definitivo que cierra la prueba de este ascenso, el que
+     * no está anulado (fase 3.3).
+     */
+    public function nombramientoDefinitivo(): HasOne
+    {
+        return $this->hasOne(MovimientoPersonal::class, 'movimiento_relacionado_id')
+            ->where('tipo_movimiento', TipoMovimientoPersonal::NOMBRAMIENTO_DEFINITIVO->value)
+            ->where('estado', '!=', EstadoAccionPersonal::ANULADA->value);
+    }
+
+    /**
+     * ¿Es el reintegro del ascendido que no superó la prueba (fase 3.3)? Ese sí
+     * toca el vínculo: lo devuelve a su puesto anterior. El de una comisión o
+     * una licencia no, porque el titular nunca dejó el suyo.
+     */
+    public function esReintegroDelAscenso(): bool
+    {
+        return $this->tipo_movimiento === TipoMovimientoPersonal::REINTEGRO
+            && (bool) $this->movimientoRelacionado?->tipo_movimiento?->asciende();
     }
 
     /**
@@ -536,6 +558,8 @@ class MovimientoPersonal extends Model
     {
         return (bool) $this->tipo_movimiento?->creaVinculo()
             || (bool) $this->tipo_movimiento?->convierteNombramiento()
+            || (bool) $this->tipo_movimiento?->asciende()
+            || $this->esReintegroDelAscenso()
             || $this->reubicaAlServidor()
             || (bool) $this->subtipoEfectivo()?->cierraVinculo();
     }
@@ -584,6 +608,9 @@ class MovimientoPersonal extends Model
         return (bool) $this->tipo_movimiento?->creaVinculo()
             // El nombramiento definitivo: el mismo puesto, ahora permanente.
             || (bool) $this->tipo_movimiento?->convierteNombramiento()
+            // El ascenso propone el puesto ganado, y su reintegro el de antes.
+            || (bool) $this->tipo_movimiento?->asciende()
+            || $this->esReintegroDelAscenso()
             || $this->tipo_movimiento === TipoMovimientoPersonal::SUBROGACION
             || $this->reubicaAlServidor();
     }

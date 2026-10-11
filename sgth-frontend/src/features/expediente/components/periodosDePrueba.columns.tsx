@@ -1,5 +1,5 @@
 import { Text, Tooltip } from '@mantine/core'
-import { IconCertificate } from '@tabler/icons-react'
+import { IconArrowBackUp, IconCertificate } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
 import { StatusBadge, TableActions } from '@/components/ui'
 import { formatFecha } from '@/lib/fecha'
@@ -17,8 +17,14 @@ function Restante({ p }: { p: PeriodoDePrueba }) {
   )
 }
 
-/** El nombramiento definitivo, en trámite o registrado. */
-function Definitivo({ p }: { p: PeriodoDePrueba }) {
+/** Cómo termina: el nombramiento definitivo o, en el ascenso, el reintegro. */
+function Salida({ p }: { p: PeriodoDePrueba }) {
+  if (p.reintegro) {
+    return p.reintegro.codigo_registro
+      ? <Text size="sm" ff="monospace">Reintegro {p.reintegro.codigo_registro}</Text>
+      : <StatusBadge tone="info">Reintegro en trámite</StatusBadge>
+  }
+
   if (!p.definitivo) {
     return p.concluida
       ? (
@@ -38,11 +44,13 @@ interface Opciones {
   /** ¿Quien mira puede preparar acciones para ese servidor? */
   puedePreparar: (servidorId: number | null) => boolean
   onPrepararDefinitivo: (p: PeriodoDePrueba) => void
+  onReintegrar: (p: PeriodoDePrueba) => void
 }
 
 export const getPeriodoDePruebaColumns = ({
   puedePreparar,
   onPrepararDefinitivo,
+  onReintegrar,
 }: Opciones): DataTableColumn<PeriodoDePrueba>[] => [
   {
     accessor: 'servidor',
@@ -55,12 +63,26 @@ export const getPeriodoDePruebaColumns = ({
     ),
   },
   {
+    accessor: 'motivo',
+    title: 'Por qué',
+    width: 130,
+    render: (p) => (
+      <StatusBadge tone={p.motivo === 'ascenso' ? 'info' : 'neutral'}>
+        {p.motivo === 'ascenso' ? 'Ascenso' : 'Ingreso'}
+      </StatusBadge>
+    ),
+  },
+  {
     accessor: 'puesto',
     title: 'Puesto y unidad',
     render: (p) => (
       <div>
         <Text size="sm">{p.puesto ?? '—'}</Text>
         <Text size="xs" c="dimmed">{p.unidad ?? '—'}</Text>
+        {/* El del ascendido, guardado mientras dura la prueba. */}
+        {p.puesto_reservado && (
+          <Text size="xs" c="dimmed">Se le reserva: {p.puesto_reservado}</Text>
+        )}
       </div>
     ),
   },
@@ -77,24 +99,36 @@ export const getPeriodoDePruebaColumns = ({
   },
   {
     accessor: 'definitivo',
-    title: 'Nombramiento definitivo',
-    render: (p) => <Definitivo p={p} />,
+    title: 'Cómo termina',
+    render: (p) => <Salida p={p} />,
   },
   {
     accessor: 'acciones',
     title: '',
     width: 50,
-    render: (p) => (
-      <TableActions
-        actions={[
-          {
-            label: 'Preparar nombramiento definitivo',
-            icon: <IconCertificate size={14} />,
-            onClick: () => onPrepararDefinitivo(p),
-            hidden: !p.concluida || !!p.definitivo || !puedePreparar(p.servidor.id),
-          },
-        ]}
-      />
-    ),
+    render: (p) => {
+      const sinSalida = !p.definitivo && !p.reintegro
+      const puede = puedePreparar(p.servidor.id)
+
+      return (
+        <TableActions
+          actions={[
+            {
+              label: 'Preparar nombramiento definitivo',
+              icon: <IconCertificate size={14} />,
+              onClick: () => onPrepararDefinitivo(p),
+              hidden: !p.concluida || !sinSalida || !puede,
+            },
+            {
+              // Si no supera la prueba, vuelve a su puesto (LOSEP 17 b.5).
+              label: 'Reintegrar al puesto anterior',
+              icon: <IconArrowBackUp size={14} />,
+              onClick: () => onReintegrar(p),
+              hidden: p.motivo !== 'ascenso' || !sinSalida || !puede,
+            },
+          ]}
+        />
+      )
+    },
   },
 ]

@@ -32,6 +32,7 @@ class MovimientoPersonalStateService
         private readonly SancionSinEfectoService $sanciones,
         private readonly RestitucionService $restituciones,
         private readonly TrasladoService $traslados,
+        private readonly AscensoService $ascensos,
     ) {
     }
 
@@ -162,6 +163,11 @@ class MovimientoPersonalStateService
     private function aplicarSuscrita(MovimientoPersonal $movimiento, array $datos): void
     {
         $this->validarSupuestoDelProvisional($movimiento);
+
+        if ($movimiento->tipo_movimiento->asciende()) {
+            $this->ascensos->exigirActa($movimiento);
+        }
+
         $this->aplicarDictamenSiViene($movimiento, $datos);
 
         // Suscribir es el acto de firma: aquí se sella quién firmó, porque las
@@ -310,7 +316,7 @@ class MovimientoPersonalStateService
 
         if ($movimiento->rigeEn($hoy)) {
             // Antes, lo que ya debía regir para este servidor y el comando aún
-            // no aplicó: la cesación del «ascenso» va antes que su ingreso. Si
+            // no aplicó: la cesación va antes que el ingreso que la sigue. Si
             // algo de eso falla, este registro no sigue sobre un vínculo a medias.
             $previas = $this->aplicarVigentes($hoy, $movimiento->servidor_id, $movimiento->id);
 
@@ -332,7 +338,7 @@ class MovimientoPersonalStateService
      * de una acción que rige ya, para que nada quede atrás.
      *
      * En orden de fecha, y en un mismo día los cierres antes que los ingresos:
-     * es el «ascenso» de Talento Humano —cesación y nuevo ingreso el mismo
+     * el ganador interno que no asciende —cesación y nuevo ingreso el mismo
      * día—, y el ingreso no puede nacer con el vínculo anterior abierto.
      *
      * Cada acción va en su propia transacción: si una falla, queda pendiente
@@ -353,7 +359,9 @@ class MovimientoPersonalStateService
                 $m->fecha_efectiva->toDateString(),
                 match (true) {
                     $m->cierraElVinculo()                  => 0,
-                    $m->reubicaAlServidor()                => 1,
+                    $m->reubicaAlServidor(),
+                    $m->tipo_movimiento->asciende(),
+                    $m->esReintegroDelAscenso()            => 1,
                     $m->tipo_movimiento->creaVinculo()     => 3,
                     default                                => 2,
                 },
@@ -454,6 +462,13 @@ class MovimientoPersonalStateService
             // El provisional de prueba pasa a permanente en el mismo vínculo
             // (fase 3.2).
             $this->contratoServidorService->convertirEnDefinitivo($movimiento);
+        } elseif ($tipo->asciende()) {
+            // Al puesto ganado, de prueba y con el de antes reservado (fase 3.3).
+            $this->contratoServidorService->ascender($movimiento);
+        } elseif ($movimiento->esReintegroDelAscenso()) {
+            // No superó la prueba: vuelve a su puesto anterior con su
+            // remuneración anterior (LOSEP 17 b.5).
+            $this->contratoServidorService->volverAlPuestoDeAntes($movimiento->movimientoRelacionado);
         }
 
         // La subrogación no crea vínculo: reemplaza temporalmente al titular
@@ -562,8 +577,46 @@ class MovimientoPersonalStateService
             ], true)
         ) {
             throw new ReglaNegocioException(
-                'La ausencia que este reintegro cierra ya no está registrada: anule el reintegro.'
+                $movimiento->esReintegroDelAscenso()
+                    ? 'El ascenso del que este reintegro devuelve ya no está registrado: anule el reintegro.'
+                    : 'La ausencia que este reintegro cierra ya no está registrada: anule el reintegro.'
             );
+        }
+
+        // El reintegro del ascendido: tiene que seguir en la prueba de ese
+        // ascenso (fase 3.3).
+        if ($movimiento->esReintegroDelAscenso()) {
+            $vigente = Servidor::with('contratoVigente')->find($movimiento->servidor_id)?->contratoVigente;
+
+            if (! $vigente || (int) $vigente->movimiento_ascenso_id !== (int) $movimiento->movimiento_relacionado_id) {
+                throw new ReglaNegocioException(
+                    'El servidor ya no está en el período de prueba de ese ascenso: no hay a qué puesto reintegrarlo.'
+                );
+            }
+        }
+
+        // El ascenso, otra vez: el puesto o su escala pueden haber cambiado desde
+        // el borrador, y la edad corre (fase 3.3).
+        if ($movimiento->tipo_movimiento->asciende()) {
+            $servidor = Servidor::with('contratoVigente.puesto')->findOrFail($movimiento->servidor_id);
+
+            $this->ascensos->validarDestino(
+                $servidor->contratoVigente,
+                $movimiento->puesto_destino_id ? (int) $movimiento->puesto_destino_id : null,
+                $movimiento->unidad_destino_id ? (int) $movimiento->unidad_destino_id : null,
+            );
+            $this->ascensos->validarEdad($servidor, $movimiento->fecha_efectiva?->toDateString());
+
+            // Si rige ya, `ascender()` lo comprueba al aplicarlo.
+            if (! $movimiento->rigeEn($hoy) && $movimiento->puesto_destino_id) {
+                $this->contratoServidorService->validarVacante(
+                    (int) $movimiento->puesto_destino_id,
+                    TipoNombramiento::PROVISIONAL->value,
+                    $servidor->contratoVigente->id,
+                    null,
+                    $movimiento->id,
+                );
+            }
         }
 
         if ($movimiento->tipo_movimiento->creaVinculo()) {
@@ -619,6 +672,10 @@ class MovimientoPersonalStateService
     {
         if ($movimiento->esAusenciaTemporal()) {
             $this->impedirAnularAusenciaConReintegroOReemplazo($movimiento);
+        }
+
+        if ($movimiento->tipo_movimiento->asciende()) {
+            $this->impedirAnularAscensoConSuSalida($movimiento);
         }
 
         $this->aplicarDictamenSiViene($movimiento, $datos);
@@ -703,6 +760,27 @@ class MovimientoPersonalStateService
             throw new ReglaNegocioException(
                 'Hay un ingreso de reemplazo en trámite para esta ausencia: anúlelo antes.'
             );
+        }
+    }
+
+    /**
+     * Un ascenso cuya prueba ya tiene salida —el definitivo o el reintegro, en
+     * trámite o emitidos— no se anula: se anula antes esa salida (fase 3.3).
+     * Sin esto, el borrador quedaba colgando de un ascenso que no existe.
+     */
+    private function impedirAnularAscensoConSuSalida(MovimientoPersonal $ascenso): void
+    {
+        foreach ([
+            'nombramiento definitivo' => $ascenso->nombramientoDefinitivo()->first(),
+            'reintegro'               => $ascenso->reintegro()->first(),
+        ] as $nombre => $salida) {
+            if ($salida) {
+                throw new ReglaNegocioException(
+                    "Este ascenso tiene su {$nombre}"
+                        .($salida->codigo_registro ? " ({$salida->codigo_registro})" : ' en trámite')
+                        .": anule antes el {$nombre}."
+                );
+            }
         }
     }
 
@@ -824,6 +902,16 @@ class MovimientoPersonalStateService
 
         if ($movimiento->tipo_movimiento->convierteNombramiento()) {
             $this->contratoServidorService->devolverAPrueba($movimiento);
+            return;
+        }
+
+        if ($movimiento->tipo_movimiento->asciende()) {
+            $this->contratoServidorService->volverAlPuestoDeAntes($movimiento);
+            return;
+        }
+
+        if ($movimiento->esReintegroDelAscenso()) {
+            $this->contratoServidorService->volverAlPuestoGanado($movimiento->movimientoRelacionado);
             return;
         }
 
@@ -970,7 +1058,7 @@ class MovimientoPersonalStateService
 
     /**
      * Un ingreso ya no cierra por su cuenta el vínculo vigente del servidor.
-     * Talento Humano no maneja "ascenso": cuando alguien pasa a otro puesto se
+     * Fuera del ascenso (fase 3.3), cuando alguien pasa a otro puesto se
      * registran dos acciones formales y separadas — primero la Cesación de
      * Funciones, después el Ingreso y Vinculación —, cada una con su propio
      * documento. Cerrar el contrato en silencio desde el ingreso convertía ese
@@ -984,7 +1072,7 @@ class MovimientoPersonalStateService
             return;
         }
 
-        // El «ascenso»: la cesación del puesto actual ya está registrada y rige
+        // El ganador interno: la cesación del puesto actual ya está registrada y rige
         // a más tardar el día en que rige este ingreso. El vínculo se cierra
         // antes de que este nazca (`aplicarVigentes()` aplica los cierres
         // primero), así que no hay dos vínculos a la vez.
@@ -1115,7 +1203,9 @@ class MovimientoPersonalStateService
         // La etiqueta sale del subtipo cuando lo hay y del tipo cuando no: la
         // prestación de servicios reubica sin tener subtipo, y el mensaje decía
         // el nombre de otra cosa.
-        if ($movimiento->reubicaAlServidor() && !$movimiento->puesto_destino_id) {
+        if (($movimiento->reubicaAlServidor() || $movimiento->tipo_movimiento->asciende())
+            && !$movimiento->puesto_destino_id
+        ) {
             $etiqueta = $movimiento->subtipoEfectivo()?->etiqueta()
                 ?? $movimiento->tipo_movimiento->etiqueta();
 

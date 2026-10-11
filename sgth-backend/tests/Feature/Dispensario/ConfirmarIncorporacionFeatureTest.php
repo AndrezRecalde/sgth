@@ -201,7 +201,7 @@ test('candidato interno con vínculo vigente gana el concurso: el ingreso exige 
     $stateService = app(MovimientoPersonalStateService::class);
     $movimiento = $stateService->transicionar($movimiento->fresh(), EstadoAccionPersonal::SUSCRITA);
 
-    // Talento Humano no maneja "ascenso": el ingreso ya no cierra el vínculo
+    // Un provisional no asciende (fase 3.3): el ingreso no cierra el vínculo
     // anterior por su cuenta, exige que se registre antes la cesación.
     expect(fn () => $stateService->transicionar($movimiento->fresh(), EstadoAccionPersonal::REGISTRADA))
         ->toThrow(ReglaNegocioException::class, 'Registre primero la Cesación de Funciones');
@@ -232,6 +232,60 @@ test('candidato interno con vínculo vigente gana el concurso: el ingreso exige 
     expect($vinculoNuevo->puesto_id)->toBe($this->puesto->id);
 
     expect($servidorInterno->fresh()->puesto_id)->toBe($this->puesto->id);
+});
+
+test('el ganador interno de carrera, a un puesto de escala superior, asciende en vez de cesar e ingresar (fase 3.3)', function () {
+    $escalaMenor = GrupoOcupacional::create([
+        'grado_codigo' => 'SP2', 'grado_numerico' => 2, 'grupo' => 'Profesional',
+        'denominacion_generica' => 'Asistente', 'rmu' => 901.00, 'regimen' => 'losep', 'activo' => true,
+    ]);
+    $puestoActual = Puesto::create([
+        'unidad_administrativa_id' => $this->unidad->id, 'grupo_ocupacional_id' => $escalaMenor->id,
+        'plazas' => 1, 'regimen_laboral' => 'losep', 'activo' => true,
+    ]);
+
+    $servidorInterno = Servidor::create([
+        'cedula' => '1751234567', 'nombre' => 'María', 'apellido' => 'Torres',
+        'regimen_laboral' => 'losep', 'estado' => true, 'tipo_nombramiento' => 'nombramiento_permanente',
+        'puesto_id' => $puestoActual->id, 'unidad_administrativa_id' => $this->unidad->id,
+    ]);
+    $vinculo = ContratoServidor::create([
+        'servidor_id' => $servidorInterno->id, 'tipo_nombramiento' => 'nombramiento_permanente',
+        'unidad_administrativa_id' => $this->unidad->id, 'puesto_id' => $puestoActual->id,
+        'remuneracion' => 901, 'fecha_inicio' => '2019-03-01', 'estado' => 'vigente',
+    ]);
+
+    $this->postulante->update(['servidor_id' => $servidorInterno->id]);
+
+    $response = $this->actingAs($this->user, 'sanctum')
+        ->postJson("/api/v1/dispensario/solicitudes-certificacion/{$this->solicitud->id}/confirmar-incorporacion")
+        ->assertOk();
+
+    expect($response->json('mensaje'))->toContain('ascenso')
+        ->not->toContain('Cesación de Funciones');
+
+    $ascenso = MovimientoPersonal::findOrFail($response->json('datos.movimiento_id'));
+    expect($ascenso->tipo_movimiento)->toBe(TipoMovimientoPersonal::ASCENSO)
+        ->and($ascenso->estado)->toBe(EstadoAccionPersonal::BORRADOR)
+        ->and($ascenso->puesto_destino_id)->toBe($this->puesto->id)
+        ->and((float) $ascenso->remuneracion_propuesta)->toBe(1212.0);
+
+    // Talento Humano completa el acta y lo registra: el mismo vínculo pasa al
+    // puesto del concurso, de prueba, y el de antes se le reserva.
+    app(MovimientoPersonalService::class)->actualizarBorrador($ascenso, [
+        'acta_concurso_numero' => 'ACTA-CNV-2026-001',
+        'acta_concurso_fecha'  => now()->toDateString(),
+    ]);
+    $stateService = app(MovimientoPersonalStateService::class);
+    $stateService->transicionar($ascenso->fresh(), EstadoAccionPersonal::SUSCRITA);
+    $stateService->transicionar($ascenso->fresh(), EstadoAccionPersonal::REGISTRADA);
+
+    $vinculo->refresh();
+    expect($vinculo->estado->value)->toBe('vigente')
+        ->and($vinculo->puesto_id)->toBe($this->puesto->id)
+        ->and($vinculo->tipo_nombramiento)->toBe(TipoNombramiento::PROVISIONAL)
+        ->and($vinculo->puesto_reservado_id)->toBe($puestoActual->id)
+        ->and(ContratoServidor::where('servidor_id', $servidorInterno->id)->count())->toBe(1);
 });
 
 test('ex-servidor inactivo que reingresa vuelve a estado=true automáticamente al registrar el ingreso', function () {

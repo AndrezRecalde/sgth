@@ -181,6 +181,8 @@ test('cada clase aplica exactamente a los nombramientos de antes', function () {
         'restitucion' => [],
         // Nace del período de prueba, no del formulario (3.2).
         'nombramiento_definitivo' => [],
+        // El servidor de carrera (3.3).
+        'ascenso' => ['nombramiento_permanente'],
     ];
 
     foreach (ClaseAccionPersonal::cases() as $clase) {
@@ -225,8 +227,9 @@ test('lo que pide el formulario coincide con lo que la acción hace al registrar
             // vuelve al que tenía, con el mismo nombramiento (fase 2.6).
             $creaUnoNuevo = $tipo->creaVinculo() && $clase !== ClaseAccionPersonal::RESTITUCION;
 
+            // El ascenso reubica también, con su propia regla (fase 3.3).
             expect($clase->pideSituacionPropuesta())
-                ->toBe($creaUnoNuevo || $movimiento->reubicaAlServidor(), "Situación propuesta de «{$nombre}»")
+                ->toBe($creaUnoNuevo || $movimiento->reubicaAlServidor() || $tipo->asciende(), "Situación propuesta de «{$nombre}»")
                 // El período lo piden las ausencias: las comisiones y, desde la
                 // fase 2.2, la licencia sin remuneración.
                 ->and($clase->pidePeriodo())

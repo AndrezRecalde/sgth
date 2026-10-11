@@ -12,7 +12,12 @@ import { buscarClase } from '../utils/catalogoAcciones'
  * contrato, y el documento impreso acabaría con un número que no corresponde a
  * nada.
  */
-function soloLoQueAplica(data: MovimientoFormData, pideContratacion: boolean): MovimientoFormData {
+function soloLoQueAplica(
+  data: MovimientoFormData,
+  pideContratacion: boolean,
+  /** El ascenso trae el acta sin ser ingreso (fase 3.3). */
+  pideActa = false,
+): MovimientoFormData {
   if (pideContratacion) {
     // El supuesto y el acta solo son del provisional (fase 3.2); el backend
     // también los limpia.
@@ -40,8 +45,8 @@ function soloLoQueAplica(data: MovimientoFormData, pideContratacion: boolean): M
     puede_marcar: null,
     tipo_nombramiento_propuesto: null,
     supuesto_provisional_propuesto: null,
-    acta_concurso_numero: null,
-    acta_concurso_fecha: null,
+    acta_concurso_numero: pideActa ? (data.acta_concurso_numero?.trim() || null) : null,
+    acta_concurso_fecha: pideActa ? data.acta_concurso_fecha : null,
     cubre_movimiento_id: null,
   }
 }
@@ -72,7 +77,7 @@ export function useGuardarAccionPersonal({
     mutationFn: (data: MovimientoFormData) => {
       const clase = buscarClase(catalogo, data.clase)
       const limpio = {
-        ...soloLoQueAplica(data, !!clase?.pide_contratacion),
+        ...soloLoQueAplica(data, !!clase?.pide_contratacion, !!clase?.pide_acta_concurso),
         // La institución y la marca de estudios solo viajan en las clases que
         // las piden (fase 2.3): en otra acción se grabarían sin significar nada.
         institucion_destino: clase?.pide_institucion_destino ? (data.institucion_destino?.trim() || null) : null,

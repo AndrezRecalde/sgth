@@ -66,7 +66,10 @@ class PlantillaService
         return DB::table('puestos as p')
             ->join('unidades_administrativas as u', 'u.id', '=', 'p.unidad_administrativa_id')
             ->leftJoin('contratos_servidor as c', function ($join) {
-                $join->on('c.puesto_id', '=', 'p.id')
+                // También el ascendido en prueba que dejó el puesto: se le
+                // reserva hasta que la prueba termine (fase 3.3).
+                $join->on(fn ($on) => $on->on('c.puesto_id', '=', 'p.id')
+                    ->orOn('c.puesto_reservado_id', '=', 'p.id'))
                     ->where('c.estado', 'vigente')
                     ->whereNull('c.deleted_at')
                     // El reemplazo no consume plaza: la sigue teniendo el

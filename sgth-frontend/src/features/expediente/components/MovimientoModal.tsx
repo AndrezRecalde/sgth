@@ -261,6 +261,9 @@ function FormularioAccion({
                     form={form}
                     esIngreso={esIngreso}
                     tipoNombramiento={vinculo.tipoNombramiento}
+                    notaRmu={claseElegida?.codigo === 'ascenso'
+                      ? 'La de la escala del puesto ganado; si hoy cobra más, conserva la suya (LOSEP, transitoria tercera).'
+                      : undefined}
                   />
                 </Grid.Col>
               </Grid>

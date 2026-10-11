@@ -206,14 +206,15 @@ test('quien no prepara acciones no reintegra', function () {
     ($this->reintegrar)($ausencia, $this->hoy)->assertForbidden();
 });
 
-test('es de quien puede tener una ausencia: permanentes, obreros y dignatarios', function () {
+test('es de quien puede tener una ausencia —permanentes, obreros y dignatarios— y del ascendido que vuelve', function () {
     $elegibles = array_values(array_map(
         fn (TipoNombramiento $n) => $n->value,
         array_filter(TipoNombramiento::cases(), fn (TipoNombramiento $n) => TipoMovimientoPersonal::REINTEGRO->elegiblePara($n)),
     ));
     sort($elegibles);
 
-    expect($elegibles)->toBe(['codigo_trabajo', 'eleccion_popular', 'nombramiento_permanente']);
+    // El provisional, por el ascendido que no superó la prueba (fase 3.3).
+    expect($elegibles)->toBe(['codigo_trabajo', 'eleccion_popular', 'nombramiento_permanente', 'nombramiento_provisional']);
 });
 
 // ── El fin de la ausencia ───────────────────────────────────────

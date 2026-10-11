@@ -544,6 +544,7 @@ test('tieneDocumentoImprimible() cubre todo acto formal, que es todo lo que qued
         TipoMovimientoPersonal::REGIMEN_DISCIPLINARIO,
         TipoMovimientoPersonal::REINTEGRO,
         TipoMovimientoPersonal::NOMBRAMIENTO_DEFINITIVO,
+        TipoMovimientoPersonal::ASCENSO,
         // …más los tipos planos legados que tienen subtipo equivalente…
         TipoMovimientoPersonal::TRASLADO,
         TipoMovimientoPersonal::TRASPASO,

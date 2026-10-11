@@ -45,6 +45,7 @@ enum ClaseAccionPersonal: string
     case REINTEGRO                 = 'reintegro';
     case RESTITUCION               = 'restitucion';
     case NOMBRAMIENTO_DEFINITIVO   = 'nombramiento_definitivo';
+    case ASCENSO                   = 'ascenso';
 
     public function etiqueta(): string
     {
@@ -64,6 +65,7 @@ enum ClaseAccionPersonal: string
             self::REINTEGRO                 => 'Reintegro',
             self::RESTITUCION               => 'Restitución',
             self::NOMBRAMIENTO_DEFINITIVO   => 'Nombramiento Definitivo',
+            self::ASCENSO                   => 'Ascenso',
         };
     }
 
@@ -76,6 +78,7 @@ enum ClaseAccionPersonal: string
             self::NOMBRAMIENTO_DEFINITIVO => FamiliaAccionPersonal::INGRESO,
 
             self::TRASLADO,
+            self::ASCENSO,
             self::INTERCAMBIO_VOLUNTARIO,
             self::COMISION_CON_REMUNERACION,
             self::COMISION_SIN_REMUNERACION => FamiliaAccionPersonal::CAMBIO_ADMINISTRATIVO,
@@ -266,6 +269,7 @@ enum ClaseAccionPersonal: string
             self::REINTEGRO => [TipoMovimientoPersonal::REINTEGRO, null],
             self::RESTITUCION => [TipoMovimientoPersonal::RESTITUCION, null],
             self::NOMBRAMIENTO_DEFINITIVO => [TipoMovimientoPersonal::NOMBRAMIENTO_DEFINITIVO, null],
+            self::ASCENSO => [TipoMovimientoPersonal::ASCENSO, null],
         };
     }
 
@@ -321,6 +325,7 @@ enum ClaseAccionPersonal: string
                 TipoMovimientoPersonal::REINTEGRO                 => self::REINTEGRO,
                 TipoMovimientoPersonal::RESTITUCION               => self::RESTITUCION,
                 TipoMovimientoPersonal::NOMBRAMIENTO_DEFINITIVO   => self::NOMBRAMIENTO_DEFINITIVO,
+                TipoMovimientoPersonal::ASCENSO                   => self::ASCENSO,
                 default                                           => null,
             },
         };
@@ -331,11 +336,21 @@ enum ClaseAccionPersonal: string
     /**
      * Situación actual frente a situación propuesta: puesto, unidad, R.M.U. y
      * partida de destino. La pide el ingreso, donde nace el vínculo, y el
-     * traslado, que reubica al servidor dentro de él.
+     * traslado y el ascenso, que reubican al servidor dentro de él.
      */
     public function pideSituacionPropuesta(): bool
     {
-        return in_array($this, [self::INGRESO, self::TRASLADO], true);
+        return in_array($this, [self::INGRESO, self::TRASLADO, self::ASCENSO], true);
+    }
+
+    /**
+     * El acta final del concurso (número y fecha). El ascenso se gana en
+     * concurso (LOSEP Art. 68; fase 3.3). El ingreso también la pide, pero solo
+     * si es de prueba: eso lo decide su supuesto, no la clase.
+     */
+    public function pideActaConcurso(): bool
+    {
+        return $this === self::ASCENSO;
     }
 
     /**
@@ -446,6 +461,11 @@ enum ClaseAccionPersonal: string
             $this === self::TRASLADO =>
                 'A otro puesto vacante de la institución, con igual remuneración y previo informe de la UATH '
                     .'(LOSEP Art. 35), que deja constancia de que el servidor cumple el perfil (Art. 36).',
+            $this === self::ASCENSO =>
+                'Al puesto ganado en concurso, de una escala superior a la del que ocupa (LOSEP Art. 68). '
+                    .'Entra con nombramiento provisional de prueba por seis meses y su puesto queda reservado: '
+                    .'si no supera la prueba, vuelve a él con su remuneración anterior (Art. 17 b.5). '
+                    .'A los 65 años ya no se asciende (Art. 81).',
             $this === self::RESTITUCION =>
                 'Por sentencia ejecutoriada (LOSEP Art. 46): deja sin efecto la cesación que cerró '
                     .'su último nombramiento permanente y lo devuelve al mismo puesto, sin perder la '

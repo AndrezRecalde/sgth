@@ -4239,8 +4239,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Prepara en borrador el nombramiento definitivo, cumplidos los tres meses */
+        /** Prepara en borrador el nombramiento definitivo, cumplida la prueba */
         post: operations["periodoDePrueba.nombramientoDefinitivo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/contratos/{contrato}/reintegro-del-ascenso": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Prepara en borrador el reintegro del ascendido a su puesto anterior */
+        post: operations["periodoDePrueba.reintegroDelAscenso"];
         delete?: never;
         options?: never;
         head?: never;
@@ -7420,12 +7437,12 @@ export interface components {
          * @description La clase legal de una acción de personal: el acto que se registra, con el nombre que le da la LOSEP (diseño de Acciones de Personal, sección 4). Es la identidad pública del catálogo. El frontend elige una clase —y, en la cesación, una causal— y el backend la traduce al par tipo/subtipo con el que todavía se guarda y opera cada acción. Esa traducción vive aquí, en `tipoYSubtipo()`, y su inversa en `desde()`: son las dos únicas puertas entre los dos vocabularios.  Las reglas no se repiten. La elegibilidad por nombramiento se pregunta a `TipoMovimientoPersonal` y `SubtipoMovimientoPersonal`, que siguen siendo su única fuente: esta clase solo las agrupa con el nombre legal. Lo que es solo de formulario —qué bloques pide, el aviso de la comisión— sí vive aquí, y `CatalogoAccionesPersonalTest` comprueba que coincida con lo que el tipo/subtipo traducido hace de verdad.  Nombres que cambian respecto de los que veía Talento Humano, todos aceptados el 2026-10-09 (cuestionario, preguntas N1, 9 y 15):  - el «Traspaso» de los permanentes y la «Prestación de servicios» de los    demás son el mismo acto, el **traslado** del Art. 35;  - el «Traslado administrativo» entre instituciones es el **intercambio    voluntario** del Art. 39;  - el «Cambio de denominación» de los obreros es el **cambio de ocupación**    del Art. 192 del Código del Trabajo.
          * @enum {string}
          */
-        ClaseAccionPersonal: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "subrogacion" | "encargo" | "incremento_remuneracion" | "cambio_ocupacion" | "sancion" | "cesacion" | "reintegro" | "restitucion" | "nombramiento_definitivo";
+        ClaseAccionPersonal: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "subrogacion" | "encargo" | "incremento_remuneracion" | "cambio_ocupacion" | "sancion" | "cesacion" | "reintegro" | "restitucion" | "nombramiento_definitivo" | "ascenso";
         /** ClaseAccionPersonalResource */
         ClaseAccionPersonalResource: {
             codigo: components["schemas"]["ClaseAccionPersonal"];
             /** @enum {string} */
-            etiqueta: "Ingreso y Vinculación" | "Traslado" | "Intercambio Voluntario" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Licencia sin Remuneración" | "Subrogación" | "Encargo" | "Incremento de Remuneración" | "Cambio de Ocupación" | "Sanción Disciplinaria" | "Cesación de Funciones" | "Reintegro" | "Restitución" | "Nombramiento Definitivo";
+            etiqueta: "Ingreso y Vinculación" | "Traslado" | "Intercambio Voluntario" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Licencia sin Remuneración" | "Subrogación" | "Encargo" | "Incremento de Remuneración" | "Cambio de Ocupación" | "Sanción Disciplinaria" | "Cesación de Funciones" | "Reintegro" | "Restitución" | "Nombramiento Definitivo" | "Ascenso";
             familia: components["schemas"]["FamiliaAccionPersonal"];
             se_crea_desde_formulario: boolean;
             requiere_vinculo: boolean;
@@ -7438,6 +7455,8 @@ export interface components {
             pide_datos_judiciales: boolean;
             pide_informe_uath_para: components["schemas"]["TipoNombramiento"][];
             pide_contratacion: boolean;
+            /** @description El acta final del concurso: la pide el ascenso (fase 3.3). */
+            pide_acta_concurso: boolean;
             registro_de_contrato_para: components["schemas"]["TipoNombramiento"][];
             dictamen_medico_por_defecto: boolean;
             aviso: string | null;
@@ -7558,6 +7577,8 @@ export interface components {
             movimiento_origen_id: number | null;
             movimiento_cierre_id: number | null;
             supuesto_provisional: components["schemas"]["SupuestoProvisional"] | null;
+            puesto_reservado_id: number | null;
+            movimiento_ascenso_id: number | null;
             rau: string;
         };
         /** Convocatoria */
@@ -9401,6 +9422,21 @@ export interface components {
             observacion?: string | null;
         };
         /**
+         * ReintegrarAscensoRequest
+         * @description El reintegro del ascendido que no superó la prueba (fase 3.3): cuándo vuelve
+         *     a su puesto anterior, el informe de la evaluación y la explicación del
+         *     documento. El rango de la fecha lo valida ReintegroService, que conoce el
+         *     período de prueba.
+         */
+        ReintegrarAscensoRequest: {
+            /** Format: date-time */
+            fecha_regreso: string;
+            /** @description La ley lo condiciona a una evaluación técnica y objetiva (LOSEP 17 b.5). */
+            informe_uath_numero: string;
+            descripcion: string;
+            observacion?: string | null;
+        };
+        /**
          * ReintegrarAusenciaRequest
          * @description El reintegro que se prepara desde la ausencia (fase 2.4): cuándo vuelve el
          *     servidor y la explicación del documento. El rango de la fecha lo valida
@@ -10254,7 +10290,7 @@ export interface components {
              *     contrato» que nacía registrada y sin efecto.
              * @enum {string}
              */
-            clase: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "cambio_ocupacion" | "cesacion" | "restitucion";
+            clase: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "cambio_ocupacion" | "cesacion" | "restitucion" | "ascenso";
             /**
              * @description Que la causal sea obligatoria, que pertenezca a la clase y que
              *     aplique al nombramiento lo decide
@@ -10775,17 +10811,17 @@ export interface components {
         };
         /**
          * SupuestoProvisional
-         * @description Para qué se da un nombramiento provisional (LOSEP Art. 17 b; diseño de Acciones de Personal, 4.2 y 4.3; fase 3.2). Decide qué causales le valen: la remoción es del provisional cuyo supuesto terminó (b.1, b.3, b.4) y el no superar la prueba, del de prueba (b.5). No se ofrecen el b.2 —licencia sin remuneración— ni la parte del b.3 que cubre una comisión: son reemplazos, y los reemplazos son solo ocasionales o profesionales [TH N10].
+         * @description Para qué se da un nombramiento provisional (LOSEP Art. 17 b; diseño de Acciones de Personal, 4.2 y 4.3; fase 3.2). Decide qué causales le valen: la remoción es del provisional cuyo supuesto terminó (b.1, b.3, b.4) y el no superar la prueba, del de prueba (b.5). No se ofrecen el b.2 —licencia sin remuneración— ni la parte del b.3 que cubre una comisión: son reemplazos, y los reemplazos son solo ocasionales o profesionales [TH N10].  El ascendido también es provisional de prueba (b.5, inciso segundo; fase 3.3), pero con reglas propias: seis meses, su puesto anterior reservado y, si no la supera, el reintegro a ese puesto en lugar de la cesación. No se elige en el ingreso: lo pone el ascenso.
          * @enum {string}
          */
-        SupuestoProvisional: "suspendido_o_destituido" | "puesto_vacante" | "nivel_jerarquico_superior" | "de_prueba";
+        SupuestoProvisional: "suspendido_o_destituido" | "puesto_vacante" | "nivel_jerarquico_superior" | "de_prueba" | "ascenso";
         /** SupuestoProvisionalResource */
         SupuestoProvisionalResource: {
             codigo: components["schemas"]["SupuestoProvisional"];
             /** @enum {string} */
-            etiqueta: "Puesto de un servidor suspendido o destituido" | "Puesto vacante" | "Puesto del nivel jerárquico superior" | "De prueba";
+            etiqueta: "Puesto de un servidor suspendido o destituido" | "Puesto vacante" | "Puesto del nivel jerárquico superior" | "De prueba" | "De prueba por ascenso";
             /** @enum {string} */
-            base_legal: "LOSEP Art. 17 b.1" | "LOSEP Art. 17 b.3" | "LOSEP Art. 17 b.4" | "LOSEP Art. 17 b.5";
+            base_legal: "LOSEP Art. 17 b.1" | "LOSEP Art. 17 b.3" | "LOSEP Art. 17 b.4" | "LOSEP Art. 17 b.5" | "LOSEP Arts. 17 b.5 y 68";
         };
         /** TecnicoDtic */
         TecnicoDtic: {
@@ -10890,7 +10926,7 @@ export interface components {
          * TipoMovimientoPersonal
          * @enum {string}
          */
-        TipoMovimientoPersonal: "traslado" | "subrogacion" | "comision_servicios" | "ingreso" | "cambio_denominacion" | "prestacion_servicios" | "cambio_administrativo" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "traspaso" | "destitucion" | "cesacion_funciones" | "regimen_disciplinario" | "reintegro" | "restitucion" | "nombramiento_definitivo";
+        TipoMovimientoPersonal: "traslado" | "subrogacion" | "comision_servicios" | "ingreso" | "cambio_denominacion" | "prestacion_servicios" | "cambio_administrativo" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "traspaso" | "destitucion" | "cesacion_funciones" | "regimen_disciplinario" | "reintegro" | "restitucion" | "nombramiento_definitivo" | "ascenso";
         /**
          * TipoNombramiento
          * @enum {string}
@@ -14941,7 +14977,10 @@ export interface operations {
                             clases: components["schemas"]["ClaseAccionPersonalResource"][];
                             /** @description Con qué documento se formaliza cada acto (fase 2.7). */
                             instrumentos: components["schemas"]["InstrumentoActoResource"][];
-                            /** @description Para qué se da un provisional (LOSEP 17 b; fase 3.2). */
+                            /**
+                             * @description Para qué se da un provisional (LOSEP 17 b; fase 3.2). El del ascenso no
+                             *     se elige: lo pone el ascenso (fase 3.3).
+                             */
                             supuestos_provisional: components["schemas"]["SupuestoProvisionalResource"][];
                         };
                         meta: null;
@@ -23499,13 +23538,24 @@ export interface operations {
                                 nombre: string;
                                 cedula: string;
                             };
+                            /** @description Por qué está en prueba: ingresó por concurso o ascendió. */
+                            motivo: string;
+                            /** @enum {string} */
+                            motivo_etiqueta: "Puesto de un servidor suspendido o destituido" | "Puesto vacante" | "Puesto del nivel jerárquico superior" | "De prueba" | "De prueba por ascenso";
                             puesto: string;
                             unidad: string;
+                            /** @description El del ascendido, que se le guarda mientras dura la prueba. */
+                            puesto_reservado: string;
                             desde: string;
                             hasta: string;
                             dias_restantes: number | null;
                             concluida: string;
                             definitivo: {
+                                id: number;
+                                estado: string;
+                                codigo_registro: string | null;
+                            } | null;
+                            reintegro: {
                                 id: number;
                                 estado: string;
                                 codigo_registro: string | null;
@@ -23547,6 +23597,42 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
             404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "periodoDePrueba.reintegroDelAscenso": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The contrato ID */
+                contrato: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReintegrarAscensoRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Reintegro al puesto anterior preparado en borrador.";
+                        datos: components["schemas"]["MovimientoPersonalResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "periodos.resumen": {

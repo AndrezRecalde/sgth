@@ -472,6 +472,8 @@ test('tocaElVinculo() cubre exactamente las ramas que aplican un efecto al regis
         $aplicaAlgo = $tipo->creaVinculo()
             // El nombramiento definitivo convierte el vínculo (fase 3.2).
             || $tipo->convierteNombramiento()
+            // Y el ascenso lo mueve al puesto ganado (fase 3.3).
+            || $tipo->asciende()
             || $movimiento->reubicaAlServidor()
             || (bool) $movimiento->subtipoEfectivo()?->cierraVinculo();
 

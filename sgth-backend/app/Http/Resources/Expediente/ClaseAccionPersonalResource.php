@@ -42,6 +42,8 @@ class ClaseAccionPersonalResource extends JsonResource
             /** @var list<TipoNombramiento> */
             'pide_informe_uath_para'      => $clase->pideInformeUathPara(),
             'pide_contratacion'           => $clase->pideContratacion(),
+            // El acta final del concurso: la pide el ascenso (fase 3.3).
+            'pide_acta_concurso'          => $clase->pideActaConcurso(),
             // Con estos nombramientos no es acción sino registro del contrato
             // (fase 2.7): el formulario no pide firmantes.
             /** @var list<TipoNombramiento> */

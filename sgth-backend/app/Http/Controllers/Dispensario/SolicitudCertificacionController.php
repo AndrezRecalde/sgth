@@ -19,10 +19,13 @@ use App\Http\Responses\ApiResponse;
 use App\Models\Dispensario\FichaSaludOcupacional;
 use App\Models\Dispensario\SolicitudCertificacionMedica;
 use App\Models\Dispensario\SolicitudConstantesVitales;
+use App\Models\Estructura\Puesto;
+use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
 use App\Models\Seleccion\Convocatoria;
 use App\Models\Seleccion\Onboarding;
 use App\Services\Dispensario\TriajeService;
+use App\Services\Expediente\AscensoService;
 use App\Services\Expediente\MovimientoPersonalService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -580,23 +583,23 @@ final class SolicitudCertificacionController extends Controller
                 ]);
             }
 
-            $tipoNombramientoPropuesto = $this->resolverTipoNombramientoPropuesto($convocatoria);
+            // El ganador interno de carrera que gana un puesto de escala
+            // superior asciende (LOSEP Art. 68; TH N2; fase 3.3): conserva su
+            // vínculo y su puesto queda reservado durante la prueba. Hasta aquí
+            // se le cesaba y volvía a ingresar, y perdía el derecho a volver.
+            $vigente = $esCandidatoInterno ? $servidor->contratoVigente()->first() : null;
+            $asciende = $convocatoria->tipo_proceso === TipoProcesoConvocatoria::FORMAL
+                && AscensoService::esAscenso($vigente, $puesto);
 
-            $movimiento = $this->movimientoPersonalService->registrar($servidor->id, [
-                'tipo_movimiento' => TipoMovimientoPersonal::INGRESO->value,
-                'descripcion' => "Incorporación tras proceso de selección {$convocatoria->codigo}. Dictamen médico: {$solicitud->dictamen}.",
-                'fecha_efectiva' => now()->toDateString(),
-                'tipo_nombramiento_propuesto' => $tipoNombramientoPropuesto->value,
-                // El ganador de un concurso entra de prueba (LOSEP 17 b.5; TH
-                // N3; fase 3.2). El acta final del concurso la completa Talento
-                // Humano en el borrador: Reclutamiento no la tiene.
-                'supuesto_provisional_propuesto' => $convocatoria->tipo_proceso === TipoProcesoConvocatoria::FORMAL
-                    ? SupuestoProvisional::DE_PRUEBA->value
-                    : null,
-                'puesto_destino_id' => $puesto->id,
-                'unidad_destino_id' => $puesto->unidad_administrativa_id,
-                'remuneracion_propuesta' => $puesto->rmu,
-            ]);
+            $movimiento = $asciende
+                ? $this->movimientoPersonalService->registrar($servidor->id, [
+                    'tipo_movimiento'   => TipoMovimientoPersonal::ASCENSO->value,
+                    'descripcion'       => "Ascenso tras el concurso {$convocatoria->codigo}. Dictamen médico: {$solicitud->dictamen}.",
+                    'fecha_efectiva'    => now()->toDateString(),
+                    'puesto_destino_id' => $puesto->id,
+                    'unidad_destino_id' => $puesto->unidad_administrativa_id,
+                ])
+                : $this->registrarIngreso($servidor, $convocatoria, $solicitud, $puesto);
 
             // Se enlaza la solicitud al movimiento para que el guard de
             // dictamen médico de MovimientoPersonalStateService encuentre este
@@ -634,17 +637,23 @@ final class SolicitudCertificacionController extends Controller
             // no lo cierra por su cuenta: Talento Humano debe registrar antes la
             // Cesación de Funciones del puesto actual (ver
             // MovimientoPersonalStateService::assertSinVinculoVigente()).
-            $mensajeCesacion = $esCandidatoInterno && $servidor->contratoVigente()->exists()
+            $mensajeCesacion = ! $asciende && $esCandidatoInterno && $servidor->contratoVigente()->exists()
                 ? ' Como mantiene un vínculo vigente, primero debe registrarse la '
                     .'Cesación de Funciones de su puesto actual; recién entonces podrá '
                     .'registrarse este Ingreso y Vinculación.'
                 : '';
 
+            $mensajeActo = $asciende
+                ? "Es servidor de carrera y el puesto es de escala superior: el ascenso quedó en borrador (código {$movimiento->id}). "
+                    .'Talento Humano completa el acta final del concurso y lo aprueba en Expediente / Movimientos; '
+                    .'su puesto actual queda reservado durante los seis meses de prueba.'
+                : 'El ingreso quedó registrado en borrador (código '
+                    .$movimiento->id.') y requiere revisión y aprobación de Talento Humano en el '
+                    .'módulo de Expediente / Movimientos antes de quedar vinculado formalmente.';
+
             return ApiResponse::ok(
                 ['servidor_id' => $servidor->id, 'movimiento_id' => $movimiento->id],
-                "{$mensajeIdentidad} El ingreso quedó registrado en borrador (código "
-                    .$movimiento->id.') y requiere revisión y aprobación de Talento Humano en el '
-                    .'módulo de Expediente / Movimientos antes de quedar vinculado formalmente.'
+                "{$mensajeIdentidad} {$mensajeActo}"
                     .$mensajeCesacion
                     .($finalizada ? ' Era el último ganador: la convocatoria quedó finalizada.' : '')
             );
@@ -652,6 +661,32 @@ final class SolicitudCertificacionController extends Controller
             \DB::rollBack();
             throw $e;
         }
+    }
+
+    /** El ingreso del ganador: el de afuera, o el interno que no asciende. */
+    private function registrarIngreso(
+        Servidor $servidor,
+        Convocatoria $convocatoria,
+        SolicitudCertificacionMedica $solicitud,
+        Puesto $puesto,
+    ): MovimientoPersonal {
+        $tipoNombramientoPropuesto = $this->resolverTipoNombramientoPropuesto($convocatoria);
+
+        return $this->movimientoPersonalService->registrar($servidor->id, [
+            'tipo_movimiento' => TipoMovimientoPersonal::INGRESO->value,
+            'descripcion' => "Incorporación tras proceso de selección {$convocatoria->codigo}. Dictamen médico: {$solicitud->dictamen}.",
+            'fecha_efectiva' => now()->toDateString(),
+            'tipo_nombramiento_propuesto' => $tipoNombramientoPropuesto->value,
+            // El ganador de un concurso entra de prueba (LOSEP 17 b.5; TH
+            // N3; fase 3.2). El acta final del concurso la completa Talento
+            // Humano en el borrador: Reclutamiento no la tiene.
+            'supuesto_provisional_propuesto' => $convocatoria->tipo_proceso === TipoProcesoConvocatoria::FORMAL
+                ? SupuestoProvisional::DE_PRUEBA->value
+                : null,
+            'puesto_destino_id' => $puesto->id,
+            'unidad_destino_id' => $puesto->unidad_administrativa_id,
+            'remuneracion_propuesta' => $puesto->rmu,
+        ]);
     }
 
     /**

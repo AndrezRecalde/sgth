@@ -15,8 +15,9 @@ class ConfiguracionReporteMovimientoSeeder extends Seeder
      * listado de la norma (ingresos, traslados, cambios administrativos).
      * "Ascensos" quedó SIN mapeo (2026-07-23): el tipo_movimiento 'ascenso'
      * se retiró del catálogo por no existir como acción de personal en la
-     * operación real del GAD — la categoría de la norma queda descubierta
-     * hasta que se defina cómo se registrará esa acción de personal.
+     * operación real del GAD. Volvió en la fase 3.3 (2026-10-10) y tiene ya
+     * dónde mapear, pero se deja sin marcar hasta que la UATH lo confirme
+     * contra el formato exacto, igual que el resto.
      * Desde la taxonomía de dos niveles (2026-07-27) sí existen 'traspaso' y
      * 'cesacion_funciones' como tipo_movimiento propio, así que la categoría
      * "cesación de funciones" de la norma ya tiene dónde mapear — pero se
