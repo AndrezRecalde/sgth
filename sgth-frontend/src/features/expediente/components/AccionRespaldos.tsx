@@ -49,19 +49,27 @@ export function AccionRespaldos({ m }: { m: MovimientoPersonal }) {
           </BloqueDetalle>
         )}
 
-        {/* La sentencia de la restitución [TH N15; fase 2.6]. */}
+        {/* La sentencia de la restitución [TH N15; fase 2.6], o la
+            providencia que ordena el reintegro del obrero (fase 4.5b). */}
         {m.clase === 'restitucion' && (
           <BloqueDetalle>
-            <SectionHeading title="Sentencia" mb="xs" />
+            <SectionHeading title={m.fecha_providencia ? 'Orden judicial' : 'Sentencia'} mb="xs" />
             <DetailList items={[
               { label: 'Causa', value: m.causa_judicial_numero },
               { label: 'Unidad judicial', value: m.unidad_judicial },
-              { label: 'Sentencia', value: formatFecha(m.fecha_sentencia) },
-              { label: 'Ejecutoría', value: formatFecha(m.fecha_ejecutoria) },
-              {
-                label: 'Remuneraciones dejadas de percibir',
-                value: dinero(m.remuneraciones_dejadas_de_percibir),
-              },
+              ...(m.fecha_providencia
+                ? [{ label: 'Providencia', value: `${formatFecha(m.fecha_providencia)} · reintegro inmediato, como medida cautelar` }]
+                : [
+                  { label: 'Sentencia', value: formatFecha(m.fecha_sentencia) },
+                  { label: 'Ejecutoría', value: formatFecha(m.fecha_ejecutoria) },
+                ]),
+              // Al obrero se le calculan si la sentencia no las fija.
+              ...(m.remuneraciones_dejadas_de_percibir != null || m.instrumento !== 'documento_ct'
+                ? [{
+                  label: 'Remuneraciones dejadas de percibir',
+                  value: dinero(m.remuneraciones_dejadas_de_percibir),
+                }]
+                : []),
             ]} />
           </BloqueDetalle>
         )}

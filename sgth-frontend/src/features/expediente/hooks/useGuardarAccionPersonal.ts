@@ -107,7 +107,9 @@ export function useGuardarAccionPersonal({
         informe_uath_numero: clase?.pide_informe_uath_para.length
           ? (data.informe_uath_numero?.trim() || null)
           : null,
-        // La sentencia, solo en la restitución (fase 2.6).
+        // La sentencia, solo en la restitución (fase 2.6), o la providencia
+        // del reintegro del obrero (fase 4.5b): las fechas del camino que no
+        // se tomó ya las borró el formulario.
         ...(clase?.pide_datos_judiciales
           ? {
               causa_judicial_numero: data.causa_judicial_numero?.trim() || null,
@@ -118,8 +120,11 @@ export function useGuardarAccionPersonal({
               unidad_judicial: null,
               fecha_sentencia: null,
               fecha_ejecutoria: null,
+              fecha_providencia: null,
               remuneraciones_dejadas_de_percibir: null,
             }),
+        // Solo del formulario: el backend lo deduce de las fechas.
+        orden_judicial: undefined,
       }
 
       if (edicion) {

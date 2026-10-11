@@ -8930,6 +8930,8 @@ export interface components {
             fecha_consentimiento: string | null;
             /** Format: date-time */
             fecha_presentacion_renuncia: string | null;
+            /** Format: date-time */
+            fecha_providencia: string | null;
         };
         /** MovimientoPersonalResource */
         MovimientoPersonalResource: {
@@ -9051,6 +9053,7 @@ export interface components {
                 id: number;
                 codigo_registro: string | null;
                 estado: string;
+                etiqueta: string;
             } | null;
             codigo: string | null;
             codigo_registro: string | null;
@@ -9073,6 +9076,11 @@ export interface components {
             fecha_sentencia: string | null;
             /** Format: date-time */
             fecha_ejecutoria: string | null;
+            /**
+             * Format: date-time
+             * @description O la providencia que ordena el reintegro del obrero (fase 4.5b).
+             */
+            fecha_providencia: string | null;
             remuneraciones_dejadas_de_percibir: string | null;
             documento_respaldo: string | null;
             dictamen_presupuestario_ref: string | null;
@@ -10074,6 +10082,12 @@ export interface components {
              *     resolución interna.
              */
             pendiente_vinculacion: boolean | null;
+            /**
+             * @description El nombramiento de su último vínculo, vigente o no: a quien no
+             *     tiene uno, el formulario le ofrece la restitución, y la del
+             *     obrero es el reintegro por despido ineficaz (fase 4.5b).
+             */
+            ultimo_nombramiento?: string;
             documentos?: components["schemas"]["DocumentoServidorResource"][];
             movimientos?: components["schemas"]["MovimientoPersonal"][];
         };
@@ -10658,6 +10672,11 @@ export interface components {
             fecha_sentencia?: string | null;
             /** Format: date-time */
             fecha_ejecutoria?: string | null;
+            /**
+             * Format: date-time
+             * @description La providencia que ordena el reintegro del obrero (CT 195.2; fase 4.5b).
+             */
+            fecha_providencia?: string | null;
             remuneraciones_dejadas_de_percibir?: number | null;
             puesto_origen_id?: number | null;
             puesto_destino_id?: number | null;
@@ -11809,6 +11828,8 @@ export interface components {
             fecha_sentencia?: string | null;
             /** Format: date-time */
             fecha_ejecutoria?: string | null;
+            /** Format: date-time */
+            fecha_providencia?: string | null;
             remuneraciones_dejadas_de_percibir?: number | null;
             puesto_origen_id?: number | null;
             puesto_destino_id?: number | null;
@@ -29198,6 +29219,11 @@ export interface operations {
                             fecha_efectiva: string;
                             total_referencial: string | null;
                             acta: components["schemas"]["ActaFiniquito"];
+                            reintegro: {
+                                id: number;
+                                codigo_registro: string | null;
+                                estado: string;
+                            } | null;
                         }[];
                         meta: null;
                     };

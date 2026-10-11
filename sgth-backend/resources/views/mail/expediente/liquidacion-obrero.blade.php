@@ -1,8 +1,9 @@
 <x-mail::message>
+@php($reintegro ??= false)
 @if($anulada)
-# Terminación anulada
+# {{ $reintegro ? 'Reintegro anulado' : 'Terminación anulada' }}
 
-Talento Humano **anuló** la terminación **N.º {{ $numero }}** de **{{ $servidor }}**
+Talento Humano **anuló** {{ $reintegro ? 'el reintegro' : 'la terminación' }} **N.º {{ $numero }}** de **{{ $servidor }}**
 (C.I. {{ $cedula }}), cuya liquidación se le envió para pago.
 
 @if($motivo)
@@ -11,6 +12,14 @@ Talento Humano **anuló** la terminación **N.º {{ $numero }}** de **{{ $servid
 
 Si la liquidación ya se pagó, disponga a quien corresponda lo que proceda. Se
 adjunta la hoja de registro interno con la marca de anulación.
+@elseif($reintegro)
+# Reintegro de obrero: remuneraciones pendientes
+
+Talento Humano registró el reintegro **N.º {{ $numero }}** de **{{ $servidor }}**
+(C.I. {{ $cedula }}), cuyo despido el juez declaró ineficaz, que rige desde el
+{{ $rige }}. Lo ordena la {{ $orden ?? 'orden judicial' }}, en la causa **{{ $causa ?? '—' }}**
+({{ $unidadJudicial ?? '—' }}). Disponga a quien corresponda el pago de lo pendiente,
+con su recargo (Código del Trabajo, Art. 195.3).
 @else
 # Liquidación de obrero para pago
 

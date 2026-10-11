@@ -1,5 +1,5 @@
 import api from '@/lib/axios'
-import type { ApiResponse } from '@/types/api'
+import type { ApiResponse, EstadoAccionPersonal } from '@/types/api'
 
 /** El acta de finiquito de un obrero, registrada desde el sistema del Ministerio del Trabajo (fase 4.5). */
 export type ActaFiniquito = {
@@ -31,6 +31,8 @@ export type TerminacionObrero = {
   /** El total de la liquidación referencial; null si la causal no tiene rubros del Código. */
   total_referencial: number | null
   acta: ActaFiniquito | null
+  /** El reintegro por despido ineficaz que la deja sin efecto, en trámite o emitido (fase 4.5b). */
+  reintegro: { id: number; codigo_registro: string | null; estado: EstadoAccionPersonal } | null
 }
 
 /** «Apellidos Nombres», como lo enseñan los listados. */

@@ -28,6 +28,10 @@ use Illuminate\Support\Facades\Storage;
  * La jubilación patronal y el retiro voluntario los fija el contrato colectivo
  * o la ordenanza (fase 4.6), y los haberes ordinarios —décimos, vacaciones no
  * gozadas— son de la desvinculación de todos (fase 7).
+ *
+ * Desde la fase 4.5b, también lo que se paga por el reintegro del obrero cuyo
+ * despido el juez declaró ineficaz (Art. 195.3): las remuneraciones pendientes
+ * con el 10 % de recargo, por el mismo aviso a Financiero.
  */
 class TerminacionObreroService
 {
@@ -39,6 +43,9 @@ class TerminacionObreroService
 
     /** El tope de la indemnización por despido intempestivo, en remuneraciones (Art. 188). */
     private const MESES_MAXIMOS_DE_INDEMNIZACION = 25;
+
+    /** El recargo sobre las remuneraciones pendientes del despido ineficaz (Art. 195.3). */
+    private const RECARGO_DEL_DESPIDO_INEFICAZ = 0.10;
 
     /**
      * Valida la causal del obrero y deja la fecha en que presentó la renuncia
@@ -118,12 +125,21 @@ class TerminacionObreroService
      * año); en la indemnización, la fracción de un año es un año completo (Art.
      * 188).
      *
-     * @return array{remuneracion: ?float, desde: ?string, anios_servicio: ?float,
+     * El reintegro por despido ineficaz trae la suya (fase 4.5b): `tipo` dice
+     * cuál es, y en el reintegro `desde` y `hasta` son los días que estuvo
+     * fuera.
+     *
+     * @return array{tipo: 'terminacion'|'reintegro', remuneracion: ?float, desde: ?string, hasta: ?string,
+     *               anios_servicio: ?float, dias_fuera: ?int,
      *               rubros: list<array{concepto: string, base_legal: string, detalle: string, monto: ?float}>,
      *               total: ?float, nota: string}|null
      */
     public function liquidacion(MovimientoPersonal $movimiento): ?array
     {
+        if ($movimiento->esReintegroPorDespidoIneficaz()) {
+            return $this->liquidacionDelReintegro($movimiento);
+        }
+
         $causal = $movimiento->subtipoEfectivo();
 
         if ($movimiento->instrumento !== InstrumentoActo::DOCUMENTO_CT
@@ -165,9 +181,12 @@ class TerminacionObreroService
         $montos = array_column($rubros, 'monto');
 
         return [
+            'tipo'           => 'terminacion',
             'remuneracion'   => $remuneracion,
             'desde'          => $desde,
+            'hasta'          => null,
             'anios_servicio' => $anios,
+            'dias_fuera'     => null,
             'rubros'         => $rubros,
             'total'          => in_array(null, $montos, true) ? null : round(array_sum($montos), 2),
             'nota'           => 'Referencial. No incluye los décimos, las vacaciones no gozadas ni lo que fije el '
@@ -176,9 +195,78 @@ class TerminacionObreroService
     }
 
     /**
+     * Lo que se paga por el reintegro del obrero cuyo despido el juez declaró
+     * ineficaz (Art. 195.3): las remuneraciones pendientes, desde el día
+     * siguiente a la terminación hasta la víspera del reintegro, con el 10 %
+     * de recargo. Las que fije la sentencia, si Talento Humano las registró;
+     * si no, la remuneración que tenía, a treinta días por mes.
+     *
+     * @return array{tipo: 'reintegro', remuneracion: ?float, desde: ?string, hasta: ?string,
+     *               anios_servicio: null, dias_fuera: ?int,
+     *               rubros: list<array{concepto: string, base_legal: string, detalle: string, monto: ?float}>,
+     *               total: ?float, nota: string}
+     */
+    private function liquidacionDelReintegro(MovimientoPersonal $reintegro): array
+    {
+        $terminacion = $reintegro->movimientoRelacionado;
+        $remuneracion = app(RestitucionService::class)->remuneracionQueTenia($reintegro);
+
+        $desde = $terminacion?->fecha_efectiva?->copy()->addDay();
+        $hasta = $reintegro->fecha_efectiva?->copy()->subDay();
+        $dias = $desde && $hasta ? max(0, (int) $desde->diffInDays($hasta, false) + 1) : null;
+
+        $fijadas = $reintegro->remuneraciones_dejadas_de_percibir !== null
+            ? (float) $reintegro->remuneraciones_dejadas_de_percibir
+            : null;
+        $pendientes = $fijadas
+            ?? ($remuneracion !== null && $dias !== null ? round($remuneracion / 30 * $dias, 2) : null);
+        $recargo = $pendientes !== null ? round($pendientes * self::RECARGO_DEL_DESPIDO_INEFICAZ, 2) : null;
+
+        $nota = 'Referencial.';
+        if (! $reintegro->fecha_sentencia) {
+            $nota .= ' Lo ordenó la providencia como medida cautelar: lo pendiente se paga si la sentencia declara '
+                .'la ineficacia del despido.';
+        }
+        if ($acta = $terminacion?->actaFiniquito) {
+            $nota .= ' En el finiquito de la terminación se pagaron $'.number_format((float) $acta->valor_pagado, 2)
+                .': se compensan según lo que disponga la sentencia.';
+        }
+        $nota .= ' El valor definitivo lo establece Financiero.';
+
+        return [
+            'tipo'           => 'reintegro',
+            'remuneracion'   => $remuneracion,
+            'desde'          => $dias ? $desde->toDateString() : null,
+            'hasta'          => $dias ? $hasta->toDateString() : null,
+            'anios_servicio' => null,
+            'dias_fuera'     => $dias,
+            'rubros'         => [
+                [
+                    'concepto'   => 'Remuneraciones pendientes',
+                    'base_legal' => 'Código del Trabajo, Art. 195.3',
+                    'detalle'    => $fijadas !== null
+                        ? 'Las que fija la sentencia'
+                        : ($dias === null ? 'Sin los días fuera' : "{$dias} días fuera, a treinta por mes"),
+                    'monto'      => $pendientes,
+                ],
+                [
+                    'concepto'   => 'Recargo del 10 %',
+                    'base_legal' => 'Código del Trabajo, Art. 195.3',
+                    'detalle'    => '10 % de las remuneraciones pendientes',
+                    'monto'      => $recargo,
+                ],
+            ],
+            'total'          => $pendientes !== null ? round($pendientes + $recargo, 2) : null,
+            'nota'           => $nota,
+        ];
+    }
+
+    /**
      * Las terminaciones de obreros ya registradas, con su liquidación y su
      * acta de finiquito, de la más reciente a la más antigua.
      *
+     * La que el juez dejó sin efecto con un reintegro ya registrado lo dice, y
+     * no está pendiente de acta (fase 4.5b).
      * @return list<array<string, mixed>>
      */
     public function listar(bool $soloSinActa = false): array
@@ -187,8 +275,11 @@ class TerminacionObreroService
             ->where('instrumento', InstrumentoActo::DOCUMENTO_CT->value)
             ->where('tipo_movimiento', TipoMovimientoPersonal::CESACION_FUNCIONES->value)
             ->whereIn('estado', [EstadoAccionPersonal::REGISTRADA->value, EstadoAccionPersonal::NOTIFICADA->value])
-            ->when($soloSinActa, fn ($q) => $q->whereDoesntHave('actaFiniquito'))
-            ->with(['servidor:id,nombre,segundo_nombre,apellido,segundo_apellido,cedula', 'actaFiniquito'])
+            ->when($soloSinActa, fn ($q) => $q->whereDoesntHave('actaFiniquito')
+                ->whereDoesntHave('restitucion', fn ($r) => $r->whereIn('estado', [
+                    EstadoAccionPersonal::REGISTRADA->value, EstadoAccionPersonal::NOTIFICADA->value,
+                ])))
+            ->with(['servidor:id,nombre,segundo_nombre,apellido,segundo_apellido,cedula', 'actaFiniquito', 'restitucion'])
             ->orderByDesc('fecha_efectiva')
             ->orderByDesc('id')
             ->get()
@@ -201,6 +292,11 @@ class TerminacionObreroService
                 'fecha_efectiva'  => $m->fecha_efectiva?->toDateString(),
                 'total_referencial' => $this->liquidacion($m)['total'] ?? null,
                 'acta'            => $m->actaFiniquito,
+                'reintegro'       => $m->restitucion ? [
+                    'id'              => $m->restitucion->id,
+                    'codigo_registro' => $m->restitucion->codigo_registro,
+                    'estado'          => $m->restitucion->estado->value,
+                ] : null,
             ])
             ->values()
             ->all();

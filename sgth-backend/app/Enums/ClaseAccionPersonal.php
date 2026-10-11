@@ -417,6 +417,9 @@ enum ClaseAccionPersonal: string
             self::CAMBIO_LUGAR            => 'Código del Trabajo, Art. 192',
             self::INCREMENTO_REMUNERACION => 'Código del Trabajo, Art. 118; contrato colectivo',
             self::SANCION                 => 'Código del Trabajo, Arts. 44 y 64; reglamento interno',
+            // Solo el obrero llega aquí: su restitución es el reintegro por
+            // despido ineficaz (fase 4.5b).
+            self::RESTITUCION             => 'Código del Trabajo, Arts. 195.1 a 195.3',
             default                       => null,
         };
     }
@@ -582,7 +585,9 @@ enum ClaseAccionPersonal: string
             $this === self::RESTITUCION =>
                 'Por sentencia ejecutoriada (LOSEP Art. 46): deja sin efecto la cesación que cerró '
                     .'su último nombramiento permanente y lo devuelve al mismo puesto, sin perder la '
-                    .'antigüedad. Si lo ocupa un provisional, se le prepara la remoción.',
+                    .'antigüedad. Si lo ocupa un provisional, se le prepara la remoción. Al obrero, por '
+                    .'despido ineficaz (Código del Trabajo, Arts. 195.1 a 195.3): basta la providencia que '
+                    .'ordena el reintegro inmediato, y vuelve con su contrato y su remuneración.',
             default => null,
         };
     }

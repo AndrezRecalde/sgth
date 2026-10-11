@@ -20,6 +20,11 @@ export interface VinculoDelServidor {
   sinVinculo?: boolean
   /** El nombramiento del vínculo vigente, cuando lo hay. */
   tipoNombramiento?: string | null
+  /**
+   * Sin vínculo, el de su último: la restitución del obrero es su reintegro
+   * por despido ineficaz (fase 4.5b).
+   */
+  ultimoNombramiento?: string | null
 }
 
 /** `nombramientos_elegibles` llega como tupla; para buscar basta una lista. */

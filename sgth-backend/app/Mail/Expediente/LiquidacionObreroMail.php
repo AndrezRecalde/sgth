@@ -12,7 +12,8 @@ use Illuminate\Queue\SerializesModels;
 
 /**
  * La liquidación referencial de la terminación de un obrero, para Financiero
- * (fase 4.5), con la hoja de registro interno adjunta.
+ * (fase 4.5), con la hoja de registro interno adjunta. Y, desde la fase 4.5b,
+ * lo que se paga por su reintegro cuando el juez declara ineficaz el despido.
  */
 class LiquidacionObreroMail extends Mailable
 {
@@ -35,11 +36,14 @@ class LiquidacionObreroMail extends Mailable
     public function envelope(): Envelope
     {
         $numero = $this->movimiento->codigo_registro;
+        $asunto = $this->movimiento->esReintegroPorDespidoIneficaz()
+            ? 'Reintegro de obrero: remuneraciones pendientes'
+            : 'Liquidación de obrero';
 
         return new Envelope(
             subject: $this->anulada
-                ? "ANULADA — Liquidación de obrero {$numero} — {$this->nombreServidor()}"
-                : "Liquidación de obrero para pago {$numero} — {$this->nombreServidor()}",
+                ? "ANULADA — {$asunto} {$numero} — {$this->nombreServidor()}"
+                : "{$asunto} para pago {$numero} — {$this->nombreServidor()}",
         );
     }
 
@@ -51,6 +55,10 @@ class LiquidacionObreroMail extends Mailable
             markdown: 'mail.expediente.liquidacion-obrero',
             with: [
                 'anulada'  => $this->anulada,
+                'reintegro' => $this->movimiento->esReintegroPorDespidoIneficaz(),
+                'orden'    => $this->movimiento->ordenJudicial(),
+                'causa'    => $this->movimiento->causa_judicial_numero,
+                'unidadJudicial' => $this->movimiento->unidad_judicial,
                 'numero'   => $this->movimiento->codigo_registro,
                 'servidor' => $this->nombreServidor(),
                 'cedula'   => $this->movimiento->servidor?->cedula,

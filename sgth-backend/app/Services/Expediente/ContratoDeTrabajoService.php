@@ -214,7 +214,8 @@ class ContratoDeTrabajoService
         return [$puesto, (int) $puesto->unidad_administrativa_id];
     }
 
-    private function puestoDelCatalogo(int $puestoId, ?int $unidadId): Puesto
+    /** Un puesto activo del catálogo de obreros; si se indica la unidad, de ella. */
+    public function puestoDelCatalogo(int $puestoId, ?int $unidadId): Puesto
     {
         $puesto = Puesto::with(['cargo:id,nombre', 'unidadAdministrativa:id,nombre'])->find($puestoId);
 

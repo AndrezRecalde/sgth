@@ -102,6 +102,13 @@ class ServidorResource extends JsonResource
             'pendiente_vinculacion' => $this->resource->relationLoaded('contratoVigente')
                 ? is_null($this->resource->contratoVigente)
                 : null,
+            // El nombramiento de su último vínculo, vigente o no: a quien no
+            // tiene uno, el formulario le ofrece la restitución, y la del
+            // obrero es el reintegro por despido ineficaz (fase 4.5b).
+            'ultimo_nombramiento' => $this->whenLoaded(
+                'ultimoContrato',
+                fn () => $this->resource->ultimoContrato?->tipo_nombramiento?->value,
+            ),
             'documentos'  => DocumentoServidorResource::collection($this->whenLoaded('documentos')),
             'movimientos' => $this->whenLoaded('movimientos'),
         ];

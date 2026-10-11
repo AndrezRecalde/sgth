@@ -7,12 +7,13 @@ import { IconInfoCircle } from '@tabler/icons-react'
 import { SectionHeading } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import {
-  esActoDeAutoridad, esDelContratoCivil, esDelRegistroInterno, pideDocumentoDeOrigen, pideDocumentoFirmado,
-  pideInformeUath, type MovimientoFormData,
+  esActoDeAutoridad, esDelContratoCivil, esDelRegistroInterno, esReintegroDelObrero, pideDocumentoDeOrigen,
+  pideDocumentoFirmado, pideInformeUath, type MovimientoFormData,
 } from '../schemas/movimiento.schema'
 import type { ClaseDelCatalogo } from '@/types/api'
 import { FirmantesPanel } from './FirmantesPanel'
 import { MovimientoDatosJudiciales } from './MovimientoDatosJudiciales'
+import { MovimientoPuestoDelReintegro } from './MovimientoPuestoDelReintegro'
 import { MovimientoActaConcurso } from './MovimientoActaConcurso'
 import { MovimientoDatosDelPeriodo } from './MovimientoDatosDelPeriodo'
 import { MovimientoDatosLicenciaConsejo } from './MovimientoDatosLicenciaConsejo'
@@ -31,12 +32,15 @@ export function MovimientoDatosDelActo({
   form,
   clase,
   tipoNombramiento,
+  ultimoNombramiento,
 }: {
   form: UseFormReturn<MovimientoFormData>
   /** La clase elegida: de su ficha del catálogo sale si pide período y su aviso. */
   clase?: ClaseDelCatalogo
   /** El nombramiento vigente: el traslado pide el informe de la UATH según él. */
   tipoNombramiento?: string | null
+  /** El de su último vínculo, si no tiene uno: la restitución del obrero es su reintegro (fase 4.5b). */
+  ultimoNombramiento?: string | null
 }) {
   const contained = useContainedInput()
   const { control, register, formState: { errors } } = form
@@ -68,7 +72,9 @@ export function MovimientoDatosDelActo({
 
   // Al obrero lo rige el Código del Trabajo (fase 4.3): cada acto deja su hoja
   // de registro interno, y lo que cambia del contrato, el número de su adenda.
-  const registroInterno = esDelRegistroInterno(clase, tipoNombramiento, nombramiento)
+  // Y su reintegro por despido ineficaz, aunque ya no tenga vínculo (fase 4.5b).
+  const reintegroDelObrero = esReintegroDelObrero(clase, ultimoNombramiento)
+  const registroInterno = reintegroDelObrero || esDelRegistroInterno(clase, tipoNombramiento, nombramiento)
   const conAdenda = !!clase?.cambio_del_obrero
   const documentoObligatorio = conDocumentoDeOrigen || conDocumentoFirmado || conAdenda
 
@@ -195,7 +201,8 @@ export function MovimientoDatosDelActo({
         />
       )}
 
-      {clase?.pide_datos_judiciales && <MovimientoDatosJudiciales form={form} />}
+      {clase?.pide_datos_judiciales && <MovimientoDatosJudiciales form={form} obrero={reintegroDelObrero} />}
+      {reintegroDelObrero && <MovimientoPuestoDelReintegro form={form} />}
 
       {/* La licencia del Consejo: con o sin remuneración y su prórroga (4.1b). */}
       {clase?.pide_datos_de_licencia_del_consejo && <MovimientoDatosLicenciaConsejo form={form} />}

@@ -576,6 +576,11 @@ export type ServidorConRelaciones = Servidor & {
   tiene_enfermedad_catastrofica?: boolean
   contrato_vigente?: ContratoConRelaciones
   pendiente_vinculacion?: boolean | null
+  /**
+   * El nombramiento de su último vínculo, vigente o no: a quien no tiene uno,
+   * la restitución del obrero es su reintegro por despido ineficaz (fase 4.5b).
+   */
+  ultimo_nombramiento?: TipoNombramiento | null
   estado?: boolean
   fecha_ingreso_institucion?:    string | null
   fecha_ingreso_sector_publico?: string | null
@@ -730,9 +735,15 @@ export type AnotacionAccion = Omit<
  * Espeja `TerminacionObreroService::liquidacion()`.
  */
 export type LiquidacionReferencial = {
+  /** La de la terminación (fase 4.5) o la del reintegro por despido ineficaz (fase 4.5b). */
+  tipo: 'terminacion' | 'reintegro'
   remuneracion: number | null
+  /** En la terminación, desde cuándo sirve; en el reintegro, el primer día fuera. */
   desde: string | null
+  /** En el reintegro, el último día fuera. */
+  hasta: string | null
   anios_servicio: number | null
+  dias_fuera: number | null
   rubros: { concepto: string; base_legal: string; detalle: string; monto: number | null }[]
   total: number | null
   nota: string
@@ -817,11 +828,15 @@ export type MovimientoPersonal = {
     fecha_inicio: string | null
     fecha_fin: string | null
   } | null
-  /** La restitución que deja sin efecto esta cesación por sentencia (fase 2.6). */
+  /**
+   * La restitución que deja sin efecto esta cesación por sentencia (fase 2.6);
+   * en el obrero, su reintegro por despido ineficaz (fase 4.5b).
+   */
   restituida_por?: {
     id: number
     codigo_registro: string | null
     estado: EstadoAccionPersonal
+    etiqueta: string
   } | null
   /** El informe técnico de la UATH que pide el traslado (fase 3.1). */
   informe_uath_numero?: string | null
@@ -843,6 +858,8 @@ export type MovimientoPersonal = {
   unidad_judicial?: string | null
   fecha_sentencia?: string | null
   fecha_ejecutoria?: string | null
+  /** O la providencia que ordena el reintegro del obrero, como medida cautelar (fase 4.5b). */
+  fecha_providencia?: string | null
   remuneraciones_dejadas_de_percibir?: string | number | null
   numero_contrato?: string | null
   partida_presupuestaria_id?: number | null

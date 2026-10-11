@@ -22,6 +22,8 @@ export const VALORES_EN_BLANCO: DefaultValues<MovimientoFormData> = {
   fecha_sentencia: null,
   fecha_ejecutoria: null,
   remuneraciones_dejadas_de_percibir: null,
+  fecha_providencia: null,
+  orden_judicial: 'providencia',
   resolucion_numero: '',
   observacion: '',
   caucionado: false,
@@ -82,6 +84,9 @@ export function valoresDelBorrador(
     fecha_ejecutoria: soloFecha(movimiento.fecha_ejecutoria),
     remuneraciones_dejadas_de_percibir: movimiento.remuneraciones_dejadas_de_percibir != null
       ? Number(movimiento.remuneraciones_dejadas_de_percibir) : null,
+    // El reintegro del obrero: con la sentencia, si la tiene (fase 4.5b).
+    fecha_providencia: soloFecha(movimiento.fecha_providencia),
+    orden_judicial: movimiento.fecha_sentencia ? 'sentencia' : 'providencia',
     tipo_nombramiento_propuesto: movimiento.tipo_nombramiento_propuesto ?? null,
     supuesto_provisional_propuesto: movimiento.supuesto_provisional_propuesto ?? null,
     acta_concurso_numero: movimiento.acta_concurso_numero ?? '',

@@ -17,7 +17,8 @@ use Illuminate\Support\Facades\Mail;
  * registro interno, y si se anula después, el aviso contrario.
  *
  * Solo las causales con algo que pagar según el Código: el desahucio, el
- * acuerdo de las partes y el despido intempestivo. Si no hay jefe o el correo
+ * acuerdo de las partes y el despido intempestivo. Y el reintegro por despido
+ * ineficaz, con sus remuneraciones pendientes (fase 4.5b). Si no hay jefe o el correo
  * falla, la transición sigue: la pantalla avisa que hay que enviarlo a mano.
  */
 class AvisoLiquidacionObreroService
