@@ -502,7 +502,15 @@ class MovimientoPersonal extends Model
      */
     public function causal(): ?SubtipoMovimientoPersonal
     {
-        return $this->clase?->requiereCausal() ? $this->subtipoEfectivo() : null;
+        $subtipo = $this->subtipoEfectivo();
+
+        // «Sanción disciplinaria» a secas es la de antes de la fase 2.5: no
+        // dice cuál, y se enseña como no indicada.
+        if ($subtipo === SubtipoMovimientoPersonal::SANCION_DISCIPLINARIA) {
+            return null;
+        }
+
+        return $this->clase?->requiereCausal() ? $subtipo : null;
     }
 
     /**

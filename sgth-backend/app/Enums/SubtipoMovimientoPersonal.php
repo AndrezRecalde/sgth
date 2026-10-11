@@ -19,6 +19,13 @@ enum SubtipoMovimientoPersonal: string
     case COMISION_SIN_REMUNERACION = 'comision_sin_remuneracion';
 
     // ── Régimen Disciplinario ────────────────────────────────
+    // Las sanciones de LOSEP Art. 43 que llevan acción (diseño, 4.2; fase 2.5;
+    // TH N13). La amonestación verbal no la lleva, y la destitución es una
+    // cesación.
+    case AMONESTACION_ESCRITA        = 'amonestacion_escrita';
+    case SANCION_PECUNIARIA          = 'sancion_pecuniaria';
+    case SUSPENSION_SIN_REMUNERACION = 'suspension_sin_remuneracion';
+    // La de antes de la fase 2.5, que no decía cuál: queda para el histórico.
     case SANCION_DISCIPLINARIA = 'sancion_disciplinaria';
 
     // ── Cesación de Funciones ────────────────────────────────
@@ -65,6 +72,9 @@ enum SubtipoMovimientoPersonal: string
             self::TRASPASO                  => 'Traspaso',
             self::COMISION_CON_REMUNERACION => 'Comisión de Servicios con Remuneración',
             self::COMISION_SIN_REMUNERACION => 'Comisión de Servicios sin Remuneración',
+            self::AMONESTACION_ESCRITA        => 'Amonestación escrita',
+            self::SANCION_PECUNIARIA          => 'Sanción pecuniaria administrativa',
+            self::SUSPENSION_SIN_REMUNERACION => 'Suspensión temporal sin goce de remuneración',
             self::SANCION_DISCIPLINARIA     => 'Sanción Disciplinaria',
             self::RENUNCIA                  => 'Renuncia',
             self::DESTITUCION               => 'Destitución',
@@ -118,6 +128,9 @@ enum SubtipoMovimientoPersonal: string
             self::REEMPLAZO_DIGNATARIO       => 'LOSEP Art. 28 d',
             self::CANDIDATURA                => 'LOSEP Art. 28 e',
             self::CUIDADO_HIJOS              => 'LOSEP Art. 28 f',
+            self::AMONESTACION_ESCRITA        => 'LOSEP Art. 43 b',
+            self::SANCION_PECUNIARIA          => 'LOSEP Art. 43 c',
+            self::SUSPENSION_SIN_REMUNERACION => 'LOSEP Art. 43 d',
             default                          => null,
         };
     }
@@ -130,7 +143,15 @@ enum SubtipoMovimientoPersonal: string
      */
     public function seRegistraDesdeElFormulario(): bool
     {
-        return ! in_array($this, [self::DESTITUCION, self::VISTO_BUENO], true);
+        // Tampoco las sanciones (fase 2.5): las impone el sumario.
+        return ! in_array($this, [
+            self::DESTITUCION,
+            self::VISTO_BUENO,
+            self::AMONESTACION_ESCRITA,
+            self::SANCION_PECUNIARIA,
+            self::SUSPENSION_SIN_REMUNERACION,
+            self::SANCION_DISCIPLINARIA,
+        ], true);
     }
 
     /**
@@ -188,6 +209,12 @@ enum SubtipoMovimientoPersonal: string
             // LOSEP. Solo la multa —sin suspensión—, y eso lo vigila
             // DisciplinarioService, que es quien sabe qué sanción es.
             self::SANCION_DISCIPLINARIA => [...$conSancionYCesacionLosep, TipoNombramiento::CODIGO_TRABAJO],
+
+            // Fase 2.5. Al obrero solo le llega la multa: su amonestación va
+            // sin acción hasta su bloque (diseño, 9.15), y no se le suspende.
+            self::SANCION_PECUNIARIA => [...$conSancionYCesacionLosep, TipoNombramiento::CODIGO_TRABAJO],
+            self::AMONESTACION_ESCRITA,
+            self::SUSPENSION_SIN_REMUNERACION => $conSancionYCesacionLosep,
 
             self::RENUNCIA,
             self::DESTITUCION,

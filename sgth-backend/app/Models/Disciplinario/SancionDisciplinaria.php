@@ -2,6 +2,7 @@
 
 namespace App\Models\Disciplinario;
 
+use App\Enums\SubtipoMovimientoPersonal;
 use App\Enums\TipoFalta;
 use App\Enums\TipoSancion;
 use App\Models\Expediente\MovimientoPersonal;
@@ -25,6 +26,10 @@ class SancionDisciplinaria extends Model
         'dias_suspension',
         'fecha_efectiva',
         'observaciones',
+        // Sin efecto: se anuló su acción de personal (fase 2.5).
+        'anulada_en',
+        'motivo_anulacion',
+        'anulada_por',
         'created_by',
         'updated_by',
     ];
@@ -37,6 +42,7 @@ class SancionDisciplinaria extends Model
             'porcentaje_multa' => 'decimal:2',
             'dias_suspension'  => 'integer',
             'fecha_efectiva'   => 'date',
+            'anulada_en'       => 'datetime',
         ];
     }
 
@@ -71,6 +77,27 @@ class SancionDisciplinaria extends Model
         $remuneracion = $this->movimientoPersonal->remuneracion_origen;
 
         return $this->descuentoReferencial($remuneracion !== null ? (float) $remuneracion : null);
+    }
+
+    /**
+     * La causal de su acción de personal (fase 2.5): las de LOSEP Art. 43 que
+     * llevan una. La amonestación verbal no la lleva [TH N13], y la destitución
+     * es una cesación, no una sanción.
+     */
+    public function causalDeLaAccion(): ?SubtipoMovimientoPersonal
+    {
+        return match ($this->tipo_sancion) {
+            TipoSancion::AMONESTACION_ESCRITA => SubtipoMovimientoPersonal::AMONESTACION_ESCRITA,
+            TipoSancion::MULTA                => SubtipoMovimientoPersonal::SANCION_PECUNIARIA,
+            TipoSancion::SUSPENSION           => SubtipoMovimientoPersonal::SUSPENSION_SIN_REMUNERACION,
+            default                           => null,
+        };
+    }
+
+    /** ¿Se anuló su acción? Sigue en el sumario, como constancia. */
+    public function estaSinEfecto(): bool
+    {
+        return $this->anulada_en !== null;
     }
 
     /** Las sanciones que tocan la remuneración y van a Financiero. */

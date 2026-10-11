@@ -923,6 +923,11 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
    - `sgth:acciones:aplicar-vigentes` prepara en borrador el reintegro de las ausencias que terminaron en los últimos 30 días sin tenerlo, con regreso al día siguiente del fin, si el servidor sigue vinculado. Las de antes no: terminaron sin reintegro porque no existía.
    - El documento dice qué ausencia termina y cuál fue su último día, y la situación propuesta es el mismo puesto.
 5. Sanción solo desde Disciplinario, con sus datos; amonestación escrita con acción; anular ↔ sanción.
+   - La clase `sancion` sale del formulario: solo la crea el sumario. Los borradores hechos a mano se anulan, no se corrigen.
+   - Tres causales con su base legal (LOSEP 43 b, c y d): amonestación escrita, sanción pecuniaria administrativa y suspensión temporal sin goce de remuneración. La suspensión lleva su período en la acción. «Sanción disciplinaria» a secas queda para el histórico; las ya emitidas desde un sumario toman la causal de su sanción, y las hechas a mano se enseñan como «No indicada (histórico)».
+   - La amonestación escrita lleva acción [TH N13], sin efecto sobre el vínculo ni aviso a Financiero. La verbal no. Al obrero solo le llega la multa con acción; su amonestación, sin acción hasta su bloque (4.4).
+   - Anular la acción de una sanción, o la cesación de una destitución, deja la sanción sin efecto (cuándo, por qué y quién; no se borra) y devuelve el sumario resuelto a «Con informe» para dictar la correcta. Apelado o cerrado no se mueve. Se anula solo desde la acción. El sumario admite una sanción vigente a la vez y enseña las que quedaron sin efecto.
+   - Fuera: el bloqueo de asistencia y la novedad de nómina de la suspensión (fases 5 y 7), y el visto bueno ↔ su cesación (bloque de obreros).
 6. Restitución con datos judiciales.
 7. Ocasionales: ingreso como registro del contrato, sin acción.
 

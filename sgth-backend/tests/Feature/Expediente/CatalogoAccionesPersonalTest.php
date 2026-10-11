@@ -161,10 +161,6 @@ test('cada clase aplica exactamente a los nombramientos de antes', function () {
         'licencia_sin_remuneracion' => ['nombramiento_permanente', 'codigo_trabajo', 'eleccion_popular'],
         'incremento_remuneracion'   => ['codigo_trabajo'],
         'cambio_ocupacion'          => ['codigo_trabajo'],
-        'sancion' => [
-            'nombramiento_permanente', 'nombramiento_provisional', 'servicios_ocasionales',
-            'libre_nombramiento_remocion', 'codigo_trabajo',
-        ],
         // Sin obreros desde la fase 2.1: su única causal era el visto bueno,
         // que ya no se elige en el formulario —lo crea Disciplinario—. Sus
         // terminaciones propias llegan con el bloque del Código del Trabajo.
@@ -173,12 +169,14 @@ test('cada clase aplica exactamente a los nombramientos de antes', function () {
             'libre_nombramiento_remocion', 'servicios_profesionales',
         ],
         // El ingreso no depende del nombramiento: se registra a quien no tiene
-        // vínculo. Y la subrogación, el encargo y el reintegro (fase 2.4) nacen
-        // en su propia pantalla, no en el formulario.
+        // vínculo. Y la subrogación, el encargo, el reintegro (fase 2.4) y la
+        // sanción (fase 2.5, desde Disciplinario) nacen en su propia
+        // pantalla, no en el formulario.
         'ingreso'     => [],
         'subrogacion' => [],
         'encargo'     => [],
         'reintegro'   => [],
+        'sancion'     => [],
     ];
 
     foreach (ClaseAccionPersonal::cases() as $clase) {

@@ -14,6 +14,7 @@ import {
 import { formatFecha } from '@/lib/fecha'
 import { ESTADO_LABELS, TONO_ACCION } from '@/features/expediente/utils/estadoAccionPersonal'
 import type { Sumario } from '@/types/api'
+import { SancionesSinEfecto } from './SancionesSinEfecto'
 
 const dolares = (v: number) =>
   `$${v.toLocaleString('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -148,6 +149,8 @@ function Contenido({ sumario }: { sumario: Sumario }) {
           )}
         </div>
       )}
+
+      <SancionesSinEfecto sanciones={sumario.sanciones_sin_efecto ?? []} />
     </Stack>
   )
 }

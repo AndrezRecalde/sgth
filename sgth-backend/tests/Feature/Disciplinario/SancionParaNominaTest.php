@@ -102,7 +102,8 @@ test('una multa crea su acción de personal en borrador con el descuento referen
     $accion = MovimientoPersonal::where('servidor_id', $servidor->id)->sole();
 
     expect($accion->tipo_movimiento)->toBe(TipoMovimientoPersonal::REGIMEN_DISCIPLINARIO)
-        ->and($accion->subtipo_movimiento)->toBe(SubtipoMovimientoPersonal::SANCION_DISCIPLINARIA)
+        // Con su causal desde la fase 2.5.
+        ->and($accion->subtipo_movimiento)->toBe(SubtipoMovimientoPersonal::SANCION_PECUNIARIA)
         ->and($accion->estado)->toBe(EstadoAccionPersonal::BORRADOR)
         ->and((float) $accion->remuneracion_origen)->toBe(1212.0)
         ->and($accion->fecha_efectiva->toDateString())->toBe('2026-10-06')
@@ -123,12 +124,19 @@ test('una suspensión descuenta la remuneración entre 30 por los días, en día
         ->toContain('Arts. 42 literal b) y 43');
 });
 
-test('una amonestación no crea acción de personal', function () {
+test('una amonestación no llega a Financiero', function () {
+    // Desde la fase 2.5 la escrita lleva acción [TH N13], pero no descuenta:
+    // no sale correo al registrarla.
+    Mail::fake();
     $permanente = ($this->servidorCon)(TipoNombramiento::PERMANENTE);
     ($this->resolver)($permanente, ['tipo_falta' => 'leve', 'tipo_sancion' => 'amonestacion_escrita'])->assertOk();
 
-    expect(MovimientoPersonal::where('servidor_id', $permanente->id)->count())->toBe(0)
-        ->and(SancionDisciplinaria::count())->toBe(1);
+    $url = '/api/v1/expediente/movimientos/'.MovimientoPersonal::where('servidor_id', $permanente->id)->sole()->id.'/transicionar';
+
+    $this->putJson($url, ['estado' => 'suscrita'])->assertOk();
+    $this->putJson($url, ['estado' => 'registrada'])->assertOk()->assertJsonPath('meta', null);
+
+    Mail::assertNothingSent();
 });
 
 test('a un obrero se le multa con acción de personal, pero no se le suspende', function () {
@@ -141,7 +149,7 @@ test('a un obrero se le multa con acción de personal, pero no se le suspende', 
         ->assertJsonPath('datos.sancion.descuento_referencial.monto', 60.6);
 
     $accion = MovimientoPersonal::where('servidor_id', $obrero->id)->sole();
-    expect($accion->subtipo_movimiento)->toBe(SubtipoMovimientoPersonal::SANCION_DISCIPLINARIA)
+    expect($accion->subtipo_movimiento)->toBe(SubtipoMovimientoPersonal::SANCION_PECUNIARIA)
         ->and($accion->descripcion)->toContain('Reglamento Interno de Trabajo y al Código del Trabajo')
         ->and($accion->descripcion)->not->toContain('Servicio Público');
 

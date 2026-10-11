@@ -269,7 +269,9 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
                 $sancion->update(['movimiento_personal_id' => $cesacion->id]);
             }
 
-            if ($sancion->afectaRemuneracion()) {
+            // La amonestación escrita también lleva acción [TH N13; fase 2.5],
+            // además de la multa y la suspensión. La verbal no.
+            if ($sancion->causalDeLaAccion()) {
                 $this->crearAccionDeSancion($sumario, $sancion);
             }
 
@@ -283,31 +285,40 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
     }
 
     /**
-     * La multa y la suspensión llegan a Financiero como acción de personal
-     * «Régimen Disciplinario — Sanción disciplinaria» (decisión de TH,
-     * 2026-10-04): nace en BORRADOR, como la cesación de una destitución, y
-     * cuando Talento Humano la registra sale por correo al jefe de Gestión
-     * Financiera con el descuento referencial (AvisoFinancieroSancionService).
+     * La sanción llega a su acción de personal con su causal (fase 2.5):
+     * amonestación escrita, sanción pecuniaria o suspensión. Nace en BORRADOR,
+     * como la cesación de una destitución. La multa y la suspensión, cuando
+     * Talento Humano las registra, salen por correo al jefe de Gestión
+     * Financiera con el descuento referencial (decisión de TH, 2026-10-04;
+     * AvisoFinancieroSancionService). La suspensión lleva su período.
      *
-     * Elegibles: los nombramientos LOSEP que TH fijó el 2026-09-28 y, desde
-     * el 2026-10-04, los obreros, a quienes solo llega la multa porque la
-     * suspensión se les rechaza antes (assertSancionAplicableAlRegimen()). A
-     * un dignatario de elección popular la sanción se le registra sin acción.
+     * Elegibles, por la causal: los nombramientos LOSEP que TH fijó el
+     * 2026-09-28 y, para la multa, los obreros (2026-10-04). Al obrero su
+     * amonestación le llega sin acción hasta su bloque (diseño, 9.15), y la
+     * suspensión se le rechaza antes (assertSancionAplicableAlRegimen()). A un
+     * dignatario de elección popular la sanción se le registra sin acción.
      */
     private function crearAccionDeSancion(Sumario $sumario, SancionDisciplinaria $sancion): void
     {
         $servidor     = Servidor::with('contratoVigente')->findOrFail($sumario->servidor_id);
         $nombramiento = $servidor->contratoVigente?->tipo_nombramiento;
+        $causal       = $sancion->causalDeLaAccion();
 
-        if (! $nombramiento || ! SubtipoMovimientoPersonal::SANCION_DISCIPLINARIA->elegiblePara($nombramiento)) {
+        if (! $nombramiento || ! $causal?->elegiblePara($nombramiento)) {
             return;
         }
 
+        $periodo = $sancion->tipo_sancion === TipoSancion::SUSPENSION
+            ? $sancion->descuentoReferencial(null)
+            : null;
+
         $accion = $this->movimientoPersonalService->registrar($servidor->id, [
             'tipo_movimiento'    => TipoMovimientoPersonal::REGIMEN_DISCIPLINARIO->value,
-            'subtipo_movimiento' => SubtipoMovimientoPersonal::SANCION_DISCIPLINARIA->value,
+            'subtipo_movimiento' => $causal->value,
             'descripcion'        => $this->explicacionDeLaSancion($sumario, $sancion, $nombramiento),
             'fecha_efectiva'     => $sancion->fecha_efectiva->toDateString(),
+            'fecha_inicio'       => $periodo['desde'] ?? null,
+            'fecha_fin'          => $periodo['hasta'] ?? null,
         ]);
 
         $sancion->update(['movimiento_personal_id' => $accion->id]);
@@ -330,6 +341,10 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
             ? $base.'conforme al Reglamento Interno de Trabajo y al Código del Trabajo, que no '
                 .'admite multas por más del 10 % de la remuneración.'
             : $base."conforme a los Arts. 42 literal {$literal}) y 43 de la Ley Orgánica de Servicio Público.";
+
+        if ($sancion->tipo_sancion === TipoSancion::AMONESTACION_ESCRITA) {
+            return "Se impone la sanción de amonestación escrita {$origen}";
+        }
 
         $efecto = $sancion->descuentoReferencial(null);
 
