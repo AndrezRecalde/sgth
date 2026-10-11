@@ -159,6 +159,10 @@ class MovimientoPersonalResource extends JsonResource
             'firmante_th_cedula'        => $this->firmante_th_cedula,
 
             'lugar_trabajo'  => $this->lugar_trabajo,
+            // El lugar de antes del cambio y el consentimiento del cambio de
+            // ocupación de un obrero (fase 4.3).
+            'lugar_trabajo_origen' => $this->lugar_trabajo_origen,
+            'fecha_consentimiento' => $this->fecha_consentimiento,
             'caucionado'     => $this->caucionado,
             'caucion_numero' => $this->caucion_numero,
             'caucion_fecha'  => $this->caucion_fecha,

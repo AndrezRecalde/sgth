@@ -7,8 +7,8 @@ import { IconInfoCircle } from '@tabler/icons-react'
 import { SectionHeading } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import {
-  esActoDeAutoridad, esDelContratoCivil, pideDocumentoDeOrigen, pideDocumentoFirmado, pideInformeUath,
-  type MovimientoFormData,
+  esActoDeAutoridad, esDelContratoCivil, esDelRegistroInterno, pideDocumentoDeOrigen, pideDocumentoFirmado,
+  pideInformeUath, type MovimientoFormData,
 } from '../schemas/movimiento.schema'
 import type { ClaseDelCatalogo } from '@/types/api'
 import { FirmantesPanel } from './FirmantesPanel'
@@ -59,7 +59,12 @@ export function MovimientoDatosDelActo({
   // sus adendas y su terminación los firman las partes.
   const contratoCivil = esDelContratoCivil(clase, tipoNombramiento, nombramiento)
   const conDocumentoFirmado = pideDocumentoFirmado(clase, tipoNombramiento, causal)
-  const documentoObligatorio = conDocumentoDeOrigen || conDocumentoFirmado
+
+  // Al obrero lo rige el Código del Trabajo (fase 4.3): cada acto deja su hoja
+  // de registro interno, y lo que cambia del contrato, el número de su adenda.
+  const registroInterno = esDelRegistroInterno(clase, tipoNombramiento, nombramiento)
+  const conAdenda = !!clase?.cambio_del_obrero
+  const documentoObligatorio = conDocumentoDeOrigen || conDocumentoFirmado || conAdenda
 
   const muestraFechas = !!clase?.pide_periodo
   const pideInstitucion = !!clase?.pide_institucion_destino
@@ -205,8 +210,10 @@ export function MovimientoDatosDelActo({
       <TextInput
         label={conDocumentoDeOrigen
           ? 'Documento de origen N.º'
-          : conDocumentoFirmado ? 'Documento firmado N.º' : 'Número de resolución'}
-        description={conDocumentoFirmado
+          : conDocumentoFirmado ? 'Documento firmado N.º' : conAdenda ? 'Adenda N.º' : 'Número de resolución'}
+        description={conAdenda
+          ? 'El número de la adenda que firmaron el empleador y el trabajador.'
+          : conDocumentoFirmado
           ? (clase?.pide_adenda
             ? 'El número de la adenda que firmaron las partes.'
             : 'El acta de terminación que firmaron las partes, o la partida de defunción.')
@@ -253,6 +260,13 @@ export function MovimientoDatosDelActo({
           A una autoridad electa no se le emite acción de personal: ninguno de sus
           actos nace de una autoridad nominadora. Se registra con su documento de
           origen y su propia numeración (AU), sin firmantes.
+        </Alert>
+      ) : registroInterno ? (
+        <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
+          A los obreros los rige el Código del Trabajo, no la LOSEP: no se les
+          emite acción de personal. Su contrato y sus adendas los firman el
+          empleador y el trabajador; aquí cada acto deja una hoja de registro
+          interno, con su número RI, que firma solo Talento Humano.
         </Alert>
       ) : contratoCivil ? (
         <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>

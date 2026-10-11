@@ -120,6 +120,9 @@ export function VinculoLaboralItem({ vinculo, onReprogramar }: Props) {
                 ),
               },
               { label: 'Remuneración', value: dinero(c.remuneracion) },
+              // Desde la fase 4.3 lo guarda el vínculo, y el cambio de lugar
+              // del obrero lo mueve.
+              { label: 'Lugar de trabajo', value: c.lugar_trabajo },
               { label: 'Resolución', value: c.resolucion_numero },
               { label: 'Partida', value: partidaDelVinculo(c) },
               { label: 'Marca asistencia', value: c.puede_marcar === false ? 'No' : 'Sí' },

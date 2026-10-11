@@ -143,6 +143,26 @@ class AccionPersonalPdfService
             ];
         }
 
+        // A un obrero tampoco: cada acto suyo deja la hoja de registro interno,
+        // con su número RI, que firma Talento Humano [TH N8; fase 4.3]. Es la
+        // que va a Financiero con la multa.
+        if ($movimiento->esDelRegistroInterno()) {
+            $pdf = Pdf::loadView('pdf.expediente.registro-interno', [
+                'movimiento'         => $movimiento,
+                'descuento'          => $descuento,
+                'anulada'            => $movimiento->estado === EstadoAccionPersonal::ANULADA,
+                'servidor'           => $movimiento->servidor,
+                'firmaTalentoHumano' => $this->firma($movimiento, 'firmante_th', RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO),
+                'logo'               => public_path('images/logo-gadpe.png'),
+            ])->setPaper('a4', 'portrait');
+
+            return [
+                'content'  => $pdf->output(),
+                'filename' => 'registro_interno_'.$movimiento->codigo_registro
+                    .($movimiento->estado === EstadoAccionPersonal::ANULADA ? '_ANULADA' : '').'.pdf',
+            ];
+        }
+
         $pdf = Pdf::loadView('pdf.expediente.accion-personal', [
             'movimiento'   => $movimiento,
             'descuento'    => $descuento,

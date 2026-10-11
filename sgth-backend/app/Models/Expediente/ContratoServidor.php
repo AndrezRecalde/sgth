@@ -34,6 +34,9 @@ class ContratoServidor extends Model
         'supuesto_provisional',
         'numero_contrato',
         'unidad_administrativa_id',
+        // Dónde trabaja: uno de los tres lugares de la institución. Vivía solo
+        // en la acción; el cambio de lugar del obrero lo mueve (fase 4.3).
+        'lugar_trabajo',
         'puesto_id',
         // El puesto que el ascendido dejó, reservado mientras dura su prueba, y
         // el ascenso que lo explica (fase 3.3).

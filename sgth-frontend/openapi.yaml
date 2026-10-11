@@ -45918,7 +45918,8 @@
                     "inicio_periodo",
                     "licencia_consejo",
                     "asuncion_definitiva",
-                    "adenda"
+                    "adenda",
+                    "cambio_lugar"
                 ],
                 "title": "ClaseAccionPersonal"
             },
@@ -45950,7 +45951,8 @@
                             "Inicio del Per\u00edodo",
                             "Licencia concedida por el Consejo",
                             "Asunci\u00f3n Definitiva",
-                            "Adenda al contrato"
+                            "Adenda al contrato",
+                            "Cambio de Lugar de Trabajo"
                         ]
                     },
                     "familia": {
@@ -46014,6 +46016,19 @@
                         "type": "boolean",
                         "description": "Lo que cambia la adenda del contrato civil (fase 4.2)."
                     },
+                    "cambio_del_obrero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Lo que cambia del contrato de trabajo de un obrero (fase 4.3):\n'ocupacion', 'lugar' o 'remuneracion'.",
+                        "enum": [
+                            "ocupacion",
+                            "lugar",
+                            "remuneracion",
+                            null
+                        ]
+                    },
                     "registro_de_contrato_para": {
                         "type": "array",
                         "items": {
@@ -46027,6 +46042,12 @@
                         }
                     },
                     "contrato_civil_para": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TipoNombramiento"
+                        }
+                    },
+                    "documento_ct_para": {
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/TipoNombramiento"
@@ -46061,9 +46082,11 @@
                     "pide_datos_del_periodo",
                     "pide_datos_de_licencia_del_consejo",
                     "pide_adenda",
+                    "cambio_del_obrero",
                     "registro_de_contrato_para",
                     "acto_de_autoridad_para",
                     "contrato_civil_para",
+                    "documento_ct_para",
                     "dictamen_medico_por_defecto",
                     "aviso"
                 ],
@@ -46571,6 +46594,12 @@
                             "null"
                         ]
                     },
+                    "lugar_trabajo": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "rau": {
                         "type": "string"
                     }
@@ -46601,6 +46630,7 @@
                     "supuesto_provisional",
                     "puesto_reservado_id",
                     "movimiento_ascenso_id",
+                    "lugar_trabajo",
                     "rau"
                 ],
                 "title": "ContratoServidor"
@@ -49994,12 +50024,13 @@
             },
             "InstrumentoActo": {
                 "type": "string",
-                "description": "Con qu\u00e9 documento se formaliza un acto (dise\u00f1o de Acciones de Personal, 8.1). Todos comparten el registro, el historial y el motor de efectos; cambian la numeraci\u00f3n, el documento y qui\u00e9n firma. Llegan de uno en uno, con su bloque. El primero distinto de la acci\u00f3n de personal es el registro del contrato de un ocasional (fase 2.7; TH N7): la ley no le pide acci\u00f3n a ese ingreso (LOSEP 18, \u00faltimo inciso; Reglamento 19). El segundo, el acto de autoridad (fase 4.1; TH 1\u20137): al Prefecto y al Viceprefecto no se les emite acci\u00f3n de personal, porque ninguno de sus actos nace de una autoridad nominadora; lleva el documento de origen \u2014la credencial del CNE, la resoluci\u00f3n del Consejo\u2014 y su propia numeraci\u00f3n. El tercero, el contrato civil (fase 4.2; TH N6): quien tiene Servicios Profesionales no es servidor ni tiene relaci\u00f3n de dependencia (Reglamento Art. 148). Su contrato, sus adendas y su terminaci\u00f3n los firman las partes; aqu\u00ed se registran. El de obreros vendr\u00e1 con el suyo.\n",
+                "description": "Con qu\u00e9 documento se formaliza un acto (dise\u00f1o de Acciones de Personal, 8.1). Todos comparten el registro, el historial y el motor de efectos; cambian la numeraci\u00f3n, el documento y qui\u00e9n firma. Llegan de uno en uno, con su bloque. El primero distinto de la acci\u00f3n de personal es el registro del contrato de un ocasional (fase 2.7; TH N7): la ley no le pide acci\u00f3n a ese ingreso (LOSEP 18, \u00faltimo inciso; Reglamento 19). El segundo, el acto de autoridad (fase 4.1; TH 1\u20137): al Prefecto y al Viceprefecto no se les emite acci\u00f3n de personal, porque ninguno de sus actos nace de una autoridad nominadora; lleva el documento de origen \u2014la credencial del CNE, la resoluci\u00f3n del Consejo\u2014 y su propia numeraci\u00f3n. El tercero, el contrato civil (fase 4.2; TH N6): quien tiene Servicios Profesionales no es servidor ni tiene relaci\u00f3n de dependencia (Reglamento Art. 148). Su contrato, sus adendas y su terminaci\u00f3n los firman las partes; aqu\u00ed se registran. El cuarto, el del C\u00f3digo del Trabajo (fase 4.3; TH N8): a los obreros los rige el C\u00f3digo del Trabajo (Constituci\u00f3n Arts. 229 y 326.16), no la LOSEP. Su contrato y sus adendas los firman el empleador y el trabajador, y cada acto deja en el expediente una hoja de registro interno, RI-AAAA-NNNN, que firma Talento Humano.\n",
                 "enum": [
                     "accion_personal",
                     "registro_contrato",
                     "acto_autoridad",
-                    "contrato_civil"
+                    "contrato_civil",
+                    "documento_ct"
                 ],
                 "title": "InstrumentoActo"
             },
@@ -50015,7 +50046,8 @@
                             "Acci\u00f3n de personal",
                             "Registro del contrato",
                             "Acto de autoridad electa",
-                            "Contrato civil"
+                            "Contrato civil",
+                            "Registro interno (C\u00f3digo del Trabajo)"
                         ]
                     }
                 },
@@ -50870,6 +50902,19 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "lugar_trabajo_origen": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "fecha_consentimiento": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
                     }
                 },
                 "required": [
@@ -50944,7 +50989,9 @@
                     "acta_posesion_numero",
                     "con_remuneracion",
                     "prorroga_causa",
-                    "fecha_fin_origen"
+                    "fecha_fin_origen",
+                    "lugar_trabajo_origen",
+                    "fecha_consentimiento"
                 ],
                 "title": "MovimientoPersonal"
             },
@@ -51507,6 +51554,20 @@
                             "null"
                         ]
                     },
+                    "lugar_trabajo_origen": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "El lugar de antes del cambio y el consentimiento del cambio de\nocupaci\u00f3n de un obrero (fase 4.3)."
+                    },
+                    "fecha_consentimiento": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
                     "caucionado": {
                         "type": [
                             "boolean",
@@ -51805,6 +51866,8 @@
                     "firmante_th_cargo",
                     "firmante_th_cedula",
                     "lugar_trabajo",
+                    "lugar_trabajo_origen",
+                    "fecha_consentimiento",
                     "caucionado",
                     "caucion_numero",
                     "caucion_fecha",
@@ -57412,7 +57475,8 @@
                             "ascenso",
                             "inicio_periodo",
                             "licencia_consejo",
-                            "adenda"
+                            "adenda",
+                            "cambio_lugar"
                         ]
                     },
                     "causal": {
@@ -57681,6 +57745,14 @@
                             "null"
                         ],
                         "maxLength": 255
+                    },
+                    "fecha_consentimiento": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "El consentimiento escrito del cambio de ocupaci\u00f3n de un obrero\n(CT 192; fase 4.3). Que sea obligatorio ah\u00ed lo decide\nContratoDeTrabajoService."
                     },
                     "caucionado": {
                         "type": [
@@ -59502,7 +59574,8 @@
                     "inicio_periodo",
                     "licencia_consejo",
                     "asuncion_definitiva",
-                    "adenda"
+                    "adenda",
+                    "cambio_lugar"
                 ],
                 "title": "TipoMovimientoPersonal"
             },
@@ -61761,6 +61834,14 @@
                             "null"
                         ],
                         "maxLength": 255
+                    },
+                    "fecha_consentimiento": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "El consentimiento escrito del cambio de ocupaci\u00f3n (CT 192; fase 4.3)."
                     },
                     "caucionado": {
                         "type": [

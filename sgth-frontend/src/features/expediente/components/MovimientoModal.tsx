@@ -21,6 +21,7 @@ import { MovimientoPasoTipo } from './MovimientoPasoTipo'
 import { MovimientoSituacionPropuesta } from './MovimientoSituacionPropuesta'
 import { MovimientoDatosDelActo } from './MovimientoDatosDelActo'
 import { MovimientoDatosAdenda } from './MovimientoDatosAdenda'
+import { MovimientoDatosCambioObrero } from './MovimientoDatosCambioObrero'
 import { valoresDelBorrador, VALORES_EN_BLANCO } from '../utils/movimientoIniciales'
 
 interface Props {
@@ -276,6 +277,11 @@ function FormularioAccion({
             {/* La adenda del contrato civil: lo que cambia, si cambia (fase 4.2). */}
             {claseElegida?.pide_adenda && (
               <MovimientoDatosAdenda form={form} servidorId={servidorId} clase={claseElegida} />
+            )}
+
+            {/* Y lo que cambia del contrato de trabajo de un obrero (fase 4.3). */}
+            {claseElegida?.cambio_del_obrero && (
+              <MovimientoDatosCambioObrero form={form} servidorId={servidorId} clase={claseElegida} />
             )}
 
             <MovimientoDatosDelActo form={form} clase={claseElegida} tipoNombramiento={vinculo.tipoNombramiento} />

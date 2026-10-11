@@ -867,6 +867,10 @@ export type MovimientoPersonal = {
   motivo_anulacion?: string | null
   observacion?: string | null
   lugar_trabajo?: string | null
+  // El lugar de antes del cambio y el consentimiento escrito del cambio de
+  // ocupación de un obrero (fase 4.3).
+  lugar_trabajo_origen?: string | null
+  fecha_consentimiento?: string | null
   caucionado?: boolean | null
   caucion_numero?: string | null
   caucion_fecha?: string | null

@@ -46,6 +46,9 @@ const camposDelFormulario = z.object({
   credencial_cne_numero: z.string().max(100).optional().nullable(),
   credencial_cne_fecha: z.string().optional().nullable(),
   acta_posesion_numero: z.string().max(100).optional().nullable(),
+  // El consentimiento escrito del cambio de ocupación de un obrero (CT 192;
+  // fase 4.3).
+  fecha_consentimiento: z.string().optional().nullable(),
   // La licencia del Consejo: con o sin remuneración y su prórroga (fase 4.1b).
   con_remuneracion: z.boolean().optional().nullable(),
   prorroga_causa: z.string().optional().nullable(),
@@ -163,6 +166,52 @@ export function crearMovimientoSchema(
         ctx.addIssue({
           path: ['fecha_fin_propuesta'], code: 'custom',
           message: 'El plazo nuevo no puede terminar antes de que rija la adenda',
+        })
+      }
+    }
+
+    // Lo que cambia del contrato de trabajo de un obrero, con su adenda (fase
+    // 4.3). Que la remuneración no baje, que el puesto sea del catálogo de
+    // obreros y que algo cambie de verdad lo dice el backend, que conoce el
+    // contrato.
+    const cambio = clase.cambio_del_obrero
+    if (cambio) {
+      if (!data.resolucion_numero?.trim()) {
+        ctx.addIssue({ path: ['resolucion_numero'], code: 'custom', message: 'Indique el número de la adenda firmada' })
+      }
+
+      if (cambio === 'ocupacion') {
+        if (!data.puesto_destino_id) {
+          ctx.addIssue({ path: ['puesto_destino_id'], code: 'custom', message: 'Indique el puesto de la ocupación nueva' })
+        }
+        if (!data.fecha_consentimiento) {
+          ctx.addIssue({
+            path: ['fecha_consentimiento'], code: 'custom',
+            message: 'Indique la fecha del consentimiento escrito del trabajador',
+          })
+        } else if (data.fecha_efectiva && data.fecha_consentimiento > data.fecha_efectiva) {
+          ctx.addIssue({
+            path: ['fecha_consentimiento'], code: 'custom',
+            message: 'El consentimiento es previo al cambio',
+          })
+        }
+      }
+
+      if (cambio === 'lugar') {
+        if (!data.puesto_destino_id && !data.lugar_trabajo) {
+          ctx.addIssue({
+            path: ['lugar_trabajo'], code: 'custom',
+            message: 'Indique la unidad y el puesto, o el lugar de trabajo',
+          })
+        } else if (data.unidad_destino_id && !data.puesto_destino_id) {
+          ctx.addIssue({ path: ['puesto_destino_id'], code: 'custom', message: 'Indique el puesto de la unidad a la que pasa' })
+        }
+      }
+
+      if (cambio === 'remuneracion' && data.remuneracion_propuesta == null) {
+        ctx.addIssue({
+          path: ['remuneracion_propuesta'], code: 'custom',
+          message: 'Indique la remuneración nueva, mayor que la actual',
         })
       }
     }
@@ -327,6 +376,23 @@ export function pideDocumentoFirmado(
   return !clase?.pide_contratacion
     && causal !== 'contrato_finalizado'
     && esDelContratoCivil(clase, tipoNombramiento)
+}
+
+/**
+ * ¿Es un acto de un obrero, con su hoja de registro interno (fase 4.3)? Sin
+ * acción de personal; la hoja la firma solo Talento Humano. Misma regla que el
+ * contrato civil: en el ingreso decide el nombramiento propuesto.
+ */
+export function esDelRegistroInterno(
+  clase: ClaseDelCatalogo | undefined,
+  tipoNombramiento?: string | null,
+  propuesto?: string | null,
+): boolean {
+  if (!clase) return false
+
+  const nombramiento = clase.pide_contratacion ? propuesto : tipoNombramiento
+
+  return !!nombramiento && clase.documento_ct_para.some((n) => n === nombramiento)
 }
 
 /** ¿El traslado de este servidor pide el informe de la UATH? Lo responde el catálogo. */

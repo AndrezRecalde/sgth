@@ -1136,6 +1136,92 @@ class ContratoServidorService
         $this->sincronizarPuestoDesdeVinculo($vigente->servidor_id);
     }
 
+    /**
+     * El cambio del contrato de trabajo de un obrero (fase 4.3): la ocupación
+     * o el lugar —el puesto y la unidad, que ocupan plaza—, la remuneración y
+     * el lugar de trabajo, en lo que diga la adenda. La remuneración nunca
+     * baja, y se vuelve a mirar aquí porque el cambio puede regir más tarde.
+     */
+    public function aplicarCambioDelObrero(MovimientoPersonal $cambio): void
+    {
+        $vigente = Servidor::with('contratoVigente')->findOrFail($cambio->servidor_id)->contratoVigente;
+
+        if (! $vigente || $vigente->tipo_nombramiento !== TipoNombramiento::CODIGO_TRABAJO) {
+            throw new ReglaNegocioException(
+                'El cambio es del contrato de trabajo de un obrero, y el servidor ya no lo tiene vigente.'
+            );
+        }
+
+        $cambios = [];
+
+        if ($cambio->puesto_destino_id) {
+            $this->validarVacante((int) $cambio->puesto_destino_id, TipoNombramiento::CODIGO_TRABAJO->value, $vigente->id);
+
+            $cambios['puesto_id'] = $cambio->puesto_destino_id;
+            $cambios['unidad_administrativa_id'] = $cambio->unidad_destino_id ?? $vigente->unidad_administrativa_id;
+        }
+
+        if ($cambio->remuneracion_propuesta !== null) {
+            if ($vigente->remuneracion !== null && (float) $cambio->remuneracion_propuesta < (float) $vigente->remuneracion) {
+                throw new ReglaNegocioException(
+                    'La remuneración de un obrero nunca baja: hoy es $ '.number_format((float) $vigente->remuneracion, 2)
+                        .' y el cambio la deja en $ '.number_format((float) $cambio->remuneracion_propuesta, 2).'.'
+                );
+            }
+
+            $cambios['remuneracion'] = $cambio->remuneracion_propuesta;
+        }
+
+        if ($cambio->tipo_movimiento === TipoMovimientoPersonal::CAMBIO_LUGAR && filled($cambio->lugar_trabajo)) {
+            $cambios['lugar_trabajo'] = $cambio->lugar_trabajo;
+        }
+
+        $vigente->update($cambios);
+
+        $this->sincronizarPuestoDesdeVinculo($vigente->servidor_id);
+    }
+
+    /**
+     * Anular el cambio devuelve el contrato a como estaba en lo que cambió. Al
+     * puesto de antes solo se vuelve si sigue habiendo plaza.
+     */
+    public function deshacerCambioDelObrero(MovimientoPersonal $cambio): void
+    {
+        $vigente = Servidor::with('contratoVigente')->findOrFail($cambio->servidor_id)->contratoVigente;
+
+        if (! $vigente || $vigente->tipo_nombramiento !== TipoNombramiento::CODIGO_TRABAJO) {
+            throw new ReglaNegocioException('No se puede anular el cambio: el contrato que cambió ya no está vigente.');
+        }
+
+        $cambios = [];
+
+        if ($cambio->puesto_destino_id && $cambio->puesto_origen_id) {
+            try {
+                $this->validarVacante((int) $cambio->puesto_origen_id, TipoNombramiento::CODIGO_TRABAJO->value, $vigente->id);
+            } catch (ReglaNegocioException) {
+                throw new ReglaNegocioException(
+                    'No se puede anular: el puesto del que venía el obrero ya no tiene plaza libre, así que no hay '
+                        .'a dónde devolverlo.'
+                );
+            }
+
+            $cambios['puesto_id'] = $cambio->puesto_origen_id;
+            $cambios['unidad_administrativa_id'] = $cambio->unidad_origen_id ?? $vigente->unidad_administrativa_id;
+        }
+
+        if ($cambio->remuneracion_propuesta !== null) {
+            $cambios['remuneracion'] = $cambio->remuneracion_origen;
+        }
+
+        if ($cambio->tipo_movimiento === TipoMovimientoPersonal::CAMBIO_LUGAR && filled($cambio->lugar_trabajo)) {
+            $cambios['lugar_trabajo'] = $cambio->lugar_trabajo_origen;
+        }
+
+        $vigente->update($cambios);
+
+        $this->sincronizarPuestoDesdeVinculo($vigente->servidor_id);
+    }
+
     private function ponerEnElPuestoGanado(ContratoServidor $vigente, MovimientoPersonal $ascenso): void
     {
         $this->validarVacante((int) $ascenso->puesto_destino_id, TipoNombramiento::PROVISIONAL->value, $vigente->id);

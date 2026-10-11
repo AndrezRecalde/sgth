@@ -7504,12 +7504,12 @@ export interface components {
          * @description La clase legal de una acción de personal: el acto que se registra, con el nombre que le da la LOSEP (diseño de Acciones de Personal, sección 4). Es la identidad pública del catálogo. El frontend elige una clase —y, en la cesación, una causal— y el backend la traduce al par tipo/subtipo con el que todavía se guarda y opera cada acción. Esa traducción vive aquí, en `tipoYSubtipo()`, y su inversa en `desde()`: son las dos únicas puertas entre los dos vocabularios.  Las reglas no se repiten. La elegibilidad por nombramiento se pregunta a `TipoMovimientoPersonal` y `SubtipoMovimientoPersonal`, que siguen siendo su única fuente: esta clase solo las agrupa con el nombre legal. Lo que es solo de formulario —qué bloques pide, el aviso de la comisión— sí vive aquí, y `CatalogoAccionesPersonalTest` comprueba que coincida con lo que el tipo/subtipo traducido hace de verdad.  Nombres que cambian respecto de los que veía Talento Humano, todos aceptados el 2026-10-09 (cuestionario, preguntas N1, 9 y 15):  - el «Traspaso» de los permanentes y la «Prestación de servicios» de los    demás son el mismo acto, el **traslado** del Art. 35;  - el «Traslado administrativo» entre instituciones es el **intercambio    voluntario** del Art. 39;  - el «Cambio de denominación» de los obreros es el **cambio de ocupación**    del Art. 192 del Código del Trabajo.
          * @enum {string}
          */
-        ClaseAccionPersonal: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "subrogacion" | "encargo" | "incremento_remuneracion" | "cambio_ocupacion" | "sancion" | "cesacion" | "reintegro" | "restitucion" | "nombramiento_definitivo" | "ascenso" | "inicio_periodo" | "licencia_consejo" | "asuncion_definitiva" | "adenda";
+        ClaseAccionPersonal: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "subrogacion" | "encargo" | "incremento_remuneracion" | "cambio_ocupacion" | "sancion" | "cesacion" | "reintegro" | "restitucion" | "nombramiento_definitivo" | "ascenso" | "inicio_periodo" | "licencia_consejo" | "asuncion_definitiva" | "adenda" | "cambio_lugar";
         /** ClaseAccionPersonalResource */
         ClaseAccionPersonalResource: {
             codigo: components["schemas"]["ClaseAccionPersonal"];
             /** @enum {string} */
-            etiqueta: "Ingreso y Vinculación" | "Traslado" | "Intercambio Voluntario" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Licencia sin Remuneración" | "Subrogación" | "Encargo" | "Incremento de Remuneración" | "Cambio de Ocupación" | "Sanción Disciplinaria" | "Cesación de Funciones" | "Reintegro" | "Restitución" | "Nombramiento Definitivo" | "Ascenso" | "Inicio del Período" | "Licencia concedida por el Consejo" | "Asunción Definitiva" | "Adenda al contrato";
+            etiqueta: "Ingreso y Vinculación" | "Traslado" | "Intercambio Voluntario" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Licencia sin Remuneración" | "Subrogación" | "Encargo" | "Incremento de Remuneración" | "Cambio de Ocupación" | "Sanción Disciplinaria" | "Cesación de Funciones" | "Reintegro" | "Restitución" | "Nombramiento Definitivo" | "Ascenso" | "Inicio del Período" | "Licencia concedida por el Consejo" | "Asunción Definitiva" | "Adenda al contrato" | "Cambio de Lugar de Trabajo";
             familia: components["schemas"]["FamiliaAccionPersonal"];
             se_crea_desde_formulario: boolean;
             requiere_vinculo: boolean;
@@ -7530,9 +7530,16 @@ export interface components {
             pide_datos_de_licencia_del_consejo: boolean;
             /** @description Lo que cambia la adenda del contrato civil (fase 4.2). */
             pide_adenda: boolean;
+            /**
+             * @description Lo que cambia del contrato de trabajo de un obrero (fase 4.3):
+             *     'ocupacion', 'lugar' o 'remuneracion'.
+             * @enum {string|null}
+             */
+            cambio_del_obrero: "ocupacion" | "lugar" | "remuneracion" | null;
             registro_de_contrato_para: components["schemas"]["TipoNombramiento"][];
             acto_de_autoridad_para: components["schemas"]["TipoNombramiento"][];
             contrato_civil_para: components["schemas"]["TipoNombramiento"][];
+            documento_ct_para: components["schemas"]["TipoNombramiento"][];
             dictamen_medico_por_defecto: boolean;
             aviso: string | null;
         };
@@ -7654,6 +7661,7 @@ export interface components {
             supuesto_provisional: components["schemas"]["SupuestoProvisional"] | null;
             puesto_reservado_id: number | null;
             movimiento_ascenso_id: number | null;
+            lugar_trabajo: string | null;
             rau: string;
         };
         /** Convocatoria */
@@ -8557,15 +8565,15 @@ export interface components {
         };
         /**
          * InstrumentoActo
-         * @description Con qué documento se formaliza un acto (diseño de Acciones de Personal, 8.1). Todos comparten el registro, el historial y el motor de efectos; cambian la numeración, el documento y quién firma. Llegan de uno en uno, con su bloque. El primero distinto de la acción de personal es el registro del contrato de un ocasional (fase 2.7; TH N7): la ley no le pide acción a ese ingreso (LOSEP 18, último inciso; Reglamento 19). El segundo, el acto de autoridad (fase 4.1; TH 1–7): al Prefecto y al Viceprefecto no se les emite acción de personal, porque ninguno de sus actos nace de una autoridad nominadora; lleva el documento de origen —la credencial del CNE, la resolución del Consejo— y su propia numeración. El tercero, el contrato civil (fase 4.2; TH N6): quien tiene Servicios Profesionales no es servidor ni tiene relación de dependencia (Reglamento Art. 148). Su contrato, sus adendas y su terminación los firman las partes; aquí se registran. El de obreros vendrá con el suyo.
+         * @description Con qué documento se formaliza un acto (diseño de Acciones de Personal, 8.1). Todos comparten el registro, el historial y el motor de efectos; cambian la numeración, el documento y quién firma. Llegan de uno en uno, con su bloque. El primero distinto de la acción de personal es el registro del contrato de un ocasional (fase 2.7; TH N7): la ley no le pide acción a ese ingreso (LOSEP 18, último inciso; Reglamento 19). El segundo, el acto de autoridad (fase 4.1; TH 1–7): al Prefecto y al Viceprefecto no se les emite acción de personal, porque ninguno de sus actos nace de una autoridad nominadora; lleva el documento de origen —la credencial del CNE, la resolución del Consejo— y su propia numeración. El tercero, el contrato civil (fase 4.2; TH N6): quien tiene Servicios Profesionales no es servidor ni tiene relación de dependencia (Reglamento Art. 148). Su contrato, sus adendas y su terminación los firman las partes; aquí se registran. El cuarto, el del Código del Trabajo (fase 4.3; TH N8): a los obreros los rige el Código del Trabajo (Constitución Arts. 229 y 326.16), no la LOSEP. Su contrato y sus adendas los firman el empleador y el trabajador, y cada acto deja en el expediente una hoja de registro interno, RI-AAAA-NNNN, que firma Talento Humano.
          * @enum {string}
          */
-        InstrumentoActo: "accion_personal" | "registro_contrato" | "acto_autoridad" | "contrato_civil";
+        InstrumentoActo: "accion_personal" | "registro_contrato" | "acto_autoridad" | "contrato_civil" | "documento_ct";
         /** InstrumentoActoResource */
         InstrumentoActoResource: {
             codigo: components["schemas"]["InstrumentoActo"];
             /** @enum {string} */
-            etiqueta: "Acción de personal" | "Registro del contrato" | "Acto de autoridad electa" | "Contrato civil";
+            etiqueta: "Acción de personal" | "Registro del contrato" | "Acto de autoridad electa" | "Contrato civil" | "Registro interno (Código del Trabajo)";
         };
         /** InventarioMedicina */
         InventarioMedicina: {
@@ -8769,6 +8777,9 @@ export interface components {
             prorroga_causa: components["schemas"]["CausaProrrogaLicencia"] | null;
             /** Format: date-time */
             fecha_fin_origen: string | null;
+            lugar_trabajo_origen: string | null;
+            /** Format: date-time */
+            fecha_consentimiento: string | null;
         };
         /** MovimientoPersonalResource */
         MovimientoPersonalResource: {
@@ -8931,6 +8942,13 @@ export interface components {
             firmante_th_cargo: string | null;
             firmante_th_cedula: string | null;
             lugar_trabajo: string | null;
+            /**
+             * @description El lugar de antes del cambio y el consentimiento del cambio de
+             *     ocupación de un obrero (fase 4.3).
+             */
+            lugar_trabajo_origen: string | null;
+            /** Format: date-time */
+            fecha_consentimiento: string | null;
             caucionado: boolean | null;
             caucion_numero: string | null;
             /** Format: date-time */
@@ -10413,7 +10431,7 @@ export interface components {
              *     contrato» que nacía registrada y sin efecto.
              * @enum {string}
              */
-            clase: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "cambio_ocupacion" | "cesacion" | "restitucion" | "ascenso" | "inicio_periodo" | "licencia_consejo" | "adenda";
+            clase: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "cambio_ocupacion" | "cesacion" | "restitucion" | "ascenso" | "inicio_periodo" | "licencia_consejo" | "adenda" | "cambio_lugar";
             /**
              * @description Que la causal sea obligatoria, que pertenezca a la clase y que
              *     aplique al nombramiento lo decide
@@ -10512,6 +10530,13 @@ export interface components {
             observacion?: string | null;
             codigo?: string | null;
             lugar_trabajo?: string | null;
+            /**
+             * Format: date-time
+             * @description El consentimiento escrito del cambio de ocupación de un obrero
+             *     (CT 192; fase 4.3). Que sea obligatorio ahí lo decide
+             *     ContratoDeTrabajoService.
+             */
+            fecha_consentimiento?: string | null;
             caucionado?: boolean | null;
             caucion_numero?: string | null;
             /** Format: date-time */
@@ -11058,7 +11083,7 @@ export interface components {
          * TipoMovimientoPersonal
          * @enum {string}
          */
-        TipoMovimientoPersonal: "traslado" | "subrogacion" | "comision_servicios" | "ingreso" | "cambio_denominacion" | "prestacion_servicios" | "cambio_administrativo" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "traspaso" | "destitucion" | "cesacion_funciones" | "regimen_disciplinario" | "reintegro" | "restitucion" | "nombramiento_definitivo" | "ascenso" | "inicio_periodo" | "licencia_consejo" | "asuncion_definitiva" | "adenda";
+        TipoMovimientoPersonal: "traslado" | "subrogacion" | "comision_servicios" | "ingreso" | "cambio_denominacion" | "prestacion_servicios" | "cambio_administrativo" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "traspaso" | "destitucion" | "cesacion_funciones" | "regimen_disciplinario" | "reintegro" | "restitucion" | "nombramiento_definitivo" | "ascenso" | "inicio_periodo" | "licencia_consejo" | "asuncion_definitiva" | "adenda" | "cambio_lugar";
         /**
          * TipoNombramiento
          * @enum {string}
@@ -11624,6 +11649,11 @@ export interface components {
             observacion?: string | null;
             codigo?: string | null;
             lugar_trabajo?: string | null;
+            /**
+             * Format: date-time
+             * @description El consentimiento escrito del cambio de ocupación (CT 192; fase 4.3).
+             */
+            fecha_consentimiento?: string | null;
             caucionado?: boolean | null;
             caucion_numero?: string | null;
             /** Format: date-time */

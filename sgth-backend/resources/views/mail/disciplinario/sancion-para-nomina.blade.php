@@ -1,8 +1,8 @@
 <x-mail::message>
 @if($anulada)
-# Acción de personal anulada
+# Sanción anulada
 
-Talento Humano **anuló** la acción de personal **N.º {{ $numero }}**, que se le
+Talento Humano **anuló** {{ $documento }} **N.º {{ $numero }}**, que se le
 envió para aplicar un descuento en el rol de pagos de **{{ $servidor }}**
 (C.I. {{ $cedula }}).
 
@@ -15,7 +15,7 @@ adjunta el documento con la marca de anulación.
 @else
 # Sanción disciplinaria para nómina
 
-Talento Humano registró la acción de personal **N.º {{ $numero }}**, que impone
+Talento Humano registró {{ $documento }} **N.º {{ $numero }}**, que impone
 una sanción con efecto en la remuneración de **{{ $servidor }}**
 (C.I. {{ $cedula }}). Disponga a quien corresponda su aplicación en el rol de
 pagos.

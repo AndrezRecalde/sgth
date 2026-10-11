@@ -22,6 +22,8 @@ interface Props {
   soloVinculo?: boolean
   /** Muestra hasta cuándo va el vínculo: la adenda puede cambiarlo (fase 4.2). */
   conPlazo?: boolean
+  /** Muestra el lugar de trabajo: el cambio de lugar del obrero lo mueve (fase 4.3). */
+  conLugar?: boolean
 }
 
 function Campo({ etiqueta, valor }: { etiqueta: string; valor?: string | null }) {
@@ -39,7 +41,7 @@ function Campo({ etiqueta, valor }: { etiqueta: string; valor?: string | null })
  * el formulario — son datos que ya existen y que nadie debería re-teclear.
  */
 export function SituacionActualPanel({
-  servidorId, titulo = 'Situación actual', soloVinculo = false, conPlazo = false,
+  servidorId, titulo = 'Situación actual', soloVinculo = false, conPlazo = false, conLugar = false,
 }: Props) {
   const { data: servidor, isLoading, error } = useServidor(servidorId)
 
@@ -122,6 +124,11 @@ export function SituacionActualPanel({
                 valor={partidaDelVinculo(contrato)}
               />
             </Grid.Col>
+            {conLugar && (
+              <Grid.Col span={12}>
+                <Campo etiqueta="Lugar de trabajo" valor={contrato?.lugar_trabajo} />
+              </Grid.Col>
+            )}
             {conPlazo && (
               <Grid.Col span={12}>
                 <Campo

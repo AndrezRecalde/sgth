@@ -562,8 +562,10 @@ test('tieneDocumentoImprimible() cubre todo acto formal, que es todo lo que qued
         // El inicio del período de una autoridad (4.1): su instrumento le quita
         // el documento, no el tipo.
         TipoMovimientoPersonal::INICIO_PERIODO,
-        // Y la adenda, que es del contrato civil (4.2).
+        // Y la adenda, que es del contrato civil (4.2), y el cambio de lugar
+        // de un obrero, con su hoja de registro interno (4.3).
         TipoMovimientoPersonal::ADENDA,
+        TipoMovimientoPersonal::CAMBIO_LUGAR,
     ];
 
     // La bitácora del expediente —novedad de contrato, cambio de puesto,
