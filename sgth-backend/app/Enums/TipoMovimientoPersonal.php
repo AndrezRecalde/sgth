@@ -36,6 +36,9 @@ enum TipoMovimientoPersonal: string
     // Vuelve al servidor a su puesto por sentencia (LOSEP 46; fase 2.6). Crea
     // el vínculo como el ingreso, enlazado a la cesación que deja sin efecto.
     case RESTITUCION               = 'restitucion';
+    // Convierte el provisional de prueba en permanente al concluir los tres
+    // meses, sin cerrar el vínculo (LOSEP 17 b.5; fase 3.2).
+    case NOMBRAMIENTO_DEFINITIVO   = 'nombramiento_definitivo';
     // 'ascenso' se retiró (2026-07-23): confirmado con Talento Humano/UATH
     // que no existe como acción de personal en la operación real del GAD
     // (cero registros, sin mecanismo formal de registro). También era uno
@@ -61,6 +64,7 @@ enum TipoMovimientoPersonal: string
             self::REGIMEN_DISCIPLINARIO     => 'Régimen Disciplinario',
             self::REINTEGRO                 => 'Reintegro',
             self::RESTITUCION               => 'Restitución',
+            self::NOMBRAMIENTO_DEFINITIVO   => 'Nombramiento Definitivo',
         };
     }
 
@@ -212,6 +216,15 @@ enum TipoMovimientoPersonal: string
     }
 
     /**
+     * Cambia el nombramiento del vínculo vigente sin cerrarlo: el provisional
+     * de prueba pasa a permanente (fase 3.2).
+     */
+    public function convierteNombramiento(): bool
+    {
+        return $this === self::NOMBRAMIENTO_DEFINITIVO;
+    }
+
+    /**
      * Las "acciones de personal" formales tienen restricción de elegibilidad
      * por tipo de nombramiento y nacen en estado BORRADOR (deben pasar por el
      * flujo guardado de MovimientoPersonalStateService). La bitácora del
@@ -235,6 +248,7 @@ enum TipoMovimientoPersonal: string
             self::CESACION_FUNCIONES,
             self::REGIMEN_DISCIPLINARIO,
             self::REINTEGRO,
+            self::NOMBRAMIENTO_DEFINITIVO,
         ], true) || $this->subtipoEquivalente() !== null;
     }
 
@@ -365,6 +379,10 @@ enum TipoMovimientoPersonal: string
             // 2.2). Se deduce de las causales para no quedarse atrás si cambian.
             // El del provisional ascendido que vuelve a su puesto llega con el
             // ascenso (fase 3).
+            // Del provisional de prueba; que lo sea lo comprueba el servicio,
+            // que mira el supuesto del vínculo.
+            self::NOMBRAMIENTO_DEFINITIVO =>
+                $tipo === TipoNombramiento::PROVISIONAL,
             self::REINTEGRO => array_filter(
                 SubtipoMovimientoPersonal::cases(),
                 fn (SubtipoMovimientoPersonal $s) => $s->esAusenciaTemporal() && $s->elegiblePara($tipo)

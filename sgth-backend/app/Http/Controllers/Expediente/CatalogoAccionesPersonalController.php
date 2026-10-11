@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Expediente;
 use App\Enums\ClaseAccionPersonal;
 use App\Enums\FamiliaAccionPersonal;
 use App\Enums\InstrumentoActo;
+use App\Enums\SupuestoProvisional;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Expediente\ClaseAccionPersonalResource;
 use App\Http\Resources\Expediente\FamiliaAccionPersonalResource;
 use App\Http\Resources\Expediente\InstrumentoActoResource;
+use App\Http\Resources\Expediente\SupuestoProvisionalResource;
 use App\Http\Responses\ApiResponse;
 use Illuminate\Http\JsonResponse;
 
@@ -33,6 +35,8 @@ class CatalogoAccionesPersonalController extends Controller
             'clases'   => ClaseAccionPersonalResource::collection(ClaseAccionPersonal::cases()),
             // Con qué documento se formaliza cada acto (fase 2.7).
             'instrumentos' => InstrumentoActoResource::collection(InstrumentoActo::cases()),
+            // Para qué se da un provisional (LOSEP 17 b; fase 3.2).
+            'supuestos_provisional' => SupuestoProvisionalResource::collection(SupuestoProvisional::cases()),
         ], 'Catálogo de acciones de personal.');
     }
 }

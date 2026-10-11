@@ -92,6 +92,7 @@ test('un ingreso sin puesto o unidad propuestos no puede registrarse', function 
         'categoria'                   => CategoriaEventoVinculo::ACCION_DE_PERSONAL,
         'estado'                      => EstadoAccionPersonal::SUSCRITA,
         'tipo_nombramiento_propuesto' => 'nombramiento_provisional',
+        'supuesto_provisional_propuesto' => 'puesto_vacante', // LOSEP 17 b.3 (fase 3.2)
         'descripcion'                 => 'Ingreso propuesto sin puesto',
         'fecha_efectiva'              => '2026-08-01',
         'autorizado_por'              => $this->user->id,
@@ -175,6 +176,7 @@ test('un ingreso completo, al registrarse, crea el ContratoServidor y sincroniza
     // porque el guard de inmutabilidad solo bloquea desde REGISTRADA/NOTIFICADA).
     $movimiento->update([
         'tipo_nombramiento_propuesto' => 'nombramiento_provisional',
+        'supuesto_provisional_propuesto' => 'puesto_vacante', // LOSEP 17 b.3 (fase 3.2)
         'puesto_destino_id'           => $this->puestoA->id,
         'unidad_destino_id'           => $this->unidad->id,
         'remuneracion_propuesta'      => 850.00,

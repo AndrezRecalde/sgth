@@ -44,6 +44,7 @@ enum ClaseAccionPersonal: string
     case CESACION                  = 'cesacion';
     case REINTEGRO                 = 'reintegro';
     case RESTITUCION               = 'restitucion';
+    case NOMBRAMIENTO_DEFINITIVO   = 'nombramiento_definitivo';
 
     public function etiqueta(): string
     {
@@ -62,6 +63,7 @@ enum ClaseAccionPersonal: string
             self::CESACION                  => 'Cesación de Funciones',
             self::REINTEGRO                 => 'Reintegro',
             self::RESTITUCION               => 'Restitución',
+            self::NOMBRAMIENTO_DEFINITIVO   => 'Nombramiento Definitivo',
         };
     }
 
@@ -70,7 +72,8 @@ enum ClaseAccionPersonal: string
         return match ($this) {
             self::INGRESO,
             self::REINTEGRO,
-            self::RESTITUCION => FamiliaAccionPersonal::INGRESO,
+            self::RESTITUCION,
+            self::NOMBRAMIENTO_DEFINITIVO => FamiliaAccionPersonal::INGRESO,
 
             self::TRASLADO,
             self::INTERCAMBIO_VOLUNTARIO,
@@ -107,7 +110,12 @@ enum ClaseAccionPersonal: string
         // Y la sanción, desde la fase 2.5: la impone el sumario de
         // Disciplinario, con su falta, su porcentaje o sus días. A mano se
         // sancionaba sin sumario.
-        return ! in_array($this, [self::SUBROGACION, self::ENCARGO, self::REINTEGRO, self::SANCION], true);
+        //
+        // Ni el nombramiento definitivo (fase 3.2): nace del período de prueba,
+        // en el comando diario o en su pantalla, al cumplirse los tres meses.
+        return ! in_array($this, [
+            self::SUBROGACION, self::ENCARGO, self::REINTEGRO, self::SANCION, self::NOMBRAMIENTO_DEFINITIVO,
+        ], true);
     }
 
     /**
@@ -257,6 +265,7 @@ enum ClaseAccionPersonal: string
             self::CESACION => [TipoMovimientoPersonal::CESACION_FUNCIONES, $causal],
             self::REINTEGRO => [TipoMovimientoPersonal::REINTEGRO, null],
             self::RESTITUCION => [TipoMovimientoPersonal::RESTITUCION, null],
+            self::NOMBRAMIENTO_DEFINITIVO => [TipoMovimientoPersonal::NOMBRAMIENTO_DEFINITIVO, null],
         };
     }
 
@@ -311,6 +320,7 @@ enum ClaseAccionPersonal: string
                 TipoMovimientoPersonal::REGIMEN_DISCIPLINARIO     => self::SANCION,
                 TipoMovimientoPersonal::REINTEGRO                 => self::REINTEGRO,
                 TipoMovimientoPersonal::RESTITUCION               => self::RESTITUCION,
+                TipoMovimientoPersonal::NOMBRAMIENTO_DEFINITIVO   => self::NOMBRAMIENTO_DEFINITIVO,
                 default                                           => null,
             },
         };

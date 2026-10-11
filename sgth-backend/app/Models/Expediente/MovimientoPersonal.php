@@ -7,6 +7,7 @@ use App\Enums\ClaseAccionPersonal;
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\InstrumentoActo;
 use App\Enums\SubtipoMovimientoPersonal;
+use App\Enums\SupuestoProvisional;
 use App\Enums\TipoMovimientoPersonal;
 use App\Enums\TipoNombramiento;
 use App\Exceptions\ReglaNegocioException;
@@ -231,6 +232,8 @@ class MovimientoPersonal extends Model
         'categoria',
         'estado',
         'tipo_nombramiento_propuesto',
+        // El supuesto del provisional que el ingreso propone (fase 3.2).
+        'supuesto_provisional_propuesto',
         'remuneracion_propuesta',
         'fecha_fin_propuesta',
         'numero_contrato',
@@ -272,6 +275,9 @@ class MovimientoPersonal extends Model
         'resolucion_numero',
         // El informe técnico de la UATH que pide el traslado (fase 3.1).
         'informe_uath_numero',
+        // El acta final del concurso del provisional de prueba (fase 3.2).
+        'acta_concurso_numero',
+        'acta_concurso_fecha',
         // La sentencia de una restitución [TH N15; fase 2.6].
         'causa_judicial_numero',
         'unidad_judicial',
@@ -301,6 +307,8 @@ class MovimientoPersonal extends Model
             'categoria'                   => CategoriaEventoVinculo::class,
             'estado'                      => EstadoAccionPersonal::class,
             'tipo_nombramiento_propuesto' => TipoNombramiento::class,
+            'supuesto_provisional_propuesto' => SupuestoProvisional::class,
+            'acta_concurso_fecha'         => 'date',
             'remuneracion_propuesta'      => 'decimal:2',
             'remuneracion_origen'         => 'decimal:2',
             'fecha_fin_propuesta'         => 'date',
@@ -527,6 +535,7 @@ class MovimientoPersonal extends Model
     public function tocaElVinculo(): bool
     {
         return (bool) $this->tipo_movimiento?->creaVinculo()
+            || (bool) $this->tipo_movimiento?->convierteNombramiento()
             || $this->reubicaAlServidor()
             || (bool) $this->subtipoEfectivo()?->cierraVinculo();
     }
@@ -573,6 +582,8 @@ class MovimientoPersonal extends Model
         // Lo que crea un vínculo: el ingreso y, desde la fase 2.6, la
         // restitución, que propone el puesto al que vuelve.
         return (bool) $this->tipo_movimiento?->creaVinculo()
+            // El nombramiento definitivo: el mismo puesto, ahora permanente.
+            || (bool) $this->tipo_movimiento?->convierteNombramiento()
             || $this->tipo_movimiento === TipoMovimientoPersonal::SUBROGACION
             || $this->reubicaAlServidor();
     }

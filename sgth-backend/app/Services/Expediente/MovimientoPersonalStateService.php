@@ -8,8 +8,10 @@ use App\Enums\EstadoContrato;
 use App\Enums\InstrumentoActo;
 use App\Enums\PartidaPorModalidad;
 use App\Enums\SubtipoMovimientoPersonal;
+use App\Enums\SupuestoProvisional;
 use App\Enums\TipoEventoVinculo;
 use App\Enums\TipoMovimientoPersonal;
+use App\Enums\TipoNombramiento;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Dispensario\SolicitudCertificacionMedica;
 use App\Models\Expediente\ContratoServidor;
@@ -159,6 +161,7 @@ class MovimientoPersonalStateService
      */
     private function aplicarSuscrita(MovimientoPersonal $movimiento, array $datos): void
     {
+        $this->validarSupuestoDelProvisional($movimiento);
         $this->aplicarDictamenSiViene($movimiento, $datos);
 
         // Suscribir es el acto de firma: aquí se sella quién firmó, porque las
@@ -232,6 +235,35 @@ class MovimientoPersonalStateService
             throw new ReglaNegocioException(
                 "La partida {$partida->codigo} no tiene disponibilidad presupuestaria "
                     .'verificada. Solicítela a la Dirección Financiera antes de suscribir.'
+            );
+        }
+    }
+
+    /**
+     * El provisional dice para qué se da (LOSEP 17 b), y el de prueba entra
+     * por concurso, con su acta (fase 3.2). Se pide al suscribir, cuando el
+     * borrador todavía se corrige: lo suscrito antes de existir el supuesto ya
+     * no se edita, y se registra sin él como los provisionales de antes.
+     */
+    private function validarSupuestoDelProvisional(MovimientoPersonal $movimiento): void
+    {
+        if ($movimiento->tipo_movimiento !== TipoMovimientoPersonal::INGRESO
+            || $movimiento->tipo_nombramiento_propuesto !== TipoNombramiento::PROVISIONAL
+        ) {
+            return;
+        }
+
+        if (! $movimiento->supuesto_provisional_propuesto) {
+            throw new ReglaNegocioException(
+                'No se puede suscribir el ingreso sin el supuesto del nombramiento provisional.'
+            );
+        }
+
+        if ($movimiento->supuesto_provisional_propuesto === SupuestoProvisional::DE_PRUEBA
+            && (blank($movimiento->acta_concurso_numero) || ! $movimiento->acta_concurso_fecha)
+        ) {
+            throw new ReglaNegocioException(
+                'No se puede suscribir el ingreso de prueba sin el acta final del concurso (número y fecha).'
             );
         }
     }
@@ -386,6 +418,8 @@ class MovimientoPersonalStateService
                 // es lo que consulta el control de plazas para no contar dos
                 // veces la misma, y lo que permite listar quién cubre a quién.
                 'cubre_movimiento_id'      => $movimiento->cubre_movimiento_id,
+                // Para qué se da el provisional (LOSEP 17 b; fase 3.2).
+                'supuesto_provisional'     => $movimiento->supuesto_provisional_propuesto?->value,
                 'fecha_inicio'             => $movimiento->fecha_efectiva?->toDateString(),
                 // Solo para vínculos con plazo pactado; si va null, Servicios
                 // Profesionales recibe igualmente su vencimiento derivado en
@@ -416,6 +450,10 @@ class MovimientoPersonalStateService
         } elseif ($movimiento->subtipoEfectivo()?->cierraVinculo()) {
             $this->cerrarVinculo($movimiento);
             $this->aplicarCascadasDeLaCesacion($movimiento);
+        } elseif ($tipo->convierteNombramiento()) {
+            // El provisional de prueba pasa a permanente en el mismo vínculo
+            // (fase 3.2).
+            $this->contratoServidorService->convertirEnDefinitivo($movimiento);
         }
 
         // La subrogación no crea vínculo: reemplaza temporalmente al titular
@@ -495,6 +533,26 @@ class MovimientoPersonalStateService
 
         if ($movimiento->subtipoEfectivo() === SubtipoMovimientoPersonal::TERMINACION_UNILATERAL) {
             MovimientoPersonalService::impedirTerminacionDeProtegida($movimiento->servidor_id);
+        }
+
+        // El nombramiento definitivo: del provisional de prueba, cumplidos los
+        // tres meses (LOSEP 17 b.5).
+        if ($movimiento->tipo_movimiento->convierteNombramiento()) {
+            $vigente = Servidor::with('contratoVigente')->find($movimiento->servidor_id)?->contratoVigente;
+            $fin = $vigente?->finDelPeriodoDePrueba();
+
+            if (! $fin) {
+                throw new ReglaNegocioException(
+                    'El servidor ya no tiene un nombramiento provisional de prueba que convertir en definitivo.'
+                );
+            }
+
+            if ($movimiento->fecha_efectiva && $movimiento->fecha_efectiva->toDateString() <= $fin->toDateString()) {
+                throw new ReglaNegocioException(
+                    'El nombramiento definitivo rige después del período de prueba, que termina el '
+                        .$fin->format('d/m/Y').'.'
+                );
+            }
         }
 
         if ($movimiento->tipo_movimiento === TipoMovimientoPersonal::REINTEGRO
@@ -761,6 +819,11 @@ class MovimientoPersonalStateService
 
         if ($movimiento->tipo_movimiento->creaVinculo()) {
             $this->deshacerVinculoCreado($movimiento);
+            return;
+        }
+
+        if ($movimiento->tipo_movimiento->convierteNombramiento()) {
+            $this->contratoServidorService->devolverAPrueba($movimiento);
             return;
         }
 

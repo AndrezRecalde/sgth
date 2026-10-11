@@ -7,6 +7,7 @@ use App\Enums\AptitudMedica;
 use App\Enums\EstadoPostulante;
 use App\Enums\Permiso;
 use App\Enums\TipoMovimientoPersonal;
+use App\Enums\SupuestoProvisional;
 use App\Enums\TipoNombramiento;
 use App\Enums\TipoProcesoConvocatoria;
 use App\Exceptions\ReglaNegocioException;
@@ -586,6 +587,12 @@ final class SolicitudCertificacionController extends Controller
                 'descripcion' => "Incorporación tras proceso de selección {$convocatoria->codigo}. Dictamen médico: {$solicitud->dictamen}.",
                 'fecha_efectiva' => now()->toDateString(),
                 'tipo_nombramiento_propuesto' => $tipoNombramientoPropuesto->value,
+                // El ganador de un concurso entra de prueba (LOSEP 17 b.5; TH
+                // N3; fase 3.2). El acta final del concurso la completa Talento
+                // Humano en el borrador: Reclutamiento no la tiene.
+                'supuesto_provisional_propuesto' => $convocatoria->tipo_proceso === TipoProcesoConvocatoria::FORMAL
+                    ? SupuestoProvisional::DE_PRUEBA->value
+                    : null,
                 'puesto_destino_id' => $puesto->id,
                 'unidad_destino_id' => $puesto->unidad_administrativa_id,
                 'remuneracion_propuesta' => $puesto->rmu,
@@ -648,8 +655,10 @@ final class SolicitudCertificacionController extends Controller
     }
 
     /**
-     * Formal: único resultado legal posible es Nombramiento Permanente
-     * (confirmado con Talento Humano — no se infiere nada del Puesto).
+     * Formal: nombramiento provisional de prueba (LOSEP 17 b.5). Hasta la fase
+     * 3.2 era permanente directo, sin prueba; TH lo confirmó primero y después
+     * decidió seguir la norma [TH N3]: a los tres meses llega el nombramiento
+     * definitivo (PeriodoDePruebaService).
      * Express: el tipo lo declaró Talento Humano al abrir el proceso
      * (Convocatoria::tipo_nombramiento_previsto), tampoco se deriva del
      * Puesto. Talento Humano debe revisar este dato propuesto antes de
@@ -659,7 +668,7 @@ final class SolicitudCertificacionController extends Controller
     private function resolverTipoNombramientoPropuesto(Convocatoria $convocatoria): TipoNombramiento
     {
         return match ($convocatoria->tipo_proceso) {
-            TipoProcesoConvocatoria::FORMAL => TipoNombramiento::PERMANENTE,
+            TipoProcesoConvocatoria::FORMAL => TipoNombramiento::PROVISIONAL,
             TipoProcesoConvocatoria::EXPRESS => $convocatoria->tipo_nombramiento_previsto
                 ?? throw new ReglaNegocioException(
                     'La convocatoria express no tiene un tipo de nombramiento previsto definido.'

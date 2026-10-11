@@ -82,6 +82,7 @@ use App\Http\Controllers\Expediente\HistorialAcademicoController;
 use App\Http\Controllers\Expediente\AusenciaTemporalController;
 use App\Http\Controllers\Expediente\CatalogoAccionesPersonalController;
 use App\Http\Controllers\Expediente\MovimientoPersonalController;
+use App\Http\Controllers\Expediente\PeriodoDePruebaController;
 use App\Http\Controllers\Expediente\VerificacionCertificadoController;
 use App\Http\Controllers\Expediente\VinculacionInicialController;
 use App\Http\Controllers\Expediente\ServidorController;
@@ -398,6 +399,13 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // remuneración) y qué hueco falta cubrir con personal de apoyo.
         Route::get('ausencias-temporales', [AusenciaTemporalController::class, 'index'])
             ->middleware('role:admin-uath|asistente-uath');
+
+        // Quién está en período de prueba (LOSEP 17 b.5; fase 3.2), y su
+        // nombramiento definitivo al cumplir los tres meses.
+        Route::get('periodos-de-prueba', [PeriodoDePruebaController::class, 'index'])
+            ->middleware('role:admin-uath|asistente-uath');
+        Route::post('contratos/{contrato}/nombramiento-definitivo', [PeriodoDePruebaController::class, 'nombramientoDefinitivo'])
+            ->middleware('permission:preparar-accion-personal');
 
         // Carga inicial: servidores que ya estaban vinculados antes de que el
         // sistema existiera. Se salta la Acción de Personal a propósito, así

@@ -8,6 +8,7 @@ use App\Enums\EstadoContrato;
 use App\Enums\SubtipoMovimientoPersonal;
 use App\Enums\TipoEventoVinculo;
 use App\Enums\TipoMovimientoPersonal;
+use App\Enums\SupuestoProvisional;
 use App\Enums\TipoNombramiento;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Estructura\Puesto;
@@ -798,6 +799,50 @@ class ContratoServidorService
      * como un traspaso» sin pronunciarse sobre la remuneración— y el
      * 2026-09-29 confirmaron que no cambia.
      */
+    /**
+     * El nombramiento definitivo (LOSEP 17 b.5; fase 3.2): el provisional de
+     * prueba pasa a permanente en el mismo vínculo, que no se cierra, así que
+     * la antigüedad sigue corriendo. El número, la partida y la remuneración se
+     * conservan.
+     */
+    public function convertirEnDefinitivo(MovimientoPersonal $movimiento): void
+    {
+        $vigente = Servidor::with('contratoVigente')->findOrFail($movimiento->servidor_id)->contratoVigente;
+
+        if (! $vigente?->esDePrueba()) {
+            throw new ReglaNegocioException(
+                'El servidor ya no tiene un nombramiento provisional de prueba que convertir en definitivo.'
+            );
+        }
+
+        $vigente->update([
+            'tipo_nombramiento'    => TipoNombramiento::PERMANENTE->value,
+            'supuesto_provisional' => null,
+        ]);
+
+        $this->sincronizarPuestoDesdeVinculo($movimiento->servidor_id);
+    }
+
+    /** Anular el nombramiento definitivo devuelve el vínculo a provisional de prueba. */
+    public function devolverAPrueba(MovimientoPersonal $movimiento): void
+    {
+        $vigente = Servidor::with('contratoVigente')->findOrFail($movimiento->servidor_id)->contratoVigente;
+
+        if (! $vigente || $vigente->tipo_nombramiento !== TipoNombramiento::PERMANENTE) {
+            throw new ReglaNegocioException(
+                'No se puede devolver el vínculo a provisional de prueba: ya no es el permanente que '
+                    .'creó este nombramiento definitivo.'
+            );
+        }
+
+        $vigente->update([
+            'tipo_nombramiento'    => TipoNombramiento::PROVISIONAL->value,
+            'supuesto_provisional' => SupuestoProvisional::DE_PRUEBA->value,
+        ]);
+
+        $this->sincronizarPuestoDesdeVinculo($movimiento->servidor_id);
+    }
+
     public function reestructurarDesdeMovimiento(MovimientoPersonal $movimiento): void
     {
         $servidor = Servidor::with('contratoVigente')->findOrFail($movimiento->servidor_id);

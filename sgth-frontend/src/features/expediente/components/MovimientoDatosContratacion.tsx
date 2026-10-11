@@ -9,6 +9,7 @@ import { useAusenciasTemporales } from '../hooks/useAusenciasTemporales'
 import { admiteMarcacion } from '../utils/nombramiento'
 import { TIPO_NOMBRAMIENTO_OPTIONS } from '../utils/tipoNombramientoOptions'
 import type { MovimientoFormData } from '../schemas/movimiento.schema'
+import { MovimientoSupuestoProvisional } from './MovimientoSupuestoProvisional'
 import { formatFecha } from '@/lib/fecha'
 import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 
@@ -92,6 +93,8 @@ export function MovimientoDatosContratacion({
 
       {/* Un reemplazo dura lo que dura la ausencia, así que solo se ofrece con
           nombramiento temporal. La misma regla la impone validarReemplazo(). */}
+      {nombramiento === 'nombramiento_provisional' && <MovimientoSupuestoProvisional form={form} />}
+
       {puedeCubrir && (
         <Controller
           name="cubre_movimiento_id"
