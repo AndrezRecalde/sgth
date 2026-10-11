@@ -66,6 +66,10 @@ function panoramaDispensario($test, string $query = ''): array
 }
 
 test('el flujo de hoy cuenta los turnos por estado y la espera desde la llegada', function () {
+    // A mediodía: la llegada es 50 minutos antes de «ahora», y pasada la
+    // medianoche caía ayer y salía del flujo de hoy. El CI lo tumbó a las 00:12.
+    $this->travelTo(Carbon::today()->setTime(12, 0));
+
     $llegada = Carbon::now()->subMinutes(50);
     $atendido = turnoPanorama($this, 'atendido', $llegada);
     consultaPanorama($this, 'medicina_general', $llegada->copy()->addMinutes(30), $atendido);
