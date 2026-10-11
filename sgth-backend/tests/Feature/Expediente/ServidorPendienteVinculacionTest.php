@@ -64,6 +64,7 @@ test('deja de estar pendiente_vinculacion después de que un ingreso llega a reg
         'categoria'                   => CategoriaEventoVinculo::ACCION_DE_PERSONAL,
         'estado'                      => EstadoAccionPersonal::SUSCRITA,
         'tipo_nombramiento_propuesto' => 'nombramiento_provisional',
+        'supuesto_provisional_propuesto' => 'puesto_vacante', // LOSEP 17 b.3 (fase 3.2)
         'descripcion'                 => 'Ingreso formal',
         'fecha_efectiva'              => now()->toDateString(),
         'puesto_destino_id'           => $this->puesto->id,

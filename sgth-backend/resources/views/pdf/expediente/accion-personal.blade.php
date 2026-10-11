@@ -278,7 +278,9 @@
     // situación propuesta es la misma que la actual.
     $esReintegro = $movimiento->tipo_movimiento === \App\Enums\TipoMovimientoPersonal::REINTEGRO;
     $mismoPuesto = $esReintegro
-        || $movimiento->subtipo_movimiento === \App\Enums\SubtipoMovimientoPersonal::AMONESTACION_ESCRITA;
+        || $movimiento->subtipo_movimiento === \App\Enums\SubtipoMovimientoPersonal::AMONESTACION_ESCRITA
+        // El nombramiento definitivo: el mismo puesto, ahora permanente (fase 3.2).
+        || $movimiento->tipo_movimiento === \App\Enums\TipoMovimientoPersonal::NOMBRAMIENTO_DEFINITIVO;
     $ausenciaQueCierra = $esReintegro ? $movimiento->movimientoRelacionado : null;
 
     // La restitución vuelve por sentencia (fase 2.6): dice qué cesación deja
@@ -441,6 +443,19 @@
         <div class="respaldo">
             Al terminar la comisión, el servidor debe servir en la institución un tiempo igual
             al de su duración (LOSEP Art. 30).
+        </div>
+    @endif
+    @if($movimiento->supuesto_provisional_propuesto)
+        {{-- Fase 3.2: para qué se da el provisional, y el acta del concurso del de prueba. --}}
+        <div class="respaldo">
+            <strong>Nombramiento provisional:</strong> {{ $movimiento->supuesto_provisional_propuesto->etiqueta() }}
+            ({{ $movimiento->supuesto_provisional_propuesto->baseLegal() }}).
+        </div>
+    @endif
+    @if($movimiento->acta_concurso_numero)
+        <div class="respaldo">
+            <strong>Acta final del concurso:</strong> N.º {{ $movimiento->acta_concurso_numero }}, del
+            {{ $fmtFecha($movimiento->acta_concurso_fecha) }}.
         </div>
     @endif
     @if($movimiento->informe_uath_numero)

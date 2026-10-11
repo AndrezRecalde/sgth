@@ -179,6 +179,8 @@ test('cada clase aplica exactamente a los nombramientos de antes', function () {
         'sancion'     => [],
         // Como el ingreso: quien vuelve por sentencia no tiene vínculo (2.6).
         'restitucion' => [],
+        // Nace del período de prueba, no del formulario (3.2).
+        'nombramiento_definitivo' => [],
     ];
 
     foreach (ClaseAccionPersonal::cases() as $clase) {

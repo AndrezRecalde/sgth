@@ -695,10 +695,14 @@ export type FamiliaDelCatalogo = components['schemas']['FamiliaAccionPersonalRes
 /** Con qué documento se formaliza un acto (fase 2.7). */
 export type InstrumentoActo = components['schemas']['InstrumentoActo']
 export type InstrumentoDelCatalogo = components['schemas']['InstrumentoActoResource']
+/** Para qué se da un provisional (LOSEP 17 b; fase 3.2). */
+export type SupuestoProvisional = components['schemas']['SupuestoProvisional']
+export type SupuestoDelCatalogo = components['schemas']['SupuestoProvisionalResource']
 export type CatalogoAccionesPersonal = {
   familias: FamiliaDelCatalogo[]
   clases: ClaseDelCatalogo[]
   instrumentos: InstrumentoDelCatalogo[]
+  supuestos_provisional: SupuestoDelCatalogo[]
 }
 
 export type EstadoAccionPersonal =
@@ -808,6 +812,11 @@ export type MovimientoPersonal = {
   } | null
   /** El informe técnico de la UATH que pide el traslado (fase 3.1). */
   informe_uath_numero?: string | null
+  /** Para qué se da el provisional, y el acta del de prueba (fase 3.2). */
+  supuesto_provisional_propuesto?: SupuestoProvisional | null
+  supuesto_provisional_etiqueta?: string | null
+  acta_concurso_numero?: string | null
+  acta_concurso_fecha?: string | null
   // La sentencia de una restitución (fase 2.6).
   causa_judicial_numero?: string | null
   unidad_judicial?: string | null

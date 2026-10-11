@@ -32,6 +32,13 @@ export function AccionRespaldos({ m }: { m: MovimientoPersonal }) {
                 label: 'Nombramiento',
                 value: etiquetaNombramiento(m.tipo_nombramiento_propuesto),
               },
+              // Para qué se da el provisional y el acta del de prueba (fase 3.2).
+              ...(m.supuesto_provisional_etiqueta
+                ? [{ label: 'Supuesto', value: m.supuesto_provisional_etiqueta }]
+                : []),
+              ...(m.acta_concurso_numero
+                ? [{ label: 'Acta del concurso', value: `${m.acta_concurso_numero} · ${formatFecha(m.acta_concurso_fecha)}` }]
+                : []),
               { label: 'N.º de contrato', value: m.numero_contrato },
               { label: 'Remuneración', value: dinero(m.remuneracion_propuesta) },
               {

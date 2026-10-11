@@ -14,13 +14,23 @@ import { buscarClase } from '../utils/catalogoAcciones'
  */
 function soloLoQueAplica(data: MovimientoFormData, pideContratacion: boolean): MovimientoFormData {
   if (pideContratacion) {
+    // El supuesto y el acta solo son del provisional (fase 3.2); el backend
+    // también los limpia.
+    const provisional = data.tipo_nombramiento_propuesto === 'nombramiento_provisional'
+    const conSupuesto = {
+      ...data,
+      supuesto_provisional_propuesto: provisional ? data.supuesto_provisional_propuesto : null,
+      acta_concurso_numero: provisional ? (data.acta_concurso_numero?.trim() || null) : null,
+      acta_concurso_fecha: provisional ? data.acta_concurso_fecha : null,
+    }
+
     // Cinturón, además del `setValue` al cambiar de nombramiento: un borrador
     // que ya venía con la marcación puesta y un nombramiento que no marca se
     // edita sin tocar ese selector, y entonces el `onChange` no corre. La
     // modalidad manda sobre lo que quedó guardado.
     return admiteMarcacion(data.tipo_nombramiento_propuesto)
-      ? data
-      : { ...data, puede_marcar: false }
+      ? conSupuesto
+      : { ...conSupuesto, puede_marcar: false }
   }
 
   return {
@@ -29,6 +39,9 @@ function soloLoQueAplica(data: MovimientoFormData, pideContratacion: boolean): M
     fecha_fin_propuesta: null,
     puede_marcar: null,
     tipo_nombramiento_propuesto: null,
+    supuesto_provisional_propuesto: null,
+    acta_concurso_numero: null,
+    acta_concurso_fecha: null,
     cubre_movimiento_id: null,
   }
 }

@@ -6672,12 +6672,20 @@
                                                     "items": {
                                                         "$ref": "#/components/schemas/InstrumentoActoResource"
                                                     }
+                                                },
+                                                "supuestos_provisional": {
+                                                    "type": "array",
+                                                    "description": "Para qu\u00e9 se da un provisional (LOSEP 17 b; fase 3.2).",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/SupuestoProvisionalResource"
+                                                    }
                                                 }
                                             },
                                             "required": [
                                                 "familias",
                                                 "clases",
-                                                "instrumentos"
+                                                "instrumentos",
+                                                "supuestos_provisional"
                                             ]
                                         },
                                         "meta": {
@@ -26153,6 +26161,196 @@
                 }
             }
         },
+        "/v1/expediente/periodos-de-prueba": {
+            "get": {
+                "operationId": "periodoDePrueba.index",
+                "tags": [
+                    "PeriodoDePrueba"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Per\u00edodos de prueba en curso."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "contrato_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "servidor": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "nombre": {
+                                                                "type": "string"
+                                                            },
+                                                            "cedula": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "nombre",
+                                                            "cedula"
+                                                        ]
+                                                    },
+                                                    "puesto": {
+                                                        "type": "string"
+                                                    },
+                                                    "unidad": {
+                                                        "type": "string"
+                                                    },
+                                                    "desde": {
+                                                        "type": "string"
+                                                    },
+                                                    "hasta": {
+                                                        "type": "string"
+                                                    },
+                                                    "dias_restantes": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "concluida": {
+                                                        "type": "string"
+                                                    },
+                                                    "definitivo": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "estado": {
+                                                                "type": "string"
+                                                            },
+                                                            "codigo_registro": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "estado",
+                                                            "codigo_registro"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "contrato_id",
+                                                    "servidor",
+                                                    "puesto",
+                                                    "unidad",
+                                                    "desde",
+                                                    "hasta",
+                                                    "dias_restantes",
+                                                    "concluida",
+                                                    "definitivo"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/contratos/{contrato}/nombramiento-definitivo": {
+            "post": {
+                "operationId": "periodoDePrueba.nombramientoDefinitivo",
+                "summary": "Prepara en borrador el nombramiento definitivo, cumplidos los tres meses",
+                "tags": [
+                    "PeriodoDePrueba"
+                ],
+                "parameters": [
+                    {
+                        "name": "contrato",
+                        "in": "path",
+                        "required": true,
+                        "description": "The contrato ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Nombramiento definitivo preparado en borrador."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/MovimientoPersonalResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/asistencia/periodos-vacaciones/servidores/{servidorId}/resumen": {
             "get": {
                 "operationId": "periodos.resumen",
@@ -45084,7 +45282,8 @@
                     "sancion",
                     "cesacion",
                     "reintegro",
-                    "restitucion"
+                    "restitucion",
+                    "nombramiento_definitivo"
                 ],
                 "title": "ClaseAccionPersonal"
             },
@@ -45110,7 +45309,8 @@
                             "Sanci\u00f3n Disciplinaria",
                             "Cesaci\u00f3n de Funciones",
                             "Reintegro",
-                            "Restituci\u00f3n"
+                            "Restituci\u00f3n",
+                            "Nombramiento Definitivo"
                         ]
                     },
                     "familia": {
@@ -45675,6 +45875,16 @@
                             "null"
                         ]
                     },
+                    "supuesto_provisional": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/SupuestoProvisional"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
                     "rau": {
                         "type": "string"
                     }
@@ -45702,6 +45912,7 @@
                     "partida_presupuestaria_id",
                     "movimiento_origen_id",
                     "movimiento_cierre_id",
+                    "supuesto_provisional",
                     "rau"
                 ],
                 "title": "ContratoServidor"
@@ -49888,6 +50099,29 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "supuesto_provisional_propuesto": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/SupuestoProvisional"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "acta_concurso_numero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "acta_concurso_fecha": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
                     }
                 },
                 "required": [
@@ -49953,7 +50187,10 @@
                     "fecha_ejecutoria",
                     "remuneraciones_dejadas_de_percibir",
                     "instrumento",
-                    "informe_uath_numero"
+                    "informe_uath_numero",
+                    "supuesto_provisional_propuesto",
+                    "acta_concurso_numero",
+                    "acta_concurso_fecha"
                 ],
                 "title": "MovimientoPersonal"
             },
@@ -50155,6 +50392,33 @@
                                 "type": "null"
                             }
                         ]
+                    },
+                    "supuesto_provisional_propuesto": {
+                        "anyOf": [
+                            {
+                                "description": "Para qu\u00e9 se da el provisional, y el acta del de prueba (fase 3.2).",
+                                "$ref": "#/components/schemas/SupuestoProvisional"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "supuesto_provisional_etiqueta": {
+                        "type": "string"
+                    },
+                    "acta_concurso_numero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "acta_concurso_fecha": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
                     },
                     "remuneracion_propuesta": {
                         "type": [
@@ -50691,6 +50955,10 @@
                     "puesto_origen_id",
                     "puesto_destino_id",
                     "tipo_nombramiento_propuesto",
+                    "supuesto_provisional_propuesto",
+                    "supuesto_provisional_etiqueta",
+                    "acta_concurso_numero",
+                    "acta_concurso_fecha",
                     "remuneracion_propuesta",
                     "numero_contrato",
                     "partida_presupuestaria_id",
@@ -56331,6 +56599,33 @@
                         "description": "La sentencia de una restituci\u00f3n (fase 2.6). Que sean obligatorios\nen ella lo decide RestitucionService.",
                         "maxLength": 100
                     },
+                    "supuesto_provisional_propuesto": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "El supuesto del provisional y el acta del concurso (fase 3.2).",
+                        "enum": [
+                            "suspendido_o_destituido",
+                            "puesto_vacante",
+                            "nivel_jerarquico_superior",
+                            "de_prueba"
+                        ]
+                    },
+                    "acta_concurso_numero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 100
+                    },
+                    "acta_concurso_fecha": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
                     "causa_judicial_numero": {
                         "type": [
                             "string",
@@ -57944,6 +58239,49 @@
                 ],
                 "title": "Sumario"
             },
+            "SupuestoProvisional": {
+                "type": "string",
+                "description": "Para qu\u00e9 se da un nombramiento provisional (LOSEP Art. 17 b; dise\u00f1o de Acciones de Personal, 4.2 y 4.3; fase 3.2). Decide qu\u00e9 causales le valen: la remoci\u00f3n es del provisional cuyo supuesto termin\u00f3 (b.1, b.3, b.4) y el no superar la prueba, del de prueba (b.5). No se ofrecen el b.2 \u2014licencia sin remuneraci\u00f3n\u2014 ni la parte del b.3 que cubre una comisi\u00f3n: son reemplazos, y los reemplazos son solo ocasionales o profesionales [TH N10].\n",
+                "enum": [
+                    "suspendido_o_destituido",
+                    "puesto_vacante",
+                    "nivel_jerarquico_superior",
+                    "de_prueba"
+                ],
+                "title": "SupuestoProvisional"
+            },
+            "SupuestoProvisionalResource": {
+                "type": "object",
+                "properties": {
+                    "codigo": {
+                        "$ref": "#/components/schemas/SupuestoProvisional"
+                    },
+                    "etiqueta": {
+                        "type": "string",
+                        "enum": [
+                            "Puesto de un servidor suspendido o destituido",
+                            "Puesto vacante",
+                            "Puesto del nivel jer\u00e1rquico superior",
+                            "De prueba"
+                        ]
+                    },
+                    "base_legal": {
+                        "type": "string",
+                        "enum": [
+                            "LOSEP Art. 17 b.1",
+                            "LOSEP Art. 17 b.3",
+                            "LOSEP Art. 17 b.4",
+                            "LOSEP Art. 17 b.5"
+                        ]
+                    }
+                },
+                "required": [
+                    "codigo",
+                    "etiqueta",
+                    "base_legal"
+                ],
+                "title": "SupuestoProvisionalResource"
+            },
             "TecnicoDtic": {
                 "type": "object",
                 "properties": {
@@ -58223,7 +58561,8 @@
                     "cesacion_funciones",
                     "regimen_disciplinario",
                     "reintegro",
-                    "restitucion"
+                    "restitucion",
+                    "nombramiento_definitivo"
                 ],
                 "title": "TipoMovimientoPersonal"
             },
@@ -60290,6 +60629,33 @@
                         ],
                         "description": "La sentencia de una restituci\u00f3n (fase 2.6). Que sean obligatorios\nen ella lo decide RestitucionService.",
                         "maxLength": 100
+                    },
+                    "supuesto_provisional_propuesto": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "El supuesto del provisional y el acta del concurso (fase 3.2).",
+                        "enum": [
+                            "suspendido_o_destituido",
+                            "puesto_vacante",
+                            "nivel_jerarquico_superior",
+                            "de_prueba"
+                        ]
+                    },
+                    "acta_concurso_numero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 100
+                    },
+                    "acta_concurso_fecha": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
                     },
                     "causa_judicial_numero": {
                         "type": [

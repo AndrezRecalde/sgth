@@ -66,6 +66,10 @@ class StoreMovimientoPersonalRequest extends FormRequest
             // La sentencia de una restitución (fase 2.6). Que sean obligatorios
             // en ella lo decide RestitucionService.
             'informe_uath_numero'   => 'nullable|string|max:100',
+            // El supuesto del provisional y el acta del concurso (fase 3.2).
+            'supuesto_provisional_propuesto' => 'nullable|string|in:suspendido_o_destituido,puesto_vacante,nivel_jerarquico_superior,de_prueba',
+            'acta_concurso_numero'  => 'nullable|string|max:100',
+            'acta_concurso_fecha'   => 'nullable|date|before_or_equal:today',
             'causa_judicial_numero' => 'nullable|string|max:100',
             'unidad_judicial'       => 'nullable|string|max:255',
             'fecha_sentencia'       => 'nullable|date',

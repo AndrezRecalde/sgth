@@ -6,6 +6,7 @@ use App\Enums\EstadoAccionPersonal;
 use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Services\Expediente\MovimientoPersonalStateService;
+use App\Services\Expediente\PeriodoDePruebaService;
 use App\Services\Expediente\ReintegroService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -29,8 +30,11 @@ class AplicarAccionesVigentesCommand extends Command
 
     protected $description = 'Aplica el efecto de las acciones de personal registradas que ya rigen, y avisa de lo que vence en 30 días.';
 
-    public function handle(MovimientoPersonalStateService $estados, ReintegroService $reintegros): int
-    {
+    public function handle(
+        MovimientoPersonalStateService $estados,
+        ReintegroService $reintegros,
+        PeriodoDePruebaService $periodos,
+    ): int {
         $fecha = $this->option('fecha') ?: now()->toDateString();
 
         $resultado = $estados->aplicarVigentes($fecha);
@@ -53,6 +57,7 @@ class AplicarAccionesVigentesCommand extends Command
         }
 
         $this->prepararReintegros($reintegros, $fecha);
+        $this->prepararNombramientosDefinitivos($periodos, $fecha);
         $this->avisarVencimientos($fecha);
         $this->avisarReemplazosSinTitular();
 
@@ -83,6 +88,32 @@ class AplicarAccionesVigentesCommand extends Command
             $this->table(
                 ['Ausencia', 'Servidor', 'Motivo'],
                 array_map(fn (array $o) => [$o['ausencia_id'], $o['servidor_id'], $o['motivo']], $resultado['omitidas'])
+            );
+        }
+    }
+
+    /**
+     * Los períodos de prueba que concluyeron (fase 3.2): se prepara en
+     * borrador el nombramiento definitivo, que la ley da también si no se
+     * practicó la evaluación (LOSEP 17 b.5).
+     */
+    private function prepararNombramientosDefinitivos(PeriodoDePruebaService $periodos, string $fecha): void
+    {
+        $resultado = $periodos->prepararLosConcluidos($fecha);
+
+        if ($resultado['preparados'] !== []) {
+            $this->info(count($resultado['preparados']).' nombramiento(s) definitivo(s) preparados en borrador.');
+            $this->table(
+                ['Contrato', 'Acción', 'Servidor'],
+                array_map(fn (array $r) => [$r['contrato_id'], $r['movimiento_id'], $r['servidor_id']], $resultado['preparados'])
+            );
+        }
+
+        if ($resultado['omitidos'] !== []) {
+            $this->warn(count($resultado['omitidos']).' período(s) de prueba concluyeron sin poder preparar el nombramiento definitivo:');
+            $this->table(
+                ['Contrato', 'Servidor', 'Motivo'],
+                array_map(fn (array $o) => [$o['contrato_id'], $o['servidor_id'], $o['motivo']], $resultado['omitidos'])
             );
         }
     }

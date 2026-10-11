@@ -38,6 +38,10 @@ const camposDelFormulario = z.object({
   // acción que da origen a un contrato; en el resto ni se muestran ni se
   // envían.
   tipo_nombramiento_propuesto: z.string().optional().nullable(),
+  // Para qué se da el provisional, y el acta del de prueba (fase 3.2).
+  supuesto_provisional_propuesto: z.string().optional().nullable(),
+  acta_concurso_numero: z.string().max(100).optional().nullable(),
+  acta_concurso_fecha: z.string().optional().nullable(),
   numero_contrato: z.string().max(100).optional().nullable(),
   fecha_fin_propuesta: z.string().optional().nullable(),
   puede_marcar: z.boolean().optional().nullable(),
@@ -160,6 +164,24 @@ export function crearMovimientoSchema(
           path: ['unidad_destino_id'], code: 'custom',
           message: 'Seleccione la unidad administrativa',
         })
+      }
+
+      // El provisional dice para qué se da (LOSEP 17 b), y el de prueba trae
+      // el acta del concurso (fase 3.2).
+      if (data.tipo_nombramiento_propuesto === 'nombramiento_provisional') {
+        if (!data.supuesto_provisional_propuesto) {
+          ctx.addIssue({
+            path: ['supuesto_provisional_propuesto'], code: 'custom',
+            message: 'Seleccione el supuesto del nombramiento provisional',
+          })
+        } else if (data.supuesto_provisional_propuesto === 'de_prueba') {
+          if (!data.acta_concurso_numero?.trim()) {
+            ctx.addIssue({ path: ['acta_concurso_numero'], code: 'custom', message: 'Indique el número del acta del concurso' })
+          }
+          if (!data.acta_concurso_fecha) {
+            ctx.addIssue({ path: ['acta_concurso_fecha'], code: 'custom', message: 'Indique la fecha del acta del concurso' })
+          }
+        }
       }
     }
 

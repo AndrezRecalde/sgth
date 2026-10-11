@@ -115,7 +115,9 @@ test('dictamen médico apto crea el servidor y deja el ingreso en borrador, pend
     $movimiento = MovimientoPersonal::findOrFail($movimientoId);
     expect($movimiento->tipo_movimiento->value)->toBe('ingreso');
     expect($movimiento->estado)->toBe(EstadoAccionPersonal::BORRADOR);
-    expect($movimiento->tipo_nombramiento_propuesto->value)->toBe('nombramiento_permanente');
+    // El ganador de un concurso entra de prueba (LOSEP 17 b.5; fase 3.2).
+    expect($movimiento->tipo_nombramiento_propuesto->value)->toBe('nombramiento_provisional');
+    expect($movimiento->supuesto_provisional_propuesto?->value)->toBe('de_prueba');
     expect($movimiento->puesto_destino_id)->toBe($this->puesto->id);
     expect($movimiento->unidad_destino_id)->toBe($this->unidad->id);
     expect((float) $movimiento->remuneracion_propuesta)->toBe(1212.00);
@@ -123,7 +125,12 @@ test('dictamen médico apto crea el servidor y deja el ingreso en borrador, pend
     // El reclutamiento no conoce el número de contrato: lo asigna Talento
     // Humano al revisar el borrador, y es obligatorio para poder registrar.
     app(MovimientoPersonalService::class)
-        ->actualizarBorrador($movimiento, ['numero_contrato' => 'CT-2026-0021']);
+        ->actualizarBorrador($movimiento, [
+            'numero_contrato'      => 'CT-2026-0021',
+            // El de prueba trae el acta del concurso (fase 3.2).
+            'acta_concurso_numero' => 'ACTA-CT-2026-0021',
+            'acta_concurso_fecha'  => now()->toDateString(),
+        ]);
 
     // Al transicionar manualmente (como haría Talento Humano desde el tab de
     // Movimientos) hasta 'registrada', recién ahí se materializa el vínculo.
@@ -184,7 +191,12 @@ test('candidato interno con vínculo vigente gana el concurso: el ingreso exige 
     // El número de contrato se fija mientras la acción sigue en borrador: es
     // un dato del documento, y una vez suscrita ya no se edita.
     app(MovimientoPersonalService::class)
-        ->actualizarBorrador($movimiento, ['numero_contrato' => 'CT-2026-0022']);
+        ->actualizarBorrador($movimiento, [
+            'numero_contrato'      => 'CT-2026-0022',
+            // El de prueba trae el acta del concurso (fase 3.2).
+            'acta_concurso_numero' => 'ACTA-CT-2026-0022',
+            'acta_concurso_fecha'  => now()->toDateString(),
+        ]);
 
     $stateService = app(MovimientoPersonalStateService::class);
     $movimiento = $stateService->transicionar($movimiento->fresh(), EstadoAccionPersonal::SUSCRITA);
@@ -239,7 +251,12 @@ test('ex-servidor inactivo que reingresa vuelve a estado=true automáticamente a
     $movimiento = MovimientoPersonal::findOrFail($response->json('datos.movimiento_id'));
 
     app(MovimientoPersonalService::class)
-        ->actualizarBorrador($movimiento, ['numero_contrato' => 'CT-2026-0023']);
+        ->actualizarBorrador($movimiento, [
+            'numero_contrato'      => 'CT-2026-0023',
+            // El de prueba trae el acta del concurso (fase 3.2).
+            'acta_concurso_numero' => 'ACTA-CT-2026-0023',
+            'acta_concurso_fecha'  => now()->toDateString(),
+        ]);
 
     $stateService = app(MovimientoPersonalStateService::class);
     $movimiento = $stateService->transicionar($movimiento->fresh(), EstadoAccionPersonal::SUSCRITA);
@@ -248,7 +265,7 @@ test('ex-servidor inactivo que reingresa vuelve a estado=true automáticamente a
     expect($servidorExServidor->fresh()->estado)->toBeTrue();
 });
 
-test('convocatoria formal siempre produce PERMANENTE, incluso si el puesto es código de trabajo (ya no se infiere del régimen del puesto)', function () {
+test('convocatoria formal siempre produce un provisional de prueba, incluso si el puesto es código de trabajo (ya no se infiere del régimen del puesto)', function () {
     $puestoCodigoTrabajo = Puesto::create([
         'unidad_administrativa_id' => $this->unidad->id,
         'grupo_ocupacional_id' => $this->grupoOcupacional->id,
@@ -291,7 +308,9 @@ test('convocatoria formal siempre produce PERMANENTE, incluso si el puesto es c�
 
     $response->assertStatus(200);
     $movimiento = MovimientoPersonal::findOrFail($response->json('datos.movimiento_id'));
-    expect($movimiento->tipo_nombramiento_propuesto)->toBe(TipoNombramiento::PERMANENTE);
+    // Fase 3.2 [TH N3]: de prueba, y a los tres meses el definitivo.
+    expect($movimiento->tipo_nombramiento_propuesto)->toBe(TipoNombramiento::PROVISIONAL)
+        ->and($movimiento->supuesto_provisional_propuesto?->value)->toBe('de_prueba');
 });
 
 test('convocatoria express usa tipo_nombramiento_previsto directamente, sin inferir nada del puesto', function () {

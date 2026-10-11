@@ -164,6 +164,7 @@ test('anular un ingreso registrado deshace el vínculo que creó', function () {
         'descripcion' => 'Ingreso con el puesto equivocado',
         'fecha_efectiva' => '2026-02-01',
         'tipo_nombramiento_propuesto' => 'nombramiento_provisional',
+        'supuesto_provisional_propuesto' => 'puesto_vacante', // LOSEP 17 b.3 (fase 3.2)
         'puesto_destino_id' => $this->puestoA->id,
         'unidad_destino_id' => $this->unidad->id,
         'remuneracion_propuesta' => 900,
@@ -210,6 +211,7 @@ test('tras anular el ingreso se puede registrar el que lo reemplaza', function (
         'estado' => EstadoAccionPersonal::BORRADOR,
         'fecha_efectiva' => '2026-02-01',
         'tipo_nombramiento_propuesto' => 'nombramiento_provisional',
+        'supuesto_provisional_propuesto' => 'puesto_vacante', // LOSEP 17 b.3 (fase 3.2)
         'unidad_destino_id' => $this->unidad->id,
         'remuneracion_propuesta' => 900,
         'autorizado_por' => $this->user->id,
@@ -468,6 +470,8 @@ test('tocaElVinculo() cubre exactamente las ramas que aplican un efecto al regis
         $movimiento = new MovimientoPersonal(['tipo_movimiento' => $tipo->value]);
 
         $aplicaAlgo = $tipo->creaVinculo()
+            // El nombramiento definitivo convierte el vínculo (fase 3.2).
+            || $tipo->convierteNombramiento()
             || $movimiento->reubicaAlServidor()
             || (bool) $movimiento->subtipoEfectivo()?->cierraVinculo();
 

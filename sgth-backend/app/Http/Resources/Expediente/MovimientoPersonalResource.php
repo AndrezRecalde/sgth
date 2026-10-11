@@ -85,6 +85,11 @@ class MovimientoPersonalResource extends JsonResource
             // Datos del vínculo que Talento Humano fija en borrador y que se
             // materializan en el ContratoServidor al registrar la acción.
             'tipo_nombramiento_propuesto' => $this->tipo_nombramiento_propuesto,
+            // Para qué se da el provisional, y el acta del de prueba (fase 3.2).
+            'supuesto_provisional_propuesto' => $this->supuesto_provisional_propuesto,
+            'supuesto_provisional_etiqueta'  => $this->supuesto_provisional_propuesto?->etiqueta(),
+            'acta_concurso_numero'        => $this->acta_concurso_numero,
+            'acta_concurso_fecha'         => $this->acta_concurso_fecha,
             'remuneracion_propuesta'      => $this->remuneracion_propuesta,
             'numero_contrato'             => $this->numero_contrato,
             'partida_presupuestaria_id'   => $this->partida_presupuestaria_id,

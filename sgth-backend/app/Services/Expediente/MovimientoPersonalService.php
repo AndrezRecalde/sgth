@@ -8,10 +8,12 @@ use App\Enums\EstadoAccionPersonal;
 use App\Enums\EstadoContrato;
 use App\Enums\InstrumentoActo;
 use App\Enums\SubtipoMovimientoPersonal;
+use App\Enums\SupuestoProvisional;
 use App\Enums\TipoMovimientoPersonal;
 use App\Enums\TipoNombramiento;
 use App\Enums\TipoParentesco;
 use App\Exceptions\ReglaNegocioException;
+use App\Models\Estructura\Puesto;
 use App\Models\Expediente\CargaFamiliar;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
@@ -167,6 +169,15 @@ class MovimientoPersonalService
 
         if ($subtipo === SubtipoMovimientoPersonal::TERMINACION_UNILATERAL) {
             self::impedirTerminacionDeProtegida($servidorId);
+        }
+
+        // Las causales del provisional dependen de su supuesto (fase 3.2).
+        $this->validarCausalSegunSupuesto($servidor, $subtipo);
+
+        // El ingreso de un provisional dice para qué se da (LOSEP 17 b), y el
+        // de prueba, el acta del concurso.
+        if ($tipoMovimiento === TipoMovimientoPersonal::INGRESO) {
+            $datos = $this->conSupuestoDelIngreso($datos);
         }
 
         if ($subtipo?->esComisionDeServicios()) {
@@ -344,6 +355,20 @@ class MovimientoPersonalService
         $this->revalidarReemplazo($movimiento, $datos);
         $this->revalidarTraslado($movimiento, $datos);
 
+        if ($movimiento->tipo_movimiento === TipoMovimientoPersonal::INGRESO && array_intersect(
+            array_keys($datos),
+            ['tipo_nombramiento_propuesto', 'supuesto_provisional_propuesto', 'puesto_destino_id', 'acta_concurso_numero', 'acta_concurso_fecha'],
+        ) !== []) {
+            $datos = $this->conSupuestoDelIngreso([
+                'tipo_nombramiento_propuesto'    => $movimiento->tipo_nombramiento_propuesto?->value,
+                'supuesto_provisional_propuesto' => $movimiento->supuesto_provisional_propuesto?->value,
+                'puesto_destino_id'              => $movimiento->puesto_destino_id,
+                'acta_concurso_numero'           => $movimiento->acta_concurso_numero,
+                'acta_concurso_fecha'            => $movimiento->acta_concurso_fecha?->toDateString(),
+                ...$datos,
+            ]);
+        }
+
         if ($movimiento->tipo_movimiento === TipoMovimientoPersonal::RESTITUCION) {
             $datos = $this->revalidarRestitucion($movimiento, $datos);
         }
@@ -354,6 +379,77 @@ class MovimientoPersonalService
             'unidadOrigen', 'unidadDestino', 'puestoOrigen.cargo',
             'puestoDestino.cargo', 'partidaPresupuestaria', 'autorizadoPor',
         ]);
+    }
+
+    /**
+     * El supuesto del provisional que el ingreso propone (LOSEP 17 b; fase
+     * 3.2). Fuera de un provisional no significa nada, ni el acta del concurso
+     * fuera del de prueba. Se puede dejar para el borrador —Reclutamiento no lo
+     * sabe en el express—, pero no se suscribe sin él.
+     *
+     * @param  array<string, mixed>  $datos
+     * @return array<string, mixed>
+     */
+    private function conSupuestoDelIngreso(array $datos): array
+    {
+        $nombramiento = $datos['tipo_nombramiento_propuesto'] ?? null;
+        $nombramiento = $nombramiento instanceof TipoNombramiento
+            ? $nombramiento
+            : TipoNombramiento::tryFrom((string) $nombramiento);
+
+        $supuesto = $nombramiento === TipoNombramiento::PROVISIONAL
+            ? SupuestoProvisional::tryFrom((string) ($datos['supuesto_provisional_propuesto'] ?? ''))
+            : null;
+
+        if ($supuesto === SupuestoProvisional::NIVEL_JERARQUICO_SUPERIOR && ! empty($datos['puesto_destino_id'])) {
+            $puesto = Puesto::with('grupoOcupacional')->find($datos['puesto_destino_id']);
+
+            if ($puesto && ! $puesto->esNivelJerarquicoSuperior()) {
+                throw new ReglaNegocioException(
+                    'El provisional del nivel jerárquico superior (LOSEP 17 b.4) es para un puesto de ese nivel, '
+                        .'y el elegido no lo es.'
+                );
+            }
+        }
+
+        $datos['supuesto_provisional_propuesto'] = $supuesto?->value;
+
+        if ($supuesto !== SupuestoProvisional::DE_PRUEBA) {
+            $datos['acta_concurso_numero'] = null;
+            $datos['acta_concurso_fecha'] = null;
+        }
+
+        return $datos;
+    }
+
+    /**
+     * La remoción es del provisional cuyo supuesto terminó (b.1, b.3, b.4), y
+     * el no superar la prueba, del de prueba (b.5) [diseño, 4.3; fase 3.2]. Los
+     * provisionales de antes no dicen su supuesto: conservan las dos.
+     */
+    private function validarCausalSegunSupuesto(Servidor $servidor, ?SubtipoMovimientoPersonal $subtipo): void
+    {
+        $vigente = $servidor->contratoVigente;
+
+        if ($vigente?->tipo_nombramiento !== TipoNombramiento::PROVISIONAL || $vigente->supuesto_provisional === null) {
+            return;
+        }
+
+        $dePrueba = $vigente->supuesto_provisional === SupuestoProvisional::DE_PRUEBA;
+
+        if ($subtipo === SubtipoMovimientoPersonal::PERIODO_PRUEBA_NO_SUPERADO && ! $dePrueba) {
+            throw new ReglaNegocioException(
+                'No superar el período de prueba es causal del provisional de prueba (LOSEP 17 b.5), y este es '
+                    ."«{$vigente->supuesto_provisional->etiqueta()}»."
+            );
+        }
+
+        if ($subtipo === SubtipoMovimientoPersonal::REMOCION && $dePrueba) {
+            throw new ReglaNegocioException(
+                'Al provisional de prueba no se le remueve: si no supera la prueba, cesa por esa causal '
+                    .'(LOSEP 17 b.5).'
+            );
+        }
     }
 
     /**

@@ -4,6 +4,7 @@ namespace App\Models\Expediente;
 
 use App\Enums\EstadoContrato;
 use App\Enums\OrigenVinculo;
+use App\Enums\SupuestoProvisional;
 use App\Enums\TipoNombramiento;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use App\Observers\Expediente\ContratoServidorObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 
@@ -28,6 +30,8 @@ class ContratoServidor extends Model
     protected $fillable = [
         'servidor_id',
         'tipo_nombramiento',
+        // Para qué se dio el provisional (LOSEP 17 b; fase 3.2).
+        'supuesto_provisional',
         'numero_contrato',
         'unidad_administrativa_id',
         'puesto_id',
@@ -50,6 +54,7 @@ class ContratoServidor extends Model
     {
         return [
             'tipo_nombramiento' => TipoNombramiento::class,
+            'supuesto_provisional' => SupuestoProvisional::class,
             'estado'            => EstadoContrato::class,
             'origen'            => OrigenVinculo::class,
             'fecha_inicio'      => 'date',
@@ -57,6 +62,25 @@ class ContratoServidor extends Model
             'remuneracion'      => 'decimal:2',
             'puede_marcar'      => 'boolean',
         ];
+    }
+
+    /** ¿Es un provisional de prueba (b.5)? */
+    public function esDePrueba(): bool
+    {
+        return $this->tipo_nombramiento === TipoNombramiento::PROVISIONAL
+            && $this->supuesto_provisional === SupuestoProvisional::DE_PRUEBA;
+    }
+
+    /**
+     * El último día de los tres meses de prueba (LOSEP 17 b.5). El
+     * nombramiento definitivo rige desde el día siguiente. Null si no es de
+     * prueba.
+     */
+    public function finDelPeriodoDePrueba(): ?Carbon
+    {
+        return $this->esDePrueba() && $this->fecha_inicio
+            ? $this->fecha_inicio->copy()->addMonthsNoOverflow(SupuestoProvisional::MESES_DE_PRUEBA)->subDay()
+            : null;
     }
 
     /**

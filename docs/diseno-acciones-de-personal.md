@@ -950,6 +950,11 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
    - Al surtir efecto el vínculo toma también la partida elegida en la acción. Anular vuelve al puesto de origen solo si allí hay plaza, y devuelve la partida.
    - Jefaturas [TH 19]: el ingreso de reemplazo y el contrato que cubren la ausencia de un puesto `es_jefe` se rechazan; se cubre con subrogación o encargo. El panel de ausencias las marca y el formulario no las ofrece.
 2. Período de prueba + nombramiento definitivo; el concurso entra con provisional de prueba; acta del concurso.
+   - El vínculo provisional dice su supuesto (enum `SupuestoProvisional`, columna `supuesto_provisional`): suspendido o destituido (b.1), puesto vacante (b.3), nivel jerárquico superior (b.4) o de prueba (b.5). La licencia (b.2) no se ofrece [TH N10]. Todo ingreso provisional lo pide al suscribir, cuando el borrador aún se corrige. El b.4 exige un puesto de ese nivel, y el de prueba el acta final del concurso (número y fecha), que sale en el PDF. Lo suscrito antes del campo se registra sin él, y los provisionales de antes quedan sin supuesto.
+   - Reclutamiento: el ganador del concurso formal entra con provisional de prueba y no con permanente. Se sigue la norma, no la respuesta N3.
+   - El período dura 3 meses desde el inicio del vínculo (`ContratoServidor::finDelPeriodoDePrueba()`). La pestaña «Períodos de prueba» de Acciones de Personal muestra a quien está en prueba, con su fin, los días que le quedan y su definitivo.
+   - Nueva clase `nombramiento_definitivo` (tipo propio, CONVIERTE_NOMBRAMIENTO). No se crea desde el formulario. El comando diario la prepara en borrador al terminar la prueba, también si no hubo evaluación. Rige desde el día siguiente al fin y también se puede preparar desde la pestaña. Al surtir efecto, el vínculo pasa a permanente sin supuesto; anularla lo devuelve a prueba.
+   - Causales [4.3]: «no superar el período de prueba» queda solo para el de prueba, y la remoción para los demás provisionales; los de antes conservan ambas. Si TH juzga que la persona no superó la prueba, anula el borrador del definitivo y registra la cesación. La evaluación del período de prueba (9.3) y las pruebas del ascendido (3.3) y del obrero (fase 4) siguen pendientes.
 3. Ascenso con prueba de 6 meses y reserva del puesto.
 
 **Fase 4 — Bloques por régimen**
