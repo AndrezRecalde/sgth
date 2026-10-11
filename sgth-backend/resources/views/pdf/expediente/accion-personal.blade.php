@@ -273,6 +273,11 @@
 
     $esIngreso = $movimiento->tipo_movimiento === \App\Enums\TipoMovimientoPersonal::INGRESO;
 
+    // El reintegro devuelve al servidor al puesto que conservó durante la
+    // ausencia (fase 2.4): la situación propuesta es la misma que la actual.
+    $esReintegro = $movimiento->tipo_movimiento === \App\Enums\TipoMovimientoPersonal::REINTEGRO;
+    $ausenciaQueCierra = $esReintegro ? $movimiento->movimientoRelacionado : null;
+
     // El título es el nombre de la clase —traslado, encargo, cesación…—, el
     // mismo que se ve en pantalla. Subrogación y encargo comparten tipo, pero
     // no clase: un encargo impreso como «Subrogación» diría que se reemplazó a
@@ -288,10 +293,16 @@
         ?? null;
 
     // Propuesta: manda lo fijado en la acción; el puesto destino es el respaldo.
-    $rmuPropuesta = $movimiento->remuneracion_propuesta ?? $movimiento->puestoDestino->rmu ?? null;
-    $partidaPropuesta = $movimiento->partidaPresupuestaria->codigo
-        ?? $movimiento->puestoDestino->partidaPresupuestaria->codigo
-        ?? null;
+    $puestoPropuesto = $esReintegro ? $movimiento->puestoOrigen : $movimiento->puestoDestino;
+    $unidadPropuesta = $esReintegro ? $movimiento->unidadOrigen : $movimiento->unidadDestino;
+    $rmuPropuesta = $esReintegro
+        ? $rmuOrigen
+        : ($movimiento->remuneracion_propuesta ?? $movimiento->puestoDestino->rmu ?? null);
+    $partidaPropuesta = $esReintegro
+        ? $partidaOrigen
+        : ($movimiento->partidaPresupuestaria->codigo
+            ?? $movimiento->puestoDestino->partidaPresupuestaria->codigo
+            ?? null);
 @endphp
 
 <div class="membrete">
@@ -385,6 +396,21 @@
             al {{ $fmtFecha($movimiento->fecha_fin) }}
         </div>
     @endif
+    @if($ausenciaQueCierra)
+        {{-- Fase 2.4: qué ausencia cierra y hasta cuándo duró. --}}
+        @php
+            $cierra = ($ausenciaQueCierra->etiquetaAusencia() ?? $ausenciaQueCierra->etiqueta())
+                .($ausenciaQueCierra->codigo_registro ? " ({$ausenciaQueCierra->codigo_registro})" : '')
+                .($ausenciaQueCierra->fecha_inicio
+                    ? ', del '.$fmtFecha($ausenciaQueCierra->fecha_inicio)
+                        .($ausenciaQueCierra->fecha_fin ? ' al '.$fmtFecha($ausenciaQueCierra->fecha_fin) : '')
+                    : '');
+        @endphp
+        <div class="respaldo">
+            <strong>Termina:</strong> {{ $cierra }}. El último día de la ausencia es el
+            {{ $fmtFecha($movimiento->fecha_efectiva?->copy()->subDay()) }}.
+        </div>
+    @endif
     @if($movimiento->para_estudios_o_eventos)
         <div class="respaldo">
             Al terminar la comisión, el servidor debe servir en la institución un tiempo igual
@@ -438,11 +464,11 @@
                 Valor de referencia: el descuento lo aplica Financiero en el rol de pagos.
             </span></div>
         @else
-            <div class="campo"><span class="label">Dirección</span><span class="valor">{!! $dato($movimiento->unidadDestino->nombre ?? null) !!}</span></div>
-            <div class="campo"><span class="label">Grupo ocupacional</span><span class="valor">{!! $dato($movimiento->puestoDestino->grupoOcupacional->denominacion_generica ?? null) !!}</span></div>
-            <div class="campo"><span class="label">Puesto</span><span class="valor fuerte">{!! $dato($movimiento->puestoDestino->cargo->nombre ?? null) !!}</span></div>
-            <div class="campo"><span class="label">Grado</span><span class="valor">{!! $dato($movimiento->puestoDestino->grupoOcupacional->grado_codigo ?? null) !!}</span></div>
-            <div class="campo"><span class="label">Lugar de trabajo</span><span class="valor">{!! $dato($movimiento->puestoDestino ? ($movimiento->lugar_trabajo ?: 'Esmeraldas') : null) !!}</span></div>
+            <div class="campo"><span class="label">Dirección</span><span class="valor">{!! $dato($unidadPropuesta->nombre ?? null) !!}</span></div>
+            <div class="campo"><span class="label">Grupo ocupacional</span><span class="valor">{!! $dato($puestoPropuesto->grupoOcupacional->denominacion_generica ?? null) !!}</span></div>
+            <div class="campo"><span class="label">Puesto</span><span class="valor fuerte">{!! $dato($puestoPropuesto->cargo->nombre ?? null) !!}</span></div>
+            <div class="campo"><span class="label">Grado</span><span class="valor">{!! $dato($puestoPropuesto->grupoOcupacional->grado_codigo ?? null) !!}</span></div>
+            <div class="campo"><span class="label">Lugar de trabajo</span><span class="valor">{!! $dato($puestoPropuesto ? ($movimiento->lugar_trabajo ?: 'Esmeraldas') : null) !!}</span></div>
             <div class="campo"><span class="label">R.M.U.</span><span class="valor fuerte">{!! $dato($fmtRmu($rmuPropuesta)) !!}</span></div>
             <div class="campo"><span class="label">Partida presupuestaria</span><span class="valor">{!! $dato($partidaPropuesta) !!}</span></div>
         @endif

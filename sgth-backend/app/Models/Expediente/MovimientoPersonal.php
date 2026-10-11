@@ -14,6 +14,7 @@ use App\Models\Estructura\PartidaPresupuestaria;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\User;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -239,6 +240,10 @@ class MovimientoPersonal extends Model
         'dictamen_presupuestario_ref',
         'movimiento_previo_id',
         'cubre_movimiento_id',
+        // El acto con que esta se enlaza (diseño, 8.1; fase 2.4): la ausencia
+        // que cierra un reintegro, el reintegro del que sale la cesación del
+        // reemplazo.
+        'movimiento_relacionado_id',
         'descripcion',
         'fecha_efectiva',
         'fecha_inicio',
@@ -325,6 +330,41 @@ class MovimientoPersonal extends Model
     public function contratosReemplazo(): HasMany
     {
         return $this->hasMany(ContratoServidor::class, 'cubre_movimiento_id');
+    }
+
+    /**
+     * El acto con que esta se enlaza (diseño, 8.1; fase 2.4): la ausencia que
+     * cierra un reintegro, o el reintegro del que nace la cesación del
+     * reemplazo.
+     */
+    public function movimientoRelacionado(): BelongsTo
+    {
+        return $this->belongsTo(MovimientoPersonal::class, 'movimiento_relacionado_id');
+    }
+
+    /** Los reintegros de esta ausencia, anulados incluidos. */
+    public function reintegros(): HasMany
+    {
+        return $this->hasMany(MovimientoPersonal::class, 'movimiento_relacionado_id')
+            ->where('tipo_movimiento', TipoMovimientoPersonal::REINTEGRO->value);
+    }
+
+    /**
+     * El reintegro que cuenta: el que no está anulado. Hay uno a lo sumo
+     * —ReintegroService no prepara otro—, en trámite o ya emitido.
+     */
+    public function reintegro(): HasOne
+    {
+        return $this->hasOne(MovimientoPersonal::class, 'movimiento_relacionado_id')
+            ->where('tipo_movimiento', TipoMovimientoPersonal::REINTEGRO->value)
+            ->where('estado', '!=', EstadoAccionPersonal::ANULADA->value);
+    }
+
+    /** Las cesaciones de reemplazos que preparó este reintegro [TH 18]. */
+    public function salidasDeReemplazo(): HasMany
+    {
+        return $this->hasMany(MovimientoPersonal::class, 'movimiento_relacionado_id')
+            ->where('tipo_movimiento', TipoMovimientoPersonal::CESACION_FUNCIONES->value);
     }
 
     public function movimientosHabilitados(): HasMany
@@ -567,7 +607,8 @@ class MovimientoPersonal extends Model
 
     /**
      * Ausencia vigente a una fecha. El período vive en fecha_inicio/fecha_fin;
-     * sin fecha de fin se considera abierta.
+     * sin fecha de fin se considera abierta. La que cerró un reintegro emitido
+     * termina el día anterior al regreso (fase 2.4).
      */
     public function scopeAusenciaVigenteEn(Builder $query, string $fecha): Builder
     {
@@ -578,7 +619,46 @@ class MovimientoPersonal extends Model
             ->whereDate('fecha_inicio', '<=', $fecha)
             ->where(function ($q) use ($fecha) {
                 $q->whereNull('fecha_fin')->orWhereDate('fecha_fin', '>=', $fecha);
-            });
+            })
+            ->whereDoesntHave('reintegros', fn (Builder $r) => $r
+                ->whereIn('estado', [
+                    EstadoAccionPersonal::REGISTRADA->value,
+                    EstadoAccionPersonal::NOTIFICADA->value,
+                ])
+                ->whereDate('fecha_efectiva', '<=', $fecha));
+    }
+
+    /**
+     * El reintegro que ya se emitió —registrado o notificado—, si lo hay. Uno
+     * en trámite todavía no cierra nada.
+     */
+    public function reintegroEmitido(): ?MovimientoPersonal
+    {
+        $reintegro = $this->reintegro;
+
+        return $reintegro && in_array($reintegro->estado, [
+            EstadoAccionPersonal::REGISTRADA,
+            EstadoAccionPersonal::NOTIFICADA,
+        ], true) ? $reintegro : null;
+    }
+
+    /**
+     * Hasta cuándo dura de verdad la ausencia: el día anterior al regreso si
+     * un reintegro emitido la cerró antes, y si no, su fecha de fin (fase
+     * 2.4). Se deduce y no se escribe: la ausencia registrada ya no se
+     * modifica.
+     */
+    public function finEfectivo(): ?CarbonInterface
+    {
+        $regreso = $this->reintegroEmitido()?->fecha_efectiva;
+
+        if (! $regreso) {
+            return $this->fecha_fin;
+        }
+
+        $antes = $regreso->copy()->subDay();
+
+        return $this->fecha_fin && $this->fecha_fin->lt($antes) ? $this->fecha_fin : $antes;
     }
 
     /**

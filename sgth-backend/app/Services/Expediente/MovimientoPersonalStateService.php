@@ -4,6 +4,7 @@ namespace App\Services\Expediente;
 
 use App\Enums\AptitudMedica;
 use App\Enums\EstadoAccionPersonal;
+use App\Enums\EstadoContrato;
 use App\Enums\PartidaPorModalidad;
 use App\Enums\SubtipoMovimientoPersonal;
 use App\Enums\TipoEventoVinculo;
@@ -23,6 +24,7 @@ class MovimientoPersonalStateService
         private readonly ContratoServidorService $contratoServidorService,
         private readonly FirmanteAccionPersonalService $firmanteService,
         private readonly SubrogacionService $subrogacionService,
+        private readonly ReintegroService $reintegros,
     ) {
     }
 
@@ -395,6 +397,13 @@ class MovimientoPersonalStateService
             $this->subrogacionService->activarPorMovimiento($movimiento);
         }
 
+        // El reintegro no toca el vínculo del titular, que nunca se cerró: la
+        // ausencia termina sola el día anterior. Lo que sí arrastra es la
+        // salida de quien lo cubría [TH 18; fase 2.4].
+        if ($tipo === TipoMovimientoPersonal::REINTEGRO) {
+            $this->reintegros->prepararSalidaDelReemplazo($movimiento);
+        }
+
         $movimiento->efecto_aplicado_en = now();
     }
 
@@ -454,6 +463,17 @@ class MovimientoPersonalStateService
             MovimientoPersonalService::impedirTerminacionDeProtegida($movimiento->servidor_id);
         }
 
+        if ($movimiento->tipo_movimiento === TipoMovimientoPersonal::REINTEGRO
+            && ! in_array($movimiento->movimientoRelacionado?->estado, [
+                EstadoAccionPersonal::REGISTRADA,
+                EstadoAccionPersonal::NOTIFICADA,
+            ], true)
+        ) {
+            throw new ReglaNegocioException(
+                'La ausencia que este reintegro cierra ya no está registrada: anule el reintegro.'
+            );
+        }
+
         if ($movimiento->tipo_movimiento->creaVinculo()) {
             // Si rige ya, `crear()` lo comprueba al materializarlo.
             if (! $movimiento->rigeEn($hoy) && $movimiento->puesto_destino_id && $movimiento->tipo_nombramiento_propuesto) {
@@ -489,6 +509,10 @@ class MovimientoPersonalStateService
      */
     private function aplicarAnulacion(MovimientoPersonal $movimiento, array $datos): void
     {
+        if ($movimiento->esAusenciaTemporal()) {
+            $this->impedirAnularAusenciaConReintegroOReemplazo($movimiento);
+        }
+
         $this->aplicarDictamenSiViene($movimiento, $datos);
 
         if (! blank($datos['motivo_anulacion'] ?? null)) {
@@ -499,10 +523,95 @@ class MovimientoPersonalStateService
             $this->subrogacionService->cancelarPorMovimiento($movimiento);
         }
 
+        if ($movimiento->tipo_movimiento === TipoMovimientoPersonal::REINTEGRO) {
+            $this->anularSalidasDelReemplazo($movimiento);
+        }
+
         // Y si ya estaba registrada, deshacer lo que el registro hizo sobre el
         // vínculo: anular un acto que ya surtió efecto no es solo cambiarle el
         // estado a la fila.
         $this->revertirEfectoSobreElVinculo($movimiento);
+    }
+
+    /**
+     * Una ausencia que ya tiene reintegro, o quien la cubra, no se anula [TH
+     * 18; fase 2.4]. Si el servidor volvió antes, lo que corresponde es el
+     * reintegro: la ausencia termina el día anterior y el reemplazo sale con
+     * ella. Anularla dejaría al reemplazo cubriendo algo que nunca existió.
+     */
+    private function impedirAnularAusenciaConReintegroOReemplazo(MovimientoPersonal $ausencia): void
+    {
+        $reintegro = $ausencia->reintegro()->first();
+
+        if ($reintegro) {
+            throw new ReglaNegocioException(
+                'Esta ausencia tiene su reintegro'
+                    .($reintegro->codigo_registro ? " ({$reintegro->codigo_registro})" : ' en trámite')
+                    .': anule antes el reintegro.'
+            );
+        }
+
+        $contrato = ContratoServidor::where('cubre_movimiento_id', $ausencia->id)
+            ->where('estado', EstadoContrato::VIGENTE->value)
+            ->with('servidor:id,nombre,apellido')
+            ->first();
+
+        if ($contrato) {
+            $nombre = trim(($contrato->servidor?->nombre ?? '').' '.($contrato->servidor?->apellido ?? ''));
+
+            throw new ReglaNegocioException(
+                "Esta ausencia tiene un reemplazo vigente ({$nombre}). Si el servidor volvió antes, "
+                    .'use el reintegro: la ausencia termina el día anterior y al reemplazo se le '
+                    .'prepara la salida. Si la ausencia nunca debió existir, cese antes al reemplazo.'
+            );
+        }
+
+        // El ingreso del reemplazo que todavía no surtió efecto: quedaría
+        // cubriendo una ausencia anulada.
+        if ($ausencia->reemplazos()
+            ->where('estado', '!=', EstadoAccionPersonal::ANULADA->value)
+            ->whereNull('efecto_aplicado_en')
+            ->exists()
+        ) {
+            throw new ReglaNegocioException(
+                'Hay un ingreso de reemplazo en trámite para esta ausencia: anúlelo antes.'
+            );
+        }
+    }
+
+    /**
+     * Anular el reintegro devuelve la ausencia a su fin pactado, y quien la
+     * cubría ya no tiene por qué salir: su cesación en trámite se anula con él.
+     * Si ya se registró, el reemplazo dejó la plaza, y eso se deshace primero
+     * anulando esa cesación —que reabre su contrato—.
+     */
+    private function anularSalidasDelReemplazo(MovimientoPersonal $reintegro): void
+    {
+        $salidas = $reintegro->salidasDeReemplazo()
+            ->where('estado', '!=', EstadoAccionPersonal::ANULADA->value)
+            ->orderBy('id')
+            ->get();
+
+        $emitida = $salidas->first(fn (MovimientoPersonal $s) => in_array(
+            $s->estado,
+            [EstadoAccionPersonal::REGISTRADA, EstadoAccionPersonal::NOTIFICADA],
+            true
+        ));
+
+        if ($emitida) {
+            throw new ReglaNegocioException(
+                "El reemplazo ya cesó con {$emitida->codigo_registro}, que salió de este reintegro: "
+                    .'anule antes esa cesación.'
+            );
+        }
+
+        $codigo = $reintegro->codigo_registro ?? "#{$reintegro->id}";
+
+        foreach ($salidas as $salida) {
+            $this->transicionar($salida, EstadoAccionPersonal::ANULADA, [
+                'motivo_anulacion' => "Se anuló el reintegro {$codigo}, del que salía.",
+            ]);
+        }
     }
 
     /**
@@ -835,12 +944,11 @@ class MovimientoPersonalStateService
         }
 
         $ausencia = $movimiento->cubreMovimiento;
+        $finAusencia = $ausencia?->finEfectivo()?->toDateString();
 
-        if (! $ausencia?->fecha_fin || ! $movimiento->fecha_fin_propuesta) {
+        if (! $finAusencia || ! $movimiento->fecha_fin_propuesta) {
             return;
         }
-
-        $finAusencia = $ausencia->fecha_fin->toDateString();
 
         if ($movimiento->fecha_fin_propuesta->toDateString() > $finAusencia) {
             throw new ReglaNegocioException(

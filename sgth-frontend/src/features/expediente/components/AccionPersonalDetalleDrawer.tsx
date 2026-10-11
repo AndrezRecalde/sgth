@@ -11,6 +11,7 @@ import { AccionAnotaciones } from './AccionAnotaciones'
 import { EstadoAccionBadge } from './EstadoAccionBadge'
 import { AccionBotonEditar } from './AccionBotonEditar'
 import { AccionPersonalPie } from './AccionPersonalPie'
+import { AccionRelacionada } from './AccionRelacionada'
 import { AccionRespaldos } from './AccionRespaldos'
 import { AccionSituacionBloques } from './AccionSituacionBloques'
 import { BloqueDetalle } from './BloqueDetalle'
@@ -113,6 +114,8 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
             No consume plaza: la sigue ocupando el titular.
           </Alert>
         )}
+
+        <AccionRelacionada m={m} />
 
         {esIngreso && estado === 'suscrita' && (
           <Alert variant="light" color="amber" icon={<IconAlertTriangle size={16} />}>

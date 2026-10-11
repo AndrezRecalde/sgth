@@ -97,6 +97,13 @@ class MovimientoPersonalResource extends JsonResource
             'movimiento_previo_id' => $this->movimiento_previo_id,
             /** Ausencia temporal que este ingreso viene a cubrir. */
             'cubre_movimiento_id'  => $this->cubre_movimiento_id,
+            /**
+             * El acto con que se enlaza (fase 2.4): la ausencia que cierra un
+             * reintegro, o el reintegro del que salió la cesación de un
+             * reemplazo.
+             */
+            'movimiento_relacionado_id' => $this->movimiento_relacionado_id,
+            'relacionado'               => $this->relacionado(),
 
             'codigo'                      => $this->codigo,
             'codigo_registro'             => $this->codigo_registro,
@@ -171,6 +178,29 @@ class MovimientoPersonalResource extends JsonResource
                 ]
             ),
         ];
+    }
+
+    /**
+     * Lo justo para decir «cierra la AP-… (Comisión de servicios…)» sin otra
+     * consulta desde la pantalla.
+     *
+     * @return array{id: int, codigo_registro: ?string, etiqueta: ?string, fecha_inicio: ?string, fecha_fin: ?string}|null
+     */
+    private function relacionado(): ?array
+    {
+        if (! $this->movimiento_relacionado_id) {
+            return null;
+        }
+
+        $otro = $this->movimientoRelacionado;
+
+        return $otro ? [
+            'id'              => $otro->id,
+            'codigo_registro' => $otro->codigo_registro,
+            'etiqueta'        => $otro->etiquetaAusencia() ?? $otro->etiqueta(),
+            'fecha_inicio'    => $otro->fecha_inicio?->toDateString(),
+            'fecha_fin'       => $otro->fecha_fin?->toDateString(),
+        ] : null;
     }
 
     private function avisoDeProteccion(): ?string

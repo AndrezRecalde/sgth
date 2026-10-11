@@ -845,7 +845,8 @@ class MovimientoPersonalService
      */
     private function validarPlazoDelReemplazo(MovimientoPersonal $ausencia, array $datos): void
     {
-        $finAusencia = $ausencia->fecha_fin?->toDateString();
+        // Si el titular ya tiene su reintegro, la ausencia termina antes.
+        $finAusencia = $ausencia->finEfectivo()?->toDateString();
 
         if (! $finAusencia) {
             return;

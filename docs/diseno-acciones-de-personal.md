@@ -170,7 +170,7 @@ Notas:
 |---|---|---|---|---|---|---|
 | Ingreso | `ingreso` | Ingreso y vinculación | LOSEP 16–18; Reg. 19 | INGRESO | CREA_VINCULO | Reclutamiento / Manual |
 | Ingreso | `nombramiento_definitivo` | Nombramiento definitivo | LOSEP 17 b.5; Reg. 224–227 | NOMBRAMIENTO | CONVIERTE_NOMBRAMIENTO | Período de prueba (9.2) |
-| Ingreso | `reintegro` | Reintegro | LOSEP 32 | REINTEGRO | TERMINA_AUSENCIA | Ausencias / Manual |
+| Ingreso | `reintegro` | Reintegro | LOSEP 32 | REINTEGRO | TERMINA_AUSENCIA | Ausencias (botón y comando diario; fase 2.4) |
 | Ingreso | `restitucion` | Restitución | LOSEP 46 | RESTITUCIÓN | CREA_VINCULO (con continuidad) | Manual |
 | Cambio administrativo | `ascenso` | Ascenso | LOSEP 68; Reg. 190–191 | ASCENSO | REUBICA + RESERVA_PUESTO | Reclutamiento |
 | Cambio administrativo | `traslado` | Traslado | LOSEP 35–36 | TRASLADO | REUBICA | Manual |
@@ -494,8 +494,8 @@ Así hay un solo historial, un solo motor de efectos y una sola bandeja, filtrab
 | `base_legal` | text | La pone la clase por defecto; TH la edita en borrador |
 | `acto_tipo`, `acto_numero`, `acto_fecha` | enum (decreto, acuerdo, resolución, memorando, credencial CNE, acta de posesión, resolución del Consejo, oficio, sentencia) + string + date | Lo que origina el acto. Hoy solo existe `resolucion_numero`, sin fecha |
 | `institucion_destino` | string | Comisiones e intercambio |
-| `fecha_fin_real` | date | Fin efectivo de una ausencia (lo fija el reintegro) |
-| `movimiento_relacionado_id` | FK a sí misma | Reintegro → ausencia; nombramiento definitivo → ingreso; restitución → destitución; reemplazo → ausencia. Junta `movimiento_previo_id` y `cubre_movimiento_id` en un solo enlace con su rol |
+| `fecha_fin_real` | date | Fin efectivo de una ausencia (lo fija el reintegro). **No hizo falta** (fase 2.4): se deduce del reintegro emitido, y la ausencia registrada no se modifica |
+| `movimiento_relacionado_id` | FK a sí misma | Reintegro → ausencia; nombramiento definitivo → ingreso; restitución → destitución; reemplazo → ausencia. Junta `movimiento_previo_id` y `cubre_movimiento_id` en un solo enlace con su rol. Existe desde la fase 2.4: lo usan el reintegro (→ ausencia) y la salida del reemplazo (→ reintegro) |
 | `acta_concurso_numero`, `acta_concurso_fecha` | string + date | Ingreso y ascenso por concurso |
 | `causa_judicial_numero`, `unidad_judicial`, `fecha_sentencia`, `fecha_ejecutoria` | string, string, date, date | Restitución [TH N15]; reintegro de obreros por despido ineficaz |
 | `efecto_aplicado_en` | timestamp | Si es nulo y está registrada, el acto está pendiente de vigencia |
@@ -893,7 +893,7 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
    - El «ascenso»: el ingreso se admite si la cesación del puesto actual ya está registrada para ese día o antes, y el comando aplica los cierres antes que los ingresos.
    - Un ingreso pendiente cuenta como plaza ocupada.
    - Anular revierte solo lo que ya surtió efecto; el orden «de la última hacia atrás» cuenta también las pendientes.
-   - Los avisos de lo que vence en 30 días salen, por ahora, en la salida del comando. El reintegro en borrador y el cierre de los períodos de las autoridades electas llegan con sus clases (fase 2).
+   - Los avisos de lo que vence en 30 días salen, por ahora, en la salida del comando. El reintegro en borrador llegó en la fase 2.4; el cierre de los períodos de las autoridades electas llega con su clase.
 
 **Fase 2 — Completar la LOSEP**
 1. Cesación con las causales de 4.3 (incluida la remoción), cascadas (plaza, subrogaciones, reemplazos) y borrador automático del ocasional vencido.
@@ -914,6 +914,14 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
    - `institucion_destino` obligatoria en las dos comisiones y en el intercambio voluntario; las registradas antes la tienen en su explicación.
    - El documento imprime la institución, el período de las ausencias y la obligación de volver.
 4. Reintegro y fin anticipado, con la salida del reemplazo; no se anula una ausencia con reemplazo vigente.
+   - Clase y tipo `reintegro`, con número AP, enlazado a la ausencia que cierra (`movimiento_relacionado_id`). Nace solo de la ausencia: el botón «Reintegrar» de «Ausencias y reemplazos» y el comando diario; no del formulario, porque sin ella no sabe qué cerrar. En borrador no se corrige: se anula y se prepara otro.
+   - Es de quien puede tener una ausencia: los permanentes y, por la licencia «según su régimen», obreros y autoridades electas (se deduce de las causales). El del provisional ascendido que vuelve llega con el ascenso (3.3).
+   - Valida que la ausencia esté registrada y sin otro reintegro no anulado, y que el regreso caiga después del inicio y a más tardar el día siguiente al fin.
+   - La ausencia termina la víspera del regreso en cuanto el reintegro se emite (`finEfectivo()`): deja de verse en «Ausencias y reemplazos» y junto al contrato, deja de avisar como vencimiento y limita el plazo de un reemplazo nuevo. La ausencia no se toca.
+   - Al surtir efecto, quien cubría la ausencia recibe su cesación en borrador con fecha de la víspera [TH 18]: «Terminación por cumplimiento del plazo» si es ocasional, «Contrato finalizado» si es profesional; no se prepara si ya tiene una cesación en curso. Anular el reintegro anula esa salida mientras no se haya registrado; si ya se registró, hay que anularla antes.
+   - Una ausencia con reemplazo vigente, con un ingreso de reemplazo en trámite o con su reintegro no se anula: el sistema remite al reintegro [TH 18].
+   - `sgth:acciones:aplicar-vigentes` prepara en borrador el reintegro de las ausencias que terminaron en los últimos 30 días sin tenerlo, con regreso al día siguiente del fin, si el servidor sigue vinculado. Las de antes no: terminaron sin reintegro porque no existía.
+   - El documento dice qué ausencia termina y cuál fue su último día, y la situación propuesta es el mismo puesto.
 5. Sanción solo desde Disciplinario, con sus datos; amonestación escrita con acción; anular ↔ sanción.
 6. Restitución con datos judiciales.
 7. Ocasionales: ingreso como registro del contrato, sin acción.

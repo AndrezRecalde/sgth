@@ -6,6 +6,7 @@ use App\Enums\EstadoAccionPersonal;
 use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Services\Expediente\MovimientoPersonalStateService;
+use App\Services\Expediente\ReintegroService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 
@@ -17,10 +18,10 @@ use Illuminate\Console\Command;
  * aquí el día en que rige. Lo que falla queda pendiente y sale en la lista con
  * su motivo, para que Talento Humano lo resuelva; el resto sigue.
  *
- * También avisa de lo que vence en los próximos 30 días —ausencias y contratos
- * con plazo—, por ahora en esta salida. El reintegro en borrador al vencer una
- * ausencia y el cierre de los períodos de las autoridades electas llegan con
- * sus clases, en la fase 2.
+ * Desde la fase 2.4 prepara también en borrador el reintegro de las ausencias
+ * que llegaron a su fin. Y avisa de lo que vence en los próximos 30 días
+ * —ausencias y contratos con plazo—, por ahora en esta salida. El cierre de los
+ * períodos de las autoridades electas llega con su clase.
  */
 class AplicarAccionesVigentesCommand extends Command
 {
@@ -28,7 +29,7 @@ class AplicarAccionesVigentesCommand extends Command
 
     protected $description = 'Aplica el efecto de las acciones de personal registradas que ya rigen, y avisa de lo que vence en 30 días.';
 
-    public function handle(MovimientoPersonalStateService $estados): int
+    public function handle(MovimientoPersonalStateService $estados, ReintegroService $reintegros): int
     {
         $fecha = $this->option('fecha') ?: now()->toDateString();
 
@@ -51,12 +52,39 @@ class AplicarAccionesVigentesCommand extends Command
             );
         }
 
+        $this->prepararReintegros($reintegros, $fecha);
         $this->avisarVencimientos($fecha);
         $this->avisarReemplazosSinTitular();
 
         // Lo que no se pudo aplicar no hace fallar el comando: el resto se
         // aplicó, y lo pendiente sigue a la vista en la lista de arriba.
         return self::SUCCESS;
+    }
+
+    /**
+     * Las ausencias que terminaron sin reintegro (fase 2.4): se les prepara en
+     * borrador, con regreso al día siguiente del fin, para que Talento Humano
+     * lo revise y lo registre.
+     */
+    private function prepararReintegros(ReintegroService $reintegros, string $fecha): void
+    {
+        $resultado = $reintegros->prepararLosDeAusenciasTerminadas($fecha);
+
+        if ($resultado['preparados'] !== []) {
+            $this->info(count($resultado['preparados']).' reintegro(s) preparados en borrador.');
+            $this->table(
+                ['Ausencia', 'Reintegro', 'Servidor'],
+                array_map(fn (array $r) => [$r['ausencia_id'], $r['movimiento_id'], $r['servidor_id']], $resultado['preparados'])
+            );
+        }
+
+        if ($resultado['omitidas'] !== []) {
+            $this->warn(count($resultado['omitidas']).' ausencia(s) terminaron y no se les pudo preparar el reintegro:');
+            $this->table(
+                ['Ausencia', 'Servidor', 'Motivo'],
+                array_map(fn (array $o) => [$o['ausencia_id'], $o['servidor_id'], $o['motivo']], $resultado['omitidas'])
+            );
+        }
     }
 
     /**
@@ -96,6 +124,9 @@ class AplicarAccionesVigentesCommand extends Command
         $ausencias = MovimientoPersonal::query()->esAusenciaTemporal()
             ->whereIn('estado', [EstadoAccionPersonal::REGISTRADA->value, EstadoAccionPersonal::NOTIFICADA->value])
             ->whereBetween('fecha_fin', [$fecha, $hasta])
+            // La que ya tiene reintegro, en trámite o emitido, no está por vencer:
+            // Talento Humano ya se ocupó.
+            ->whereDoesntHave('reintegro')
             ->with('servidor:id,nombre,apellido')
             ->orderBy('fecha_fin')
             ->orderBy('id')

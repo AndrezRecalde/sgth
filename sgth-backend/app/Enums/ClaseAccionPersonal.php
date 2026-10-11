@@ -42,6 +42,7 @@ enum ClaseAccionPersonal: string
     case CAMBIO_OCUPACION          = 'cambio_ocupacion';
     case SANCION                   = 'sancion';
     case CESACION                  = 'cesacion';
+    case REINTEGRO                 = 'reintegro';
 
     public function etiqueta(): string
     {
@@ -58,13 +59,15 @@ enum ClaseAccionPersonal: string
             self::CAMBIO_OCUPACION          => 'Cambio de Ocupación',
             self::SANCION                   => 'Sanción Disciplinaria',
             self::CESACION                  => 'Cesación de Funciones',
+            self::REINTEGRO                 => 'Reintegro',
         };
     }
 
     public function familia(): FamiliaAccionPersonal
     {
         return match ($this) {
-            self::INGRESO => FamiliaAccionPersonal::INGRESO,
+            self::INGRESO,
+            self::REINTEGRO => FamiliaAccionPersonal::INGRESO,
 
             self::TRASLADO,
             self::INTERCAMBIO_VOLUNTARIO,
@@ -94,7 +97,10 @@ enum ClaseAccionPersonal: string
      */
     public function seCreaDesdeElFormulario(): bool
     {
-        return ! in_array($this, [self::SUBROGACION, self::ENCARGO], true);
+        // El reintegro tampoco: nace de la ausencia que cierra —el botón de
+        // «Ausencias y reemplazos» o el comando diario—, porque sin ella no
+        // sabe qué cerrar (fase 2.4).
+        return ! in_array($this, [self::SUBROGACION, self::ENCARGO, self::REINTEGRO], true);
     }
 
     /**
@@ -236,6 +242,7 @@ enum ClaseAccionPersonal: string
                 SubtipoMovimientoPersonal::SANCION_DISCIPLINARIA,
             ],
             self::CESACION => [TipoMovimientoPersonal::CESACION_FUNCIONES, $causal],
+            self::REINTEGRO => [TipoMovimientoPersonal::REINTEGRO, null],
         };
     }
 
@@ -285,6 +292,7 @@ enum ClaseAccionPersonal: string
                 // la taxonomía de dos niveles, pero se reconoce igual.
                 TipoMovimientoPersonal::CESACION_FUNCIONES        => self::CESACION,
                 TipoMovimientoPersonal::REGIMEN_DISCIPLINARIO     => self::SANCION,
+                TipoMovimientoPersonal::REINTEGRO                 => self::REINTEGRO,
                 default                                           => null,
             },
         };
@@ -302,7 +310,6 @@ enum ClaseAccionPersonal: string
         return in_array($this, [self::INGRESO, self::TRASLADO], true);
     }
 
-    /** Desde y hasta: lo que define a una comisión de servicios. */
     /**
      * Desde y hasta: las comisiones y, desde la fase 2.2, la licencia sin
      * remuneración, que siempre lleva fechas [TH 16]. Sin ellas la licencia no

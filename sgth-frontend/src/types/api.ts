@@ -779,6 +779,18 @@ export type MovimientoPersonal = {
   partida_origen_id?: number | null
   /** Ausencia temporal que este ingreso viene a cubrir. Solo en reemplazos. */
   cubre_movimiento_id?: number | null
+  /**
+   * El acto con que se enlaza (fase 2.4): la ausencia que cierra un reintegro,
+   * o el reintegro del que salió la cesación de un reemplazo.
+   */
+  movimiento_relacionado_id?: number | null
+  relacionado?: {
+    id: number
+    codigo_registro: string | null
+    etiqueta: string | null
+    fecha_inicio: string | null
+    fecha_fin: string | null
+  } | null
   numero_contrato?: string | null
   partida_presupuestaria_id?: number | null
   puede_marcar?: boolean | null

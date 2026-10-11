@@ -16,9 +16,16 @@ export const PERMISO_PREPARAR_ACCION = 'preparar-accion-personal'
  * backend, que responde 403 o 422 igual.
  */
 export function usePuedePrepararAccion(servidorId?: number | null): boolean {
+  return usePuedePrepararAcciones()(servidorId)
+}
+
+/**
+ * La misma pregunta para una lista: una tabla no puede llamar a un hook por
+ * fila, así que recibe la función.
+ */
+export function usePuedePrepararAcciones(): (servidorId?: number | null) => boolean {
   const { hasPermiso, usuario } = useAuth()
+  const conPermiso = hasPermiso(PERMISO_PREPARAR_ACCION)
 
-  const esElMismo = servidorId != null && usuario?.servidor_id === servidorId
-
-  return hasPermiso(PERMISO_PREPARAR_ACCION) && !esElMismo
+  return (servidorId) => conPermiso && !(servidorId != null && usuario?.servidor_id === servidorId)
 }

@@ -1,8 +1,9 @@
 import { Text, Tooltip } from '@mantine/core'
+import { IconArrowBackUp } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
-import { StatusBadge } from '@/components/ui'
+import { StatusBadge, TableActions } from '@/components/ui'
 import { formatFecha } from '@/lib/fecha'
-import type { AusenciaTemporal } from '../services/ausenciaTemporalService'
+import type { AusenciaTemporal, ReintegroAusencia } from '../services/ausenciaTemporalService'
 
 /** El plazo que resta, con el matiz de que una ausencia puede no tener fin. */
 function Restante({ dias }: { dias: number | null }) {
@@ -17,7 +18,36 @@ function Restante({ dias }: { dias: number | null }) {
   )
 }
 
-export const getAusenciaColumns = (): DataTableColumn<AusenciaTemporal>[] => [
+/** El reintegro de la fila: en trámite, o emitido con su fecha de regreso. */
+function Reintegro({ reintegro }: { reintegro: ReintegroAusencia | null }) {
+  if (!reintegro) return <Text size="sm" c="dimmed">—</Text>
+
+  if (!reintegro.codigo_registro) {
+    return (
+      <Tooltip label="Está en la bandeja de acciones de personal, por suscribir y registrar" withArrow>
+        <StatusBadge tone="info">En trámite</StatusBadge>
+      </Tooltip>
+    )
+  }
+
+  return (
+    <div>
+      <Text size="sm">Regresa el {formatFecha(reintegro.fecha_regreso)}</Text>
+      <Text size="xs" c="dimmed" ff="monospace">{reintegro.codigo_registro}</Text>
+    </div>
+  )
+}
+
+interface Opciones {
+  /** ¿Quien mira puede preparar acciones para ese servidor? */
+  puedePreparar: (servidorId: number | null) => boolean
+  onReintegrar: (ausencia: AusenciaTemporal) => void
+}
+
+export const getAusenciaColumns = ({
+  puedePreparar,
+  onReintegrar,
+}: Opciones): DataTableColumn<AusenciaTemporal>[] => [
   {
     accessor: 'servidor',
     title: 'Servidor ausente',
@@ -82,5 +112,28 @@ export const getAusenciaColumns = (): DataTableColumn<AusenciaTemporal>[] => [
         </div>
       )
     },
+  },
+  {
+    accessor: 'reintegro',
+    title: 'Reintegro',
+    render: (a) => <Reintegro reintegro={a.reintegro} />,
+  },
+  {
+    accessor: 'acciones',
+    title: '',
+    width: 50,
+    render: (a) => (
+      <TableActions
+        actions={[
+          {
+            label: 'Reintegrar',
+            icon: <IconArrowBackUp size={14} />,
+            onClick: () => onReintegrar(a),
+            // Uno por ausencia: si ya hay, se sigue en la bandeja.
+            hidden: !!a.reintegro || !puedePreparar(a.servidor.id),
+          },
+        ]}
+      />
+    ),
   },
 ]

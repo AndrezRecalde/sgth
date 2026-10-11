@@ -173,10 +173,12 @@ test('cada clase aplica exactamente a los nombramientos de antes', function () {
             'libre_nombramiento_remocion', 'servicios_profesionales',
         ],
         // El ingreso no depende del nombramiento: se registra a quien no tiene
-        // vínculo. Y la subrogación y el encargo los decide su propio módulo.
+        // vínculo. Y la subrogación, el encargo y el reintegro (fase 2.4) nacen
+        // en su propia pantalla, no en el formulario.
         'ingreso'     => [],
         'subrogacion' => [],
         'encargo'     => [],
+        'reintegro'   => [],
     ];
 
     foreach (ClaseAccionPersonal::cases() as $clase) {
