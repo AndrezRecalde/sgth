@@ -30,6 +30,7 @@ class StoreMovimientoPersonalRequest extends FormRequest
             'fecha_sentencia'       => 'fecha de la sentencia',
             'fecha_ejecutoria'      => 'fecha de ejecutoría',
             'remuneraciones_dejadas_de_percibir' => 'remuneraciones dejadas de percibir',
+            'fecha_consentimiento'  => 'fecha del consentimiento',
         ];
     }
 
@@ -115,6 +116,10 @@ class StoreMovimientoPersonalRequest extends FormRequest
             'observacion'       => 'nullable|string|max:1000',
             'codigo'            => 'nullable|string|max:30',
             'lugar_trabajo'     => 'nullable|string|max:255',
+            // El consentimiento escrito del cambio de ocupación de un obrero
+            // (CT 192; fase 4.3). Que sea obligatorio ahí lo decide
+            // ContratoDeTrabajoService.
+            'fecha_consentimiento' => 'nullable|date|before_or_equal:today',
             'caucionado'        => 'nullable|boolean',
             'caucion_numero'    => 'nullable|string|max:100',
             'caucion_fecha'     => 'nullable|date',

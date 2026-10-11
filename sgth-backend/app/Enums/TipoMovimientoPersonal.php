@@ -61,6 +61,9 @@ enum TipoMovimientoPersonal: string
     // partes, no una acción de personal (diseño, 9.10; fase 4.2). Reemplaza a
     // su «Prestación de servicios».
     case ADENDA                    = 'adenda';
+    // El obrero pasa a otra unidad, en un puesto de la misma denominación, o a
+    // otro lugar de trabajo, por adenda de su contrato (CT 192; fase 4.3).
+    case CAMBIO_LUGAR              = 'cambio_lugar';
 
     public function etiqueta(): string
     {
@@ -87,6 +90,7 @@ enum TipoMovimientoPersonal: string
             self::LICENCIA_CONSEJO          => 'Licencia del Consejo',
             self::ASUNCION_DEFINITIVA       => 'Asunción Definitiva',
             self::ADENDA                    => 'Adenda',
+            self::CAMBIO_LUGAR              => 'Cambio de Lugar',
         };
     }
 
@@ -209,6 +213,10 @@ enum TipoMovimientoPersonal: string
             self::CAMBIO_ADMINISTRATIVO,
             self::PRESTACION_SERVICIOS,
             self::ADENDA,
+            // Los del contrato de trabajo de un obrero (fase 4.3).
+            self::CAMBIO_DENOMINACION,
+            self::INCREMENTO_REMUNERACION,
+            self::CAMBIO_LUGAR,
         ], true);
     }
 
@@ -283,6 +291,18 @@ enum TipoMovimientoPersonal: string
     }
 
     /**
+     * Cambian el contrato de trabajo de un obrero, por adenda (fase 4.3): la
+     * ocupación (CT 192), el lugar o la remuneración (CT 118). Solo surten
+     * efecto en el instrumento del Código del Trabajo: los de antes eran
+     * acciones de personal que no tocaban el vínculo, y así se quedan —ver
+     * `MovimientoPersonal::cambiaElContratoDeTrabajo()`—.
+     */
+    public function cambiaElContratoDeTrabajo(): bool
+    {
+        return in_array($this, [self::CAMBIO_DENOMINACION, self::INCREMENTO_REMUNERACION, self::CAMBIO_LUGAR], true);
+    }
+
+    /**
      * Las "acciones de personal" formales tienen restricción de elegibilidad
      * por tipo de nombramiento y nacen en estado BORRADOR (deben pasar por el
      * flujo guardado de MovimientoPersonalStateService). La bitácora del
@@ -311,6 +331,7 @@ enum TipoMovimientoPersonal: string
             self::LICENCIA_CONSEJO,
             self::ASUNCION_DEFINITIVA,
             self::ADENDA,
+            self::CAMBIO_LUGAR,
         ], true) || $this->subtipoEquivalente() !== null;
     }
 
@@ -432,6 +453,9 @@ enum TipoMovimientoPersonal: string
             // La adenda, solo del contrato civil (fase 4.2).
             self::ADENDA =>
                 $tipo === TipoNombramiento::SERVICIOS_PROFESIONALES,
+            // El cambio de lugar, solo de los obreros (fase 4.3).
+            self::CAMBIO_LUGAR =>
+                $tipo === TipoNombramiento::CODIGO_TRABAJO,
             self::CAMBIO_ADMINISTRATIVO =>
                 $tipo === TipoNombramiento::PERMANENTE,
             self::LICENCIA_SIN_REMUNERACION => in_array($tipo, [

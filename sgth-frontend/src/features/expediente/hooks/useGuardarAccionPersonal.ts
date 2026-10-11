@@ -80,6 +80,9 @@ export function useGuardarAccionPersonal({
       const clase = buscarClase(catalogo, data.clase)
       const limpio = {
         ...soloLoQueAplica(data, !!clase?.pide_contratacion, !!clase?.pide_acta_concurso, !!clase?.pide_adenda),
+        // El consentimiento escrito, solo en el cambio de ocupación de un
+        // obrero (fase 4.3).
+        fecha_consentimiento: clase?.cambio_del_obrero === 'ocupacion' ? data.fecha_consentimiento : null,
         // La institución y la marca de estudios solo viajan en las clases que
         // las piden (fase 2.3): en otra acción se grabarían sin significar nada.
         institucion_destino: clase?.pide_institucion_destino ? (data.institucion_destino?.trim() || null) : null,

@@ -50,6 +50,7 @@ enum ClaseAccionPersonal: string
     case LICENCIA_CONSEJO          = 'licencia_consejo';
     case ASUNCION_DEFINITIVA       = 'asuncion_definitiva';
     case ADENDA                    = 'adenda';
+    case CAMBIO_LUGAR              = 'cambio_lugar';
 
     public function etiqueta(): string
     {
@@ -74,6 +75,7 @@ enum ClaseAccionPersonal: string
             self::LICENCIA_CONSEJO          => 'Licencia concedida por el Consejo',
             self::ASUNCION_DEFINITIVA       => 'Asunción Definitiva',
             self::ADENDA                    => 'Adenda al contrato',
+            self::CAMBIO_LUGAR              => 'Cambio de Lugar de Trabajo',
         };
     }
 
@@ -101,7 +103,8 @@ enum ClaseAccionPersonal: string
             self::ASUNCION_DEFINITIVA => FamiliaAccionPersonal::REEMPLAZO,
 
             self::INCREMENTO_REMUNERACION,
-            self::CAMBIO_OCUPACION => FamiliaAccionPersonal::PUESTO_REMUNERACION,
+            self::CAMBIO_OCUPACION,
+            self::CAMBIO_LUGAR => FamiliaAccionPersonal::PUESTO_REMUNERACION,
 
             self::SANCION  => FamiliaAccionPersonal::REGIMEN_DISCIPLINARIO,
             self::CESACION => FamiliaAccionPersonal::CESACION,
@@ -297,6 +300,7 @@ enum ClaseAccionPersonal: string
             self::LICENCIA_CONSEJO => [TipoMovimientoPersonal::LICENCIA_CONSEJO, null],
             self::ASUNCION_DEFINITIVA => [TipoMovimientoPersonal::ASUNCION_DEFINITIVA, null],
             self::ADENDA => [TipoMovimientoPersonal::ADENDA, null],
+            self::CAMBIO_LUGAR => [TipoMovimientoPersonal::CAMBIO_LUGAR, null],
         };
     }
 
@@ -357,6 +361,7 @@ enum ClaseAccionPersonal: string
                 TipoMovimientoPersonal::LICENCIA_CONSEJO          => self::LICENCIA_CONSEJO,
                 TipoMovimientoPersonal::ASUNCION_DEFINITIVA       => self::ASUNCION_DEFINITIVA,
                 TipoMovimientoPersonal::ADENDA                    => self::ADENDA,
+                TipoMovimientoPersonal::CAMBIO_LUGAR              => self::CAMBIO_LUGAR,
                 default                                           => null,
             },
         };
@@ -382,6 +387,38 @@ enum ClaseAccionPersonal: string
     public function pideAdenda(): bool
     {
         return $this === self::ADENDA;
+    }
+
+    /**
+     * Qué cambia del contrato de trabajo de un obrero, por adenda (fase 4.3):
+     * la ocupación, el lugar o la remuneración. Cada uno tiene su bloque en el
+     * formulario. Null en las demás clases.
+     */
+    public function cambioDelObrero(): ?string
+    {
+        return match ($this) {
+            self::CAMBIO_OCUPACION        => 'ocupacion',
+            self::CAMBIO_LUGAR            => 'lugar',
+            self::INCREMENTO_REMUNERACION => 'remuneracion',
+            default                       => null,
+        };
+    }
+
+    /**
+     * La base legal que imprime la hoja de registro interno de un obrero
+     * cuando el acto no tiene causal propia (diseño, 9.15). Null si no hay una
+     * que citar.
+     */
+    public function baseLegalEnElCodigoDelTrabajo(): ?string
+    {
+        return match ($this) {
+            self::INGRESO                 => 'Código del Trabajo, Arts. 11, 14 y 15',
+            self::CAMBIO_OCUPACION,
+            self::CAMBIO_LUGAR            => 'Código del Trabajo, Art. 192',
+            self::INCREMENTO_REMUNERACION => 'Código del Trabajo, Art. 118; contrato colectivo',
+            self::SANCION                 => 'Código del Trabajo, Arts. 44 y 64; reglamento interno',
+            default                       => null,
+        };
     }
 
     /**
@@ -514,6 +551,16 @@ enum ClaseAccionPersonal: string
             $this === self::TRASLADO =>
                 'A otro puesto vacante de la institución, con igual remuneración y previo informe de la UATH '
                     .'(LOSEP Art. 35), que deja constancia de que el servidor cumple el perfil (Art. 36).',
+            $this === self::CAMBIO_OCUPACION =>
+                'A otro puesto del catálogo de obreros, con el consentimiento escrito del trabajador: sin él, el '
+                    .'cambio equivale a un despido intempestivo (Código del Trabajo, Art. 192). La remuneración '
+                    .'puede subir, nunca bajar. Se registra con el número de la adenda firmada.',
+            $this === self::CAMBIO_LUGAR =>
+                'A otra unidad, en un puesto de la misma denominación, o a otro lugar de trabajo, por adenda '
+                    .'firmada por el empleador y el trabajador. La ocupación y la remuneración no cambian.',
+            $this === self::INCREMENTO_REMUNERACION =>
+                'Un monto nuevo, mayor que el actual: la remuneración del obrero nunca baja. Se registra con '
+                    .'el número de la adenda firmada y el dictamen presupuestario.',
             $this === self::ADENDA =>
                 'Cambia el contrato de Servicios Profesionales en lo que diga la adenda firmada: la unidad y el '
                     .'puesto, el plazo —dentro del año calendario del contrato— o los honorarios. No lleva acción de '

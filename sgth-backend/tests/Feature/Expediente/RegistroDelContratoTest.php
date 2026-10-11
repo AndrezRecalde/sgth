@@ -242,9 +242,9 @@ test('el catálogo dice con qué nombramiento el ingreso es registro del contrat
     expect($ingreso['registro_de_contrato_para'])->toBe(['servicios_ocasionales'])
         ->and($traslado['registro_de_contrato_para'])->toBe([])
         ->and(collect($catalogo->json('datos.instrumentos'))->pluck('codigo')->all())
-        // Y el acto de autoridad electa desde la fase 4.1, y el contrato civil
-        // desde la 4.2.
-        ->toBe(['accion_personal', 'registro_contrato', 'acto_autoridad', 'contrato_civil']);
+        // Y el acto de autoridad electa desde la fase 4.1, el contrato civil
+        // desde la 4.2 y el registro interno de los obreros desde la 4.3.
+        ->toBe(['accion_personal', 'registro_contrato', 'acto_autoridad', 'contrato_civil', 'documento_ct']);
 });
 
 test('la bandeja se filtra por instrumento', function () {

@@ -198,6 +198,11 @@ class MovimientoPersonalService
             $datos = app(ContratoCivilService::class)->completarAdenda($servidor, $datos);
         }
 
+        // Y lo que cambia del contrato de trabajo de un obrero (fase 4.3).
+        if ($tipoMovimiento->cambiaElContratoDeTrabajo()) {
+            $datos = app(ContratoDeTrabajoService::class)->completar($servidor, $tipoMovimiento, $datos);
+        }
+
         if ($subtipo === SubtipoMovimientoPersonal::TERMINACION_UNILATERAL) {
             self::impedirTerminacionDeProtegida($servidorId);
         }
@@ -256,8 +261,9 @@ class MovimientoPersonalService
         }
 
         // El ingreso de un ocasional es el registro de su contrato, sin acción
-        // [TH N7; fase 2.7], y lo de Servicios Profesionales, del contrato
-        // civil (fase 4.2). Se decide aquí, por donde entran también el
+        // [TH N7; fase 2.7], lo de Servicios Profesionales, del contrato
+        // civil (fase 4.2), y lo de un obrero, del Código del Trabajo (fase
+        // 4.3). Se decide aquí, por donde entran también el
         // reemplazo y Reclutamiento, y antes de la ficha médica, que depende
         // de él.
         $datos['instrumento'] = $this->instrumentoPara(
@@ -450,6 +456,23 @@ class MovimientoPersonalService
                     'unidad_destino_id'      => $movimiento->unidad_destino_id,
                     'remuneracion_propuesta' => $movimiento->remuneracion_propuesta,
                     'fecha_fin_propuesta'    => $movimiento->fecha_fin_propuesta?->toDateString(),
+                    'fecha_efectiva'         => $movimiento->fecha_efectiva?->toDateString(),
+                    ...$datos,
+                ],
+            );
+        }
+
+        // El cambio del contrato de trabajo, con lo corregido (fase 4.3).
+        if ($movimiento->cambiaElContratoDeTrabajo()) {
+            $datos = app(ContratoDeTrabajoService::class)->completar(
+                Servidor::with('contratoVigente.puesto')->findOrFail($movimiento->servidor_id),
+                $movimiento->tipo_movimiento,
+                [
+                    'puesto_destino_id'      => $movimiento->puesto_destino_id,
+                    'unidad_destino_id'      => $movimiento->unidad_destino_id,
+                    'remuneracion_propuesta' => $movimiento->remuneracion_propuesta,
+                    'lugar_trabajo'          => $movimiento->lugar_trabajo,
+                    'fecha_consentimiento'   => $movimiento->fecha_consentimiento?->toDateString(),
                     'fecha_efectiva'         => $movimiento->fecha_efectiva?->toDateString(),
                     ...$datos,
                 ],

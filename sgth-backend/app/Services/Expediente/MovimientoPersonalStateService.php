@@ -34,6 +34,7 @@ class MovimientoPersonalStateService
         private readonly TrasladoService $traslados,
         private readonly AscensoService $ascensos,
         private readonly ContratoCivilService $contratoCivil,
+        private readonly ContratoDeTrabajoService $contratoDeTrabajo,
     ) {
     }
 
@@ -194,6 +195,11 @@ class MovimientoPersonalStateService
             // El del contrato civil lo firmaron las partes: lleva el número de
             // la adenda o del acta (fase 4.2).
             $this->contratoCivil->exigirDocumentoFirmado($movimiento);
+        } elseif ($instrumento === InstrumentoActo::DOCUMENTO_CT) {
+            // El del obrero: la adenda la firman el empleador y el trabajador,
+            // y la hoja de registro interno, Talento Humano (fase 4.3).
+            $this->contratoDeTrabajo->exigirAdenda($movimiento);
+            $this->firmanteService->sellarTalentoHumanoEn($movimiento, $datos['fecha_suscripcion'] ?? null);
         }
 
         $this->solicitarCertificacionMedicaSiHaceFalta($movimiento);
@@ -315,13 +321,15 @@ class MovimientoPersonalStateService
         // correlativo AP, que solo cuenta acciones de personal (fase 2.7). El
         // acto de autoridad lleva el suyo, AU [TH 6; fase 4.1]. Y el contrato
         // civil, su número; su adenda y su terminación, el correlativo CC
-        // (fase 4.2).
+        // (fase 4.2). Todo acto de un obrero, el de su hoja de registro
+        // interno, RI; el número del contrato queda en el vínculo (fase 4.3).
         $movimiento->codigo_registro = match ($movimiento->instrumento ?? InstrumentoActo::ACCION_PERSONAL) {
             InstrumentoActo::REGISTRO_CONTRATO => $this->numeroDelRegistroDeContrato($movimiento),
             InstrumentoActo::ACTO_AUTORIDAD    => $this->generarCodigoRegistro('AU'),
             InstrumentoActo::CONTRATO_CIVIL    => $movimiento->tipo_movimiento->creaVinculo()
                 ? $this->numeroDelContrato($movimiento)
                 : $this->generarCodigoRegistro('CC'),
+            InstrumentoActo::DOCUMENTO_CT      => $this->generarCodigoRegistro('RI'),
             default                            => $this->generarCodigoRegistro(),
         };
         $movimiento->fecha_registro  = now()->toDateString();
@@ -489,6 +497,8 @@ class MovimientoPersonalStateService
                 // es lo que consulta el control de plazas para no contar dos
                 // veces la misma, y lo que permite listar quién cubre a quién.
                 'cubre_movimiento_id'      => $movimiento->cubre_movimiento_id,
+                // Dónde va a trabajar: desde la fase 4.3 lo guarda el vínculo.
+                'lugar_trabajo'            => filled($movimiento->lugar_trabajo) ? $movimiento->lugar_trabajo : null,
                 // Para qué se da el provisional (LOSEP 17 b; fase 3.2).
                 'supuesto_provisional'     => $movimiento->supuesto_provisional_propuesto?->value,
                 'fecha_inicio'             => $movimiento->fecha_efectiva?->toDateString(),
@@ -539,6 +549,9 @@ class MovimientoPersonalStateService
         } elseif ($tipo->esAdenda()) {
             // El contrato civil cambia en lo que dice la adenda (fase 4.2).
             $this->contratoServidorService->aplicarAdenda($movimiento);
+        } elseif ($movimiento->cambiaElContratoDeTrabajo()) {
+            // Y el de trabajo del obrero, en lo que dice la suya (fase 4.3).
+            $this->contratoServidorService->aplicarCambioDelObrero($movimiento);
         }
 
         // La subrogación no crea vínculo: reemplaza temporalmente al titular
@@ -682,6 +695,11 @@ class MovimientoPersonalStateService
         // desde el borrador (fase 4.2).
         if ($movimiento->tipo_movimiento->esAdenda()) {
             $this->contratoCivil->validarAlRegistrar($movimiento);
+        }
+
+        // Y el cambio del contrato de trabajo de un obrero (fase 4.3).
+        if ($movimiento->cambiaElContratoDeTrabajo()) {
+            $this->contratoDeTrabajo->validarAlRegistrar($movimiento);
         }
 
         // El ascenso, otra vez: el puesto o su escala pueden haber cambiado desde
@@ -1051,6 +1069,11 @@ class MovimientoPersonalStateService
 
         if ($movimiento->tipo_movimiento->esAdenda()) {
             $this->contratoServidorService->deshacerAdenda($movimiento);
+            return;
+        }
+
+        if ($movimiento->cambiaElContratoDeTrabajo()) {
+            $this->contratoServidorService->deshacerCambioDelObrero($movimiento);
             return;
         }
 

@@ -67,6 +67,8 @@ class SancionParaNominaMail extends Mailable
                 'base'     => $dinero($this->descuento['base']),
                 'monto'    => $dinero($this->descuento['monto']),
                 'motivo'   => $this->movimiento->motivo_anulacion,
+                // La de un obrero va en su hoja de registro interno (fase 4.3).
+                'documento' => $this->movimiento->esDelRegistroInterno() ? 'el registro interno' : 'la acción de personal',
             ],
         );
     }

@@ -197,8 +197,10 @@ test('cada clase aplica exactamente a los nombramientos de antes', function () {
         // nace del cese del Prefecto, no del formulario (4.1b).
         'licencia_consejo'    => ['eleccion_popular'],
         'asuncion_definitiva' => [],
-        // La adenda, del contrato civil (4.2).
-        'adenda' => ['servicios_profesionales'],
+        // La adenda, del contrato civil (4.2), y el cambio de lugar, de los
+        // obreros (4.3).
+        'adenda'       => ['servicios_profesionales'],
+        'cambio_lugar' => ['codigo_trabajo'],
     ];
 
     foreach (ClaseAccionPersonal::cases() as $clase) {
@@ -385,14 +387,20 @@ test('el servicio también rechaza una clase que no es del formulario', function
 test('lo que los módulos crean por tipo recibe su clase sin pedirla', function () {
     $obrero = ($this->servidorCon)(TipoNombramiento::CODIGO_TRABAJO);
 
+    // La multa de un obrero, como la crea Disciplinario. Hasta la fase 4.3 se
+    // probaba con un cambio de denominación, que desde entonces pide su puesto
+    // y el consentimiento del trabajador.
     $m = app(MovimientoPersonalService::class)->registrar($obrero->id, [
-        'tipo_movimiento' => TipoMovimientoPersonal::CAMBIO_DENOMINACION->value,
-        'descripcion'     => 'Cambio de denominación creado por tipo',
-        'fecha_efectiva'  => '2026-10-15',
+        'tipo_movimiento'    => TipoMovimientoPersonal::REGIMEN_DISCIPLINARIO->value,
+        'subtipo_movimiento' => SubtipoMovimientoPersonal::SANCION_PECUNIARIA->value,
+        'descripcion'        => 'Multa creada por tipo',
+        'fecha_efectiva'     => '2026-10-15',
     ]);
 
-    expect($m->clase)->toBe(ClaseAccionPersonal::CAMBIO_OCUPACION)
-        ->and($m->etiqueta())->toBe('Cambio de Ocupación');
+    expect($m->clase)->toBe(ClaseAccionPersonal::SANCION)
+        ->and($m->etiqueta())->toBe('Sanción Disciplinaria')
+        // Y su instrumento, el registro interno de los obreros (fase 4.3).
+        ->and($m->instrumento)->toBe(\App\Enums\InstrumentoActo::DOCUMENTO_CT);
 });
 
 test('los tipos antiguos se clasifican como el resto del módulo los opera', function () {

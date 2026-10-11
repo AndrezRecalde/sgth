@@ -297,6 +297,10 @@ class MovimientoPersonal extends Model
         'autorizado_por',
         'observacion',
         'lugar_trabajo',
+        // El lugar que tenía el obrero antes del cambio, y el consentimiento
+        // escrito del cambio de ocupación (CT 192; fase 4.3).
+        'lugar_trabajo_origen',
+        'fecha_consentimiento',
         'caucionado',
         'caucion_numero',
         'caucion_fecha',
@@ -323,6 +327,7 @@ class MovimientoPersonal extends Model
             'remuneracion_origen'         => 'decimal:2',
             'fecha_fin_propuesta'         => 'date',
             'fecha_fin_origen'            => 'date',
+            'fecha_consentimiento'        => 'date',
             'puede_marcar'                => 'boolean',
             'para_estudios_o_eventos'     => 'boolean',
             'con_remuneracion'            => 'boolean',
@@ -576,8 +581,22 @@ class MovimientoPersonal extends Model
             || (bool) $this->tipo_movimiento?->asumeLaPrimeraAutoridad()
             // La adenda del contrato civil (fase 4.2).
             || (bool) $this->tipo_movimiento?->esAdenda()
+            // Lo que cambia del contrato de trabajo de un obrero (fase 4.3).
+            || $this->cambiaElContratoDeTrabajo()
             || $this->reubicaAlServidor()
             || (bool) $this->subtipoEfectivo()?->cierraVinculo();
+    }
+
+    /**
+     * ¿Cambia el contrato de trabajo de un obrero (fase 4.3)? El cambio de
+     * ocupación, el de lugar y el incremento, en el instrumento del Código del
+     * Trabajo. Los de antes eran acciones de personal que no tocaban el
+     * vínculo: anularlos hoy no tiene nada que deshacer.
+     */
+    public function cambiaElContratoDeTrabajo(): bool
+    {
+        return (bool) $this->tipo_movimiento?->cambiaElContratoDeTrabajo()
+            && $this->instrumento === InstrumentoActo::DOCUMENTO_CT;
     }
 
     /**
@@ -631,6 +650,8 @@ class MovimientoPersonal extends Model
             || (bool) $this->tipo_movimiento?->asumeLaPrimeraAutoridad()
             // La adenda, lo que cambia del contrato civil (fase 4.2).
             || (bool) $this->tipo_movimiento?->esAdenda()
+            // Y lo que cambia del contrato de trabajo de un obrero (fase 4.3).
+            || $this->cambiaElContratoDeTrabajo()
             || $this->tipo_movimiento === TipoMovimientoPersonal::SUBROGACION
             || $this->reubicaAlServidor();
     }
@@ -847,6 +868,12 @@ class MovimientoPersonal extends Model
     public function esDelContratoCivil(): bool
     {
         return $this->instrumento === InstrumentoActo::CONTRATO_CIVIL;
+    }
+
+    /** ¿Es un acto de un obrero, con su hoja de registro interno (fase 4.3)? */
+    public function esDelRegistroInterno(): bool
+    {
+        return $this->instrumento === InstrumentoActo::DOCUMENTO_CT;
     }
 
     /** ¿Ya rige en esa fecha? */

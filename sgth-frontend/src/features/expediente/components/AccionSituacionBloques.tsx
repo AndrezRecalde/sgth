@@ -35,6 +35,11 @@ export function AccionSituacionBloques({ m, botonEditar }: Props) {
   // La adenda del contrato civil cambia solo lo que dice (fase 4.2): lo demás
   // viene vacío, y es «sin cambio», no un dato que falta.
   const esAdenda = m.clase === 'adenda'
+  // Igual lo que cambia del contrato de trabajo de un obrero (fase 4.3). Los
+  // de antes, con acción de personal, no cambiaban nada y se enseñan como eran.
+  const esCambioDelObrero = m.instrumento === 'documento_ct'
+    && ['cambio_ocupacion', 'cambio_lugar', 'incremento_remuneracion'].includes(m.clase ?? '')
+  const cambiaLoQueDice = esAdenda || esCambioDelObrero
   const sinCambio = 'Sin cambio'
 
   const diferencia = m.remuneracion_propuesta != null && m.remuneracion_origen != null
@@ -85,24 +90,34 @@ export function AccionSituacionBloques({ m, botonEditar }: Props) {
           una licencia dejan al servidor en su puesto, y lo que las define
           es el período. Reservar la columna para todas obligaba a
           rellenarla de guiones. */}
-      {propone && esAdenda && (
+      {propone && cambiaLoQueDice && (
         <Grid.Col span={{ base: 12, sm: 6 }}>
           <BloqueDetalle altoCompleto>
-            <SectionHeading title="Lo que cambia la adenda" mb="xs" />
+            <SectionHeading title={esAdenda ? 'Lo que cambia la adenda' : 'Lo que cambia'} mb="xs" />
             <DetailList columnas={1} items={[
               { label: 'Unidad', value: m.puesto_destino ? m.unidad_destino?.nombre : sinCambio },
               { label: 'Puesto', value: m.puesto_destino?.cargo?.nombre ?? sinCambio },
               {
-                label: 'Honorarios',
+                label: esAdenda ? 'Honorarios' : 'Remuneración',
                 value: m.remuneracion_propuesta != null ? dinero(m.remuneracion_propuesta) : sinCambio,
               },
-              {
-                label: 'Plazo',
-                value: m.fecha_fin_propuesta
-                  ? `Hasta el ${formatFecha(m.fecha_fin_propuesta)}`
-                    + (m.fecha_fin_origen ? ` (antes, el ${formatFecha(m.fecha_fin_origen)})` : '')
-                  : sinCambio,
-              },
+              ...(esAdenda
+                ? [{
+                    label: 'Plazo',
+                    value: m.fecha_fin_propuesta
+                      ? `Hasta el ${formatFecha(m.fecha_fin_propuesta)}`
+                        + (m.fecha_fin_origen ? ` (antes, el ${formatFecha(m.fecha_fin_origen)})` : '')
+                      : sinCambio,
+                  }]
+                : [{
+                    label: 'Lugar de trabajo',
+                    value: m.lugar_trabajo
+                      ? m.lugar_trabajo + (m.lugar_trabajo_origen ? ` (antes, ${m.lugar_trabajo_origen})` : '')
+                      : sinCambio,
+                  }]),
+              ...(m.fecha_consentimiento
+                ? [{ label: 'Consentimiento del trabajador', value: `Por escrito, del ${formatFecha(m.fecha_consentimiento)}` }]
+                : []),
             ]} />
 
             {botonEditar}
@@ -110,7 +125,7 @@ export function AccionSituacionBloques({ m, botonEditar }: Props) {
         </Grid.Col>
       )}
 
-      {propone && !esAdenda && (
+      {propone && !cambiaLoQueDice && (
         <Grid.Col span={{ base: 12, sm: 6 }}>
           <BloqueDetalle altoCompleto>
             <SectionHeading
