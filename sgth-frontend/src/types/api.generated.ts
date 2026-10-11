@@ -7405,9 +7405,9 @@ export interface components {
         CausalAccionPersonalResource: {
             codigo: components["schemas"]["SubtipoMovimientoPersonal"];
             /** @enum {string} */
-            etiqueta: "Traslado Administrativo" | "Traspaso" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Amonestación escrita" | "Sanción pecuniaria administrativa" | "Suspensión temporal sin goce de remuneración" | "Sanción Disciplinaria" | "Renuncia" | "Destitución" | "Jubilación" | "Incapacidad absoluta y permanente" | "Contrato Finalizado" | "Visto Bueno" | "Remoción" | "No superar el período de prueba" | "Terminación por cumplimiento del plazo" | "Terminación unilateral" | "Mutuo acuerdo" | "Evaluación regular o insuficiente" | "Retiro voluntario o compra de renuncia" | "Pérdida de los derechos de ciudadanía" | "Fallecimiento" | "Fin del período" | "Revocatoria del mandato" | "Remoción por el Consejo Provincial" | "Asuntos particulares" | "Estudios de posgrado" | "Servicio militar" | "Reemplazo de un dignatario electo" | "Candidatura a elección popular" | "Cuidado de hijos" | "Según su régimen (Código del Trabajo)";
+            etiqueta: "Traslado Administrativo" | "Traspaso" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Amonestación escrita" | "Sanción pecuniaria administrativa" | "Suspensión temporal sin goce de remuneración" | "Sanción Disciplinaria" | "Renuncia" | "Destitución" | "Jubilación" | "Incapacidad absoluta y permanente" | "Contrato Finalizado" | "Visto Bueno" | "Remoción" | "No superar el período de prueba" | "Terminación por cumplimiento del plazo" | "Terminación unilateral" | "Mutuo acuerdo" | "Evaluación regular o insuficiente" | "Retiro voluntario o compra de renuncia" | "Pérdida de los derechos de ciudadanía" | "Fallecimiento" | "Fin del período" | "Revocatoria del mandato" | "Remoción por el Consejo Provincial" | "Terminación por mutuo acuerdo" | "Terminación anticipada según el contrato" | "Asuntos particulares" | "Estudios de posgrado" | "Servicio militar" | "Reemplazo de un dignatario electo" | "Candidatura a elección popular" | "Cuidado de hijos" | "Según su régimen (Código del Trabajo)";
             /** @enum {string|null} */
-            base_legal: "LOSEP Art. 47 a; Reglamento Art. 102" | "LOSEP Art. 47 e; Reglamento Art. 105" | "LOSEP Art. 17 b.5" | "Reglamento a la LOSEP Art. 146 a" | "Reglamento a la LOSEP Art. 146 f" | "Reglamento a la LOSEP Art. 146 b" | "Reglamento a la LOSEP Art. 146 g" | "LOSEP Arts. 47 f y 48" | "LOSEP Art. 47 j" | "LOSEP Art. 47 i y k; Mandato Constituyente 2" | "LOSEP Art. 47 b" | "LOSEP Art. 47 d" | "LOSEP Art. 47 l" | "Código del Trabajo Art. 172" | "Constitución Art. 105" | "COOTAD Arts. 333–336" | "LOSEP Art. 28 a" | "LOSEP Art. 28 b" | "LOSEP Art. 28 c" | "LOSEP Art. 28 d" | "LOSEP Art. 28 e" | "LOSEP Art. 28 f" | "LOSEP Art. 43 b" | "LOSEP Art. 43 c" | "LOSEP Art. 43 d" | null;
+            base_legal: "LOSEP Art. 47 a; Reglamento Art. 102" | "LOSEP Art. 47 e; Reglamento Art. 105" | "LOSEP Art. 17 b.5" | "Reglamento a la LOSEP Art. 146 a" | "Reglamento a la LOSEP Art. 146 f" | "Reglamento a la LOSEP Art. 146 b" | "Reglamento a la LOSEP Art. 146 g" | "LOSEP Arts. 47 f y 48" | "LOSEP Art. 47 j" | "LOSEP Art. 47 i y k; Mandato Constituyente 2" | "LOSEP Art. 47 b" | "LOSEP Art. 47 d" | "LOSEP Art. 47 l" | "Código del Trabajo Art. 172" | "Constitución Art. 105" | "COOTAD Arts. 333–336" | "El plazo del contrato" | "Código Civil Art. 1561" | "La cláusula de terminación del contrato" | "LOSEP Art. 28 a" | "LOSEP Art. 28 b" | "LOSEP Art. 28 c" | "LOSEP Art. 28 d" | "LOSEP Art. 28 e" | "LOSEP Art. 28 f" | "LOSEP Art. 43 b" | "LOSEP Art. 43 c" | "LOSEP Art. 43 d" | null;
             nombramientos_elegibles: [
                 components["schemas"]["TipoNombramiento"]
             ] | [
@@ -7417,6 +7417,13 @@ export interface components {
                 components["schemas"]["TipoNombramiento"],
                 components["schemas"]["TipoNombramiento"]
             ] | [
+                components["schemas"]["TipoNombramiento"],
+                components["schemas"]["TipoNombramiento"],
+                components["schemas"]["TipoNombramiento"],
+                components["schemas"]["TipoNombramiento"]
+            ] | [
+                components["schemas"]["TipoNombramiento"],
+                components["schemas"]["TipoNombramiento"],
                 components["schemas"]["TipoNombramiento"],
                 components["schemas"]["TipoNombramiento"],
                 components["schemas"]["TipoNombramiento"],
@@ -7497,12 +7504,12 @@ export interface components {
          * @description La clase legal de una acción de personal: el acto que se registra, con el nombre que le da la LOSEP (diseño de Acciones de Personal, sección 4). Es la identidad pública del catálogo. El frontend elige una clase —y, en la cesación, una causal— y el backend la traduce al par tipo/subtipo con el que todavía se guarda y opera cada acción. Esa traducción vive aquí, en `tipoYSubtipo()`, y su inversa en `desde()`: son las dos únicas puertas entre los dos vocabularios.  Las reglas no se repiten. La elegibilidad por nombramiento se pregunta a `TipoMovimientoPersonal` y `SubtipoMovimientoPersonal`, que siguen siendo su única fuente: esta clase solo las agrupa con el nombre legal. Lo que es solo de formulario —qué bloques pide, el aviso de la comisión— sí vive aquí, y `CatalogoAccionesPersonalTest` comprueba que coincida con lo que el tipo/subtipo traducido hace de verdad.  Nombres que cambian respecto de los que veía Talento Humano, todos aceptados el 2026-10-09 (cuestionario, preguntas N1, 9 y 15):  - el «Traspaso» de los permanentes y la «Prestación de servicios» de los    demás son el mismo acto, el **traslado** del Art. 35;  - el «Traslado administrativo» entre instituciones es el **intercambio    voluntario** del Art. 39;  - el «Cambio de denominación» de los obreros es el **cambio de ocupación**    del Art. 192 del Código del Trabajo.
          * @enum {string}
          */
-        ClaseAccionPersonal: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "subrogacion" | "encargo" | "incremento_remuneracion" | "cambio_ocupacion" | "sancion" | "cesacion" | "reintegro" | "restitucion" | "nombramiento_definitivo" | "ascenso" | "inicio_periodo" | "licencia_consejo" | "asuncion_definitiva";
+        ClaseAccionPersonal: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "subrogacion" | "encargo" | "incremento_remuneracion" | "cambio_ocupacion" | "sancion" | "cesacion" | "reintegro" | "restitucion" | "nombramiento_definitivo" | "ascenso" | "inicio_periodo" | "licencia_consejo" | "asuncion_definitiva" | "adenda";
         /** ClaseAccionPersonalResource */
         ClaseAccionPersonalResource: {
             codigo: components["schemas"]["ClaseAccionPersonal"];
             /** @enum {string} */
-            etiqueta: "Ingreso y Vinculación" | "Traslado" | "Intercambio Voluntario" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Licencia sin Remuneración" | "Subrogación" | "Encargo" | "Incremento de Remuneración" | "Cambio de Ocupación" | "Sanción Disciplinaria" | "Cesación de Funciones" | "Reintegro" | "Restitución" | "Nombramiento Definitivo" | "Ascenso" | "Inicio del Período" | "Licencia concedida por el Consejo" | "Asunción Definitiva";
+            etiqueta: "Ingreso y Vinculación" | "Traslado" | "Intercambio Voluntario" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Licencia sin Remuneración" | "Subrogación" | "Encargo" | "Incremento de Remuneración" | "Cambio de Ocupación" | "Sanción Disciplinaria" | "Cesación de Funciones" | "Reintegro" | "Restitución" | "Nombramiento Definitivo" | "Ascenso" | "Inicio del Período" | "Licencia concedida por el Consejo" | "Asunción Definitiva" | "Adenda al contrato";
             familia: components["schemas"]["FamiliaAccionPersonal"];
             se_crea_desde_formulario: boolean;
             requiere_vinculo: boolean;
@@ -7521,8 +7528,11 @@ export interface components {
             pide_datos_del_periodo: boolean;
             /** @description Con o sin remuneración y la prórroga de la licencia del Consejo (4.1b). */
             pide_datos_de_licencia_del_consejo: boolean;
+            /** @description Lo que cambia la adenda del contrato civil (fase 4.2). */
+            pide_adenda: boolean;
             registro_de_contrato_para: components["schemas"]["TipoNombramiento"][];
             acto_de_autoridad_para: components["schemas"]["TipoNombramiento"][];
+            contrato_civil_para: components["schemas"]["TipoNombramiento"][];
             dictamen_medico_por_defecto: boolean;
             aviso: string | null;
         };
@@ -8547,15 +8557,15 @@ export interface components {
         };
         /**
          * InstrumentoActo
-         * @description Con qué documento se formaliza un acto (diseño de Acciones de Personal, 8.1). Todos comparten el registro, el historial y el motor de efectos; cambian la numeración, el documento y quién firma. Llegan de uno en uno, con su bloque. El primero distinto de la acción de personal es el registro del contrato de un ocasional (fase 2.7; TH N7): la ley no le pide acción a ese ingreso (LOSEP 18, último inciso; Reglamento 19). El segundo, el acto de autoridad (fase 4.1; TH 1–7): al Prefecto y al Viceprefecto no se les emite acción de personal, porque ninguno de sus actos nace de una autoridad nominadora; lleva el documento de origen —la credencial del CNE, la resolución del Consejo— y su propia numeración. Los de obreros y profesionales vendrán con los suyos.
+         * @description Con qué documento se formaliza un acto (diseño de Acciones de Personal, 8.1). Todos comparten el registro, el historial y el motor de efectos; cambian la numeración, el documento y quién firma. Llegan de uno en uno, con su bloque. El primero distinto de la acción de personal es el registro del contrato de un ocasional (fase 2.7; TH N7): la ley no le pide acción a ese ingreso (LOSEP 18, último inciso; Reglamento 19). El segundo, el acto de autoridad (fase 4.1; TH 1–7): al Prefecto y al Viceprefecto no se les emite acción de personal, porque ninguno de sus actos nace de una autoridad nominadora; lleva el documento de origen —la credencial del CNE, la resolución del Consejo— y su propia numeración. El tercero, el contrato civil (fase 4.2; TH N6): quien tiene Servicios Profesionales no es servidor ni tiene relación de dependencia (Reglamento Art. 148). Su contrato, sus adendas y su terminación los firman las partes; aquí se registran. El de obreros vendrá con el suyo.
          * @enum {string}
          */
-        InstrumentoActo: "accion_personal" | "registro_contrato" | "acto_autoridad";
+        InstrumentoActo: "accion_personal" | "registro_contrato" | "acto_autoridad" | "contrato_civil";
         /** InstrumentoActoResource */
         InstrumentoActoResource: {
             codigo: components["schemas"]["InstrumentoActo"];
             /** @enum {string} */
-            etiqueta: "Acción de personal" | "Registro del contrato" | "Acto de autoridad electa";
+            etiqueta: "Acción de personal" | "Registro del contrato" | "Acto de autoridad electa" | "Contrato civil";
         };
         /** InventarioMedicina */
         InventarioMedicina: {
@@ -8757,6 +8767,8 @@ export interface components {
             acta_posesion_numero: string | null;
             con_remuneracion: boolean | null;
             prorroga_causa: components["schemas"]["CausaProrrogaLicencia"] | null;
+            /** Format: date-time */
+            fecha_fin_origen: string | null;
         };
         /** MovimientoPersonalResource */
         MovimientoPersonalResource: {
@@ -8842,6 +8854,11 @@ export interface components {
             requiere_dictamen_medico: boolean;
             /** Format: date-time */
             fecha_fin_propuesta: string | null;
+            /**
+             * Format: date-time
+             * @description El plazo que tenía el contrato civil antes de la adenda (fase 4.2).
+             */
+            fecha_fin_origen: string | null;
             /**
              * @description Situación actual congelada al crear la acción: no se deriva del
              *     puesto de origen, que pudo cambiar de escala o de partida desde
@@ -10396,7 +10413,7 @@ export interface components {
              *     contrato» que nacía registrada y sin efecto.
              * @enum {string}
              */
-            clase: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "cambio_ocupacion" | "cesacion" | "restitucion" | "ascenso" | "inicio_periodo" | "licencia_consejo";
+            clase: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "cambio_ocupacion" | "cesacion" | "restitucion" | "ascenso" | "inicio_periodo" | "licencia_consejo" | "adenda";
             /**
              * @description Que la causal sea obligatoria, que pertenezca a la clase y que
              *     aplique al nombramiento lo decide
@@ -10897,7 +10914,7 @@ export interface components {
          * @description Subtipos de acción de personal. Talento Humano opera con dos niveles: un tipo "paraguas" (Cambio Administrativo, Régimen Disciplinario, Cesación de Funciones) y un subtipo que es el que realmente determina la elegibilidad por tipo de nombramiento y el texto del documento impreso. Confirmado con TH (2026-07-27). Ver TipoMovimientoPersonal::subtiposPermitidos().
          * @enum {string}
          */
-        SubtipoMovimientoPersonal: "traslado_administrativo" | "traspaso" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "amonestacion_escrita" | "sancion_pecuniaria" | "suspension_sin_remuneracion" | "sancion_disciplinaria" | "renuncia" | "destitucion" | "jubilacion" | "incapacidad" | "contrato_finalizado" | "visto_bueno" | "remocion" | "periodo_prueba_no_superado" | "fin_del_plazo" | "terminacion_unilateral" | "mutuo_acuerdo" | "evaluacion_insuficiente" | "retiro_voluntario" | "perdida_derechos_ciudadania" | "fallecimiento" | "fin_del_periodo" | "revocatoria_del_mandato" | "remocion_por_el_consejo" | "asuntos_particulares" | "estudios_posgrado" | "servicio_militar" | "reemplazo_dignatario" | "candidatura" | "cuidado_hijos" | "segun_su_regimen";
+        SubtipoMovimientoPersonal: "traslado_administrativo" | "traspaso" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "amonestacion_escrita" | "sancion_pecuniaria" | "suspension_sin_remuneracion" | "sancion_disciplinaria" | "renuncia" | "destitucion" | "jubilacion" | "incapacidad" | "contrato_finalizado" | "visto_bueno" | "remocion" | "periodo_prueba_no_superado" | "fin_del_plazo" | "terminacion_unilateral" | "mutuo_acuerdo" | "evaluacion_insuficiente" | "retiro_voluntario" | "perdida_derechos_ciudadania" | "fallecimiento" | "fin_del_periodo" | "revocatoria_del_mandato" | "remocion_por_el_consejo" | "terminacion_mutuo_acuerdo" | "terminacion_anticipada" | "asuntos_particulares" | "estudios_posgrado" | "servicio_militar" | "reemplazo_dignatario" | "candidatura" | "cuidado_hijos" | "segun_su_regimen";
         /** Sumario */
         Sumario: {
             id: number;
@@ -11041,7 +11058,7 @@ export interface components {
          * TipoMovimientoPersonal
          * @enum {string}
          */
-        TipoMovimientoPersonal: "traslado" | "subrogacion" | "comision_servicios" | "ingreso" | "cambio_denominacion" | "prestacion_servicios" | "cambio_administrativo" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "traspaso" | "destitucion" | "cesacion_funciones" | "regimen_disciplinario" | "reintegro" | "restitucion" | "nombramiento_definitivo" | "ascenso" | "inicio_periodo" | "licencia_consejo" | "asuncion_definitiva";
+        TipoMovimientoPersonal: "traslado" | "subrogacion" | "comision_servicios" | "ingreso" | "cambio_denominacion" | "prestacion_servicios" | "cambio_administrativo" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "traspaso" | "destitucion" | "cesacion_funciones" | "regimen_disciplinario" | "reintegro" | "restitucion" | "nombramiento_definitivo" | "ascenso" | "inicio_periodo" | "licencia_consejo" | "asuncion_definitiva" | "adenda";
         /**
          * TipoNombramiento
          * @enum {string}

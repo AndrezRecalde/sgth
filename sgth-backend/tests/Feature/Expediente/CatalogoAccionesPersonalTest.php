@@ -129,6 +129,8 @@ test('el catálogo trae todas las familias y todas las clases, con su familia', 
             'terminacion_unilateral', 'mutuo_acuerdo', 'evaluacion_insuficiente', 'jubilacion',
             'retiro_voluntario', 'incapacidad', 'perdida_derechos_ciudadania', 'fallecimiento',
             'contrato_finalizado',
+            // Las del contrato civil (fase 4.2).
+            'terminacion_mutuo_acuerdo', 'terminacion_anticipada',
             // Las de la autoridad electa (4.1); el fin del período lo pone el sistema.
             'revocatoria_del_mandato', 'remocion_por_el_consejo',
         ])
@@ -153,9 +155,10 @@ test('el catálogo trae todas las familias y todas las clases, con su familia', 
 */
 test('cada clase aplica exactamente a los nombramientos de antes', function () {
     $esperado = [
+        // Sin Servicios Profesionales desde la fase 4.2: lo suyo es la adenda.
         'traslado' => [
             'nombramiento_permanente', 'nombramiento_provisional', 'servicios_ocasionales',
-            'libre_nombramiento_remocion', 'servicios_profesionales',
+            'libre_nombramiento_remocion',
         ],
         'intercambio_voluntario'    => ['nombramiento_permanente'],
         'comision_con_remuneracion' => ['nombramiento_permanente'],
@@ -194,6 +197,8 @@ test('cada clase aplica exactamente a los nombramientos de antes', function () {
         // nace del cese del Prefecto, no del formulario (4.1b).
         'licencia_consejo'    => ['eleccion_popular'],
         'asuncion_definitiva' => [],
+        // La adenda, del contrato civil (4.2).
+        'adenda' => ['servicios_profesionales'],
     ];
 
     foreach (ClaseAccionPersonal::cases() as $clase) {

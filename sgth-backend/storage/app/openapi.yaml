@@ -45470,6 +45470,8 @@
                             "Fin del per\u00edodo",
                             "Revocatoria del mandato",
                             "Remoci\u00f3n por el Consejo Provincial",
+                            "Terminaci\u00f3n por mutuo acuerdo",
+                            "Terminaci\u00f3n anticipada seg\u00fan el contrato",
                             "Asuntos particulares",
                             "Estudios de posgrado",
                             "Servicio militar",
@@ -45501,6 +45503,9 @@
                             "C\u00f3digo del Trabajo Art. 172",
                             "Constituci\u00f3n Art. 105",
                             "COOTAD Arts. 333\u2013336",
+                            "El plazo del contrato",
+                            "C\u00f3digo Civil Art. 1561",
+                            "La cl\u00e1usula de terminaci\u00f3n del contrato",
                             "LOSEP Art. 28 a",
                             "LOSEP Art. 28 b",
                             "LOSEP Art. 28 c",
@@ -45567,6 +45572,32 @@
                                 ],
                                 "minItems": 4,
                                 "maxItems": 4,
+                                "additionalItems": false
+                            },
+                            {
+                                "type": "array",
+                                "prefixItems": [
+                                    {
+                                        "$ref": "#/components/schemas/TipoNombramiento"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/TipoNombramiento"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/TipoNombramiento"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/TipoNombramiento"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/TipoNombramiento"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/TipoNombramiento"
+                                    }
+                                ],
+                                "minItems": 6,
+                                "maxItems": 6,
                                 "additionalItems": false
                             },
                             {
@@ -45886,7 +45917,8 @@
                     "ascenso",
                     "inicio_periodo",
                     "licencia_consejo",
-                    "asuncion_definitiva"
+                    "asuncion_definitiva",
+                    "adenda"
                 ],
                 "title": "ClaseAccionPersonal"
             },
@@ -45917,7 +45949,8 @@
                             "Ascenso",
                             "Inicio del Per\u00edodo",
                             "Licencia concedida por el Consejo",
-                            "Asunci\u00f3n Definitiva"
+                            "Asunci\u00f3n Definitiva",
+                            "Adenda al contrato"
                         ]
                     },
                     "familia": {
@@ -45977,6 +46010,10 @@
                         "type": "boolean",
                         "description": "Con o sin remuneraci\u00f3n y la pr\u00f3rroga de la licencia del Consejo (4.1b)."
                     },
+                    "pide_adenda": {
+                        "type": "boolean",
+                        "description": "Lo que cambia la adenda del contrato civil (fase 4.2)."
+                    },
                     "registro_de_contrato_para": {
                         "type": "array",
                         "items": {
@@ -45984,6 +46021,12 @@
                         }
                     },
                     "acto_de_autoridad_para": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TipoNombramiento"
+                        }
+                    },
+                    "contrato_civil_para": {
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/TipoNombramiento"
@@ -46017,8 +46060,10 @@
                     "pide_acta_concurso",
                     "pide_datos_del_periodo",
                     "pide_datos_de_licencia_del_consejo",
+                    "pide_adenda",
                     "registro_de_contrato_para",
                     "acto_de_autoridad_para",
+                    "contrato_civil_para",
                     "dictamen_medico_por_defecto",
                     "aviso"
                 ],
@@ -49949,11 +49994,12 @@
             },
             "InstrumentoActo": {
                 "type": "string",
-                "description": "Con qu\u00e9 documento se formaliza un acto (dise\u00f1o de Acciones de Personal, 8.1). Todos comparten el registro, el historial y el motor de efectos; cambian la numeraci\u00f3n, el documento y qui\u00e9n firma. Llegan de uno en uno, con su bloque. El primero distinto de la acci\u00f3n de personal es el registro del contrato de un ocasional (fase 2.7; TH N7): la ley no le pide acci\u00f3n a ese ingreso (LOSEP 18, \u00faltimo inciso; Reglamento 19). El segundo, el acto de autoridad (fase 4.1; TH 1\u20137): al Prefecto y al Viceprefecto no se les emite acci\u00f3n de personal, porque ninguno de sus actos nace de una autoridad nominadora; lleva el documento de origen \u2014la credencial del CNE, la resoluci\u00f3n del Consejo\u2014 y su propia numeraci\u00f3n. Los de obreros y profesionales vendr\u00e1n con los suyos.\n",
+                "description": "Con qu\u00e9 documento se formaliza un acto (dise\u00f1o de Acciones de Personal, 8.1). Todos comparten el registro, el historial y el motor de efectos; cambian la numeraci\u00f3n, el documento y qui\u00e9n firma. Llegan de uno en uno, con su bloque. El primero distinto de la acci\u00f3n de personal es el registro del contrato de un ocasional (fase 2.7; TH N7): la ley no le pide acci\u00f3n a ese ingreso (LOSEP 18, \u00faltimo inciso; Reglamento 19). El segundo, el acto de autoridad (fase 4.1; TH 1\u20137): al Prefecto y al Viceprefecto no se les emite acci\u00f3n de personal, porque ninguno de sus actos nace de una autoridad nominadora; lleva el documento de origen \u2014la credencial del CNE, la resoluci\u00f3n del Consejo\u2014 y su propia numeraci\u00f3n. El tercero, el contrato civil (fase 4.2; TH N6): quien tiene Servicios Profesionales no es servidor ni tiene relaci\u00f3n de dependencia (Reglamento Art. 148). Su contrato, sus adendas y su terminaci\u00f3n los firman las partes; aqu\u00ed se registran. El de obreros vendr\u00e1 con el suyo.\n",
                 "enum": [
                     "accion_personal",
                     "registro_contrato",
-                    "acto_autoridad"
+                    "acto_autoridad",
+                    "contrato_civil"
                 ],
                 "title": "InstrumentoActo"
             },
@@ -49968,7 +50014,8 @@
                         "enum": [
                             "Acci\u00f3n de personal",
                             "Registro del contrato",
-                            "Acto de autoridad electa"
+                            "Acto de autoridad electa",
+                            "Contrato civil"
                         ]
                     }
                 },
@@ -50816,6 +50863,13 @@
                                 "type": "null"
                             }
                         ]
+                    },
+                    "fecha_fin_origen": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
                     }
                 },
                 "required": [
@@ -50889,7 +50943,8 @@
                     "credencial_cne_fecha",
                     "acta_posesion_numero",
                     "con_remuneracion",
-                    "prorroga_causa"
+                    "prorroga_causa",
+                    "fecha_fin_origen"
                 ],
                 "title": "MovimientoPersonal"
             },
@@ -51192,6 +51247,14 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "fecha_fin_origen": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "El plazo que ten\u00eda el contrato civil antes de la adenda (fase 4.2)."
                     },
                     "remuneracion_origen": {
                         "type": [
@@ -51710,6 +51773,7 @@
                     "puede_marcar",
                     "requiere_dictamen_medico",
                     "fecha_fin_propuesta",
+                    "fecha_fin_origen",
                     "remuneracion_origen",
                     "partida_origen_id",
                     "movimiento_previo_id",
@@ -57347,7 +57411,8 @@
                             "restitucion",
                             "ascenso",
                             "inicio_periodo",
-                            "licencia_consejo"
+                            "licencia_consejo",
+                            "adenda"
                         ]
                     },
                     "causal": {
@@ -58991,6 +59056,8 @@
                     "fin_del_periodo",
                     "revocatoria_del_mandato",
                     "remocion_por_el_consejo",
+                    "terminacion_mutuo_acuerdo",
+                    "terminacion_anticipada",
                     "asuntos_particulares",
                     "estudios_posgrado",
                     "servicio_militar",
@@ -59434,7 +59501,8 @@
                     "ascenso",
                     "inicio_periodo",
                     "licencia_consejo",
-                    "asuncion_definitiva"
+                    "asuncion_definitiva",
+                    "adenda"
                 ],
                 "title": "TipoMovimientoPersonal"
             },

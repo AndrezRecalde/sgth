@@ -20,6 +20,7 @@ import { getApiErrorMessage } from '@/types/api'
 import { MovimientoPasoTipo } from './MovimientoPasoTipo'
 import { MovimientoSituacionPropuesta } from './MovimientoSituacionPropuesta'
 import { MovimientoDatosDelActo } from './MovimientoDatosDelActo'
+import { MovimientoDatosAdenda } from './MovimientoDatosAdenda'
 import { valoresDelBorrador, VALORES_EN_BLANCO } from '../utils/movimientoIniciales'
 
 interface Props {
@@ -261,6 +262,7 @@ function FormularioAccion({
                     form={form}
                     esIngreso={esIngreso}
                     tipoNombramiento={vinculo.tipoNombramiento}
+                    contratoCivilPara={claseElegida?.contrato_civil_para}
                     notaRmu={claseElegida?.codigo === 'ascenso'
                       ? 'La de la escala del puesto ganado; si hoy cobra más, conserva la suya (LOSEP, transitoria tercera).'
                       : claseElegida?.pide_datos_del_periodo
@@ -269,6 +271,11 @@ function FormularioAccion({
                   />
                 </Grid.Col>
               </Grid>
+            )}
+
+            {/* La adenda del contrato civil: lo que cambia, si cambia (fase 4.2). */}
+            {claseElegida?.pide_adenda && (
+              <MovimientoDatosAdenda form={form} servidorId={servidorId} clase={claseElegida} />
             )}
 
             <MovimientoDatosDelActo form={form} clase={claseElegida} tipoNombramiento={vinculo.tipoNombramiento} />

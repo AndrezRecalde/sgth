@@ -33,6 +33,7 @@ class MovimientoPersonalStateService
         private readonly RestitucionService $restituciones,
         private readonly TrasladoService $traslados,
         private readonly AscensoService $ascensos,
+        private readonly ContratoCivilService $contratoCivil,
     ) {
     }
 
@@ -189,6 +190,10 @@ class MovimientoPersonalStateService
             // su constancia la firma solo Talento Humano (fase 4.1b).
             $this->exigirDocumentoDeOrigen($movimiento);
             $this->firmanteService->sellarTalentoHumanoEn($movimiento, $datos['fecha_suscripcion'] ?? null);
+        } elseif ($instrumento === InstrumentoActo::CONTRATO_CIVIL) {
+            // El del contrato civil lo firmaron las partes: lleva el número de
+            // la adenda o del acta (fase 4.2).
+            $this->contratoCivil->exigirDocumentoFirmado($movimiento);
         }
 
         $this->solicitarCertificacionMedicaSiHaceFalta($movimiento);
@@ -308,10 +313,15 @@ class MovimientoPersonalStateService
 
         // El registro del contrato lleva el número del contrato, no el
         // correlativo AP, que solo cuenta acciones de personal (fase 2.7). El
-        // acto de autoridad lleva el suyo, AU [TH 6; fase 4.1].
+        // acto de autoridad lleva el suyo, AU [TH 6; fase 4.1]. Y el contrato
+        // civil, su número; su adenda y su terminación, el correlativo CC
+        // (fase 4.2).
         $movimiento->codigo_registro = match ($movimiento->instrumento ?? InstrumentoActo::ACCION_PERSONAL) {
             InstrumentoActo::REGISTRO_CONTRATO => $this->numeroDelRegistroDeContrato($movimiento),
             InstrumentoActo::ACTO_AUTORIDAD    => $this->generarCodigoRegistro('AU'),
+            InstrumentoActo::CONTRATO_CIVIL    => $movimiento->tipo_movimiento->creaVinculo()
+                ? $this->numeroDelContrato($movimiento)
+                : $this->generarCodigoRegistro('CC'),
             default                            => $this->generarCodigoRegistro(),
         };
         $movimiento->fecha_registro  = now()->toDateString();
@@ -526,6 +536,9 @@ class MovimientoPersonalStateService
             // El Viceprefecto asume la Prefectura hasta el fin del período
             // (COOTAD Art. 51; fase 4.1b).
             $this->contratoServidorService->asumirLaPrimeraAutoridad($movimiento);
+        } elseif ($tipo->esAdenda()) {
+            // El contrato civil cambia en lo que dice la adenda (fase 4.2).
+            $this->contratoServidorService->aplicarAdenda($movimiento);
         }
 
         // La subrogación no crea vínculo: reemplaza temporalmente al titular
@@ -663,6 +676,12 @@ class MovimientoPersonalStateService
                     'El servidor ya no está en el período de prueba de ese ascenso: no hay a qué puesto reintegrarlo.'
                 );
             }
+        }
+
+        // La adenda, otra vez: el contrato o el puesto pueden haber cambiado
+        // desde el borrador (fase 4.2).
+        if ($movimiento->tipo_movimiento->esAdenda()) {
+            $this->contratoCivil->validarAlRegistrar($movimiento);
         }
 
         // El ascenso, otra vez: el puesto o su escala pueden haber cambiado desde
@@ -1027,6 +1046,11 @@ class MovimientoPersonalStateService
 
         if ($movimiento->tipo_movimiento->asumeLaPrimeraAutoridad()) {
             $this->contratoServidorService->deshacerAsuncion($movimiento);
+            return;
+        }
+
+        if ($movimiento->tipo_movimiento->esAdenda()) {
+            $this->contratoServidorService->deshacerAdenda($movimiento);
             return;
         }
 
@@ -1467,9 +1491,19 @@ class MovimientoPersonalStateService
             throw new ReglaNegocioException('Para registrar el contrato indique '.implode(' y ', $faltan).'.');
         }
 
+        return $this->numeroDelContrato($movimiento);
+    }
+
+    /**
+     * El número del contrato es el del registro, en la serie de su instrumento:
+     * el del ocasional o el del contrato civil (fase 4.2). El del contrato civil
+     * no pide plazo, que se deriva del año calendario.
+     */
+    private function numeroDelContrato(MovimientoPersonal $movimiento): string
+    {
         $numero = trim((string) $movimiento->numero_contrato);
 
-        $repetido = MovimientoPersonal::where('instrumento', InstrumentoActo::REGISTRO_CONTRATO->value)
+        $repetido = MovimientoPersonal::where('instrumento', $movimiento->instrumento->value)
             ->where('codigo_registro', $numero)
             ->where('id', '!=', $movimiento->id)
             ->with('servidor:id,nombre,apellido')

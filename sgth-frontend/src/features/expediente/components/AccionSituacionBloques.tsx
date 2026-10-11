@@ -32,6 +32,10 @@ export function AccionSituacionBloques({ m, botonEditar }: Props) {
   const esSubrogacion = m.clase === 'subrogacion' || m.clase === 'encargo'
   const propone = m.propone_situacion
   const ausencia = m.es_ausencia_temporal
+  // La adenda del contrato civil cambia solo lo que dice (fase 4.2): lo demás
+  // viene vacío, y es «sin cambio», no un dato que falta.
+  const esAdenda = m.clase === 'adenda'
+  const sinCambio = 'Sin cambio'
 
   const diferencia = m.remuneracion_propuesta != null && m.remuneracion_origen != null
     ? Number(m.remuneracion_propuesta) - Number(m.remuneracion_origen)
@@ -81,7 +85,32 @@ export function AccionSituacionBloques({ m, botonEditar }: Props) {
           una licencia dejan al servidor en su puesto, y lo que las define
           es el período. Reservar la columna para todas obligaba a
           rellenarla de guiones. */}
-      {propone && (
+      {propone && esAdenda && (
+        <Grid.Col span={{ base: 12, sm: 6 }}>
+          <BloqueDetalle altoCompleto>
+            <SectionHeading title="Lo que cambia la adenda" mb="xs" />
+            <DetailList columnas={1} items={[
+              { label: 'Unidad', value: m.puesto_destino ? m.unidad_destino?.nombre : sinCambio },
+              { label: 'Puesto', value: m.puesto_destino?.cargo?.nombre ?? sinCambio },
+              {
+                label: 'Honorarios',
+                value: m.remuneracion_propuesta != null ? dinero(m.remuneracion_propuesta) : sinCambio,
+              },
+              {
+                label: 'Plazo',
+                value: m.fecha_fin_propuesta
+                  ? `Hasta el ${formatFecha(m.fecha_fin_propuesta)}`
+                    + (m.fecha_fin_origen ? ` (antes, el ${formatFecha(m.fecha_fin_origen)})` : '')
+                  : sinCambio,
+              },
+            ]} />
+
+            {botonEditar}
+          </BloqueDetalle>
+        </Grid.Col>
+      )}
+
+      {propone && !esAdenda && (
         <Grid.Col span={{ base: 12, sm: 6 }}>
           <BloqueDetalle altoCompleto>
             <SectionHeading

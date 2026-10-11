@@ -562,6 +562,8 @@ test('tieneDocumentoImprimible() cubre todo acto formal, que es todo lo que qued
         // El inicio del período de una autoridad (4.1): su instrumento le quita
         // el documento, no el tipo.
         TipoMovimientoPersonal::INICIO_PERIODO,
+        // Y la adenda, que es del contrato civil (4.2).
+        TipoMovimientoPersonal::ADENDA,
     ];
 
     // La bitácora del expediente —novedad de contrato, cambio de puesto,
@@ -601,11 +603,12 @@ test('el incremento de remuneración es solo para obreros', function () {
     }
 });
 
-test('la prestación de servicios es para provisionales, ocasionales, servicios profesionales y libre nombramiento', function () {
+// Servicios Profesionales salió en la fase 4.2: su cambio de unidad es la
+// adenda del contrato civil (ContratoCivilTest).
+test('la prestación de servicios es para provisionales, ocasionales y libre nombramiento', function () {
     $elegibles = [
         TipoNombramiento::PROVISIONAL,
         TipoNombramiento::SERVICIOS_OCASIONALES,
-        TipoNombramiento::SERVICIOS_PROFESIONALES,
         // Añadido el 2026-09-29 junto con el resto de lo que TH equipara al
         // ocasional; ver el test de abajo.
         TipoNombramiento::LIBRE_NOMBRAMIENTO,

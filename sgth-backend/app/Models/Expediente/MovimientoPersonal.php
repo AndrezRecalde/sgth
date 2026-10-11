@@ -236,6 +236,8 @@ class MovimientoPersonal extends Model
         'supuesto_provisional_propuesto',
         'remuneracion_propuesta',
         'fecha_fin_propuesta',
+        // El plazo que tenía el contrato civil antes de la adenda (fase 4.2).
+        'fecha_fin_origen',
         'numero_contrato',
         'partida_presupuestaria_id',
         'puede_marcar',
@@ -320,6 +322,7 @@ class MovimientoPersonal extends Model
             'remuneracion_propuesta'      => 'decimal:2',
             'remuneracion_origen'         => 'decimal:2',
             'fecha_fin_propuesta'         => 'date',
+            'fecha_fin_origen'            => 'date',
             'puede_marcar'                => 'boolean',
             'para_estudios_o_eventos'     => 'boolean',
             'con_remuneracion'            => 'boolean',
@@ -571,6 +574,8 @@ class MovimientoPersonal extends Model
             || (bool) $this->tipo_movimiento?->asciende()
             || $this->esReintegroDelAscenso()
             || (bool) $this->tipo_movimiento?->asumeLaPrimeraAutoridad()
+            // La adenda del contrato civil (fase 4.2).
+            || (bool) $this->tipo_movimiento?->esAdenda()
             || $this->reubicaAlServidor()
             || (bool) $this->subtipoEfectivo()?->cierraVinculo();
     }
@@ -624,6 +629,8 @@ class MovimientoPersonal extends Model
             || $this->esReintegroDelAscenso()
             // La asunción definitiva, el puesto del Prefecto (4.1b).
             || (bool) $this->tipo_movimiento?->asumeLaPrimeraAutoridad()
+            // La adenda, lo que cambia del contrato civil (fase 4.2).
+            || (bool) $this->tipo_movimiento?->esAdenda()
             || $this->tipo_movimiento === TipoMovimientoPersonal::SUBROGACION
             || $this->reubicaAlServidor();
     }
@@ -834,6 +841,12 @@ class MovimientoPersonal extends Model
     public function esRegistroDeContrato(): bool
     {
         return $this->instrumento === InstrumentoActo::REGISTRO_CONTRATO;
+    }
+
+    /** ¿Es un acto del contrato civil de Servicios Profesionales (fase 4.2)? */
+    public function esDelContratoCivil(): bool
+    {
+        return $this->instrumento === InstrumentoActo::CONTRATO_CIVIL;
     }
 
     /** ¿Ya rige en esa fecha? */

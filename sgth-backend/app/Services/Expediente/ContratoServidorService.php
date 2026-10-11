@@ -462,6 +462,15 @@ class ContratoServidorService
             );
         }
 
+        // El del contrato civil lo cambia una adenda firmada por las partes, que
+        // se registra con su número (fase 4.2).
+        if ($contrato->tipo_nombramiento === TipoNombramiento::SERVICIOS_PROFESIONALES) {
+            throw new ReglaNegocioException(
+                'El plazo de un contrato de Servicios Profesionales se cambia con una adenda firmada por las partes: '
+                    .'regístrela desde «Nueva acción de personal».'
+            );
+        }
+
         $nuevaFechaFin = $datos['fecha_fin'] ?? null;
 
         $this->validarPlazo([
@@ -544,8 +553,11 @@ class ContratoServidorService
      * Si el vencimiento anterior ya generó una cesación que sigue en pie,
      * moverlo la dejaría apuntando a una fecha que ya no existe. Talento
      * Humano debe decidir primero qué hacer con esa acción.
+     *
+     * La del ocasional es el fin del plazo (fase 2.1), y hasta la fase 4.2 no
+     * se miraba: su plazo se movía con la cesación del vencimiento en trámite.
      */
-    private function assertSinCesacionPendiente(ContratoServidor $contrato): void
+    private function assertSinCesacionPendiente(ContratoServidor $contrato, string $para = 'reprogramar el plazo'): void
     {
         if (!$contrato->fecha_fin) {
             return;
@@ -553,7 +565,10 @@ class ContratoServidorService
 
         $pendiente = MovimientoPersonal::where('servidor_id', $contrato->servidor_id)
             ->where('tipo_movimiento', TipoMovimientoPersonal::CESACION_FUNCIONES->value)
-            ->where('subtipo_movimiento', SubtipoMovimientoPersonal::CONTRATO_FINALIZADO->value)
+            ->whereIn('subtipo_movimiento', [
+                SubtipoMovimientoPersonal::CONTRATO_FINALIZADO->value,
+                SubtipoMovimientoPersonal::FIN_DEL_PLAZO->value,
+            ])
             ->where('estado', '!=', EstadoAccionPersonal::ANULADA->value)
             ->whereDate('fecha_efectiva', $contrato->fecha_fin->toDateString())
             ->exists();
@@ -561,7 +576,7 @@ class ContratoServidorService
         if ($pendiente) {
             throw new ReglaNegocioException(
                 'Ya existe una Cesación de Funciones generada para el vencimiento actual. '
-                    .'Anúlela antes de reprogramar el plazo.'
+                    ."Anúlela antes de {$para}."
             );
         }
     }
@@ -1032,6 +1047,91 @@ class ContratoServidorService
             'remuneracion'              => $asuncion->remuneracion_origen ?? $vigente->remuneracion,
             'partida_presupuestaria_id' => $asuncion->partida_origen_id ?? $vigente->partida_presupuestaria_id,
         ]);
+
+        $this->sincronizarPuestoDesdeVinculo($vigente->servidor_id);
+    }
+
+    /**
+     * La adenda del contrato civil (fase 4.2): cambia el vínculo vigente en lo
+     * que dice —la unidad y el puesto, los honorarios, el plazo— y en nada
+     * más. El número y el inicio siguen siendo los del contrato. Quien tiene un
+     * contrato civil no ocupa plaza, así que no hay vacante que comprobar.
+     */
+    public function aplicarAdenda(MovimientoPersonal $adenda): void
+    {
+        $vigente = Servidor::with('contratoVigente')->findOrFail($adenda->servidor_id)->contratoVigente;
+
+        if (! $vigente || $vigente->tipo_nombramiento !== TipoNombramiento::SERVICIOS_PROFESIONALES) {
+            throw new ReglaNegocioException(
+                'La adenda es del contrato de Servicios Profesionales, y el servidor ya no lo tiene vigente.'
+            );
+        }
+
+        $cambios = [];
+
+        if ($adenda->puesto_destino_id) {
+            $cambios['puesto_id'] = $adenda->puesto_destino_id;
+            $cambios['unidad_administrativa_id'] = $adenda->unidad_destino_id ?? $vigente->unidad_administrativa_id;
+        }
+
+        if ($adenda->remuneracion_propuesta !== null) {
+            $cambios['remuneracion'] = $adenda->remuneracion_propuesta;
+        }
+
+        if ($adenda->fecha_fin_propuesta) {
+            $plazo = $adenda->fecha_fin_propuesta->toDateString();
+
+            $this->validarPlazo([
+                'tipo_nombramiento'   => $vigente->tipo_nombramiento,
+                'fecha_inicio'        => $vigente->fecha_inicio?->toDateString(),
+                'fecha_fin'           => $plazo,
+                'cubre_movimiento_id' => $vigente->cubre_movimiento_id,
+            ]);
+            $this->assertSinCesacionPendiente($vigente, 'cambiar el plazo con una adenda');
+
+            $cambios['fecha_fin'] = $plazo;
+        }
+
+        $vigente->update($cambios);
+
+        $this->sincronizarPuestoDesdeVinculo($vigente->servidor_id);
+    }
+
+    /**
+     * Anular la adenda devuelve el contrato a como estaba en lo que ella
+     * cambió. Si el plazo que fijó ya venció y tiene su cesación en trámite,
+     * esa se anula antes.
+     */
+    public function deshacerAdenda(MovimientoPersonal $adenda): void
+    {
+        $vigente = Servidor::with('contratoVigente')->findOrFail($adenda->servidor_id)->contratoVigente;
+
+        if (! $vigente || $vigente->tipo_nombramiento !== TipoNombramiento::SERVICIOS_PROFESIONALES) {
+            throw new ReglaNegocioException('No se puede anular la adenda: el contrato que cambió ya no está vigente.');
+        }
+
+        $cambios = [];
+
+        if ($adenda->puesto_destino_id) {
+            $cambios['puesto_id'] = $adenda->puesto_origen_id ?? $vigente->puesto_id;
+            $cambios['unidad_administrativa_id'] = $adenda->unidad_origen_id ?? $vigente->unidad_administrativa_id;
+        }
+
+        if ($adenda->remuneracion_propuesta !== null) {
+            $cambios['remuneracion'] = $adenda->remuneracion_origen;
+        }
+
+        if ($adenda->fecha_fin_propuesta) {
+            $this->assertSinCesacionPendiente($vigente, 'anular la adenda que fijó ese plazo');
+
+            $cambios['fecha_fin'] = $adenda->fecha_fin_origen?->toDateString()
+                ?? $this->resolverFechaFin([
+                    'tipo_nombramiento' => $vigente->tipo_nombramiento,
+                    'fecha_inicio'      => $vigente->fecha_inicio?->toDateString(),
+                ]);
+        }
+
+        $vigente->update($cambios);
 
         $this->sincronizarPuestoDesdeVinculo($vigente->servidor_id);
     }

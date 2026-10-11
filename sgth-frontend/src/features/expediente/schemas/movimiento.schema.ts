@@ -137,6 +137,36 @@ export function crearMovimientoSchema(
       })
     }
 
+    // El acto del contrato civil lleva el número del documento que firmaron
+    // las partes (fase 4.2). El backend lo pide al suscribir.
+    if (pideDocumentoFirmado(clase, tipoNombramiento, data.causal) && !data.resolucion_numero?.trim()) {
+      ctx.addIssue({
+        path: ['resolucion_numero'], code: 'custom',
+        message: clase.pide_adenda
+          ? 'Indique el número de la adenda firmada'
+          : 'Indique el número del acta de terminación o de la partida de defunción',
+      })
+    }
+
+    // La adenda dice lo que cambia (fase 4.2). Que de verdad cambie, y que el
+    // plazo no salga del año del contrato, lo dice el backend, que lo conoce.
+    if (clase.pide_adenda) {
+      if (!data.puesto_destino_id && data.remuneracion_propuesta == null && !data.fecha_fin_propuesta) {
+        ctx.addIssue({
+          path: ['puesto_destino_id'], code: 'custom',
+          message: 'Indique lo que cambia la adenda: el puesto, los honorarios o el plazo',
+        })
+      } else if (data.unidad_destino_id && !data.puesto_destino_id) {
+        ctx.addIssue({ path: ['puesto_destino_id'], code: 'custom', message: 'Indique el puesto de la unidad a la que pasa' })
+      }
+      if (data.fecha_fin_propuesta && data.fecha_efectiva && data.fecha_fin_propuesta < data.fecha_efectiva) {
+        ctx.addIssue({
+          path: ['fecha_fin_propuesta'], code: 'custom',
+          message: 'El plazo nuevo no puede terminar antes de que rija la adenda',
+        })
+      }
+    }
+
     // La licencia del Consejo dice si es con o sin remuneración (fase 4.1b).
     if (clase.pide_datos_de_licencia_del_consejo && data.con_remuneracion == null) {
       ctx.addIssue({
@@ -266,6 +296,37 @@ export function pideDocumentoDeOrigen(
   tipoNombramiento?: string | null,
 ): boolean {
   return esActoDeAutoridad(clase, tipoNombramiento) && !clase?.pide_datos_del_periodo
+}
+
+/**
+ * ¿Es un acto del contrato civil de Servicios Profesionales (fase 4.2)? Sin
+ * acción de personal ni firmantes. Lo responde el catálogo: en el ingreso, por
+ * el nombramiento que propone; en el resto, por el vigente.
+ */
+export function esDelContratoCivil(
+  clase: ClaseDelCatalogo | undefined,
+  tipoNombramiento?: string | null,
+  propuesto?: string | null,
+): boolean {
+  if (!clase) return false
+
+  const nombramiento = clase.pide_contratacion ? propuesto : tipoNombramiento
+
+  return !!nombramiento && clase.contrato_civil_para.some((n) => n === nombramiento)
+}
+
+/**
+ * El acto del contrato civil lleva el número del documento firmado: la adenda o
+ * el acta. No el contrato, que tiene el suyo, ni su vencimiento.
+ */
+export function pideDocumentoFirmado(
+  clase: ClaseDelCatalogo | undefined,
+  tipoNombramiento?: string | null,
+  causal?: string | null,
+): boolean {
+  return !clase?.pide_contratacion
+    && causal !== 'contrato_finalizado'
+    && esDelContratoCivil(clase, tipoNombramiento)
 }
 
 /** ¿El traslado de este servidor pide el informe de la UATH? Lo responde el catálogo. */

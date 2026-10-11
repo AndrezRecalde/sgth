@@ -7,7 +7,8 @@ import { IconInfoCircle } from '@tabler/icons-react'
 import { SectionHeading } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import {
-  esActoDeAutoridad, pideDocumentoDeOrigen, pideInformeUath, type MovimientoFormData,
+  esActoDeAutoridad, esDelContratoCivil, pideDocumentoDeOrigen, pideDocumentoFirmado, pideInformeUath,
+  type MovimientoFormData,
 } from '../schemas/movimiento.schema'
 import type { ClaseDelCatalogo } from '@/types/api'
 import { FirmantesPanel } from './FirmantesPanel'
@@ -42,6 +43,7 @@ export function MovimientoDatosDelActo({
 
   const caucionado = useWatch({ control, name: 'caucionado' })
   const nombramiento = useWatch({ control, name: 'tipo_nombramiento_propuesto' })
+  const causal = useWatch({ control, name: 'causal' })
 
   // El ingreso de un ocasional es el registro de su contrato (fase 2.7): el
   // contrato se firma aparte y aquí nadie firma.
@@ -52,6 +54,12 @@ export function MovimientoDatosDelActo({
   // lleva su documento de origen y no lo firma nadie (fase 4.1).
   const actoDeAutoridad = esActoDeAutoridad(clase, tipoNombramiento)
   const conDocumentoDeOrigen = pideDocumentoDeOrigen(clase, tipoNombramiento)
+
+  // Quien tiene Servicios Profesionales no es servidor (fase 4.2): su contrato,
+  // sus adendas y su terminación los firman las partes.
+  const contratoCivil = esDelContratoCivil(clase, tipoNombramiento, nombramiento)
+  const conDocumentoFirmado = pideDocumentoFirmado(clase, tipoNombramiento, causal)
+  const documentoObligatorio = conDocumentoDeOrigen || conDocumentoFirmado
 
   const muestraFechas = !!clase?.pide_periodo
   const pideInstitucion = !!clase?.pide_institucion_destino
@@ -192,18 +200,25 @@ export function MovimientoDatosDelActo({
         />
       )}
 
-      {/* En el cese de una autoridad es su documento de origen (fase 4.1). */}
+      {/* En el cese de una autoridad es su documento de origen (fase 4.1), y
+          en el contrato civil el documento firmado por las partes (fase 4.2). */}
       <TextInput
-        label={conDocumentoDeOrigen ? 'Documento de origen N.º' : 'Número de resolución'}
-        description={!conDocumentoDeOrigen
-          ? undefined
-          : clase?.pide_datos_de_licencia_del_consejo
-            ? 'La resolución del Consejo Provincial que la concede.'
-            : clase?.causales.length
-              ? 'El resultado del CNE, la resolución del Consejo Provincial, la renuncia aceptada o la partida de defunción.'
-              : 'La resolución del Consejo Provincial o el oficio que lo origina.'}
-        placeholder={conDocumentoDeOrigen ? undefined : 'Opcional'}
-        withAsterisk={conDocumentoDeOrigen}
+        label={conDocumentoDeOrigen
+          ? 'Documento de origen N.º'
+          : conDocumentoFirmado ? 'Documento firmado N.º' : 'Número de resolución'}
+        description={conDocumentoFirmado
+          ? (clase?.pide_adenda
+            ? 'El número de la adenda que firmaron las partes.'
+            : 'El acta de terminación que firmaron las partes, o la partida de defunción.')
+          : !conDocumentoDeOrigen
+            ? undefined
+            : clase?.pide_datos_de_licencia_del_consejo
+              ? 'La resolución del Consejo Provincial que la concede.'
+              : clase?.causales.length
+                ? 'El resultado del CNE, la resolución del Consejo Provincial, la renuncia aceptada o la partida de defunción.'
+                : 'La resolución del Consejo Provincial o el oficio que lo origina.'}
+        placeholder={documentoObligatorio ? undefined : 'Opcional'}
+        withAsterisk={documentoObligatorio}
         error={errors.resolucion_numero?.message}
         {...contained}
         {...register('resolucion_numero')}
@@ -217,7 +232,9 @@ export function MovimientoDatosDelActo({
           render={({ field }) => (
             <Switch
               label="Requiere ficha de salud ocupacional"
-              description="Si se marca, no podrá registrarse sin dictamen de aptitud del dispensario."
+              description={contratoCivil
+                ? 'Opcional en el contrato civil. Si se marca, no podrá registrarse sin dictamen de aptitud del dispensario.'
+                : 'Si se marca, no podrá registrarse sin dictamen de aptitud del dispensario.'}
               checked={!!field.value}
               onChange={(e) => field.onChange(e.currentTarget.checked)}
             />
@@ -236,6 +253,14 @@ export function MovimientoDatosDelActo({
           A una autoridad electa no se le emite acción de personal: ninguno de sus
           actos nace de una autoridad nominadora. Se registra con su documento de
           origen y su propia numeración (AU), sin firmantes.
+        </Alert>
+      ) : contratoCivil ? (
+        <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
+          Quien tiene Servicios Profesionales no es servidor ni tiene relación de
+          dependencia (Reglamento a la LOSEP, Art. 148): no se le emite acción de
+          personal. El contrato, sus adendas y su terminación los firman las
+          partes; aquí se registran, con el número del contrato o el correlativo
+          CC, y sin firmantes.
         </Alert>
       ) : (
         <>

@@ -17,6 +17,8 @@ function soloLoQueAplica(
   pideContratacion: boolean,
   /** El ascenso trae el acta sin ser ingreso (fase 3.3). */
   pideActa = false,
+  /** La adenda trae el plazo nuevo del contrato civil (fase 4.2). */
+  pideAdenda = false,
 ): MovimientoFormData {
   if (pideContratacion) {
     // El supuesto y el acta solo son del provisional (fase 3.2); el backend
@@ -41,7 +43,7 @@ function soloLoQueAplica(
   return {
     ...data,
     numero_contrato: null,
-    fecha_fin_propuesta: null,
+    fecha_fin_propuesta: pideAdenda ? data.fecha_fin_propuesta : null,
     puede_marcar: null,
     tipo_nombramiento_propuesto: null,
     supuesto_provisional_propuesto: null,
@@ -77,7 +79,7 @@ export function useGuardarAccionPersonal({
     mutationFn: (data: MovimientoFormData) => {
       const clase = buscarClase(catalogo, data.clase)
       const limpio = {
-        ...soloLoQueAplica(data, !!clase?.pide_contratacion, !!clase?.pide_acta_concurso),
+        ...soloLoQueAplica(data, !!clase?.pide_contratacion, !!clase?.pide_acta_concurso, !!clase?.pide_adenda),
         // La institución y la marca de estudios solo viajan en las clases que
         // las piden (fase 2.3): en otra acción se grabarían sin significar nada.
         institucion_destino: clase?.pide_institucion_destino ? (data.institucion_destino?.trim() || null) : null,

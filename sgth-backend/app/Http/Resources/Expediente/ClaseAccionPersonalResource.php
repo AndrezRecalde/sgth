@@ -48,6 +48,8 @@ class ClaseAccionPersonalResource extends JsonResource
             'pide_datos_del_periodo'      => $clase->pideDatosDelPeriodo(),
             // Con o sin remuneración y la prórroga de la licencia del Consejo (4.1b).
             'pide_datos_de_licencia_del_consejo' => $clase->pideDatosDeLicenciaDelConsejo(),
+            // Lo que cambia la adenda del contrato civil (fase 4.2).
+            'pide_adenda'                 => $clase->pideAdenda(),
             // Con estos nombramientos no es acción sino registro del contrato
             // (fase 2.7): el formulario no pide firmantes.
             /** @var list<TipoNombramiento> */
@@ -55,6 +57,10 @@ class ClaseAccionPersonalResource extends JsonResource
             // Y con estos es acto de autoridad electa (fase 4.1): tampoco firma nadie.
             /** @var list<TipoNombramiento> */
             'acto_de_autoridad_para'      => InstrumentoActo::nombramientosConActoDeAutoridad($clase),
+            // Y con estos es del contrato civil (fase 4.2): lo firmaron las
+            // partes, y la ficha médica abre desmarcada [TH 25].
+            /** @var list<TipoNombramiento> */
+            'contrato_civil_para'         => InstrumentoActo::nombramientosConContratoCivil($clase),
             'dictamen_medico_por_defecto' => $clase->dictamenMedicoPorDefecto(),
             'aviso'                       => $clase->aviso(),
         ];

@@ -172,10 +172,13 @@ test('las reglas valen igual para el provisional, que se guarda como prestación
         ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'igual remuneración'));
 });
 
-test('servicios profesionales conserva su prestación de servicios sin estas reglas', function () {
+// Hasta la fase 4.2 conservaba su «Prestación de servicios» sin estas reglas.
+test('servicios profesionales ya no se traslada: su cambio de unidad es la adenda', function () {
     ($this->trasladar)(($this->servidor)(TipoNombramiento::SERVICIOS_PROFESIONALES), $this->mayor, [
         'informe_uath_numero' => null,
-    ])->assertCreated();
+    ])
+        ->assertStatus(422)
+        ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'no aplica'));
 });
 
 test('corregir el borrador no se salta las reglas', function () {
