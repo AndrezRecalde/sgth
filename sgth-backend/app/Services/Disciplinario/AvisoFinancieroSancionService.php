@@ -2,8 +2,8 @@
 
 namespace App\Services\Disciplinario;
 
+use App\Enums\ClaseAccionPersonal;
 use App\Enums\EstadoAccionPersonal;
-use App\Enums\SubtipoMovimientoPersonal;
 use App\Mail\Disciplinario\SancionParaNominaMail;
 use App\Models\Disciplinario\SancionDisciplinaria;
 use App\Models\Expediente\MovimientoPersonal;
@@ -44,7 +44,9 @@ class AvisoFinancieroSancionService
      */
     public function trasTransicion(MovimientoPersonal $movimiento, EstadoAccionPersonal $origen): ?string
     {
-        if ($movimiento->subtipo_movimiento !== SubtipoMovimientoPersonal::SANCION_DISCIPLINARIA) {
+        // Por la clase y no por el subtipo: desde la fase 2.5 cada sanción
+        // tiene su causal. Cuál descuenta lo dice la sanción, abajo.
+        if ($movimiento->clase !== ClaseAccionPersonal::SANCION) {
             return null;
         }
 

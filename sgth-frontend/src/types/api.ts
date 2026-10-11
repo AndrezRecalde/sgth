@@ -1334,6 +1334,9 @@ export type SancionDisciplinaria = {
   } | null
   /** Lo que Financiero descuenta, como referencia; null si la sanción no toca la remuneración. */
   descuento_referencial?: DescuentoReferencial | null
+  /** Sin efecto: se anuló su acción de personal (fase 2.5). */
+  anulada_en?: string | null
+  motivo_anulacion?: string | null
 }
 
 /** Espeja `SancionDisciplinaria::descuentoReferencial()`. */
@@ -1358,7 +1361,9 @@ export type Sumario = {
   fecha_termino_prueba?: string | null
   fecha_informe?: string | null
   fecha_resolucion?: string | null
+  /** La vigente. La que quedó sin efecto va en `sanciones_sin_efecto`. */
   sancion?: SancionDisciplinaria | null
+  sanciones_sin_efecto?: SancionDisciplinaria[]
 }
 
 export type VistoBueno = {

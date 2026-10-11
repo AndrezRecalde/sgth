@@ -76,6 +76,10 @@ enum TipoMovimientoPersonal: string
                 SubtipoMovimientoPersonal::COMISION_SIN_REMUNERACION,
             ],
             self::REGIMEN_DISCIPLINARIO => [
+                SubtipoMovimientoPersonal::AMONESTACION_ESCRITA,
+                SubtipoMovimientoPersonal::SANCION_PECUNIARIA,
+                SubtipoMovimientoPersonal::SUSPENSION_SIN_REMUNERACION,
+                // La genérica de antes de la fase 2.5, para el histórico.
                 SubtipoMovimientoPersonal::SANCION_DISCIPLINARIA,
             ],
             // El orden es el del formulario: las de todos primero, las de un

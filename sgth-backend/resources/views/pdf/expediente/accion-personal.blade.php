@@ -274,8 +274,11 @@
     $esIngreso = $movimiento->tipo_movimiento === \App\Enums\TipoMovimientoPersonal::INGRESO;
 
     // El reintegro devuelve al servidor al puesto que conservó durante la
-    // ausencia (fase 2.4): la situación propuesta es la misma que la actual.
+    // ausencia (fase 2.4), y la amonestación escrita no lo mueve (fase 2.5): la
+    // situación propuesta es la misma que la actual.
     $esReintegro = $movimiento->tipo_movimiento === \App\Enums\TipoMovimientoPersonal::REINTEGRO;
+    $mismoPuesto = $esReintegro
+        || $movimiento->subtipo_movimiento === \App\Enums\SubtipoMovimientoPersonal::AMONESTACION_ESCRITA;
     $ausenciaQueCierra = $esReintegro ? $movimiento->movimientoRelacionado : null;
 
     // El título es el nombre de la clase —traslado, encargo, cesación…—, el
@@ -293,12 +296,12 @@
         ?? null;
 
     // Propuesta: manda lo fijado en la acción; el puesto destino es el respaldo.
-    $puestoPropuesto = $esReintegro ? $movimiento->puestoOrigen : $movimiento->puestoDestino;
-    $unidadPropuesta = $esReintegro ? $movimiento->unidadOrigen : $movimiento->unidadDestino;
-    $rmuPropuesta = $esReintegro
+    $puestoPropuesto = $mismoPuesto ? $movimiento->puestoOrigen : $movimiento->puestoDestino;
+    $unidadPropuesta = $mismoPuesto ? $movimiento->unidadOrigen : $movimiento->unidadDestino;
+    $rmuPropuesta = $mismoPuesto
         ? $rmuOrigen
         : ($movimiento->remuneracion_propuesta ?? $movimiento->puestoDestino->rmu ?? null);
-    $partidaPropuesta = $esReintegro
+    $partidaPropuesta = $mismoPuesto
         ? $partidaOrigen
         : ($movimiento->partidaPresupuestaria->codigo
             ?? $movimiento->puestoDestino->partidaPresupuestaria->codigo

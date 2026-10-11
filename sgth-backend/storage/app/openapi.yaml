@@ -44636,6 +44636,9 @@
                             "Traspaso",
                             "Comisi\u00f3n de Servicios con Remuneraci\u00f3n",
                             "Comisi\u00f3n de Servicios sin Remuneraci\u00f3n",
+                            "Amonestaci\u00f3n escrita",
+                            "Sanci\u00f3n pecuniaria administrativa",
+                            "Suspensi\u00f3n temporal sin goce de remuneraci\u00f3n",
                             "Sanci\u00f3n Disciplinaria",
                             "Renuncia",
                             "Destituci\u00f3n",
@@ -44687,6 +44690,9 @@
                             "LOSEP Art. 28 d",
                             "LOSEP Art. 28 e",
                             "LOSEP Art. 28 f",
+                            "LOSEP Art. 43 b",
+                            "LOSEP Art. 43 c",
+                            "LOSEP Art. 43 d",
                             null
                         ]
                     },
@@ -56041,7 +56047,6 @@
                             "licencia_sin_remuneracion",
                             "incremento_remuneracion",
                             "cambio_ocupacion",
-                            "sancion",
                             "cesacion"
                         ]
                     },
@@ -57554,6 +57559,9 @@
                     "traspaso",
                     "comision_con_remuneracion",
                     "comision_sin_remuneracion",
+                    "amonestacion_escrita",
+                    "sancion_pecuniaria",
+                    "suspension_sin_remuneracion",
                     "sancion_disciplinaria",
                     "renuncia",
                     "destitucion",

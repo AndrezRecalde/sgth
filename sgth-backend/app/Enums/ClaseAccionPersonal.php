@@ -100,7 +100,11 @@ enum ClaseAccionPersonal: string
         // El reintegro tampoco: nace de la ausencia que cierra —el botón de
         // «Ausencias y reemplazos» o el comando diario—, porque sin ella no
         // sabe qué cerrar (fase 2.4).
-        return ! in_array($this, [self::SUBROGACION, self::ENCARGO, self::REINTEGRO], true);
+        //
+        // Y la sanción, desde la fase 2.5: la impone el sumario de
+        // Disciplinario, con su falta, su porcentaje o sus días. A mano se
+        // sancionaba sin sumario.
+        return ! in_array($this, [self::SUBROGACION, self::ENCARGO, self::REINTEGRO, self::SANCION], true);
     }
 
     /**
@@ -132,6 +136,13 @@ enum ClaseAccionPersonal: string
                 fn (SubtipoMovimientoPersonal $c) => $c->seRegistraDesdeElFormulario(),
             )),
             self::LICENCIA_SIN_REMUNERACION => TipoMovimientoPersonal::LICENCIA_SIN_REMUNERACION->subtiposPermitidos(),
+            // Las de LOSEP Art. 43 con acción (fase 2.5). La genérica de antes
+            // queda fuera: no dice cuál.
+            self::SANCION => [
+                SubtipoMovimientoPersonal::AMONESTACION_ESCRITA,
+                SubtipoMovimientoPersonal::SANCION_PECUNIARIA,
+                SubtipoMovimientoPersonal::SUSPENSION_SIN_REMUNERACION,
+            ],
             default        => [],
         };
     }
@@ -237,10 +248,7 @@ enum ClaseAccionPersonal: string
             self::INCREMENTO_REMUNERACION => [TipoMovimientoPersonal::INCREMENTO_REMUNERACION, null],
             self::CAMBIO_OCUPACION        => [TipoMovimientoPersonal::CAMBIO_DENOMINACION, null],
 
-            self::SANCION => [
-                TipoMovimientoPersonal::REGIMEN_DISCIPLINARIO,
-                SubtipoMovimientoPersonal::SANCION_DISCIPLINARIA,
-            ],
+            self::SANCION => [TipoMovimientoPersonal::REGIMEN_DISCIPLINARIO, $causal],
             self::CESACION => [TipoMovimientoPersonal::CESACION_FUNCIONES, $causal],
             self::REINTEGRO => [TipoMovimientoPersonal::REINTEGRO, null],
         };
@@ -279,7 +287,10 @@ enum ClaseAccionPersonal: string
             SubtipoMovimientoPersonal::TRASLADO_ADMINISTRATIVO   => self::INTERCAMBIO_VOLUNTARIO,
             SubtipoMovimientoPersonal::COMISION_CON_REMUNERACION => self::COMISION_CON_REMUNERACION,
             SubtipoMovimientoPersonal::COMISION_SIN_REMUNERACION => self::COMISION_SIN_REMUNERACION,
-            SubtipoMovimientoPersonal::SANCION_DISCIPLINARIA     => self::SANCION,
+            SubtipoMovimientoPersonal::SANCION_DISCIPLINARIA,
+            SubtipoMovimientoPersonal::AMONESTACION_ESCRITA,
+            SubtipoMovimientoPersonal::SANCION_PECUNIARIA,
+            SubtipoMovimientoPersonal::SUSPENSION_SIN_REMUNERACION => self::SANCION,
 
             null => match ($tipo) {
                 TipoMovimientoPersonal::INGRESO                   => self::INGRESO,

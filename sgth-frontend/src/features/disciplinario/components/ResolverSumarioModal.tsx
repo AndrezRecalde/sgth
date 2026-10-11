@@ -152,6 +152,17 @@ function FormularioResolucion({
           </Alert>
         )}
 
+        {/* La escrita lleva acción desde la fase 2.5 [TH N13]; la del obrero
+            le llega sin acción hasta su bloque. */}
+        {sancion === 'amonestacion_escrita'
+          && sumario.servidor?.contrato_vigente?.tipo_nombramiento !== 'codigo_trabajo' && (
+          <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
+            Se generará una acción de personal de amonestación escrita en
+            borrador, para que Talento Humano la registre. No toca la
+            remuneración.
+          </Alert>
+        )}
+
         {(sancion === 'multa' || sancion === 'suspension') && (
           <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
             Se generará una acción de personal de sanción disciplinaria en

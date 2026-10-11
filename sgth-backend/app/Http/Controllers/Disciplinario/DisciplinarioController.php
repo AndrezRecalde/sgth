@@ -24,6 +24,8 @@ class DisciplinarioController extends Controller
             'servidor.contratoVigente:id,servidor_id,tipo_nombramiento',
             // La acción que nació de la sanción y lo que descuenta (2026-10-04).
             'sancion.movimientoPersonal:id,codigo_registro,estado,remuneracion_origen',
+            // Las que quedaron sin efecto al anularse su acción (fase 2.5).
+            'sancionesSinEfecto.movimientoPersonal:id,codigo_registro,estado,remuneracion_origen',
         ])
             ->when($request->filled('estado'), fn ($q) => $q->where('estado', $request->input('estado')))
             ->when($request->filled('servidor_id'), fn ($q) => $q->where('servidor_id', $request->integer('servidor_id')))
@@ -84,12 +86,19 @@ class DisciplinarioController extends Controller
             $request->user()->id
         );
 
+        $sumario->load([
+            'sancion.movimientoPersonal:id,codigo_registro,estado,remuneracion_origen',
+            'sancionesSinEfecto.movimientoPersonal:id,codigo_registro,estado,remuneracion_origen',
+        ]);
+
         $mensaje = 'Sumario Administrativo resuelto exitosamente y sanción aplicada.';
         if ($request->validated('tipo_sancion') === 'destitucion') {
             $mensaje .= ' El servidor fue destituido: se generó la Cesación de Funciones en '
                 .'borrador para revisión de Talento Humano.';
+        } elseif ($sumario->sancion?->movimiento_personal_id) {
+            $mensaje .= ' Su acción de personal quedó en borrador para revisión de Talento Humano.';
         }
 
-        return ApiResponse::ok($sumario->load('sancion.movimientoPersonal:id,codigo_registro,estado,remuneracion_origen'), $mensaje);
+        return ApiResponse::ok($sumario, $mensaje);
     }
 }

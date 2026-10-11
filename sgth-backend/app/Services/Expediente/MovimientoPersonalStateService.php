@@ -16,6 +16,7 @@ use App\Models\Expediente\EventoVinculo;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
+use App\Services\Disciplinario\SancionSinEfectoService;
 use Illuminate\Support\Facades\DB;
 
 class MovimientoPersonalStateService
@@ -25,6 +26,7 @@ class MovimientoPersonalStateService
         private readonly FirmanteAccionPersonalService $firmanteService,
         private readonly SubrogacionService $subrogacionService,
         private readonly ReintegroService $reintegros,
+        private readonly SancionSinEfectoService $sanciones,
     ) {
     }
 
@@ -531,6 +533,15 @@ class MovimientoPersonalStateService
         // vínculo: anular un acto que ya surtió efecto no es solo cambiarle el
         // estado a la fila.
         $this->revertirEfectoSobreElVinculo($movimiento);
+
+        // Sin su acto, la sanción no puede seguir impuesta: queda sin efecto y
+        // el sumario vuelve a resolverse (fase 2.5). Vale para la sanción y
+        // para la cesación de una destitución.
+        if ($movimiento->tipo_movimiento === TipoMovimientoPersonal::REGIMEN_DISCIPLINARIO
+            || $movimiento->subtipoEfectivo() === SubtipoMovimientoPersonal::DESTITUCION
+        ) {
+            $this->sanciones->porAnulacionDe($movimiento);
+        }
     }
 
     /**

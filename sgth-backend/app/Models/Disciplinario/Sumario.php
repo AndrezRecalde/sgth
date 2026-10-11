@@ -7,6 +7,7 @@ use App\Models\Expediente\Servidor;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\LogOptions;
@@ -72,8 +73,21 @@ class Sumario extends Model
         return $this->belongsTo(Servidor::class);
     }
 
+    /**
+     * La sanción vigente. La que quedó sin efecto al anularse su acción no
+     * cuenta (fase 2.5): el sumario vuelve a resolverse con otra.
+     */
     public function sancion(): HasOne
     {
-        return $this->hasOne(SancionDisciplinaria::class, 'sumario_id');
+        return $this->hasOne(SancionDisciplinaria::class, 'sumario_id')->whereNull('anulada_en');
+    }
+
+    /** Las que quedaron sin efecto, de la más reciente a la más antigua. */
+    public function sancionesSinEfecto(): HasMany
+    {
+        return $this->hasMany(SancionDisciplinaria::class, 'sumario_id')
+            ->whereNotNull('anulada_en')
+            ->orderByDesc('anulada_en')
+            ->orderByDesc('id');
     }
 }
