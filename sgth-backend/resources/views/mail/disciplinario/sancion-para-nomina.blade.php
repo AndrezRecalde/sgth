@@ -1,4 +1,6 @@
 <x-mail::message>
+{{-- La de un obrero va en su hoja de registro interno (fase 4.3). --}}
+@php($documento ??= 'la acción de personal')
 @if($anulada)
 # Sanción anulada
 
