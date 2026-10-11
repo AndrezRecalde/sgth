@@ -104,6 +104,8 @@ class MovimientoPersonalResource extends JsonResource
              */
             'movimiento_relacionado_id' => $this->movimiento_relacionado_id,
             'relacionado'               => $this->relacionado(),
+            // La de una cesación que una sentencia dejó sin efecto (fase 2.6).
+            'restituida_por'            => $this->restituidaPor(),
 
             'codigo'                      => $this->codigo,
             'codigo_registro'             => $this->codigo_registro,
@@ -113,6 +115,12 @@ class MovimientoPersonalResource extends JsonResource
             'efecto_aplicado_en'          => $this->efecto_aplicado_en,
             'pendiente_de_vigencia'       => $this->pendienteDeVigencia(),
             'resolucion_numero'           => $this->resolucion_numero,
+            // La sentencia de una restitución (fase 2.6).
+            'causa_judicial_numero'       => $this->causa_judicial_numero,
+            'unidad_judicial'             => $this->unidad_judicial,
+            'fecha_sentencia'             => $this->fecha_sentencia,
+            'fecha_ejecutoria'            => $this->fecha_ejecutoria,
+            'remuneraciones_dejadas_de_percibir' => $this->remuneraciones_dejadas_de_percibir,
             'documento_respaldo'          => $this->documento_respaldo,
             'dictamen_presupuestario_ref' => $this->dictamen_presupuestario_ref,
 
@@ -184,7 +192,7 @@ class MovimientoPersonalResource extends JsonResource
      * Lo justo para decir «cierra la AP-… (Comisión de servicios…)» sin otra
      * consulta desde la pantalla.
      *
-     * @return array{id: int, codigo_registro: ?string, etiqueta: ?string, fecha_inicio: ?string, fecha_fin: ?string}|null
+     * @return array{id: int, clase: ?string, codigo_registro: ?string, etiqueta: ?string, fecha_efectiva: ?string, fecha_inicio: ?string, fecha_fin: ?string}|null
      */
     private function relacionado(): ?array
     {
@@ -196,10 +204,33 @@ class MovimientoPersonalResource extends JsonResource
 
         return $otro ? [
             'id'              => $otro->id,
+            'clase'           => $otro->clase?->value,
             'codigo_registro' => $otro->codigo_registro,
-            'etiqueta'        => $otro->etiquetaAusencia() ?? $otro->etiqueta(),
+            // La causal cuando la hay: «Destitución» dice más que «Cesación».
+            'etiqueta'        => $otro->etiquetaAusencia() ?? $otro->causal()?->etiqueta() ?? $otro->etiqueta(),
+            'fecha_efectiva'  => $otro->fecha_efectiva?->toDateString(),
             'fecha_inicio'    => $otro->fecha_inicio?->toDateString(),
             'fecha_fin'       => $otro->fecha_fin?->toDateString(),
+        ] : null;
+    }
+
+    /**
+     * La restitución que deja sin efecto esta cesación, si la hay.
+     *
+     * @return array{id: int, codigo_registro: ?string, estado: string}|null
+     */
+    private function restituidaPor(): ?array
+    {
+        if (! $this->cierraElVinculo()) {
+            return null;
+        }
+
+        $restitucion = $this->resource->restitucion;
+
+        return $restitucion ? [
+            'id'              => $restitucion->id,
+            'codigo_registro' => $restitucion->codigo_registro,
+            'estado'          => $restitucion->estado->value,
         ] : null;
     }
 

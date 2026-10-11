@@ -281,6 +281,11 @@
         || $movimiento->subtipo_movimiento === \App\Enums\SubtipoMovimientoPersonal::AMONESTACION_ESCRITA;
     $ausenciaQueCierra = $esReintegro ? $movimiento->movimientoRelacionado : null;
 
+    // La restitución vuelve por sentencia (fase 2.6): dice qué cesación deja
+    // sin efecto y con qué causa judicial.
+    $esRestitucion = $movimiento->tipo_movimiento === \App\Enums\TipoMovimientoPersonal::RESTITUCION;
+    $cesacionSinEfecto = $esRestitucion ? $movimiento->movimientoRelacionado : null;
+
     // El título es el nombre de la clase —traslado, encargo, cesación…—, el
     // mismo que se ve en pantalla. Subrogación y encargo comparten tipo, pero
     // no clase: un encargo impreso como «Subrogación» diría que se reemplazó a
@@ -414,6 +419,24 @@
             {{ $fmtFecha($movimiento->fecha_efectiva?->copy()->subDay()) }}.
         </div>
     @endif
+    @if($esRestitucion)
+        @if($cesacionSinEfecto)
+            <div class="respaldo">
+                <strong>Deja sin efecto:</strong>
+                {{ $cesacionSinEfecto->causal()?->etiqueta() ?? $cesacionSinEfecto->etiqueta() }}{{ $cesacionSinEfecto->codigo_registro ? " ({$cesacionSinEfecto->codigo_registro})" : '' }},
+                que rigió desde el {{ $fmtFecha($cesacionSinEfecto->fecha_efectiva) }}.
+            </div>
+        @endif
+        <div class="respaldo">
+            <strong>Sentencia:</strong> causa N.º {{ $movimiento->causa_judicial_numero }}, {{ $movimiento->unidad_judicial }};
+            dictada el {{ $fmtFecha($movimiento->fecha_sentencia) }} y ejecutoriada el
+            {{ $fmtFecha($movimiento->fecha_ejecutoria) }} (LOSEP Art. 46).
+        </div>
+        <div class="respaldo">
+            <strong>Remuneraciones dejadas de percibir:</strong>
+            {!! $dato($fmtRmu($movimiento->remuneraciones_dejadas_de_percibir)) !!}
+        </div>
+    @endif
     @if($movimiento->para_estudios_o_eventos)
         <div class="respaldo">
             Al terminar la comisión, el servidor debe servir en la institución un tiempo igual
@@ -438,6 +461,13 @@
                 <div class="campo">
                     <span class="valor vacio">
                         Sin vínculo laboral previo — este es el primer ingreso del servidor.
+                    </span>
+                </div>
+            @elseif($esRestitucion)
+                <div class="campo">
+                    <span class="valor vacio">
+                        Sin vínculo desde el {{ $fmtFecha($cesacionSinEfecto?->fecha_efectiva) }}, por la cesación
+                        que esta acción deja sin efecto.
                     </span>
                 </div>
             @else

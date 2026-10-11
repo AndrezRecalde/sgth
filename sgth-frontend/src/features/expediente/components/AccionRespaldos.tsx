@@ -14,7 +14,8 @@ import { formatFecha } from '@/lib/fecha'
  * la resolución y el dictamen médico, y quiénes firmaron.
  */
 export function AccionRespaldos({ m }: { m: MovimientoPersonal }) {
-  const esIngreso = m.clase === 'ingreso'
+  // La restitución también crea el vínculo, con el nombramiento que tenía.
+  const esIngreso = m.clase === 'ingreso' || m.clase === 'restitucion'
 
   return (
     <>
@@ -36,6 +37,23 @@ export function AccionRespaldos({ m }: { m: MovimientoPersonal }) {
               {
                 label: 'Marca asistencia',
                 value: m.puede_marcar == null ? null : (m.puede_marcar ? 'Sí' : 'No'),
+              },
+            ]} />
+          </BloqueDetalle>
+        )}
+
+        {/* La sentencia de la restitución [TH N15; fase 2.6]. */}
+        {m.clase === 'restitucion' && (
+          <BloqueDetalle>
+            <SectionHeading title="Sentencia" mb="xs" />
+            <DetailList items={[
+              { label: 'Causa', value: m.causa_judicial_numero },
+              { label: 'Unidad judicial', value: m.unidad_judicial },
+              { label: 'Sentencia', value: formatFecha(m.fecha_sentencia) },
+              { label: 'Ejecutoría', value: formatFecha(m.fecha_ejecutoria) },
+              {
+                label: 'Remuneraciones dejadas de percibir',
+                value: dinero(m.remuneraciones_dejadas_de_percibir),
               },
             ]} />
           </BloqueDetalle>

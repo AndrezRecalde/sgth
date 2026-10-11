@@ -81,9 +81,10 @@ export function MovimientosTab({ servidorId, tipoNombramiento }: Props) {
             icon={<IconAlertTriangle size={16} />}
             mb="sm"
           >
-            Este servidor no tiene contrato vigente, así que no se le pueden
-            registrar acciones de personal: registre primero su Ingreso y
-            Vinculación.
+            Este servidor no tiene contrato vigente, así que aquí no se le pueden
+            registrar acciones de personal. Su Ingreso y Vinculación o, si vuelve
+            por sentencia, su Restitución se registran en Acciones de Personal,
+            desde «Nueva acción de personal».
           </Alert>
         )}
 

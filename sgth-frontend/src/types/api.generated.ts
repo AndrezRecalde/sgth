@@ -7387,12 +7387,12 @@ export interface components {
          * @description La clase legal de una acción de personal: el acto que se registra, con el nombre que le da la LOSEP (diseño de Acciones de Personal, sección 4). Es la identidad pública del catálogo. El frontend elige una clase —y, en la cesación, una causal— y el backend la traduce al par tipo/subtipo con el que todavía se guarda y opera cada acción. Esa traducción vive aquí, en `tipoYSubtipo()`, y su inversa en `desde()`: son las dos únicas puertas entre los dos vocabularios.  Las reglas no se repiten. La elegibilidad por nombramiento se pregunta a `TipoMovimientoPersonal` y `SubtipoMovimientoPersonal`, que siguen siendo su única fuente: esta clase solo las agrupa con el nombre legal. Lo que es solo de formulario —qué bloques pide, el aviso de la comisión— sí vive aquí, y `CatalogoAccionesPersonalTest` comprueba que coincida con lo que el tipo/subtipo traducido hace de verdad.  Nombres que cambian respecto de los que veía Talento Humano, todos aceptados el 2026-10-09 (cuestionario, preguntas N1, 9 y 15):  - el «Traspaso» de los permanentes y la «Prestación de servicios» de los    demás son el mismo acto, el **traslado** del Art. 35;  - el «Traslado administrativo» entre instituciones es el **intercambio    voluntario** del Art. 39;  - el «Cambio de denominación» de los obreros es el **cambio de ocupación**    del Art. 192 del Código del Trabajo.
          * @enum {string}
          */
-        ClaseAccionPersonal: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "subrogacion" | "encargo" | "incremento_remuneracion" | "cambio_ocupacion" | "sancion" | "cesacion" | "reintegro";
+        ClaseAccionPersonal: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "subrogacion" | "encargo" | "incremento_remuneracion" | "cambio_ocupacion" | "sancion" | "cesacion" | "reintegro" | "restitucion";
         /** ClaseAccionPersonalResource */
         ClaseAccionPersonalResource: {
             codigo: components["schemas"]["ClaseAccionPersonal"];
             /** @enum {string} */
-            etiqueta: "Ingreso y Vinculación" | "Traslado" | "Intercambio Voluntario" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Licencia sin Remuneración" | "Subrogación" | "Encargo" | "Incremento de Remuneración" | "Cambio de Ocupación" | "Sanción Disciplinaria" | "Cesación de Funciones" | "Reintegro";
+            etiqueta: "Ingreso y Vinculación" | "Traslado" | "Intercambio Voluntario" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Licencia sin Remuneración" | "Subrogación" | "Encargo" | "Incremento de Remuneración" | "Cambio de Ocupación" | "Sanción Disciplinaria" | "Cesación de Funciones" | "Reintegro" | "Restitución";
             familia: components["schemas"]["FamiliaAccionPersonal"];
             se_crea_desde_formulario: boolean;
             requiere_vinculo: boolean;
@@ -7402,6 +7402,7 @@ export interface components {
             pide_periodo: boolean;
             pide_institucion_destino: boolean;
             admite_para_estudios_o_eventos: boolean;
+            pide_datos_judiciales: boolean;
             pide_contratacion: boolean;
             dictamen_medico_por_defecto: boolean;
             aviso: string | null;
@@ -8594,6 +8595,13 @@ export interface components {
             institucion_destino: string | null;
             para_estudios_o_eventos: boolean;
             movimiento_relacionado_id: number | null;
+            causa_judicial_numero: string | null;
+            unidad_judicial: string | null;
+            /** Format: date-time */
+            fecha_sentencia: string | null;
+            /** Format: date-time */
+            fecha_ejecutoria: string | null;
+            remuneraciones_dejadas_de_percibir: string | null;
         };
         /** MovimientoPersonalResource */
         MovimientoPersonalResource: {
@@ -8677,10 +8685,19 @@ export interface components {
             movimiento_relacionado_id: number | null;
             relacionado: {
                 id: number;
+                clase: string;
                 codigo_registro: string | null;
+                /** @description La causal cuando la hay: «Destitución» dice más que «Cesación». */
                 etiqueta: string;
+                fecha_efectiva: string;
                 fecha_inicio: string;
                 fecha_fin: string;
+            } | null;
+            /** @description La de una cesación que una sentencia dejó sin efecto (fase 2.6). */
+            restituida_por: {
+                id: number;
+                codigo_registro: string | null;
+                estado: string;
             } | null;
             codigo: string | null;
             codigo_registro: string | null;
@@ -8694,6 +8711,14 @@ export interface components {
             efecto_aplicado_en: string | null;
             pendiente_de_vigencia: boolean;
             resolucion_numero: string | null;
+            /** @description La sentencia de una restitución (fase 2.6). */
+            causa_judicial_numero: string | null;
+            unidad_judicial: string | null;
+            /** Format: date-time */
+            fecha_sentencia: string | null;
+            /** Format: date-time */
+            fecha_ejecutoria: string | null;
+            remuneraciones_dejadas_de_percibir: string | null;
             documento_respaldo: string | null;
             dictamen_presupuestario_ref: string | null;
             /**
@@ -10162,7 +10187,7 @@ export interface components {
              *     contrato» que nacía registrada y sin efecto.
              * @enum {string}
              */
-            clase: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "cambio_ocupacion" | "cesacion";
+            clase: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "cambio_ocupacion" | "cesacion" | "restitucion";
             /**
              * @description Que la causal sea obligatoria, que pertenezca a la clase y que
              *     aplique al nombramiento lo decide
@@ -10188,6 +10213,17 @@ export interface components {
             /** @description Comisiones e intercambio: la entidad del Estado a la que va (fase 2.3). */
             institucion_destino?: string | null;
             para_estudios_o_eventos?: boolean | null;
+            /**
+             * @description La sentencia de una restitución (fase 2.6). Que sean obligatorios
+             *     en ella lo decide RestitucionService.
+             */
+            causa_judicial_numero?: string | null;
+            unidad_judicial?: string | null;
+            /** Format: date-time */
+            fecha_sentencia?: string | null;
+            /** Format: date-time */
+            fecha_ejecutoria?: string | null;
+            remuneraciones_dejadas_de_percibir?: number | null;
             puesto_origen_id?: number | null;
             puesto_destino_id?: number | null;
             /**
@@ -10764,7 +10800,7 @@ export interface components {
          * TipoMovimientoPersonal
          * @enum {string}
          */
-        TipoMovimientoPersonal: "traslado" | "subrogacion" | "comision_servicios" | "ingreso" | "cambio_denominacion" | "prestacion_servicios" | "cambio_administrativo" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "traspaso" | "destitucion" | "cesacion_funciones" | "regimen_disciplinario" | "reintegro";
+        TipoMovimientoPersonal: "traslado" | "subrogacion" | "comision_servicios" | "ingreso" | "cambio_denominacion" | "prestacion_servicios" | "cambio_administrativo" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "traspaso" | "destitucion" | "cesacion_funciones" | "regimen_disciplinario" | "reintegro" | "restitucion";
         /**
          * TipoNombramiento
          * @enum {string}
@@ -11277,6 +11313,17 @@ export interface components {
             /** @description Comisiones e intercambio: la entidad del Estado a la que va (fase 2.3). */
             institucion_destino?: string | null;
             para_estudios_o_eventos?: boolean | null;
+            /**
+             * @description La sentencia de una restitución (fase 2.6). Que sean obligatorios
+             *     en ella lo decide RestitucionService.
+             */
+            causa_judicial_numero?: string | null;
+            unidad_judicial?: string | null;
+            /** Format: date-time */
+            fecha_sentencia?: string | null;
+            /** Format: date-time */
+            fecha_ejecutoria?: string | null;
+            remuneraciones_dejadas_de_percibir?: number | null;
             puesto_origen_id?: number | null;
             puesto_destino_id?: number | null;
             tipo_nombramiento_propuesto?: components["schemas"]["TipoNombramiento"];

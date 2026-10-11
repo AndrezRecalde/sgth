@@ -30,6 +30,9 @@ class SancionDisciplinaria extends Model
         'anulada_en',
         'motivo_anulacion',
         'anulada_por',
+        // El acto que la dejó sin efecto: su acción anulada, o la restitución
+        // que la deja sin efecto por sentencia (fase 2.6).
+        'sin_efecto_por_movimiento_id',
         'created_by',
         'updated_by',
     ];

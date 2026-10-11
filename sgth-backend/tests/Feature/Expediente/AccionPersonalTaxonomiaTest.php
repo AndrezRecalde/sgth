@@ -548,9 +548,10 @@ test('tieneDocumentoImprimible() cubre todo acto formal, que es todo lo que qued
         TipoMovimientoPersonal::TRASPASO,
         TipoMovimientoPersonal::COMISION_SERVICIOS,
         TipoMovimientoPersonal::DESTITUCION,
-        // …y los dos que se suman a mano en tieneDocumentoImprimible().
+        // …y los tres que se suman a mano en tieneDocumentoImprimible().
         TipoMovimientoPersonal::SUBROGACION,
         TipoMovimientoPersonal::INGRESO,
+        TipoMovimientoPersonal::RESTITUCION,
     ];
 
     // La bitácora del expediente —novedad de contrato, cambio de puesto,

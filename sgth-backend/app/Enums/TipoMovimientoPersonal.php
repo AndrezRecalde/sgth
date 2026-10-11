@@ -33,6 +33,9 @@ enum TipoMovimientoPersonal: string
     // Cierra una comisión o una licencia cuando el servidor vuelve (LOSEP 32;
     // fase 2.4). Va enlazado a la ausencia que cierra (movimiento_relacionado_id).
     case REINTEGRO                 = 'reintegro';
+    // Vuelve al servidor a su puesto por sentencia (LOSEP 46; fase 2.6). Crea
+    // el vínculo como el ingreso, enlazado a la cesación que deja sin efecto.
+    case RESTITUCION               = 'restitucion';
     // 'ascenso' se retiró (2026-07-23): confirmado con Talento Humano/UATH
     // que no existe como acción de personal en la operación real del GAD
     // (cero registros, sin mecanismo formal de registro). También era uno
@@ -57,6 +60,7 @@ enum TipoMovimientoPersonal: string
             self::CESACION_FUNCIONES        => 'Cesación de Funciones',
             self::REGIMEN_DISCIPLINARIO     => 'Régimen Disciplinario',
             self::REINTEGRO                 => 'Reintegro',
+            self::RESTITUCION               => 'Restitución',
         };
     }
 
@@ -204,7 +208,7 @@ enum TipoMovimientoPersonal: string
      */
     public function creaVinculo(): bool
     {
-        return $this === self::INGRESO;
+        return in_array($this, [self::INGRESO, self::RESTITUCION], true);
     }
 
     /**
@@ -268,6 +272,9 @@ enum TipoMovimientoPersonal: string
         return $this->esAccionDePersonal() || in_array($this, [
             self::SUBROGACION,
             self::INGRESO,
+            // Como el ingreso, queda fuera de esAccionDePersonal() porque quien
+            // vuelve no tiene vínculo que validar (fase 2.6).
+            self::RESTITUCION,
         ], true);
     }
 

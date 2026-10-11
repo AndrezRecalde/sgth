@@ -54,6 +54,11 @@ export function AccionSituacionBloques({ m, botonEditar }: Props) {
             <Text size="sm" c="dimmed">
               Sin vínculo previo — este es el primer ingreso del servidor.
             </Text>
+          ) : m.clase === 'restitucion' ? (
+            <Text size="sm" c="dimmed">
+              Sin vínculo desde el {formatFecha(m.relacionado?.fecha_efectiva)}, por la
+              cesación que esta restitución deja sin efecto.
+            </Text>
           ) : (
             <DetailList columnas={1} items={[
               { label: 'Apellidos', value: apellidos },

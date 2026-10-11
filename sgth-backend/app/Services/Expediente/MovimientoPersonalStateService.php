@@ -27,6 +27,7 @@ class MovimientoPersonalStateService
         private readonly SubrogacionService $subrogacionService,
         private readonly ReintegroService $reintegros,
         private readonly SancionSinEfectoService $sanciones,
+        private readonly RestitucionService $restituciones,
     ) {
     }
 
@@ -406,6 +407,12 @@ class MovimientoPersonalStateService
             $this->reintegros->prepararSalidaDelReemplazo($movimiento);
         }
 
+        // La sentencia deja sin efecto la destitución, y con ella la sanción
+        // del sumario (fase 2.6). El vínculo ya lo creó la rama de arriba.
+        if ($tipo === TipoMovimientoPersonal::RESTITUCION) {
+            $this->sanciones->porSentencia($movimiento);
+        }
+
         $movimiento->efecto_aplicado_en = now();
     }
 
@@ -477,12 +484,16 @@ class MovimientoPersonalStateService
         }
 
         if ($movimiento->tipo_movimiento->creaVinculo()) {
+            $liberado = $movimiento->tipo_movimiento === TipoMovimientoPersonal::RESTITUCION
+                ? $this->contratoQueLiberaLaRemocion($movimiento)
+                : null;
+
             // Si rige ya, `crear()` lo comprueba al materializarlo.
             if (! $movimiento->rigeEn($hoy) && $movimiento->puesto_destino_id && $movimiento->tipo_nombramiento_propuesto) {
                 $this->contratoServidorService->validarVacante(
                     (int) $movimiento->puesto_destino_id,
                     $movimiento->tipo_nombramiento_propuesto->value,
-                    null,
+                    $liberado,
                     $movimiento->cubre_movimiento_id ? (int) $movimiento->cubre_movimiento_id : null,
                     $movimiento->id,
                 );
@@ -529,10 +540,20 @@ class MovimientoPersonalStateService
             $this->anularSalidasDelReemplazo($movimiento);
         }
 
+        if ($movimiento->tipo_movimiento === TipoMovimientoPersonal::RESTITUCION) {
+            $this->anularRemocionesEnTramite($movimiento);
+        }
+
         // Y si ya estaba registrada, deshacer lo que el registro hizo sobre el
         // vínculo: anular un acto que ya surtió efecto no es solo cambiarle el
         // estado a la fila.
         $this->revertirEfectoSobreElVinculo($movimiento);
+
+        // Anular la restitución devuelve la sanción que la sentencia había
+        // dejado sin efecto (fase 2.6).
+        if ($movimiento->tipo_movimiento === TipoMovimientoPersonal::RESTITUCION) {
+            $this->sanciones->revertirSentencia($movimiento);
+        }
 
         // Sin su acto, la sanción no puede seguir impuesta: queda sin efecto y
         // el sumario vuelve a resolverse (fase 2.5). Vale para la sanción y
@@ -588,6 +609,53 @@ class MovimientoPersonalStateService
                 'Hay un ingreso de reemplazo en trámite para esta ausencia: anúlelo antes.'
             );
         }
+    }
+
+    /**
+     * La plaza de la restitución la libera la remoción del provisional (fase
+     * 2.6), que tiene que estar registrada antes. Si lo está y todavía espera
+     * su fecha, su contrato no cuenta como ocupado: se cerrará la víspera.
+     */
+    private function contratoQueLiberaLaRemocion(MovimientoPersonal $restitucion): ?int
+    {
+        $remocion = $this->restituciones->remociones($restitucion)->first();
+
+        if (! $remocion) {
+            return null;
+        }
+
+        if (! in_array($remocion->estado, [EstadoAccionPersonal::REGISTRADA, EstadoAccionPersonal::NOTIFICADA], true)) {
+            $provisional = $remocion->servidor;
+
+            throw new ReglaNegocioException(
+                'Registre antes la remoción de '.trim(($provisional?->nombre ?? '').' '.($provisional?->apellido ?? ''))
+                    .', que ocupa el puesto de forma provisional: es la que libera la plaza.'
+            );
+        }
+
+        if ($remocion->efecto_aplicado_en !== null) {
+            return null;
+        }
+
+        return ContratoServidor::where('servidor_id', $remocion->servidor_id)
+            ->where('estado', EstadoContrato::VIGENTE->value)
+            ->value('id');
+    }
+
+    /**
+     * Anular la restitución anula la remoción del provisional mientras no se
+     * haya registrado. Si ya se registró, el provisional dejó el puesto, y
+     * devolverlo es otra decisión: se anula esa remoción aparte.
+     */
+    private function anularRemocionesEnTramite(MovimientoPersonal $restitucion): void
+    {
+        $codigo = $restitucion->codigo_registro ?? "#{$restitucion->id}";
+
+        $this->restituciones->remociones($restitucion)
+            ->filter(fn (MovimientoPersonal $r) => in_array($r->estado, [EstadoAccionPersonal::BORRADOR, EstadoAccionPersonal::SUSCRITA], true))
+            ->each(fn (MovimientoPersonal $r) => $this->transicionar($r, EstadoAccionPersonal::ANULADA, [
+                'motivo_anulacion' => "Se anuló la restitución {$codigo}, de la que salía.",
+            ]));
     }
 
     /**
