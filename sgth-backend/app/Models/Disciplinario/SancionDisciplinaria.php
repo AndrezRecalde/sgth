@@ -19,6 +19,9 @@ class SancionDisciplinaria extends Model
 
     protected $fillable = [
         'sumario_id',
+        // La falta del reglamento interno, en la sanción de un obrero; en la de
+        // la LOSEP manda la gravedad (fase 4.4).
+        'falta_reglamento_id',
         'movimiento_personal_id',
         'tipo_falta',
         'tipo_sancion',
@@ -52,6 +55,11 @@ class SancionDisciplinaria extends Model
     public function sumario(): BelongsTo
     {
         return $this->belongsTo(Sumario::class, 'sumario_id');
+    }
+
+    public function faltaReglamento(): BelongsTo
+    {
+        return $this->belongsTo(FaltaReglamentoInterno::class, 'falta_reglamento_id');
     }
 
     /**

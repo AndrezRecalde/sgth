@@ -1320,9 +1320,15 @@ export type FirmanteVigente = {
 }
 
 // ── Régimen disciplinario ────────────────────────
-// Dos procedimientos distintos según el régimen del servidor: sumario
-// administrativo (LOSEP) y visto bueno ante el Inspector del Trabajo
-// (obreros bajo Código del Trabajo).
+// Procedimientos distintos según el régimen del servidor: sumario
+// administrativo (LOSEP); y, para los obreros bajo Código del Trabajo, el
+// procedimiento del reglamento interno (fase 4.4) y el visto bueno ante el
+// Inspector del Trabajo.
+export type ProcedimientoDisciplinario = 'sumario_administrativo' | 'reglamento_interno'
+
+/** Una falta del catálogo del reglamento interno de los obreros (fase 4.4). */
+export type FaltaReglamentoInterno = components['schemas']['FaltaReglamentoInterno']
+
 export type EstadoSumario =
   | 'abierto' | 'en_instruccion' | 'en_prueba'
   | 'con_informe' | 'resuelto' | 'apelado' | 'cerrado'
@@ -1364,7 +1370,11 @@ export type ServidorResumen = {
  */
 export type SancionDisciplinaria = {
   id: number
-  tipo_falta: TipoFalta
+  /** La gravedad de la LOSEP; vacía en la sanción del reglamento interno. */
+  tipo_falta: TipoFalta | null
+  /** La falta del reglamento interno, en la sanción de un obrero (fase 4.4). */
+  falta_reglamento_id?: number | null
+  falta_reglamento?: FaltaReglamentoInterno | null
   tipo_sancion: TipoSancion
   porcentaje_multa?: string | number | null
   dias_suspension?: number | null
@@ -1399,6 +1409,11 @@ export type Sumario = {
   id: number
   servidor_id: number
   servidor?: ServidorResumen | null
+  /** El sumario de la LOSEP o el del reglamento interno de un obrero (fase 4.4). */
+  procedimiento: ProcedimientoDisciplinario
+  /** La falta del reglamento interno que se imputa al obrero. */
+  falta_reglamento_id?: number | null
+  falta_reglamento?: FaltaReglamentoInterno | null
   motivo: string
   estado: EstadoSumario
   fecha_apertura?: string | null
@@ -1440,6 +1455,8 @@ export type SumarioFormData = {
   servidor_id: number
   motivo: string
   fecha_apertura?: string | null
+  /** La falta que se imputa a un obrero (fase 4.4). */
+  falta_reglamento_id?: number | null
 }
 
 export type VistoBuenoFormData = {

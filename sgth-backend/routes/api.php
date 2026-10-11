@@ -24,6 +24,7 @@ use App\Http\Controllers\Catalogo\EntidadFinancieraController;
 use App\Http\Controllers\Catalogo\ProvinciaController;
 use App\Http\Controllers\Catalogo\TipoUnidadController;
 use App\Http\Controllers\Disciplinario\DisciplinarioController;
+use App\Http\Controllers\Disciplinario\FaltaReglamentoInternoController;
 use App\Http\Controllers\Disciplinario\VistoBuenoController;
 use App\Http\Controllers\Dispensario\AdquisicionController;
 use App\Http\Controllers\Dispensario\TableroSaludOcupacionalController;
@@ -1130,9 +1131,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             [TramoViaticoController::class, 'destroy']);
     });
 
-    // Módulo 14: Disciplinario — sumario administrativo (LOSEP) y visto bueno
-    // (Código del Trabajo). Son procedimientos distintos según el régimen del
-    // servidor, no dos nombres para lo mismo.
+    // Módulo 14: Disciplinario — sumario administrativo (LOSEP), procedimiento
+    // del reglamento interno y visto bueno (Código del Trabajo). Son
+    // procedimientos distintos según el régimen del servidor, no dos nombres
+    // para lo mismo.
     //
     // Sin `show` (2026-10-04): los cajones de detalle se arman con lo que trae
     // el listado, y lo único que añadía eran createdBy/updatedBy, que en el JSON
@@ -1145,6 +1147,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::post('sumarios', [DisciplinarioController::class, 'store']);
             Route::put('sumarios/{sumario}/avanzar', [DisciplinarioController::class, 'avanzar']);
             Route::post('sumarios/{id}/resolver', [DisciplinarioController::class, 'resolver']);
+
+            // El catálogo de faltas del reglamento interno de los obreros (fase
+            // 4.4). Sin borrado: se desactiva.
+            Route::get('reglamento-interno/faltas', [FaltaReglamentoInternoController::class, 'index']);
+            Route::post('reglamento-interno/faltas', [FaltaReglamentoInternoController::class, 'store']);
+            Route::put('reglamento-interno/faltas/{falta}', [FaltaReglamentoInternoController::class, 'update']);
 
             Route::get('vistos-buenos', [VistoBuenoController::class, 'index']);
             Route::post('vistos-buenos', [VistoBuenoController::class, 'store']);

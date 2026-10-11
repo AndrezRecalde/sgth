@@ -4,6 +4,7 @@ import { Text } from '@mantine/core'
 import { StatusBadge, TableActions, type TableAction } from '@/components/ui'
 import {
   ESTADO_SUMARIO_LABELS,
+  PROCEDIMIENTO_LABELS,
   TIPO_SANCION_LABELS,
   TONO_SUMARIO,
   nombreServidor,
@@ -36,7 +37,16 @@ export function columnasSumario(
       accessor: 'motivo',
       title: 'Motivo',
       render: (s) => (
-        <Text size="sm" lineClamp={2}>{s.motivo}</Text>
+        <div>
+          <Text size="sm" lineClamp={2}>{s.motivo}</Text>
+          {/* El del obrero dice su procedimiento y su falta (fase 4.4). */}
+          {s.procedimiento === 'reglamento_interno' && (
+            <Text size="xs" c="dimmed" lineClamp={1}>
+              {PROCEDIMIENTO_LABELS[s.procedimiento]}
+              {s.falta_reglamento ? ` · ${s.falta_reglamento.articulo}` : ''}
+            </Text>
+          )}
+        </div>
       ),
     },
     {

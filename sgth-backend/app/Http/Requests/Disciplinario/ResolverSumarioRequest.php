@@ -24,7 +24,12 @@ class ResolverSumarioRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'tipo_falta'       => ['required', Rule::enum(TipoFalta::class)],
+            // La gravedad es del sumario de la LOSEP; el procedimiento del
+            // reglamento interno de un obrero lleva su falta del catálogo
+            // (fase 4.4). Cuál se exige lo decide DisciplinarioService, que
+            // sabe de qué procedimiento es el sumario.
+            'tipo_falta'       => ['nullable', Rule::enum(TipoFalta::class)],
+            'falta_reglamento_id' => ['nullable', 'integer', 'exists:faltas_reglamento_interno,id'],
             'tipo_sancion'     => ['required', Rule::enum(TipoSancion::class)],
             'porcentaje_multa' => [
                 'nullable',

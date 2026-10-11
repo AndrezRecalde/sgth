@@ -2,8 +2,9 @@ import { z } from 'zod/v4'
 import { fromDateValue } from '@/lib/fecha'
 
 /**
- * Apertura del sumario administrativo. Las reglas son las de
- * `StoreSumarioRequest`.
+ * Apertura del sumario administrativo o, a un obrero, del procedimiento de su
+ * reglamento interno (fase 4.4). Las reglas son las de `StoreSumarioRequest`;
+ * que el obrero traiga su falta lo pide el modal, que sabe quién es.
  */
 
 const MOTIVO_MAX = 2000
@@ -25,6 +26,7 @@ export const sumarioSchema = z.object({
   fecha_apertura: z.string()
     .min(1, 'Indique la fecha de apertura')
     .refine((f) => !esFechaFutura(f), 'El sumario no puede abrirse con una fecha futura'),
+  falta_reglamento_id: z.number().optional().nullable(),
 })
 
 export type SumarioFormValues = z.infer<typeof sumarioSchema>

@@ -1,7 +1,8 @@
 'use client'
 
 import { Alert, Tabs } from '@mantine/core'
-import { IconInfoCircle, IconScale, IconTool } from '@tabler/icons-react'
+import { IconBook2, IconInfoCircle, IconScale, IconTool } from '@tabler/icons-react'
+import { ReglamentoInternoTab } from '@/features/disciplinario/components/ReglamentoInternoTab'
 import { SumariosTab } from '@/features/disciplinario/components/SumariosTab'
 import { VistosBuenosTab } from '@/features/disciplinario/components/VistosBuenosTab'
 import { PageHeader, PageShell } from '@/components/ui'
@@ -23,19 +24,24 @@ export function DisciplinarioView() {
         icon={<IconInfoCircle size={16} />}
       >
         El procedimiento depende del régimen del servidor: el <strong>sumario
-        administrativo</strong> aplica al personal LOSEP, y el <strong>visto
-        bueno</strong> ante el Inspector del Trabajo a los obreros bajo Código del
-        Trabajo. En ambos casos, la terminación del vínculo se materializa como
-        una Cesación de Funciones que Talento Humano debe revisar y aprobar.
+        administrativo</strong> aplica al personal LOSEP. A los obreros bajo
+        Código del Trabajo se les sanciona con el <strong>procedimiento de su
+        reglamento interno</strong>, con las faltas de su catálogo, y su
+        terminación por falta grave es un <strong>visto bueno</strong> ante el
+        Inspector del Trabajo. La terminación del vínculo se materializa como una
+        cesación que Talento Humano debe revisar y aprobar.
       </Alert>
 
       <Tabs defaultValue="sumarios">
         <Tabs.List mb="md">
           <Tabs.Tab value="sumarios" leftSection={<IconScale size={16} />}>
-            Sumarios administrativos (LOSEP)
+            Sumarios y procedimientos
           </Tabs.Tab>
           <Tabs.Tab value="vistos-buenos" leftSection={<IconTool size={16} />}>
             Vistos buenos (Código del Trabajo)
+          </Tabs.Tab>
+          <Tabs.Tab value="reglamento-interno" leftSection={<IconBook2 size={16} />}>
+            Reglamento interno
           </Tabs.Tab>
         </Tabs.List>
 
@@ -45,6 +51,10 @@ export function DisciplinarioView() {
 
         <Tabs.Panel value="vistos-buenos">
           <VistosBuenosTab />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="reglamento-interno">
+          <ReglamentoInternoTab />
         </Tabs.Panel>
       </Tabs>
     </PageShell>

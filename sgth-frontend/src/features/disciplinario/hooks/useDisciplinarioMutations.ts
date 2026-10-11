@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   disciplinarioService,
   type AvanzarSumarioData,
+  type FaltaReglamentoData,
   type ResolverSumarioData,
   type TransicionarVistoBuenoData,
 } from '../services/disciplinarioService'
@@ -24,11 +25,33 @@ export function useDisciplinarioMutations() {
 
   const crearSumario = useMutation({
     mutationFn: (data: SumarioFormData) => disciplinarioService.crearSumario(data),
-    onSuccess: () => {
-      notificar.exito('Sumario abierto', 'El sumario administrativo fue registrado.')
+    onSuccess: (sumario) => {
+      notificar.exito(
+        'Procedimiento abierto',
+        sumario.procedimiento === 'reglamento_interno'
+          ? 'El procedimiento del reglamento interno fue registrado.'
+          : 'El sumario administrativo fue registrado.',
+      )
       invalidarSumarios()
     },
-    onError: notificar.alFallar('No se pudo abrir el sumario'),
+    // La falta que falta la pone SumarioModal bajo el campo (fase 4.4).
+    onError: notificar.alFallarSalvoCampos('No se pudo abrir el procedimiento'),
+  })
+
+  const invalidarFaltas = () => qc.invalidateQueries({ queryKey: ['faltas-reglamento'] })
+
+  const guardarFalta = useMutation({
+    mutationFn: ({ id, data }: { id?: number | null; data: FaltaReglamentoData }) => id
+      ? disciplinarioService.actualizarFaltaReglamento(id, data)
+      : disciplinarioService.crearFaltaReglamento(data),
+    onSuccess: (_falta, variables) => {
+      notificar.exito(
+        variables.id ? 'Falta actualizada' : 'Falta agregada',
+        'El catálogo del reglamento interno quedó al día.',
+      )
+      invalidarFaltas()
+    },
+    onError: notificar.alFallarSalvoCampos('No se pudo guardar la falta'),
   })
 
   const avanzarSumario = useMutation({
@@ -101,6 +124,7 @@ export function useDisciplinarioMutations() {
 
   return {
     crearSumario,
+    guardarFalta,
     avanzarSumario,
     resolverSumario,
     crearVistoBueno,

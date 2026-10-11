@@ -151,12 +151,16 @@ test('la amonestación escrita lleva acción; la verbal no [TH N13]', function (
     expect(MovimientoPersonal::where('servidor_id', $verbal->id)->exists())->toBeFalse();
 });
 
-test('al obrero su amonestación escrita le llega sin acción, hasta su bloque', function () {
+// Hasta la fase 4.4 le llegaba sin documento, «hasta su bloque».
+test('al obrero su amonestación escrita le llega con su hoja de registro interno', function () {
     $obrero = ($this->servidorCon)(TipoNombramiento::CODIGO_TRABAJO);
     ($this->resolver)(($this->sumario)($obrero), ['tipo_falta' => 'leve', 'tipo_sancion' => 'amonestacion_escrita'])
         ->assertOk();
 
-    expect(MovimientoPersonal::where('servidor_id', $obrero->id)->exists())->toBeFalse()
+    $hoja = MovimientoPersonal::where('servidor_id', $obrero->id)->sole();
+
+    expect($hoja->subtipo_movimiento)->toBe(SubtipoMovimientoPersonal::AMONESTACION_ESCRITA)
+        ->and($hoja->instrumento)->toBe(\App\Enums\InstrumentoActo::DOCUMENTO_CT)
         ->and(SancionDisciplinaria::count())->toBe(1);
 });
 

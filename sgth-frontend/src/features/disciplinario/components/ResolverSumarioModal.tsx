@@ -13,6 +13,7 @@ import {
   type ResolucionSumarioFormData,
 } from '../schemas/resolucionSumario.schema'
 import { ResolucionSancionCampos } from './ResolucionSancionCampos'
+import { ResolucionReglamentoFormulario } from './ResolucionReglamentoFormulario'
 import { nombreServidor } from '../utils/etiquetas'
 import type { Sumario } from '@/types/api'
 
@@ -33,6 +34,12 @@ export function ResolverSumarioModal({ opened, onClose, sumario }: Props) {
   // para que su animación de cierre no se corte.
   if (!sumario) {
     return <SgthModal opened={opened} onClose={onClose} title="Resolver el sumario" />
+  }
+
+  // El del obrero se resuelve con su reglamento interno, no con la gravedad de
+  // la LOSEP (fase 4.4).
+  if (sumario.procedimiento === 'reglamento_interno') {
+    return <ResolucionReglamentoFormulario key={sumario.id} opened={opened} onClose={onClose} sumario={sumario} />
   }
 
   // Se remonta al cambiar de sumario (key): así los valores iniciales son los

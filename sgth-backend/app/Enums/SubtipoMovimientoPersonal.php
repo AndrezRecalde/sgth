@@ -236,10 +236,12 @@ enum SubtipoMovimientoPersonal: string
             // DisciplinarioService, que es quien sabe qué sanción es.
             self::SANCION_DISCIPLINARIA => [...$conSancionYCesacionLosep, TipoNombramiento::CODIGO_TRABAJO],
 
-            // Fase 2.5. Al obrero solo le llega la multa: su amonestación va
-            // sin acción hasta su bloque (diseño, 9.15), y no se le suspende.
+            // Fase 2.5. Al obrero le llegan la multa y, desde la fase 4.4, la
+            // amonestación escrita; no se le suspende.
             self::SANCION_PECUNIARIA => [...$conSancionYCesacionLosep, TipoNombramiento::CODIGO_TRABAJO],
-            self::AMONESTACION_ESCRITA,
+            // Y su amonestación escrita desde la fase 4.4, con la hoja de
+            // registro interno. Al obrero no se le suspende.
+            self::AMONESTACION_ESCRITA => [...$conSancionYCesacionLosep, TipoNombramiento::CODIGO_TRABAJO],
             self::SUSPENSION_SIN_REMUNERACION => $conSancionYCesacionLosep,
 
             self::DESTITUCION,

@@ -4,12 +4,14 @@ namespace App\Services\Disciplinario;
 
 use App\Contracts\Disciplinario\DisciplinarioServiceInterface;
 use App\Enums\EstadoSumario;
+use App\Enums\ProcedimientoDisciplinario;
 use App\Enums\SubtipoMovimientoPersonal;
 use App\Enums\TipoMovimientoPersonal;
 use App\Enums\TipoFalta;
 use App\Enums\TipoNombramiento;
 use App\Enums\TipoSancion;
 use App\Exceptions\ReglaNegocioException;
+use App\Models\Disciplinario\FaltaReglamentoInterno;
 use App\Models\Disciplinario\SancionDisciplinaria;
 use App\Models\Disciplinario\Sumario;
 use App\Models\Expediente\Servidor;
@@ -18,6 +20,7 @@ use App\Services\Expediente\MovimientoPersonalService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 final class DisciplinarioService implements DisciplinarioServiceInterface
@@ -54,28 +57,38 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
         'cerrado'        => [],
     ];
 
+    /**
+     * Abre el sumario administrativo de un servidor de la LOSEP o, a un obrero,
+     * el procedimiento del reglamento interno con la falta que se le imputa
+     * (fase 4.4). Hasta aquí al obrero no se le abría nada: la pantalla lo
+     * mandaba al visto bueno, y su multa —que la resolución sí admitía— no se
+     * alcanzaba desde la aplicación.
+     */
     public function abrirSumario(int $servidorId, array $datos, int $userId): Sumario
     {
         $servidor = Servidor::with('contratoVigente')->findOrFail($servidorId);
-        $nombramiento = $servidor->contratoVigente?->tipo_nombramiento;
+        $procedimiento = ProcedimientoDisciplinario::para($servidor->contratoVigente?->tipo_nombramiento);
 
-        if ($nombramiento === TipoNombramiento::CODIGO_TRABAJO) {
-            throw new ReglaNegocioException(
-                'El sumario administrativo es el procedimiento de la LOSEP. Para un obrero '
-                    .'bajo Código del Trabajo, tramite un visto bueno ante el Inspector del Trabajo.'
-            );
-        }
+        $falta = $procedimiento === ProcedimientoDisciplinario::REGLAMENTO_INTERNO
+            ? $this->faltaDelCatalogo($datos['falta_reglamento_id'] ?? null)
+            : null;
 
         $tieneAbierto = Sumario::where('servidor_id', $servidorId)
             ->whereNotIn('estado', [EstadoSumario::RESUELTO->value, EstadoSumario::CERRADO->value])
             ->exists();
 
         if ($tieneAbierto) {
-            throw new ReglaNegocioException('El servidor ya tiene un sumario administrativo en curso.');
+            throw new ReglaNegocioException(
+                $falta
+                    ? 'El obrero ya tiene un procedimiento disciplinario en curso.'
+                    : 'El servidor ya tiene un sumario administrativo en curso.'
+            );
         }
 
         return Sumario::create([
             ...$datos,
+            'procedimiento'       => $procedimiento,
+            'falta_reglamento_id' => $falta?->id,
             'servidor_id'    => $servidorId,
             'estado'         => EstadoSumario::ABIERTO,
             'fecha_apertura' => $datos['fecha_apertura'] ?? now()->toDateString(),
@@ -220,8 +233,28 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
             );
         }
 
-        $this->assertSancionAplicableAlRegimen($sumario, $datosSancion['tipo_sancion']);
-        $this->assertSancionAdmitidaPorLaFalta($datosSancion['tipo_falta'], $datosSancion['tipo_sancion']);
+        // El obrero, con la falta de su reglamento interno: la que se le imputó
+        // o, si la resolución la cambia, otra del catálogo vigente (fase 4.4).
+        $falta = null;
+
+        if ($sumario->esDelReglamentoInterno()) {
+            $elegida = $datosSancion['falta_reglamento_id'] ?? null;
+
+            $falta = ! $elegida || (int) $elegida === (int) $sumario->falta_reglamento_id
+                ? $sumario->faltaReglamento
+                : $this->faltaDelCatalogo($elegida);
+
+            $this->assertSancionDelReglamento($falta, $datosSancion);
+        } else {
+            if (empty($datosSancion['tipo_falta'])) {
+                throw ValidationException::withMessages([
+                    'tipo_falta' => 'Indique la gravedad de la falta.',
+                ]);
+            }
+
+            $this->assertSancionAplicableAlRegimen($sumario, $datosSancion['tipo_sancion']);
+            $this->assertSancionAdmitidaPorLaFalta($datosSancion['tipo_falta'], $datosSancion['tipo_sancion']);
+        }
 
         DB::beginTransaction();
         try {
@@ -232,7 +265,9 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
 
             $sancion = SancionDisciplinaria::create([
                 'sumario_id'       => $sumario->id,
-                'tipo_falta'       => $datosSancion['tipo_falta'],
+                'falta_reglamento_id' => $falta?->id,
+                // La gravedad de la LOSEP no le aplica al obrero.
+                'tipo_falta'       => $falta ? null : $datosSancion['tipo_falta'],
                 'tipo_sancion'     => $datosSancion['tipo_sancion'],
                 'porcentaje_multa' => $datosSancion['porcentaje_multa'] ?? null,
                 'dias_suspension'  => $datosSancion['dias_suspension'] ?? null,
@@ -293,10 +328,11 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
      * AvisoFinancieroSancionService). La suspensión lleva su período.
      *
      * Elegibles, por la causal: los nombramientos LOSEP que TH fijó el
-     * 2026-09-28 y, para la multa, los obreros (2026-10-04). Al obrero su
-     * amonestación le llega sin acción hasta su bloque (diseño, 9.15), y la
-     * suspensión se le rechaza antes (assertSancionAplicableAlRegimen()). A un
-     * dignatario de elección popular la sanción se le registra sin acción.
+     * 2026-09-28 y, para la multa y la amonestación escrita, los obreros
+     * (2026-10-04 y fase 4.4), cuyo acto es la hoja de registro interno. La
+     * suspensión no se le impone (assertSancionAplicableAlRegimen() y el
+     * catálogo del reglamento interno). A un dignatario de elección popular la
+     * sanción se le registra sin acción.
      */
     private function crearAccionDeSancion(Sumario $sumario, SancionDisciplinaria $sancion): void
     {
@@ -334,13 +370,23 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
         SancionDisciplinaria $sancion,
         TipoNombramiento $nombramiento,
     ): string {
-        $falta  = mb_strtolower($sancion->tipo_falta->etiqueta());
-        $base   = "por falta {$falta} determinada en el Sumario Administrativo N.º {$sumario->id}, ";
-        $literal = $sancion->tipo_falta === TipoFalta::LEVE ? 'a' : 'b';
-        $origen = $nombramiento === TipoNombramiento::CODIGO_TRABAJO
-            ? $base.'conforme al Reglamento Interno de Trabajo y al Código del Trabajo, que no '
-                .'admite multas por más del 10 % de la remuneración.'
-            : $base."conforme a los Arts. 42 literal {$literal}) y 43 de la Ley Orgánica de Servicio Público.";
+        $reglamento = $sancion->faltaReglamento;
+
+        if ($reglamento) {
+            // La del obrero cita su reglamento interno (fase 4.4).
+            $origen = "por la falta prevista en el {$reglamento->cita()} —"
+                .Str::limit(rtrim(trim($reglamento->descripcion), '.'), 300)
+                ."—, determinada en el procedimiento disciplinario N.º {$sumario->id}, conforme a los "
+                .'Arts. 44 y 64 del Código del Trabajo.';
+        } else {
+            $falta  = mb_strtolower($sancion->tipo_falta->etiqueta());
+            $base   = "por falta {$falta} determinada en el Sumario Administrativo N.º {$sumario->id}, ";
+            $literal = $sancion->tipo_falta === TipoFalta::LEVE ? 'a' : 'b';
+            $origen = $nombramiento === TipoNombramiento::CODIGO_TRABAJO
+                ? $base.'conforme al Reglamento Interno de Trabajo y al Código del Trabajo, que no '
+                    .'admite multas por más del 10 % de la remuneración.'
+                : $base."conforme a los Arts. 42 literal {$literal}) y 43 de la Ley Orgánica de Servicio Público.";
+        }
 
         if ($sancion->tipo_sancion === TipoSancion::AMONESTACION_ESCRITA) {
             return "Se impone la sanción de amonestación escrita {$origen}";
@@ -387,6 +433,65 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
                 $ultima,
             ),
         ]);
+    }
+
+    /**
+     * La falta del catálogo vigente del reglamento interno. Sin catálogo
+     * cargado, al obrero no se le sanciona: el Código del Trabajo prohíbe
+     * imponer lo que el reglamento interno no prevé (Art. 44 a).
+     */
+    private function faltaDelCatalogo(mixed $id): FaltaReglamentoInterno
+    {
+        if (! FaltaReglamentoInterno::activas()->exists()) {
+            throw new ReglaNegocioException(
+                'El reglamento interno todavía no tiene faltas cargadas, y sin ellas al obrero no se le sanciona '
+                    .'(Código del Trabajo, Art. 44 a). Cárguelas en Disciplinario, «Reglamento interno».'
+            );
+        }
+
+        $falta = $id ? FaltaReglamentoInterno::find((int) $id) : null;
+
+        if (! $falta?->activo) {
+            throw ValidationException::withMessages([
+                'falta_reglamento_id' => $id
+                    ? 'La falta no está en el catálogo vigente del reglamento interno.'
+                    : 'Indique la falta del reglamento interno que se imputa.',
+            ]);
+        }
+
+        return $falta;
+    }
+
+    /**
+     * La sanción del obrero es una de las que su reglamento interno da a la
+     * falta, y la multa no pasa del porcentaje que fija, que nunca supera el
+     * 10 %. El error va en el campo, para que la pantalla lo ponga debajo.
+     *
+     * @param  array<string, mixed>  $datos
+     */
+    private function assertSancionDelReglamento(FaltaReglamentoInterno $falta, array $datos): void
+    {
+        $sancion = TipoSancion::from($datos['tipo_sancion']);
+
+        if (! $falta->admite($sancion)) {
+            $admitidas = implode(', ', array_map(
+                fn (TipoSancion $s) => mb_strtolower($s->etiqueta()),
+                $falta->sancionesAdmitidas(),
+            ));
+
+            throw ValidationException::withMessages([
+                'tipo_sancion' => "El {$falta->articulo} del reglamento interno sanciona esta falta con: {$admitidas}.",
+            ]);
+        }
+
+        if ($sancion === TipoSancion::MULTA
+            && (float) ($datos['porcentaje_multa'] ?? 0) > (float) $falta->porcentaje_maximo_multa
+        ) {
+            throw ValidationException::withMessages([
+                'porcentaje_multa' => "El {$falta->articulo} del reglamento interno admite una multa de hasta el "
+                    .rtrim(rtrim(number_format((float) $falta->porcentaje_maximo_multa, 2, ',', '.'), '0'), ',').' %.',
+            ]);
+        }
     }
 
     /**
@@ -446,7 +551,11 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
         $alertas = [];
 
         // 1. Notificación al sumariado: 3 días hábiles desde la apertura.
-        $sinNotificar = Sumario::where('estado', EstadoSumario::ABIERTO)
+        // Solo los del sumario administrativo: los plazos del procedimiento
+        // del reglamento interno los fija ese reglamento, que aún no tenemos
+        // (fase 4.4). Sus fechas se guardan igual.
+        $sinNotificar = Sumario::where('procedimiento', ProcedimientoDisciplinario::SUMARIO_ADMINISTRATIVO->value)
+            ->where('estado', EstadoSumario::ABIERTO)
             ->where('notificado_sn', false)
             ->get(['id', 'servidor_id', 'fecha_apertura']);
 
@@ -463,7 +572,8 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
 
         // 2. Informe del instructor: 3 días hábiles desde el término de la
         //    prueba. Mientras el sumario siga en prueba, el informe no está.
-        $enPrueba = Sumario::where('estado', EstadoSumario::EN_PRUEBA)
+        $enPrueba = Sumario::where('procedimiento', ProcedimientoDisciplinario::SUMARIO_ADMINISTRATIVO->value)
+            ->where('estado', EstadoSumario::EN_PRUEBA)
             ->whereNotNull('fecha_termino_prueba')
             ->get(['id', 'servidor_id', 'fecha_termino_prueba']);
 
@@ -480,7 +590,8 @@ final class DisciplinarioService implements DisciplinarioServiceInterface
 
         // 3. Resolución: 10 días hábiles desde el informe. Pasado el plazo, el
         //    sumario puede caducar y la sanción quedarse sin efecto.
-        $conInforme = Sumario::where('estado', EstadoSumario::CON_INFORME)
+        $conInforme = Sumario::where('procedimiento', ProcedimientoDisciplinario::SUMARIO_ADMINISTRATIVO->value)
+            ->where('estado', EstadoSumario::CON_INFORME)
             ->whereNotNull('fecha_informe')
             ->get(['id', 'servidor_id', 'fecha_informe']);
 

@@ -6,6 +6,7 @@ import {
 } from '@/components/ui'
 import {
   ESTADO_SUMARIO_LABELS,
+  PROCEDIMIENTO_LABELS,
   TIPO_FALTA_LABELS,
   TIPO_SANCION_LABELS,
   TONO_SUMARIO,
@@ -42,7 +43,7 @@ export function SumarioDetalleDrawer({ opened, onClose, sumario }: Props) {
     <SgthDrawer
       opened={opened}
       onClose={onClose}
-      title="Sumario administrativo"
+      title={sumario ? PROCEDIMIENTO_LABELS[sumario.procedimiento] : 'Sumario administrativo'}
       description={sumario ? nombreServidor(sumario.servidor) : undefined}
     >
       {sumario && <Contenido sumario={sumario} />}
@@ -62,6 +63,12 @@ function Contenido({ sumario }: { sumario: Sumario }) {
     },
     { label: 'Cédula', value: sumario.servidor?.cedula },
     { label: 'Motivo', value: sumario.motivo, ancho: true },
+    // La falta que se imputa al obrero, de su reglamento interno (fase 4.4).
+    ...(sumario.falta_reglamento ? [{
+      label: 'Falta imputada',
+      value: `${sumario.falta_reglamento.articulo} — ${sumario.falta_reglamento.descripcion}`,
+      ancho: true,
+    }] : []),
   ]
 
   const hitos: DetailItem[] = [
@@ -96,7 +103,17 @@ function Contenido({ sumario }: { sumario: Sumario }) {
           <DetailList
             columnas={2}
             items={[
-              { label: 'Gravedad de la falta', value: TIPO_FALTA_LABELS[sancion.tipo_falta] },
+              // En el del obrero, la falta de su reglamento; en el de la LOSEP,
+              // su gravedad (fase 4.4).
+              sancion.falta_reglamento
+                ? {
+                    label: 'Falta probada',
+                    value: `${sancion.falta_reglamento.articulo} del reglamento interno`,
+                  }
+                : {
+                    label: 'Gravedad de la falta',
+                    value: sancion.tipo_falta ? TIPO_FALTA_LABELS[sancion.tipo_falta] : null,
+                  },
               {
                 label: 'Sanción',
                 value: (
@@ -128,7 +145,7 @@ function Contenido({ sumario }: { sumario: Sumario }) {
                   : 'Sin remuneración registrada',
               }] : []),
               ...(accion ? [{
-                label: 'Acción de personal',
+                label: sumario.procedimiento === 'reglamento_interno' ? 'Hoja de registro interno' : 'Acción de personal',
                 value: (
                   <StatusBadge tone={TONO_ACCION[accion.estado]}>
                     {accion.codigo_registro
