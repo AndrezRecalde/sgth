@@ -1,5 +1,5 @@
 import { z } from 'zod/v4'
-import type { CatalogoAccionesPersonal } from '@/types/api'
+import type { CatalogoAccionesPersonal, ClaseDelCatalogo } from '@/types/api'
 import { buscarClase } from '../utils/catalogoAcciones'
 
 const camposDelFormulario = z.object({
@@ -25,6 +25,8 @@ const camposDelFormulario = z.object({
   institucion_destino: z.string().max(255).optional().nullable(),
   para_estudios_o_eventos: z.boolean().optional().nullable(),
 
+  // El informe técnico de la UATH del traslado (fase 3.1).
+  informe_uath_numero: z.string().max(100).optional().nullable(),
   // La sentencia de una restitución (fase 2.6).
   causa_judicial_numero: z.string().max(100).optional().nullable(),
   unidad_judicial: z.string().max(255).optional().nullable(),
@@ -57,11 +59,24 @@ export type MovimientoFormData = z.infer<typeof camposDelFormulario>
  * clase tomadas del catálogo: si pide causal, período, situación propuesta o
  * datos de contratación.
  */
-export function crearMovimientoSchema(catalogo: CatalogoAccionesPersonal) {
+export function crearMovimientoSchema(
+  catalogo: CatalogoAccionesPersonal,
+  /** El nombramiento vigente del servidor: de él depende si el traslado pide el informe. */
+  tipoNombramiento?: string | null,
+) {
   return camposDelFormulario.superRefine((data, ctx) => {
     const clase = buscarClase(catalogo, data.clase)
 
     if (!clase) return
+
+    // El traslado, previo informe de la UATH (LOSEP Art. 35; fase 3.1). A
+    // quién se le pide lo dice el catálogo.
+    if (pideInformeUath(clase, tipoNombramiento) && !data.informe_uath_numero?.trim()) {
+      ctx.addIssue({
+        path: ['informe_uath_numero'], code: 'custom',
+        message: 'Indique el número del informe técnico de la UATH',
+      })
+    }
 
     if (clase.causales.length > 0 && !data.causal) {
       ctx.addIssue({
@@ -155,4 +170,12 @@ export function crearMovimientoSchema(catalogo: CatalogoAccionesPersonal) {
       })
     }
   })
+}
+
+/** ¿El traslado de este servidor pide el informe de la UATH? Lo responde el catálogo. */
+export function pideInformeUath(
+  clase: ClaseDelCatalogo | undefined,
+  tipoNombramiento?: string | null,
+): boolean {
+  return !!tipoNombramiento && !!clase?.pide_informe_uath_para.some((n) => n === tipoNombramiento)
 }

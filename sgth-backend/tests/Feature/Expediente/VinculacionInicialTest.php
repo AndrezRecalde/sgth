@@ -296,6 +296,11 @@ test('el listado devuelve solo la cohorte migrada', function () {
 test('el vínculo migrado sirve de situación actual para la siguiente acción', function () {
     $datos = ($this->payload)();
 
+    // A otro puesto con la misma escala: el traslado exige igual remuneración
+    // y no es al mismo puesto (fase 3.1).
+    $destino = Puesto::create(['unidad_administrativa_id' => $this->unidad->id, 'plazas' => 5]);
+    escalaComunParaTraslados(1212.50, $this->puesto, $destino);
+
     $servidor = $this->service->registrar(
         collect($datos)->except('vinculo')->all(),
         $datos['vinculo'],
@@ -305,10 +310,11 @@ test('el vínculo migrado sirve de situación actual para la siguiente acción',
         ->registrar($servidor->id, [
             'tipo_movimiento'    => TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO->value,
             'subtipo_movimiento' => \App\Enums\SubtipoMovimientoPersonal::TRASPASO->value,
+            'informe_uath_numero' => 'INF-UATH-PRUEBA',
             'descripcion'        => 'Traspaso posterior a la migración',
             'fecha_efectiva'     => '2026-08-04',
             'unidad_destino_id'  => $this->unidad->id,
-            'puesto_destino_id'  => $this->puesto->id,
+            'puesto_destino_id'  => $destino->id,
         ]);
 
     // La situación actual se congela desde el contrato migrado.

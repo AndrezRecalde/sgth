@@ -43,6 +43,8 @@ export type AusenciaTemporal = {
   puesto: string | null
   puesto_id: number | null
   destino: string | null
+  /** Una jefatura se cubre con subrogación o encargo, no con reemplazo [TH 19]. */
+  es_jefatura: boolean
   reemplazo: ReemplazoAusencia | null
 }
 

@@ -379,6 +379,26 @@ enum ClaseAccionPersonal: string
     }
 
     /**
+     * A quién le pide el traslado el informe técnico de la UATH, y con él las
+     * demás reglas del Art. 35 (fase 3.1): a los nombramientos de la LOSEP.
+     * Servicios Profesionales conserva su «Prestación de servicios» sin ellas
+     * hasta su bloque (fase 4.2).
+     *
+     * @return list<TipoNombramiento>
+     */
+    public function pideInformeUathPara(): array
+    {
+        if ($this !== self::TRASLADO) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            $this->nombramientosElegibles(),
+            fn (TipoNombramiento $n) => $n !== TipoNombramiento::SERVICIOS_PROFESIONALES,
+        ));
+    }
+
+    /**
      * Si la casilla «Requiere ficha de salud ocupacional» abre marcada. Es el
      * mismo valor que aplica el servicio cuando la petición no lo trae.
      */
@@ -413,6 +433,9 @@ enum ClaseAccionPersonal: string
             $this === self::COMISION_SIN_REMUNERACION =>
                 'Con 1 año de servicio a la fecha de inicio, y hasta 6 años sumados en toda la '
                     .'carrera. Nunca para un puesto del nivel jerárquico superior (LOSEP Art. 31).',
+            $this === self::TRASLADO =>
+                'A otro puesto vacante de la institución, con igual remuneración y previo informe de la UATH '
+                    .'(LOSEP Art. 35), que deja constancia de que el servidor cumple el perfil (Art. 36).',
             $this === self::RESTITUCION =>
                 'Por sentencia ejecutoriada (LOSEP Art. 46): deja sin efecto la cesación que cerró '
                     .'su último nombramiento permanente y lo devuelve al mismo puesto, sin perder la '

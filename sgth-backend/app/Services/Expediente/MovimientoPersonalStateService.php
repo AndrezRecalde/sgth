@@ -29,6 +29,7 @@ class MovimientoPersonalStateService
         private readonly ReintegroService $reintegros,
         private readonly SancionSinEfectoService $sanciones,
         private readonly RestitucionService $restituciones,
+        private readonly TrasladoService $traslados,
     ) {
     }
 
@@ -526,13 +527,25 @@ class MovimientoPersonalStateService
             return;
         }
 
-        if (($movimiento->cierraElVinculo() || $movimiento->reubicaAlServidor())
-            && ! Servidor::with('contratoVigente')->find($movimiento->servidor_id)?->contratoVigente
-        ) {
+        $vigente = Servidor::with('contratoVigente')->find($movimiento->servidor_id)?->contratoVigente;
+
+        if (($movimiento->cierraElVinculo() || $movimiento->reubicaAlServidor()) && ! $vigente) {
             throw new ReglaNegocioException(
                 $movimiento->cierraElVinculo()
                     ? 'El servidor no tiene un vínculo laboral vigente que cesar.'
                     : 'El servidor no tiene un vínculo vigente para reubicar.'
+            );
+        }
+
+        // El puesto o su escala pueden haber cambiado desde el borrador: el
+        // traslado se vuelve a comprobar al registrarse (fase 3.1).
+        if ($vigente && TrasladoService::aplica(
+            $movimiento->tipo_movimiento, $movimiento->subtipoEfectivo(), $vigente->tipo_nombramiento
+        )) {
+            $this->traslados->validarDestino(
+                $vigente,
+                $movimiento->puesto_destino_id ? (int) $movimiento->puesto_destino_id : null,
+                $movimiento->unidad_destino_id ? (int) $movimiento->unidad_destino_id : null,
             );
         }
     }
@@ -826,10 +839,29 @@ class MovimientoPersonalStateService
             );
         }
 
+        // El puesto de origen pudo ocuparse mientras tanto (fase 3.1): sin
+        // plaza, no se vuelve a él.
+        try {
+            $this->contratoServidorService->validarVacante(
+                (int) $movimiento->puesto_origen_id,
+                $contrato->tipo_nombramiento->value,
+                $contrato->id,
+            );
+        } catch (ReglaNegocioException) {
+            throw new ReglaNegocioException(
+                'No se puede anular: el puesto del que venía el servidor ya no tiene plaza libre, así que '
+                    .'no hay a dónde devolverlo.'
+            );
+        }
+
         $contrato->update([
             'puesto_id'                => $movimiento->puesto_origen_id,
             'unidad_administrativa_id' => $movimiento->unidad_origen_id
                 ?? $contrato->unidad_administrativa_id,
+            // Y la partida, si el traslado la cambió.
+            ...($movimiento->partida_presupuestaria_id && $movimiento->partida_origen_id
+                ? ['partida_presupuestaria_id' => $movimiento->partida_origen_id]
+                : []),
         ]);
 
         $this->contratoServidorService->sincronizarPuestoDesdeVinculo($movimiento->servidor_id);

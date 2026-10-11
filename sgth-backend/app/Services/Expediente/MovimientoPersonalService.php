@@ -153,6 +153,18 @@ class MovimientoPersonalService
             $this->validarElegibilidad($servidor, $tipoMovimiento, $subtipo);
         }
 
+        // El traslado: igual remuneración, puesto de la unidad y el informe de
+        // la UATH (LOSEP Art. 35; fase 3.1).
+        if (TrasladoService::aplica($tipoMovimiento, $subtipo, $servidor->contratoVigente?->tipo_nombramiento)) {
+            $traslados = app(TrasladoService::class);
+            $traslados->exigirInforme($datos['informe_uath_numero'] ?? null);
+            $traslados->validarDestino(
+                $servidor->contratoVigente,
+                isset($datos['puesto_destino_id']) ? (int) $datos['puesto_destino_id'] : null,
+                isset($datos['unidad_destino_id']) ? (int) $datos['unidad_destino_id'] : null,
+            );
+        }
+
         if ($subtipo === SubtipoMovimientoPersonal::TERMINACION_UNILATERAL) {
             self::impedirTerminacionDeProtegida($servidorId);
         }
@@ -330,6 +342,7 @@ class MovimientoPersonalService
             );
         }
         $this->revalidarReemplazo($movimiento, $datos);
+        $this->revalidarTraslado($movimiento, $datos);
 
         if ($movimiento->tipo_movimiento === TipoMovimientoPersonal::RESTITUCION) {
             $datos = $this->revalidarRestitucion($movimiento, $datos);
@@ -341,6 +354,36 @@ class MovimientoPersonalService
             'unidadOrigen', 'unidadDestino', 'puestoOrigen.cargo',
             'puestoDestino.cargo', 'partidaPresupuestaria', 'autorizadoPor',
         ]);
+    }
+
+    /**
+     * Corregir el borrador de un traslado: el informe no se deja vacío, y el
+     * puesto resultante sigue cumpliendo el Art. 35 (fase 3.1).
+     *
+     * @param  array<string, mixed>  $datos
+     */
+    private function revalidarTraslado(MovimientoPersonal $movimiento, array $datos): void
+    {
+        $vigente = Servidor::with('contratoVigente')->find($movimiento->servidor_id)?->contratoVigente;
+
+        if (! $vigente || ! TrasladoService::aplica(
+            $movimiento->tipo_movimiento, $movimiento->subtipoEfectivo(), $vigente->tipo_nombramiento
+        )) {
+            return;
+        }
+
+        $traslados = app(TrasladoService::class);
+
+        if (array_key_exists('informe_uath_numero', $datos)) {
+            $traslados->exigirInforme($datos['informe_uath_numero']);
+        }
+
+        if (array_key_exists('puesto_destino_id', $datos) || array_key_exists('unidad_destino_id', $datos)) {
+            $puesto = $datos['puesto_destino_id'] ?? $movimiento->puesto_destino_id;
+            $unidad = $datos['unidad_destino_id'] ?? $movimiento->unidad_destino_id;
+
+            $traslados->validarDestino($vigente, $puesto ? (int) $puesto : null, $unidad ? (int) $unidad : null);
+        }
     }
 
     private function instrumentoPara(TipoMovimientoPersonal $tipo, TipoNombramiento|string|null $nombramiento): string
@@ -864,6 +907,13 @@ class MovimientoPersonalService
         if ($ausencia->servidor_id === $servidorId) {
             throw new ReglaNegocioException(
                 'Un servidor no puede cubrir su propia ausencia.'
+            );
+        }
+
+        if ($ausencia->esAusenciaDeJefatura()) {
+            throw new ReglaNegocioException(
+                'La ausencia de una jefatura se cubre con subrogación o encargo, no con un reemplazo '
+                    .'contratado (TH 19). Regístrela desde Subrogaciones.'
             );
         }
 

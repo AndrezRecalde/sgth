@@ -39,6 +39,8 @@ class ClaseAccionPersonalResource extends JsonResource
             'pide_institucion_destino'    => $clase->pideInstitucionDestino(),
             'admite_para_estudios_o_eventos' => $clase->admiteParaEstudiosOEventos(),
             'pide_datos_judiciales'       => $clase->pideDatosJudiciales(),
+            /** @var list<TipoNombramiento> */
+            'pide_informe_uath_para'      => $clase->pideInformeUathPara(),
             'pide_contratacion'           => $clase->pideContratacion(),
             // Con estos nombramientos no es acción sino registro del contrato
             // (fase 2.7): el formulario no pide firmantes.

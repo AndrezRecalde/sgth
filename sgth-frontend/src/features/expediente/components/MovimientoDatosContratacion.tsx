@@ -44,7 +44,9 @@ export function MovimientoDatosContratacion({
 
   // Solo las que hoy siguen sin cubrir: ofrecer una ya cubierta serviría solo
   // para que el backend la rechace.
-  const { data: ausencias = [] } = useAusenciasTemporales({ cubiertas: false })
+  // Tampoco las jefaturas: se cubren con subrogación o encargo [TH 19].
+  const { data: todas = [] } = useAusenciasTemporales({ cubiertas: false })
+  const ausencias = todas.filter((a) => !a.es_jefatura)
 
   const ausenciaOptions = ausencias.map((a) => ({
     value: String(a.id),

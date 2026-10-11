@@ -119,6 +119,8 @@ class MovimientoPersonalResource extends JsonResource
             'efecto_aplicado_en'          => $this->efecto_aplicado_en,
             'pendiente_de_vigencia'       => $this->pendienteDeVigencia(),
             'resolucion_numero'           => $this->resolucion_numero,
+            // El informe de la UATH del traslado (fase 3.1).
+            'informe_uath_numero'         => $this->informe_uath_numero,
             // La sentencia de una restitución (fase 2.6).
             'causa_judicial_numero'       => $this->causa_judicial_numero,
             'unidad_judicial'             => $this->unidad_judicial,

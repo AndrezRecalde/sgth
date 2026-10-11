@@ -37,6 +37,8 @@ beforeEach(function () {
     $this->puestoB = Puesto::create([
         'codigo' => 'P-B', 'unidad_administrativa_id' => $this->unidad->id, 'plazas' => 5,
     ]);
+    // El traslado exige igual remuneración (fase 3.1).
+    escalaComunParaTraslados(986, $this->puestoA, $this->puestoB);
 
     $this->stateService = app(MovimientoPersonalStateService::class);
 });
@@ -296,6 +298,7 @@ test('una prestación de servicios sin puesto_destino_id no puede registrarse', 
     $movimiento = app(\App\Services\Expediente\MovimientoPersonalService::class)
         ->registrar($servidor->id, [
             'tipo_movimiento' => TipoMovimientoPersonal::PRESTACION_SERVICIOS->value,
+            'informe_uath_numero' => 'INF-UATH-PRUEBA',
             'descripcion'     => 'Prestación de servicios sin puesto propuesto',
             'fecha_efectiva'  => '2026-08-01',
         ]);
@@ -336,6 +339,7 @@ test('una prestación de servicios reubica al servidor conservando el mismo cont
     $movimiento = app(\App\Services\Expediente\MovimientoPersonalService::class)
         ->registrar($servidor->id, [
             'tipo_movimiento'   => TipoMovimientoPersonal::PRESTACION_SERVICIOS->value,
+            'informe_uath_numero' => 'INF-UATH-PRUEBA',
             'descripcion'       => 'Prestación de servicios en el puesto B',
             'fecha_efectiva'    => '2026-08-01',
             'puesto_destino_id' => $this->puestoB->id,
@@ -420,6 +424,7 @@ test('una prestación de servicios de Servicios Profesionales no compite por la 
     $movimiento = app(\App\Services\Expediente\MovimientoPersonalService::class)
         ->registrar($profesional->id, [
             'tipo_movimiento'   => TipoMovimientoPersonal::PRESTACION_SERVICIOS->value,
+            'informe_uath_numero' => 'INF-UATH-PRUEBA',
             'descripcion'       => 'Prestación de servicios al puesto único',
             'fecha_efectiva'    => '2026-08-01',
             'puesto_destino_id' => $puestoUnico->id,
@@ -565,6 +570,7 @@ test('la actividad laboral agrupa las acciones bajo el contrato al que pertenece
     $traspaso = $servicio->registrar($servidor->id, [
         'tipo_movimiento'    => \App\Enums\TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO->value,
         'subtipo_movimiento' => \App\Enums\SubtipoMovimientoPersonal::TRASPASO->value,
+        'informe_uath_numero' => 'INF-UATH-PRUEBA',
         'descripcion'        => 'Traspaso',
         'fecha_efectiva'     => '2026-03-15',
         'puesto_destino_id'  => $this->puestoB->id,
@@ -628,6 +634,7 @@ test('la acción congela dónde estaba el servidor al momento de registrarla', f
         ->registrar($servidor->id, [
             'tipo_movimiento'    => \App\Enums\TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO->value,
             'subtipo_movimiento' => \App\Enums\SubtipoMovimientoPersonal::TRASPASO->value,
+            'informe_uath_numero' => 'INF-UATH-PRUEBA',
             'descripcion'        => 'Traspaso al puesto B',
             'fecha_efectiva'     => '2026-05-01',
             'puesto_destino_id'  => $this->puestoB->id,

@@ -6,7 +6,7 @@ import { Controller, useWatch, type UseFormReturn } from 'react-hook-form'
 import { IconInfoCircle } from '@tabler/icons-react'
 import { SectionHeading } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import type { MovimientoFormData } from '../schemas/movimiento.schema'
+import { pideInformeUath, type MovimientoFormData } from '../schemas/movimiento.schema'
 import type { ClaseDelCatalogo } from '@/types/api'
 import { FirmantesPanel } from './FirmantesPanel'
 import { MovimientoDatosJudiciales } from './MovimientoDatosJudiciales'
@@ -24,10 +24,13 @@ import { fromDateValue, fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 export function MovimientoDatosDelActo({
   form,
   clase,
+  tipoNombramiento,
 }: {
   form: UseFormReturn<MovimientoFormData>
   /** La clase elegida: de su ficha del catálogo sale si pide período y su aviso. */
   clase?: ClaseDelCatalogo
+  /** El nombramiento vigente: el traslado pide el informe de la UATH según él. */
+  tipoNombramiento?: string | null
 }) {
   const contained = useContainedInput()
   const { control, register, formState: { errors } } = form
@@ -119,6 +122,18 @@ export function MovimientoDatosDelActo({
           error={errors.institucion_destino?.message}
           {...contained}
           {...register('institucion_destino')}
+        />
+      )}
+
+      {pideInformeUath(clase, tipoNombramiento) && (
+        <TextInput
+          label="Informe técnico de la UATH N.º"
+          placeholder="Ej. INF-UATH-2026-010"
+          description="El traslado se hace previo informe de la UATH, donde consta que el servidor cumple el perfil del puesto (LOSEP Arts. 35 y 36)."
+          withAsterisk
+          error={errors.informe_uath_numero?.message}
+          {...contained}
+          {...register('informe_uath_numero')}
         />
       )}
 

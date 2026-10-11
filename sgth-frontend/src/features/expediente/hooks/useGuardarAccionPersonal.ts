@@ -64,6 +64,10 @@ export function useGuardarAccionPersonal({
         // las piden (fase 2.3): en otra acción se grabarían sin significar nada.
         institucion_destino: clase?.pide_institucion_destino ? (data.institucion_destino?.trim() || null) : null,
         para_estudios_o_eventos: clase?.admite_para_estudios_o_eventos ? !!data.para_estudios_o_eventos : false,
+        // El informe de la UATH, solo en el traslado (fase 3.1).
+        informe_uath_numero: clase?.pide_informe_uath_para.length
+          ? (data.informe_uath_numero?.trim() || null)
+          : null,
         // La sentencia, solo en la restitución (fase 2.6).
         ...(clase?.pide_datos_judiciales
           ? {

@@ -52,6 +52,8 @@ beforeEach(function () {
     $this->puestoB = Puesto::create([
         'codigo' => 'AN-B', 'unidad_administrativa_id' => $this->unidad->id, 'plazas' => 5,
     ]);
+    // El traslado exige igual remuneración (fase 3.1).
+    escalaComunParaTraslados(1500, $this->puestoA, $this->puestoB);
 
     $this->state   = app(MovimientoPersonalStateService::class);
     $this->service = app(MovimientoPersonalService::class);
@@ -279,6 +281,7 @@ test('anular un traspaso registrado devuelve al servidor a su puesto de origen',
     $traspaso = $this->service->registrar($servidor->id, [
         'tipo_movimiento'    => TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO->value,
         'subtipo_movimiento' => SubtipoMovimientoPersonal::TRASPASO->value,
+        'informe_uath_numero' => 'INF-UATH-PRUEBA',
         'descripcion'        => 'Traspaso al puesto B',
         'fecha_efectiva'     => '2026-03-01',
         'puesto_destino_id'  => $this->puestoB->id,
@@ -314,10 +317,12 @@ test('no se anula una acción si después se registró otra que toca el vínculo
     $puestoC = Puesto::create([
         'codigo' => 'AN-C', 'unidad_administrativa_id' => $this->unidad->id, 'plazas' => 5,
     ]);
+    escalaComunParaTraslados(1500, $puestoC);
 
     $primero = ($this->registrar)($this->service->registrar($servidor->id, [
         'tipo_movimiento'    => TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO->value,
         'subtipo_movimiento' => SubtipoMovimientoPersonal::TRASPASO->value,
+        'informe_uath_numero' => 'INF-UATH-PRUEBA',
         'descripcion'        => 'Primer traspaso: A → B',
         'fecha_efectiva'     => '2026-03-01',
         'puesto_destino_id'  => $this->puestoB->id,
@@ -327,6 +332,7 @@ test('no se anula una acción si después se registró otra que toca el vínculo
     $segundo = ($this->registrar)($this->service->registrar($servidor->id, [
         'tipo_movimiento'    => TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO->value,
         'subtipo_movimiento' => SubtipoMovimientoPersonal::TRASPASO->value,
+        'informe_uath_numero' => 'INF-UATH-PRUEBA',
         'descripcion'        => 'Segundo traspaso: B → C',
         'fecha_efectiva'     => '2026-07-01',
         'puesto_destino_id'  => $puestoC->id,
@@ -357,6 +363,7 @@ test('una acción posterior que no toca el vínculo no impide anular', function 
     $traspaso = ($this->registrar)($this->service->registrar($servidor->id, [
         'tipo_movimiento'    => TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO->value,
         'subtipo_movimiento' => SubtipoMovimientoPersonal::TRASPASO->value,
+        'informe_uath_numero' => 'INF-UATH-PRUEBA',
         'descripcion'        => 'Traspaso al puesto B',
         'fecha_efectiva'     => '2026-03-01',
         'puesto_destino_id'  => $this->puestoB->id,
@@ -386,6 +393,7 @@ test('anular un borrador no toca ningún vínculo', function () {
     $traspaso = $this->service->registrar($servidor->id, [
         'tipo_movimiento'    => TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO->value,
         'subtipo_movimiento' => SubtipoMovimientoPersonal::TRASPASO->value,
+        'informe_uath_numero' => 'INF-UATH-PRUEBA',
         'descripcion'        => 'Traspaso que no llegó a aprobarse',
         'fecha_efectiva'     => '2026-03-01',
         'puesto_destino_id'  => $this->puestoB->id,
@@ -408,6 +416,7 @@ test('una acción anulada que llegó a registrarse conserva su documento', funct
     $traspaso = ($this->registrar)($this->service->registrar($servidor->id, [
         'tipo_movimiento'    => TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO->value,
         'subtipo_movimiento' => SubtipoMovimientoPersonal::TRASPASO->value,
+        'informe_uath_numero' => 'INF-UATH-PRUEBA',
         'descripcion'        => 'Traspaso anulado',
         'fecha_efectiva'     => '2026-03-01',
         'puesto_destino_id'  => $this->puestoB->id,
@@ -431,6 +440,7 @@ test('un borrador anulado sigue sin documento: nunca fue nada', function () {
     $traspaso = $this->service->registrar($servidor->id, [
         'tipo_movimiento'    => TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO->value,
         'subtipo_movimiento' => SubtipoMovimientoPersonal::TRASPASO->value,
+        'informe_uath_numero' => 'INF-UATH-PRUEBA',
         'descripcion'        => 'Nunca aprobado',
         'fecha_efectiva'     => '2026-03-01',
         'puesto_destino_id'  => $this->puestoB->id,

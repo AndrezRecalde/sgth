@@ -154,7 +154,10 @@ function FormularioAccion({
       requiere_dictamen_medico: unicaClase?.dictamen_medico_por_defecto ?? false,
     }
 
-  const schema = React.useMemo(() => crearMovimientoSchema(catalogo), [catalogo])
+  const schema = React.useMemo(
+    () => crearMovimientoSchema(catalogo, vinculo.tipoNombramiento),
+    [catalogo, vinculo.tipoNombramiento],
+  )
 
   const form = useForm<MovimientoFormData>({
     resolver: zodResolver(schema),
@@ -263,7 +266,7 @@ function FormularioAccion({
               </Grid>
             )}
 
-            <MovimientoDatosDelActo form={form} clase={claseElegida} />
+            <MovimientoDatosDelActo form={form} clase={claseElegida} tipoNombramiento={vinculo.tipoNombramiento} />
 
             {/* Red de seguridad: si algo no valida, se dice. Con el error en
                 cada campo bastaría, pero esto cubre también lo que valide el
