@@ -37,7 +37,14 @@ class AccionPersonalPdfService
         // todos los tipos que quedan en esta tabla son actos —la bitácora pasó
         // a `eventos_vinculo`—, pero la puerta se queda: un tipo nuevo que no
         // lo sea no debe imprimir un documento de apariencia oficial.
-        if (! $movimiento->tipo_movimiento->tieneDocumentoImprimible()) {
+        if ($movimiento->esRegistroDeContrato()) {
+            throw new ReglaNegocioException(
+                'El registro del contrato no tiene documento de acción de personal: el contrato '
+                    .'se firma aparte y aquí solo se registra.'
+            );
+        }
+
+        if (! $movimiento->tieneDocumentoImprimible()) {
             throw new ReglaNegocioException(
                 "\"{$movimiento->tipo_movimiento->etiqueta()}\" es un registro interno del "
                     .'expediente, no una Acción de Personal: no tiene documento imprimible.'

@@ -5,6 +5,7 @@ namespace App\Services\Expediente;
 use App\Enums\AptitudMedica;
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\EstadoContrato;
+use App\Enums\InstrumentoActo;
 use App\Enums\PartidaPorModalidad;
 use App\Enums\SubtipoMovimientoPersonal;
 use App\Enums\TipoEventoVinculo;
@@ -71,6 +72,12 @@ class MovimientoPersonalStateService
 
         $this->assertTransicionPermitida($origen, $destino);
 
+        if ($destino === EstadoAccionPersonal::NOTIFICADA && ! $this->seNotifica($movimiento)) {
+            throw new ReglaNegocioException(
+                'Un registro del contrato no se notifica: el contrato lo firmó la persona.'
+            );
+        }
+
         return DB::transaction(function () use ($movimiento, $destino, $datos) {
             // Sin rama 'default': los cuatro estados de arriba son los únicos
             // alcanzables. El quinto, BORRADOR, no figura como destino en
@@ -114,9 +121,16 @@ class MovimientoPersonalStateService
 
         return array_values(array_filter(
             $destinos,
-            fn (EstadoAccionPersonal $destino) => ($permiso = $destino->permisoParaLlegar()) === null
-                || $usuario->can($permiso->value),
+            fn (EstadoAccionPersonal $destino) => (($permiso = $destino->permisoParaLlegar()) === null
+                || $usuario->can($permiso->value))
+                && ($destino !== EstadoAccionPersonal::NOTIFICADA || $this->seNotifica($movimiento)),
         ));
+    }
+
+    /** Lo que la persona no firmó (fase 2.7): el contrato del ocasional sí. */
+    private function seNotifica(MovimientoPersonal $movimiento): bool
+    {
+        return ($movimiento->instrumento ?? InstrumentoActo::ACCION_PERSONAL)->seNotifica();
     }
 
     private function assertTransicionPermitida(EstadoAccionPersonal $origen, EstadoAccionPersonal $destino): void
@@ -149,10 +163,16 @@ class MovimientoPersonalStateService
         // Suscribir es el acto de firma: aquí se sella quién firmó, porque las
         // autoridades rotan y el documento debe seguir mostrando a quien firmó
         // entonces aunque hoy el cargo lo ocupe otra persona.
-        $this->firmanteService->sellarEn(
-            $movimiento,
-            $datos['fecha_suscripcion'] ?? null
-        );
+        //
+        // El registro del contrato no lo firma nadie aquí: el contrato se firmó
+        // aparte (fase 2.7). Suscribirlo es darlo por revisado, y es también
+        // cuando se pide la ficha médica.
+        if (($movimiento->instrumento ?? InstrumentoActo::ACCION_PERSONAL)->sellaFirmantes()) {
+            $this->firmanteService->sellarEn(
+                $movimiento,
+                $datos['fecha_suscripcion'] ?? null
+            );
+        }
 
         $this->solicitarCertificacionMedicaSiHaceFalta($movimiento);
 
@@ -233,7 +253,11 @@ class MovimientoPersonalStateService
         $this->validarDatosPropuestos($movimiento);
         $this->validarDictamenMedico($movimiento);
 
-        $movimiento->codigo_registro = $this->generarCodigoRegistro();
+        // El registro del contrato lleva el número del contrato, no el
+        // correlativo AP, que solo cuenta acciones de personal (fase 2.7).
+        $movimiento->codigo_registro = $movimiento->esRegistroDeContrato()
+            ? $this->numeroDelRegistroDeContrato($movimiento)
+            : $this->generarCodigoRegistro();
         $movimiento->fecha_registro  = now()->toDateString();
 
         /*
@@ -1119,6 +1143,41 @@ class MovimientoPersonalStateService
      * año; no sustituye una secuencia dedicada, pero es suficiente para el
      * volumen de este módulo — la columna sigue siendo unique a nivel BD.
      */
+    /**
+     * El número del contrato, con lo demás que el registro necesita [TH N7]:
+     * plazo, puesto, partida y remuneración. Que no esté ya registrado lo
+     * comprueba aquí, con su nombre, y no el índice único con un error de base.
+     */
+    private function numeroDelRegistroDeContrato(MovimientoPersonal $movimiento): string
+    {
+        $faltan = array_keys(array_filter([
+            'el plazo del contrato' => ! $movimiento->fecha_fin_propuesta,
+            'la partida presupuestaria' => ! ($movimiento->partida_presupuestaria_id
+                ?? $movimiento->puestoDestino?->partida_presupuestaria_id),
+        ]));
+
+        if ($faltan !== []) {
+            throw new ReglaNegocioException('Para registrar el contrato indique '.implode(' y ', $faltan).'.');
+        }
+
+        $numero = trim((string) $movimiento->numero_contrato);
+
+        $repetido = MovimientoPersonal::where('instrumento', InstrumentoActo::REGISTRO_CONTRATO->value)
+            ->where('codigo_registro', $numero)
+            ->where('id', '!=', $movimiento->id)
+            ->with('servidor:id,nombre,apellido')
+            ->first();
+
+        if ($repetido) {
+            throw new ReglaNegocioException(
+                "El contrato N.º {$numero} ya está registrado, a nombre de "
+                    .trim(($repetido->servidor?->nombre ?? '').' '.($repetido->servidor?->apellido ?? '')).'.'
+            );
+        }
+
+        return $numero;
+    }
+
     private function generarCodigoRegistro(): string
     {
         $anio = now()->year;

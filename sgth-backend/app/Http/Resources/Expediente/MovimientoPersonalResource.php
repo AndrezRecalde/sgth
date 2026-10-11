@@ -52,7 +52,11 @@ class MovimientoPersonalResource extends JsonResource
             'es_ausencia_temporal'       => $this->esAusenciaTemporal(),
             'propone_situacion'          => $this->proponeSituacion(),
             'tiene_efecto_economico'     => (bool) $this->tipo_movimiento?->tieneEfectoEconomico(),
-            'tiene_documento_imprimible' => (bool) $this->tipo_movimiento?->tieneDocumentoImprimible(),
+            'tiene_documento_imprimible' => $this->tieneDocumentoImprimible(),
+            // Con qué documento se formaliza (fase 2.7): el ingreso de un
+            // ocasional es el registro de su contrato, sin acción.
+            'instrumento'                => $this->instrumento,
+            'instrumento_etiqueta'       => $this->instrumento?->etiqueta(),
             'editable_en_formulario'     => $this->editableEnFormulario(),
 
             // Lo que puede hacer con ella quien pregunta (fase 1.3): los pasos

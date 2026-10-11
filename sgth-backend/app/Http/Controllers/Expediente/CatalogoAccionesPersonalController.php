@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Expediente;
 
 use App\Enums\ClaseAccionPersonal;
 use App\Enums\FamiliaAccionPersonal;
+use App\Enums\InstrumentoActo;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Expediente\ClaseAccionPersonalResource;
 use App\Http\Resources\Expediente\FamiliaAccionPersonalResource;
+use App\Http\Resources\Expediente\InstrumentoActoResource;
 use App\Http\Responses\ApiResponse;
 use Illuminate\Http\JsonResponse;
 
@@ -29,6 +31,8 @@ class CatalogoAccionesPersonalController extends Controller
         return ApiResponse::ok([
             'familias' => FamiliaAccionPersonalResource::collection(FamiliaAccionPersonal::cases()),
             'clases'   => ClaseAccionPersonalResource::collection(ClaseAccionPersonal::cases()),
+            // Con qué documento se formaliza cada acto (fase 2.7).
+            'instrumentos' => InstrumentoActoResource::collection(InstrumentoActo::cases()),
         ], 'Catálogo de acciones de personal.');
     }
 }

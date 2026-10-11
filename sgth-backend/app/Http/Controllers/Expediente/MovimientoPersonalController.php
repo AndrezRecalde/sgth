@@ -83,6 +83,8 @@ class MovimientoPersonalController extends Controller
             ->when($request->filled('estado'), fn ($q) => $q->where('estado', $request->input('estado')))
             ->when($request->filled('tipo_movimiento'), fn ($q) => $q->where('tipo_movimiento', $request->input('tipo_movimiento')))
             ->when($request->filled('clase'), fn ($q) => $q->where('clase', $request->input('clase')))
+            // Acciones de personal o registros del contrato (fase 2.7).
+            ->when($request->filled('instrumento'), fn ($q) => $q->where('instrumento', $request->input('instrumento')))
             ->when($request->filled('servidor_id'), fn ($q) => $q->where('servidor_id', $request->integer('servidor_id')))
             ->when($request->filled('anio'), fn ($q) => $q->whereYear('fecha_efectiva', $request->integer('anio')))
             // Quien revisa la bandeja no ve lo que se le está preparando a él:

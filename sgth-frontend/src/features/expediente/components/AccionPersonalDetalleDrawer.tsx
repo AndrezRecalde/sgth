@@ -63,6 +63,9 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
                 {m.causal_base_legal ? ` · ${m.causal_base_legal}` : ''}
               </Text>
             )}
+            {m.instrumento === 'registro_contrato' && (
+              <Text size="sm" c="dimmed">{m.instrumento_etiqueta}: sin acción de personal</Text>
+            )}
           </div>
           <EstadoAccionBadge m={m} />
         </Group>

@@ -6660,11 +6660,19 @@
                                                     "items": {
                                                         "$ref": "#/components/schemas/ClaseAccionPersonalResource"
                                                     }
+                                                },
+                                                "instrumentos": {
+                                                    "type": "array",
+                                                    "description": "Con qu\u00e9 documento se formaliza cada acto (fase 2.7).",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/InstrumentoActoResource"
+                                                    }
                                                 }
                                             },
                                             "required": [
                                                 "familias",
-                                                "clases"
+                                                "clases",
+                                                "instrumentos"
                                             ]
                                         },
                                         "meta": {
@@ -24024,6 +24032,13 @@
                     },
                     {
                         "name": "clase",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "instrumento",
                         "in": "query",
                         "schema": {
                             "type": "string"
@@ -45132,6 +45147,12 @@
                     "pide_contratacion": {
                         "type": "boolean"
                     },
+                    "registro_de_contrato_para": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TipoNombramiento"
+                        }
+                    },
                     "dictamen_medico_por_defecto": {
                         "type": "boolean"
                     },
@@ -45156,6 +45177,7 @@
                     "admite_para_estudios_o_eventos",
                     "pide_datos_judiciales",
                     "pide_contratacion",
+                    "registro_de_contrato_para",
                     "dictamen_medico_por_defecto",
                     "aviso"
                 ],
@@ -49045,6 +49067,35 @@
                 ],
                 "title": "InspeccionSsoResource"
             },
+            "InstrumentoActo": {
+                "type": "string",
+                "description": "Con qu\u00e9 documento se formaliza un acto (dise\u00f1o de Acciones de Personal, 8.1). Todos comparten el registro, el historial y el motor de efectos; cambian la numeraci\u00f3n, el documento y qui\u00e9n firma. Llegan de uno en uno, con su bloque. El primero distinto de la acci\u00f3n de personal es el registro del contrato de un ocasional (fase 2.7; TH N7): la ley no le pide acci\u00f3n a ese ingreso (LOSEP 18, \u00faltimo inciso; Reglamento 19). Los de obreros, profesionales y autoridades electas vendr\u00e1n con los suyos.\n",
+                "enum": [
+                    "accion_personal",
+                    "registro_contrato"
+                ],
+                "title": "InstrumentoActo"
+            },
+            "InstrumentoActoResource": {
+                "type": "object",
+                "properties": {
+                    "codigo": {
+                        "$ref": "#/components/schemas/InstrumentoActo"
+                    },
+                    "etiqueta": {
+                        "type": "string",
+                        "enum": [
+                            "Acci\u00f3n de personal",
+                            "Registro del contrato"
+                        ]
+                    }
+                },
+                "required": [
+                    "codigo",
+                    "etiqueta"
+                ],
+                "title": "InstrumentoActoResource"
+            },
             "InventarioMedicina": {
                 "type": "object",
                 "properties": {
@@ -49816,6 +49867,9 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "instrumento": {
+                        "$ref": "#/components/schemas/InstrumentoActo"
                     }
                 },
                 "required": [
@@ -49879,7 +49933,8 @@
                     "unidad_judicial",
                     "fecha_sentencia",
                     "fecha_ejecutoria",
-                    "remuneraciones_dejadas_de_percibir"
+                    "remuneraciones_dejadas_de_percibir",
+                    "instrumento"
                 ],
                 "title": "MovimientoPersonal"
             },
@@ -49974,6 +50029,13 @@
                     },
                     "tiene_documento_imprimible": {
                         "type": "boolean"
+                    },
+                    "instrumento": {
+                        "description": "Con qu\u00e9 documento se formaliza (fase 2.7): el ingreso de un\nocasional es el registro de su contrato, sin acci\u00f3n.",
+                        "$ref": "#/components/schemas/InstrumentoActo"
+                    },
+                    "instrumento_etiqueta": {
+                        "type": "string"
                     },
                     "editable_en_formulario": {
                         "type": "boolean"
@@ -50583,6 +50645,8 @@
                     "propone_situacion",
                     "tiene_efecto_economico",
                     "tiene_documento_imprimible",
+                    "instrumento",
+                    "instrumento_etiqueta",
                     "editable_en_formulario",
                     "transiciones_permitidas",
                     "puede_editar",

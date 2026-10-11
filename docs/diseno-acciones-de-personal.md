@@ -867,7 +867,7 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
 **Fase 1 — Cimientos** (solo cambian nombres en pantalla, ya aprobados por TH)
 1. Catálogo servido por el backend y API por clase: enums `ClaseAccionPersonal` y `FamiliaAccionPersonal`; columna `clase` con su migración de datos; endpoint del catálogo; la creación pide `clase` y `causal`; el frontend consume el catálogo y se borra su copia de reglas. La clase convive con el par tipo/subtipo, que sigue mandando sobre cómo opera cada acción: la elegibilidad se delega en él y la traducción entre los dos vive en `ClaseAccionPersonal`.
    - `causal` no tiene columna todavía: hoy es el subtipo de la cesación. La tendrá cuando lleguen causales que no son subtipos (fase 2.1).
-   - `instrumento` llega con el primer instrumento distinto de la acción de personal (fase 2.7).
+   - `instrumento` llegó con el primer instrumento distinto de la acción de personal: el registro del contrato (fase 2.7).
 2. Bitácora fuera de `movimientos_personal` (`eventos_vinculo`); la API solo acepta clases creables a mano.
    - Pasan la novedad de contrato (ahora «contrato registrado sin acción», que cubre la carga inicial y el alta directa), las constancias de una subrogación terminada o cancelada antes, y los tipos `cambio_puesto`, `cambio_regimen` y `egreso`, que salen del catálogo. El expediente las muestra como «Novedades del vínculo», aparte de las acciones.
    - La reprogramación del plazo se queda en el registro de auditoría, de donde ya la lee la pantalla. Las correcciones llegan con las anotaciones del punto 4.
@@ -937,6 +937,11 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
    - Al surtir efecto, la sanción de la destitución queda sin efecto por sentencia (`sin_efecto_por_movimiento_id`); el sumario no se mueve. Anular la restitución borra el vínculo, devuelve la sanción y anula la remoción que siga en borrador.
    - Fuera: el pago de las remuneraciones (novedad de nómina, fase 7) y los períodos de vacaciones del tiempo fuera.
 7. Ocasionales: ingreso como registro del contrato, sin acción.
+   - Columna `instrumento` (enum `InstrumentoActo`) con `accion_personal` y `registro_contrato`; los de obreros, profesionales y autoridades llegan con sus bloques. Todo lo existente quedó como acción, y los borradores de ingreso de ocasionales pasaron a registro.
+   - Se decide sola en `MovimientoPersonalService::registrar()` —por donde entran el formulario, el reemplazo y Reclutamiento— y se recalcula al cambiar el nombramiento del borrador. El de Servicios Profesionales sigue como acción hasta 4.2.
+   - Mismo ciclo y mismos permisos. Al suscribirlo no se sellan firmantes (se sigue pidiendo la ficha médica), no se notifica y no tiene PDF.
+   - Su número es el del contrato, no el correlativo AP. El índice único pasó a ser por instrumento y `codigo_registro` admite 100 caracteres. Al registrarlo pide el plazo, la partida (la suya o la del puesto) y un número que no esté ya registrado.
+   - Los demás actos del ocasional siguen siendo acciones de personal. La bandeja filtra por instrumento, y el formulario cambia los firmantes por el aviso del registro.
 
 **Fase 3 — Movilidad y carrera**
 1. Traslado (Art. 35) unificado, con validaciones; jefaturas sin reemplazo contratado.
