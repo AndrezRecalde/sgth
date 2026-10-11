@@ -93,6 +93,9 @@ export function useGuardarAccionPersonal({
               fecha_fin_propuesta: data.fecha_fin_propuesta,
             }
           : { credencial_cne_numero: null, credencial_cne_fecha: null, acta_posesion_numero: null }),
+        // Con o sin remuneración y la prórroga, solo en la licencia del Consejo (4.1b).
+        con_remuneracion: clase?.pide_datos_de_licencia_del_consejo ? data.con_remuneracion : null,
+        prorroga_causa: clase?.pide_datos_de_licencia_del_consejo ? (data.prorroga_causa || null) : null,
         // El informe de la UATH, solo en el traslado (fase 3.1).
         informe_uath_numero: clase?.pide_informe_uath_para.length
           ? (data.informe_uath_numero?.trim() || null)

@@ -46,6 +46,8 @@ class ClaseAccionPersonalResource extends JsonResource
             'pide_acta_concurso'          => $clase->pideActaConcurso(),
             // La credencial, la posesión y el fin del período (fase 4.1).
             'pide_datos_del_periodo'      => $clase->pideDatosDelPeriodo(),
+            // Con o sin remuneración y la prórroga de la licencia del Consejo (4.1b).
+            'pide_datos_de_licencia_del_consejo' => $clase->pideDatosDeLicenciaDelConsejo(),
             // Con estos nombramientos no es acción sino registro del contrato
             // (fase 2.7): el formulario no pide firmantes.
             /** @var list<TipoNombramiento> */

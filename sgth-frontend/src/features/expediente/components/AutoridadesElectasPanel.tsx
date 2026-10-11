@@ -1,25 +1,29 @@
 'use client'
 
 import React from 'react'
-import { Alert, Stack } from '@mantine/core'
-import { IconBuildingBank, IconInfoCircle } from '@tabler/icons-react'
+import { Alert, Button, Group, Stack } from '@mantine/core'
+import { IconBuildingBank, IconInfoCircle, IconUserShare } from '@tabler/icons-react'
 import { DataState, SgthTable } from '@/components/ui'
 import { useAutoridadesElectas } from '../hooks/useAutoridadesElectas'
 import { usePuedePrepararAcciones } from '../hooks/usePuedePrepararAccion'
 import type { AutoridadElecta } from '../services/autoridadElectaService'
 import { getAutoridadElectaColumns } from './autoridadesElectas.columns'
 import { FinDelPeriodoModal } from './FinDelPeriodoModal'
+import { SubrogacionPorLeyModal } from './SubrogacionPorLeyModal'
 
 /**
  * El Prefecto y el Viceprefecto en funciones y su período (diseño, 9.14; TH
- * 1–7; fase 4.1). Su inicio y su cese se registran desde «Nueva acción de
- * personal», sin acción ni firmantes; aquí se ve cuándo termina cada período y
- * lo que sigue, y se fija el fin del de quien ya estaba sin él.
+ * 1–7; fases 4.1 y 4.1b). Su inicio, su cese y la licencia del Consejo se
+ * registran desde «Nueva acción de personal», sin acción ni firmantes; aquí se
+ * ve cuándo termina cada período, la ausencia en curso, quién subroga y lo que
+ * sigue. Se fija el fin del período de quien ya estaba sin él, y se registra la
+ * subrogación por ley de una ausencia que no nació de una licencia.
  */
 export function AutoridadesElectasPanel() {
   const { data: autoridades = [], isLoading, error, refetch } = useAutoridadesElectas()
   const puedePreparar = usePuedePrepararAcciones()
   const [aFijar, setAFijar] = React.useState<AutoridadElecta | null>(null)
+  const [subrogar, setSubrogar] = React.useState(false)
 
   const columns = getAutoridadElectaColumns({ puedePreparar, onFijarFin: setAFijar })
 
@@ -29,8 +33,18 @@ export function AutoridadesElectasPanel() {
         A las autoridades electas no se les emite acción de personal: su período
         empieza con la credencial del CNE y se cierra solo en su fecha. Si fue
         reelegida, registre el inicio del período nuevo desde «Nueva acción de
-        personal»: empieza cuando termina el actual, sin cortar su antigüedad.
+        personal»: empieza cuando termina el actual, sin cortar su antigüedad. La
+        licencia del Prefecto de más de tres días prepara sola la subrogación por
+        ley del Viceprefecto (COOTAD Art. 51).
       </Alert>
+
+      {puedePreparar(null) && (
+        <Group justify="flex-end">
+          <Button variant="light" leftSection={<IconUserShare size={16} />} onClick={() => setSubrogar(true)}>
+            Registrar subrogación por ley
+          </Button>
+        </Group>
+      )}
 
       <DataState
         loading={isLoading}
@@ -48,6 +62,7 @@ export function AutoridadesElectasPanel() {
       </DataState>
 
       <FinDelPeriodoModal opened={!!aFijar} onClose={() => setAFijar(null)} autoridad={aFijar} />
+      <SubrogacionPorLeyModal opened={subrogar} onClose={() => setSubrogar(false)} />
     </Stack>
   )
 }

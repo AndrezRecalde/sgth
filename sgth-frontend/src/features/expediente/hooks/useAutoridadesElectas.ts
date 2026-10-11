@@ -1,12 +1,33 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { notificar } from '@/components/ui'
-import { autoridadElectaService } from '../services/autoridadElectaService'
+import { autoridadElectaService, type SubrogacionPorLeyData } from '../services/autoridadElectaService'
 
 export function useAutoridadesElectas() {
   return useQuery({
     queryKey: ['autoridades-electas'],
     queryFn: autoridadElectaService.listar,
     staleTime: 1000 * 60,
+  })
+}
+
+/** La subrogación por ley del Viceprefecto (fase 4.1b). */
+export function useRegistrarSubrogacionPorLey() {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: (data: SubrogacionPorLeyData) => autoridadElectaService.registrarSubrogacionPorLey(data),
+    onSuccess: () => {
+      notificar.exito(
+        'Subrogación por ley preparada',
+        'Quedó en borrador en la bandeja: suscríbala con el dictamen presupuestario y regístrela.',
+      )
+      qc.invalidateQueries({ queryKey: ['autoridades-electas'] })
+      qc.invalidateQueries({ queryKey: ['movimientos'] })
+      qc.invalidateQueries({ queryKey: ['bandeja-movimientos'] })
+    },
+    // Los errores de campo los pinta el formulario; lo demás —tres días o
+    // menos, sin Viceprefecto— llega como mensaje.
+    onError: notificar.alFallarSalvoCampos('No se pudo preparar la subrogación por ley'),
   })
 }
 

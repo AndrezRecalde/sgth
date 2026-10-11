@@ -412,6 +412,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->middleware('role:admin-uath|asistente-uath');
         Route::post('contratos/{contrato}/fin-del-periodo', [AutoridadElectaController::class, 'fijarFinDelPeriodo'])
             ->middleware('permission:preparar-accion-personal');
+        // La subrogación por ley del Viceprefecto (fase 4.1b).
+        Route::post('autoridades-electas/subrogacion-por-ley', [AutoridadElectaController::class, 'subrogacionPorLey'])
+            ->middleware('permission:preparar-accion-personal');
 
         // El ascendido que no superó la prueba vuelve a su puesto (fase 3.3).
         Route::post('contratos/{contrato}/reintegro-del-ascenso', [PeriodoDePruebaController::class, 'reintegroDelAscenso'])

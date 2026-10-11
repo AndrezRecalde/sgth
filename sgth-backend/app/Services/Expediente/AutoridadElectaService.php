@@ -4,16 +4,20 @@ namespace App\Services\Expediente;
 
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\EstadoContrato;
+use App\Enums\EstadoSubrogacion;
+use App\Enums\MotivoSubrogacion;
 use App\Enums\SubtipoMovimientoPersonal;
 use App\Enums\TipoEventoVinculo;
 use App\Enums\TipoMovimientoPersonal;
 use App\Enums\TipoNombramiento;
+use App\Enums\TipoSubrogacion;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Estructura\Puesto;
 use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\EventoVinculo;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
+use App\Models\Expediente\Subrogacion;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -28,13 +32,20 @@ use Illuminate\Support\Facades\DB;
  * cierra solo en su fecha [TH 1]. La reelección abre el siguiente cuando
  * termina el anterior, sin cortar la antigüedad [TH 4].
  *
- * Las licencias y vacaciones que concede el Consejo, la subrogación por ley
- * del Viceprefecto y la asunción definitiva llegan en la 4.1b.
+ * Desde la 4.1b, también sus ausencias y su reemplazo: la licencia que concede
+ * el Consejo, la subrogación por ley del Viceprefecto y su asunción definitiva.
+ * Las vacaciones siguen en Asistencia, como las de todos [TH N11].
  */
 class AutoridadElectaService
 {
     /** El período de una autoridad seccional dura hasta cuatro años. */
     private const AÑOS_DEL_PERIODO = 4;
+
+    /** Los días de licencia del Consejo que caben en un año sin prórroga (COOTAD Art. 47 s). */
+    private const DIAS_DE_LICENCIA_AL_ANIO = 60;
+
+    /** Si la ausencia del Prefecto pasa de tantos días, lo subroga el Viceprefecto (COOTAD Art. 51). */
+    private const DIAS_PARA_SUBROGAR = 3;
 
     /**
      * Valida el inicio del período y fija lo que no se elige: la elección
@@ -293,6 +304,8 @@ class AutoridadElectaService
                     : null;
                 $cese = $this->ceseEnCurso($contrato);
                 $siguiente = $this->siguientePeriodo($contrato);
+                $ausencia = $this->ausenciaEnCurso($contrato);
+                $subrogacion = $this->subrogacionEnCurso($contrato);
 
                 return [
                     'contrato_id'     => $contrato->id,
@@ -312,10 +325,266 @@ class AutoridadElectaService
                     'puede_fijar_fin' => ! $inicio && ! $cese,
                     'cese'            => $cese ? [...$this->resumen($cese), 'causal' => $cese->subtipoEfectivo()?->etiqueta()] : null,
                     'siguiente'       => $this->resumen($siguiente),
+                    // La licencia del Consejo en curso o por venir (4.1b).
+                    'ausencia'        => $ausencia ? [
+                        ...$this->resumen($ausencia),
+                        'desde' => $ausencia->fecha_inicio?->toDateString(),
+                        'hasta' => $ausencia->finEfectivo()?->toDateString(),
+                    ] : null,
+                    // Quién lo subroga, o a quién subroga (4.1b).
+                    'subrogacion'     => $subrogacion,
+                    'es_prefecto'     => $this->prefecto()?->id === $contrato->id,
                 ];
             })
             ->values()
             ->all();
+    }
+
+    // ── Fase 4.1b: las ausencias de la autoridad y su reemplazo ─────
+
+    /**
+     * La licencia que concede el Consejo Provincial (COOTAD Art. 47 s): con o
+     * sin remuneración, como diga su resolución, y hasta 60 días acumulados en
+     * el año. Pasado el tope solo la admite una prórroga por enfermedad
+     * catastrófica o calamidad doméstica.
+     *
+     * @param  array<string, mixed>  $datos
+     */
+    public function validarLicenciaDelConsejo(Servidor $servidor, array $datos, ?int $excepto = null): void
+    {
+        if (blank($datos['fecha_inicio'] ?? null) || blank($datos['fecha_fin'] ?? null)) {
+            throw new ReglaNegocioException('Indique desde y hasta cuándo es la licencia que concede el Consejo.');
+        }
+
+        $inicio = Carbon::parse($datos['fecha_inicio'])->startOfDay();
+        $fin = Carbon::parse($datos['fecha_fin'])->startOfDay();
+
+        if ($fin->lt($inicio)) {
+            throw new ReglaNegocioException('La licencia termina después de empezar.');
+        }
+
+        if (! array_key_exists('con_remuneracion', $datos) || $datos['con_remuneracion'] === null) {
+            throw new ReglaNegocioException(
+                'Indique si la licencia es con o sin remuneración, como lo dice la resolución del Consejo.'
+            );
+        }
+
+        // Prorrogada por el Consejo: el tope no la detiene.
+        if (filled($datos['prorroga_causa'] ?? null)) {
+            return;
+        }
+
+        $otras = MovimientoPersonal::where('servidor_id', $servidor->id)
+            ->where('tipo_movimiento', TipoMovimientoPersonal::LICENCIA_CONSEJO->value)
+            ->where('estado', '!=', EstadoAccionPersonal::ANULADA->value)
+            ->when($excepto, fn ($q) => $q->where('id', '!=', $excepto))
+            ->get();
+
+        for ($anio = $inicio->year; $anio <= $fin->year; $anio++) {
+            $dias = $this->diasEnElAnio($inicio, $fin, $anio)
+                + $otras->sum(fn (MovimientoPersonal $l) => $l->fecha_inicio && $l->finEfectivo()
+                    ? $this->diasEnElAnio($l->fecha_inicio->copy()->startOfDay(), $l->finEfectivo()->copy()->startOfDay(), $anio)
+                    : 0);
+
+            if ($dias > self::DIAS_DE_LICENCIA_AL_ANIO) {
+                throw new ReglaNegocioException(
+                    "En {$anio} la autoridad sumaría {$dias} días de licencia del Consejo: el tope es "
+                        .self::DIAS_DE_LICENCIA_AL_ANIO.' al año (COOTAD Art. 47 s). Si el Consejo la prorrogó por '
+                        .'enfermedad catastrófica o calamidad doméstica, indique la causa.'
+                );
+            }
+        }
+    }
+
+    /** Los días de [desde, hasta] que caen en ese año. */
+    private function diasEnElAnio(Carbon $desde, Carbon $hasta, int $anio): int
+    {
+        $primero = Carbon::create($anio, 1, 1)->startOfDay();
+        $ultimo = Carbon::create($anio, 12, 31)->startOfDay();
+
+        $a = $desde->gt($primero) ? $desde : $primero;
+        $b = $hasta->lt($ultimo) ? $hasta : $ultimo;
+
+        return $b->lt($a) ? 0 : (int) $a->diffInDays($b) + 1;
+    }
+
+    /**
+     * El vínculo vigente del Prefecto: la autoridad electa en la jefatura de la
+     * unidad de máxima autoridad, que es la que firma como autoridad
+     * nominadora.
+     */
+    public function prefecto(): ?ContratoServidor
+    {
+        return ContratoServidor::where('estado', EstadoContrato::VIGENTE->value)
+            ->where('tipo_nombramiento', TipoNombramiento::ELECCION_POPULAR->value)
+            ->whereHas('puesto', fn ($p) => $p->where('es_jefe', true)
+                ->whereHas('unidadAdministrativa', fn ($u) => $u->where('es_maxima_autoridad', true)))
+            ->orderBy('id')
+            ->first();
+    }
+
+    /**
+     * El vínculo vigente del Viceprefecto: la otra autoridad electa en
+     * funciones. Si no hay exactamente una, no se adivina.
+     */
+    public function viceprefecto(): ?ContratoServidor
+    {
+        $prefecto = $this->prefecto();
+
+        $otras = ContratoServidor::where('estado', EstadoContrato::VIGENTE->value)
+            ->where('tipo_nombramiento', TipoNombramiento::ELECCION_POPULAR->value)
+            ->when($prefecto, fn ($q) => $q->where('id', '!=', $prefecto->id))
+            ->get();
+
+        return $otras->count() === 1 ? $otras->first() : null;
+    }
+
+    /** ¿Es del Prefecto este puesto? La jefatura de la unidad de máxima autoridad. */
+    private function esPuestoDelPrefecto(?int $puestoId): bool
+    {
+        return $puestoId !== null && Puesto::whereKey($puestoId)
+            ->where('es_jefe', true)
+            ->whereHas('unidadAdministrativa', fn ($u) => $u->where('es_maxima_autoridad', true))
+            ->exists();
+    }
+
+    /**
+     * La subrogación por ley del Viceprefecto (COOTAD Art. 51): si la ausencia
+     * del Prefecto pasa de tres días, lo subroga y recibe su remuneración. Es la
+     * misma fila de subrogaciones, así que mientras dure firma como autoridad
+     * nominadora «(S)»; su acto es de autoridad, con número AU, y conserva el
+     * dictamen presupuestario de toda subrogación porque paga la diferencia.
+     *
+     * @param  array{fecha_inicio: string, fecha_fin: string, motivo: string, resolucion_numero?: ?string, observacion?: ?string}  $datos
+     */
+    public function registrarSubrogacionPorLey(array $datos, ?MovimientoPersonal $ausencia = null): Subrogacion
+    {
+        $prefecto = $this->prefecto();
+        $vice = $this->viceprefecto();
+
+        if (! $prefecto) {
+            throw new ReglaNegocioException(
+                'No hay un Prefecto en funciones: la subrogación por ley es del Viceprefecto al Prefecto.'
+            );
+        }
+
+        if (! $vice) {
+            throw new ReglaNegocioException(
+                'No se encuentra a un único Viceprefecto en funciones que subrogue al Prefecto.'
+            );
+        }
+
+        $inicio = Carbon::parse($datos['fecha_inicio'])->startOfDay();
+        $fin = Carbon::parse($datos['fecha_fin'])->startOfDay();
+        $dias = $fin->lt($inicio) ? 0 : (int) $inicio->diffInDays($fin) + 1;
+
+        if ($dias <= self::DIAS_PARA_SUBROGAR) {
+            throw new ReglaNegocioException(
+                'El Viceprefecto subroga por ley cuando la ausencia del Prefecto pasa de tres días (COOTAD Art. 51): '
+                    ."esta dura {$dias}."
+            );
+        }
+
+        return app(SubrogacionService::class)->registrar([
+            'tipo'                      => TipoSubrogacion::SUBROGACION->value,
+            'servidor_subrogante_id'    => $vice->servidor_id,
+            'servidor_subrogado_id'     => $prefecto->servidor_id,
+            'unidad_administrativa_id'  => $prefecto->unidad_administrativa_id,
+            'puesto_subrogado_id'       => $prefecto->puesto_id,
+            'fecha_inicio'              => $inicio->toDateString(),
+            'fecha_fin'                 => $fin->toDateString(),
+            'motivo'                    => $datos['motivo'],
+            'resolucion_numero'         => $datos['resolucion_numero'] ?? null,
+            'observacion'               => $datos['observacion'] ?? 'Subrogación por ley del Viceprefecto (COOTAD Art. 51).',
+            'movimiento_relacionado_id' => $ausencia?->id,
+        ]);
+    }
+
+    /**
+     * Registrada la licencia del Consejo de un Prefecto, si pasa de tres días
+     * se prepara la subrogación por ley del Viceprefecto, en borrador. Si no se
+     * puede —no hay Viceprefecto, ya hay una—, no detiene la licencia: Talento
+     * Humano la registra desde «Autoridades electas».
+     */
+    public function prepararSubrogacionPorLey(MovimientoPersonal $licencia): ?Subrogacion
+    {
+        if ($licencia->tipo_movimiento !== TipoMovimientoPersonal::LICENCIA_CONSEJO
+            || ! $this->esPuestoDelPrefecto($licencia->puesto_origen_id)
+            || ! $licencia->fecha_inicio || ! $licencia->fecha_fin
+            || MovimientoPersonal::where('movimiento_relacionado_id', $licencia->id)
+                ->where('tipo_movimiento', TipoMovimientoPersonal::SUBROGACION->value)
+                ->where('estado', '!=', EstadoAccionPersonal::ANULADA->value)
+                ->exists()
+        ) {
+            return null;
+        }
+
+        try {
+            return $this->registrarSubrogacionPorLey([
+                'fecha_inicio'      => $licencia->fecha_inicio->toDateString(),
+                'fecha_fin'         => $licencia->fecha_fin->toDateString(),
+                'motivo'            => MotivoSubrogacion::LICENCIA->value,
+                'resolucion_numero' => $licencia->resolucion_numero,
+                'observacion'       => 'Preparada al registrarse la licencia del Consejo'
+                    .($licencia->codigo_registro ? " {$licencia->codigo_registro}" : '').'.',
+            ], $licencia);
+        } catch (ReglaNegocioException) {
+            return null;
+        }
+    }
+
+    /**
+     * Registrado el cese anticipado del Prefecto —revocatoria, remoción,
+     * renuncia o fallecimiento—, se prepara en borrador la asunción definitiva
+     * del Viceprefecto: asume hasta terminar el período (COOTAD Art. 51). Al
+     * fin del período no, porque termina también el del Viceprefecto.
+     */
+    public function prepararAsuncion(MovimientoPersonal $cese): ?MovimientoPersonal
+    {
+        $causal = $cese->subtipoEfectivo();
+
+        if (! $causal?->cierraVinculo()
+            || $causal === SubtipoMovimientoPersonal::FIN_DEL_PERIODO
+            || $cese->instrumento !== \App\Enums\InstrumentoActo::ACTO_AUTORIDAD
+            || ! $this->esPuestoDelPrefecto($cese->puesto_origen_id)
+            || MovimientoPersonal::where('movimiento_relacionado_id', $cese->id)
+                ->where('tipo_movimiento', TipoMovimientoPersonal::ASUNCION_DEFINITIVA->value)
+                ->where('estado', '!=', EstadoAccionPersonal::ANULADA->value)
+                ->exists()
+        ) {
+            return null;
+        }
+
+        // El Viceprefecto: la otra autoridad en funciones, que no es quien cesa.
+        $vice = ContratoServidor::where('estado', EstadoContrato::VIGENTE->value)
+            ->where('tipo_nombramiento', TipoNombramiento::ELECCION_POPULAR->value)
+            ->where('servidor_id', '!=', $cese->servidor_id)
+            ->get();
+
+        if ($vice->count() !== 1) {
+            return null;
+        }
+
+        $vice = $vice->first();
+        $puesto = Puesto::with('grupoOcupacional')->find($cese->puesto_origen_id);
+
+        try {
+            return app(MovimientoPersonalService::class)->registrar($vice->servidor_id, [
+                'tipo_movimiento'           => TipoMovimientoPersonal::ASUNCION_DEFINITIVA->value,
+                'descripcion'               => 'Asume la Prefectura hasta terminar el período, por la ausencia definitiva '
+                    .'del Prefecto ('.mb_strtolower($causal->etiqueta())
+                    .($cese->codigo_registro ? ", {$cese->codigo_registro}" : '').'), conforme al Art. 51 del COOTAD.',
+                'fecha_efectiva'            => $cese->fecha_efectiva->copy()->addDay()->toDateString(),
+                'puesto_destino_id'         => $cese->puesto_origen_id,
+                'unidad_destino_id'         => $cese->unidad_origen_id,
+                // La remuneración de la primera autoridad.
+                'remuneracion_propuesta'    => $cese->remuneracion_origen ?? $puesto?->rmu,
+                'partida_presupuestaria_id' => $cese->partida_origen_id,
+                'movimiento_relacionado_id' => $cese->id,
+            ]);
+        } catch (ReglaNegocioException) {
+            return null;
+        }
     }
 
     /** La cesación no anulada de este vínculo, en trámite o esperando su fecha. */
@@ -328,6 +597,51 @@ class AutoridadElectaService
             ->whereDate('fecha_efectiva', '>=', $contrato->fecha_inicio->toDateString())
             ->orderByDesc('id')
             ->first();
+    }
+
+    /** La licencia del Consejo que no ha terminado, registrada o en trámite. */
+    private function ausenciaEnCurso(ContratoServidor $contrato): ?MovimientoPersonal
+    {
+        return MovimientoPersonal::where('servidor_id', $contrato->servidor_id)
+            ->where('tipo_movimiento', TipoMovimientoPersonal::LICENCIA_CONSEJO->value)
+            ->where('estado', '!=', EstadoAccionPersonal::ANULADA->value)
+            ->whereDate('fecha_fin', '>=', now()->toDateString())
+            ->orderBy('fecha_inicio')
+            ->orderBy('id')
+            ->first();
+    }
+
+    /**
+     * La subrogación pendiente o activa en que esta autoridad es titular o
+     * subrogante.
+     *
+     * @return array{rol: string, con: string, desde: ?string, hasta: ?string, estado: string}|null
+     */
+    private function subrogacionEnCurso(ContratoServidor $contrato): ?array
+    {
+        $subrogacion = Subrogacion::whereIn('estado', [EstadoSubrogacion::PENDIENTE->value, EstadoSubrogacion::ACTIVA->value])
+            ->where(fn ($q) => $q->where('servidor_subrogado_id', $contrato->servidor_id)
+                ->orWhere('servidor_subrogante_id', $contrato->servidor_id))
+            ->whereDate('fecha_fin', '>=', now()->toDateString())
+            ->with(['subrogante:id,nombre,apellido', 'subrogado:id,nombre,apellido'])
+            ->orderBy('fecha_inicio')
+            ->orderBy('id')
+            ->first();
+
+        if (! $subrogacion) {
+            return null;
+        }
+
+        $esTitular = (int) $subrogacion->servidor_subrogado_id === (int) $contrato->servidor_id;
+        $otro = $esTitular ? $subrogacion->subrogante : $subrogacion->subrogado;
+
+        return [
+            'rol'    => $esTitular ? 'subrogado' : 'subrogante',
+            'con'    => trim(($otro?->apellido ?? '').' '.($otro?->nombre ?? '')),
+            'desde'  => $subrogacion->fecha_inicio?->toDateString(),
+            'hasta'  => $subrogacion->fecha_fin?->toDateString(),
+            'estado' => $subrogacion->estado->value,
+        ];
     }
 
     /** El período siguiente de la autoridad reelegida, si ya se registró o se prepara. */

@@ -6,7 +6,9 @@ use App\Contracts\Expediente\SubrogacionServiceInterface;
 use App\Enums\CategoriaEventoVinculo;
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\EstadoSubrogacion;
+use App\Enums\InstrumentoActo;
 use App\Enums\TipoEventoVinculo;
+use App\Enums\TipoMovimientoPersonal;
 use App\Enums\TipoSubrogacion;
 use App\Enums\PartidaPorModalidad;
 use App\Exceptions\ReglaNegocioException;
@@ -14,6 +16,7 @@ use App\Models\Estructura\PartidaPresupuestaria;
 use App\Models\Estructura\Puesto;
 use App\Models\Expediente\EventoVinculo;
 use App\Models\Expediente\MovimientoPersonal;
+use App\Models\Expediente\Servidor;
 use App\Models\Expediente\Subrogacion;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
@@ -97,6 +100,14 @@ class SubrogacionService implements SubrogacionServiceInterface
                 'puesto_destino_id' => $subrogacion->puesto_subrogado_id,
                 'resolucion_numero' => $subrogacion->resolucion_numero,
                 'autorizado_por'    => auth()->id(),
+                // La del Viceprefecto es acto de autoridad, sin acción de
+                // personal (fase 4.1b): el instrumento lo dice su nombramiento.
+                'instrumento'       => InstrumentoActo::para(
+                    TipoMovimientoPersonal::SUBROGACION,
+                    Servidor::with('contratoVigente')->find($subrogacion->servidor_subrogante_id)?->contratoVigente?->tipo_nombramiento,
+                )->value,
+                // La ausencia que la origina, si la preparó el sistema (4.1b).
+                'movimiento_relacionado_id' => $datos['movimiento_relacionado_id'] ?? null,
                 ...$this->congelarSituacion($subrogacion),
             ]);
 

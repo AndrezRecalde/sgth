@@ -260,6 +260,8 @@ return [
         'credencial_cne_numero' => 'número de la credencial del CNE',
         'credencial_cne_fecha'  => 'fecha de la credencial del CNE',
         'acta_posesion_numero'  => 'número del acta de posesión',
+        'con_remuneracion'      => 'remuneración de la licencia',
+        'prorroga_causa'        => 'causa de la prórroga',
         'causa_judicial_numero' => 'número de la causa judicial',
         'unidad_judicial' => 'unidad judicial',
         'fecha_sentencia' => 'fecha de la sentencia',

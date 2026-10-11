@@ -50,6 +50,12 @@ enum TipoMovimientoPersonal: string
     // ingreso, pero no es una acción de personal: se registra con la
     // credencial del CNE y no lo firma nadie.
     case INICIO_PERIODO            = 'inicio_periodo';
+    // La licencia que el Consejo Provincial concede a la autoridad electa, con
+    // o sin remuneración según su resolución (COOTAD Art. 47 s; fase 4.1b).
+    case LICENCIA_CONSEJO          = 'licencia_consejo';
+    // El Viceprefecto pasa a Prefecto hasta terminar el período, por la
+    // ausencia definitiva del titular (COOTAD Art. 51; fase 4.1b).
+    case ASUNCION_DEFINITIVA       = 'asuncion_definitiva';
 
     public function etiqueta(): string
     {
@@ -73,6 +79,8 @@ enum TipoMovimientoPersonal: string
             self::NOMBRAMIENTO_DEFINITIVO   => 'Nombramiento Definitivo',
             self::ASCENSO                   => 'Ascenso',
             self::INICIO_PERIODO            => 'Inicio del Período',
+            self::LICENCIA_CONSEJO          => 'Licencia del Consejo',
+            self::ASUNCION_DEFINITIVA       => 'Asunción Definitiva',
         };
     }
 
@@ -247,6 +255,15 @@ enum TipoMovimientoPersonal: string
     }
 
     /**
+     * El Viceprefecto pasa al puesto del Prefecto, en el mismo vínculo, hasta
+     * terminar el período (fase 4.1b).
+     */
+    public function asumeLaPrimeraAutoridad(): bool
+    {
+        return $this === self::ASUNCION_DEFINITIVA;
+    }
+
+    /**
      * Las "acciones de personal" formales tienen restricción de elegibilidad
      * por tipo de nombramiento y nacen en estado BORRADOR (deben pasar por el
      * flujo guardado de MovimientoPersonalStateService). La bitácora del
@@ -272,6 +289,8 @@ enum TipoMovimientoPersonal: string
             self::REINTEGRO,
             self::NOMBRAMIENTO_DEFINITIVO,
             self::ASCENSO,
+            self::LICENCIA_CONSEJO,
+            self::ASUNCION_DEFINITIVA,
         ], true) || $this->subtipoEquivalente() !== null;
     }
 
@@ -408,8 +427,9 @@ enum TipoMovimientoPersonal: string
             // obreros y dignatarios por su licencia «según su régimen» (fase
             // 2.2). Se deduce de las causales para no quedarse atrás si cambian.
             // Y el ascendido que no superó la prueba, que es provisional (fase
-            // 3.3): que lo sea lo comprueba AscensoService.
-            self::REINTEGRO => $tipo === TipoNombramiento::PROVISIONAL || array_filter(
+            // 3.3): que lo sea lo comprueba AscensoService. Y la autoridad que
+            // vuelve de la licencia del Consejo (fase 4.1b).
+            self::REINTEGRO => in_array($tipo, [TipoNombramiento::PROVISIONAL, TipoNombramiento::ELECCION_POPULAR], true) || array_filter(
                 SubtipoMovimientoPersonal::cases(),
                 fn (SubtipoMovimientoPersonal $s) => $s->esAusenciaTemporal() && $s->elegiblePara($tipo)
             ) !== [],
@@ -418,7 +438,10 @@ enum TipoMovimientoPersonal: string
                 $tipo === TipoNombramiento::PERMANENTE,
             // La reelección: la autoridad empieza su período nuevo mientras el
             // anterior termina (fase 4.1). Sin vínculo no se pregunta.
-            self::INICIO_PERIODO =>
+            self::INICIO_PERIODO,
+            // Lo del Consejo y la ley, solo de las autoridades electas (4.1b).
+            self::LICENCIA_CONSEJO,
+            self::ASUNCION_DEFINITIVA =>
                 $tipo === TipoNombramiento::ELECCION_POPULAR,
             default => true,
         };

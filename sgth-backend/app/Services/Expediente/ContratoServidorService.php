@@ -991,6 +991,51 @@ class ContratoServidorService
         }
     }
 
+    /**
+     * La asunción definitiva (COOTAD Art. 51; fase 4.1b): el Viceprefecto pasa
+     * al puesto del Prefecto, con su remuneración, en el mismo vínculo y hasta
+     * el fin del mismo período. La autoridad electa no ocupa plaza, así que no
+     * hay vacante que comprobar.
+     */
+    public function asumirLaPrimeraAutoridad(MovimientoPersonal $asuncion): void
+    {
+        $vigente = Servidor::with('contratoVigente')->findOrFail($asuncion->servidor_id)->contratoVigente;
+
+        if (! $vigente || $vigente->tipo_nombramiento !== TipoNombramiento::ELECCION_POPULAR) {
+            throw new ReglaNegocioException('La asunción definitiva es del Viceprefecto en funciones, y el servidor ya no lo está.');
+        }
+
+        $vigente->update([
+            'puesto_id'                 => $asuncion->puesto_destino_id,
+            'unidad_administrativa_id'  => $asuncion->unidad_destino_id ?? $vigente->unidad_administrativa_id,
+            'remuneracion'              => $asuncion->remuneracion_propuesta ?? $vigente->remuneracion,
+            'partida_presupuestaria_id' => $asuncion->partida_presupuestaria_id ?? $vigente->partida_presupuestaria_id,
+        ]);
+
+        $this->sincronizarPuestoDesdeVinculo($vigente->servidor_id);
+    }
+
+    /** Anular la asunción lo devuelve a la Viceprefectura, con lo que tenía. */
+    public function deshacerAsuncion(MovimientoPersonal $asuncion): void
+    {
+        $vigente = Servidor::with('contratoVigente')->findOrFail($asuncion->servidor_id)->contratoVigente;
+
+        if (! $vigente || (int) $vigente->puesto_id !== (int) $asuncion->puesto_destino_id) {
+            throw new ReglaNegocioException(
+                'No se puede anular la asunción: el servidor ya no está en el puesto que asumió.'
+            );
+        }
+
+        $vigente->update([
+            'puesto_id'                 => $asuncion->puesto_origen_id ?? $vigente->puesto_id,
+            'unidad_administrativa_id'  => $asuncion->unidad_origen_id ?? $vigente->unidad_administrativa_id,
+            'remuneracion'              => $asuncion->remuneracion_origen ?? $vigente->remuneracion,
+            'partida_presupuestaria_id' => $asuncion->partida_origen_id ?? $vigente->partida_presupuestaria_id,
+        ]);
+
+        $this->sincronizarPuestoDesdeVinculo($vigente->servidor_id);
+    }
+
     private function ponerEnElPuestoGanado(ContratoServidor $vigente, MovimientoPersonal $ascenso): void
     {
         $this->validarVacante((int) $ascenso->puesto_destino_id, TipoNombramiento::PROVISIONAL->value, $vigente->id);

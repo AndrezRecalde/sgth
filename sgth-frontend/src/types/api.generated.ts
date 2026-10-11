@@ -672,6 +672,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/expediente/autoridades-electas/subrogacion-por-ley": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Registra la subrogación por ley del Viceprefecto (COOTAD Art. 51; fase
+         *     4.1b): nace en borrador con su acto de autoridad, que sigue el trámite
+         *     de cualquier acción
+         */
+        post: operations["autoridadElecta.subrogacionPorLey"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/viaticos/vuelos": {
         parameters: {
             query?: never;
@@ -7374,11 +7395,17 @@ export interface components {
          * @enum {string}
          */
         CategoriaRiesgoLaboral: "fisico" | "seguridad" | "quimico" | "biologico" | "ergonomico" | "psicosocial";
+        /**
+         * CausaProrrogaLicencia
+         * @description Por qué el Consejo Provincial prorroga una licencia más allá de los 60 días acumulados (COOTAD Art. 47 s; fase 4.1b).
+         * @enum {string}
+         */
+        CausaProrrogaLicencia: "enfermedad_catastrofica" | "calamidad_domestica";
         /** CausalAccionPersonalResource */
         CausalAccionPersonalResource: {
             codigo: components["schemas"]["SubtipoMovimientoPersonal"];
             /** @enum {string} */
-            etiqueta: "Traslado Administrativo" | "Traspaso" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Amonestación escrita" | "Sanción pecuniaria administrativa" | "Suspensión temporal sin goce de remuneración" | "Sanción Disciplinaria" | "Renuncia" | "Destitución" | "Jubilación" | "Incapacidad absoluta y permanente" | "Contrato Finalizado" | "Visto Bueno" | "Remoción" | "No superar el período de prueba" | "Terminación por cumplimiento del plazo" | "Terminación unilateral" | "Mutuo acuerdo" | "Evaluación regular o insuficiente" | "Retiro voluntario o compra de renuncia" | "Pérdida de los derechos de ciudadanía" | "Fallecimiento" | "Fin del período" | "Revocatoria del mandato" | "Remoción por el Consejo Provincial" | "Asuntos particulares" | "Estudios de posgrado" | "Servicio militar" | "Reemplazo de un dignatario electo" | "Candidatura a elección popular" | "Cuidado de hijos" | "Según su régimen (Código del Trabajo o Consejo)";
+            etiqueta: "Traslado Administrativo" | "Traspaso" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Amonestación escrita" | "Sanción pecuniaria administrativa" | "Suspensión temporal sin goce de remuneración" | "Sanción Disciplinaria" | "Renuncia" | "Destitución" | "Jubilación" | "Incapacidad absoluta y permanente" | "Contrato Finalizado" | "Visto Bueno" | "Remoción" | "No superar el período de prueba" | "Terminación por cumplimiento del plazo" | "Terminación unilateral" | "Mutuo acuerdo" | "Evaluación regular o insuficiente" | "Retiro voluntario o compra de renuncia" | "Pérdida de los derechos de ciudadanía" | "Fallecimiento" | "Fin del período" | "Revocatoria del mandato" | "Remoción por el Consejo Provincial" | "Asuntos particulares" | "Estudios de posgrado" | "Servicio militar" | "Reemplazo de un dignatario electo" | "Candidatura a elección popular" | "Cuidado de hijos" | "Según su régimen (Código del Trabajo)";
             /** @enum {string|null} */
             base_legal: "LOSEP Art. 47 a; Reglamento Art. 102" | "LOSEP Art. 47 e; Reglamento Art. 105" | "LOSEP Art. 17 b.5" | "Reglamento a la LOSEP Art. 146 a" | "Reglamento a la LOSEP Art. 146 f" | "Reglamento a la LOSEP Art. 146 b" | "Reglamento a la LOSEP Art. 146 g" | "LOSEP Arts. 47 f y 48" | "LOSEP Art. 47 j" | "LOSEP Art. 47 i y k; Mandato Constituyente 2" | "LOSEP Art. 47 b" | "LOSEP Art. 47 d" | "LOSEP Art. 47 l" | "Código del Trabajo Art. 172" | "Constitución Art. 105" | "COOTAD Arts. 333–336" | "LOSEP Art. 28 a" | "LOSEP Art. 28 b" | "LOSEP Art. 28 c" | "LOSEP Art. 28 d" | "LOSEP Art. 28 e" | "LOSEP Art. 28 f" | "LOSEP Art. 43 b" | "LOSEP Art. 43 c" | "LOSEP Art. 43 d" | null;
             nombramientos_elegibles: [
@@ -7470,12 +7497,12 @@ export interface components {
          * @description La clase legal de una acción de personal: el acto que se registra, con el nombre que le da la LOSEP (diseño de Acciones de Personal, sección 4). Es la identidad pública del catálogo. El frontend elige una clase —y, en la cesación, una causal— y el backend la traduce al par tipo/subtipo con el que todavía se guarda y opera cada acción. Esa traducción vive aquí, en `tipoYSubtipo()`, y su inversa en `desde()`: son las dos únicas puertas entre los dos vocabularios.  Las reglas no se repiten. La elegibilidad por nombramiento se pregunta a `TipoMovimientoPersonal` y `SubtipoMovimientoPersonal`, que siguen siendo su única fuente: esta clase solo las agrupa con el nombre legal. Lo que es solo de formulario —qué bloques pide, el aviso de la comisión— sí vive aquí, y `CatalogoAccionesPersonalTest` comprueba que coincida con lo que el tipo/subtipo traducido hace de verdad.  Nombres que cambian respecto de los que veía Talento Humano, todos aceptados el 2026-10-09 (cuestionario, preguntas N1, 9 y 15):  - el «Traspaso» de los permanentes y la «Prestación de servicios» de los    demás son el mismo acto, el **traslado** del Art. 35;  - el «Traslado administrativo» entre instituciones es el **intercambio    voluntario** del Art. 39;  - el «Cambio de denominación» de los obreros es el **cambio de ocupación**    del Art. 192 del Código del Trabajo.
          * @enum {string}
          */
-        ClaseAccionPersonal: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "subrogacion" | "encargo" | "incremento_remuneracion" | "cambio_ocupacion" | "sancion" | "cesacion" | "reintegro" | "restitucion" | "nombramiento_definitivo" | "ascenso" | "inicio_periodo";
+        ClaseAccionPersonal: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "subrogacion" | "encargo" | "incremento_remuneracion" | "cambio_ocupacion" | "sancion" | "cesacion" | "reintegro" | "restitucion" | "nombramiento_definitivo" | "ascenso" | "inicio_periodo" | "licencia_consejo" | "asuncion_definitiva";
         /** ClaseAccionPersonalResource */
         ClaseAccionPersonalResource: {
             codigo: components["schemas"]["ClaseAccionPersonal"];
             /** @enum {string} */
-            etiqueta: "Ingreso y Vinculación" | "Traslado" | "Intercambio Voluntario" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Licencia sin Remuneración" | "Subrogación" | "Encargo" | "Incremento de Remuneración" | "Cambio de Ocupación" | "Sanción Disciplinaria" | "Cesación de Funciones" | "Reintegro" | "Restitución" | "Nombramiento Definitivo" | "Ascenso" | "Inicio del Período";
+            etiqueta: "Ingreso y Vinculación" | "Traslado" | "Intercambio Voluntario" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Licencia sin Remuneración" | "Subrogación" | "Encargo" | "Incremento de Remuneración" | "Cambio de Ocupación" | "Sanción Disciplinaria" | "Cesación de Funciones" | "Reintegro" | "Restitución" | "Nombramiento Definitivo" | "Ascenso" | "Inicio del Período" | "Licencia concedida por el Consejo" | "Asunción Definitiva";
             familia: components["schemas"]["FamiliaAccionPersonal"];
             se_crea_desde_formulario: boolean;
             requiere_vinculo: boolean;
@@ -7492,6 +7519,8 @@ export interface components {
             pide_acta_concurso: boolean;
             /** @description La credencial, la posesión y el fin del período (fase 4.1). */
             pide_datos_del_periodo: boolean;
+            /** @description Con o sin remuneración y la prórroga de la licencia del Consejo (4.1b). */
+            pide_datos_de_licencia_del_consejo: boolean;
             registro_de_contrato_para: components["schemas"]["TipoNombramiento"][];
             acto_de_autoridad_para: components["schemas"]["TipoNombramiento"][];
             dictamen_medico_por_defecto: boolean;
@@ -8726,6 +8755,8 @@ export interface components {
             /** Format: date-time */
             credencial_cne_fecha: string | null;
             acta_posesion_numero: string | null;
+            con_remuneracion: boolean | null;
+            prorroga_causa: components["schemas"]["CausaProrrogaLicencia"] | null;
         };
         /** MovimientoPersonalResource */
         MovimientoPersonalResource: {
@@ -8787,6 +8818,10 @@ export interface components {
             unidad_destino_id: number | null;
             institucion_destino: string | null;
             para_estudios_o_eventos: boolean;
+            /** @description La licencia del Consejo: con o sin remuneración, y su prórroga (4.1b). */
+            con_remuneracion: boolean | null;
+            prorroga_causa: components["schemas"]["CausaProrrogaLicencia"] | null;
+            prorroga_causa_etiqueta: string;
             puesto_origen_id: number | null;
             puesto_destino_id: number | null;
             tipo_nombramiento_propuesto: components["schemas"]["TipoNombramiento"] | null;
@@ -9446,6 +9481,23 @@ export interface components {
             observaciones?: string | null;
             brechas_identificadas?: string | null;
             acciones_mejora?: string | null;
+        };
+        /**
+         * RegistrarSubrogacionPorLeyRequest
+         * @description La subrogación por ley del Viceprefecto que Talento Humano registra a mano
+         *     (fase 4.1b): las vacaciones u otra ausencia del Prefecto que no nació de una
+         *     licencia del Consejo. Que pase de tres días lo valida AutoridadElectaService.
+         */
+        RegistrarSubrogacionPorLeyRequest: {
+            /** Format: date-time */
+            fecha_inicio: string;
+            /** Format: date-time */
+            fecha_fin: string;
+            /** @enum {string} */
+            motivo: "vacaciones" | "licencia" | "enfermedad" | "comision_servicios" | "otro";
+            /** @description El oficio que comunica la ausencia o la resolución del Consejo [TH 6]. */
+            resolucion_numero: string;
+            observacion?: string | null;
         };
         /**
          * RegistrarSubrogacionRequest
@@ -10344,7 +10396,7 @@ export interface components {
              *     contrato» que nacía registrada y sin efecto.
              * @enum {string}
              */
-            clase: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "cambio_ocupacion" | "cesacion" | "restitucion" | "ascenso" | "inicio_periodo";
+            clase: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "cambio_ocupacion" | "cesacion" | "restitucion" | "ascenso" | "inicio_periodo" | "licencia_consejo";
             /**
              * @description Que la causal sea obligatoria, que pertenezca a la clase y que
              *     aplique al nombramiento lo decide
@@ -10370,6 +10422,10 @@ export interface components {
             /** @description Comisiones e intercambio: la entidad del Estado a la que va (fase 2.3). */
             institucion_destino?: string | null;
             para_estudios_o_eventos?: boolean | null;
+            /** @description La licencia del Consejo (fase 4.1b). */
+            con_remuneracion?: boolean | null;
+            /** @enum {string|null} */
+            prorroga_causa?: "enfermedad_catastrofica" | "calamidad_domestica" | null;
             /**
              * @description La sentencia de una restitución (fase 2.6). Que sean obligatorios
              *     en ella lo decide RestitucionService.
@@ -10985,7 +11041,7 @@ export interface components {
          * TipoMovimientoPersonal
          * @enum {string}
          */
-        TipoMovimientoPersonal: "traslado" | "subrogacion" | "comision_servicios" | "ingreso" | "cambio_denominacion" | "prestacion_servicios" | "cambio_administrativo" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "traspaso" | "destitucion" | "cesacion_funciones" | "regimen_disciplinario" | "reintegro" | "restitucion" | "nombramiento_definitivo" | "ascenso" | "inicio_periodo";
+        TipoMovimientoPersonal: "traslado" | "subrogacion" | "comision_servicios" | "ingreso" | "cambio_denominacion" | "prestacion_servicios" | "cambio_administrativo" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "traspaso" | "destitucion" | "cesacion_funciones" | "regimen_disciplinario" | "reintegro" | "restitucion" | "nombramiento_definitivo" | "ascenso" | "inicio_periodo" | "licencia_consejo" | "asuncion_definitiva";
         /**
          * TipoNombramiento
          * @enum {string}
@@ -11498,6 +11554,10 @@ export interface components {
             /** @description Comisiones e intercambio: la entidad del Estado a la que va (fase 2.3). */
             institucion_destino?: string | null;
             para_estudios_o_eventos?: boolean | null;
+            /** @description La licencia del Consejo (fase 4.1b). */
+            con_remuneracion?: boolean | null;
+            /** @enum {string|null} */
+            prorroga_causa?: "enfermedad_catastrofica" | "calamidad_domestica" | null;
             /**
              * @description La sentencia de una restitución (fase 2.6). Que sean obligatorios
              *     en ella lo decide RestitucionService.
@@ -13684,6 +13744,27 @@ export interface operations {
                                 codigo_registro: string | null;
                                 fecha_efectiva: string;
                             } | null;
+                            /** @description La licencia del Consejo en curso o por venir (4.1b). */
+                            ausencia: {
+                                ""?: {
+                                    id: number;
+                                    estado: string;
+                                    codigo_registro: string | null;
+                                    fecha_efectiva: string;
+                                } | null;
+                                desde: string;
+                                hasta: string;
+                            } | null;
+                            /** @description Quién lo subroga, o a quién subroga (4.1b). */
+                            subrogacion: {
+                                /** @enum {string} */
+                                rol: "subrogado" | "subrogante";
+                                con: string;
+                                desde: string;
+                                hasta: string;
+                                estado: string;
+                            } | null;
+                            es_prefecto: boolean;
                         }[];
                         meta: null;
                     };
@@ -13728,6 +13809,40 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
             404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "autoridadElecta.subrogacionPorLey": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegistrarSubrogacionPorLeyRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Subrogación por ley preparada en borrador: suscríbala y regístrela en la bandeja.";
+                        datos: {
+                            subrogacion_id: number;
+                            movimiento_id: number | null;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
             422: components["responses"]["ValidationException"];
         };
     };

@@ -22,11 +22,33 @@ export type AutoridadElecta = {
   cese: (ActoDelPeriodo & { causal: string | null }) | null
   /** El período siguiente de la autoridad reelegida. */
   siguiente: ActoDelPeriodo | null
+  /** La licencia del Consejo en curso o por venir (fase 4.1b). */
+  ausencia: (ActoDelPeriodo & { desde: string | null; hasta: string | null }) | null
+  /** Quién la subroga, o a quién subroga (fase 4.1b). */
+  subrogacion: { rol: 'subrogado' | 'subrogante'; con: string; desde: string | null; hasta: string | null; estado: string } | null
+  es_prefecto: boolean
+}
+
+export type SubrogacionPorLeyData = {
+  fecha_inicio: string
+  fecha_fin: string
+  motivo: string
+  resolucion_numero: string
+  observacion?: string | null
 }
 
 export const autoridadElectaService = {
   listar: () =>
     api.get<ApiResponse<AutoridadElecta[]>>('/expediente/autoridades-electas').then((r) => r.data.datos),
+
+  /** La subrogación por ley del Viceprefecto, en borrador (COOTAD Art. 51; fase 4.1b). */
+  registrarSubrogacionPorLey: (data: SubrogacionPorLeyData) =>
+    api
+      .post<ApiResponse<{ subrogacion_id: number; movimiento_id: number | null }>>(
+        '/expediente/autoridades-electas/subrogacion-por-ley',
+        data,
+      )
+      .then((r) => r.data.datos),
 
   fijarFinDelPeriodo: (contratoId: number, fechaFin: string) =>
     api

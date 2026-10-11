@@ -77,6 +77,13 @@ export function AccionRespaldos({ m }: { m: MovimientoPersonal }) {
                   value: m.informe_uath_numero,
                 }]
               : []),
+            // La licencia del Consejo: con o sin remuneración, y su prórroga (4.1b).
+            ...(m.con_remuneracion != null
+              ? [{ label: 'Remuneración', value: m.con_remuneracion ? 'Con remuneración' : 'Sin remuneración' }]
+              : []),
+            ...(m.prorroga_causa_etiqueta
+              ? [{ label: 'Prórroga del Consejo', value: m.prorroga_causa_etiqueta }]
+              : []),
             // La credencial y la posesión de una autoridad (fase 4.1).
             ...(m.credencial_cne_numero
               ? [{ label: 'Credencial del CNE', value: `${m.credencial_cne_numero} · ${formatFecha(m.credencial_cne_fecha)}` }]

@@ -47,6 +47,25 @@ class FirmanteAccionPersonalService
     }
 
     /**
+     * La constancia de un acto de autoridad electa la firma solo Talento
+     * Humano (fase 4.1b): ninguno de esos actos nace de la autoridad
+     * nominadora. Se sella al suscribir, como los demás.
+     */
+    public function sellarTalentoHumanoEn(MovimientoPersonal $movimiento, ?string $fecha = null): void
+    {
+        if ($movimiento->firmante_th_nombre) {
+            return;
+        }
+
+        $fecha = $fecha ?? now()->toDateString();
+
+        $movimiento->fecha_suscripcion = $fecha;
+
+        $rol = RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO;
+        $this->copiar($movimiento, $rol, $this->resolver($rol, $fecha));
+    }
+
+    /**
      * Firmante vigente de un rol en una fecha: el jefe de la unidad anclada,
      * o quien lo subrogue/encargue si hay una subrogación vigente sobre ese
      * puesto — quien ejerce el cargo es quien firma.

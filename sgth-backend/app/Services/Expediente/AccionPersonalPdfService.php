@@ -44,13 +44,6 @@ class AccionPersonalPdfService
             );
         }
 
-        if ($movimiento->instrumento === \App\Enums\InstrumentoActo::ACTO_AUTORIDAD) {
-            throw new ReglaNegocioException(
-                'A una autoridad electa no se le emite acción de personal: su documento es el de origen, la '
-                    .'credencial del CNE o la resolución del Consejo.'
-            );
-        }
-
         if (! $movimiento->tieneDocumentoImprimible()) {
             throw new ReglaNegocioException(
                 "\"{$movimiento->tipo_movimiento->etiqueta()}\" es un registro interno del "
@@ -121,6 +114,25 @@ class AccionPersonalPdfService
             ?->descuentoReferencial(
                 $movimiento->remuneracion_origen !== null ? (float) $movimiento->remuneracion_origen : null
             );
+
+        // A una autoridad electa no se le emite acción de personal: su acto
+        // tiene una constancia, con su número AU, que firma Talento Humano [TH 6;
+        // fase 4.1b].
+        if ($movimiento->instrumento === \App\Enums\InstrumentoActo::ACTO_AUTORIDAD) {
+            $pdf = Pdf::loadView('pdf.expediente.constancia-autoridad', [
+                'movimiento'         => $movimiento,
+                'anulada'            => $movimiento->estado === EstadoAccionPersonal::ANULADA,
+                'servidor'           => $movimiento->servidor,
+                'firmaTalentoHumano' => $this->firma($movimiento, 'firmante_th', RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO),
+                'logo'               => public_path('images/logo-gadpe.png'),
+            ])->setPaper('a4', 'portrait');
+
+            return [
+                'content'  => $pdf->output(),
+                'filename' => 'constancia_'.$movimiento->codigo_registro
+                    .($movimiento->estado === EstadoAccionPersonal::ANULADA ? '_ANULADA' : '').'.pdf',
+            ];
+        }
 
         $pdf = Pdf::loadView('pdf.expediente.accion-personal', [
             'movimiento'   => $movimiento,

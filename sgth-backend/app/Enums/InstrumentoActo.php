@@ -86,10 +86,14 @@ enum InstrumentoActo: string
         ));
     }
 
-    /** El documento del Ministerio, con su número AP. El contrato se firma aparte. */
+    /**
+     * El documento del Ministerio, con su número AP. El contrato se firma
+     * aparte. El acto de autoridad tiene su constancia, opcional y con su
+     * número AU [TH 6; fase 4.1b].
+     */
     public function tieneDocumento(): bool
     {
-        return $this === self::ACCION_PERSONAL;
+        return in_array($this, [self::ACCION_PERSONAL, self::ACTO_AUTORIDAD], true);
     }
 
     /** Quién firma: la autoridad y Talento Humano, solo en la acción de personal. */
