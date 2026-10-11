@@ -161,10 +161,13 @@ test('un traspaso no es ausencia temporal: el servidor sí está, solo cambió d
     $destino = Puesto::create([
         'codigo' => 'P-DEST', 'unidad_administrativa_id' => $otra->id, 'plazas' => 3,
     ]);
+    // El traslado exige igual remuneración (fase 3.1).
+    escalaComunParaTraslados(1500, $this->puesto, $destino);
 
     $traspaso = $this->service->registrar($titular->id, [
         'tipo_movimiento'    => TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO->value,
         'subtipo_movimiento' => SubtipoMovimientoPersonal::TRASPASO->value,
+        'informe_uath_numero' => 'INF-UATH-PRUEBA',
         'descripcion'        => 'Traspaso a Financiera',
         'fecha_efectiva'     => '2026-08-01',
         'fecha_inicio'       => '2026-08-01',

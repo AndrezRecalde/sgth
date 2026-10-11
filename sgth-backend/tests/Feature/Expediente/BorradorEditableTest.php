@@ -434,10 +434,13 @@ test('la acción congela remuneración y partida de origen, no las deriva del pu
         'remuneracion'             => 1450.75,
         'estado'                   => 'vigente',
     ]);
+    // El traslado exige igual remuneración (fase 3.1).
+    escalaComunParaTraslados(1450.75, $puestoOrigen, $this->puesto);
 
     $movimiento = $this->service->registrar($servidor->fresh()->id, [
         'tipo_movimiento'    => TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO->value,
         'subtipo_movimiento' => SubtipoMovimientoPersonal::TRASPASO->value,
+        'informe_uath_numero' => 'INF-UATH-PRUEBA',
         'descripcion'        => 'Traspaso con situación actual congelada',
         'fecha_efectiva'     => '2026-08-01',
         'puesto_destino_id'  => $this->puesto->id,

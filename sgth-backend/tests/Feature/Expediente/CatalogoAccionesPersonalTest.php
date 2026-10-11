@@ -239,11 +239,16 @@ test('lo que pide el formulario coincide con lo que la acción hace al registrar
 
 test('el traslado de un permanente se guarda como el traspaso de siempre', function () {
     $servidor = ($this->servidorCon)(TipoNombramiento::PERMANENTE);
+    // Otro puesto con la misma escala: el traslado pide igual remuneración
+    // (fase 3.1), y no es al mismo puesto.
+    $destino = Puesto::create(['unidad_administrativa_id' => $this->unidad->id, 'plazas' => 10]);
+    escalaComunParaTraslados(1500, $this->puesto, $destino);
 
     ($this->crear)($servidor, [
-        'clase'             => 'traslado',
-        'unidad_destino_id' => $this->unidad->id,
-        'puesto_destino_id' => $this->puesto->id,
+        'clase'               => 'traslado',
+        'unidad_destino_id'   => $this->unidad->id,
+        'puesto_destino_id'   => $destino->id,
+        'informe_uath_numero' => 'INF-UATH-PRUEBA',
     ])->assertCreated()
         ->assertJsonPath('datos.clase', 'traslado')
         ->assertJsonPath('datos.etiqueta', 'Traslado')
@@ -259,10 +264,13 @@ test('el traslado de un permanente se guarda como el traspaso de siempre', funct
 
 test('el traslado de un provisional se guarda como la prestación de servicios de siempre', function () {
     $servidor = ($this->servidorCon)(TipoNombramiento::PROVISIONAL);
+    $destino = Puesto::create(['unidad_administrativa_id' => $this->unidad->id, 'plazas' => 10]);
+    escalaComunParaTraslados(1500, $this->puesto, $destino);
 
     ($this->crear)($servidor, [
-        'clase'             => 'traslado',
-        'puesto_destino_id' => $this->puesto->id,
+        'clase'               => 'traslado',
+        'puesto_destino_id'   => $destino->id,
+        'informe_uath_numero' => 'INF-UATH-PRUEBA',
     ])->assertCreated();
 
     $m = MovimientoPersonal::where('servidor_id', $servidor->id)->firstOrFail();

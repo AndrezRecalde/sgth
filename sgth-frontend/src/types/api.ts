@@ -806,6 +806,8 @@ export type MovimientoPersonal = {
     codigo_registro: string | null
     estado: EstadoAccionPersonal
   } | null
+  /** El informe técnico de la UATH que pide el traslado (fase 3.1). */
+  informe_uath_numero?: string | null
   // La sentencia de una restitución (fase 2.6).
   causa_judicial_numero?: string | null
   unidad_judicial?: string | null

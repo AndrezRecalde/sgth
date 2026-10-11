@@ -443,6 +443,12 @@
             al de su duración (LOSEP Art. 30).
         </div>
     @endif
+    @if($movimiento->informe_uath_numero)
+        {{-- Fase 3.1: el traslado se hace previo informe de la UATH (LOSEP Art. 35). --}}
+        <div class="respaldo">
+            <strong>Informe técnico de la UATH:</strong> {{ $movimiento->informe_uath_numero }}
+        </div>
+    @endif
     @if($movimiento->resolucion_numero)
         <div class="respaldo">
             <strong>Documento de respaldo:</strong> {{ $movimiento->resolucion_numero }}

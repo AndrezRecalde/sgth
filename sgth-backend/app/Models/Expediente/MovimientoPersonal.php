@@ -270,6 +270,8 @@ class MovimientoPersonal extends Model
         'partida_origen_id',
         'puesto_destino_id',
         'resolucion_numero',
+        // El informe técnico de la UATH que pide el traslado (fase 3.1).
+        'informe_uath_numero',
         // La sentencia de una restitución [TH N15; fase 2.6].
         'causa_judicial_numero',
         'unidad_judicial',
@@ -752,6 +754,19 @@ class MovimientoPersonal extends Model
     {
         return (bool) $this->tipo_movimiento?->tieneDocumentoImprimible()
             && ($this->instrumento ?? InstrumentoActo::ACCION_PERSONAL)->tieneDocumento();
+    }
+
+    /**
+     * ¿La ausencia es de una jefatura? Se cubre siempre con subrogación o
+     * encargo, nunca con un reemplazo contratado [TH 19; fase 3.1]. El puesto
+     * es el congelado en la acción, o el que el titular ocupa si no se guardó.
+     */
+    public function esAusenciaDeJefatura(): bool
+    {
+        $puesto = $this->puestoOrigen
+            ?? Servidor::with('contratoVigente.puesto')->find($this->servidor_id)?->contratoVigente?->puesto;
+
+        return (bool) $puesto?->es_jefe;
     }
 
     public function esRegistroDeContrato(): bool

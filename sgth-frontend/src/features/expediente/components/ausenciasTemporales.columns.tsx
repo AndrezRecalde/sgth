@@ -97,7 +97,12 @@ export const getAusenciaColumns = ({
     render: (a) => {
       if (!a.reemplazo) {
         return (
-          <Tooltip label="Registre un Ingreso y Vinculación enlazado a esta ausencia" withArrow>
+          <Tooltip
+            label={a.es_jefatura
+              ? 'Es una jefatura: se cubre con subrogación o encargo, no con un reemplazo contratado'
+              : 'Registre un Ingreso y Vinculación enlazado a esta ausencia'}
+            withArrow
+          >
             <StatusBadge tone="warning">Sin cubrir</StatusBadge>
           </Tooltip>
         )

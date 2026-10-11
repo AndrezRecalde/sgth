@@ -3369,6 +3369,10 @@
                                                     "destino": {
                                                         "type": "string"
                                                     },
+                                                    "es_jefatura": {
+                                                        "type": "boolean",
+                                                        "description": "Una jefatura se cubre con subrogaci\u00f3n o encargo, no con un\nreemplazo contratado [TH 19; fase 3.1]."
+                                                    },
                                                     "reemplazo": {
                                                         "type": [
                                                             "object",
@@ -3393,6 +3397,7 @@
                                                     "puesto",
                                                     "puesto_id",
                                                     "destino",
+                                                    "es_jefatura",
                                                     "reemplazo"
                                                 ]
                                             }
@@ -45144,6 +45149,12 @@
                     "pide_datos_judiciales": {
                         "type": "boolean"
                     },
+                    "pide_informe_uath_para": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TipoNombramiento"
+                        }
+                    },
                     "pide_contratacion": {
                         "type": "boolean"
                     },
@@ -45176,6 +45187,7 @@
                     "pide_institucion_destino",
                     "admite_para_estudios_o_eventos",
                     "pide_datos_judiciales",
+                    "pide_informe_uath_para",
                     "pide_contratacion",
                     "registro_de_contrato_para",
                     "dictamen_medico_por_defecto",
@@ -49870,6 +49882,12 @@
                     },
                     "instrumento": {
                         "$ref": "#/components/schemas/InstrumentoActo"
+                    },
+                    "informe_uath_numero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -49934,7 +49952,8 @@
                     "fecha_sentencia",
                     "fecha_ejecutoria",
                     "remuneraciones_dejadas_de_percibir",
-                    "instrumento"
+                    "instrumento",
+                    "informe_uath_numero"
                 ],
                 "title": "MovimientoPersonal"
             },
@@ -50307,6 +50326,13 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "informe_uath_numero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "El informe de la UATH del traslado (fase 3.1)."
                     },
                     "causa_judicial_numero": {
                         "type": [
@@ -50684,6 +50710,7 @@
                     "efecto_aplicado_en",
                     "pendiente_de_vigencia",
                     "resolucion_numero",
+                    "informe_uath_numero",
                     "causa_judicial_numero",
                     "unidad_judicial",
                     "fecha_sentencia",
@@ -56296,12 +56323,19 @@
                             "null"
                         ]
                     },
-                    "causa_judicial_numero": {
+                    "informe_uath_numero": {
                         "type": [
                             "string",
                             "null"
                         ],
                         "description": "La sentencia de una restituci\u00f3n (fase 2.6). Que sean obligatorios\nen ella lo decide RestitucionService.",
+                        "maxLength": 100
+                    },
+                    "causa_judicial_numero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
                         "maxLength": 100
                     },
                     "unidad_judicial": {
@@ -60249,12 +60283,19 @@
                             "null"
                         ]
                     },
-                    "causa_judicial_numero": {
+                    "informe_uath_numero": {
                         "type": [
                             "string",
                             "null"
                         ],
                         "description": "La sentencia de una restituci\u00f3n (fase 2.6). Que sean obligatorios\nen ella lo decide RestitucionService.",
+                        "maxLength": 100
+                    },
+                    "causa_judicial_numero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
                         "maxLength": 100
                     },
                     "unidad_judicial": {

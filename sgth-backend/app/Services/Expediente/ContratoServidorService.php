@@ -523,6 +523,13 @@ class ContratoServidorService
         $ausencia = ! empty($datos['cubre_movimiento_id'])
             ? MovimientoPersonal::find($datos['cubre_movimiento_id'])
             : null;
+
+        if ($ausencia?->esAusenciaDeJefatura()) {
+            throw new ReglaNegocioException(
+                'La ausencia de una jefatura se cubre con subrogación o encargo, no con un reemplazo '
+                    .'contratado (TH 19).'
+            );
+        }
         $finAusencia = $ausencia?->finEfectivo()?->toDateString();
         if ($finAusencia && (! $fin || $fin > $finAusencia)) {
             throw new ReglaNegocioException(
@@ -817,6 +824,10 @@ class ContratoServidorService
             'puesto_id' => $puestoDestino,
             'unidad_administrativa_id' => $movimiento->unidad_destino_id
                 ?? $vigente->unidad_administrativa_id,
+            // La partida que eligió la acción, si eligió una (fase 3.1). Hasta
+            // aquí se quedaba en la acción y el vínculo seguía con la de antes.
+            'partida_presupuestaria_id' => $movimiento->partida_presupuestaria_id
+                ?? $vigente->partida_presupuestaria_id,
         ]);
 
         $this->sincronizarPuestoDesdeVinculo($movimiento->servidor_id);

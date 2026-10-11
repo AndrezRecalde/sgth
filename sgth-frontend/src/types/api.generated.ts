@@ -7403,6 +7403,7 @@ export interface components {
             pide_institucion_destino: boolean;
             admite_para_estudios_o_eventos: boolean;
             pide_datos_judiciales: boolean;
+            pide_informe_uath_para: components["schemas"]["TipoNombramiento"][];
             pide_contratacion: boolean;
             registro_de_contrato_para: components["schemas"]["TipoNombramiento"][];
             dictamen_medico_por_defecto: boolean;
@@ -8616,6 +8617,7 @@ export interface components {
             fecha_ejecutoria: string | null;
             remuneraciones_dejadas_de_percibir: string | null;
             instrumento: components["schemas"]["InstrumentoActo"];
+            informe_uath_numero: string | null;
         };
         /** MovimientoPersonalResource */
         MovimientoPersonalResource: {
@@ -8731,6 +8733,8 @@ export interface components {
             efecto_aplicado_en: string | null;
             pendiente_de_vigencia: boolean;
             resolucion_numero: string | null;
+            /** @description El informe de la UATH del traslado (fase 3.1). */
+            informe_uath_numero: string | null;
             /** @description La sentencia de una restitución (fase 2.6). */
             causa_judicial_numero: string | null;
             unidad_judicial: string | null;
@@ -10237,6 +10241,7 @@ export interface components {
              * @description La sentencia de una restitución (fase 2.6). Que sean obligatorios
              *     en ella lo decide RestitucionService.
              */
+            informe_uath_numero?: string | null;
             causa_judicial_numero?: string | null;
             unidad_judicial?: string | null;
             /** Format: date-time */
@@ -11337,6 +11342,7 @@ export interface components {
              * @description La sentencia de una restitución (fase 2.6). Que sean obligatorios
              *     en ella lo decide RestitucionService.
              */
+            informe_uath_numero?: string | null;
             causa_judicial_numero?: string | null;
             unidad_judicial?: string | null;
             /** Format: date-time */
@@ -13276,6 +13282,11 @@ export interface operations {
                             puesto: string;
                             puesto_id: number | null;
                             destino: string;
+                            /**
+                             * @description Una jefatura se cubre con subrogación o encargo, no con un
+                             *     reemplazo contratado [TH 19; fase 3.1].
+                             */
+                            es_jefatura: boolean;
                             reemplazo: {
                                 [key: string]: unknown;
                             } | null;

@@ -70,6 +70,9 @@ class AusenciaTemporalService
                 'puesto'           => $ausencia->puestoOrigen?->cargo?->nombre,
                 'puesto_id'        => $ausencia->puesto_origen_id,
                 'destino'          => $ausencia->unidadDestino?->nombre,
+                // Una jefatura se cubre con subrogación o encargo, no con un
+                // reemplazo contratado [TH 19; fase 3.1].
+                'es_jefatura'      => (bool) $ausencia->puestoOrigen?->es_jefe,
                 'reemplazo'        => $reemplazo,
             ];
         });

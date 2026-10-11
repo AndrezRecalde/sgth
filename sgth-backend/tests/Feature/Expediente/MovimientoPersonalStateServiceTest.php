@@ -314,6 +314,7 @@ test('MovimientoPersonalService::registrar crea en borrador los tipos formales d
 
     $movimiento = app(MovimientoPersonalService::class)->registrar($this->servidor->id, [
         'tipo_movimiento' => 'prestacion_servicios',
+        'informe_uath_numero' => 'INF-UATH-PRUEBA',
         'descripcion' => 'Prestación de servicios adicionales',
         'fecha_efectiva' => now()->toDateString(),
     ]);

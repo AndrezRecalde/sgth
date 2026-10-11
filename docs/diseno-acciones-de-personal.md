@@ -945,6 +945,10 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
 
 **Fase 3 — Movilidad y carrera**
 1. Traslado (Art. 35) unificado, con validaciones; jefaturas sin reemplazo contratado.
+   - Una sola regla (`TrasladoService`) para las dos formas en que se guarda —«Traspaso» en permanentes y «Prestación de servicios» en los demás—, sin migrar datos. A quién se aplica lo dice `ClaseAccionPersonal::pideInformeUathPara()`: los nombramientos de la LOSEP. Servicios Profesionales conserva su prestación de servicios sin estas reglas hasta 4.2.
+   - Al preparar, al corregir y al registrar: puesto de destino activo, distinto del que ocupa, de la unidad indicada y con igual remuneración (la del vínculo frente a la escala del puesto; sin grupo ocupacional no se registra). Al preparar y al corregir, el informe técnico de la UATH (`informe_uath_numero`), donde consta el perfil (Art. 36); lo suscrito antes del campo se registra sin él.
+   - Al surtir efecto el vínculo toma también la partida elegida en la acción. Anular vuelve al puesto de origen solo si allí hay plaza, y devuelve la partida.
+   - Jefaturas [TH 19]: el ingreso de reemplazo y el contrato que cubren la ausencia de un puesto `es_jefe` se rechazan; se cubre con subrogación o encargo. El panel de ausencias las marca y el formulario no las ofrece.
 2. Período de prueba + nombramiento definitivo; el concurso entra con provisional de prueba; acta del concurso.
 3. Ascenso con prueba de 6 meses y reserva del puesto.
 

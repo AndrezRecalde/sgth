@@ -65,6 +65,7 @@ class StoreMovimientoPersonalRequest extends FormRequest
             'para_estudios_o_eventos' => 'nullable|boolean',
             // La sentencia de una restitución (fase 2.6). Que sean obligatorios
             // en ella lo decide RestitucionService.
+            'informe_uath_numero'   => 'nullable|string|max:100',
             'causa_judicial_numero' => 'nullable|string|max:100',
             'unidad_judicial'       => 'nullable|string|max:255',
             'fecha_sentencia'       => 'nullable|date',

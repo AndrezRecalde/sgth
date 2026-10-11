@@ -253,6 +253,7 @@ return [
         'servidor_id' => 'servidor',
         'puede_marcar' => 'marcación',
         'resolucion_numero' => 'número de resolución',
+        'informe_uath_numero' => 'informe técnico de la UATH',
         'causa_judicial_numero' => 'número de la causa judicial',
         'unidad_judicial' => 'unidad judicial',
         'fecha_sentencia' => 'fecha de la sentencia',

@@ -62,6 +62,10 @@ export function AccionRespaldos({ m }: { m: MovimientoPersonal }) {
         <BloqueDetalle>
           <SectionHeading title="Respaldos" mb="xs" />
           <DetailList items={[
+            // El informe del traslado (fase 3.1), solo donde lo hay.
+            ...(m.informe_uath_numero
+              ? [{ label: 'Informe técnico de la UATH', value: m.informe_uath_numero }]
+              : []),
             { label: 'N.º de resolución', value: m.resolucion_numero },
             {
               label: 'Dictamen médico',
