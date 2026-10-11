@@ -8,6 +8,7 @@ import { useDisclosure } from '@mantine/hooks'
 import { IconAlertTriangle, IconFileOff, IconUserOff } from '@tabler/icons-react'
 import { useMovimiento } from '../hooks/useMovimientoMutations'
 import { AccionAnotaciones } from './AccionAnotaciones'
+import { AccionLiquidacionReferencial } from './AccionLiquidacionReferencial'
 import { EstadoAccionBadge } from './EstadoAccionBadge'
 import { AccionBotonEditar } from './AccionBotonEditar'
 import { AccionPersonalPie } from './AccionPersonalPie'
@@ -99,6 +100,9 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
             al crear la acción, así que refleja dónde estaba el servidor
             entonces — no dónde está hoy. */}
         <AccionSituacionBloques m={m} botonEditar={<AccionBotonEditar m={m} onEditar={abrirEditar} />} />
+
+        {/* La terminación de un obrero: su liquidación referencial (fase 4.5). */}
+        <AccionLiquidacionReferencial m={m} />
 
         <AccionRespaldos m={m} />
 

@@ -83,6 +83,8 @@ export function useGuardarAccionPersonal({
         // El consentimiento escrito, solo en el cambio de ocupación de un
         // obrero (fase 4.3).
         fecha_consentimiento: clase?.cambio_del_obrero === 'ocupacion' ? data.fecha_consentimiento : null,
+        // La renuncia presentada, solo en el desahucio del obrero (fase 4.5).
+        fecha_presentacion_renuncia: data.causal === 'desahucio' ? data.fecha_presentacion_renuncia : null,
         // La institución y la marca de estudios solo viajan en las clases que
         // las piden (fase 2.3): en otra acción se grabarían sin significar nada.
         institucion_destino: clase?.pide_institucion_destino ? (data.institucion_destino?.trim() || null) : null,

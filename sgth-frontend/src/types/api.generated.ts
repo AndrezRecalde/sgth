@@ -6027,6 +6027,56 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/expediente/terminaciones-obreros": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["terminacionObrero.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/movimientos/{movimiento}/acta-finiquito": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Registra o corrige el acta de finiquito de una terminación registrada */
+        post: operations["terminacionObrero.guardarActa"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/movimientos/{movimiento}/acta-finiquito/documento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Descarga el PDF del acta: el archivo vive en el disco privado */
+        get: operations["terminacionObrero.descargarActa"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/helpdesk/tickets": {
         parameters: {
             query?: never;
@@ -6888,6 +6938,24 @@ export interface components {
             /** Format: date-time */
             deleted_at: string | null;
         };
+        /** ActaFiniquito */
+        ActaFiniquito: {
+            id: number;
+            movimiento_personal_id: number;
+            numero: string;
+            /** Format: date-time */
+            fecha: string;
+            valor_pagado: string;
+            documento_nombre: string | null;
+            observacion: string | null;
+            created_by: number | null;
+            updated_by: number | null;
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+            tiene_documento: string;
+        };
         /** ActividadLaboral */
         ActividadLaboral: {
             id: number;
@@ -7437,9 +7505,9 @@ export interface components {
         CausalAccionPersonalResource: {
             codigo: components["schemas"]["SubtipoMovimientoPersonal"];
             /** @enum {string} */
-            etiqueta: "Traslado Administrativo" | "Traspaso" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Amonestación escrita" | "Sanción pecuniaria administrativa" | "Suspensión temporal sin goce de remuneración" | "Sanción Disciplinaria" | "Renuncia" | "Destitución" | "Jubilación" | "Incapacidad absoluta y permanente" | "Contrato Finalizado" | "Visto Bueno" | "Remoción" | "No superar el período de prueba" | "Terminación por cumplimiento del plazo" | "Terminación unilateral" | "Mutuo acuerdo" | "Evaluación regular o insuficiente" | "Retiro voluntario o compra de renuncia" | "Pérdida de los derechos de ciudadanía" | "Fallecimiento" | "Fin del período" | "Revocatoria del mandato" | "Remoción por el Consejo Provincial" | "Terminación por mutuo acuerdo" | "Terminación anticipada según el contrato" | "Asuntos particulares" | "Estudios de posgrado" | "Servicio militar" | "Reemplazo de un dignatario electo" | "Candidatura a elección popular" | "Cuidado de hijos" | "Según su régimen (Código del Trabajo)";
+            etiqueta: "Traslado Administrativo" | "Traspaso" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Amonestación escrita" | "Sanción pecuniaria administrativa" | "Suspensión temporal sin goce de remuneración" | "Sanción Disciplinaria" | "Renuncia" | "Destitución" | "Jubilación" | "Incapacidad absoluta y permanente" | "Contrato Finalizado" | "Visto Bueno" | "Remoción" | "No superar el período de prueba" | "Terminación por cumplimiento del plazo" | "Terminación unilateral" | "Mutuo acuerdo" | "Evaluación regular o insuficiente" | "Retiro voluntario o compra de renuncia" | "Pérdida de los derechos de ciudadanía" | "Fallecimiento" | "Fin del período" | "Revocatoria del mandato" | "Remoción por el Consejo Provincial" | "Terminación por mutuo acuerdo" | "Terminación anticipada según el contrato" | "Renuncia (desahucio)" | "Acuerdo de las partes" | "Conclusión de la obra o del servicio" | "Despido intempestivo" | "Muerte o incapacidad permanente" | "Caso fortuito o fuerza mayor" | "Asuntos particulares" | "Estudios de posgrado" | "Servicio militar" | "Reemplazo de un dignatario electo" | "Candidatura a elección popular" | "Cuidado de hijos" | "Según su régimen (Código del Trabajo)";
             /** @enum {string|null} */
-            base_legal: "LOSEP Art. 47 a; Reglamento Art. 102" | "LOSEP Art. 47 e; Reglamento Art. 105" | "LOSEP Art. 17 b.5" | "Reglamento a la LOSEP Art. 146 a" | "Reglamento a la LOSEP Art. 146 f" | "Reglamento a la LOSEP Art. 146 b" | "Reglamento a la LOSEP Art. 146 g" | "LOSEP Arts. 47 f y 48" | "LOSEP Art. 47 j" | "LOSEP Art. 47 i y k; Mandato Constituyente 2" | "LOSEP Art. 47 b" | "LOSEP Art. 47 d" | "LOSEP Art. 47 l" | "Código del Trabajo Art. 172" | "Constitución Art. 105" | "COOTAD Arts. 333–336" | "El plazo del contrato" | "Código Civil Art. 1561" | "La cláusula de terminación del contrato" | "LOSEP Art. 28 a" | "LOSEP Art. 28 b" | "LOSEP Art. 28 c" | "LOSEP Art. 28 d" | "LOSEP Art. 28 e" | "LOSEP Art. 28 f" | "LOSEP Art. 43 b" | "LOSEP Art. 43 c" | "LOSEP Art. 43 d" | null;
+            base_legal: "LOSEP Art. 47 a; Reglamento Art. 102" | "LOSEP Art. 47 e; Reglamento Art. 105" | "LOSEP Art. 17 b.5" | "Reglamento a la LOSEP Art. 146 a" | "Reglamento a la LOSEP Art. 146 f" | "Reglamento a la LOSEP Art. 146 b" | "Reglamento a la LOSEP Art. 146 g" | "LOSEP Arts. 47 f y 48" | "LOSEP Art. 47 j" | "LOSEP Art. 47 i y k; Mandato Constituyente 2" | "LOSEP Art. 47 b" | "LOSEP Art. 47 d" | "LOSEP Art. 47 l" | "Código del Trabajo Art. 172" | "Constitución Art. 105" | "COOTAD Arts. 333–336" | "El plazo del contrato" | "Código Civil Art. 1561" | "La cláusula de terminación del contrato" | "Código del Trabajo, Arts. 184 y 185" | "Código del Trabajo, Art. 169 núm. 2" | "Código del Trabajo, Art. 169 núm. 3" | "Código del Trabajo, Art. 15" | "Código del Trabajo, Arts. 185 y 188" | "Código del Trabajo, Art. 216; Mandato Constituyente 2" | "Mandato Constituyente 2, art. 8" | "Código del Trabajo, Art. 169 núm. 5" | "Código del Trabajo, Art. 169 núm. 6" | "LOSEP Art. 28 a" | "LOSEP Art. 28 b" | "LOSEP Art. 28 c" | "LOSEP Art. 28 d" | "LOSEP Art. 28 e" | "LOSEP Art. 28 f" | "LOSEP Art. 43 b" | "LOSEP Art. 43 c" | "LOSEP Art. 43 d" | null;
             nombramientos_elegibles: [
                 components["schemas"]["TipoNombramiento"]
             ] | [
@@ -8461,6 +8529,20 @@ export interface components {
             updated_at: string | null;
         };
         /**
+         * GuardarActaFiniquitoRequest
+         * @description El acta de finiquito de un obrero (fase 4.5): su número en el sistema del
+         *     Ministerio del Trabajo, su fecha, lo pagado y, si se tiene, el PDF.
+         */
+        GuardarActaFiniquitoRequest: {
+            numero: string;
+            /** Format: date-time */
+            fecha: string;
+            valor_pagado: number;
+            observacion?: string | null;
+            /** Format: binary */
+            archivo?: string | null;
+        };
+        /**
          * GuardarFaltaReglamentoRequest
          * @description Una falta del catálogo del reglamento interno (fase 4.4): su artículo, su
          *     descripción, las sanciones que admite y el tope de la multa, que nunca pasa
@@ -8846,6 +8928,8 @@ export interface components {
             lugar_trabajo_origen: string | null;
             /** Format: date-time */
             fecha_consentimiento: string | null;
+            /** Format: date-time */
+            fecha_presentacion_renuncia: string | null;
         };
         /** MovimientoPersonalResource */
         MovimientoPersonalResource: {
@@ -9015,6 +9099,16 @@ export interface components {
             lugar_trabajo_origen: string | null;
             /** Format: date-time */
             fecha_consentimiento: string | null;
+            /**
+             * Format: date-time
+             * @description La terminación de un obrero (fase 4.5): cuándo presentó la
+             *     renuncia, si el desahucio rige antes de los 15 días de aviso, la
+             *     liquidación referencial y el acta de finiquito.
+             */
+            fecha_presentacion_renuncia: string | null;
+            desahucio_sin_el_aviso: boolean;
+            liquidacion_referencial: string;
+            acta_finiquito?: components["schemas"]["ActaFiniquito"];
             caucionado: boolean | null;
             caucion_numero: string | null;
             /** Format: date-time */
@@ -10616,6 +10710,11 @@ export interface components {
              *     ContratoDeTrabajoService.
              */
             fecha_consentimiento?: string | null;
+            /**
+             * Format: date-time
+             * @description Cuándo presentó el obrero su renuncia (CT 184; fase 4.5).
+             */
+            fecha_presentacion_renuncia?: string | null;
             caucionado?: boolean | null;
             caucion_numero?: string | null;
             /** Format: date-time */
@@ -11023,7 +11122,7 @@ export interface components {
          * @description Subtipos de acción de personal. Talento Humano opera con dos niveles: un tipo "paraguas" (Cambio Administrativo, Régimen Disciplinario, Cesación de Funciones) y un subtipo que es el que realmente determina la elegibilidad por tipo de nombramiento y el texto del documento impreso. Confirmado con TH (2026-07-27). Ver TipoMovimientoPersonal::subtiposPermitidos().
          * @enum {string}
          */
-        SubtipoMovimientoPersonal: "traslado_administrativo" | "traspaso" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "amonestacion_escrita" | "sancion_pecuniaria" | "suspension_sin_remuneracion" | "sancion_disciplinaria" | "renuncia" | "destitucion" | "jubilacion" | "incapacidad" | "contrato_finalizado" | "visto_bueno" | "remocion" | "periodo_prueba_no_superado" | "fin_del_plazo" | "terminacion_unilateral" | "mutuo_acuerdo" | "evaluacion_insuficiente" | "retiro_voluntario" | "perdida_derechos_ciudadania" | "fallecimiento" | "fin_del_periodo" | "revocatoria_del_mandato" | "remocion_por_el_consejo" | "terminacion_mutuo_acuerdo" | "terminacion_anticipada" | "asuntos_particulares" | "estudios_posgrado" | "servicio_militar" | "reemplazo_dignatario" | "candidatura" | "cuidado_hijos" | "segun_su_regimen";
+        SubtipoMovimientoPersonal: "traslado_administrativo" | "traspaso" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "amonestacion_escrita" | "sancion_pecuniaria" | "suspension_sin_remuneracion" | "sancion_disciplinaria" | "renuncia" | "destitucion" | "jubilacion" | "incapacidad" | "contrato_finalizado" | "visto_bueno" | "remocion" | "periodo_prueba_no_superado" | "fin_del_plazo" | "terminacion_unilateral" | "mutuo_acuerdo" | "evaluacion_insuficiente" | "retiro_voluntario" | "perdida_derechos_ciudadania" | "fallecimiento" | "fin_del_periodo" | "revocatoria_del_mandato" | "remocion_por_el_consejo" | "terminacion_mutuo_acuerdo" | "terminacion_anticipada" | "desahucio" | "acuerdo_de_partes" | "conclusion_de_obra" | "prueba_no_superada_ct" | "despido_intempestivo" | "jubilacion_ct" | "retiro_voluntario_ct" | "muerte_o_incapacidad" | "caso_fortuito" | "asuntos_particulares" | "estudios_posgrado" | "servicio_militar" | "reemplazo_dignatario" | "candidatura" | "cuidado_hijos" | "segun_su_regimen";
         /** Sumario */
         Sumario: {
             id: number;
@@ -11740,6 +11839,11 @@ export interface components {
              * @description El consentimiento escrito del cambio de ocupación (CT 192; fase 4.3).
              */
             fecha_consentimiento?: string | null;
+            /**
+             * Format: date-time
+             * @description Cuándo presentó el obrero su renuncia (CT 184; fase 4.5).
+             */
+            fecha_presentacion_renuncia?: string | null;
             caucionado?: boolean | null;
             caucion_numero?: string | null;
             /** Format: date-time */
@@ -29063,6 +29167,102 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "terminacionObrero.index": {
+        parameters: {
+            query?: {
+                sin_acta?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Terminaciones de obreros.";
+                        datos: {
+                            movimiento_id: number;
+                            codigo_registro: string | null;
+                            servidor: string;
+                            causal: string;
+                            causal_etiqueta: string;
+                            fecha_efectiva: string;
+                            total_referencial: string | null;
+                            acta: components["schemas"]["ActaFiniquito"];
+                        }[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "terminacionObrero.guardarActa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The movimiento ID */
+                movimiento: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["GuardarActaFiniquitoRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Acta de finiquito registrada.";
+                        datos: components["schemas"]["ActaFiniquito"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "terminacionObrero.descargarActa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The movimiento ID */
+                movimiento: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
         };
     };
     "ticket.index": {

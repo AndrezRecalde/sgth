@@ -122,13 +122,20 @@ class MovimientoPersonalService
      * unilateralmente (diseño, 4.3; TH 11). Se comprueba al crear la acción y
      * otra vez al registrarla, por si el dato apareció entre medias.
      */
-    public static function impedirTerminacionDeProtegida(int $servidorId): void
+    public static function impedirTerminacionDeProtegida(int $servidorId, ?SubtipoMovimientoPersonal $causal = null): void
     {
-        if (ProteccionMaternidad::consta($servidorId)) {
-            throw new ReglaNegocioException(
-                ProteccionMaternidad::aviso().' La terminación unilateral no procede.'
-            );
+        if (! ProteccionMaternidad::consta($servidorId)) {
+            return;
         }
+
+        // El despido de la obrera embarazada o en lactancia es ineficaz por
+        // ley (Código del Trabajo, Art. 195.1; fase 4.5).
+        throw new ReglaNegocioException(
+            $causal === SubtipoMovimientoPersonal::DESPIDO_INTEMPESTIVO
+                ? 'Consta en su ficha de salud ocupacional que está embarazada o en período de lactancia: su '
+                    .'despido intempestivo es ineficaz (Código del Trabajo, Art. 195.1) y no procede.'
+                : ProteccionMaternidad::aviso().' La terminación unilateral no procede.'
+        );
     }
 
     public function registrar(int $servidorId, array $datos): MovimientoPersonal
@@ -203,8 +210,15 @@ class MovimientoPersonalService
             $datos = app(ContratoDeTrabajoService::class)->completar($servidor, $tipoMovimiento, $datos);
         }
 
-        if ($subtipo === SubtipoMovimientoPersonal::TERMINACION_UNILATERAL) {
-            self::impedirTerminacionDeProtegida($servidorId);
+        if ($subtipo?->seImpideAProtegida()) {
+            self::impedirTerminacionDeProtegida($servidorId, $subtipo);
+        }
+
+        // La terminación del obrero: la fecha de la renuncia en el desahucio, y
+        // el período de prueba que no pasa de 90 días (fase 4.5).
+        $datos = app(TerminacionObreroService::class)->completar($servidor, $subtipo, $datos);
+        if ($subtipo === SubtipoMovimientoPersonal::PRUEBA_NO_SUPERADA_CT) {
+            app(TerminacionObreroService::class)->validarPeriodoDePrueba($servidor->contratoVigente, $datos['fecha_efectiva'] ?? null);
         }
 
         // Las causales del provisional dependen de su supuesto (fase 3.2).
@@ -444,6 +458,21 @@ class MovimientoPersonalService
                     'puesto_destino_id'     => $movimiento->puesto_destino_id,
                     ...$datos,
                 ],
+            );
+        }
+
+        // La terminación del obrero, con lo corregido (fase 4.5).
+        $terminaciones = app(TerminacionObreroService::class);
+        $servidorDelActo = Servidor::with('contratoVigente')->findOrFail($movimiento->servidor_id);
+        $datos = $terminaciones->completar($servidorDelActo, $movimiento->subtipoEfectivo(), [
+            'fecha_presentacion_renuncia' => $movimiento->fecha_presentacion_renuncia?->toDateString(),
+            'fecha_efectiva'              => $movimiento->fecha_efectiva?->toDateString(),
+            ...$datos,
+        ]);
+        if ($movimiento->subtipoEfectivo() === SubtipoMovimientoPersonal::PRUEBA_NO_SUPERADA_CT) {
+            $terminaciones->validarPeriodoDePrueba(
+                $servidorDelActo->contratoVigente,
+                $datos['fecha_efectiva'] ?? $movimiento->fecha_efectiva?->toDateString(),
             );
         }
 

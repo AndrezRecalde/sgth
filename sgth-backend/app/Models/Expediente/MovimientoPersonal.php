@@ -301,6 +301,9 @@ class MovimientoPersonal extends Model
         // escrito del cambio de ocupación (CT 192; fase 4.3).
         'lugar_trabajo_origen',
         'fecha_consentimiento',
+        // Cuándo presentó el obrero su renuncia: el desahucio pide 15 días de
+        // aviso (CT 184; fase 4.5).
+        'fecha_presentacion_renuncia',
         'caucionado',
         'caucion_numero',
         'caucion_fecha',
@@ -328,6 +331,7 @@ class MovimientoPersonal extends Model
             'fecha_fin_propuesta'         => 'date',
             'fecha_fin_origen'            => 'date',
             'fecha_consentimiento'        => 'date',
+            'fecha_presentacion_renuncia' => 'date',
             'puede_marcar'                => 'boolean',
             'para_estudios_o_eventos'     => 'boolean',
             'con_remuneracion'            => 'boolean',
@@ -520,6 +524,12 @@ class MovimientoPersonal extends Model
     public function solicitudCertificacion(): HasOne
     {
         return $this->hasOne(SolicitudCertificacionMedica::class, 'movimiento_personal_id');
+    }
+
+    /** El acta de finiquito de la terminación de un obrero (fase 4.5). */
+    public function actaFiniquito(): HasOne
+    {
+        return $this->hasOne(ActaFiniquito::class, 'movimiento_personal_id');
     }
 
     /** Lo que se le anotó después de emitida, en el orden en que pasó. */

@@ -38808,6 +38808,215 @@
                 }
             }
         },
+        "/v1/expediente/terminaciones-obreros": {
+            "get": {
+                "operationId": "terminacionObrero.index",
+                "tags": [
+                    "TerminacionObrero"
+                ],
+                "parameters": [
+                    {
+                        "name": "sin_acta",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Terminaciones de obreros."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "movimiento_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "codigo_registro": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "servidor": {
+                                                        "type": "string"
+                                                    },
+                                                    "causal": {
+                                                        "type": "string"
+                                                    },
+                                                    "causal_etiqueta": {
+                                                        "type": "string"
+                                                    },
+                                                    "fecha_efectiva": {
+                                                        "type": "string"
+                                                    },
+                                                    "total_referencial": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "acta": {
+                                                        "$ref": "#/components/schemas/ActaFiniquito"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "movimiento_id",
+                                                    "codigo_registro",
+                                                    "servidor",
+                                                    "causal",
+                                                    "causal_etiqueta",
+                                                    "fecha_efectiva",
+                                                    "total_referencial",
+                                                    "acta"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/movimientos/{movimiento}/acta-finiquito": {
+            "post": {
+                "operationId": "terminacionObrero.guardarActa",
+                "summary": "Registra o corrige el acta de finiquito de una terminaci\u00f3n registrada",
+                "tags": [
+                    "TerminacionObrero"
+                ],
+                "parameters": [
+                    {
+                        "name": "movimiento",
+                        "in": "path",
+                        "required": true,
+                        "description": "The movimiento ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GuardarActaFiniquitoRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Acta de finiquito registrada."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/ActaFiniquito"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/movimientos/{movimiento}/acta-finiquito/documento": {
+            "get": {
+                "operationId": "terminacionObrero.descargarActa",
+                "summary": "Descarga el PDF del acta: el archivo vive en el disco privado",
+                "tags": [
+                    "TerminacionObrero"
+                ],
+                "parameters": [
+                    {
+                        "name": "movimiento",
+                        "in": "path",
+                        "required": true,
+                        "description": "The movimiento ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/helpdesk/tickets": {
             "get": {
                 "operationId": "ticket.index",
@@ -43707,6 +43916,83 @@
                 ],
                 "title": "AccidenteTrabajoResource"
             },
+            "ActaFiniquito": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "movimiento_personal_id": {
+                        "type": "integer"
+                    },
+                    "numero": {
+                        "type": "string"
+                    },
+                    "fecha": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "valor_pagado": {
+                        "type": "string"
+                    },
+                    "documento_nombre": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "observacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "updated_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "tiene_documento": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "movimiento_personal_id",
+                    "numero",
+                    "fecha",
+                    "valor_pagado",
+                    "documento_nombre",
+                    "observacion",
+                    "created_by",
+                    "updated_by",
+                    "created_at",
+                    "updated_at",
+                    "tiene_documento"
+                ],
+                "title": "ActaFiniquito"
+            },
             "ActividadLaboral": {
                 "type": "object",
                 "properties": {
@@ -45675,6 +45961,12 @@
                             "Remoci\u00f3n por el Consejo Provincial",
                             "Terminaci\u00f3n por mutuo acuerdo",
                             "Terminaci\u00f3n anticipada seg\u00fan el contrato",
+                            "Renuncia (desahucio)",
+                            "Acuerdo de las partes",
+                            "Conclusi\u00f3n de la obra o del servicio",
+                            "Despido intempestivo",
+                            "Muerte o incapacidad permanente",
+                            "Caso fortuito o fuerza mayor",
                             "Asuntos particulares",
                             "Estudios de posgrado",
                             "Servicio militar",
@@ -45709,6 +46001,15 @@
                             "El plazo del contrato",
                             "C\u00f3digo Civil Art. 1561",
                             "La cl\u00e1usula de terminaci\u00f3n del contrato",
+                            "C\u00f3digo del Trabajo, Arts. 184 y 185",
+                            "C\u00f3digo del Trabajo, Art. 169 n\u00fam. 2",
+                            "C\u00f3digo del Trabajo, Art. 169 n\u00fam. 3",
+                            "C\u00f3digo del Trabajo, Art. 15",
+                            "C\u00f3digo del Trabajo, Arts. 185 y 188",
+                            "C\u00f3digo del Trabajo, Art. 216; Mandato Constituyente 2",
+                            "Mandato Constituyente 2, art. 8",
+                            "C\u00f3digo del Trabajo, Art. 169 n\u00fam. 5",
+                            "C\u00f3digo del Trabajo, Art. 169 n\u00fam. 6",
                             "LOSEP Art. 28 a",
                             "LOSEP Art. 28 b",
                             "LOSEP Art. 28 c",
@@ -49695,6 +49996,47 @@
                 ],
                 "title": "GrupoOcupacional"
             },
+            "GuardarActaFiniquitoRequest": {
+                "type": "object",
+                "description": "El acta de finiquito de un obrero (fase 4.5): su n\u00famero en el sistema del\nMinisterio del Trabajo, su fecha, lo pagado y, si se tiene, el PDF.",
+                "properties": {
+                    "numero": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "fecha": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "valor_pagado": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 9999999999
+                    },
+                    "observacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 1000
+                    },
+                    "archivo": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "maxLength": 10240
+                    }
+                },
+                "required": [
+                    "numero",
+                    "fecha",
+                    "valor_pagado"
+                ],
+                "title": "GuardarActaFiniquitoRequest"
+            },
             "GuardarFaltaReglamentoRequest": {
                 "type": "object",
                 "description": "Una falta del cat\u00e1logo del reglamento interno (fase 4.4): su art\u00edculo, su\ndescripci\u00f3n, las sanciones que admite y el tope de la multa, que nunca pasa\ndel 10 % de la remuneraci\u00f3n.",
@@ -51244,6 +51586,13 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "fecha_presentacion_renuncia": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
                     }
                 },
                 "required": [
@@ -51320,7 +51669,8 @@
                     "prorroga_causa",
                     "fecha_fin_origen",
                     "lugar_trabajo_origen",
-                    "fecha_consentimiento"
+                    "fecha_consentimiento",
+                    "fecha_presentacion_renuncia"
                 ],
                 "title": "MovimientoPersonal"
             },
@@ -51897,6 +52247,23 @@
                         ],
                         "format": "date-time"
                     },
+                    "fecha_presentacion_renuncia": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "La terminaci\u00f3n de un obrero (fase 4.5): cu\u00e1ndo present\u00f3 la\nrenuncia, si el desahucio rige antes de los 15 d\u00edas de aviso, la\nliquidaci\u00f3n referencial y el acta de finiquito."
+                    },
+                    "desahucio_sin_el_aviso": {
+                        "type": "boolean"
+                    },
+                    "liquidacion_referencial": {
+                        "type": "string"
+                    },
+                    "acta_finiquito": {
+                        "$ref": "#/components/schemas/ActaFiniquito"
+                    },
                     "caucionado": {
                         "type": [
                             "boolean",
@@ -52197,6 +52564,9 @@
                     "lugar_trabajo",
                     "lugar_trabajo_origen",
                     "fecha_consentimiento",
+                    "fecha_presentacion_renuncia",
+                    "desahucio_sin_el_aviso",
+                    "liquidacion_referencial",
                     "caucionado",
                     "caucion_numero",
                     "caucion_fecha",
@@ -58098,6 +58468,14 @@
                         "format": "date-time",
                         "description": "El consentimiento escrito del cambio de ocupaci\u00f3n de un obrero\n(CT 192; fase 4.3). Que sea obligatorio ah\u00ed lo decide\nContratoDeTrabajoService."
                     },
+                    "fecha_presentacion_renuncia": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "Cu\u00e1ndo present\u00f3 el obrero su renuncia (CT 184; fase 4.5)."
+                    },
                     "caucionado": {
                         "type": [
                             "boolean",
@@ -59481,6 +59859,15 @@
                     "remocion_por_el_consejo",
                     "terminacion_mutuo_acuerdo",
                     "terminacion_anticipada",
+                    "desahucio",
+                    "acuerdo_de_partes",
+                    "conclusion_de_obra",
+                    "prueba_no_superada_ct",
+                    "despido_intempestivo",
+                    "jubilacion_ct",
+                    "retiro_voluntario_ct",
+                    "muerte_o_incapacidad",
+                    "caso_fortuito",
                     "asuntos_particulares",
                     "estudios_posgrado",
                     "servicio_militar",
@@ -62204,6 +62591,14 @@
                         ],
                         "format": "date-time",
                         "description": "El consentimiento escrito del cambio de ocupaci\u00f3n (CT 192; fase 4.3)."
+                    },
+                    "fecha_presentacion_renuncia": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "Cu\u00e1ndo present\u00f3 el obrero su renuncia (CT 184; fase 4.5)."
                     },
                     "caucionado": {
                         "type": [

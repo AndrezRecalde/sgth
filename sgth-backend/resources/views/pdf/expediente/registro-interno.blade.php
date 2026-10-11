@@ -90,11 +90,13 @@
 </head>
 <body>
 @php
+    // La de una terminación con algo que pagar (fase 4.5); las demás no la traen.
+    $liquidacion ??= null;
     $fmtFecha = fn ($f) => $f ? \Carbon\Carbon::parse($f)->format('d/m/Y') : '—';
     $dinero = fn ($v) => $v !== null ? '$ '.number_format((float) $v, 2) : '—';
     $nombre = trim(($servidor?->apellido ?? '').' '.($servidor?->segundo_apellido ?? '').' '.($servidor?->nombre ?? '').' '.($servidor?->segundo_nombre ?? ''));
     $causal = $movimiento->causal();
-    $baseLegal = ($causal?->baseLegal() && $causal === \App\Enums\SubtipoMovimientoPersonal::VISTO_BUENO)
+    $baseLegal = $causal?->esDelCodigoDelTrabajo()
         ? $causal->baseLegal()
         : $movimiento->clase?->baseLegalEnElCodigoDelTrabajo();
     $esIngreso = (bool) $movimiento->tipo_movimiento?->creaVinculo();
@@ -199,6 +201,9 @@
     @if($movimiento->resolucion_numero)
         <tr><td class="label">{{ $cambia ? 'Adenda' : 'Documento de origen' }}</td><td>N.º {{ $movimiento->resolucion_numero }}</td></tr>
     @endif
+    @if($movimiento->fecha_presentacion_renuncia)
+        <tr><td class="label">Renuncia presentada</td><td>El {{ $fmtFecha($movimiento->fecha_presentacion_renuncia) }}</td></tr>
+    @endif
     @if($movimiento->fecha_consentimiento)
         <tr><td class="label">Consentimiento del trabajador</td><td>Por escrito, del {{ $fmtFecha($movimiento->fecha_consentimiento) }}</td></tr>
     @endif
@@ -209,6 +214,32 @@
         <tr><td class="label">Base legal</td><td>{{ $baseLegal }}</td></tr>
     @endif
 </table>
+
+@if($liquidacion)
+    <div class="bloque-titulo">Liquidación referencial</div>
+    <table class="datos">
+        <tr>
+            <th>Rubro</th>
+            <th>Detalle</th>
+            <th style="width: 18%; text-align: right;">Valor</th>
+        </tr>
+        @foreach($liquidacion['rubros'] as $rubro)
+            <tr>
+                <td>{{ $rubro['concepto'] }}<br><span style="font-size: 8.5px; color: #5b6b63;">{{ $rubro['base_legal'] }}</span></td>
+                <td>{{ $rubro['detalle'] }}</td>
+                <td style="text-align: right;">{{ $dinero($rubro['monto']) }}</td>
+            </tr>
+        @endforeach
+        <tr>
+            <td colspan="2" class="label">Total referencial</td>
+            <td style="text-align: right; font-weight: bold;">{{ $dinero($liquidacion['total']) }}</td>
+        </tr>
+    </table>
+    <div class="nota">
+        Sobre una remuneración de {{ $dinero($liquidacion['remuneracion']) }} y servicio desde el
+        {{ $fmtFecha($liquidacion['desde']) }}. {{ $liquidacion['nota'] }}
+    </div>
+@endif
 
 <div class="bloque-titulo">Explicación</div>
 <div class="explicacion">{{ $movimiento->descripcion }}</div>

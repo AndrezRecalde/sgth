@@ -136,6 +136,16 @@ enum TipoMovimientoPersonal: string
                 // Las del contrato civil (fase 4.2).
                 SubtipoMovimientoPersonal::TERMINACION_MUTUO_ACUERDO,
                 SubtipoMovimientoPersonal::TERMINACION_ANTICIPADA,
+                // Las del obrero (fase 4.5).
+                SubtipoMovimientoPersonal::DESAHUCIO,
+                SubtipoMovimientoPersonal::ACUERDO_DE_PARTES,
+                SubtipoMovimientoPersonal::CONCLUSION_DE_OBRA,
+                SubtipoMovimientoPersonal::PRUEBA_NO_SUPERADA_CT,
+                SubtipoMovimientoPersonal::DESPIDO_INTEMPESTIVO,
+                SubtipoMovimientoPersonal::JUBILACION_CT,
+                SubtipoMovimientoPersonal::RETIRO_VOLUNTARIO_CT,
+                SubtipoMovimientoPersonal::MUERTE_O_INCAPACIDAD,
+                SubtipoMovimientoPersonal::CASO_FORTUITO,
                 SubtipoMovimientoPersonal::VISTO_BUENO,
                 // Las de la autoridad electa (fase 4.1).
                 SubtipoMovimientoPersonal::REVOCATORIA_DEL_MANDATO,

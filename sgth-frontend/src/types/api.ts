@@ -725,6 +725,19 @@ export type AnotacionAccion = Omit<
   components['schemas']['AnotacionAccionPersonalResource'], 'registrado_por'
 > & { registrado_por?: string | null }
 
+/**
+ * La liquidación referencial de la terminación de un obrero (fase 4.5).
+ * Espeja `TerminacionObreroService::liquidacion()`.
+ */
+export type LiquidacionReferencial = {
+  remuneracion: number | null
+  desde: string | null
+  anios_servicio: number | null
+  rubros: { concepto: string; base_legal: string; detalle: string; monto: number | null }[]
+  total: number | null
+  nota: string
+}
+
 export type MovimientoPersonal = {
   id: number
   servidor_id: number
@@ -871,6 +884,11 @@ export type MovimientoPersonal = {
   // ocupación de un obrero (fase 4.3).
   lugar_trabajo_origen?: string | null
   fecha_consentimiento?: string | null
+  // La terminación de un obrero (fase 4.5): cuándo presentó la renuncia, si el
+  // desahucio rige antes de los 15 días de aviso, y la liquidación referencial.
+  fecha_presentacion_renuncia?: string | null
+  desahucio_sin_el_aviso?: boolean
+  liquidacion_referencial?: LiquidacionReferencial | null
   caucionado?: boolean | null
   caucion_numero?: string | null
   caucion_fecha?: string | null
