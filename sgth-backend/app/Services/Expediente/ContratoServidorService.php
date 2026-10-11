@@ -638,8 +638,8 @@ class ContratoServidorService
 
         $puesto = Puesto::findOrFail($puestoId);
 
-        $ocupadas = $puesto->contratos()
-            ->queOcupanPlaza()
+        // Con el ascendido en prueba que lo dejó: se le reserva (fase 3.3).
+        $ocupadas = ContratoServidor::queOcupanPlazaDe($puestoId)
             ->when($exceptoContratoId, fn ($q) => $q->where('id', '!=', $exceptoContratoId))
             ->count();
 
@@ -651,8 +651,10 @@ class ContratoServidorService
             ->whereNull('cubre_movimiento_id')
             ->when($exceptoMovimientoId, fn ($q) => $q->where('id', '!=', $exceptoMovimientoId))
             ->get(['id', 'tipo_movimiento', 'tipo_nombramiento_propuesto'])
-            ->filter(fn (MovimientoPersonal $m) => $m->tipo_movimiento->creaVinculo()
+            ->filter(fn (MovimientoPersonal $m) => ($m->tipo_movimiento->creaVinculo()
                 && (bool) $m->tipo_nombramiento_propuesto?->ocupaPlaza())
+                // El ascenso que espera su fecha también tiene ya su plaza.
+                || $m->tipo_movimiento->asciende())
             ->count();
 
         if ($ocupadas >= $puesto->plazas) {
@@ -799,72 +801,6 @@ class ContratoServidorService
      * como un traspaso» sin pronunciarse sobre la remuneración— y el
      * 2026-09-29 confirmaron que no cambia.
      */
-    /**
-     * El nombramiento definitivo (LOSEP 17 b.5; fase 3.2): el provisional de
-     * prueba pasa a permanente en el mismo vínculo, que no se cierra, así que
-     * la antigüedad sigue corriendo. El número, la partida y la remuneración se
-     * conservan.
-     */
-    public function convertirEnDefinitivo(MovimientoPersonal $movimiento): void
-    {
-        $vigente = Servidor::with('contratoVigente')->findOrFail($movimiento->servidor_id)->contratoVigente;
-
-        if (! $vigente?->esDePrueba()) {
-            throw new ReglaNegocioException(
-                'El servidor ya no tiene un nombramiento provisional de prueba que convertir en definitivo.'
-            );
-        }
-
-        $vigente->update([
-            'tipo_nombramiento'    => TipoNombramiento::PERMANENTE->value,
-            'supuesto_provisional' => null,
-        ]);
-
-        // Desde hoy es permanente: es su fecha de nombramiento.
-        $this->sincronizarNombramientoDelServidor($vigente, [
-            'fecha_nombramiento' => $movimiento->fecha_efectiva?->toDateString(),
-        ]);
-    }
-
-    /** Anular el nombramiento definitivo devuelve el vínculo a provisional de prueba. */
-    public function devolverAPrueba(MovimientoPersonal $movimiento): void
-    {
-        $vigente = Servidor::with('contratoVigente')->findOrFail($movimiento->servidor_id)->contratoVigente;
-
-        if (! $vigente || $vigente->tipo_nombramiento !== TipoNombramiento::PERMANENTE) {
-            throw new ReglaNegocioException(
-                'No se puede devolver el vínculo a provisional de prueba: ya no es el permanente que '
-                    .'creó este nombramiento definitivo.'
-            );
-        }
-
-        $vigente->update([
-            'tipo_nombramiento'    => TipoNombramiento::PROVISIONAL->value,
-            'supuesto_provisional' => SupuestoProvisional::DE_PRUEBA->value,
-        ]);
-
-        $this->sincronizarNombramientoDelServidor($vigente, ['fecha_nombramiento' => null]);
-    }
-
-    /**
-     * El nombramiento que enseña el servidor es copia del de su vínculo, y
-     * `sincronizarRegimenServidor()` solo la escribe al crear el contrato. Lo
-     * que cambia el nombramiento sin crear contrato —el definitivo— la pone al
-     * día aquí; sin esto, el expediente lo seguía filtrando y exportando como
-     * provisional.
-     *
-     * @param  array<string, mixed>  $extra
-     */
-    private function sincronizarNombramientoDelServidor(ContratoServidor $vigente, array $extra = []): void
-    {
-        Servidor::findOrFail($vigente->servidor_id)->update([
-            'tipo_nombramiento' => $vigente->tipo_nombramiento->value,
-            ...$extra,
-        ]);
-
-        $this->sincronizarPuestoDesdeVinculo($vigente->servidor_id);
-    }
-
     public function reestructurarDesdeMovimiento(MovimientoPersonal $movimiento): void
     {
         $servidor = Servidor::with('contratoVigente')->findOrFail($movimiento->servidor_id);
@@ -898,5 +834,216 @@ class ContratoServidorService
         ]);
 
         $this->sincronizarPuestoDesdeVinculo($movimiento->servidor_id);
+    }
+
+    /**
+     * El nombramiento definitivo (LOSEP 17 b.5; fase 3.2): el provisional de
+     * prueba pasa a permanente en el mismo vínculo, que no se cierra, así que
+     * la antigüedad sigue corriendo. El número, la partida y la remuneración se
+     * conservan.
+     *
+     * El del ascendido (fase 3.3) libera además el puesto que se le reservaba.
+     * Su fecha de nombramiento no cambia: ya era servidor de carrera.
+     */
+    public function convertirEnDefinitivo(MovimientoPersonal $movimiento): void
+    {
+        $vigente = Servidor::with('contratoVigente')->findOrFail($movimiento->servidor_id)->contratoVigente;
+
+        if (! $vigente?->esDePrueba()) {
+            throw new ReglaNegocioException(
+                'El servidor ya no tiene un nombramiento provisional de prueba que convertir en definitivo.'
+            );
+        }
+
+        $ascendido = $vigente->esAscensoEnPrueba();
+
+        $vigente->update([
+            'tipo_nombramiento'     => TipoNombramiento::PERMANENTE->value,
+            'supuesto_provisional'  => null,
+            'puesto_reservado_id'   => null,
+            'movimiento_ascenso_id' => null,
+        ]);
+
+        // Quien ingresó es permanente desde hoy: es su fecha de nombramiento.
+        $this->sincronizarNombramientoDelServidor($vigente, $ascendido ? [] : [
+            'fecha_nombramiento' => $movimiento->fecha_efectiva?->toDateString(),
+        ]);
+    }
+
+    /**
+     * Anular el nombramiento definitivo devuelve el vínculo a provisional de
+     * prueba: el de quien ingresó, o el del ascendido con su puesto de antes
+     * reservado otra vez, si nadie lo ocupó mientras tanto.
+     */
+    public function devolverAPrueba(MovimientoPersonal $movimiento): void
+    {
+        $vigente = Servidor::with('contratoVigente')->findOrFail($movimiento->servidor_id)->contratoVigente;
+
+        if (! $vigente || $vigente->tipo_nombramiento !== TipoNombramiento::PERMANENTE) {
+            throw new ReglaNegocioException(
+                'No se puede devolver el vínculo a provisional de prueba: ya no es el permanente que '
+                    .'creó este nombramiento definitivo.'
+            );
+        }
+
+        $ascenso = $movimiento->movimientoRelacionado;
+
+        if ($ascenso?->tipo_movimiento?->asciende()) {
+            $this->reservarElPuestoDeAntes($vigente, $ascenso);
+
+            $vigente->update([
+                'tipo_nombramiento'     => TipoNombramiento::PROVISIONAL->value,
+                'supuesto_provisional'  => SupuestoProvisional::ASCENSO->value,
+                'puesto_reservado_id'   => $ascenso->puesto_origen_id,
+                'movimiento_ascenso_id' => $ascenso->id,
+            ]);
+
+            $this->sincronizarNombramientoDelServidor($vigente);
+
+            return;
+        }
+
+        $vigente->update([
+            'tipo_nombramiento'    => TipoNombramiento::PROVISIONAL->value,
+            'supuesto_provisional' => SupuestoProvisional::DE_PRUEBA->value,
+        ]);
+
+        $this->sincronizarNombramientoDelServidor($vigente, ['fecha_nombramiento' => null]);
+    }
+
+    /**
+     * El ascenso (LOSEP Arts. 17 b.5 y 68; fase 3.3): el servidor de carrera
+     * pasa al puesto que ganó, en el mismo vínculo, así que la antigüedad sigue
+     * corriendo. Cambian el puesto, la unidad, la partida y la remuneración, y
+     * el nombramiento pasa a provisional de prueba por seis meses. El puesto que
+     * deja queda reservado.
+     */
+    public function ascender(MovimientoPersonal $ascenso): void
+    {
+        $vigente = Servidor::with('contratoVigente')->findOrFail($ascenso->servidor_id)->contratoVigente;
+
+        if (! $vigente || $vigente->tipo_nombramiento !== TipoNombramiento::PERMANENTE) {
+            throw new ReglaNegocioException(
+                'El ascenso es del servidor con nombramiento permanente, y el servidor ya no lo tiene.'
+            );
+        }
+
+        $this->ponerEnElPuestoGanado($vigente, $ascenso);
+    }
+
+    /**
+     * Anular el ascenso, o el reintegro de quien no superó la prueba: el
+     * servidor vuelve al puesto que tenía, con su remuneración, su partida y su
+     * nombramiento permanente (LOSEP 17 b.5), y la reserva se libera.
+     */
+    public function volverAlPuestoDeAntes(MovimientoPersonal $ascenso): void
+    {
+        $vigente = Servidor::with('contratoVigente')->findOrFail($ascenso->servidor_id)->contratoVigente;
+
+        if (! $vigente || (int) $vigente->movimiento_ascenso_id !== (int) $ascenso->id) {
+            throw new ReglaNegocioException(
+                'El servidor ya no está en el período de prueba de este ascenso, así que no hay a qué '
+                    .'puesto devolverlo.'
+            );
+        }
+
+        // Es el que tiene reservado, así que la plaza la ocupa él mismo.
+        $this->validarVacante((int) $ascenso->puesto_origen_id, TipoNombramiento::PERMANENTE->value, $vigente->id);
+
+        $vigente->update([
+            'tipo_nombramiento'         => TipoNombramiento::PERMANENTE->value,
+            'supuesto_provisional'      => null,
+            'puesto_id'                 => $ascenso->puesto_origen_id,
+            'unidad_administrativa_id'  => $ascenso->unidad_origen_id ?? $vigente->unidad_administrativa_id,
+            'partida_presupuestaria_id' => $ascenso->partida_origen_id ?? $vigente->partida_presupuestaria_id,
+            'remuneracion'              => $ascenso->remuneracion_origen ?? $vigente->remuneracion,
+            'puesto_reservado_id'       => null,
+            'movimiento_ascenso_id'     => null,
+        ]);
+
+        $this->sincronizarNombramientoDelServidor($vigente);
+    }
+
+    /**
+     * Anular el reintegro de quien no superó la prueba lo devuelve al puesto
+     * ganado, si sigue libre, con su prueba y su reserva.
+     */
+    public function volverAlPuestoGanado(MovimientoPersonal $ascenso): void
+    {
+        $vigente = Servidor::with('contratoVigente')->findOrFail($ascenso->servidor_id)->contratoVigente;
+
+        if (! $vigente || $vigente->tipo_nombramiento !== TipoNombramiento::PERMANENTE
+            || (int) $vigente->puesto_id !== (int) $ascenso->puesto_origen_id
+        ) {
+            throw new ReglaNegocioException(
+                'No se puede devolver al servidor al puesto del ascenso: ya no está en el puesto al que se '
+                    .'reintegró.'
+            );
+        }
+
+        try {
+            $this->ponerEnElPuestoGanado($vigente, $ascenso);
+        } catch (ReglaNegocioException) {
+            throw new ReglaNegocioException(
+                'No se puede anular: el puesto del ascenso ya no tiene plaza libre, así que no hay a dónde '
+                    .'devolver al servidor.'
+            );
+        }
+    }
+
+    private function ponerEnElPuestoGanado(ContratoServidor $vigente, MovimientoPersonal $ascenso): void
+    {
+        $this->validarVacante((int) $ascenso->puesto_destino_id, TipoNombramiento::PROVISIONAL->value, $vigente->id);
+
+        $vigente->update([
+            'tipo_nombramiento'         => TipoNombramiento::PROVISIONAL->value,
+            'supuesto_provisional'      => SupuestoProvisional::ASCENSO->value,
+            'puesto_id'                 => $ascenso->puesto_destino_id,
+            'unidad_administrativa_id'  => $ascenso->unidad_destino_id ?? $vigente->unidad_administrativa_id,
+            'partida_presupuestaria_id' => $ascenso->partida_presupuestaria_id
+                ?? $ascenso->puestoDestino?->partida_presupuestaria_id
+                ?? $vigente->partida_presupuestaria_id,
+            'remuneracion'              => $ascenso->remuneracion_propuesta ?? $vigente->remuneracion,
+            // El que deja se le guarda hasta que termine la prueba.
+            'puesto_reservado_id'       => $vigente->puesto_id,
+            'movimiento_ascenso_id'     => $ascenso->id,
+        ]);
+
+        $this->sincronizarNombramientoDelServidor($vigente);
+    }
+
+    /**
+     * Volver a reservarle el puesto de antes exige que siga libre: el
+     * definitivo lo liberó, y otro pudo ser nombrado en él.
+     */
+    private function reservarElPuestoDeAntes(ContratoServidor $vigente, MovimientoPersonal $ascenso): void
+    {
+        try {
+            $this->validarVacante((int) $ascenso->puesto_origen_id, TipoNombramiento::PROVISIONAL->value, $vigente->id);
+        } catch (ReglaNegocioException) {
+            throw new ReglaNegocioException(
+                'No se puede anular: el puesto que el servidor dejó al ascender ya no tiene plaza libre, así '
+                    .'que no se le puede volver a reservar.'
+            );
+        }
+    }
+
+    /**
+     * El nombramiento que enseña el servidor es copia del de su vínculo, y
+     * `sincronizarRegimenServidor()` solo la escribe al crear el contrato. Lo
+     * que cambia el nombramiento sin crear contrato —el definitivo, el ascenso
+     * y su reintegro— la pone al día aquí; sin esto, el expediente lo seguía
+     * filtrando y exportando con el de antes.
+     *
+     * @param  array<string, mixed>  $extra
+     */
+    private function sincronizarNombramientoDelServidor(ContratoServidor $vigente, array $extra = []): void
+    {
+        Servidor::findOrFail($vigente->servidor_id)->update([
+            'tipo_nombramiento' => $vigente->tipo_nombramiento->value,
+            ...$extra,
+        ]);
+
+        $this->sincronizarPuestoDesdeVinculo($vigente->servidor_id);
     }
 }

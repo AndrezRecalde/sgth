@@ -26,6 +26,10 @@ use Carbon\Carbon;
  *
  * Al surtir efecto, si alguien cubría la ausencia, se le prepara en borrador la
  * cesación [TH 18]: el titular recupera su puesto, y la plaza no admite dos.
+ *
+ * Desde la fase 3.3 es también la vuelta del ascendido que no superó la prueba
+ * a su puesto anterior, con su remuneración anterior (LOSEP 17 b.5). Ese nace
+ * del ascenso, en «Períodos de prueba», y sí toca el vínculo.
  */
 class ReintegroService
 {
@@ -76,6 +80,73 @@ class ReintegroService
             'observacion'               => $datos['observacion'] ?? null,
             'fecha_efectiva'            => $regreso,
             'movimiento_relacionado_id' => $ausencia->id,
+        ]);
+    }
+
+    /**
+     * El ascendido que no superó la prueba vuelve a su puesto anterior con su
+     * remuneración anterior (LOSEP 17 b.5; fase 3.3). La ley lo condiciona a
+     * una evaluación técnica y objetiva: se pide el número de su informe.
+     *
+     * @param  array{fecha_regreso: string, informe_uath_numero: string, descripcion: string, observacion?: ?string}  $datos
+     */
+    public function prepararDelAscenso(ContratoServidor $contrato, array $datos): MovimientoPersonal
+    {
+        $ascenso = $contrato->movimientoAscenso;
+
+        if ($contrato->estado !== EstadoContrato::VIGENTE || ! $contrato->esAscensoEnPrueba() || ! $ascenso) {
+            throw new ReglaNegocioException(
+                'Solo se reintegra a su puesto anterior a quien está en el período de prueba de un ascenso.'
+            );
+        }
+
+        if ($definitivo = $ascenso->nombramientoDefinitivo()->first()) {
+            throw new ReglaNegocioException(
+                $definitivo->codigo_registro
+                    ? "Este ascenso ya tiene su nombramiento definitivo ({$definitivo->codigo_registro})."
+                    : 'Hay un nombramiento definitivo en trámite para este ascenso: anúlelo antes de preparar el reintegro.'
+            );
+        }
+
+        if ($previo = $ascenso->reintegro()->first()) {
+            throw new ReglaNegocioException(
+                $previo->codigo_registro
+                    ? "Este ascenso ya tiene su reintegro ({$previo->codigo_registro})."
+                    : 'Este ascenso ya tiene un reintegro en trámite: revíselo en la bandeja.'
+            );
+        }
+
+        $regreso = Carbon::parse($datos['fecha_regreso'])->toDateString();
+        $inicio = $contrato->inicioDelPeriodoDePrueba();
+        $fin = $contrato->finDelPeriodoDePrueba();
+
+        if ($inicio && $regreso <= $inicio->toDateString()) {
+            throw new ReglaNegocioException(
+                "El regreso tiene que ser posterior al ascenso, que rigió el {$inicio->format('d/m/Y')}."
+            );
+        }
+
+        if ($fin && $regreso > $fin->copy()->addDay()->toDateString()) {
+            throw new ReglaNegocioException(
+                "La prueba termina el {$fin->format('d/m/Y')}: el regreso es a más tardar el "
+                    .$fin->copy()->addDay()->format('d/m/Y').'.'
+            );
+        }
+
+        return $this->movimientos->registrar($contrato->servidor_id, [
+            'tipo_movimiento'             => TipoMovimientoPersonal::REINTEGRO->value,
+            'descripcion'                 => $datos['descripcion'],
+            'observacion'                 => $datos['observacion'] ?? null,
+            'fecha_efectiva'              => $regreso,
+            'movimiento_relacionado_id'   => $ascenso->id,
+            // El informe de la evaluación que no superó.
+            'informe_uath_numero'         => $datos['informe_uath_numero'],
+            // A donde vuelve: lo que el ascenso dejó congelado.
+            'tipo_nombramiento_propuesto' => TipoNombramiento::PERMANENTE->value,
+            'puesto_destino_id'           => $ascenso->puesto_origen_id,
+            'unidad_destino_id'           => $ascenso->unidad_origen_id,
+            'remuneracion_propuesta'      => $ascenso->remuneracion_origen,
+            'partida_presupuestaria_id'   => $ascenso->partida_origen_id,
         ]);
     }
 

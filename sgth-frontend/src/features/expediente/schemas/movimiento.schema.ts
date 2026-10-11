@@ -104,6 +104,16 @@ export function crearMovimientoSchema(
       }
     }
 
+    // El ascenso se gana en concurso: trae el acta (LOSEP Art. 68; fase 3.3).
+    if (clase.pide_acta_concurso) {
+      if (!data.acta_concurso_numero?.trim()) {
+        ctx.addIssue({ path: ['acta_concurso_numero'], code: 'custom', message: 'Indique el número del acta del concurso' })
+      }
+      if (!data.acta_concurso_fecha) {
+        ctx.addIssue({ path: ['acta_concurso_fecha'], code: 'custom', message: 'Indique la fecha del acta del concurso' })
+      }
+    }
+
     if (clase.pide_institucion_destino && !data.institucion_destino?.trim()) {
       ctx.addIssue({
         path: ['institucion_destino'], code: 'custom',

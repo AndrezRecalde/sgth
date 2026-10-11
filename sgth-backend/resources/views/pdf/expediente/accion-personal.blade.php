@@ -277,6 +277,11 @@
     // ausencia (fase 2.4), y la amonestación escrita no lo mueve (fase 2.5): la
     // situación propuesta es la misma que la actual.
     $esReintegro = $movimiento->tipo_movimiento === \App\Enums\TipoMovimientoPersonal::REINTEGRO;
+    // El del ascendido que no superó la prueba sí cambia de puesto: vuelve al
+    // que tenía (fase 3.3).
+    $reintegroDelAscenso = $esReintegro && $movimiento->esReintegroDelAscenso();
+    $esReintegro = $esReintegro && ! $reintegroDelAscenso;
+    $esAscenso = $movimiento->tipo_movimiento === \App\Enums\TipoMovimientoPersonal::ASCENSO;
     $mismoPuesto = $esReintegro
         || $movimiento->subtipo_movimiento === \App\Enums\SubtipoMovimientoPersonal::AMONESTACION_ESCRITA
         // El nombramiento definitivo: el mismo puesto, ahora permanente (fase 3.2).
@@ -458,10 +463,28 @@
             {{ $fmtFecha($movimiento->acta_concurso_fecha) }}.
         </div>
     @endif
-    @if($movimiento->informe_uath_numero)
-        {{-- Fase 3.1: el traslado se hace previo informe de la UATH (LOSEP Art. 35). --}}
+    @if($esAscenso)
+        {{-- Fase 3.3: de prueba por seis meses, con el puesto de antes reservado. --}}
         <div class="respaldo">
-            <strong>Informe técnico de la UATH:</strong> {{ $movimiento->informe_uath_numero }}
+            <strong>Ascenso:</strong> nombramiento provisional de prueba por seis meses (LOSEP Arts. 17 b.5 y 68).
+            Se le reserva su puesto de {{ $movimiento->puestoOrigen?->cargo?->nombre ?? 'origen' }}: si no supera
+            la prueba, vuelve a él con su remuneración anterior.
+        </div>
+    @endif
+    @if($reintegroDelAscenso)
+        @php $ascensoNoSuperado = $movimiento->movimientoRelacionado; @endphp
+        <div class="respaldo">
+            <strong>Vuelve:</strong> no superó el período de prueba del ascenso{{ $ascensoNoSuperado?->codigo_registro ? " ({$ascensoNoSuperado->codigo_registro})" : '' }},
+            que rigió desde el {{ $fmtFecha($ascensoNoSuperado?->fecha_efectiva) }}: vuelve a su puesto anterior con
+            su remuneración anterior (LOSEP Art. 17 b.5).
+        </div>
+    @endif
+    @if($movimiento->informe_uath_numero)
+        {{-- Fase 3.1: el traslado se hace previo informe de la UATH (LOSEP Art. 35).
+             En el reintegro del ascendido es el de su evaluación (fase 3.3). --}}
+        <div class="respaldo">
+            <strong>{{ $reintegroDelAscenso ? 'Informe de la evaluación del período de prueba' : 'Informe técnico de la UATH' }}:</strong>
+            {{ $movimiento->informe_uath_numero }}
         </div>
     @endif
     @if($movimiento->resolucion_numero)

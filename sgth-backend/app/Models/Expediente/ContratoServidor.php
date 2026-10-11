@@ -35,6 +35,10 @@ class ContratoServidor extends Model
         'numero_contrato',
         'unidad_administrativa_id',
         'puesto_id',
+        // El puesto que el ascendido dejó, reservado mientras dura su prueba, y
+        // el ascenso que lo explica (fase 3.3).
+        'puesto_reservado_id',
+        'movimiento_ascenso_id',
         'cubre_movimiento_id',
         'movimiento_origen_id',
         'movimiento_cierre_id',
@@ -64,22 +68,47 @@ class ContratoServidor extends Model
         ];
     }
 
-    /** ¿Es un provisional de prueba (b.5)? */
+    /** ¿Es un provisional de prueba (b.5): quien ingresó por concurso o quien ascendió? */
     public function esDePrueba(): bool
     {
         return $this->tipo_nombramiento === TipoNombramiento::PROVISIONAL
-            && $this->supuesto_provisional === SupuestoProvisional::DE_PRUEBA;
+            && (bool) $this->supuesto_provisional?->esDePrueba();
+    }
+
+    /** ¿Es un ascendido en su período de prueba (fase 3.3)? */
+    public function esAscensoEnPrueba(): bool
+    {
+        return $this->tipo_nombramiento === TipoNombramiento::PROVISIONAL
+            && $this->supuesto_provisional === SupuestoProvisional::ASCENSO;
     }
 
     /**
-     * El último día de los tres meses de prueba (LOSEP 17 b.5). El
-     * nombramiento definitivo rige desde el día siguiente. Null si no es de
-     * prueba.
+     * Desde cuándo corre la prueba: el inicio del vínculo para quien ingresó, y
+     * el día en que rigió el ascenso para quien ascendió, que conserva el
+     * vínculo de antes. Null si no es de prueba.
+     */
+    public function inicioDelPeriodoDePrueba(): ?Carbon
+    {
+        if (! $this->esDePrueba()) {
+            return null;
+        }
+
+        return $this->esAscensoEnPrueba()
+            ? $this->movimientoAscenso?->fecha_efectiva?->copy()
+            : $this->fecha_inicio?->copy();
+    }
+
+    /**
+     * El último día de la prueba: tres meses quien ingresó y seis quien ascendió
+     * (LOSEP 17 b.5). El nombramiento definitivo rige desde el día siguiente.
+     * Null si no es de prueba.
      */
     public function finDelPeriodoDePrueba(): ?Carbon
     {
-        return $this->esDePrueba() && $this->fecha_inicio
-            ? $this->fecha_inicio->copy()->addMonthsNoOverflow(SupuestoProvisional::MESES_DE_PRUEBA)->subDay()
+        $inicio = $this->inicioDelPeriodoDePrueba();
+
+        return $inicio
+            ? $inicio->addMonthsNoOverflow($this->supuesto_provisional->mesesDePrueba())->subDay()
             : null;
     }
 
@@ -159,6 +188,18 @@ class ContratoServidor extends Model
         return $this->belongsTo(MovimientoPersonal::class, 'movimiento_cierre_id');
     }
 
+    /** El ascenso que tiene al servidor en prueba, si es el caso (fase 3.3). */
+    public function movimientoAscenso(): BelongsTo
+    {
+        return $this->belongsTo(MovimientoPersonal::class, 'movimiento_ascenso_id');
+    }
+
+    /** El puesto que el ascendido dejó y que se le guarda mientras dura la prueba. */
+    public function puestoReservado(): BelongsTo
+    {
+        return $this->belongsTo(Puesto::class, 'puesto_reservado_id');
+    }
+
     public function scopeVigente(Builder $query): Builder
     {
         return $query->where('estado', 'vigente')
@@ -191,5 +232,18 @@ class ContratoServidor extends Model
         return $query->where('estado', 'vigente')
                      ->whereNotIn('tipo_nombramiento', TipoNombramiento::valoresSinPlaza())
                      ->whereNull('cubre_movimiento_id');
+    }
+
+    /**
+     * Los que ocupan una plaza de este puesto: quien está en él y el ascendido
+     * en prueba que lo dejó, porque se le reserva hasta que la prueba termine
+     * (LOSEP 17 b.5; fase 3.3). Sin la reserva, otro podía ser nombrado en ese
+     * puesto y el ascendido que no superara la prueba no tendría a dónde volver.
+     */
+    public function scopeQueOcupanPlazaDe(Builder $query, int $puestoId): Builder
+    {
+        return $query->queOcupanPlaza()
+                     ->where(fn (Builder $q) => $q->where('puesto_id', $puestoId)
+                         ->orWhere('puesto_reservado_id', $puestoId));
     }
 }

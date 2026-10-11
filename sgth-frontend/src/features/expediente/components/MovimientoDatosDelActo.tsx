@@ -10,6 +10,7 @@ import { pideInformeUath, type MovimientoFormData } from '../schemas/movimiento.
 import type { ClaseDelCatalogo } from '@/types/api'
 import { FirmantesPanel } from './FirmantesPanel'
 import { MovimientoDatosJudiciales } from './MovimientoDatosJudiciales'
+import { MovimientoActaConcurso } from './MovimientoActaConcurso'
 import { fromDateValue, fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 
 /**
@@ -138,6 +139,19 @@ export function MovimientoDatosDelActo({
       )}
 
       {clase?.pide_datos_judiciales && <MovimientoDatosJudiciales form={form} />}
+
+      {/* El ascenso se gana en concurso, y entra de prueba por seis meses con
+          su puesto reservado (fase 3.3). */}
+      {clase?.pide_acta_concurso && (
+        <>
+          {clase.aviso && (
+            <Alert icon={<IconInfoCircle size={16} />} color="ocean" variant="light">
+              {clase.aviso}
+            </Alert>
+          )}
+          <MovimientoActaConcurso form={form} />
+        </>
+      )}
 
       {clase?.admite_para_estudios_o_eventos && (
         <Controller

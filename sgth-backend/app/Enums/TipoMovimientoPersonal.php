@@ -39,11 +39,12 @@ enum TipoMovimientoPersonal: string
     // Convierte el provisional de prueba en permanente al concluir los tres
     // meses, sin cerrar el vínculo (LOSEP 17 b.5; fase 3.2).
     case NOMBRAMIENTO_DEFINITIVO   = 'nombramiento_definitivo';
-    // 'ascenso' se retiró (2026-07-23): confirmado con Talento Humano/UATH
-    // que no existe como acción de personal en la operación real del GAD
-    // (cero registros, sin mecanismo formal de registro). También era uno
-    // de los 4 tipos mapeados como reportable al SIITH — ver
-    // ConfiguracionReporteMovimientoSeeder, que quedó con 3 confirmados.
+    // El servidor de carrera pasa al puesto que ganó en concurso, con
+    // nombramiento provisional de prueba por seis meses y su puesto anterior
+    // reservado (LOSEP 17 b.5 y 68; TH N2; fase 3.3). Se había retirado el
+    // 2026-07-23 porque TH lo operaba como cesación más ingreso, que le quitaba
+    // al servidor el derecho a volver.
+    case ASCENSO                   = 'ascenso';
 
     public function etiqueta(): string
     {
@@ -65,6 +66,7 @@ enum TipoMovimientoPersonal: string
             self::REINTEGRO                 => 'Reintegro',
             self::RESTITUCION               => 'Restitución',
             self::NOMBRAMIENTO_DEFINITIVO   => 'Nombramiento Definitivo',
+            self::ASCENSO                   => 'Ascenso',
         };
     }
 
@@ -225,6 +227,16 @@ enum TipoMovimientoPersonal: string
     }
 
     /**
+     * Mueve al servidor de carrera al puesto que ganó, en el mismo vínculo:
+     * cambia de puesto, de remuneración y de nombramiento —provisional de
+     * prueba—, y reserva el que deja (fase 3.3).
+     */
+    public function asciende(): bool
+    {
+        return $this === self::ASCENSO;
+    }
+
+    /**
      * Las "acciones de personal" formales tienen restricción de elegibilidad
      * por tipo de nombramiento y nacen en estado BORRADOR (deben pasar por el
      * flujo guardado de MovimientoPersonalStateService). La bitácora del
@@ -249,6 +261,7 @@ enum TipoMovimientoPersonal: string
             self::REGIMEN_DISCIPLINARIO,
             self::REINTEGRO,
             self::NOMBRAMIENTO_DEFINITIVO,
+            self::ASCENSO,
         ], true) || $this->subtipoEquivalente() !== null;
     }
 
@@ -374,19 +387,22 @@ enum TipoMovimientoPersonal: string
             // aceptaba.
             self::INCREMENTO_REMUNERACION =>
                 $tipo === TipoNombramiento::CODIGO_TRABAJO,
-            // De quien puede tener la ausencia que cierra: los permanentes, y
-            // obreros y dignatarios por su licencia «según su régimen» (fase
-            // 2.2). Se deduce de las causales para no quedarse atrás si cambian.
-            // El del provisional ascendido que vuelve a su puesto llega con el
-            // ascenso (fase 3).
             // Del provisional de prueba; que lo sea lo comprueba el servicio,
             // que mira el supuesto del vínculo.
             self::NOMBRAMIENTO_DEFINITIVO =>
                 $tipo === TipoNombramiento::PROVISIONAL,
-            self::REINTEGRO => array_filter(
+            // De quien puede tener la ausencia que cierra: los permanentes, y
+            // obreros y dignatarios por su licencia «según su régimen» (fase
+            // 2.2). Se deduce de las causales para no quedarse atrás si cambian.
+            // Y el ascendido que no superó la prueba, que es provisional (fase
+            // 3.3): que lo sea lo comprueba AscensoService.
+            self::REINTEGRO => $tipo === TipoNombramiento::PROVISIONAL || array_filter(
                 SubtipoMovimientoPersonal::cases(),
                 fn (SubtipoMovimientoPersonal $s) => $s->esAusenciaTemporal() && $s->elegiblePara($tipo)
             ) !== [],
+            // El servidor de carrera (diseño, 5; LOSEP 68).
+            self::ASCENSO =>
+                $tipo === TipoNombramiento::PERMANENTE,
             default => true,
         };
     }

@@ -69,9 +69,17 @@ export function AccionRespaldos({ m }: { m: MovimientoPersonal }) {
         <BloqueDetalle>
           <SectionHeading title="Respaldos" mb="xs" />
           <DetailList items={[
-            // El informe del traslado (fase 3.1), solo donde lo hay.
+            // El informe del traslado (fase 3.1), solo donde lo hay. En el
+            // reintegro del ascendido es el de su evaluación (fase 3.3).
             ...(m.informe_uath_numero
-              ? [{ label: 'Informe técnico de la UATH', value: m.informe_uath_numero }]
+              ? [{
+                  label: m.clase === 'reintegro' ? 'Informe de la evaluación' : 'Informe técnico de la UATH',
+                  value: m.informe_uath_numero,
+                }]
+              : []),
+            // El acta del ascenso, que no es ingreso (fase 3.3).
+            ...(!esIngreso && m.acta_concurso_numero
+              ? [{ label: 'Acta del concurso', value: `${m.acta_concurso_numero} · ${formatFecha(m.acta_concurso_fecha)}` }]
               : []),
             { label: 'N.º de resolución', value: m.resolucion_numero },
             {

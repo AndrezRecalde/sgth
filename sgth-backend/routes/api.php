@@ -406,6 +406,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->middleware('role:admin-uath|asistente-uath');
         Route::post('contratos/{contrato}/nombramiento-definitivo', [PeriodoDePruebaController::class, 'nombramientoDefinitivo'])
             ->middleware('permission:preparar-accion-personal');
+        // El ascendido que no superó la prueba vuelve a su puesto (fase 3.3).
+        Route::post('contratos/{contrato}/reintegro-del-ascenso', [PeriodoDePruebaController::class, 'reintegroDelAscenso'])
+            ->middleware('permission:preparar-accion-personal');
 
         // Carga inicial: servidores que ya estaban vinculados antes de que el
         // sistema existiera. Se salta la Acción de Personal a propósito, así

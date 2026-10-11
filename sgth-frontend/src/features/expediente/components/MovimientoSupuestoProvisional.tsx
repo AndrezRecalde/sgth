@@ -1,12 +1,11 @@
 'use client'
 
-import { Grid, Select, TextInput } from '@mantine/core'
-import { DatePickerInput } from '@mantine/dates'
+import { Select } from '@mantine/core'
 import { Controller, useWatch, type UseFormReturn } from 'react-hook-form'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 import { useCatalogoAcciones } from '../hooks/useCatalogoAcciones'
 import type { MovimientoFormData } from '../schemas/movimiento.schema'
+import { MovimientoActaConcurso } from './MovimientoActaConcurso'
 
 /**
  * Para qué se da un nombramiento provisional (LOSEP Art. 17 b; fase 3.2) y, si
@@ -15,7 +14,7 @@ import type { MovimientoFormData } from '../schemas/movimiento.schema'
  */
 export function MovimientoSupuestoProvisional({ form }: { form: UseFormReturn<MovimientoFormData> }) {
   const contained = useContainedInput()
-  const { control, register, setValue, formState: { errors } } = form
+  const { control, setValue, formState: { errors } } = form
   const catalogo = useCatalogoAcciones()
 
   const supuesto = useWatch({ control, name: 'supuesto_provisional_propuesto' })
@@ -52,40 +51,7 @@ export function MovimientoSupuestoProvisional({ form }: { form: UseFormReturn<Mo
         )}
       />
 
-      {supuesto === 'de_prueba' && (
-        <Grid gap="sm">
-          <Grid.Col span={{ base: 12, sm: 6 }}>
-            <TextInput
-              label="Acta final del concurso N.º"
-              placeholder="Ej. ACTA-CONC-2026-004"
-              withAsterisk
-              error={errors.acta_concurso_numero?.message}
-              {...contained}
-              {...register('acta_concurso_numero')}
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 6 }}>
-            <Controller
-              name="acta_concurso_fecha"
-              control={control}
-              render={({ field }) => (
-                <DatePickerInput
-                  label="Fecha del acta"
-                  placeholder="Seleccionar fecha"
-                  valueFormat="DD/MM/YYYY"
-                  withAsterisk
-                  maxDate={new Date()}
-                  popoverProps={{ withinPortal: true, zIndex: 1100 }}
-                  value={toDateValue(field.value)}
-                  onChange={(d) => field.onChange(fromDateValueOrNull(d))}
-                  error={errors.acta_concurso_fecha?.message}
-                  {...contained}
-                />
-              )}
-            />
-          </Grid.Col>
-        </Grid>
-      )}
+      {supuesto === 'de_prueba' && <MovimientoActaConcurso form={form} />}
     </>
   )
 }

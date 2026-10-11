@@ -19,6 +19,8 @@ interface Props {
   esIngreso: boolean
   /** Nombramiento del vínculo VIGENTE del servidor, si lo tiene. */
   tipoNombramiento?: string | null
+  /** Lo que la clase dice de la R.M.U., si tiene regla propia: el ascenso (fase 3.3). */
+  notaRmu?: string
 }
 
 /**
@@ -29,7 +31,7 @@ interface Props {
  * nada y una comisión deja al servidor en su puesto, así que ahí este bloque no
  * se monta.
  */
-export function MovimientoSituacionPropuesta({ form, esIngreso, tipoNombramiento }: Props) {
+export function MovimientoSituacionPropuesta({ form, esIngreso, tipoNombramiento, notaRmu }: Props) {
   const contained = useContainedInput()
   const { control, setValue, formState: { errors } } = form
 
@@ -65,7 +67,7 @@ export function MovimientoSituacionPropuesta({ form, esIngreso, tipoNombramiento
     puestoDestino?.rmu != null ? Number(puestoDestino.rmu) : null,
   )
 
-  const descripcionRmu = rmuHeredada
+  const descripcionRmu = notaRmu ?? (rmuHeredada
     ? 'Fijada por el grupo ocupacional del puesto destino. No se edita en régimen LOSEP.'
     : esIngreso && !nombramiento
       ? 'Elija primero el tipo de nombramiento: de él depende si la remuneración se hereda del puesto o se pacta.'
@@ -73,7 +75,7 @@ export function MovimientoSituacionPropuesta({ form, esIngreso, tipoNombramiento
         ? (puestoDestinoId
           ? 'Este puesto no tiene grupo ocupacional asignado, así que no hay monto que heredar: ingréselo a mano.'
           : 'Elija el puesto destino para heredar la remuneración de su grupo ocupacional.')
-        : 'Se pacta en el contrato: este régimen no toma la remuneración del puesto.'
+        : 'Se pacta en el contrato: este régimen no toma la remuneración del puesto.')
 
   return (
     <BloqueDetalle>

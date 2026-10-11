@@ -35,8 +35,9 @@ class CatalogoAccionesPersonalController extends Controller
             'clases'   => ClaseAccionPersonalResource::collection(ClaseAccionPersonal::cases()),
             // Con qué documento se formaliza cada acto (fase 2.7).
             'instrumentos' => InstrumentoActoResource::collection(InstrumentoActo::cases()),
-            // Para qué se da un provisional (LOSEP 17 b; fase 3.2).
-            'supuestos_provisional' => SupuestoProvisionalResource::collection(SupuestoProvisional::cases()),
+            // Para qué se da un provisional (LOSEP 17 b; fase 3.2). El del ascenso no
+            // se elige: lo pone el ascenso (fase 3.3).
+            'supuestos_provisional' => SupuestoProvisionalResource::collection(SupuestoProvisional::delIngreso()),
         ], 'Catálogo de acciones de personal.');
     }
 }

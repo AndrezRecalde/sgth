@@ -104,8 +104,9 @@ class Puesto extends Model
     public function plazasOcupadas(): int
     {
         // Quién ocupa plaza lo define `ContratoServidor::scopeQueOcupanPlaza()`,
-        // el mismo criterio que usa la validación de vacante al contratar.
-        return $this->contratos()->queOcupanPlaza()->count();
+        // el mismo criterio que usa la validación de vacante al contratar. El
+        // ascendido en prueba la sigue ocupando aquí: se le reserva (fase 3.3).
+        return \App\Models\Expediente\ContratoServidor::queOcupanPlazaDe($this->id)->count();
     }
 
     public function plazasDisponibles(): int

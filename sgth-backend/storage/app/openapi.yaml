@@ -6675,7 +6675,7 @@
                                                 },
                                                 "supuestos_provisional": {
                                                     "type": "array",
-                                                    "description": "Para qu\u00e9 se da un provisional (LOSEP 17 b; fase 3.2).",
+                                                    "description": "Para qu\u00e9 se da un provisional (LOSEP 17 b; fase 3.2). El del ascenso no\nse elige: lo pone el ascenso (fase 3.3).",
                                                     "items": {
                                                         "$ref": "#/components/schemas/SupuestoProvisionalResource"
                                                     }
@@ -26209,11 +26209,29 @@
                                                             "cedula"
                                                         ]
                                                     },
+                                                    "motivo": {
+                                                        "type": "string",
+                                                        "description": "Por qu\u00e9 est\u00e1 en prueba: ingres\u00f3 por concurso o ascendi\u00f3."
+                                                    },
+                                                    "motivo_etiqueta": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "Puesto de un servidor suspendido o destituido",
+                                                            "Puesto vacante",
+                                                            "Puesto del nivel jer\u00e1rquico superior",
+                                                            "De prueba",
+                                                            "De prueba por ascenso"
+                                                        ]
+                                                    },
                                                     "puesto": {
                                                         "type": "string"
                                                     },
                                                     "unidad": {
                                                         "type": "string"
+                                                    },
+                                                    "puesto_reservado": {
+                                                        "type": "string",
+                                                        "description": "El del ascendido, que se le guarda mientras dura la prueba."
                                                     },
                                                     "desde": {
                                                         "type": "string"
@@ -26254,18 +26272,47 @@
                                                             "estado",
                                                             "codigo_registro"
                                                         ]
+                                                    },
+                                                    "reintegro": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "estado": {
+                                                                "type": "string"
+                                                            },
+                                                            "codigo_registro": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "estado",
+                                                            "codigo_registro"
+                                                        ]
                                                     }
                                                 },
                                                 "required": [
                                                     "contrato_id",
                                                     "servidor",
+                                                    "motivo",
+                                                    "motivo_etiqueta",
                                                     "puesto",
                                                     "unidad",
+                                                    "puesto_reservado",
                                                     "desde",
                                                     "hasta",
                                                     "dias_restantes",
                                                     "concluida",
-                                                    "definitivo"
+                                                    "definitivo",
+                                                    "reintegro"
                                                 ]
                                             }
                                         },
@@ -26292,7 +26339,7 @@
         "/v1/expediente/contratos/{contrato}/nombramiento-definitivo": {
             "post": {
                 "operationId": "periodoDePrueba.nombramientoDefinitivo",
-                "summary": "Prepara en borrador el nombramiento definitivo, cumplidos los tres meses",
+                "summary": "Prepara en borrador el nombramiento definitivo, cumplida la prueba",
                 "tags": [
                     "PeriodoDePrueba"
                 ],
@@ -26347,6 +26394,81 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/contratos/{contrato}/reintegro-del-ascenso": {
+            "post": {
+                "operationId": "periodoDePrueba.reintegroDelAscenso",
+                "summary": "Prepara en borrador el reintegro del ascendido a su puesto anterior",
+                "tags": [
+                    "PeriodoDePrueba"
+                ],
+                "parameters": [
+                    {
+                        "name": "contrato",
+                        "in": "path",
+                        "required": true,
+                        "description": "The contrato ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ReintegrarAscensoRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Reintegro al puesto anterior preparado en borrador."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/MovimientoPersonalResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -45283,7 +45405,8 @@
                     "cesacion",
                     "reintegro",
                     "restitucion",
-                    "nombramiento_definitivo"
+                    "nombramiento_definitivo",
+                    "ascenso"
                 ],
                 "title": "ClaseAccionPersonal"
             },
@@ -45310,7 +45433,8 @@
                             "Cesaci\u00f3n de Funciones",
                             "Reintegro",
                             "Restituci\u00f3n",
-                            "Nombramiento Definitivo"
+                            "Nombramiento Definitivo",
+                            "Ascenso"
                         ]
                     },
                     "familia": {
@@ -45358,6 +45482,10 @@
                     "pide_contratacion": {
                         "type": "boolean"
                     },
+                    "pide_acta_concurso": {
+                        "type": "boolean",
+                        "description": "El acta final del concurso: la pide el ascenso (fase 3.3)."
+                    },
                     "registro_de_contrato_para": {
                         "type": "array",
                         "items": {
@@ -45389,6 +45517,7 @@
                     "pide_datos_judiciales",
                     "pide_informe_uath_para",
                     "pide_contratacion",
+                    "pide_acta_concurso",
                     "registro_de_contrato_para",
                     "dictamen_medico_por_defecto",
                     "aviso"
@@ -45885,6 +46014,18 @@
                             }
                         ]
                     },
+                    "puesto_reservado_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "movimiento_ascenso_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
                     "rau": {
                         "type": "string"
                     }
@@ -45913,6 +46054,8 @@
                     "movimiento_origen_id",
                     "movimiento_cierre_id",
                     "supuesto_provisional",
+                    "puesto_reservado_id",
+                    "movimiento_ascenso_id",
                     "rau"
                 ],
                 "title": "ContratoServidor"
@@ -53006,6 +53149,38 @@
                 ],
                 "title": "RegistrarSubrogacionRequest"
             },
+            "ReintegrarAscensoRequest": {
+                "type": "object",
+                "description": "El reintegro del ascendido que no super\u00f3 la prueba (fase 3.3): cu\u00e1ndo vuelve\na su puesto anterior, el informe de la evaluaci\u00f3n y la explicaci\u00f3n del\ndocumento. El rango de la fecha lo valida ReintegroService, que conoce el\nper\u00edodo de prueba.",
+                "properties": {
+                    "fecha_regreso": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "informe_uath_numero": {
+                        "type": "string",
+                        "description": "La ley lo condiciona a una evaluaci\u00f3n t\u00e9cnica y objetiva (LOSEP 17 b.5).",
+                        "maxLength": 100
+                    },
+                    "descripcion": {
+                        "type": "string",
+                        "maxLength": 1000
+                    },
+                    "observacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 1000
+                    }
+                },
+                "required": [
+                    "fecha_regreso",
+                    "informe_uath_numero",
+                    "descripcion"
+                ],
+                "title": "ReintegrarAscensoRequest"
+            },
             "ReintegrarAusenciaRequest": {
                 "type": "object",
                 "description": "El reintegro que se prepara desde la ausencia (fase 2.4): cu\u00e1ndo vuelve el\nservidor y la explicaci\u00f3n del documento. El rango de la fecha lo valida\nReintegroService, que conoce la ausencia.",
@@ -56524,7 +56699,8 @@
                             "incremento_remuneracion",
                             "cambio_ocupacion",
                             "cesacion",
-                            "restitucion"
+                            "restitucion",
+                            "ascenso"
                         ]
                     },
                     "causal": {
@@ -58241,12 +58417,13 @@
             },
             "SupuestoProvisional": {
                 "type": "string",
-                "description": "Para qu\u00e9 se da un nombramiento provisional (LOSEP Art. 17 b; dise\u00f1o de Acciones de Personal, 4.2 y 4.3; fase 3.2). Decide qu\u00e9 causales le valen: la remoci\u00f3n es del provisional cuyo supuesto termin\u00f3 (b.1, b.3, b.4) y el no superar la prueba, del de prueba (b.5). No se ofrecen el b.2 \u2014licencia sin remuneraci\u00f3n\u2014 ni la parte del b.3 que cubre una comisi\u00f3n: son reemplazos, y los reemplazos son solo ocasionales o profesionales [TH N10].\n",
+                "description": "Para qu\u00e9 se da un nombramiento provisional (LOSEP Art. 17 b; dise\u00f1o de Acciones de Personal, 4.2 y 4.3; fase 3.2). Decide qu\u00e9 causales le valen: la remoci\u00f3n es del provisional cuyo supuesto termin\u00f3 (b.1, b.3, b.4) y el no superar la prueba, del de prueba (b.5). No se ofrecen el b.2 \u2014licencia sin remuneraci\u00f3n\u2014 ni la parte del b.3 que cubre una comisi\u00f3n: son reemplazos, y los reemplazos son solo ocasionales o profesionales [TH N10].  El ascendido tambi\u00e9n es provisional de prueba (b.5, inciso segundo; fase 3.3), pero con reglas propias: seis meses, su puesto anterior reservado y, si no la supera, el reintegro a ese puesto en lugar de la cesaci\u00f3n. No se elige en el ingreso: lo pone el ascenso.\n",
                 "enum": [
                     "suspendido_o_destituido",
                     "puesto_vacante",
                     "nivel_jerarquico_superior",
-                    "de_prueba"
+                    "de_prueba",
+                    "ascenso"
                 ],
                 "title": "SupuestoProvisional"
             },
@@ -58262,7 +58439,8 @@
                             "Puesto de un servidor suspendido o destituido",
                             "Puesto vacante",
                             "Puesto del nivel jer\u00e1rquico superior",
-                            "De prueba"
+                            "De prueba",
+                            "De prueba por ascenso"
                         ]
                     },
                     "base_legal": {
@@ -58271,7 +58449,8 @@
                             "LOSEP Art. 17 b.1",
                             "LOSEP Art. 17 b.3",
                             "LOSEP Art. 17 b.4",
-                            "LOSEP Art. 17 b.5"
+                            "LOSEP Art. 17 b.5",
+                            "LOSEP Arts. 17 b.5 y 68"
                         ]
                     }
                 },
@@ -58562,7 +58741,8 @@
                     "regimen_disciplinario",
                     "reintegro",
                     "restitucion",
-                    "nombramiento_definitivo"
+                    "nombramiento_definitivo",
+                    "ascenso"
                 ],
                 "title": "TipoMovimientoPersonal"
             },
