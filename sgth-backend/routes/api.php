@@ -82,6 +82,7 @@ use App\Http\Controllers\Expediente\HistorialAcademicoController;
 use App\Http\Controllers\Expediente\AusenciaTemporalController;
 use App\Http\Controllers\Expediente\CatalogoAccionesPersonalController;
 use App\Http\Controllers\Expediente\MovimientoPersonalController;
+use App\Http\Controllers\Expediente\AutoridadElectaController;
 use App\Http\Controllers\Expediente\PeriodoDePruebaController;
 use App\Http\Controllers\Expediente\VerificacionCertificadoController;
 use App\Http\Controllers\Expediente\VinculacionInicialController;
@@ -406,6 +407,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->middleware('role:admin-uath|asistente-uath');
         Route::post('contratos/{contrato}/nombramiento-definitivo', [PeriodoDePruebaController::class, 'nombramientoDefinitivo'])
             ->middleware('permission:preparar-accion-personal');
+        // Las autoridades electas en funciones y el fin de su período (fase 4.1).
+        Route::get('autoridades-electas', [AutoridadElectaController::class, 'index'])
+            ->middleware('role:admin-uath|asistente-uath');
+        Route::post('contratos/{contrato}/fin-del-periodo', [AutoridadElectaController::class, 'fijarFinDelPeriodo'])
+            ->middleware('permission:preparar-accion-personal');
+
         // El ascendido que no superó la prueba vuelve a su puesto (fase 3.3).
         Route::post('contratos/{contrato}/reintegro-del-ascenso', [PeriodoDePruebaController::class, 'reintegroDelAscenso'])
             ->middleware('permission:preparar-accion-personal');

@@ -10,32 +10,42 @@ namespace App\Enums;
  * Llegan de uno en uno, con su bloque. El primero distinto de la acción de
  * personal es el registro del contrato de un ocasional (fase 2.7; TH N7): la
  * ley no le pide acción a ese ingreso (LOSEP 18, último inciso; Reglamento
- * 19). Los de obreros, profesionales y autoridades electas vendrán con los
- * suyos.
+ * 19). El segundo, el acto de autoridad (fase 4.1; TH 1–7): al Prefecto y al
+ * Viceprefecto no se les emite acción de personal, porque ninguno de sus actos
+ * nace de una autoridad nominadora; lleva el documento de origen —la credencial
+ * del CNE, la resolución del Consejo— y su propia numeración. Los de obreros y
+ * profesionales vendrán con los suyos.
  */
 enum InstrumentoActo: string
 {
     case ACCION_PERSONAL   = 'accion_personal';
     case REGISTRO_CONTRATO = 'registro_contrato';
+    case ACTO_AUTORIDAD    = 'acto_autoridad';
 
     public function etiqueta(): string
     {
         return match ($this) {
             self::ACCION_PERSONAL   => 'Acción de personal',
             self::REGISTRO_CONTRATO => 'Registro del contrato',
+            self::ACTO_AUTORIDAD    => 'Acto de autoridad electa',
         };
     }
 
     /**
-     * El instrumento de un acto, por su tipo y el nombramiento que propone: el
-     * ingreso de un ocasional se registra con su contrato, sin acción. El de
-     * Servicios Profesionales sigue como acción hasta su bloque (fase 4.2).
+     * El instrumento de un acto, por su tipo y el nombramiento: el que propone
+     * si crea el vínculo, o el vigente si no. El ingreso de un ocasional se
+     * registra con su contrato, sin acción, y todo acto de una autoridad electa
+     * es acto de autoridad. El de Servicios Profesionales sigue como acción
+     * hasta su bloque (fase 4.2).
      */
     public static function para(TipoMovimientoPersonal $tipo, ?TipoNombramiento $nombramiento): self
     {
-        return $tipo === TipoMovimientoPersonal::INGRESO && $nombramiento === TipoNombramiento::SERVICIOS_OCASIONALES
-            ? self::REGISTRO_CONTRATO
-            : self::ACCION_PERSONAL;
+        return match (true) {
+            $nombramiento === TipoNombramiento::ELECCION_POPULAR => self::ACTO_AUTORIDAD,
+            $tipo === TipoMovimientoPersonal::INGRESO
+                && $nombramiento === TipoNombramiento::SERVICIOS_OCASIONALES => self::REGISTRO_CONTRATO,
+            default => self::ACCION_PERSONAL,
+        };
     }
 
     /**
@@ -46,11 +56,33 @@ enum InstrumentoActo: string
      */
     public static function nombramientosConRegistroDeContrato(ClaseAccionPersonal $clase): array
     {
+        return self::nombramientosCon($clase, self::REGISTRO_CONTRATO);
+    }
+
+    /**
+     * Los nombramientos con que una clase es acto de autoridad (fase 4.1): el
+     * formulario no pide firmantes y pide el documento de origen.
+     *
+     * @return list<TipoNombramiento>
+     */
+    public static function nombramientosConActoDeAutoridad(ClaseAccionPersonal $clase): array
+    {
+        return array_values(array_filter(
+            self::nombramientosCon($clase, self::ACTO_AUTORIDAD),
+            // Solo los que la clase admite: el ingreso no se le registra a una
+            // autoridad, que empieza con «Inicio del período».
+            fn (TipoNombramiento $n) => $clase === ClaseAccionPersonal::INICIO_PERIODO || $clase->elegiblePara($n),
+        ));
+    }
+
+    /** @return list<TipoNombramiento> */
+    private static function nombramientosCon(ClaseAccionPersonal $clase, self $instrumento): array
+    {
         [$tipo] = $clase->tipoYSubtipo();
 
         return array_values(array_filter(
             TipoNombramiento::cases(),
-            fn (TipoNombramiento $n) => self::para($tipo, $n) === self::REGISTRO_CONTRATO,
+            fn (TipoNombramiento $n) => self::para($tipo, $n) === $instrumento,
         ));
     }
 

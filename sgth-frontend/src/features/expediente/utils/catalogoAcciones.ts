@@ -44,7 +44,13 @@ export function buscarClase(
 export function claseDisponible(clase: ClaseDelCatalogo, vinculo: VinculoDelServidor): boolean {
   if (!clase.se_crea_desde_formulario) return false
 
-  if (!clase.requiere_vinculo) return vinculo.sinVinculo === true
+  // Sin vínculo cabe lo que no lo requiere. Con él, de esas clases solo la que
+  // el catálogo admite para su nombramiento: el inicio del período de la
+  // autoridad reelegida (fase 4.1).
+  if (!clase.requiere_vinculo) {
+    return vinculo.sinVinculo === true
+      || (!!vinculo.tipoNombramiento && incluye(clase.nombramientos_elegibles, vinculo.tipoNombramiento))
+  }
 
   if (vinculo.sinVinculo || !vinculo.tipoNombramiento) return false
 

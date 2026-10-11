@@ -82,6 +82,17 @@ export function useGuardarAccionPersonal({
         // las piden (fase 2.3): en otra acción se grabarían sin significar nada.
         institucion_destino: clase?.pide_institucion_destino ? (data.institucion_destino?.trim() || null) : null,
         para_estudios_o_eventos: clase?.admite_para_estudios_o_eventos ? !!data.para_estudios_o_eventos : false,
+        // La credencial, la posesión y el fin del período, solo en el inicio
+        // del período de una autoridad (fase 4.1). El fin del período viaja
+        // como el plazo del vínculo.
+        ...(clase?.pide_datos_del_periodo
+          ? {
+              credencial_cne_numero: data.credencial_cne_numero?.trim() || null,
+              credencial_cne_fecha: data.credencial_cne_fecha,
+              acta_posesion_numero: data.acta_posesion_numero?.trim() || null,
+              fecha_fin_propuesta: data.fecha_fin_propuesta,
+            }
+          : { credencial_cne_numero: null, credencial_cne_fecha: null, acta_posesion_numero: null }),
         // El informe de la UATH, solo en el traslado (fase 3.1).
         informe_uath_numero: clase?.pide_informe_uath_para.length
           ? (data.informe_uath_numero?.trim() || null)

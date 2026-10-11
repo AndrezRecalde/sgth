@@ -65,7 +65,8 @@ export function MovimientoDatosContratacion({
         render={({ field }) => (
           <Select
             label="Tipo de nombramiento"
-            data={TIPO_NOMBRAMIENTO_OPTIONS}
+            // La autoridad electa no ingresa: empieza su período (fase 4.1).
+            data={TIPO_NOMBRAMIENTO_OPTIONS.filter((o) => o.value !== 'eleccion_popular')}
             searchable
             value={field.value ?? null}
             onChange={(v) => {

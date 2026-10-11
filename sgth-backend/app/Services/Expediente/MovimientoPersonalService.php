@@ -151,8 +151,21 @@ class MovimientoPersonalService
             [$datos, $provisional] = app(RestitucionService::class)->completar($servidor, $datos);
         }
 
+        // La autoridad electa empieza su período con la credencial del CNE, sin
+        // acción de personal; al ingreso no se le registra (diseño, 9.14; fase
+        // 4.1).
+        if ($tipoMovimiento === TipoMovimientoPersonal::INICIO_PERIODO) {
+            $datos = app(AutoridadElectaService::class)->completarInicio($servidor, $datos);
+        }
+        self::impedirIngresoDeAutoridad($tipoMovimiento, $datos['tipo_nombramiento_propuesto'] ?? null);
+
         if ($tipoMovimiento->esAccionDePersonal()) {
             $this->validarElegibilidad($servidor, $tipoMovimiento, $subtipo);
+        }
+
+        // El cese de una autoridad, con su documento de origen.
+        if ($subtipo?->cierraVinculo() && $servidor->contratoVigente?->tipo_nombramiento === TipoNombramiento::ELECCION_POPULAR) {
+            app(AutoridadElectaService::class)->exigirDocumentoDelCese($subtipo, $datos['resolucion_numero'] ?? null);
         }
 
         // El traslado: igual remuneración, puesto de la unidad y el informe de
@@ -252,7 +265,9 @@ class MovimientoPersonalService
         // El ingreso de un ocasional es el registro de su contrato, sin acción
         // [TH N7; fase 2.7]. Se decide aquí, por donde entran también el
         // reemplazo y Reclutamiento.
-        $datos['instrumento'] = $this->instrumentoPara($tipoMovimiento, $datos['tipo_nombramiento_propuesto'] ?? null);
+        $datos['instrumento'] = $this->instrumentoPara(
+            $tipoMovimiento, $datos['tipo_nombramiento_propuesto'] ?? null, $servidor->contratoVigente?->tipo_nombramiento,
+        );
 
         // La restitución y la remoción del provisional que la hace caber nacen
         // juntas o no nace ninguna.
@@ -345,9 +360,12 @@ class MovimientoPersonalService
         // Cambiar el nombramiento de un ingreso en borrador puede cambiar su
         // instrumento: de acción a registro del contrato, o al revés.
         if (array_key_exists('tipo_nombramiento_propuesto', $datos)) {
+            self::impedirIngresoDeAutoridad($movimiento->tipo_movimiento, $datos['tipo_nombramiento_propuesto']);
+
             $datos['instrumento'] = $this->instrumentoPara(
                 $movimiento->tipo_movimiento,
                 $datos['tipo_nombramiento_propuesto'] ?? $movimiento->tipo_nombramiento_propuesto,
+                Servidor::with('contratoVigente')->find($movimiento->servidor_id)?->contratoVigente?->tipo_nombramiento,
             );
         }
 
@@ -378,6 +396,21 @@ class MovimientoPersonalService
 
         if ($movimiento->tipo_movimiento === TipoMovimientoPersonal::RESTITUCION) {
             $datos = $this->revalidarRestitucion($movimiento, $datos);
+        }
+
+        // El inicio del período, con lo corregido (fase 4.1).
+        if ($movimiento->tipo_movimiento === TipoMovimientoPersonal::INICIO_PERIODO) {
+            $datos = app(AutoridadElectaService::class)->completarInicio(
+                Servidor::findOrFail($movimiento->servidor_id),
+                [
+                    'credencial_cne_numero' => $movimiento->credencial_cne_numero,
+                    'credencial_cne_fecha'  => $movimiento->credencial_cne_fecha?->toDateString(),
+                    'fecha_efectiva'        => $movimiento->fecha_efectiva?->toDateString(),
+                    'fecha_fin_propuesta'   => $movimiento->fecha_fin_propuesta?->toDateString(),
+                    'puesto_destino_id'     => $movimiento->puesto_destino_id,
+                    ...$datos,
+                ],
+            );
         }
 
         // El ascenso se vuelve a comprobar con lo corregido, y su remuneración
@@ -517,13 +550,39 @@ class MovimientoPersonalService
         }
     }
 
-    private function instrumentoPara(TipoMovimientoPersonal $tipo, TipoNombramiento|string|null $nombramiento): string
+    /**
+     * El instrumento lo decide el nombramiento que propone lo que crea un
+     * vínculo, y el vigente en lo demás: todo acto de una autoridad electa es
+     * acto de autoridad (fase 4.1).
+     */
+    private function instrumentoPara(
+        TipoMovimientoPersonal $tipo,
+        TipoNombramiento|string|null $propuesto,
+        ?TipoNombramiento $vigente = null,
+    ): string {
+        $propuesto = $propuesto instanceof TipoNombramiento
+            ? $propuesto
+            : TipoNombramiento::tryFrom((string) $propuesto);
+
+        return InstrumentoActo::para($tipo, $tipo->creaVinculo() ? $propuesto : ($vigente ?? $propuesto))->value;
+    }
+
+    /**
+     * Al Prefecto y al Viceprefecto no se les registra un ingreso con acción de
+     * personal: empiezan su período con la credencial del CNE (fase 4.1).
+     */
+    private static function impedirIngresoDeAutoridad(TipoMovimientoPersonal $tipo, TipoNombramiento|string|null $nombramiento): void
     {
         $nombramiento = $nombramiento instanceof TipoNombramiento
             ? $nombramiento
             : TipoNombramiento::tryFrom((string) $nombramiento);
 
-        return InstrumentoActo::para($tipo, $nombramiento)->value;
+        if ($tipo === TipoMovimientoPersonal::INGRESO && $nombramiento === TipoNombramiento::ELECCION_POPULAR) {
+            throw new ReglaNegocioException(
+                'La autoridad electa no ingresa con acción de personal: registre el «Inicio del período», con la '
+                    .'credencial del CNE.'
+            );
+        }
     }
 
     /**

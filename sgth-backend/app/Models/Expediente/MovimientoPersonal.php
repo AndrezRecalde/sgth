@@ -278,6 +278,10 @@ class MovimientoPersonal extends Model
         // El acta final del concurso del provisional de prueba (fase 3.2).
         'acta_concurso_numero',
         'acta_concurso_fecha',
+        // El inicio del período de una autoridad electa (fase 4.1).
+        'credencial_cne_numero',
+        'credencial_cne_fecha',
+        'acta_posesion_numero',
         // La sentencia de una restitución [TH N15; fase 2.6].
         'causa_judicial_numero',
         'unidad_judicial',
@@ -309,6 +313,7 @@ class MovimientoPersonal extends Model
             'tipo_nombramiento_propuesto' => TipoNombramiento::class,
             'supuesto_provisional_propuesto' => SupuestoProvisional::class,
             'acta_concurso_fecha'         => 'date',
+            'credencial_cne_fecha'        => 'date',
             'remuneracion_propuesta'      => 'decimal:2',
             'remuneracion_origen'         => 'decimal:2',
             'fecha_fin_propuesta'         => 'date',

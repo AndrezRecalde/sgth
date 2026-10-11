@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Enums\EstadoAccionPersonal;
 use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\MovimientoPersonal;
+use App\Services\Expediente\AutoridadElectaService;
 use App\Services\Expediente\MovimientoPersonalStateService;
 use App\Services\Expediente\PeriodoDePruebaService;
 use App\Services\Expediente\ReintegroService;
@@ -21,8 +22,9 @@ use Illuminate\Console\Command;
  *
  * Desde la fase 2.4 prepara también en borrador el reintegro de las ausencias
  * que llegaron a su fin. Y avisa de lo que vence en los próximos 30 días
- * —ausencias y contratos con plazo—, por ahora en esta salida. El cierre de los
- * períodos de las autoridades electas llega con su clase.
+ * —ausencias y contratos con plazo—, por ahora en esta salida. Desde la fase 4.1
+ * cierra también los períodos de las autoridades electas que terminaron, antes
+ * de aplicar nada: el de la autoridad reelegida empieza cuando ese se cierra.
  */
 class AplicarAccionesVigentesCommand extends Command
 {
@@ -34,8 +36,11 @@ class AplicarAccionesVigentesCommand extends Command
         MovimientoPersonalStateService $estados,
         ReintegroService $reintegros,
         PeriodoDePruebaService $periodos,
+        AutoridadElectaService $autoridades,
     ): int {
         $fecha = $this->option('fecha') ?: now()->toDateString();
+
+        $this->cerrarPeriodosDeAutoridades($autoridades, $fecha);
 
         $resultado = $estados->aplicarVigentes($fecha);
 
@@ -64,6 +69,31 @@ class AplicarAccionesVigentesCommand extends Command
         // Lo que no se pudo aplicar no hace fallar el comando: el resto se
         // aplicó, y lo pendiente sigue a la vista en la lista de arriba.
         return self::SUCCESS;
+    }
+
+    /**
+     * Los períodos de las autoridades electas que terminaron (fase 4.1): se
+     * registra solo el «Fin del período», con la fecha en que terminó [TH 1].
+     */
+    private function cerrarPeriodosDeAutoridades(AutoridadElectaService $autoridades, string $fecha): void
+    {
+        $resultado = $autoridades->cerrarPeriodosTerminados($fecha);
+
+        if ($resultado['cerrados'] !== []) {
+            $this->info(count($resultado['cerrados']).' período(s) de autoridades electas cerrados.');
+            $this->table(
+                ['Vínculo', 'Acto', 'Servidor'],
+                array_map(fn (array $c) => [$c['contrato_id'], $c['movimiento_id'], $c['servidor_id']], $resultado['cerrados'])
+            );
+        }
+
+        if ($resultado['omitidos'] !== []) {
+            $this->warn(count($resultado['omitidos']).' período(s) terminaron y no se pudieron cerrar:');
+            $this->table(
+                ['Vínculo', 'Servidor', 'Motivo'],
+                array_map(fn (array $o) => [$o['contrato_id'], $o['servidor_id'], $o['motivo']], $resultado['omitidos'])
+            );
+        }
     }
 
     /**

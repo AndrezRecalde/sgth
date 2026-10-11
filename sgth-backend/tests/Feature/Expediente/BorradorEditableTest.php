@@ -204,10 +204,11 @@ test('un puede_marcar explícito gana sobre el recálculo donde la modalidad lo 
 | nunca: editar un borrador colaba la marcación en un contrato civil.
 */
 test('editar un borrador no puede colar marcación en una modalidad que no marca', function () {
+    // Sin la elección popular desde la fase 4.1: al ingreso ya no se le
+    // propone, la autoridad empieza con «Inicio del período» y no marca.
     foreach ([
         TipoNombramiento::SERVICIOS_PROFESIONALES,
         TipoNombramiento::LIBRE_NOMBRAMIENTO,
-        TipoNombramiento::ELECCION_POPULAR,
     ] as $nombramiento) {
         [, $movimiento] = ($this->ingresoBorrador)();
 

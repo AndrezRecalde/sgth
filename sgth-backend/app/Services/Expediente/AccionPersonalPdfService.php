@@ -44,6 +44,13 @@ class AccionPersonalPdfService
             );
         }
 
+        if ($movimiento->instrumento === \App\Enums\InstrumentoActo::ACTO_AUTORIDAD) {
+            throw new ReglaNegocioException(
+                'A una autoridad electa no se le emite acción de personal: su documento es el de origen, la '
+                    .'credencial del CNE o la resolución del Consejo.'
+            );
+        }
+
         if (! $movimiento->tieneDocumentoImprimible()) {
             throw new ReglaNegocioException(
                 "\"{$movimiento->tipo_movimiento->etiqueta()}\" es un registro interno del "
