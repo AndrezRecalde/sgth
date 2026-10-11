@@ -246,11 +246,17 @@ test('al registrarse, el mismo vínculo pasa a permanente y anularlo lo devuelve
         ->and(ContratoServidor::where('servidor_id', $servidor->id)->count())->toBe(1)
         ->and($servidor->fresh()->inicioDelServicioContinuo())->toBe($antiguedad);
 
+    // El expediente filtra y exporta por la copia del servidor.
+    expect($servidor->fresh()->tipo_nombramiento)->toBe(TipoNombramiento::PERMANENTE)
+        ->and($servidor->fresh()->fecha_nombramiento?->toDateString())->toBe($definitivo->fecha_efectiva->toDateString());
+
     $this->estados->transicionar($definitivo->fresh(), EstadoAccionPersonal::ANULADA, ['motivo_anulacion' => 'Error en la fecha.']);
 
     $contrato->refresh();
     expect($contrato->tipo_nombramiento)->toBe(TipoNombramiento::PROVISIONAL)
-        ->and($contrato->supuesto_provisional)->toBe(SupuestoProvisional::DE_PRUEBA);
+        ->and($contrato->supuesto_provisional)->toBe(SupuestoProvisional::DE_PRUEBA)
+        ->and($servidor->fresh()->tipo_nombramiento)->toBe(TipoNombramiento::PROVISIONAL)
+        ->and($servidor->fresh()->fecha_nombramiento)->toBeNull();
 });
 
 test('no rige antes de que termine la prueba', function () {

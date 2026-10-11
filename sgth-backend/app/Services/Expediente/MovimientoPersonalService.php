@@ -385,7 +385,7 @@ class MovimientoPersonalService
      * El supuesto del provisional que el ingreso propone (LOSEP 17 b; fase
      * 3.2). Fuera de un provisional no significa nada, ni el acta del concurso
      * fuera del de prueba. Se puede dejar para el borrador —Reclutamiento no lo
-     * sabe en el express—, pero no se registra sin él.
+     * sabe en el express—, pero no se suscribe sin él.
      *
      * @param  array<string, mixed>  $datos
      * @return array<string, mixed>

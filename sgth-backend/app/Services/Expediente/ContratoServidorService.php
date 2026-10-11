@@ -820,7 +820,10 @@ class ContratoServidorService
             'supuesto_provisional' => null,
         ]);
 
-        $this->sincronizarPuestoDesdeVinculo($movimiento->servidor_id);
+        // Desde hoy es permanente: es su fecha de nombramiento.
+        $this->sincronizarNombramientoDelServidor($vigente, [
+            'fecha_nombramiento' => $movimiento->fecha_efectiva?->toDateString(),
+        ]);
     }
 
     /** Anular el nombramiento definitivo devuelve el vínculo a provisional de prueba. */
@@ -840,7 +843,26 @@ class ContratoServidorService
             'supuesto_provisional' => SupuestoProvisional::DE_PRUEBA->value,
         ]);
 
-        $this->sincronizarPuestoDesdeVinculo($movimiento->servidor_id);
+        $this->sincronizarNombramientoDelServidor($vigente, ['fecha_nombramiento' => null]);
+    }
+
+    /**
+     * El nombramiento que enseña el servidor es copia del de su vínculo, y
+     * `sincronizarRegimenServidor()` solo la escribe al crear el contrato. Lo
+     * que cambia el nombramiento sin crear contrato —el definitivo— la pone al
+     * día aquí; sin esto, el expediente lo seguía filtrando y exportando como
+     * provisional.
+     *
+     * @param  array<string, mixed>  $extra
+     */
+    private function sincronizarNombramientoDelServidor(ContratoServidor $vigente, array $extra = []): void
+    {
+        Servidor::findOrFail($vigente->servidor_id)->update([
+            'tipo_nombramiento' => $vigente->tipo_nombramiento->value,
+            ...$extra,
+        ]);
+
+        $this->sincronizarPuestoDesdeVinculo($vigente->servidor_id);
     }
 
     public function reestructurarDesdeMovimiento(MovimientoPersonal $movimiento): void
