@@ -15,6 +15,8 @@ export type FiltrosBandeja = {
   /** Acciones de personal o registros del contrato (fase 2.7). */
   instrumento?: InstrumentoActo
   servidor_id?: number
+  /** Los actos de un lote: el incremento de los obreros (fase 4.6). */
+  lote_id?: number
   anio?: number
   page?: number
   per_page?: number

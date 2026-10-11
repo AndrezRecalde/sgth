@@ -261,6 +261,22 @@ enum SubtipoMovimientoPersonal: string
     }
 
     /**
+     * La cláusula del contrato colectivo que paga una bonificación por esta
+     * terminación, dentro de los topes del Mandato 2 (fase 4.6): la jubilación
+     * y el retiro voluntario.
+     *
+     * @return 'jubilacion'|'retiro'|null
+     */
+    public function clausulaDelContratoColectivo(): ?string
+    {
+        return match ($this) {
+            self::JUBILACION_CT        => 'jubilacion',
+            self::RETIRO_VOLUNTARIO_CT => 'retiro',
+            default                    => null,
+        };
+    }
+
+    /**
      * Elegibilidad por tipo de nombramiento vigente del servidor, según las
      * reglas que dictó Talento Humano:
      * - Cambio administrativo (las cuatro variantes): solo Permanente.

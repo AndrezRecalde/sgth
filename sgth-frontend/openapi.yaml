@@ -10098,6 +10098,303 @@
                 }
             }
         },
+        "/v1/expediente/contratos-colectivos": {
+            "get": {
+                "operationId": "contratoColectivo.index",
+                "summary": "Los contratos, el que rige hoy con dictamen, y los salarios b\u00e1sicos",
+                "tags": [
+                    "ContratoColectivo"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Contrato colectivo."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "vigente": {
+                                                    "anyOf": [
+                                                        {
+                                                            "$ref": "#/components/schemas/ContratoColectivo"
+                                                        },
+                                                        {
+                                                            "type": "null"
+                                                        }
+                                                    ]
+                                                },
+                                                "contratos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/ContratoColectivo"
+                                                    }
+                                                },
+                                                "salarios_basicos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/SalarioBasico"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "vigente",
+                                                "contratos",
+                                                "salarios_basicos"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "contratoColectivo.store",
+                "tags": [
+                    "ContratoColectivo"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GuardarContratoColectivoRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Contrato colectivo registrado."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/ContratoColectivo"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/contratos-colectivos/{contratoColectivo}": {
+            "post": {
+                "operationId": "contratoColectivo.update",
+                "summary": "Corrige el contrato. Va por POST: lleva el PDF, y PUT no admite multipart",
+                "tags": [
+                    "ContratoColectivo"
+                ],
+                "parameters": [
+                    {
+                        "name": "contratoColectivo",
+                        "in": "path",
+                        "required": true,
+                        "description": "The contrato colectivo ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GuardarContratoColectivoRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Contrato colectivo actualizado."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/ContratoColectivo"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/contratos-colectivos/{contratoColectivo}/documento": {
+            "get": {
+                "operationId": "contratoColectivo.descargar",
+                "summary": "Descarga el PDF: el archivo vive en el disco privado",
+                "tags": [
+                    "ContratoColectivo"
+                ],
+                "parameters": [
+                    {
+                        "name": "contratoColectivo",
+                        "in": "path",
+                        "required": true,
+                        "description": "The contrato colectivo ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/salarios-basicos": {
+            "post": {
+                "operationId": "contratoColectivo.guardarSalarioBasico",
+                "summary": "Registra o corrige el salario b\u00e1sico de un a\u00f1o",
+                "tags": [
+                    "ContratoColectivo"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GuardarSalarioBasicoRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Salario b\u00e1sico guardado."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/SalarioBasico"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/v1/expediente/servidores/{servidorId}/actividad-laboral": {
             "get": {
                 "operationId": "contratos.actividadLaboral",
@@ -23706,6 +24003,1008 @@
                 }
             }
         },
+        "/v1/expediente/lotes-accion": {
+            "get": {
+                "operationId": "loteAccion.index",
+                "tags": [
+                    "LoteAccion"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Lotes de acciones."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "tipo": {
+                                                        "type": "string"
+                                                    },
+                                                    "descripcion": {
+                                                        "type": "string"
+                                                    },
+                                                    "fecha_efectiva": {
+                                                        "type": "string"
+                                                    },
+                                                    "documento_origen": {
+                                                        "type": "string"
+                                                    },
+                                                    "dictamen_presupuestario_ref": {
+                                                        "type": "string"
+                                                    },
+                                                    "parametros": {
+                                                        "type": "array",
+                                                        "items": {}
+                                                    },
+                                                    "contrato_colectivo_id": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "creado_por": {
+                                                        "type": "string"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string"
+                                                    },
+                                                    "total": {
+                                                        "type": "string"
+                                                    },
+                                                    "por_estado": {
+                                                        "type": "object",
+                                                        "additionalProperties": {
+                                                            "type": "integer"
+                                                        }
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "tipo",
+                                                    "descripcion",
+                                                    "fecha_efectiva",
+                                                    "documento_origen",
+                                                    "dictamen_presupuestario_ref",
+                                                    "parametros",
+                                                    "contrato_colectivo_id",
+                                                    "creado_por",
+                                                    "created_at",
+                                                    "total",
+                                                    "por_estado"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/lotes-accion/incremento-obreros/previsualizar": {
+            "post": {
+                "operationId": "loteAccion.previsualizar",
+                "summary": "Qui\u00e9nes recibir\u00edan el incremento y cu\u00e1nto, sin preparar nada",
+                "tags": [
+                    "LoteAccion"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/IncrementoEnLoteRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Vista previa del incremento."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "incluidos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "servidor_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "nombre": {
+                                                                "type": "string"
+                                                            },
+                                                            "cedula": {
+                                                                "type": "string"
+                                                            },
+                                                            "unidad": {
+                                                                "type": "string"
+                                                            },
+                                                            "puesto": {
+                                                                "type": "string"
+                                                            },
+                                                            "remuneracion_actual": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "remuneracion_nueva": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "servidor_id",
+                                                            "nombre",
+                                                            "cedula",
+                                                            "unidad",
+                                                            "puesto",
+                                                            "remuneracion_actual",
+                                                            "remuneracion_nueva"
+                                                        ]
+                                                    }
+                                                },
+                                                "omitidos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "servidor_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "nombre": {
+                                                                "type": "string"
+                                                            },
+                                                            "cedula": {
+                                                                "type": "string"
+                                                            },
+                                                            "unidad": {
+                                                                "type": "string"
+                                                            },
+                                                            "puesto": {
+                                                                "type": "string"
+                                                            },
+                                                            "remuneracion_actual": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "remuneracion_nueva": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "motivo": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ],
+                                                                "enum": [
+                                                                    "Su contrato no tiene la remuneraci\u00f3n registrada.",
+                                                                    "Ya tiene un incremento en tr\u00e1mite.",
+                                                                    "Su propio incremento lo tramita otra persona de Talento Humano.",
+                                                                    "Con este incremento no ganar\u00eda m\u00e1s.",
+                                                                    null
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "servidor_id",
+                                                            "nombre",
+                                                            "cedula",
+                                                            "unidad",
+                                                            "puesto",
+                                                            "remuneracion_actual",
+                                                            "remuneracion_nueva",
+                                                            "motivo"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "incluidos",
+                                                "omitidos"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/lotes-accion/incremento-obreros": {
+            "post": {
+                "operationId": "loteAccion.store",
+                "summary": "Prepara un borrador por obrero, todos o ninguno",
+                "tags": [
+                    "LoteAccion"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/IncrementoEnLoteRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Incremento en lote preparado."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "tipo": {
+                                                    "type": "string"
+                                                },
+                                                "descripcion": {
+                                                    "type": "string"
+                                                },
+                                                "fecha_efectiva": {
+                                                    "type": "string"
+                                                },
+                                                "documento_origen": {
+                                                    "type": "string"
+                                                },
+                                                "dictamen_presupuestario_ref": {
+                                                    "type": "string"
+                                                },
+                                                "parametros": {
+                                                    "type": "array",
+                                                    "items": {}
+                                                },
+                                                "contrato_colectivo_id": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "creado_por": {
+                                                    "type": "string"
+                                                },
+                                                "created_at": {
+                                                    "type": "string"
+                                                },
+                                                "total": {
+                                                    "type": "string"
+                                                },
+                                                "por_estado": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "integer"
+                                                    }
+                                                },
+                                                "actos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "movimiento_id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "codigo_registro": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "estado": {
+                                                                "type": "string"
+                                                            },
+                                                            "nombre": {
+                                                                "type": "string"
+                                                            },
+                                                            "cedula": {
+                                                                "type": "string"
+                                                            },
+                                                            "remuneracion_actual": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "remuneracion_nueva": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "movimiento_id",
+                                                            "codigo_registro",
+                                                            "estado",
+                                                            "nombre",
+                                                            "cedula",
+                                                            "remuneracion_actual",
+                                                            "remuneracion_nueva"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "tipo",
+                                                "descripcion",
+                                                "fecha_efectiva",
+                                                "documento_origen",
+                                                "dictamen_presupuestario_ref",
+                                                "parametros",
+                                                "contrato_colectivo_id",
+                                                "creado_por",
+                                                "created_at",
+                                                "total",
+                                                "por_estado",
+                                                "actos"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/lotes-accion/{lote}": {
+            "get": {
+                "operationId": "loteAccion.show",
+                "tags": [
+                    "LoteAccion"
+                ],
+                "parameters": [
+                    {
+                        "name": "lote",
+                        "in": "path",
+                        "required": true,
+                        "description": "The lote ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Lote de acciones."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "tipo": {
+                                                    "type": "string"
+                                                },
+                                                "descripcion": {
+                                                    "type": "string"
+                                                },
+                                                "fecha_efectiva": {
+                                                    "type": "string"
+                                                },
+                                                "documento_origen": {
+                                                    "type": "string"
+                                                },
+                                                "dictamen_presupuestario_ref": {
+                                                    "type": "string"
+                                                },
+                                                "parametros": {
+                                                    "type": "array",
+                                                    "items": {}
+                                                },
+                                                "contrato_colectivo_id": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "creado_por": {
+                                                    "type": "string"
+                                                },
+                                                "created_at": {
+                                                    "type": "string"
+                                                },
+                                                "total": {
+                                                    "type": "string"
+                                                },
+                                                "por_estado": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "integer"
+                                                    }
+                                                },
+                                                "actos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "movimiento_id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "codigo_registro": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "estado": {
+                                                                "type": "string"
+                                                            },
+                                                            "nombre": {
+                                                                "type": "string"
+                                                            },
+                                                            "cedula": {
+                                                                "type": "string"
+                                                            },
+                                                            "remuneracion_actual": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "remuneracion_nueva": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "movimiento_id",
+                                                            "codigo_registro",
+                                                            "estado",
+                                                            "nombre",
+                                                            "cedula",
+                                                            "remuneracion_actual",
+                                                            "remuneracion_nueva"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "tipo",
+                                                "descripcion",
+                                                "fecha_efectiva",
+                                                "documento_origen",
+                                                "dictamen_presupuestario_ref",
+                                                "parametros",
+                                                "contrato_colectivo_id",
+                                                "creado_por",
+                                                "created_at",
+                                                "total",
+                                                "por_estado",
+                                                "actos"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/lotes-accion/{lote}/registrar": {
+            "post": {
+                "operationId": "loteAccion.registrar",
+                "summary": "Suscribe y registra lo que del lote sigue en tr\u00e1mite. Pide los dos\npermisos, como hacerlo acto por acto",
+                "tags": [
+                    "LoteAccion"
+                ],
+                "parameters": [
+                    {
+                        "name": "lote",
+                        "in": "path",
+                        "required": true,
+                        "description": "The lote ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string"
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "registrados": {
+                                                    "type": "integer"
+                                                },
+                                                "fallidos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "movimiento_id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "nombre": {
+                                                                "type": "string"
+                                                            },
+                                                            "mensaje": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "movimiento_id",
+                                                            "nombre",
+                                                            "mensaje"
+                                                        ]
+                                                    }
+                                                },
+                                                "lote": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "tipo": {
+                                                            "type": "string"
+                                                        },
+                                                        "descripcion": {
+                                                            "type": "string"
+                                                        },
+                                                        "fecha_efectiva": {
+                                                            "type": "string"
+                                                        },
+                                                        "documento_origen": {
+                                                            "type": "string"
+                                                        },
+                                                        "dictamen_presupuestario_ref": {
+                                                            "type": "string"
+                                                        },
+                                                        "parametros": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        },
+                                                        "contrato_colectivo_id": {
+                                                            "type": [
+                                                                "integer",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "creado_por": {
+                                                            "type": "string"
+                                                        },
+                                                        "created_at": {
+                                                            "type": "string"
+                                                        },
+                                                        "total": {
+                                                            "type": "string"
+                                                        },
+                                                        "por_estado": {
+                                                            "type": "object",
+                                                            "additionalProperties": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "actos": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "movimiento_id": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "codigo_registro": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "estado": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "nombre": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "cedula": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "remuneracion_actual": {
+                                                                        "type": [
+                                                                            "number",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "remuneracion_nueva": {
+                                                                        "type": [
+                                                                            "number",
+                                                                            "null"
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "movimiento_id",
+                                                                    "codigo_registro",
+                                                                    "estado",
+                                                                    "nombre",
+                                                                    "cedula",
+                                                                    "remuneracion_actual",
+                                                                    "remuneracion_nueva"
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "tipo",
+                                                        "descripcion",
+                                                        "fecha_efectiva",
+                                                        "documento_origen",
+                                                        "dictamen_presupuestario_ref",
+                                                        "parametros",
+                                                        "contrato_colectivo_id",
+                                                        "creado_por",
+                                                        "created_at",
+                                                        "total",
+                                                        "por_estado",
+                                                        "actos"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "registrados",
+                                                "fallidos",
+                                                "lote"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/lotes-accion/{lote}/descartar": {
+            "post": {
+                "operationId": "loteAccion.descartar",
+                "summary": "Anula lo que del lote sigue en tr\u00e1mite",
+                "tags": [
+                    "LoteAccion"
+                ],
+                "parameters": [
+                    {
+                        "name": "lote",
+                        "in": "path",
+                        "required": true,
+                        "description": "The lote ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "motivo": {
+                                        "type": "string",
+                                        "minLength": 5,
+                                        "maxLength": 300
+                                    }
+                                },
+                                "required": [
+                                    "motivo"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string"
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "anulados": {
+                                                    "type": "integer"
+                                                },
+                                                "lote": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "tipo": {
+                                                            "type": "string"
+                                                        },
+                                                        "descripcion": {
+                                                            "type": "string"
+                                                        },
+                                                        "fecha_efectiva": {
+                                                            "type": "string"
+                                                        },
+                                                        "documento_origen": {
+                                                            "type": "string"
+                                                        },
+                                                        "dictamen_presupuestario_ref": {
+                                                            "type": "string"
+                                                        },
+                                                        "parametros": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        },
+                                                        "contrato_colectivo_id": {
+                                                            "type": [
+                                                                "integer",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "creado_por": {
+                                                            "type": "string"
+                                                        },
+                                                        "created_at": {
+                                                            "type": "string"
+                                                        },
+                                                        "total": {
+                                                            "type": "string"
+                                                        },
+                                                        "por_estado": {
+                                                            "type": "object",
+                                                            "additionalProperties": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "actos": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "movimiento_id": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "codigo_registro": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "estado": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "nombre": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "cedula": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "remuneracion_actual": {
+                                                                        "type": [
+                                                                            "number",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "remuneracion_nueva": {
+                                                                        "type": [
+                                                                            "number",
+                                                                            "null"
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "movimiento_id",
+                                                                    "codigo_registro",
+                                                                    "estado",
+                                                                    "nombre",
+                                                                    "cedula",
+                                                                    "remuneracion_actual",
+                                                                    "remuneracion_nueva"
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "tipo",
+                                                        "descripcion",
+                                                        "fecha_efectiva",
+                                                        "documento_origen",
+                                                        "dictamen_presupuestario_ref",
+                                                        "parametros",
+                                                        "contrato_colectivo_id",
+                                                        "creado_por",
+                                                        "created_at",
+                                                        "total",
+                                                        "por_estado",
+                                                        "actos"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "anulados",
+                                                "lote"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/inventario/mantenimientos": {
             "get": {
                 "operationId": "mantenimientos.index",
@@ -24725,6 +26024,14 @@
                     },
                     {
                         "name": "servidor_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "lote_id",
                         "in": "query",
                         "schema": {
                             "type": "integer",
@@ -27367,8 +28674,7 @@
                                                     "type": "object",
                                                     "properties": {
                                                         "dias_generados": {
-                                                            "type": "number",
-                                                            "description": "La escala vive en un solo sitio, que tambi\u00e9n consultan los motores.\nAqu\u00ed se aplicaba 15/20/25/30 en LOSEP y, en el C\u00f3digo del Trabajo,\nel d\u00eda adicional desde el segundo a\u00f1o: ver `EscalaVacaciones`."
+                                                            "type": "number"
                                                         },
                                                         "dias_utilizados": {
                                                             "type": "number"
@@ -46989,6 +48295,143 @@
                 ],
                 "title": "ConsultaMedica"
             },
+            "ContratoColectivo": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "numero": {
+                        "type": "string"
+                    },
+                    "fecha_suscripcion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "fecha_registro_mdt": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "vigencia_desde": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "vigencia_hasta": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "dictamen_finanzas_numero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "dictamen_finanzas_fecha": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "dias_adicionales_vacaciones": {
+                        "type": "integer"
+                    },
+                    "bonificacion_jubilacion_sbu": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "bonificacion_retiro_sbu": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "incremento_pactado_porcentaje": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "documento_nombre": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "observacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "updated_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "tiene_documento": {
+                        "type": "string"
+                    },
+                    "tiene_dictamen": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "numero",
+                    "fecha_suscripcion",
+                    "fecha_registro_mdt",
+                    "vigencia_desde",
+                    "vigencia_hasta",
+                    "dictamen_finanzas_numero",
+                    "dictamen_finanzas_fecha",
+                    "dias_adicionales_vacaciones",
+                    "bonificacion_jubilacion_sbu",
+                    "bonificacion_retiro_sbu",
+                    "incremento_pactado_porcentaje",
+                    "documento_nombre",
+                    "observacion",
+                    "created_by",
+                    "updated_by",
+                    "created_at",
+                    "updated_at",
+                    "tiene_documento",
+                    "tiene_dictamen"
+                ],
+                "title": "ContratoColectivo"
+            },
             "ContratoServidor": {
                 "type": "object",
                 "properties": {
@@ -50063,6 +51506,108 @@
                 ],
                 "title": "GuardarActaFiniquitoRequest"
             },
+            "GuardarContratoColectivoRequest": {
+                "type": "object",
+                "description": "El contrato colectivo de los obreros (fase 4.6): el documento, su vigencia,\nel dictamen del Ministerio de Finanzas y las cl\u00e1usulas que cambian c\u00e1lculos,\ncon los topes de la ley.",
+                "properties": {
+                    "numero": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "fecha_suscripcion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "fecha_registro_mdt": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "vigencia_desde": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "vigencia_hasta": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "dictamen_finanzas_numero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 100
+                    },
+                    "dictamen_finanzas_fecha": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "dias_adicionales_vacaciones": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 0,
+                        "maximum": 30
+                    },
+                    "bonificacion_jubilacion_sbu": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "description": "El Mandato 2, Art. 8: hasta siete salarios b\u00e1sicos por a\u00f1o.",
+                        "minimum": 0,
+                        "maximum": 7
+                    },
+                    "bonificacion_retiro_sbu": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "minimum": 0,
+                        "maximum": 7
+                    },
+                    "incremento_pactado_porcentaje": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "maximum": 100
+                    },
+                    "observacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 1000
+                    },
+                    "archivo": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "maxLength": 10240
+                    }
+                },
+                "required": [
+                    "numero",
+                    "vigencia_desde"
+                ],
+                "title": "GuardarContratoColectivoRequest"
+            },
             "GuardarFaltaReglamentoRequest": {
                 "type": "object",
                 "description": "Una falta del cat\u00e1logo del reglamento interno (fase 4.4): su art\u00edculo, su\ndescripci\u00f3n, las sanciones que admite y el tope de la multa, que nunca pasa\ndel 10 % de la remuneraci\u00f3n.",
@@ -50108,6 +51653,33 @@
                     "descripcion"
                 ],
                 "title": "GuardarFaltaReglamentoRequest"
+            },
+            "GuardarSalarioBasicoRequest": {
+                "type": "object",
+                "description": "El salario b\u00e1sico unificado de un a\u00f1o (fase 4.6).",
+                "properties": {
+                    "anio": {
+                        "type": "integer",
+                        "minimum": 2000,
+                        "maximum": 2100
+                    },
+                    "monto": {
+                        "type": "number",
+                        "maximum": 99999
+                    },
+                    "acuerdo": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 150
+                    }
+                },
+                "required": [
+                    "anio",
+                    "monto"
+                ],
+                "title": "GuardarSalarioBasicoRequest"
             },
             "HandoffErp": {
                 "type": "object",
@@ -50477,6 +52049,60 @@
                     "updated_at"
                 ],
                 "title": "HorasTrabajadasPeriodoResource"
+            },
+            "IncrementoEnLoteRequest": {
+                "type": "object",
+                "description": "El incremento de los obreros en lote (fase 4.6). Para previsualizarlo basta\nel modo, el valor y la unidad; para prepararlo, tambi\u00e9n la fecha, la\nexplicaci\u00f3n, el documento de origen y el dictamen presupuestario.",
+                "properties": {
+                    "modo": {
+                        "type": "string",
+                        "enum": [
+                            "porcentaje",
+                            "monto"
+                        ]
+                    },
+                    "valor": {
+                        "type": "number",
+                        "maximum": 99999
+                    },
+                    "unidad_administrativa_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "por_contrato_colectivo": {
+                        "type": [
+                            "boolean",
+                            "null"
+                        ]
+                    },
+                    "fecha_efectiva": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "descripcion": {
+                        "type": "string",
+                        "maxLength": 1000
+                    },
+                    "documento_origen": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "dictamen_presupuestario_ref": {
+                        "type": "string",
+                        "maxLength": 255
+                    }
+                },
+                "required": [
+                    "modo",
+                    "valor",
+                    "fecha_efectiva",
+                    "descripcion",
+                    "documento_origen",
+                    "dictamen_presupuestario_ref"
+                ],
+                "title": "IncrementoEnLoteRequest"
             },
             "InformeActividad": {
                 "type": "object",
@@ -51626,6 +53252,12 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "lote_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -51704,7 +53336,8 @@
                     "lugar_trabajo_origen",
                     "fecha_consentimiento",
                     "fecha_presentacion_renuncia",
-                    "fecha_providencia"
+                    "fecha_providencia",
+                    "lote_id"
                 ],
                 "title": "MovimientoPersonal"
             },
@@ -52199,6 +53832,13 @@
                         "format": "date-time",
                         "description": "O la providencia que ordena el reintegro del obrero (fase 4.5b)."
                     },
+                    "lote_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "El lote del que naci\u00f3: el incremento de los obreros (fase 4.6)."
+                    },
                     "remuneraciones_dejadas_de_percibir": {
                         "type": [
                             "string",
@@ -52596,6 +54236,7 @@
                     "fecha_sentencia",
                     "fecha_ejecutoria",
                     "fecha_providencia",
+                    "lote_id",
                     "remuneraciones_dejadas_de_percibir",
                     "documento_respaldo",
                     "dictamen_presupuestario_ref",
@@ -55367,6 +57008,63 @@
                     "codigo_trabajo"
                 ],
                 "title": "RolPuesto"
+            },
+            "SalarioBasico": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "anio": {
+                        "type": "integer"
+                    },
+                    "monto": {
+                        "type": "string"
+                    },
+                    "acuerdo": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "updated_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "anio",
+                    "monto",
+                    "acuerdo",
+                    "created_by",
+                    "updated_by",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "SalarioBasico"
             },
             "Servidor": {
                 "type": "object",

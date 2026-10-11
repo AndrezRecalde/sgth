@@ -1737,6 +1737,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/expediente/contratos-colectivos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Los contratos, el que rige hoy con dictamen, y los salarios básicos */
+        get: operations["contratoColectivo.index"];
+        put?: never;
+        post: operations["contratoColectivo.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/contratos-colectivos/{contratoColectivo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Corrige el contrato. Va por POST: lleva el PDF, y PUT no admite multipart */
+        post: operations["contratoColectivo.update"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/contratos-colectivos/{contratoColectivo}/documento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Descarga el PDF: el archivo vive en el disco privado */
+        get: operations["contratoColectivo.descargar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/salarios-basicos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Registra o corrige el salario básico de un año */
+        post: operations["contratoColectivo.guardarSalarioBasico"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/expediente/servidores/{servidorId}/actividad-laboral": {
         parameters: {
             query?: never;
@@ -3733,6 +3801,109 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["liquidacionViatico.confirmar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/lotes-accion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["loteAccion.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/lotes-accion/incremento-obreros/previsualizar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Quiénes recibirían el incremento y cuánto, sin preparar nada */
+        post: operations["loteAccion.previsualizar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/lotes-accion/incremento-obreros": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Prepara un borrador por obrero, todos o ninguno */
+        post: operations["loteAccion.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/lotes-accion/{lote}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["loteAccion.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/lotes-accion/{lote}/registrar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Suscribe y registra lo que del lote sigue en trámite. Pide los dos
+         *     permisos, como hacerlo acto por acto
+         */
+        post: operations["loteAccion.registrar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/lotes-accion/{lote}/descartar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Anula lo que del lote sigue en trámite */
+        post: operations["loteAccion.descartar"];
         delete?: never;
         options?: never;
         head?: never;
@@ -7729,6 +7900,36 @@ export interface components {
             tipo_diagnostico: string;
             especialidad: components["schemas"]["EspecialidadAtencion"];
         };
+        /** ContratoColectivo */
+        ContratoColectivo: {
+            id: number;
+            numero: string;
+            /** Format: date-time */
+            fecha_suscripcion: string | null;
+            /** Format: date-time */
+            fecha_registro_mdt: string | null;
+            /** Format: date-time */
+            vigencia_desde: string;
+            /** Format: date-time */
+            vigencia_hasta: string | null;
+            dictamen_finanzas_numero: string | null;
+            /** Format: date-time */
+            dictamen_finanzas_fecha: string | null;
+            dias_adicionales_vacaciones: number;
+            bonificacion_jubilacion_sbu: string | null;
+            bonificacion_retiro_sbu: string | null;
+            incremento_pactado_porcentaje: string | null;
+            documento_nombre: string | null;
+            observacion: string | null;
+            created_by: number | null;
+            updated_by: number | null;
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+            tiene_documento: string;
+            tiene_dictamen: string;
+        };
         /** ContratoServidor */
         ContratoServidor: {
             id: number;
@@ -8543,6 +8744,34 @@ export interface components {
             archivo?: string | null;
         };
         /**
+         * GuardarContratoColectivoRequest
+         * @description El contrato colectivo de los obreros (fase 4.6): el documento, su vigencia,
+         *     el dictamen del Ministerio de Finanzas y las cláusulas que cambian cálculos,
+         *     con los topes de la ley.
+         */
+        GuardarContratoColectivoRequest: {
+            numero: string;
+            /** Format: date-time */
+            fecha_suscripcion?: string | null;
+            /** Format: date-time */
+            fecha_registro_mdt?: string | null;
+            /** Format: date-time */
+            vigencia_desde: string;
+            /** Format: date-time */
+            vigencia_hasta?: string | null;
+            dictamen_finanzas_numero?: string | null;
+            /** Format: date-time */
+            dictamen_finanzas_fecha?: string | null;
+            dias_adicionales_vacaciones?: number | null;
+            /** @description El Mandato 2, Art. 8: hasta siete salarios básicos por año. */
+            bonificacion_jubilacion_sbu?: number | null;
+            bonificacion_retiro_sbu?: number | null;
+            incremento_pactado_porcentaje?: number | null;
+            observacion?: string | null;
+            /** Format: binary */
+            archivo?: string | null;
+        };
+        /**
          * GuardarFaltaReglamentoRequest
          * @description Una falta del catálogo del reglamento interno (fase 4.4): su artículo, su
          *     descripción, las sanciones que admite y el tope de la multa, que nunca pasa
@@ -8557,6 +8786,15 @@ export interface components {
             admite_multa?: boolean;
             porcentaje_maximo_multa?: number | null;
             activo?: boolean;
+        };
+        /**
+         * GuardarSalarioBasicoRequest
+         * @description El salario básico unificado de un año (fase 4.6).
+         */
+        GuardarSalarioBasicoRequest: {
+            anio: number;
+            monto: number;
+            acuerdo?: string | null;
         };
         /** HandoffErp */
         HandoffErp: {
@@ -8650,6 +8888,24 @@ export interface components {
             created_at: string | null;
             /** Format: date-time */
             updated_at: string | null;
+        };
+        /**
+         * IncrementoEnLoteRequest
+         * @description El incremento de los obreros en lote (fase 4.6). Para previsualizarlo basta
+         *     el modo, el valor y la unidad; para prepararlo, también la fecha, la
+         *     explicación, el documento de origen y el dictamen presupuestario.
+         */
+        IncrementoEnLoteRequest: {
+            /** @enum {string} */
+            modo: "porcentaje" | "monto";
+            valor: number;
+            unidad_administrativa_id?: number | null;
+            por_contrato_colectivo?: boolean | null;
+            /** Format: date-time */
+            fecha_efectiva: string;
+            descripcion: string;
+            documento_origen: string;
+            dictamen_presupuestario_ref: string;
         };
         /** InformeActividad */
         InformeActividad: {
@@ -8932,6 +9188,7 @@ export interface components {
             fecha_presentacion_renuncia: string | null;
             /** Format: date-time */
             fecha_providencia: string | null;
+            lote_id: number | null;
         };
         /** MovimientoPersonalResource */
         MovimientoPersonalResource: {
@@ -9081,6 +9338,8 @@ export interface components {
              * @description O la providencia que ordena el reintegro del obrero (fase 4.5b).
              */
             fecha_providencia: string | null;
+            /** @description El lote del que nació: el incremento de los obreros (fase 4.6). */
+            lote_id: number | null;
             remuneraciones_dejadas_de_percibir: string | null;
             documento_respaldo: string | null;
             dictamen_presupuestario_ref: string | null;
@@ -9927,6 +10186,19 @@ export interface components {
          * @enum {string}
          */
         RolPuesto: "dignatario" | "ejecucion_coordinacion" | "ejecucion_procesos" | "ejecucion_procesos_apoyo" | "administrativo" | "codigo_trabajo";
+        /** SalarioBasico */
+        SalarioBasico: {
+            id: number;
+            anio: number;
+            monto: string;
+            acuerdo: string | null;
+            created_by: number | null;
+            updated_by: number | null;
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
         /** Servidor */
         Servidor: {
             id: number;
@@ -16747,6 +17019,157 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
+    "contratoColectivo.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Contrato colectivo.";
+                        datos: {
+                            vigente: components["schemas"]["ContratoColectivo"] | null;
+                            contratos: components["schemas"]["ContratoColectivo"][];
+                            salarios_basicos: components["schemas"]["SalarioBasico"][];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "contratoColectivo.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["GuardarContratoColectivoRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Contrato colectivo registrado.";
+                        datos: components["schemas"]["ContratoColectivo"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "contratoColectivo.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The contrato colectivo ID */
+                contratoColectivo: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["GuardarContratoColectivoRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Contrato colectivo actualizado.";
+                        datos: components["schemas"]["ContratoColectivo"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "contratoColectivo.descargar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The contrato colectivo ID */
+                contratoColectivo: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "contratoColectivo.guardarSalarioBasico": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuardarSalarioBasicoRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Salario básico guardado.";
+                        datos: components["schemas"]["SalarioBasico"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "contratos.actividadLaboral": {
         parameters: {
             query?: never;
@@ -22762,6 +23185,332 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
+    "loteAccion.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Lotes de acciones.";
+                        datos: {
+                            id: number;
+                            tipo: string;
+                            descripcion: string;
+                            fecha_efectiva: string;
+                            documento_origen: string;
+                            dictamen_presupuestario_ref: string;
+                            parametros: unknown[];
+                            contrato_colectivo_id: number | null;
+                            creado_por: string;
+                            created_at: string;
+                            total: string;
+                            por_estado: {
+                                [key: string]: number;
+                            };
+                        }[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "loteAccion.previsualizar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IncrementoEnLoteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Vista previa del incremento.";
+                        datos: {
+                            incluidos: {
+                                servidor_id: string;
+                                nombre: string;
+                                cedula: string;
+                                unidad: string;
+                                puesto: string;
+                                remuneracion_actual: number | null;
+                                remuneracion_nueva: number | null;
+                            }[];
+                            omitidos: {
+                                servidor_id: string;
+                                nombre: string;
+                                cedula: string;
+                                unidad: string;
+                                puesto: string;
+                                remuneracion_actual: number | null;
+                                remuneracion_nueva: number | null;
+                                /** @enum {string|null} */
+                                motivo: "Su contrato no tiene la remuneración registrada." | "Ya tiene un incremento en trámite." | "Su propio incremento lo tramita otra persona de Talento Humano." | "Con este incremento no ganaría más." | null;
+                            }[];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "loteAccion.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IncrementoEnLoteRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Incremento en lote preparado.";
+                        datos: {
+                            id: number;
+                            tipo: string;
+                            descripcion: string;
+                            fecha_efectiva: string;
+                            documento_origen: string;
+                            dictamen_presupuestario_ref: string;
+                            parametros: unknown[];
+                            contrato_colectivo_id: number | null;
+                            creado_por: string;
+                            created_at: string;
+                            total: string;
+                            por_estado: {
+                                [key: string]: number;
+                            };
+                            actos: {
+                                movimiento_id: number;
+                                codigo_registro: string | null;
+                                estado: string;
+                                nombre: string;
+                                cedula: string;
+                                remuneracion_actual: number | null;
+                                remuneracion_nueva: number | null;
+                            }[];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "loteAccion.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The lote ID */
+                lote: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Lote de acciones.";
+                        datos: {
+                            id: number;
+                            tipo: string;
+                            descripcion: string;
+                            fecha_efectiva: string;
+                            documento_origen: string;
+                            dictamen_presupuestario_ref: string;
+                            parametros: unknown[];
+                            contrato_colectivo_id: number | null;
+                            creado_por: string;
+                            created_at: string;
+                            total: string;
+                            por_estado: {
+                                [key: string]: number;
+                            };
+                            actos: {
+                                movimiento_id: number;
+                                codigo_registro: string | null;
+                                estado: string;
+                                nombre: string;
+                                cedula: string;
+                                remuneracion_actual: number | null;
+                                remuneracion_nueva: number | null;
+                            }[];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "loteAccion.registrar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The lote ID */
+                lote: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: {
+                            registrados: number;
+                            fallidos: {
+                                movimiento_id: number;
+                                nombre: string;
+                                mensaje: string;
+                            }[];
+                            lote: {
+                                id: number;
+                                tipo: string;
+                                descripcion: string;
+                                fecha_efectiva: string;
+                                documento_origen: string;
+                                dictamen_presupuestario_ref: string;
+                                parametros: unknown[];
+                                contrato_colectivo_id: number | null;
+                                creado_por: string;
+                                created_at: string;
+                                total: string;
+                                por_estado: {
+                                    [key: string]: number;
+                                };
+                                actos: {
+                                    movimiento_id: number;
+                                    codigo_registro: string | null;
+                                    estado: string;
+                                    nombre: string;
+                                    cedula: string;
+                                    remuneracion_actual: number | null;
+                                    remuneracion_nueva: number | null;
+                                }[];
+                            };
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "loteAccion.descartar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The lote ID */
+                lote: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    motivo: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: {
+                            anulados: number;
+                            lote: {
+                                id: number;
+                                tipo: string;
+                                descripcion: string;
+                                fecha_efectiva: string;
+                                documento_origen: string;
+                                dictamen_presupuestario_ref: string;
+                                parametros: unknown[];
+                                contrato_colectivo_id: number | null;
+                                creado_por: string;
+                                created_at: string;
+                                total: string;
+                                por_estado: {
+                                    [key: string]: number;
+                                };
+                                actos: {
+                                    movimiento_id: number;
+                                    codigo_registro: string | null;
+                                    estado: string;
+                                    nombre: string;
+                                    cedula: string;
+                                    remuneracion_actual: number | null;
+                                    remuneracion_nueva: number | null;
+                                }[];
+                            };
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "mantenimientos.index": {
         parameters: {
             query?: never;
@@ -23165,6 +23914,7 @@ export interface operations {
                 clase?: string;
                 instrumento?: string;
                 servidor_id?: number;
+                lote_id?: number;
                 anio?: number;
                 per_page?: number;
             };
@@ -24363,11 +25113,6 @@ export interface operations {
                                 dias_saldo: number;
                             };
                             propuesto: {
-                                /**
-                                 * @description La escala vive en un solo sitio, que también consultan los motores.
-                                 *     Aquí se aplicaba 15/20/25/30 en LOSEP y, en el Código del Trabajo,
-                                 *     el día adicional desde el segundo año: ver `EscalaVacaciones`.
-                                 */
                                 dias_generados: number;
                                 dias_utilizados: number;
                                 dias_saldo: Record<string, never> | null;

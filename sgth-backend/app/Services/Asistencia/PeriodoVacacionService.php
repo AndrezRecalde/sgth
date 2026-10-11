@@ -11,6 +11,7 @@ use App\Models\Asistencia\PermisoServidor;
 use App\Models\Asistencia\Vacacion;
 use App\Models\Asistencia\VacacionDescuento;
 use App\Models\Expediente\Servidor;
+use App\Services\Expediente\ContratoColectivoService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
@@ -30,12 +31,22 @@ class PeriodoVacacionService
      */
     public function calcularDiasGenerados(
         string $regimen,
-        int $aniosAntiguedad
+        int $aniosAntiguedad,
+        ?int $anio = null
     ): float {
         // La escala vive en un solo sitio, que también consultan los motores.
         // Aquí se aplicaba 15/20/25/30 en LOSEP y, en el Código del Trabajo,
         // el día adicional desde el segundo año: ver `EscalaVacaciones`.
-        return EscalaVacaciones::diasGenerados($regimen, $aniosAntiguedad);
+        //
+        // Al obrero, más los días del contrato colectivo que rige en el año del
+        // período: hoy, o su último día si ya pasó (fase 4.6).
+        $delContratoColectivo = $regimen === RegimenLaboral::CODIGO_TRABAJO->value
+            ? app(ContratoColectivoService::class)->diasAdicionalesDeVacaciones(
+                $anio === null ? now() : Carbon::create($anio, 12, 31)->min(now())
+            )
+            : 0;
+
+        return EscalaVacaciones::diasGenerados($regimen, $aniosAntiguedad, $delContratoColectivo);
     }
 
     /**
@@ -186,7 +197,7 @@ class PeriodoVacacionService
             : (string) ($servidor->regimen_laboral ?? 'losep');
 
         $antiguedad = $this->calcularAntiguedad($servidor, $regimen, $anio);
-        $diasGen    = $this->calcularDiasGenerados($regimen, $antiguedad);
+        $diasGen    = $this->calcularDiasGenerados($regimen, $antiguedad, $anio);
 
         // Saldo acumulado de períodos anteriores abiertos, entero. Antes se
         // recortaba a 60 en LOSEP, pero solo aquí, en lo que se muestra: el

@@ -860,6 +860,8 @@ export type MovimientoPersonal = {
   fecha_ejecutoria?: string | null
   /** O la providencia que ordena el reintegro del obrero, como medida cautelar (fase 4.5b). */
   fecha_providencia?: string | null
+  /** El lote del que nació: el incremento de los obreros (fase 4.6). */
+  lote_id?: number | null
   remuneraciones_dejadas_de_percibir?: string | number | null
   numero_contrato?: string | null
   partida_presupuestaria_id?: number | null

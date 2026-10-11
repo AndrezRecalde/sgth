@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { Tabs } from '@mantine/core'
 import {
-  IconBuildingBank, IconHourglass, IconInbox, IconSignature, IconUserMinus, IconUserOff, IconUserPlus,
+  IconBuildingBank, IconFileText, IconHourglass, IconInbox, IconSignature, IconStack2, IconUserMinus, IconUserOff,
+  IconUserPlus,
 } from '@tabler/icons-react'
 import { SelectorServidorCategoria } from '@/features/expediente/components/SelectorServidorCategoria'
 import { MovimientoModal } from '@/features/expediente/components/MovimientoModal'
@@ -13,6 +14,8 @@ import { AusenciasTemporalesPanel } from '@/features/expediente/components/Ausen
 import { PeriodosDePruebaPanel } from '@/features/expediente/components/PeriodosDePruebaPanel'
 import { AutoridadesElectasPanel } from '@/features/expediente/components/AutoridadesElectasPanel'
 import { TerminacionesObrerosPanel } from '@/features/expediente/components/TerminacionesObrerosPanel'
+import { IncrementosEnLotePanel } from '@/features/expediente/components/IncrementosEnLotePanel'
+import { ContratoColectivoPanel } from '@/features/expediente/components/ContratoColectivoPanel'
 import { usePuedePrepararAccion } from '@/features/expediente/hooks/usePuedePrepararAccion'
 import type { FamiliaDelCatalogo, ServidorConRelaciones } from '@/types/api'
 import { PageHeader, PageShell } from '@/components/ui'
@@ -70,6 +73,12 @@ export function AccionesPersonalView() {
           <Tabs.Tab value="terminaciones-obreros" leftSection={<IconUserMinus size={16} />}>
             Terminaciones de obreros
           </Tabs.Tab>
+          <Tabs.Tab value="lotes" leftSection={<IconStack2 size={16} />}>
+            Incrementos en lote
+          </Tabs.Tab>
+          <Tabs.Tab value="contrato-colectivo" leftSection={<IconFileText size={16} />}>
+            Contrato colectivo
+          </Tabs.Tab>
           <Tabs.Tab value="firmantes" leftSection={<IconSignature size={16} />}>
             Firmantes
           </Tabs.Tab>
@@ -117,6 +126,15 @@ export function AccionesPersonalView() {
 
         <Tabs.Panel value="terminaciones-obreros">
           <TerminacionesObrerosPanel />
+        </Tabs.Panel>
+
+        {/* Los obreros: el incremento en lote y el contrato colectivo (fase 4.6). */}
+        <Tabs.Panel value="lotes">
+          <IncrementosEnLotePanel />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="contrato-colectivo">
+          <ContratoColectivoPanel />
         </Tabs.Panel>
 
         <Tabs.Panel value="firmantes">

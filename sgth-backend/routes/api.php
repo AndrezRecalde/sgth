@@ -85,6 +85,8 @@ use App\Http\Controllers\Expediente\CatalogoAccionesPersonalController;
 use App\Http\Controllers\Expediente\MovimientoPersonalController;
 use App\Http\Controllers\Expediente\AutoridadElectaController;
 use App\Http\Controllers\Expediente\TerminacionObreroController;
+use App\Http\Controllers\Expediente\ContratoColectivoController;
+use App\Http\Controllers\Expediente\LoteAccionController;
 use App\Http\Controllers\Expediente\PeriodoDePruebaController;
 use App\Http\Controllers\Expediente\VerificacionCertificadoController;
 use App\Http\Controllers\Expediente\VinculacionInicialController;
@@ -425,6 +427,35 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->middleware('permission:preparar-accion-personal');
         Route::get('movimientos/{movimiento}/acta-finiquito/documento', [TerminacionObreroController::class, 'descargarActa'])
             ->middleware('role:admin-uath|asistente-uath');
+
+        // El contrato colectivo de los obreros y el salario básico (fase 4.6):
+        // lo consulta Talento Humano y lo carga su director.
+        Route::get('contratos-colectivos', [ContratoColectivoController::class, 'index'])
+            ->middleware('role:admin-uath|asistente-uath');
+        Route::post('contratos-colectivos', [ContratoColectivoController::class, 'store'])
+            ->middleware('role:admin-uath');
+        Route::post('contratos-colectivos/{contratoColectivo}', [ContratoColectivoController::class, 'update'])
+            ->middleware('role:admin-uath');
+        Route::get('contratos-colectivos/{contratoColectivo}/documento', [ContratoColectivoController::class, 'descargar'])
+            ->middleware('role:admin-uath|asistente-uath');
+        Route::post('salarios-basicos', [ContratoColectivoController::class, 'guardarSalarioBasico'])
+            ->middleware('role:admin-uath');
+
+        // El incremento de los obreros en lote (fase 4.6). Prepararlo es
+        // preparar acciones; registrarlo pide suscribir y registrar, como acto
+        // por acto; descartarlo, anular.
+        Route::get('lotes-accion', [LoteAccionController::class, 'index'])
+            ->middleware('role:admin-uath|asistente-uath');
+        Route::post('lotes-accion/incremento-obreros/previsualizar', [LoteAccionController::class, 'previsualizar'])
+            ->middleware('permission:preparar-accion-personal');
+        Route::post('lotes-accion/incremento-obreros', [LoteAccionController::class, 'store'])
+            ->middleware('permission:preparar-accion-personal');
+        Route::get('lotes-accion/{lote}', [LoteAccionController::class, 'show'])
+            ->middleware('role:admin-uath|asistente-uath');
+        Route::post('lotes-accion/{lote}/registrar', [LoteAccionController::class, 'registrar'])
+            ->middleware(['permission:suscribir-accion-personal', 'permission:registrar-accion-personal']);
+        Route::post('lotes-accion/{lote}/descartar', [LoteAccionController::class, 'descartar'])
+            ->middleware('permission:anular-accion-personal');
 
         // El ascendido que no superó la prueba vuelve a su puesto (fase 3.3).
         Route::post('contratos/{contrato}/reintegro-del-ascenso', [PeriodoDePruebaController::class, 'reintegroDelAscenso'])

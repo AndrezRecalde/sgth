@@ -144,6 +144,8 @@ class MovimientoPersonalResource extends JsonResource
             'fecha_ejecutoria'            => $this->fecha_ejecutoria,
             // O la providencia que ordena el reintegro del obrero (fase 4.5b).
             'fecha_providencia'           => $this->fecha_providencia,
+            // El lote del que nació: el incremento de los obreros (fase 4.6).
+            'lote_id'                     => $this->lote_id,
             'remuneraciones_dejadas_de_percibir' => $this->remuneraciones_dejadas_de_percibir,
             'documento_respaldo'          => $this->documento_respaldo,
             'dictamen_presupuestario_ref' => $this->dictamen_presupuestario_ref,

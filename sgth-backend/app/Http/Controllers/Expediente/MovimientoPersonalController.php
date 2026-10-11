@@ -88,6 +88,8 @@ class MovimientoPersonalController extends Controller
             // Acciones de personal o registros del contrato (fase 2.7).
             ->when($request->filled('instrumento'), fn ($q) => $q->where('instrumento', $request->input('instrumento')))
             ->when($request->filled('servidor_id'), fn ($q) => $q->where('servidor_id', $request->integer('servidor_id')))
+            // Los actos de un lote: el incremento de los obreros (fase 4.6).
+            ->when($request->filled('lote_id'), fn ($q) => $q->where('lote_id', $request->integer('lote_id')))
             ->when($request->filled('anio'), fn ($q) => $q->whereYear('fecha_efectiva', $request->integer('anio')))
             // Quien revisa la bandeja no ve lo que se le está preparando a él:
             // no puede tramitarlo, y es justo lo que no debe ver antes de tiempo.
