@@ -175,7 +175,7 @@ dataset('matriz de elegibilidad', [
             TipoNombramiento::CODIGO_TRABAJO,
         ],
     ],
-    'renuncia → permanente, provisional, ocasional y libre nombramiento' => [
+    'renuncia → permanente, provisional, ocasional, libre nombramiento y autoridades electas' => [
         SubtipoMovimientoPersonal::RENUNCIA,
         [
             TipoNombramiento::PERMANENTE,
@@ -183,6 +183,8 @@ dataset('matriz de elegibilidad', [
             TipoNombramiento::SERVICIOS_OCASIONALES,
             // TH equiparó Libre Nombramiento al ocasional el 2026-09-29.
             TipoNombramiento::LIBRE_NOMBRAMIENTO,
+            // La renuncia cierra también el período de una autoridad (4.1).
+            TipoNombramiento::ELECCION_POPULAR,
         ],
     ],
     'destitución → permanente, provisional, ocasional y libre nombramiento' => [
@@ -554,6 +556,9 @@ test('tieneDocumentoImprimible() cubre todo acto formal, que es todo lo que qued
         TipoMovimientoPersonal::SUBROGACION,
         TipoMovimientoPersonal::INGRESO,
         TipoMovimientoPersonal::RESTITUCION,
+        // El inicio del período de una autoridad (4.1): su instrumento le quita
+        // el documento, no el tipo.
+        TipoMovimientoPersonal::INICIO_PERIODO,
     ];
 
     // La bitácora del expediente —novedad de contrato, cambio de puesto,

@@ -289,14 +289,24 @@ class MovimientoPersonalStateService
         // contrato, la resolución y la remuneración pactada.
         $this->aplicarDatosVinculo($movimiento, $datos);
 
+        // El período anterior de la autoridad reelegida que ya terminó y el
+        // comando todavía no cerró: se cierra antes, y antes de tomar número,
+        // porque su fin lleva el suyo (fase 4.1).
+        if ($movimiento->tipo_movimiento === TipoMovimientoPersonal::INICIO_PERIODO && $movimiento->rigeEn(now()->toDateString())) {
+            app(AutoridadElectaService::class)->cerrarPeriodosTerminados(now()->toDateString(), $movimiento->servidor_id);
+        }
+
         $this->validarDatosPropuestos($movimiento);
         $this->validarDictamenMedico($movimiento);
 
         // El registro del contrato lleva el número del contrato, no el
-        // correlativo AP, que solo cuenta acciones de personal (fase 2.7).
-        $movimiento->codigo_registro = $movimiento->esRegistroDeContrato()
-            ? $this->numeroDelRegistroDeContrato($movimiento)
-            : $this->generarCodigoRegistro();
+        // correlativo AP, que solo cuenta acciones de personal (fase 2.7). El
+        // acto de autoridad lleva el suyo, AU [TH 6; fase 4.1].
+        $movimiento->codigo_registro = match ($movimiento->instrumento ?? InstrumentoActo::ACCION_PERSONAL) {
+            InstrumentoActo::REGISTRO_CONTRATO => $this->numeroDelRegistroDeContrato($movimiento),
+            InstrumentoActo::ACTO_AUTORIDAD    => $this->generarCodigoRegistro('AU'),
+            default                            => $this->generarCodigoRegistro(),
+        };
         $movimiento->fecha_registro  = now()->toDateString();
 
         /*
@@ -318,7 +328,14 @@ class MovimientoPersonalStateService
             // Antes, lo que ya debía regir para este servidor y el comando aún
             // no aplicó: la cesación va antes que el ingreso que la sigue. Si
             // algo de eso falla, este registro no sigue sobre un vínculo a medias.
-            $previas = $this->aplicarVigentes($hoy, $movimiento->servidor_id, $movimiento->id);
+            //
+            // Solo lo que rige hasta el día de esta, no hasta hoy: lo de después
+            // puede depender de ella. El fin de un período que se registra el
+            // día siguiente no puede esperar al período nuevo, que lo necesita
+            // cerrado (fase 4.1).
+            $previas = $this->aplicarVigentes(
+                min($hoy, $movimiento->fecha_efectiva->toDateString()), $movimiento->servidor_id, $movimiento->id,
+            );
 
             if ($previas['fallidas'] !== []) {
                 throw new ReglaNegocioException(
@@ -1072,6 +1089,12 @@ class MovimientoPersonalStateService
             return;
         }
 
+        // La autoridad reelegida: su período actual termina antes de que
+        // empiece el nuevo, y ese día se cierra solo [TH 4; fase 4.1].
+        if (AutoridadElectaService::esReeleccion($servidor->contratoVigente, $movimiento)) {
+            return;
+        }
+
         // El ganador interno: la cesación del puesto actual ya está registrada y rige
         // a más tardar el día en que rige este ingreso. El vínculo se cierra
         // antes de que este nazca (`aplicarVigentes()` aplica los cierres
@@ -1363,7 +1386,7 @@ class MovimientoPersonalStateService
         return $numero;
     }
 
-    private function generarCodigoRegistro(): string
+    private function generarCodigoRegistro(string $prefijo = 'AP'): string
     {
         $anio = now()->year;
 
@@ -1380,7 +1403,7 @@ class MovimientoPersonalStateService
         // Postgres no permite FOR UPDATE junto a un agregado, así que se
         // ordena y se toma la primera fila, bloqueándola.
         $ultimo = DB::table('movimientos_personal')
-            ->where('codigo_registro', 'like', "AP-{$anio}-%")
+            ->where('codigo_registro', 'like', "{$prefijo}-{$anio}-%")
             ->orderByDesc('codigo_registro')
             ->lockForUpdate()
             ->value('codigo_registro');
@@ -1389,6 +1412,6 @@ class MovimientoPersonalStateService
         // lexicográfico es también el mayor numérico.
         $correlativo = $ultimo ? (int) substr($ultimo, -4) : 0;
 
-        return sprintf('AP-%d-%04d', $anio, $correlativo + 1);
+        return sprintf('%s-%d-%04d', $prefijo, $anio, $correlativo + 1);
     }
 }

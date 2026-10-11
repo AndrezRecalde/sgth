@@ -965,7 +965,13 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
    - El ascenso y su reintegro ponen al día la copia del nombramiento en el servidor, que el expediente filtra y exporta, como ya lo hace el definitivo desde su arreglo en la 3.2.
 
 **Fase 4 — Bloques por régimen**
-1. Autoridades electas (9.14).
+1. Autoridades electas (9.14). Partida en dos PRs: 4.1, el período, y 4.1b, las ausencias y la subrogación por ley.
+   - Instrumento `acto_autoridad`, con numeración propia `AU-AAAA-NNNN` [TH 6], sin firmantes, sin notificación y sin el documento del Ministerio (`InstrumentoActo::para`). Todo acto de quien tiene elección popular vigente es acto de autoridad, incluida la licencia «según su régimen». Lo ya registrado conserva su número AP. La constancia impresa queda para la 4.1b.
+   - Tipo y clase `inicio_periodo` (crea el vínculo; familia Ingreso). Pide la credencial del CNE (número y fecha) y la fecha de fin del período; el acta de posesión es opcional [TH 2]. Rige desde la posesión, dura hasta cuatro años, el número del vínculo es el de la credencial y la remuneración, la de la escala del puesto. No lleva ficha médica ni marcación [TH 5]. Al ingreso ya no se le propone la elección popular.
+   - La elección popular deja de ocupar plaza (`TipoNombramiento::ocupaPlaza`): el saliente y el entrante coinciden el día del cambio.
+   - Reelección [TH 4]: el inicio nuevo se admite sobre el vínculo vigente si este termina antes; el registro, o el comando, cierra primero el período anterior, y la antigüedad sigue continua. Lo que se aplica antes de registrar un acto llega hasta su fecha, no hasta hoy, porque lo posterior puede depender de él.
+   - Cese: causales propias en Cesación (revocatoria del mandato, Constitución Art. 105; remoción por el Consejo, COOTAD 333–336), más la renuncia y el fallecimiento, todas con documento de origen en «Número de resolución». El «fin del período» lo registra solo el comando diario al día siguiente de terminar [TH 1], con la fecha en que terminó.
+   - Pestaña «Autoridades electas» en Acciones de Personal: el período, los días que le quedan, el acto de inicio, el cese en curso o la reelección, y «Fijar el fin del período» para la autoridad que no lo tiene. Esto último queda en la bitácora del vínculo (`fin_del_periodo_fijado`), sin acto.
 2. Servicios Profesionales como contrato civil (9.10).
 3. Obreros: contrato, adenda y hoja de registro interno; cambio de ocupación y de lugar; incremento individual. Depende del firmante por el empleador y del formato del registro.
 4. Obreros: sanciones con el catálogo del reglamento interno; visto bueno y aviso a Financiero con el registro interno. Depende del reglamento interno.

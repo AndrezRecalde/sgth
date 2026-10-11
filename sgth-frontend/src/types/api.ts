@@ -817,6 +817,10 @@ export type MovimientoPersonal = {
   supuesto_provisional_etiqueta?: string | null
   acta_concurso_numero?: string | null
   acta_concurso_fecha?: string | null
+  // El inicio del período de una autoridad electa (fase 4.1).
+  credencial_cne_numero?: string | null
+  credencial_cne_fecha?: string | null
+  acta_posesion_numero?: string | null
   // La sentencia de una restitución (fase 2.6).
   causa_judicial_numero?: string | null
   unidad_judicial?: string | null

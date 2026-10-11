@@ -77,6 +77,13 @@ export function AccionRespaldos({ m }: { m: MovimientoPersonal }) {
                   value: m.informe_uath_numero,
                 }]
               : []),
+            // La credencial y la posesión de una autoridad (fase 4.1).
+            ...(m.credencial_cne_numero
+              ? [{ label: 'Credencial del CNE', value: `${m.credencial_cne_numero} · ${formatFecha(m.credencial_cne_fecha)}` }]
+              : []),
+            ...(m.acta_posesion_numero
+              ? [{ label: 'Acta de posesión', value: m.acta_posesion_numero }]
+              : []),
             // El acta del ascenso, que no es ingreso (fase 3.3).
             ...(!esIngreso && m.acta_concurso_numero
               ? [{ label: 'Acta del concurso', value: `${m.acta_concurso_numero} · ${formatFecha(m.acta_concurso_fecha)}` }]

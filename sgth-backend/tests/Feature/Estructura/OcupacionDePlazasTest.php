@@ -93,6 +93,9 @@ test('el predicado y la lista para SQL dicen lo mismo', function () {
     expect($sinPlaza)->toEqualCanonicalizing([
         TipoNombramiento::SERVICIOS_PROFESIONALES->value,
         TipoNombramiento::SERVICIOS_OCASIONALES->value,
+        // El Prefecto y el Viceprefecto no pasan por el control de plazas: el
+        // día del cambio coinciden el saliente y el entrante (fase 4.1).
+        TipoNombramiento::ELECCION_POPULAR->value,
     ]);
 });
 

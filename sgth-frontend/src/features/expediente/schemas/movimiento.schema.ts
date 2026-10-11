@@ -42,6 +42,10 @@ const camposDelFormulario = z.object({
   supuesto_provisional_propuesto: z.string().optional().nullable(),
   acta_concurso_numero: z.string().max(100).optional().nullable(),
   acta_concurso_fecha: z.string().optional().nullable(),
+  // El inicio del período de una autoridad electa (fase 4.1).
+  credencial_cne_numero: z.string().max(100).optional().nullable(),
+  credencial_cne_fecha: z.string().optional().nullable(),
+  acta_posesion_numero: z.string().max(100).optional().nullable(),
   numero_contrato: z.string().max(100).optional().nullable(),
   fecha_fin_propuesta: z.string().optional().nullable(),
   puede_marcar: z.boolean().optional().nullable(),
@@ -102,6 +106,31 @@ export function crearMovimientoSchema(
           message: `La ${clase.etiqueta} requiere fecha de fin`,
         })
       }
+    }
+
+    // La autoridad electa empieza con la credencial del CNE, y el período
+    // termina en su fecha (fase 4.1). Que no pase de cuatro años lo dice el
+    // backend.
+    if (clase.pide_datos_del_periodo) {
+      if (!data.credencial_cne_numero?.trim()) {
+        ctx.addIssue({ path: ['credencial_cne_numero'], code: 'custom', message: 'Indique el número de la credencial del CNE' })
+      }
+      if (!data.credencial_cne_fecha) {
+        ctx.addIssue({ path: ['credencial_cne_fecha'], code: 'custom', message: 'Indique la fecha de la credencial' })
+      }
+      if (!data.fecha_fin_propuesta) {
+        ctx.addIssue({ path: ['fecha_fin_propuesta'], code: 'custom', message: 'Indique cuándo termina el período' })
+      } else if (data.fecha_efectiva && data.fecha_fin_propuesta <= data.fecha_efectiva) {
+        ctx.addIssue({ path: ['fecha_fin_propuesta'], code: 'custom', message: 'El período termina después de empezar' })
+      }
+    }
+
+    // El cese de una autoridad lleva su documento de origen (fase 4.1).
+    if (esActoDeAutoridad(clase, tipoNombramiento) && clase.causales.length > 0 && !data.resolucion_numero?.trim()) {
+      ctx.addIssue({
+        path: ['resolucion_numero'], code: 'custom',
+        message: 'Indique el documento de origen: resultado del CNE, resolución del Consejo, renuncia aceptada o partida de defunción',
+      })
     }
 
     // El ascenso se gana en concurso: trae el acta (LOSEP Art. 68; fase 3.3).
@@ -202,6 +231,21 @@ export function crearMovimientoSchema(
       })
     }
   })
+}
+
+/**
+ * ¿Es un acto de autoridad electa (fase 4.1)? Sin acción de personal ni
+ * firmantes. Lo responde el catálogo: el inicio del período siempre, y el resto
+ * de clases según el nombramiento vigente.
+ */
+export function esActoDeAutoridad(
+  clase: ClaseDelCatalogo | undefined,
+  tipoNombramiento?: string | null,
+): boolean {
+  if (!clase) return false
+  if (clase.pide_datos_del_periodo) return true
+
+  return !!tipoNombramiento && clase.acto_de_autoridad_para.some((n) => n === tipoNombramiento)
 }
 
 /** ¿El traslado de este servidor pide el informe de la UATH? Lo responde el catálogo. */

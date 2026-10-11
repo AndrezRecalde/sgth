@@ -99,13 +99,16 @@ enum TipoNombramiento: string
      * —permanente, provisional, libre nombramiento, elección popular— y los
      * obreros del Código del Trabajo, que tienen sus propios puestos.
      *
-     * No la ocupan dos modalidades, por motivos distintos:
+     * No la ocupan tres modalidades, por motivos distintos:
      *
      *  - **Servicios Profesionales**: contrato civil, sin relación de
      *    dependencia. No hay plaza que ocupar.
      *  - **Servicios Ocasionales**: se financian con gasto corriente y no toman
      *    una plaza del distributivo permanente, así que el puesto sigue vacante
      *    para concurso mientras dure el contrato.
+     *  - **Elección Popular** (fase 4.1): el Prefecto y el Viceprefecto no
+     *    pasan por el control de plazas. El día del cambio de autoridades el
+     *    saliente y el entrante coinciden (diseño, 9.14).
      *
      * Ambas SÍ se asignan a un puesto —de ahí salen las funciones, el EPP y el
      * puesto de la ficha médica ocupacional—, pero no descuentan de `plazas`.
@@ -120,6 +123,7 @@ enum TipoNombramiento: string
         return ! in_array($this, [
             self::SERVICIOS_PROFESIONALES,
             self::SERVICIOS_OCASIONALES,
+            self::ELECCION_POPULAR,
         ], true);
     }
 

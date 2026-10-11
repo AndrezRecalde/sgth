@@ -49,6 +49,11 @@ enum SubtipoMovimientoPersonal: string
     case RETIRO_VOLUNTARIO          = 'retiro_voluntario';
     case PERDIDA_DERECHOS           = 'perdida_derechos_ciudadania';
     case FALLECIMIENTO              = 'fallecimiento';
+    // Las de las autoridades electas (diseño, 9.14; fase 4.1). El fin del
+    // período lo registra el sistema en su fecha [TH 1].
+    case FIN_DEL_PERIODO            = 'fin_del_periodo';
+    case REVOCATORIA_DEL_MANDATO    = 'revocatoria_del_mandato';
+    case REMOCION_POR_EL_CONSEJO    = 'remocion_por_el_consejo';
 
     // ── Licencia sin remuneración ────────────────────────────
     // Las causales de LOSEP Art. 28 (diseño, 4.4; fase 2.2), con su tope. Solo
@@ -91,6 +96,9 @@ enum SubtipoMovimientoPersonal: string
             self::RETIRO_VOLUNTARIO          => 'Retiro voluntario o compra de renuncia',
             self::PERDIDA_DERECHOS           => 'Pérdida de los derechos de ciudadanía',
             self::FALLECIMIENTO              => 'Fallecimiento',
+            self::FIN_DEL_PERIODO            => 'Fin del período',
+            self::REVOCATORIA_DEL_MANDATO    => 'Revocatoria del mandato',
+            self::REMOCION_POR_EL_CONSEJO    => 'Remoción por el Consejo Provincial',
             self::ASUNTOS_PARTICULARES       => 'Asuntos particulares',
             self::ESTUDIOS_POSGRADO          => 'Estudios de posgrado',
             self::SERVICIO_MILITAR           => 'Servicio militar',
@@ -122,6 +130,8 @@ enum SubtipoMovimientoPersonal: string
             self::PERDIDA_DERECHOS           => 'LOSEP Art. 47 d',
             self::FALLECIMIENTO              => 'LOSEP Art. 47 l',
             self::VISTO_BUENO                => 'Código del Trabajo Art. 172',
+            self::REVOCATORIA_DEL_MANDATO    => 'Constitución Art. 105',
+            self::REMOCION_POR_EL_CONSEJO    => 'COOTAD Arts. 333–336',
             self::ASUNTOS_PARTICULARES       => 'LOSEP Art. 28 a',
             self::ESTUDIOS_POSGRADO          => 'LOSEP Art. 28 b',
             self::SERVICIO_MILITAR           => 'LOSEP Art. 28 c',
@@ -143,8 +153,10 @@ enum SubtipoMovimientoPersonal: string
      */
     public function seRegistraDesdeElFormulario(): bool
     {
-        // Tampoco las sanciones (fase 2.5): las impone el sumario.
+        // Tampoco las sanciones (fase 2.5): las impone el sumario. Ni el fin
+        // del período de una autoridad, que lo registra el sistema (fase 4.1).
         return ! in_array($this, [
+            self::FIN_DEL_PERIODO,
             self::DESTITUCION,
             self::VISTO_BUENO,
             self::AMONESTACION_ESCRITA,
@@ -216,12 +228,20 @@ enum SubtipoMovimientoPersonal: string
             self::AMONESTACION_ESCRITA,
             self::SUSPENSION_SIN_REMUNERACION => $conSancionYCesacionLosep,
 
-            self::RENUNCIA,
             self::DESTITUCION,
             self::JUBILACION,
             self::INCAPACIDAD,
-            self::PERDIDA_DERECHOS,
-            self::FALLECIMIENTO => $conSancionYCesacionLosep,
+            self::PERDIDA_DERECHOS => $conSancionYCesacionLosep,
+
+            // La renuncia y el fallecimiento también cierran el período de una
+            // autoridad electa (diseño, 9.14; fase 4.1).
+            self::RENUNCIA,
+            self::FALLECIMIENTO => [...$conSancionYCesacionLosep, TipoNombramiento::ELECCION_POPULAR],
+
+            // Las propias de la autoridad electa.
+            self::FIN_DEL_PERIODO,
+            self::REVOCATORIA_DEL_MANDATO,
+            self::REMOCION_POR_EL_CONSEJO => [TipoNombramiento::ELECCION_POPULAR],
 
             // La remoción es del provisional cuyo supuesto terminó y del de
             // libre nombramiento (LOSEP 47 e; Reg. 105; TH 8).

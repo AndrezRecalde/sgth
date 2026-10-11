@@ -44,10 +44,15 @@ class ClaseAccionPersonalResource extends JsonResource
             'pide_contratacion'           => $clase->pideContratacion(),
             // El acta final del concurso: la pide el ascenso (fase 3.3).
             'pide_acta_concurso'          => $clase->pideActaConcurso(),
+            // La credencial, la posesión y el fin del período (fase 4.1).
+            'pide_datos_del_periodo'      => $clase->pideDatosDelPeriodo(),
             // Con estos nombramientos no es acción sino registro del contrato
             // (fase 2.7): el formulario no pide firmantes.
             /** @var list<TipoNombramiento> */
             'registro_de_contrato_para'   => InstrumentoActo::nombramientosConRegistroDeContrato($clase),
+            // Y con estos es acto de autoridad electa (fase 4.1): tampoco firma nadie.
+            /** @var list<TipoNombramiento> */
+            'acto_de_autoridad_para'      => InstrumentoActo::nombramientosConActoDeAutoridad($clase),
             'dictamen_medico_por_defecto' => $clase->dictamenMedicoPorDefecto(),
             'aviso'                       => $clase->aviso(),
         ];

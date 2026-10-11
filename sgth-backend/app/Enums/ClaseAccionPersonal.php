@@ -46,6 +46,7 @@ enum ClaseAccionPersonal: string
     case RESTITUCION               = 'restitucion';
     case NOMBRAMIENTO_DEFINITIVO   = 'nombramiento_definitivo';
     case ASCENSO                   = 'ascenso';
+    case INICIO_PERIODO            = 'inicio_periodo';
 
     public function etiqueta(): string
     {
@@ -66,6 +67,7 @@ enum ClaseAccionPersonal: string
             self::RESTITUCION               => 'Restitución',
             self::NOMBRAMIENTO_DEFINITIVO   => 'Nombramiento Definitivo',
             self::ASCENSO                   => 'Ascenso',
+            self::INICIO_PERIODO            => 'Inicio del Período',
         };
     }
 
@@ -75,7 +77,8 @@ enum ClaseAccionPersonal: string
             self::INGRESO,
             self::REINTEGRO,
             self::RESTITUCION,
-            self::NOMBRAMIENTO_DEFINITIVO => FamiliaAccionPersonal::INGRESO,
+            self::NOMBRAMIENTO_DEFINITIVO,
+            self::INICIO_PERIODO => FamiliaAccionPersonal::INGRESO,
 
             self::TRASLADO,
             self::ASCENSO,
@@ -128,8 +131,9 @@ enum ClaseAccionPersonal: string
     public function requiereVinculo(): bool
     {
         // Quien vuelve por sentencia tampoco tiene vínculo: la cesación lo
-        // cerró (fase 2.6).
-        return ! in_array($this, [self::INGRESO, self::RESTITUCION], true);
+        // cerró (fase 2.6). Ni la autoridad electa que empieza su primer
+        // período (fase 4.1); la reelegida sí lo tiene, el que termina.
+        return ! in_array($this, [self::INGRESO, self::RESTITUCION, self::INICIO_PERIODO], true);
     }
 
     /**
@@ -183,8 +187,15 @@ enum ClaseAccionPersonal: string
         TipoNombramiento $nombramiento,
         ?SubtipoMovimientoPersonal $causal = null
     ): bool {
-        if (! $this->requiereVinculo() || ! $this->seCreaDesdeElFormulario()) {
+        if (! $this->seCreaDesdeElFormulario()) {
             return false;
+        }
+
+        // Sin vínculo, la clase no depende del nombramiento. La única que se le
+        // registra también a quien tiene uno es el inicio del período: la
+        // autoridad reelegida (fase 4.1).
+        if (! $this->requiereVinculo()) {
+            return $this === self::INICIO_PERIODO && $nombramiento === TipoNombramiento::ELECCION_POPULAR;
         }
 
         if ($this->requiereCausal()) {
@@ -270,6 +281,7 @@ enum ClaseAccionPersonal: string
             self::RESTITUCION => [TipoMovimientoPersonal::RESTITUCION, null],
             self::NOMBRAMIENTO_DEFINITIVO => [TipoMovimientoPersonal::NOMBRAMIENTO_DEFINITIVO, null],
             self::ASCENSO => [TipoMovimientoPersonal::ASCENSO, null],
+            self::INICIO_PERIODO => [TipoMovimientoPersonal::INICIO_PERIODO, null],
         };
     }
 
@@ -326,6 +338,7 @@ enum ClaseAccionPersonal: string
                 TipoMovimientoPersonal::RESTITUCION               => self::RESTITUCION,
                 TipoMovimientoPersonal::NOMBRAMIENTO_DEFINITIVO   => self::NOMBRAMIENTO_DEFINITIVO,
                 TipoMovimientoPersonal::ASCENSO                   => self::ASCENSO,
+                TipoMovimientoPersonal::INICIO_PERIODO            => self::INICIO_PERIODO,
                 default                                           => null,
             },
         };
@@ -340,7 +353,16 @@ enum ClaseAccionPersonal: string
      */
     public function pideSituacionPropuesta(): bool
     {
-        return in_array($this, [self::INGRESO, self::TRASLADO, self::ASCENSO], true);
+        return in_array($this, [self::INGRESO, self::TRASLADO, self::ASCENSO, self::INICIO_PERIODO], true);
+    }
+
+    /**
+     * La credencial del CNE, el acta de posesión y el fin del período: los
+     * pide el inicio del período de una autoridad electa [TH 2; fase 4.1].
+     */
+    public function pideDatosDelPeriodo(): bool
+    {
+        return $this === self::INICIO_PERIODO;
     }
 
     /**
@@ -466,6 +488,11 @@ enum ClaseAccionPersonal: string
                     .'Entra con nombramiento provisional de prueba por seis meses y su puesto queda reservado: '
                     .'si no supera la prueba, vuelve a él con su remuneración anterior (Art. 17 b.5). '
                     .'A los 65 años ya no se asciende (Art. 81).',
+            $this === self::INICIO_PERIODO =>
+                'Del Prefecto o el Viceprefecto electos: rige desde la posesión, con la credencial del CNE, y se '
+                    .'cierra solo al terminar el período, de hasta cuatro años. Si fue reelegido, el período nuevo '
+                    .'empieza cuando termina el anterior, sin cortar su antigüedad. No lleva acción de personal ni '
+                    .'firmantes.',
             $this === self::RESTITUCION =>
                 'Por sentencia ejecutoriada (LOSEP Art. 46): deja sin efecto la cesación que cerró '
                     .'su último nombramiento permanente y lo devuelve al mismo puesto, sin perder la '

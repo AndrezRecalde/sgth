@@ -129,6 +129,8 @@ test('el catálogo trae todas las familias y todas las clases, con su familia', 
             'terminacion_unilateral', 'mutuo_acuerdo', 'evaluacion_insuficiente', 'jubilacion',
             'retiro_voluntario', 'incapacidad', 'perdida_derechos_ciudadania', 'fallecimiento',
             'contrato_finalizado',
+            // Las de la autoridad electa (4.1); el fin del período lo pone el sistema.
+            'revocatoria_del_mandato', 'remocion_por_el_consejo',
         ])
         // El dictamen médico abre marcado en las dos causales que son
         // determinaciones médicas, igual que antes.
@@ -164,9 +166,10 @@ test('cada clase aplica exactamente a los nombramientos de antes', function () {
         // Sin obreros desde la fase 2.1: su única causal era el visto bueno,
         // que ya no se elige en el formulario —lo crea Disciplinario—. Sus
         // terminaciones propias llegan con el bloque del Código del Trabajo.
+        // Y las autoridades electas desde la fase 4.1, con sus causales.
         'cesacion' => [
             'nombramiento_permanente', 'nombramiento_provisional', 'servicios_ocasionales',
-            'libre_nombramiento_remocion', 'servicios_profesionales',
+            'libre_nombramiento_remocion', 'servicios_profesionales', 'eleccion_popular',
         ],
         // El ingreso no depende del nombramiento: se registra a quien no tiene
         // vínculo. Y la subrogación, el encargo, el reintegro (fase 2.4) y la
@@ -183,6 +186,9 @@ test('cada clase aplica exactamente a los nombramientos de antes', function () {
         'nombramiento_definitivo' => [],
         // El servidor de carrera (3.3).
         'ascenso' => ['nombramiento_permanente'],
+        // La autoridad reelegida; la que empieza su primer período no tiene
+        // vínculo, como en el ingreso (4.1).
+        'inicio_periodo' => ['eleccion_popular'],
     ];
 
     foreach (ClaseAccionPersonal::cases() as $clase) {
@@ -226,6 +232,9 @@ test('lo que pide el formulario coincide con lo que la acción hace al registrar
             // La restitución crea el vínculo sin pedir puesto ni contratación:
             // vuelve al que tenía, con el mismo nombramiento (fase 2.6).
             $creaUnoNuevo = $tipo->creaVinculo() && $clase !== ClaseAccionPersonal::RESTITUCION;
+            // El inicio del período sí pide puesto, pero no contratación: el
+            // nombramiento es la elección y el número, la credencial (4.1).
+            $esInicioDePeriodo = $clase === ClaseAccionPersonal::INICIO_PERIODO;
 
             // El ascenso reubica también, con su propia regla (fase 3.3).
             expect($clase->pideSituacionPropuesta())
@@ -235,7 +244,7 @@ test('lo que pide el formulario coincide con lo que la acción hace al registrar
                 ->and($clase->pidePeriodo())
                 ->toBe($movimiento->esAusenciaTemporal(), "Período de «{$nombre}»")
                 ->and($clase->pideContratacion())
-                ->toBe($creaUnoNuevo, "Contratación de «{$nombre}»");
+                ->toBe($creaUnoNuevo && ! $esInicioDePeriodo, "Contratación de «{$nombre}»");
         }
     }
 });

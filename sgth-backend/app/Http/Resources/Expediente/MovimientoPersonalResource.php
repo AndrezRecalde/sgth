@@ -90,6 +90,10 @@ class MovimientoPersonalResource extends JsonResource
             'supuesto_provisional_etiqueta'  => $this->supuesto_provisional_propuesto?->etiqueta(),
             'acta_concurso_numero'        => $this->acta_concurso_numero,
             'acta_concurso_fecha'         => $this->acta_concurso_fecha,
+            // La credencial del CNE y el acta de posesión de una autoridad (fase 4.1).
+            'credencial_cne_numero'       => $this->credencial_cne_numero,
+            'credencial_cne_fecha'        => $this->credencial_cne_fecha,
+            'acta_posesion_numero'        => $this->acta_posesion_numero,
             'remuneracion_propuesta'      => $this->remuneracion_propuesta,
             'numero_contrato'             => $this->numero_contrato,
             'partida_presupuestaria_id'   => $this->partida_presupuestaria_id,

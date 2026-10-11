@@ -6,11 +6,12 @@ import { Controller, useWatch, type UseFormReturn } from 'react-hook-form'
 import { IconInfoCircle } from '@tabler/icons-react'
 import { SectionHeading } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { pideInformeUath, type MovimientoFormData } from '../schemas/movimiento.schema'
+import { esActoDeAutoridad, pideInformeUath, type MovimientoFormData } from '../schemas/movimiento.schema'
 import type { ClaseDelCatalogo } from '@/types/api'
 import { FirmantesPanel } from './FirmantesPanel'
 import { MovimientoDatosJudiciales } from './MovimientoDatosJudiciales'
 import { MovimientoActaConcurso } from './MovimientoActaConcurso'
+import { MovimientoDatosDelPeriodo } from './MovimientoDatosDelPeriodo'
 import { fromDateValue, fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 
 /**
@@ -43,6 +44,10 @@ export function MovimientoDatosDelActo({
   // contrato se firma aparte y aquí nadie firma.
   const esRegistroDeContrato = !!nombramiento
     && !!clase?.registro_de_contrato_para.some((n) => n === nombramiento)
+
+  // Al Prefecto y al Viceprefecto no se les emite acción de personal: el acto
+  // lleva su documento de origen y no lo firma nadie (fase 4.1).
+  const actoDeAutoridad = esActoDeAutoridad(clase, tipoNombramiento)
 
   const muestraFechas = !!clase?.pide_periodo
   const pideInstitucion = !!clase?.pide_institucion_destino
@@ -140,6 +145,18 @@ export function MovimientoDatosDelActo({
 
       {clase?.pide_datos_judiciales && <MovimientoDatosJudiciales form={form} />}
 
+      {/* La autoridad electa empieza con la credencial del CNE (fase 4.1). */}
+      {clase?.pide_datos_del_periodo && (
+        <>
+          {clase.aviso && (
+            <Alert icon={<IconInfoCircle size={16} />} color="ocean" variant="light">
+              {clase.aviso}
+            </Alert>
+          )}
+          <MovimientoDatosDelPeriodo form={form} />
+        </>
+      )}
+
       {/* El ascenso se gana en concurso, y entra de prueba por seis meses con
           su puesto reservado (fase 3.3). */}
       {clase?.pide_acta_concurso && (
@@ -168,32 +185,46 @@ export function MovimientoDatosDelActo({
         />
       )}
 
+      {/* En el cese de una autoridad es su documento de origen (fase 4.1). */}
       <TextInput
-        label="Número de resolución"
-        placeholder="Opcional"
+        label={actoDeAutoridad && !clase?.pide_datos_del_periodo ? 'Documento de origen N.º' : 'Número de resolución'}
+        description={actoDeAutoridad && clase?.causales.length
+          ? 'El resultado del CNE, la resolución del Consejo Provincial, la renuncia aceptada o la partida de defunción.'
+          : undefined}
+        placeholder={actoDeAutoridad && clase?.causales.length ? undefined : 'Opcional'}
+        withAsterisk={actoDeAutoridad && !!clase?.causales.length}
         error={errors.resolucion_numero?.message}
         {...contained}
         {...register('resolucion_numero')}
       />
 
-      <Controller
-        name="requiere_dictamen_medico"
-        control={control}
-        render={({ field }) => (
-          <Switch
-            label="Requiere ficha de salud ocupacional"
-            description="Si se marca, no podrá registrarse sin dictamen de aptitud del dispensario."
-            checked={!!field.value}
-            onChange={(e) => field.onChange(e.currentTarget.checked)}
-          />
-        )}
-      />
+      {/* Las autoridades electas no pasan por la ficha médica [TH 5; fase 4.1]. */}
+      {!actoDeAutoridad && (
+        <Controller
+          name="requiere_dictamen_medico"
+          control={control}
+          render={({ field }) => (
+            <Switch
+              label="Requiere ficha de salud ocupacional"
+              description="Si se marca, no podrá registrarse sin dictamen de aptitud del dispensario."
+              checked={!!field.value}
+              onChange={(e) => field.onChange(e.currentTarget.checked)}
+            />
+          )}
+        />
+      )}
 
       {esRegistroDeContrato ? (
         <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
           El ingreso de un ocasional no lleva acción de personal (LOSEP Art. 18;
           Reglamento Art. 19): es el registro de su contrato, con su número. El
           contrato se firma aparte, así que aquí no hay firmantes ni documento.
+        </Alert>
+      ) : actoDeAutoridad ? (
+        <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
+          A una autoridad electa no se le emite acción de personal: ninguno de sus
+          actos nace de una autoridad nominadora. Se registra con su documento de
+          origen y su propia numeración (AU), sin firmantes.
         </Alert>
       ) : (
         <>

@@ -70,6 +70,10 @@ class StoreMovimientoPersonalRequest extends FormRequest
             'supuesto_provisional_propuesto' => 'nullable|string|in:suspendido_o_destituido,puesto_vacante,nivel_jerarquico_superior,de_prueba',
             'acta_concurso_numero'  => 'nullable|string|max:100',
             'acta_concurso_fecha'   => 'nullable|date|before_or_equal:today',
+            // El inicio del período de una autoridad electa (fase 4.1).
+            'credencial_cne_numero' => 'nullable|string|max:100',
+            'credencial_cne_fecha'  => 'nullable|date|before_or_equal:today',
+            'acta_posesion_numero'  => 'nullable|string|max:100',
             'causa_judicial_numero' => 'nullable|string|max:100',
             'unidad_judicial'       => 'nullable|string|max:255',
             'fecha_sentencia'       => 'nullable|date',

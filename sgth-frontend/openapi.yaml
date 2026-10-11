@@ -3716,6 +3716,305 @@
                 }
             }
         },
+        "/v1/expediente/autoridades-electas": {
+            "get": {
+                "operationId": "autoridadElecta.index",
+                "tags": [
+                    "AutoridadElecta"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Autoridades electas en funciones."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "contrato_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "servidor": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "nombre": {
+                                                                "type": "string"
+                                                            },
+                                                            "cedula": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "nombre",
+                                                            "cedula"
+                                                        ]
+                                                    },
+                                                    "dignidad": {
+                                                        "type": "string"
+                                                    },
+                                                    "unidad": {
+                                                        "type": "string"
+                                                    },
+                                                    "desde": {
+                                                        "type": "string"
+                                                    },
+                                                    "hasta": {
+                                                        "type": "string"
+                                                    },
+                                                    "dias_restantes": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "credencial": {
+                                                        "type": "string"
+                                                    },
+                                                    "inicio": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "estado": {
+                                                                "type": "string"
+                                                            },
+                                                            "codigo_registro": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "fecha_efectiva": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "estado",
+                                                            "codigo_registro",
+                                                            "fecha_efectiva"
+                                                        ]
+                                                    },
+                                                    "puede_fijar_fin": {
+                                                        "type": "string",
+                                                        "description": "El fin lo puede fijar Talento Humano si no lo dice un acto."
+                                                    },
+                                                    "cese": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "properties": {
+                                                            "": {
+                                                                "type": [
+                                                                    "object",
+                                                                    "null"
+                                                                ],
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "estado": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "codigo_registro": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "fecha_efectiva": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "id",
+                                                                    "estado",
+                                                                    "codigo_registro",
+                                                                    "fecha_efectiva"
+                                                                ]
+                                                            },
+                                                            "causal": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            null,
+                                                            "causal"
+                                                        ]
+                                                    },
+                                                    "siguiente": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "estado": {
+                                                                "type": "string"
+                                                            },
+                                                            "codigo_registro": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "fecha_efectiva": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "estado",
+                                                            "codigo_registro",
+                                                            "fecha_efectiva"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "contrato_id",
+                                                    "servidor",
+                                                    "dignidad",
+                                                    "unidad",
+                                                    "desde",
+                                                    "hasta",
+                                                    "dias_restantes",
+                                                    "credencial",
+                                                    "inicio",
+                                                    "puede_fijar_fin",
+                                                    "cese",
+                                                    "siguiente"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/contratos/{contrato}/fin-del-periodo": {
+            "post": {
+                "operationId": "autoridadElecta.fijarFinDelPeriodo",
+                "summary": "Fija el fin del per\u00edodo de una autoridad que no lo tiene",
+                "tags": [
+                    "AutoridadElecta"
+                ],
+                "parameters": [
+                    {
+                        "name": "contrato",
+                        "in": "path",
+                        "required": true,
+                        "description": "The contrato ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FijarFinDelPeriodoRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Fin del per\u00edodo fijado: ese d\u00eda el v\u00ednculo se cierra solo."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "contrato_id": {
+                                                    "type": "integer"
+                                                },
+                                                "fecha_fin": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "contrato_id",
+                                                "fecha_fin"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/v1/viaticos/vuelos": {
             "get": {
                 "operationId": "autorizacionVuelo.index",
@@ -9765,6 +10064,7 @@
                                                                         "Fin anticipado de subrogaci\u00f3n o encargo",
                                                                         "Cancelaci\u00f3n de subrogaci\u00f3n o encargo",
                                                                         "El titular al que cubr\u00eda ces\u00f3",
+                                                                        "Fin del per\u00edodo fijado",
                                                                         "Cambio de puesto",
                                                                         "Cambio de r\u00e9gimen",
                                                                         "Egreso"
@@ -44995,6 +45295,9 @@
                             "Retiro voluntario o compra de renuncia",
                             "P\u00e9rdida de los derechos de ciudadan\u00eda",
                             "Fallecimiento",
+                            "Fin del per\u00edodo",
+                            "Revocatoria del mandato",
+                            "Remoci\u00f3n por el Consejo Provincial",
                             "Asuntos particulares",
                             "Estudios de posgrado",
                             "Servicio militar",
@@ -45024,6 +45327,8 @@
                             "LOSEP Art. 47 d",
                             "LOSEP Art. 47 l",
                             "C\u00f3digo del Trabajo Art. 172",
+                            "Constituci\u00f3n Art. 105",
+                            "COOTAD Arts. 333\u2013336",
                             "LOSEP Art. 28 a",
                             "LOSEP Art. 28 b",
                             "LOSEP Art. 28 c",
@@ -45406,7 +45711,8 @@
                     "reintegro",
                     "restitucion",
                     "nombramiento_definitivo",
-                    "ascenso"
+                    "ascenso",
+                    "inicio_periodo"
                 ],
                 "title": "ClaseAccionPersonal"
             },
@@ -45434,7 +45740,8 @@
                             "Reintegro",
                             "Restituci\u00f3n",
                             "Nombramiento Definitivo",
-                            "Ascenso"
+                            "Ascenso",
+                            "Inicio del Per\u00edodo"
                         ]
                     },
                     "familia": {
@@ -45486,7 +45793,17 @@
                         "type": "boolean",
                         "description": "El acta final del concurso: la pide el ascenso (fase 3.3)."
                     },
+                    "pide_datos_del_periodo": {
+                        "type": "boolean",
+                        "description": "La credencial, la posesi\u00f3n y el fin del per\u00edodo (fase 4.1)."
+                    },
                     "registro_de_contrato_para": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TipoNombramiento"
+                        }
+                    },
+                    "acto_de_autoridad_para": {
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/TipoNombramiento"
@@ -45518,7 +45835,9 @@
                     "pide_informe_uath_para",
                     "pide_contratacion",
                     "pide_acta_concurso",
+                    "pide_datos_del_periodo",
                     "registro_de_contrato_para",
+                    "acto_de_autoridad_para",
                     "dictamen_medico_por_defecto",
                     "aviso"
                 ],
@@ -48728,6 +49047,20 @@
                 ],
                 "title": "FichaSaludOcupacional"
             },
+            "FijarFinDelPeriodoRequest": {
+                "type": "object",
+                "description": "El fin del per\u00edodo de una autoridad electa que no lo tiene (fase 4.1). Que no\npase de cuatro a\u00f1os lo valida AutoridadElectaService, que conoce el inicio.",
+                "properties": {
+                    "fecha_fin": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "fecha_fin"
+                ],
+                "title": "FijarFinDelPeriodoRequest"
+            },
             "GravedadAccidente": {
                 "type": "string",
                 "description": "Gravedad de un accidente de trabajo. La columna naci\u00f3 como texto libre (`string, 50`) y los Form Requests la validaban igual \u2014`['required','string','max:50']`\u2014, as\u00ed que el API aceptaba cualquier cosa: la tabla pintaba lo que llegara y el mapa de tonos le daba el neutro a lo que no reconoc\u00eda. Los cuatro valores son los que el formulario ofrece desde siempre.  NOTA: el modelo todav\u00eda NO castea esta columna a enum. Las filas anteriores a esta validaci\u00f3n pueden tener cualquier texto, y un cast har\u00eda reventar la lectura del listado entero con un `ValueError` por una sola fila rara. Normalizar lo que haya \u2014y reci\u00e9n entonces castear\u2014 necesita mirar los datos reales de producci\u00f3n, que es una decisi\u00f3n de Talento Humano y no del c\u00f3digo.\n",
@@ -49435,10 +49768,11 @@
             },
             "InstrumentoActo": {
                 "type": "string",
-                "description": "Con qu\u00e9 documento se formaliza un acto (dise\u00f1o de Acciones de Personal, 8.1). Todos comparten el registro, el historial y el motor de efectos; cambian la numeraci\u00f3n, el documento y qui\u00e9n firma. Llegan de uno en uno, con su bloque. El primero distinto de la acci\u00f3n de personal es el registro del contrato de un ocasional (fase 2.7; TH N7): la ley no le pide acci\u00f3n a ese ingreso (LOSEP 18, \u00faltimo inciso; Reglamento 19). Los de obreros, profesionales y autoridades electas vendr\u00e1n con los suyos.\n",
+                "description": "Con qu\u00e9 documento se formaliza un acto (dise\u00f1o de Acciones de Personal, 8.1). Todos comparten el registro, el historial y el motor de efectos; cambian la numeraci\u00f3n, el documento y qui\u00e9n firma. Llegan de uno en uno, con su bloque. El primero distinto de la acci\u00f3n de personal es el registro del contrato de un ocasional (fase 2.7; TH N7): la ley no le pide acci\u00f3n a ese ingreso (LOSEP 18, \u00faltimo inciso; Reglamento 19). El segundo, el acto de autoridad (fase 4.1; TH 1\u20137): al Prefecto y al Viceprefecto no se les emite acci\u00f3n de personal, porque ninguno de sus actos nace de una autoridad nominadora; lleva el documento de origen \u2014la credencial del CNE, la resoluci\u00f3n del Consejo\u2014 y su propia numeraci\u00f3n. Los de obreros y profesionales vendr\u00e1n con los suyos.\n",
                 "enum": [
                     "accion_personal",
-                    "registro_contrato"
+                    "registro_contrato",
+                    "acto_autoridad"
                 ],
                 "title": "InstrumentoActo"
             },
@@ -49452,7 +49786,8 @@
                         "type": "string",
                         "enum": [
                             "Acci\u00f3n de personal",
-                            "Registro del contrato"
+                            "Registro del contrato",
+                            "Acto de autoridad electa"
                         ]
                     }
                 },
@@ -50265,6 +50600,25 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "credencial_cne_numero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "credencial_cne_fecha": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "acta_posesion_numero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -50333,7 +50687,10 @@
                     "informe_uath_numero",
                     "supuesto_provisional_propuesto",
                     "acta_concurso_numero",
-                    "acta_concurso_fecha"
+                    "acta_concurso_fecha",
+                    "credencial_cne_numero",
+                    "credencial_cne_fecha",
+                    "acta_posesion_numero"
                 ],
                 "title": "MovimientoPersonal"
             },
@@ -50562,6 +50919,26 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "credencial_cne_numero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "La credencial del CNE y el acta de posesi\u00f3n de una autoridad (fase 4.1)."
+                    },
+                    "credencial_cne_fecha": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "acta_posesion_numero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "remuneracion_propuesta": {
                         "type": [
@@ -51102,6 +51479,9 @@
                     "supuesto_provisional_etiqueta",
                     "acta_concurso_numero",
                     "acta_concurso_fecha",
+                    "credencial_cne_numero",
+                    "credencial_cne_fecha",
+                    "acta_posesion_numero",
                     "remuneracion_propuesta",
                     "numero_contrato",
                     "partida_presupuestaria_id",
@@ -56700,7 +57080,8 @@
                             "cambio_ocupacion",
                             "cesacion",
                             "restitucion",
-                            "ascenso"
+                            "ascenso",
+                            "inicio_periodo"
                         ]
                     },
                     "causal": {
@@ -56801,6 +57182,28 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "credencial_cne_numero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "El inicio del per\u00edodo de una autoridad electa (fase 4.1).",
+                        "maxLength": 100
+                    },
+                    "credencial_cne_fecha": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "acta_posesion_numero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 100
                     },
                     "causa_judicial_numero": {
                         "type": [
@@ -58302,6 +58705,9 @@
                     "retiro_voluntario",
                     "perdida_derechos_ciudadania",
                     "fallecimiento",
+                    "fin_del_periodo",
+                    "revocatoria_del_mandato",
+                    "remocion_por_el_consejo",
                     "asuntos_particulares",
                     "estudios_posgrado",
                     "servicio_militar",
@@ -58742,7 +59148,8 @@
                     "reintegro",
                     "restitucion",
                     "nombramiento_definitivo",
-                    "ascenso"
+                    "ascenso",
+                    "inicio_periodo"
                 ],
                 "title": "TipoMovimientoPersonal"
             },
@@ -60836,6 +61243,28 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "credencial_cne_numero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "El inicio del per\u00edodo de una autoridad electa (fase 4.1).",
+                        "maxLength": 100
+                    },
+                    "credencial_cne_fecha": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "acta_posesion_numero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 100
                     },
                     "causa_judicial_numero": {
                         "type": [

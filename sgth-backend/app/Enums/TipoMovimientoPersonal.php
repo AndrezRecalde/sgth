@@ -45,6 +45,11 @@ enum TipoMovimientoPersonal: string
     // 2026-07-23 porque TH lo operaba como cesación más ingreso, que le quitaba
     // al servidor el derecho a volver.
     case ASCENSO                   = 'ascenso';
+    // El Prefecto y el Viceprefecto empiezan el período para el que fueron
+    // elegidos (diseño, 9.14; TH 1–7; fase 4.1). Crea el vínculo como el
+    // ingreso, pero no es una acción de personal: se registra con la
+    // credencial del CNE y no lo firma nadie.
+    case INICIO_PERIODO            = 'inicio_periodo';
 
     public function etiqueta(): string
     {
@@ -67,6 +72,7 @@ enum TipoMovimientoPersonal: string
             self::RESTITUCION               => 'Restitución',
             self::NOMBRAMIENTO_DEFINITIVO   => 'Nombramiento Definitivo',
             self::ASCENSO                   => 'Ascenso',
+            self::INICIO_PERIODO            => 'Inicio del Período',
         };
     }
 
@@ -110,6 +116,10 @@ enum TipoMovimientoPersonal: string
                 SubtipoMovimientoPersonal::FALLECIMIENTO,
                 SubtipoMovimientoPersonal::CONTRATO_FINALIZADO,
                 SubtipoMovimientoPersonal::VISTO_BUENO,
+                // Las de la autoridad electa (fase 4.1).
+                SubtipoMovimientoPersonal::REVOCATORIA_DEL_MANDATO,
+                SubtipoMovimientoPersonal::REMOCION_POR_EL_CONSEJO,
+                SubtipoMovimientoPersonal::FIN_DEL_PERIODO,
             ],
             // LOSEP Art. 28, y la transitoria de obreros y autoridades (fase 2.2).
             self::LICENCIA_SIN_REMUNERACION => [
@@ -214,7 +224,7 @@ enum TipoMovimientoPersonal: string
      */
     public function creaVinculo(): bool
     {
-        return in_array($this, [self::INGRESO, self::RESTITUCION], true);
+        return in_array($this, [self::INGRESO, self::RESTITUCION, self::INICIO_PERIODO], true);
     }
 
     /**
@@ -302,6 +312,9 @@ enum TipoMovimientoPersonal: string
             // Como el ingreso, queda fuera de esAccionDePersonal() porque quien
             // vuelve no tiene vínculo que validar (fase 2.6).
             self::RESTITUCION,
+            // La autoridad electa, igual (fase 4.1). Su instrumento —el acto de
+            // autoridad— es el que dice que no tiene documento.
+            self::INICIO_PERIODO,
         ], true);
     }
 
@@ -403,6 +416,10 @@ enum TipoMovimientoPersonal: string
             // El servidor de carrera (diseño, 5; LOSEP 68).
             self::ASCENSO =>
                 $tipo === TipoNombramiento::PERMANENTE,
+            // La reelección: la autoridad empieza su período nuevo mientras el
+            // anterior termina (fase 4.1). Sin vínculo no se pregunta.
+            self::INICIO_PERIODO =>
+                $tipo === TipoNombramiento::ELECCION_POPULAR,
             default => true,
         };
     }

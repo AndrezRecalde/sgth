@@ -34,6 +34,12 @@ enum TipoEventoVinculo: string
      */
     case TITULAR_CESADO = 'titular_cesado';
 
+    /**
+     * Talento Humano fijó el fin del período de una autoridad electa que no lo
+     * tenía (fase 4.1): la que ya estaba cuando el período empezó a contarse.
+     */
+    case FIN_DEL_PERIODO_FIJADO = 'fin_del_periodo_fijado';
+
     // Tipos de bitácora anteriores que el sistema ya no genera. Se conservan
     // solo para que el histórico migrado conserve su nombre.
     case CAMBIO_PUESTO  = 'cambio_puesto';
@@ -47,6 +53,7 @@ enum TipoEventoVinculo: string
             self::SUBROGACION_FINALIZADA => 'Fin anticipado de subrogación o encargo',
             self::SUBROGACION_CANCELADA  => 'Cancelación de subrogación o encargo',
             self::TITULAR_CESADO         => 'El titular al que cubría cesó',
+            self::FIN_DEL_PERIODO_FIJADO => 'Fin del período fijado',
             self::CAMBIO_PUESTO          => 'Cambio de puesto',
             self::CAMBIO_REGIMEN         => 'Cambio de régimen',
             self::EGRESO                 => 'Egreso',

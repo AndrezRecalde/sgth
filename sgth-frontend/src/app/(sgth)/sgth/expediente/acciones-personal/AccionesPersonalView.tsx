@@ -2,13 +2,14 @@
 
 import { useState } from 'react'
 import { Tabs } from '@mantine/core'
-import { IconHourglass, IconInbox, IconSignature, IconUserOff, IconUserPlus } from '@tabler/icons-react'
+import { IconBuildingBank, IconHourglass, IconInbox, IconSignature, IconUserOff, IconUserPlus } from '@tabler/icons-react'
 import { SelectorServidorCategoria } from '@/features/expediente/components/SelectorServidorCategoria'
 import { MovimientoModal } from '@/features/expediente/components/MovimientoModal'
 import { BandejaAccionesPersonal } from '@/features/expediente/components/BandejaAccionesPersonal'
 import { FirmantesPanel } from '@/features/expediente/components/FirmantesPanel'
 import { AusenciasTemporalesPanel } from '@/features/expediente/components/AusenciasTemporalesPanel'
 import { PeriodosDePruebaPanel } from '@/features/expediente/components/PeriodosDePruebaPanel'
+import { AutoridadesElectasPanel } from '@/features/expediente/components/AutoridadesElectasPanel'
 import { usePuedePrepararAccion } from '@/features/expediente/hooks/usePuedePrepararAccion'
 import type { FamiliaDelCatalogo, ServidorConRelaciones } from '@/types/api'
 import { PageHeader, PageShell } from '@/components/ui'
@@ -60,6 +61,9 @@ export function AccionesPersonalView() {
           <Tabs.Tab value="prueba" leftSection={<IconHourglass size={16} />}>
             Períodos de prueba
           </Tabs.Tab>
+          <Tabs.Tab value="autoridades" leftSection={<IconBuildingBank size={16} />}>
+            Autoridades electas
+          </Tabs.Tab>
           <Tabs.Tab value="firmantes" leftSection={<IconSignature size={16} />}>
             Firmantes
           </Tabs.Tab>
@@ -98,6 +102,10 @@ export function AccionesPersonalView() {
 
         <Tabs.Panel value="prueba">
           <PeriodosDePruebaPanel />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="autoridades">
+          <AutoridadesElectasPanel />
         </Tabs.Panel>
 
         <Tabs.Panel value="firmantes">
