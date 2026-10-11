@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Expediente;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Expediente\FijarFinDelPeriodoRequest;
+use App\Http\Requests\Expediente\RegistrarSubrogacionPorLeyRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\Expediente\ContratoServidor;
 use App\Services\Expediente\AutoridadElectaService;
@@ -22,6 +23,21 @@ class AutoridadElectaController extends Controller
     public function index(): JsonResponse
     {
         return ApiResponse::ok($this->autoridades->listar(), 'Autoridades electas en funciones.');
+    }
+
+    /**
+     * Registra la subrogación por ley del Viceprefecto (COOTAD Art. 51; fase
+     * 4.1b): nace en borrador con su acto de autoridad, que sigue el trámite
+     * de cualquier acción.
+     */
+    public function subrogacionPorLey(RegistrarSubrogacionPorLeyRequest $request): JsonResponse
+    {
+        $subrogacion = $this->autoridades->registrarSubrogacionPorLey($request->validated());
+
+        return ApiResponse::created(
+            ['subrogacion_id' => $subrogacion->id, 'movimiento_id' => $subrogacion->movimiento_personal_id],
+            'Subrogación por ley preparada en borrador: suscríbala y regístrela en la bandeja.'
+        );
     }
 
     /** Fija el fin del período de una autoridad que no lo tiene. */

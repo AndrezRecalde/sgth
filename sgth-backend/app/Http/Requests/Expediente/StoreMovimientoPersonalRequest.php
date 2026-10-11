@@ -63,6 +63,9 @@ class StoreMovimientoPersonalRequest extends FormRequest
             // Comisiones e intercambio: la entidad del Estado a la que va (fase 2.3).
             'institucion_destino' => 'nullable|string|max:255',
             'para_estudios_o_eventos' => 'nullable|boolean',
+            // La licencia del Consejo (fase 4.1b).
+            'con_remuneracion'      => 'nullable|boolean',
+            'prorroga_causa'        => 'nullable|string|in:enfermedad_catastrofica,calamidad_domestica',
             // La sentencia de una restitución (fase 2.6). Que sean obligatorios
             // en ella lo decide RestitucionService.
             'informe_uath_numero'   => 'nullable|string|max:100',

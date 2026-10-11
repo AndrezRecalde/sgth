@@ -64,10 +64,11 @@ enum SubtipoMovimientoPersonal: string
     case REEMPLAZO_DIGNATARIO = 'reemplazo_dignatario';
     case CANDIDATURA          = 'candidatura';
     case CUIDADO_HIJOS        = 'cuidado_hijos';
-    // Transitoria: obreros y autoridades electas tienen su licencia en su
-    // propio régimen (Código del Trabajo; el Consejo, COOTAD), y sus bloques
-    // todavía no existen. Hasta que lleguen conservan la que tenían, sin los
-    // topes de la LOSEP (decisión del 2026-10-10).
+    // Transitoria: los obreros tienen su licencia en su propio régimen (Código
+    // del Trabajo), y su bloque todavía no existe. Hasta que llegue conservan
+    // la que tenían, sin los topes de la LOSEP (decisión del 2026-10-10). Las
+    // autoridades electas la tuvieron hasta la fase 4.1b: ahora tienen la
+    // licencia del Consejo, y las suyas de antes quedan en el histórico.
     case SEGUN_SU_REGIMEN     = 'segun_su_regimen';
 
     public function etiqueta(): string
@@ -105,7 +106,7 @@ enum SubtipoMovimientoPersonal: string
             self::REEMPLAZO_DIGNATARIO       => 'Reemplazo de un dignatario electo',
             self::CANDIDATURA                => 'Candidatura a elección popular',
             self::CUIDADO_HIJOS              => 'Cuidado de hijos',
-            self::SEGUN_SU_REGIMEN           => 'Según su régimen (Código del Trabajo o Consejo)',
+            self::SEGUN_SU_REGIMEN           => 'Según su régimen (Código del Trabajo)',
         };
     }
 
@@ -266,7 +267,7 @@ enum SubtipoMovimientoPersonal: string
             self::CANDIDATURA,
             self::CUIDADO_HIJOS => [TipoNombramiento::PERMANENTE],
 
-            self::SEGUN_SU_REGIMEN => [TipoNombramiento::CODIGO_TRABAJO, TipoNombramiento::ELECCION_POPULAR],
+            self::SEGUN_SU_REGIMEN => [TipoNombramiento::CODIGO_TRABAJO],
 
             self::CONTRATO_FINALIZADO => [TipoNombramiento::SERVICIOS_PROFESIONALES],
 

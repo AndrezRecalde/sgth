@@ -79,6 +79,10 @@ class MovimientoPersonalResource extends JsonResource
             'unidad_destino_id' => $this->unidad_destino_id,
             'institucion_destino'     => $this->institucion_destino,
             'para_estudios_o_eventos' => (bool) $this->para_estudios_o_eventos,
+            // La licencia del Consejo: con o sin remuneración, y su prórroga (4.1b).
+            'con_remuneracion'        => $this->con_remuneracion,
+            'prorroga_causa'          => $this->prorroga_causa,
+            'prorroga_causa_etiqueta' => $this->prorroga_causa?->etiqueta(),
             'puesto_origen_id'  => $this->puesto_origen_id,
             'puesto_destino_id' => $this->puesto_destino_id,
 

@@ -47,6 +47,8 @@ enum ClaseAccionPersonal: string
     case NOMBRAMIENTO_DEFINITIVO   = 'nombramiento_definitivo';
     case ASCENSO                   = 'ascenso';
     case INICIO_PERIODO            = 'inicio_periodo';
+    case LICENCIA_CONSEJO          = 'licencia_consejo';
+    case ASUNCION_DEFINITIVA       = 'asuncion_definitiva';
 
     public function etiqueta(): string
     {
@@ -68,6 +70,8 @@ enum ClaseAccionPersonal: string
             self::NOMBRAMIENTO_DEFINITIVO   => 'Nombramiento Definitivo',
             self::ASCENSO                   => 'Ascenso',
             self::INICIO_PERIODO            => 'Inicio del Período',
+            self::LICENCIA_CONSEJO          => 'Licencia concedida por el Consejo',
+            self::ASUNCION_DEFINITIVA       => 'Asunción Definitiva',
         };
     }
 
@@ -86,10 +90,12 @@ enum ClaseAccionPersonal: string
             self::COMISION_CON_REMUNERACION,
             self::COMISION_SIN_REMUNERACION => FamiliaAccionPersonal::CAMBIO_ADMINISTRATIVO,
 
-            self::LICENCIA_SIN_REMUNERACION => FamiliaAccionPersonal::LICENCIAS,
+            self::LICENCIA_SIN_REMUNERACION,
+            self::LICENCIA_CONSEJO => FamiliaAccionPersonal::LICENCIAS,
 
             self::SUBROGACION,
-            self::ENCARGO => FamiliaAccionPersonal::REEMPLAZO,
+            self::ENCARGO,
+            self::ASUNCION_DEFINITIVA => FamiliaAccionPersonal::REEMPLAZO,
 
             self::INCREMENTO_REMUNERACION,
             self::CAMBIO_OCUPACION => FamiliaAccionPersonal::PUESTO_REMUNERACION,
@@ -119,8 +125,11 @@ enum ClaseAccionPersonal: string
         //
         // Ni el nombramiento definitivo (fase 3.2): nace del período de prueba,
         // en el comando diario o en su pantalla, al cumplirse los tres meses.
+        //
+        // Ni la asunción definitiva (fase 4.1b): nace del cese del Prefecto.
         return ! in_array($this, [
             self::SUBROGACION, self::ENCARGO, self::REINTEGRO, self::SANCION, self::NOMBRAMIENTO_DEFINITIVO,
+            self::ASUNCION_DEFINITIVA,
         ], true);
     }
 
@@ -282,6 +291,8 @@ enum ClaseAccionPersonal: string
             self::NOMBRAMIENTO_DEFINITIVO => [TipoMovimientoPersonal::NOMBRAMIENTO_DEFINITIVO, null],
             self::ASCENSO => [TipoMovimientoPersonal::ASCENSO, null],
             self::INICIO_PERIODO => [TipoMovimientoPersonal::INICIO_PERIODO, null],
+            self::LICENCIA_CONSEJO => [TipoMovimientoPersonal::LICENCIA_CONSEJO, null],
+            self::ASUNCION_DEFINITIVA => [TipoMovimientoPersonal::ASUNCION_DEFINITIVA, null],
         };
     }
 
@@ -339,6 +350,8 @@ enum ClaseAccionPersonal: string
                 TipoMovimientoPersonal::NOMBRAMIENTO_DEFINITIVO   => self::NOMBRAMIENTO_DEFINITIVO,
                 TipoMovimientoPersonal::ASCENSO                   => self::ASCENSO,
                 TipoMovimientoPersonal::INICIO_PERIODO            => self::INICIO_PERIODO,
+                TipoMovimientoPersonal::LICENCIA_CONSEJO          => self::LICENCIA_CONSEJO,
+                TipoMovimientoPersonal::ASUNCION_DEFINITIVA       => self::ASUNCION_DEFINITIVA,
                 default                                           => null,
             },
         };
@@ -382,8 +395,18 @@ enum ClaseAccionPersonal: string
      */
     public function pidePeriodo(): bool
     {
-        return $this === self::LICENCIA_SIN_REMUNERACION
+        return in_array($this, [self::LICENCIA_SIN_REMUNERACION, self::LICENCIA_CONSEJO], true)
             || (bool) $this->tipoYSubtipo()[1]?->esComisionDeServicios();
+    }
+
+    /**
+     * Si la licencia es con o sin remuneración —lo dice la resolución del
+     * Consejo— y la causa de la prórroga cuando pasa de los 60 días (fase
+     * 4.1b).
+     */
+    public function pideDatosDeLicenciaDelConsejo(): bool
+    {
+        return $this === self::LICENCIA_CONSEJO;
     }
 
     /**
@@ -488,6 +511,10 @@ enum ClaseAccionPersonal: string
                     .'Entra con nombramiento provisional de prueba por seis meses y su puesto queda reservado: '
                     .'si no supera la prueba, vuelve a él con su remuneración anterior (Art. 17 b.5). '
                     .'A los 65 años ya no se asciende (Art. 81).',
+            $this === self::LICENCIA_CONSEJO =>
+                'La concede el Consejo Provincial por resolución, con o sin remuneración: hasta 60 días acumulados '
+                    .'en el año, prorrogables por enfermedad catastrófica o calamidad doméstica (COOTAD Art. 47 s). '
+                    .'Si es del Prefecto y pasa de tres días, se prepara la subrogación por ley del Viceprefecto.',
             $this === self::INICIO_PERIODO =>
                 'Del Prefecto o el Viceprefecto electos: rige desde la posesión, con la credencial del CNE, y se '
                     .'cierra solo al terminar el período, de hasta cuatro años. Si fue reelegido, el período nuevo '

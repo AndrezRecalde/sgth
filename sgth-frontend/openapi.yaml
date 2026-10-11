@@ -3890,6 +3890,93 @@
                                                             "codigo_registro",
                                                             "fecha_efectiva"
                                                         ]
+                                                    },
+                                                    "ausencia": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "description": "La licencia del Consejo en curso o por venir (4.1b).",
+                                                        "properties": {
+                                                            "": {
+                                                                "type": [
+                                                                    "object",
+                                                                    "null"
+                                                                ],
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "estado": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "codigo_registro": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "fecha_efectiva": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "id",
+                                                                    "estado",
+                                                                    "codigo_registro",
+                                                                    "fecha_efectiva"
+                                                                ]
+                                                            },
+                                                            "desde": {
+                                                                "type": "string"
+                                                            },
+                                                            "hasta": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            null,
+                                                            "desde",
+                                                            "hasta"
+                                                        ]
+                                                    },
+                                                    "subrogacion": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "description": "Qui\u00e9n lo subroga, o a qui\u00e9n subroga (4.1b).",
+                                                        "properties": {
+                                                            "rol": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "subrogado",
+                                                                    "subrogante"
+                                                                ]
+                                                            },
+                                                            "con": {
+                                                                "type": "string"
+                                                            },
+                                                            "desde": {
+                                                                "type": "string"
+                                                            },
+                                                            "hasta": {
+                                                                "type": "string"
+                                                            },
+                                                            "estado": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "rol",
+                                                            "con",
+                                                            "desde",
+                                                            "hasta",
+                                                            "estado"
+                                                        ]
+                                                    },
+                                                    "es_prefecto": {
+                                                        "type": "boolean"
                                                     }
                                                 },
                                                 "required": [
@@ -3904,7 +3991,10 @@
                                                     "inicio",
                                                     "puede_fijar_fin",
                                                     "cese",
-                                                    "siguiente"
+                                                    "siguiente",
+                                                    "ausencia",
+                                                    "subrogacion",
+                                                    "es_prefecto"
                                                 ]
                                             }
                                         },
@@ -4005,6 +4095,79 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/autoridades-electas/subrogacion-por-ley": {
+            "post": {
+                "operationId": "autoridadElecta.subrogacionPorLey",
+                "summary": "Registra la subrogaci\u00f3n por ley del Viceprefecto (COOTAD Art. 51; fase\n4.1b): nace en borrador con su acto de autoridad, que sigue el tr\u00e1mite\nde cualquier acci\u00f3n",
+                "tags": [
+                    "AutoridadElecta"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RegistrarSubrogacionPorLeyRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Subrogaci\u00f3n por ley preparada en borrador: suscr\u00edbala y reg\u00edstrela en la bandeja."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "subrogacion_id": {
+                                                    "type": "integer"
+                                                },
+                                                "movimiento_id": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "subrogacion_id",
+                                                "movimiento_id"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -45263,6 +45426,15 @@
                 ],
                 "title": "CategoriaRiesgoLaboral"
             },
+            "CausaProrrogaLicencia": {
+                "type": "string",
+                "description": "Por qu\u00e9 el Consejo Provincial prorroga una licencia m\u00e1s all\u00e1 de los 60 d\u00edas acumulados (COOTAD Art. 47 s; fase 4.1b).\n",
+                "enum": [
+                    "enfermedad_catastrofica",
+                    "calamidad_domestica"
+                ],
+                "title": "CausaProrrogaLicencia"
+            },
             "CausalAccionPersonalResource": {
                 "type": "object",
                 "properties": {
@@ -45304,7 +45476,7 @@
                             "Reemplazo de un dignatario electo",
                             "Candidatura a elecci\u00f3n popular",
                             "Cuidado de hijos",
-                            "Seg\u00fan su r\u00e9gimen (C\u00f3digo del Trabajo o Consejo)"
+                            "Seg\u00fan su r\u00e9gimen (C\u00f3digo del Trabajo)"
                         ]
                     },
                     "base_legal": {
@@ -45712,7 +45884,9 @@
                     "restitucion",
                     "nombramiento_definitivo",
                     "ascenso",
-                    "inicio_periodo"
+                    "inicio_periodo",
+                    "licencia_consejo",
+                    "asuncion_definitiva"
                 ],
                 "title": "ClaseAccionPersonal"
             },
@@ -45741,7 +45915,9 @@
                             "Restituci\u00f3n",
                             "Nombramiento Definitivo",
                             "Ascenso",
-                            "Inicio del Per\u00edodo"
+                            "Inicio del Per\u00edodo",
+                            "Licencia concedida por el Consejo",
+                            "Asunci\u00f3n Definitiva"
                         ]
                     },
                     "familia": {
@@ -45797,6 +45973,10 @@
                         "type": "boolean",
                         "description": "La credencial, la posesi\u00f3n y el fin del per\u00edodo (fase 4.1)."
                     },
+                    "pide_datos_de_licencia_del_consejo": {
+                        "type": "boolean",
+                        "description": "Con o sin remuneraci\u00f3n y la pr\u00f3rroga de la licencia del Consejo (4.1b)."
+                    },
                     "registro_de_contrato_para": {
                         "type": "array",
                         "items": {
@@ -45836,6 +46016,7 @@
                     "pide_contratacion",
                     "pide_acta_concurso",
                     "pide_datos_del_periodo",
+                    "pide_datos_de_licencia_del_consejo",
                     "registro_de_contrato_para",
                     "acto_de_autoridad_para",
                     "dictamen_medico_por_defecto",
@@ -50619,6 +50800,22 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "con_remuneracion": {
+                        "type": [
+                            "boolean",
+                            "null"
+                        ]
+                    },
+                    "prorroga_causa": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/CausaProrrogaLicencia"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -50690,7 +50887,9 @@
                     "acta_concurso_fecha",
                     "credencial_cne_numero",
                     "credencial_cne_fecha",
-                    "acta_posesion_numero"
+                    "acta_posesion_numero",
+                    "con_remuneracion",
+                    "prorroga_causa"
                 ],
                 "title": "MovimientoPersonal"
             },
@@ -50869,6 +51068,26 @@
                     },
                     "para_estudios_o_eventos": {
                         "type": "boolean"
+                    },
+                    "con_remuneracion": {
+                        "type": [
+                            "boolean",
+                            "null"
+                        ],
+                        "description": "La licencia del Consejo: con o sin remuneraci\u00f3n, y su pr\u00f3rroga (4.1b)."
+                    },
+                    "prorroga_causa": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/CausaProrrogaLicencia"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "prorroga_causa_etiqueta": {
+                        "type": "string"
                     },
                     "puesto_origen_id": {
                         "type": [
@@ -51472,6 +51691,9 @@
                     "unidad_destino_id",
                     "institucion_destino",
                     "para_estudios_o_eventos",
+                    "con_remuneracion",
+                    "prorroga_causa",
+                    "prorroga_causa_etiqueta",
                     "puesto_origen_id",
                     "puesto_destino_id",
                     "tipo_nombramiento_propuesto",
@@ -53469,6 +53691,49 @@
                     "calificacion_cuantitativa"
                 ],
                 "title": "RegistrarResultadoRequest"
+            },
+            "RegistrarSubrogacionPorLeyRequest": {
+                "type": "object",
+                "description": "La subrogaci\u00f3n por ley del Viceprefecto que Talento Humano registra a mano\n(fase 4.1b): las vacaciones u otra ausencia del Prefecto que no naci\u00f3 de una\nlicencia del Consejo. Que pase de tres d\u00edas lo valida AutoridadElectaService.",
+                "properties": {
+                    "fecha_inicio": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "fecha_fin": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "motivo": {
+                        "type": "string",
+                        "enum": [
+                            "vacaciones",
+                            "licencia",
+                            "enfermedad",
+                            "comision_servicios",
+                            "otro"
+                        ]
+                    },
+                    "resolucion_numero": {
+                        "type": "string",
+                        "description": "El oficio que comunica la ausencia o la resoluci\u00f3n del Consejo [TH 6].",
+                        "maxLength": 100
+                    },
+                    "observacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 1000
+                    }
+                },
+                "required": [
+                    "fecha_inicio",
+                    "fecha_fin",
+                    "motivo",
+                    "resolucion_numero"
+                ],
+                "title": "RegistrarSubrogacionPorLeyRequest"
             },
             "RegistrarSubrogacionRequest": {
                 "type": "object",
@@ -57081,7 +57346,8 @@
                             "cesacion",
                             "restitucion",
                             "ascenso",
-                            "inicio_periodo"
+                            "inicio_periodo",
+                            "licencia_consejo"
                         ]
                     },
                     "causal": {
@@ -57146,6 +57412,23 @@
                         "type": [
                             "boolean",
                             "null"
+                        ]
+                    },
+                    "con_remuneracion": {
+                        "type": [
+                            "boolean",
+                            "null"
+                        ],
+                        "description": "La licencia del Consejo (fase 4.1b)."
+                    },
+                    "prorroga_causa": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "enfermedad_catastrofica",
+                            "calamidad_domestica"
                         ]
                     },
                     "informe_uath_numero": {
@@ -59149,7 +59432,9 @@
                     "restitucion",
                     "nombramiento_definitivo",
                     "ascenso",
-                    "inicio_periodo"
+                    "inicio_periodo",
+                    "licencia_consejo",
+                    "asuncion_definitiva"
                 ],
                 "title": "TipoMovimientoPersonal"
             },
@@ -61207,6 +61492,23 @@
                         "type": [
                             "boolean",
                             "null"
+                        ]
+                    },
+                    "con_remuneracion": {
+                        "type": [
+                            "boolean",
+                            "null"
+                        ],
+                        "description": "La licencia del Consejo (fase 4.1b)."
+                    },
+                    "prorroga_causa": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "enfermedad_catastrofica",
+                            "calamidad_domestica"
                         ]
                     },
                     "informe_uath_numero": {

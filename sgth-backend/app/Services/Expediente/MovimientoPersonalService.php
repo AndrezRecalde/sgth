@@ -163,6 +163,12 @@ class MovimientoPersonalService
             $this->validarElegibilidad($servidor, $tipoMovimiento, $subtipo);
         }
 
+        // La licencia del Consejo: con o sin remuneración y hasta 60 días al
+        // año, salvo prórroga (COOTAD Art. 47 s; fase 4.1b).
+        if ($tipoMovimiento === TipoMovimientoPersonal::LICENCIA_CONSEJO) {
+            app(AutoridadElectaService::class)->validarLicenciaDelConsejo($servidor, $datos);
+        }
+
         // El cese de una autoridad, con su documento de origen.
         if ($subtipo?->cierraVinculo() && $servidor->contratoVigente?->tipo_nombramiento === TipoNombramiento::ELECCION_POPULAR) {
             app(AutoridadElectaService::class)->exigirDocumentoDelCese($subtipo, $datos['resolucion_numero'] ?? null);
@@ -396,6 +402,21 @@ class MovimientoPersonalService
 
         if ($movimiento->tipo_movimiento === TipoMovimientoPersonal::RESTITUCION) {
             $datos = $this->revalidarRestitucion($movimiento, $datos);
+        }
+
+        // La licencia del Consejo, con lo corregido (fase 4.1b).
+        if ($movimiento->tipo_movimiento === TipoMovimientoPersonal::LICENCIA_CONSEJO) {
+            app(AutoridadElectaService::class)->validarLicenciaDelConsejo(
+                Servidor::findOrFail($movimiento->servidor_id),
+                [
+                    'fecha_inicio'     => $movimiento->fecha_inicio?->toDateString(),
+                    'fecha_fin'        => $movimiento->fecha_fin?->toDateString(),
+                    'con_remuneracion' => $movimiento->con_remuneracion,
+                    'prorroga_causa'   => $movimiento->prorroga_causa?->value,
+                    ...$datos,
+                ],
+                $movimiento->id,
+            );
         }
 
         // El inicio del período, con lo corregido (fase 4.1).

@@ -120,9 +120,9 @@ test('el inicio del período crea el vínculo de la autoridad, sin acción de pe
     $vigente = $servidor->fresh('contratoVigente')->contratoVigente;
 
     expect($inicio->codigo_registro)->toStartWith('AU-'.now()->year.'-')
-        // Nadie la firma: el Prefecto es la autoridad nominadora.
+        // No la firma la autoridad nominadora: el Prefecto lo es. Su constancia
+        // la firma Talento Humano (fase 4.1b).
         ->and($inicio->firmante_autoridad_nombre)->toBeNull()
-        ->and($inicio->fecha_suscripcion)->toBeNull()
         ->and($vigente->tipo_nombramiento)->toBe(TipoNombramiento::ELECCION_POPULAR)
         ->and($vigente->numero_contrato)->toBe('CNE-2026-0147')
         ->and($vigente->fecha_fin->toDateString())->toBe(now()->addYearsNoOverflow(4)->subDay()->toDateString())
@@ -278,13 +278,15 @@ test('el cese de la autoridad tiene sus causales y lleva su documento de origen'
 test('la licencia de la autoridad también es acto de autoridad', function () {
     [$servidor] = ($this->enFunciones)('2023-05-15', now()->addYear()->toDateString());
 
+    // Desde la fase 4.1b es la licencia del Consejo, no la «según su régimen».
     $this->postJson("/api/v1/expediente/servidores/{$servidor->id}/movimientos", [
-        'clase'          => 'licencia_sin_remuneracion',
-        'causal'         => 'segun_su_regimen',
-        'descripcion'    => 'Licencia concedida por el Consejo Provincial',
-        'fecha_efectiva' => $this->hoy,
-        'fecha_inicio'   => $this->hoy,
-        'fecha_fin'      => now()->addDays(5)->toDateString(),
+        'clase'             => 'licencia_consejo',
+        'descripcion'       => 'Licencia concedida por el Consejo Provincial',
+        'fecha_efectiva'    => $this->hoy,
+        'fecha_inicio'      => $this->hoy,
+        'fecha_fin'         => now()->addDays(5)->toDateString(),
+        'con_remuneracion'  => true,
+        'resolucion_numero' => 'RES-CP-2026-001',
     ])->assertCreated()
         ->assertJsonPath('datos.instrumento', 'acto_autoridad');
 });
@@ -344,11 +346,12 @@ test('el catálogo trae el inicio del período, y los actos de la autoridad sin 
         ->not->toContain('fin_del_periodo');
 });
 
-test('no tiene documento de acción de personal', function () {
+test('no tiene acción de personal: su documento es la constancia', function () {
     $servidor = ($this->persona)();
     $inicio = ($this->registrar)(($this->iniciar)($servidor)->json('datos.id'));
 
-    $this->getJson("/api/v1/expediente/movimientos/{$inicio->id}/accion-personal-pdf")
-        ->assertStatus(422)
-        ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'no se le emite acción de personal'));
+    // La constancia, con su número AU (fase 4.1b).
+    $respuesta = $this->get("/api/v1/expediente/movimientos/{$inicio->id}/accion-personal-pdf")->assertOk();
+
+    expect($respuesta->headers->get('content-disposition'))->toContain('constancia_'.$inicio->codigo_registro);
 });

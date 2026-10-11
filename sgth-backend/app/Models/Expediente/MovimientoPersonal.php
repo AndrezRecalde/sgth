@@ -268,6 +268,9 @@ class MovimientoPersonal extends Model
         // A qué entidad del Estado va, en comisiones e intercambio (fase 2.3).
         'institucion_destino',
         'para_estudios_o_eventos',
+        // La licencia del Consejo: con o sin remuneración, y la prórroga (4.1b).
+        'con_remuneracion',
+        'prorroga_causa',
         'puesto_origen_id',
         'remuneracion_origen',
         'partida_origen_id',
@@ -319,6 +322,8 @@ class MovimientoPersonal extends Model
             'fecha_fin_propuesta'         => 'date',
             'puede_marcar'                => 'boolean',
             'para_estudios_o_eventos'     => 'boolean',
+            'con_remuneracion'            => 'boolean',
+            'prorroga_causa'              => \App\Enums\CausaProrrogaLicencia::class,
             'fecha_registro'     => 'date',
             'efecto_aplicado_en' => 'datetime',
             'fecha_suscripcion'  => 'date',
@@ -565,6 +570,7 @@ class MovimientoPersonal extends Model
             || (bool) $this->tipo_movimiento?->convierteNombramiento()
             || (bool) $this->tipo_movimiento?->asciende()
             || $this->esReintegroDelAscenso()
+            || (bool) $this->tipo_movimiento?->asumeLaPrimeraAutoridad()
             || $this->reubicaAlServidor()
             || (bool) $this->subtipoEfectivo()?->cierraVinculo();
     }
@@ -616,6 +622,8 @@ class MovimientoPersonal extends Model
             // El ascenso propone el puesto ganado, y su reintegro el de antes.
             || (bool) $this->tipo_movimiento?->asciende()
             || $this->esReintegroDelAscenso()
+            // La asunción definitiva, el puesto del Prefecto (4.1b).
+            || (bool) $this->tipo_movimiento?->asumeLaPrimeraAutoridad()
             || $this->tipo_movimiento === TipoMovimientoPersonal::SUBROGACION
             || $this->reubicaAlServidor();
     }
@@ -640,7 +648,11 @@ class MovimientoPersonal extends Model
      */
     public function esAusenciaTemporal(): bool
     {
-        return $this->tipo_movimiento === TipoMovimientoPersonal::LICENCIA_SIN_REMUNERACION
+        return in_array($this->tipo_movimiento, [
+            TipoMovimientoPersonal::LICENCIA_SIN_REMUNERACION,
+            // La licencia del Consejo de una autoridad electa (fase 4.1b).
+            TipoMovimientoPersonal::LICENCIA_CONSEJO,
+        ], true)
             || (bool) $this->subtipoEfectivo()?->esAusenciaTemporal();
     }
 
@@ -651,6 +663,10 @@ class MovimientoPersonal extends Model
     {
         if (! $this->esAusenciaTemporal()) {
             return null;
+        }
+
+        if ($this->tipo_movimiento === TipoMovimientoPersonal::LICENCIA_CONSEJO) {
+            return $this->etiqueta();
         }
 
         // La licencia dice qué es y por qué: «asuntos particulares» solo, junto
@@ -682,7 +698,10 @@ class MovimientoPersonal extends Model
             ])
             // La licencia es ausencia con causal o sin ella: desde la fase 2.2
             // lleva subtipo, y las anteriores no.
-            ->orWhere('tipo_movimiento', TipoMovimientoPersonal::LICENCIA_SIN_REMUNERACION->value)
+            ->orWhereIn('tipo_movimiento', [
+                TipoMovimientoPersonal::LICENCIA_SIN_REMUNERACION->value,
+                TipoMovimientoPersonal::LICENCIA_CONSEJO->value,
+            ])
             ->orWhere(function (Builder $legado) {
                 $legado->whereNull('subtipo_movimiento')->whereIn('tipo_movimiento', [
                     TipoMovimientoPersonal::LICENCIA_SIN_REMUNERACION->value,

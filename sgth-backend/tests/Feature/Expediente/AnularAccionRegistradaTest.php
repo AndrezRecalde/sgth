@@ -474,6 +474,8 @@ test('tocaElVinculo() cubre exactamente las ramas que aplican un efecto al regis
             || $tipo->convierteNombramiento()
             // Y el ascenso lo mueve al puesto ganado (fase 3.3).
             || $tipo->asciende()
+            // Y la asunción definitiva, al puesto del Prefecto (fase 4.1b).
+            || $tipo->asumeLaPrimeraAutoridad()
             || $movimiento->reubicaAlServidor()
             || (bool) $movimiento->subtipoEfectivo()?->cierraVinculo();
 

@@ -177,11 +177,18 @@ class MovimientoPersonalStateService
         // El registro del contrato no lo firma nadie aquí: el contrato se firmó
         // aparte (fase 2.7). Suscribirlo es darlo por revisado, y es también
         // cuando se pide la ficha médica.
-        if (($movimiento->instrumento ?? InstrumentoActo::ACCION_PERSONAL)->sellaFirmantes()) {
+        $instrumento = $movimiento->instrumento ?? InstrumentoActo::ACCION_PERSONAL;
+
+        if ($instrumento->sellaFirmantes()) {
             $this->firmanteService->sellarEn(
                 $movimiento,
                 $datos['fecha_suscripcion'] ?? null
             );
+        } elseif ($instrumento === InstrumentoActo::ACTO_AUTORIDAD) {
+            // El acto de una autoridad electa lleva su documento de origen, y
+            // su constancia la firma solo Talento Humano (fase 4.1b).
+            $this->exigirDocumentoDeOrigen($movimiento);
+            $this->firmanteService->sellarTalentoHumanoEn($movimiento, $datos['fecha_suscripcion'] ?? null);
         }
 
         $this->solicitarCertificacionMedicaSiHaceFalta($movimiento);
@@ -346,6 +353,35 @@ class MovimientoPersonalStateService
 
             $this->aplicarEfecto($movimiento);
         }
+
+        // Lo que arrastra en borrador (fase 4.1b): la licencia del Prefecto, la
+        // subrogación por ley del Viceprefecto; su cese anticipado, la asunción
+        // definitiva. Si no se puede, no detiene este registro.
+        $autoridades = app(AutoridadElectaService::class);
+        $autoridades->prepararSubrogacionPorLey($movimiento);
+        $autoridades->prepararAsuncion($movimiento);
+    }
+
+    /**
+     * El acto de una autoridad electa se registra con su documento de origen
+     * —la resolución del Consejo, el oficio, el resultado del CNE— en «Número
+     * de resolución» (diseño, 9.14; fase 4.1b). No lo piden el inicio del
+     * período, que tiene la credencial, ni el fin del período, que lo marca la
+     * fecha.
+     */
+    private function exigirDocumentoDeOrigen(MovimientoPersonal $movimiento): void
+    {
+        if ($movimiento->tipo_movimiento === TipoMovimientoPersonal::INICIO_PERIODO
+            || $movimiento->subtipoEfectivo() === SubtipoMovimientoPersonal::FIN_DEL_PERIODO
+            || filled($movimiento->resolucion_numero)
+        ) {
+            return;
+        }
+
+        throw new ReglaNegocioException(
+            'No se puede suscribir sin el documento de origen: la resolución del Consejo, el oficio que comunica la '
+                .'ausencia o el resultado del CNE, en «Número de resolución».'
+        );
     }
 
     /**
@@ -486,6 +522,10 @@ class MovimientoPersonalStateService
             // No superó la prueba: vuelve a su puesto anterior con su
             // remuneración anterior (LOSEP 17 b.5).
             $this->contratoServidorService->volverAlPuestoDeAntes($movimiento->movimientoRelacionado);
+        } elseif ($tipo->asumeLaPrimeraAutoridad()) {
+            // El Viceprefecto asume la Prefectura hasta el fin del período
+            // (COOTAD Art. 51; fase 4.1b).
+            $this->contratoServidorService->asumirLaPrimeraAutoridad($movimiento);
         }
 
         // La subrogación no crea vínculo: reemplaza temporalmente al titular
@@ -600,6 +640,19 @@ class MovimientoPersonalStateService
             );
         }
 
+        // La asunción definitiva: el cese del Prefecto que la origina tiene que
+        // estar registrado (fase 4.1b).
+        if ($movimiento->tipo_movimiento->asumeLaPrimeraAutoridad()
+            && ! in_array($movimiento->movimientoRelacionado?->estado, [
+                EstadoAccionPersonal::REGISTRADA,
+                EstadoAccionPersonal::NOTIFICADA,
+            ], true)
+        ) {
+            throw new ReglaNegocioException(
+                'Registre antes el cese del Prefecto: la asunción definitiva nace de su ausencia definitiva.'
+            );
+        }
+
         // El reintegro del ascendido: tiene que seguir en la prueba de ese
         // ascenso (fase 3.3).
         if ($movimiento->esReintegroDelAscenso()) {
@@ -695,6 +748,10 @@ class MovimientoPersonalStateService
             $this->impedirAnularAscensoConSuSalida($movimiento);
         }
 
+        // La subrogación por ley y la asunción que salieron de este acto
+        // (fase 4.1b).
+        $this->anularLoQueSalioDeLaAutoridad($movimiento);
+
         $this->aplicarDictamenSiViene($movimiento, $datos);
 
         if (! blank($datos['motivo_anulacion'] ?? null)) {
@@ -777,6 +834,42 @@ class MovimientoPersonalStateService
             throw new ReglaNegocioException(
                 'Hay un ingreso de reemplazo en trámite para esta ausencia: anúlelo antes.'
             );
+        }
+    }
+
+    /**
+     * Anular la licencia del Consejo arrastra la subrogación por ley que se
+     * preparó con ella, y anular el cese del Prefecto, la asunción del
+     * Viceprefecto, mientras sigan en trámite. Si ya se registraron surtieron
+     * su propio efecto —la firma, el puesto—, y se anulan antes, aparte.
+     */
+    private function anularLoQueSalioDeLaAutoridad(MovimientoPersonal $movimiento): void
+    {
+        $derivados = MovimientoPersonal::where('movimiento_relacionado_id', $movimiento->id)
+            ->whereIn('tipo_movimiento', [
+                TipoMovimientoPersonal::SUBROGACION->value,
+                TipoMovimientoPersonal::ASUNCION_DEFINITIVA->value,
+            ])
+            ->where('estado', '!=', EstadoAccionPersonal::ANULADA->value)
+            ->orderBy('id')
+            ->get();
+
+        $emitido = $derivados->first(fn (MovimientoPersonal $d) => in_array(
+            $d->estado, [EstadoAccionPersonal::REGISTRADA, EstadoAccionPersonal::NOTIFICADA], true
+        ));
+
+        if ($emitido) {
+            throw new ReglaNegocioException(
+                "De este acto salió «{$emitido->etiqueta()}» ({$emitido->codigo_registro}), ya registrada: anúlela antes."
+            );
+        }
+
+        $codigo = $movimiento->codigo_registro ?? "#{$movimiento->id}";
+
+        foreach ($derivados as $derivado) {
+            $this->transicionar($derivado, EstadoAccionPersonal::ANULADA, [
+                'motivo_anulacion' => "Se anuló {$codigo}, del que salía.",
+            ]);
         }
     }
 
@@ -929,6 +1022,11 @@ class MovimientoPersonalStateService
 
         if ($movimiento->esReintegroDelAscenso()) {
             $this->contratoServidorService->volverAlPuestoGanado($movimiento->movimientoRelacionado);
+            return;
+        }
+
+        if ($movimiento->tipo_movimiento->asumeLaPrimeraAutoridad()) {
+            $this->contratoServidorService->deshacerAsuncion($movimiento);
             return;
         }
 
@@ -1226,7 +1324,8 @@ class MovimientoPersonalStateService
         // La etiqueta sale del subtipo cuando lo hay y del tipo cuando no: la
         // prestación de servicios reubica sin tener subtipo, y el mensaje decía
         // el nombre de otra cosa.
-        if (($movimiento->reubicaAlServidor() || $movimiento->tipo_movimiento->asciende())
+        if (($movimiento->reubicaAlServidor() || $movimiento->tipo_movimiento->asciende()
+                || $movimiento->tipo_movimiento->asumeLaPrimeraAutoridad())
             && !$movimiento->puesto_destino_id
         ) {
             $etiqueta = $movimiento->subtipoEfectivo()?->etiqueta()

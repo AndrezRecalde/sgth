@@ -6,12 +6,15 @@ import { Controller, useWatch, type UseFormReturn } from 'react-hook-form'
 import { IconInfoCircle } from '@tabler/icons-react'
 import { SectionHeading } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { esActoDeAutoridad, pideInformeUath, type MovimientoFormData } from '../schemas/movimiento.schema'
+import {
+  esActoDeAutoridad, pideDocumentoDeOrigen, pideInformeUath, type MovimientoFormData,
+} from '../schemas/movimiento.schema'
 import type { ClaseDelCatalogo } from '@/types/api'
 import { FirmantesPanel } from './FirmantesPanel'
 import { MovimientoDatosJudiciales } from './MovimientoDatosJudiciales'
 import { MovimientoActaConcurso } from './MovimientoActaConcurso'
 import { MovimientoDatosDelPeriodo } from './MovimientoDatosDelPeriodo'
+import { MovimientoDatosLicenciaConsejo } from './MovimientoDatosLicenciaConsejo'
 import { fromDateValue, fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 
 /**
@@ -48,6 +51,7 @@ export function MovimientoDatosDelActo({
   // Al Prefecto y al Viceprefecto no se les emite acción de personal: el acto
   // lleva su documento de origen y no lo firma nadie (fase 4.1).
   const actoDeAutoridad = esActoDeAutoridad(clase, tipoNombramiento)
+  const conDocumentoDeOrigen = pideDocumentoDeOrigen(clase, tipoNombramiento)
 
   const muestraFechas = !!clase?.pide_periodo
   const pideInstitucion = !!clase?.pide_institucion_destino
@@ -145,6 +149,9 @@ export function MovimientoDatosDelActo({
 
       {clase?.pide_datos_judiciales && <MovimientoDatosJudiciales form={form} />}
 
+      {/* La licencia del Consejo: con o sin remuneración y su prórroga (4.1b). */}
+      {clase?.pide_datos_de_licencia_del_consejo && <MovimientoDatosLicenciaConsejo form={form} />}
+
       {/* La autoridad electa empieza con la credencial del CNE (fase 4.1). */}
       {clase?.pide_datos_del_periodo && (
         <>
@@ -187,12 +194,16 @@ export function MovimientoDatosDelActo({
 
       {/* En el cese de una autoridad es su documento de origen (fase 4.1). */}
       <TextInput
-        label={actoDeAutoridad && !clase?.pide_datos_del_periodo ? 'Documento de origen N.º' : 'Número de resolución'}
-        description={actoDeAutoridad && clase?.causales.length
-          ? 'El resultado del CNE, la resolución del Consejo Provincial, la renuncia aceptada o la partida de defunción.'
-          : undefined}
-        placeholder={actoDeAutoridad && clase?.causales.length ? undefined : 'Opcional'}
-        withAsterisk={actoDeAutoridad && !!clase?.causales.length}
+        label={conDocumentoDeOrigen ? 'Documento de origen N.º' : 'Número de resolución'}
+        description={!conDocumentoDeOrigen
+          ? undefined
+          : clase?.pide_datos_de_licencia_del_consejo
+            ? 'La resolución del Consejo Provincial que la concede.'
+            : clase?.causales.length
+              ? 'El resultado del CNE, la resolución del Consejo Provincial, la renuncia aceptada o la partida de defunción.'
+              : 'La resolución del Consejo Provincial o el oficio que lo origina.'}
+        placeholder={conDocumentoDeOrigen ? undefined : 'Opcional'}
+        withAsterisk={conDocumentoDeOrigen}
         error={errors.resolucion_numero?.message}
         {...contained}
         {...register('resolucion_numero')}

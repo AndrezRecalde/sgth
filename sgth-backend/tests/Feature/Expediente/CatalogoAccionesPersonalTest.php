@@ -160,7 +160,8 @@ test('cada clase aplica exactamente a los nombramientos de antes', function () {
         'intercambio_voluntario'    => ['nombramiento_permanente'],
         'comision_con_remuneracion' => ['nombramiento_permanente'],
         'comision_sin_remuneracion' => ['nombramiento_permanente'],
-        'licencia_sin_remuneracion' => ['nombramiento_permanente', 'codigo_trabajo', 'eleccion_popular'],
+        // Sin las autoridades desde la fase 4.1b: tienen la licencia del Consejo.
+        'licencia_sin_remuneracion' => ['nombramiento_permanente', 'codigo_trabajo'],
         'incremento_remuneracion'   => ['codigo_trabajo'],
         'cambio_ocupacion'          => ['codigo_trabajo'],
         // Sin obreros desde la fase 2.1: su única causal era el visto bueno,
@@ -189,6 +190,10 @@ test('cada clase aplica exactamente a los nombramientos de antes', function () {
         // La autoridad reelegida; la que empieza su primer período no tiene
         // vínculo, como en el ingreso (4.1).
         'inicio_periodo' => ['eleccion_popular'],
+        // La licencia del Consejo, de las autoridades; la asunción definitiva
+        // nace del cese del Prefecto, no del formulario (4.1b).
+        'licencia_consejo'    => ['eleccion_popular'],
+        'asuncion_definitiva' => [],
     ];
 
     foreach (ClaseAccionPersonal::cases() as $clase) {

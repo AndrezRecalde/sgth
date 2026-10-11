@@ -547,6 +547,9 @@ test('tieneDocumentoImprimible() cubre todo acto formal, que es todo lo que qued
         TipoMovimientoPersonal::REINTEGRO,
         TipoMovimientoPersonal::NOMBRAMIENTO_DEFINITIVO,
         TipoMovimientoPersonal::ASCENSO,
+        // Los de la autoridad electa (4.1b): su documento es la constancia.
+        TipoMovimientoPersonal::LICENCIA_CONSEJO,
+        TipoMovimientoPersonal::ASUNCION_DEFINITIVA,
         // …más los tipos planos legados que tienen subtipo equivalente…
         TipoMovimientoPersonal::TRASLADO,
         TipoMovimientoPersonal::TRASPASO,

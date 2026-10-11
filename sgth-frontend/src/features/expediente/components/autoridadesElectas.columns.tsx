@@ -18,6 +18,29 @@ function Restante({ a }: { a: AutoridadElecta }) {
   )
 }
 
+/** La licencia del Consejo y la subrogación en curso (fase 4.1b). */
+function Ausencia({ a }: { a: AutoridadElecta }) {
+  if (!a.ausencia && !a.subrogacion) return <Text size="sm" c="dimmed">—</Text>
+
+  return (
+    <div>
+      {a.ausencia && (
+        <Text size="xs">
+          Licencia del {formatFecha(a.ausencia.desde)} al {formatFecha(a.ausencia.hasta)}
+          {a.ausencia.codigo_registro ? ` · ${a.ausencia.codigo_registro}` : ' · en trámite'}
+        </Text>
+      )}
+      {a.subrogacion && (
+        <Text size="xs" c="dimmed">
+          {a.subrogacion.rol === 'subrogado' ? 'Lo subroga ' : 'Subroga a '}{a.subrogacion.con}
+          {' '}del {formatFecha(a.subrogacion.desde)} al {formatFecha(a.subrogacion.hasta)}
+          {a.subrogacion.estado === 'pendiente' ? ' (por registrar)' : ''}
+        </Text>
+      )}
+    </div>
+  )
+}
+
 /** Lo que sigue: el cese en curso, o el período nuevo de la autoridad reelegida. */
 function Siguiente({ a }: { a: AutoridadElecta }) {
   if (a.cese) {
@@ -61,7 +84,7 @@ export const getAutoridadElectaColumns = ({
     render: (a) => (
       <div>
         <Text size="sm" fw={500}>{a.servidor.nombre || '—'}</Text>
-        <Text size="xs" c="dimmed">{a.dignidad ?? '—'}</Text>
+        <Text size="xs" c="dimmed">{a.dignidad ?? '—'}{a.es_prefecto ? ' · firma como autoridad nominadora' : ''}</Text>
       </div>
     ),
   },
@@ -85,6 +108,11 @@ export const getAutoridadElectaColumns = ({
         {a.credencial && <Text size="xs" c="dimmed">Credencial {a.credencial}</Text>}
       </div>
     ),
+  },
+  {
+    accessor: 'ausencia',
+    title: 'Ausencia y subrogación',
+    render: (a) => <Ausencia a={a} />,
   },
   {
     accessor: 'siguiente',

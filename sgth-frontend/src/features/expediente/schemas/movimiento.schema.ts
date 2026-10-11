@@ -46,6 +46,9 @@ const camposDelFormulario = z.object({
   credencial_cne_numero: z.string().max(100).optional().nullable(),
   credencial_cne_fecha: z.string().optional().nullable(),
   acta_posesion_numero: z.string().max(100).optional().nullable(),
+  // La licencia del Consejo: con o sin remuneración y su prórroga (fase 4.1b).
+  con_remuneracion: z.boolean().optional().nullable(),
+  prorroga_causa: z.string().optional().nullable(),
   numero_contrato: z.string().max(100).optional().nullable(),
   fecha_fin_propuesta: z.string().optional().nullable(),
   puede_marcar: z.boolean().optional().nullable(),
@@ -125,11 +128,20 @@ export function crearMovimientoSchema(
       }
     }
 
-    // El cese de una autoridad lleva su documento de origen (fase 4.1).
-    if (esActoDeAutoridad(clase, tipoNombramiento) && clase.causales.length > 0 && !data.resolucion_numero?.trim()) {
+    // El acto de una autoridad lleva su documento de origen (fases 4.1 y
+    // 4.1b), salvo el inicio del período, que tiene la credencial.
+    if (pideDocumentoDeOrigen(clase, tipoNombramiento) && !data.resolucion_numero?.trim()) {
       ctx.addIssue({
         path: ['resolucion_numero'], code: 'custom',
-        message: 'Indique el documento de origen: resultado del CNE, resolución del Consejo, renuncia aceptada o partida de defunción',
+        message: 'Indique el documento de origen: la resolución del Consejo, el resultado del CNE, la renuncia aceptada o la partida de defunción',
+      })
+    }
+
+    // La licencia del Consejo dice si es con o sin remuneración (fase 4.1b).
+    if (clase.pide_datos_de_licencia_del_consejo && data.con_remuneracion == null) {
+      ctx.addIssue({
+        path: ['con_remuneracion'], code: 'custom',
+        message: 'Indique si es con o sin remuneración, como dice la resolución',
       })
     }
 
@@ -246,6 +258,14 @@ export function esActoDeAutoridad(
   if (clase.pide_datos_del_periodo) return true
 
   return !!tipoNombramiento && clase.acto_de_autoridad_para.some((n) => n === tipoNombramiento)
+}
+
+/** El acto de autoridad lleva su documento de origen; el inicio del período, la credencial. */
+export function pideDocumentoDeOrigen(
+  clase: ClaseDelCatalogo | undefined,
+  tipoNombramiento?: string | null,
+): boolean {
+  return esActoDeAutoridad(clase, tipoNombramiento) && !clase?.pide_datos_del_periodo
 }
 
 /** ¿El traslado de este servidor pide el informe de la UATH? Lo responde el catálogo. */

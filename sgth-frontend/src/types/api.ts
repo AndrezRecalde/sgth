@@ -821,6 +821,10 @@ export type MovimientoPersonal = {
   credencial_cne_numero?: string | null
   credencial_cne_fecha?: string | null
   acta_posesion_numero?: string | null
+  // La licencia del Consejo: con o sin remuneración, y su prórroga (fase 4.1b).
+  con_remuneracion?: boolean | null
+  prorroga_causa?: 'enfermedad_catastrofica' | 'calamidad_domestica' | null
+  prorroga_causa_etiqueta?: string | null
   // La sentencia de una restitución (fase 2.6).
   causa_judicial_numero?: string | null
   unidad_judicial?: string | null
