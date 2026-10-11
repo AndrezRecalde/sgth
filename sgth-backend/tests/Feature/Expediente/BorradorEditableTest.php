@@ -373,6 +373,8 @@ test('la fecha de fin pactada llega al contrato', function () {
         'numero_contrato'        => 'CT-2026-0999',
         'remuneracion_propuesta' => 950,
         'fecha_fin_propuesta'    => '2026-11-30',
+        // El registro del contrato de un ocasional pide su partida (fase 2.7).
+        'partida_presupuestaria_id' => $this->partida->id,
     ]);
 
     $contrato = ContratoServidor::where('servidor_id', $servidor->id)->firstOrFail();
@@ -588,6 +590,8 @@ test('el plazo pactado en el borrador llega al contrato sin repetirlo al registr
     $this->service->actualizarBorrador($movimiento, [
         'numero_contrato'     => 'CT-2026-0888',
         'fecha_fin_propuesta' => '2026-12-15',
+        // El registro del contrato de un ocasional pide su partida (fase 2.7).
+        'partida_presupuestaria_id' => $this->partida->id,
     ]);
 
     $movimiento = $this->stateService->transicionar($movimiento->fresh(), EstadoAccionPersonal::SUSCRITA);

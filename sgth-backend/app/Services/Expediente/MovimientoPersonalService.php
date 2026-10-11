@@ -6,6 +6,7 @@ use App\Enums\CategoriaEventoVinculo;
 use App\Enums\ClaseAccionPersonal;
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\EstadoContrato;
+use App\Enums\InstrumentoActo;
 use App\Enums\SubtipoMovimientoPersonal;
 use App\Enums\TipoMovimientoPersonal;
 use App\Enums\TipoNombramiento;
@@ -218,6 +219,11 @@ class MovimientoPersonalService
         $datos['estado']    = EstadoAccionPersonal::BORRADOR;
         $datos['categoria'] = CategoriaEventoVinculo::ACCION_DE_PERSONAL;
 
+        // El ingreso de un ocasional es el registro de su contrato, sin acción
+        // [TH N7; fase 2.7]. Se decide aquí, por donde entran también el
+        // reemplazo y Reclutamiento.
+        $datos['instrumento'] = $this->instrumentoPara($tipoMovimiento, $datos['tipo_nombramiento_propuesto'] ?? null);
+
         // La restitución y la remoción del provisional que la hace caber nacen
         // juntas o no nace ninguna.
         $movimiento = $tipoMovimiento === TipoMovimientoPersonal::RESTITUCION
@@ -306,6 +312,15 @@ class MovimientoPersonalService
         $this->revalidarPeriodoDeComision($movimiento, $datos);
         $this->revalidarPeriodoDeLicencia($movimiento, $datos);
 
+        // Cambiar el nombramiento de un ingreso en borrador puede cambiar su
+        // instrumento: de acción a registro del contrato, o al revés.
+        if (array_key_exists('tipo_nombramiento_propuesto', $datos)) {
+            $datos['instrumento'] = $this->instrumentoPara(
+                $movimiento->tipo_movimiento,
+                $datos['tipo_nombramiento_propuesto'] ?? $movimiento->tipo_nombramiento_propuesto,
+            );
+        }
+
         $subtipoActual = $movimiento->subtipoEfectivo();
         if ($subtipoActual && self::vaAOtraInstitucion($subtipoActual)
             && array_key_exists('institucion_destino', $datos) && blank($datos['institucion_destino'])
@@ -326,6 +341,15 @@ class MovimientoPersonalService
             'unidadOrigen', 'unidadDestino', 'puestoOrigen.cargo',
             'puestoDestino.cargo', 'partidaPresupuestaria', 'autorizadoPor',
         ]);
+    }
+
+    private function instrumentoPara(TipoMovimientoPersonal $tipo, TipoNombramiento|string|null $nombramiento): string
+    {
+        $nombramiento = $nombramiento instanceof TipoNombramiento
+            ? $nombramiento
+            : TipoNombramiento::tryFrom((string) $nombramiento);
+
+        return InstrumentoActo::para($tipo, $nombramiento)->value;
     }
 
     /**

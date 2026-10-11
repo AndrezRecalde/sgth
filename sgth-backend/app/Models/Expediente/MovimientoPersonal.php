@@ -5,6 +5,7 @@ namespace App\Models\Expediente;
 use App\Enums\CategoriaEventoVinculo;
 use App\Enums\ClaseAccionPersonal;
 use App\Enums\EstadoAccionPersonal;
+use App\Enums\InstrumentoActo;
 use App\Enums\SubtipoMovimientoPersonal;
 use App\Enums\TipoMovimientoPersonal;
 use App\Enums\TipoNombramiento;
@@ -45,6 +46,7 @@ class MovimientoPersonal extends Model
                 'tipo_movimiento',
                 'subtipo_movimiento',
                 'clase',
+                'instrumento',
                 'estado',
                 'codigo_registro',
                 'fecha_registro',
@@ -210,11 +212,21 @@ class MovimientoPersonal extends Model
         });
     }
 
+    /**
+     * En memoria, antes de guardarse, ya es una acción de personal: es lo que
+     * la base pone por defecto (fase 2.7).
+     */
+    protected $attributes = [
+        'instrumento' => 'accion_personal',
+    ];
+
     protected $fillable = [
         'servidor_id',
         'tipo_movimiento',
         'subtipo_movimiento',
         'clase',
+        // Con qué documento se formaliza (diseño, 8.1; fase 2.7).
+        'instrumento',
         'requiere_dictamen_medico',
         'categoria',
         'estado',
@@ -282,6 +294,7 @@ class MovimientoPersonal extends Model
             'tipo_movimiento'             => TipoMovimientoPersonal::class,
             'subtipo_movimiento'          => SubtipoMovimientoPersonal::class,
             'clase'                       => ClaseAccionPersonal::class,
+            'instrumento'                 => InstrumentoActo::class,
             'requiere_dictamen_medico'    => 'boolean',
             'categoria'                   => CategoriaEventoVinculo::class,
             'estado'                      => EstadoAccionPersonal::class,
@@ -728,6 +741,22 @@ class MovimientoPersonal extends Model
         return in_array($this->estado, [EstadoAccionPersonal::REGISTRADA, EstadoAccionPersonal::NOTIFICADA], true)
             && filled($this->codigo_registro)
             && $this->efecto_aplicado_en === null;
+    }
+
+    /**
+     * ¿Tiene el documento del Ministerio? Depende del tipo y, desde la fase
+     * 2.7, del instrumento: el registro del contrato de un ocasional no tiene,
+     * porque el contrato se firma aparte.
+     */
+    public function tieneDocumentoImprimible(): bool
+    {
+        return (bool) $this->tipo_movimiento?->tieneDocumentoImprimible()
+            && ($this->instrumento ?? InstrumentoActo::ACCION_PERSONAL)->tieneDocumento();
+    }
+
+    public function esRegistroDeContrato(): bool
+    {
+        return $this->instrumento === InstrumentoActo::REGISTRO_CONTRATO;
     }
 
     /** ¿Ya rige en esa fecha? */

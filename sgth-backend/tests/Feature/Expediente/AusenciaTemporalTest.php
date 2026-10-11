@@ -7,6 +7,7 @@ use App\Enums\SubtipoMovimientoPersonal;
 use App\Enums\TipoMovimientoPersonal;
 use App\Enums\TipoNombramiento;
 use App\Exceptions\ReglaNegocioException;
+use App\Models\Estructura\PartidaPresupuestaria;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Expediente\ContratoServidor;
@@ -33,9 +34,14 @@ beforeEach(function () {
         'codigo' => 'UATH-AUS', 'nombre' => 'Dirección de Obras Públicas', 'nivel' => 1,
     ]);
 
-    // Una sola plaza: es la condición que hace interesante el reemplazo.
+    // Una sola plaza: es la condición que hace interesante el reemplazo. Con
+    // partida, que el registro del contrato de un ocasional pide (fase 2.7).
     $this->puesto = Puesto::create([
         'codigo' => 'P-AUS', 'unidad_administrativa_id' => $this->unidad->id, 'plazas' => 1,
+        'partida_presupuestaria_id' => PartidaPresupuestaria::create([
+            'codigo' => '510510', 'descripcion' => 'Servicios Personales por Contrato',
+            'grupo_gasto' => 'Gastos en Personal', 'activo' => true, 'disponible' => true,
+        ])->id,
     ]);
 
     $this->service      = app(MovimientoPersonalService::class);

@@ -1,4 +1,4 @@
-import type { ClaseAccionPersonal, EstadoAccionPersonal, TipoMovimientoPersonal } from '@/types/api'
+import type { ClaseAccionPersonal, EstadoAccionPersonal, InstrumentoActo, TipoMovimientoPersonal } from '@/types/api'
 
 // Los tipos de las peticiones de acciones de personal, fuera del servicio
 // para que este no pase de 100 líneas (regla 02).
@@ -12,6 +12,8 @@ export type FiltrosBandeja = {
   estado?: EstadoAccionPersonal
   tipo_movimiento?: TipoMovimientoPersonal
   clase?: ClaseAccionPersonal
+  /** Acciones de personal o registros del contrato (fase 2.7). */
+  instrumento?: InstrumentoActo
   servidor_id?: number
   anio?: number
   page?: number

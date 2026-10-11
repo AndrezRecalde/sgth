@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Expediente;
 
 use App\Enums\ClaseAccionPersonal;
+use App\Enums\InstrumentoActo;
 use App\Enums\TipoNombramiento;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -39,6 +40,10 @@ class ClaseAccionPersonalResource extends JsonResource
             'admite_para_estudios_o_eventos' => $clase->admiteParaEstudiosOEventos(),
             'pide_datos_judiciales'       => $clase->pideDatosJudiciales(),
             'pide_contratacion'           => $clase->pideContratacion(),
+            // Con estos nombramientos no es acción sino registro del contrato
+            // (fase 2.7): el formulario no pide firmantes.
+            /** @var list<TipoNombramiento> */
+            'registro_de_contrato_para'   => InstrumentoActo::nombramientosConRegistroDeContrato($clase),
             'dictamen_medico_por_defecto' => $clase->dictamenMedicoPorDefecto(),
             'aviso'                       => $clase->aviso(),
         ];

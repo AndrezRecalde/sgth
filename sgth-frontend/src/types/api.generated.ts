@@ -7404,6 +7404,7 @@ export interface components {
             admite_para_estudios_o_eventos: boolean;
             pide_datos_judiciales: boolean;
             pide_contratacion: boolean;
+            registro_de_contrato_para: components["schemas"]["TipoNombramiento"][];
             dictamen_medico_por_defecto: boolean;
             aviso: string | null;
         };
@@ -8414,6 +8415,18 @@ export interface components {
             /** Format: date-time */
             deleted_at: string | null;
         };
+        /**
+         * InstrumentoActo
+         * @description Con qué documento se formaliza un acto (diseño de Acciones de Personal, 8.1). Todos comparten el registro, el historial y el motor de efectos; cambian la numeración, el documento y quién firma. Llegan de uno en uno, con su bloque. El primero distinto de la acción de personal es el registro del contrato de un ocasional (fase 2.7; TH N7): la ley no le pide acción a ese ingreso (LOSEP 18, último inciso; Reglamento 19). Los de obreros, profesionales y autoridades electas vendrán con los suyos.
+         * @enum {string}
+         */
+        InstrumentoActo: "accion_personal" | "registro_contrato";
+        /** InstrumentoActoResource */
+        InstrumentoActoResource: {
+            codigo: components["schemas"]["InstrumentoActo"];
+            /** @enum {string} */
+            etiqueta: "Acción de personal" | "Registro del contrato";
+        };
         /** InventarioMedicina */
         InventarioMedicina: {
             id: number;
@@ -8602,6 +8615,7 @@ export interface components {
             /** Format: date-time */
             fecha_ejecutoria: string | null;
             remuneraciones_dejadas_de_percibir: string | null;
+            instrumento: components["schemas"]["InstrumentoActo"];
         };
         /** MovimientoPersonalResource */
         MovimientoPersonalResource: {
@@ -8634,6 +8648,12 @@ export interface components {
             propone_situacion: boolean;
             tiene_efecto_economico: boolean;
             tiene_documento_imprimible: boolean;
+            /**
+             * @description Con qué documento se formaliza (fase 2.7): el ingreso de un
+             *     ocasional es el registro de su contrato, sin acción.
+             */
+            instrumento: components["schemas"]["InstrumentoActo"];
+            instrumento_etiqueta: string;
             editable_en_formulario: boolean;
             /**
              * @description Lo que puede hacer con ella quien pregunta (fase 1.3): los pasos
@@ -14835,6 +14855,8 @@ export interface operations {
                         datos: {
                             familias: components["schemas"]["FamiliaAccionPersonalResource"][];
                             clases: components["schemas"]["ClaseAccionPersonalResource"][];
+                            /** @description Con qué documento se formaliza cada acto (fase 2.7). */
+                            instrumentos: components["schemas"]["InstrumentoActoResource"][];
                         };
                         meta: null;
                     };
@@ -22384,6 +22406,7 @@ export interface operations {
                 estado?: string;
                 tipo_movimiento?: string;
                 clase?: string;
+                instrumento?: string;
                 servidor_id?: number;
                 anio?: number;
                 per_page?: number;

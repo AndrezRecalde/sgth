@@ -7,10 +7,11 @@ import { IconFileDescription } from '@tabler/icons-react'
 import { DataState, PAGINACION_ES, SgthTable, Toolbar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { POR_PAGINA_BANDEJA, useBandejaMovimientos } from '../hooks/useMovimientoMutations'
+import { useCatalogoAcciones } from '../hooks/useCatalogoAcciones'
 import { AccionPersonalDetalleDrawer } from './AccionPersonalDetalleDrawer'
 import { getBandejaAccionesColumns } from './bandejaAcciones.columns'
 import { ESTADO_LABELS } from '../utils/estadoAccionPersonal'
-import type { EstadoAccionPersonal } from '@/types/api'
+import type { EstadoAccionPersonal, InstrumentoActo } from '@/types/api'
 
 const ESTADO_OPTIONS = (Object.keys(ESTADO_LABELS) as EstadoAccionPersonal[])
   .map((e) => ({ value: e, label: ESTADO_LABELS[e] }))
@@ -26,12 +27,18 @@ export function BandejaAccionesPersonal() {
   // de captura.
   const contained = useContainedInput('sm')
   const [estado, setEstado] = useState<EstadoAccionPersonal | null>('borrador')
+  const [instrumento, setInstrumento] = useState<InstrumentoActo | null>(null)
   const [pagina, setPagina] = useState(1)
+  // Acciones de personal o registros del contrato (fase 2.7): las opciones
+  // y sus nombres los da el catálogo.
+  const catalogo = useCatalogoAcciones()
+  const instrumentos = (catalogo.data?.instrumentos ?? []).map((i) => ({ value: i.codigo, label: i.etiqueta }))
   const [seleccionadoId, setSeleccionadoId] = useState<number | null>(null)
   const [detalleOpened, { open: abrirDetalle, close: cerrarDetalle }] = useDisclosure(false)
 
   const { data, isLoading, error, refetch } = useBandejaMovimientos({
     ...(estado ? { estado } : {}),
+    ...(instrumento ? { instrumento } : {}),
     page: pagina,
   })
 
@@ -41,6 +48,11 @@ export function BandejaAccionesPersonal() {
   /** Cambiar el filtro devuelve a la primera página: la 4 puede no existir. */
   const cambiarEstado = (valor: string | null) => {
     setEstado(valor as EstadoAccionPersonal | null)
+    setPagina(1)
+  }
+
+  const cambiarInstrumento = (valor: string | null) => {
+    setInstrumento(valor as InstrumentoActo | null)
     setPagina(1)
   }
 
@@ -66,6 +78,16 @@ export function BandejaAccionesPersonal() {
           clearable
           {...contained}
           style={{ minWidth: 260 }}
+        />
+        <Select
+          label="Instrumento"
+          placeholder="Todos"
+          data={instrumentos}
+          value={instrumento}
+          onChange={cambiarInstrumento}
+          clearable
+          {...contained}
+          style={{ minWidth: 240 }}
         />
       </Toolbar>
 

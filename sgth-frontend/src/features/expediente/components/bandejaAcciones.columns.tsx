@@ -41,6 +41,10 @@ export const getBandejaAccionesColumns = ({
         {m.causal_etiqueta && (
           <Text size="xs" c="dimmed">{m.causal_etiqueta}</Text>
         )}
+        {/* Fase 2.7: el ingreso de un ocasional no es una acción de personal. */}
+        {m.instrumento === 'registro_contrato' && (
+          <Text size="xs" c="dimmed">{m.instrumento_etiqueta}</Text>
+        )}
       </div>
     ),
   },

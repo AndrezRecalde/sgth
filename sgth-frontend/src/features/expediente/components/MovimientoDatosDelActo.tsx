@@ -33,6 +33,12 @@ export function MovimientoDatosDelActo({
   const { control, register, formState: { errors } } = form
 
   const caucionado = useWatch({ control, name: 'caucionado' })
+  const nombramiento = useWatch({ control, name: 'tipo_nombramiento_propuesto' })
+
+  // El ingreso de un ocasional es el registro de su contrato (fase 2.7): el
+  // contrato se firma aparte y aquí nadie firma.
+  const esRegistroDeContrato = !!nombramiento
+    && !!clase?.registro_de_contrato_para.some((n) => n === nombramiento)
 
   const muestraFechas = !!clase?.pide_periodo
   const pideInstitucion = !!clase?.pide_institucion_destino
@@ -154,12 +160,22 @@ export function MovimientoDatosDelActo({
         )}
       />
 
-      <SectionHeading title="Firmarán este documento" mt={4} mb={4} />
+      {esRegistroDeContrato ? (
+        <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
+          El ingreso de un ocasional no lleva acción de personal (LOSEP Art. 18;
+          Reglamento Art. 19): es el registro de su contrato, con su número. El
+          contrato se firma aparte, así que aquí no hay firmantes ni documento.
+        </Alert>
+      ) : (
+        <>
+          <SectionHeading title="Firmarán este documento" mt={4} mb={4} />
 
-      <Text size="xs" c="dimmed">
-        Se toman del organigrama y quedan sellados al suscribir la acción.
-      </Text>
-      <FirmantesPanel compacto />
+          <Text size="xs" c="dimmed">
+            Se toman del organigrama y quedan sellados al suscribir la acción.
+          </Text>
+          <FirmantesPanel compacto />
+        </>
+      )}
 
       <SectionHeading title="Caución" mt={4} mb={4} />
 

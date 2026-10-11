@@ -692,9 +692,13 @@ export type FamiliaAccionPersonal = components['schemas']['FamiliaAccionPersonal
 export type ClaseDelCatalogo = components['schemas']['ClaseAccionPersonalResource']
 export type CausalDelCatalogo = components['schemas']['CausalAccionPersonalResource']
 export type FamiliaDelCatalogo = components['schemas']['FamiliaAccionPersonalResource']
+/** Con qué documento se formaliza un acto (fase 2.7). */
+export type InstrumentoActo = components['schemas']['InstrumentoActo']
+export type InstrumentoDelCatalogo = components['schemas']['InstrumentoActoResource']
 export type CatalogoAccionesPersonal = {
   familias: FamiliaDelCatalogo[]
   clases: ClaseDelCatalogo[]
+  instrumentos: InstrumentoDelCatalogo[]
 }
 
 export type EstadoAccionPersonal =
@@ -783,6 +787,9 @@ export type MovimientoPersonal = {
    * El acto con que se enlaza (fase 2.4): la ausencia que cierra un reintegro,
    * o el reintegro del que salió la cesación de un reemplazo.
    */
+  /** El ingreso de un ocasional es el registro de su contrato, sin acción (fase 2.7). */
+  instrumento?: InstrumentoActo | null
+  instrumento_etiqueta?: string | null
   movimiento_relacionado_id?: number | null
   relacionado?: {
     id: number
