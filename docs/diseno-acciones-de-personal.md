@@ -635,8 +635,8 @@ Así hay un solo historial, un solo motor de efectos y una sola bandeja, filtrab
 - **Supresión de puestos**: aplazada; no se prevé por ahora [TH N16]. Mientras tanto, `eliminarPuesto` queda solo para puestos sin ocupantes ni historia. Si algún día se necesita, se diseña según el Art. 60: informe técnico, protecciones, indemnización y una partida que no se recrea en 2 años.
 
 ### 9.8 Nómina
-- La nómina toma la remuneración **del vínculo** (`contratos_servidor.remuneracion`), no la del puesto.
-- Consume `novedades_nomina`.
+- **Financiero paga en su propio sistema** (decisión de TH, 2026-10-04, la de las multas). El SGTH le entrega cada mes las **novedades para nómina**, con su monto de referencia (fase 7.3a).
+- La nómina del SGTH toma la remuneración **del vínculo** (`contratos_servidor.remuneracion`), no la del puesto, y aplica las novedades. Es un cálculo paralelo, «referencial», para la corrida del mes de prueba (fase 7.3c).
 - Es un cambio de alto riesgo: se propone **una corrida en paralelo** de un mes antes de cambiar.
 
 ### 9.9 Desvinculación (nuevo)
@@ -1174,7 +1174,21 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
    - **«Ver el lote»** desde la ficha de cualquier acto que nació en uno, también los del incremento de los obreros.
    - Se registran como antes: el incremento, de uno en uno, y el que falla se corrige desde la bandeja; el traspaso y la revisión, enteros.
    - Fuera: el incremento de la escala de la LOSEP, que espera la respuesta de Talento Humano sobre si emite acciones de personal y va con la 7.3.
-3. Novedades de nómina; la nómina lee el vínculo (con un mes de corrida en paralelo).
+3. Novedades de nómina; la nómina lee el vínculo (con un mes de corrida en paralelo). En tres PR: 3a, las novedades; 3b, la nueva escala; 3c, la nómina del SGTH sobre el vínculo.
+   - Hasta aquí la nómina del SGTH pagaba `puesto->rmu` a todo servidor activo, el mes entero, sin leer ningún acto, y nadie la usaba: Financiero paga en su sistema (9.8). Los actos que tocan el sueldo le llegaban solo por correo, y solo la multa, la suspensión y la liquidación del obrero.
+   - **3a.** Las novedades del mes **se derivan de los actos** cada vez, como la ausencia (`NovedadesDelMes`): no se guardan mientras el mes está abierto, así que un reintegro que acorta una licencia o un acto que se anula cambian el mes sin corregir filas. Cada monto sale de las remuneraciones que el acto congeló, como el descuento de la multa:
+     - **ingreso y salida** en el mes, con los días que se pagan. El vínculo lo crea y lo cierra el motor el día en que rige, así que también se leen del acto registrado que todavía no rige; la clave es la del acto, para que no cambie al aplicarse;
+     - **cambio de remuneración** (revisión, ascenso, reintegro del ascenso, asunción, adenda del obrero): la diferencia de los días que restan;
+     - **días sin remuneración**: licencia y comisión sin remuneración, licencia del Consejo que no la conserva (hasta la víspera del reintegro) y suspensión;
+     - **subrogación y encargo**, también la del Viceprefecto: la diferencia entre lo que el subrogante ya percibe y la RMU del puesto, las dos que congela su acción. Nunca negativa;
+     - **multa**, en el mes en que rige, y **remuneraciones pendientes** de la restitución (las que fija la sentencia) y del reintegro del obrero (con el recargo del 10 %, solo con sentencia).
+   - **3a.** Servicios Profesionales queda fuera: su contrato civil se paga con honorarios contra factura [TH N6].
+   - **3a.** **Mes de treinta días**, el de la suspensión: el 31 no cuenta y el último de febrero vale 30. Quien entra el 16 cobra 15 días. [Pendiente: lo confirma Financiero.]
+   - **3a.** **La entrega** (`entregas_novedades_nomina`, `novedades_nomina`): el Director de Talento Humano la hace una vez por mes, hasta el mes en curso. Congela lo entregado y le envía el Excel al jefe de Gestión Financiera (`JefeFinanciero`, que ahora comparten los avisos de la multa y de la liquidación); si no hay a quién o el correo falla, la entrega queda hecha y la pantalla lo dice.
+   - **3a.** **Los ajustes**: lo que cambie en un mes entregado se entrega en el mes siguiente, por la diferencia entre lo que hoy resulta y lo ya entregado. Cada fila guarda si la novedad sigue en pie, para que la que se revierte no se revierta otra vez. Los meses que nunca se entregaron, como los anteriores a empezar a usarlo, no generan ajustes. El mes entregado avisa de lo que cambió después.
+   - **3a.** La subrogación cancelada guarda el día (`cancelada_en`) y paga hasta la víspera; la que cierra una cesación termina ese día, como ya decía la bitácora.
+   - **3a.** Permisos `ver-novedades-nomina` (Talento Humano, Financiero y el auditor) y `entregar-novedades-nomina` (el Director). La pestaña «Novedades del mes» en Nómina, con el mes, el resumen por concepto, el acto de cada fila, los ajustes y el Excel. «Nómina» deja de salir en el menú de quien no puede abrirla.
+   - **3a.** Fuera: la liquidación de la salida (7.4), horas extras, atrasos de Asistencia y viáticos; y el ingreso y la salida en el mismo mes cuando la cesación todavía no rige.
 4. Desvinculación.
 5. Reporte SIITH por clase, con su pantalla.
 

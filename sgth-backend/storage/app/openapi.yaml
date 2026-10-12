@@ -30009,6 +30009,483 @@
                 }
             }
         },
+        "/v1/nomina/novedades": {
+            "get": {
+                "operationId": "novedadNomina.index",
+                "summary": "Las novedades de un mes: derivadas de los actos si est\u00e1 abierto, o como\nse entregaron, con lo que cambi\u00f3 despu\u00e9s",
+                "tags": [
+                    "NovedadNomina"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string"
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "periodo": {
+                                                    "type": "string"
+                                                },
+                                                "etiqueta": {
+                                                    "type": "string"
+                                                },
+                                                "entrega": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "entregada_en": {
+                                                            "type": "string"
+                                                        },
+                                                        "entregada_por": {
+                                                            "type": "string"
+                                                        },
+                                                        "novedades": {
+                                                            "type": "string"
+                                                        },
+                                                        "ajustes": {
+                                                            "type": "string"
+                                                        },
+                                                        "destinatario": {
+                                                            "type": "string"
+                                                        },
+                                                        "aviso": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "entregada_en",
+                                                        "entregada_por",
+                                                        "novedades",
+                                                        "ajustes",
+                                                        "destinatario",
+                                                        "aviso"
+                                                    ]
+                                                },
+                                                "puede_entregarse": {
+                                                    "type": "string"
+                                                },
+                                                "novedades": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "": {
+                                                                "anyOf": [
+                                                                    {
+                                                                        "type": "string"
+                                                                    },
+                                                                    {
+                                                                        "type": "object"
+                                                                    },
+                                                                    {
+                                                                        "type": "null"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "concepto": {
+                                                                "type": "string"
+                                                            },
+                                                            "concepto_etiqueta": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            null,
+                                                            "concepto",
+                                                            "concepto_etiqueta"
+                                                        ]
+                                                    }
+                                                },
+                                                "ajustes": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "": {
+                                                                "type": "string"
+                                                            },
+                                                            "concepto": {
+                                                                "type": "string"
+                                                            },
+                                                            "concepto_etiqueta": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            null,
+                                                            "concepto",
+                                                            "concepto_etiqueta"
+                                                        ]
+                                                    }
+                                                },
+                                                "cambios_tras_la_entrega": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "": {
+                                                                "type": "string"
+                                                            },
+                                                            "concepto": {
+                                                                "type": "string"
+                                                            },
+                                                            "concepto_etiqueta": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            null,
+                                                            "concepto",
+                                                            "concepto_etiqueta"
+                                                        ]
+                                                    }
+                                                },
+                                                "resumen": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "concepto": {
+                                                                "type": "string"
+                                                            },
+                                                            "etiqueta": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "Ingreso",
+                                                                    "Salida",
+                                                                    "Cambio de remuneraci\u00f3n",
+                                                                    "D\u00edas sin remuneraci\u00f3n",
+                                                                    "Subrogaci\u00f3n",
+                                                                    "Encargo",
+                                                                    "Multa",
+                                                                    "Remuneraciones pendientes"
+                                                                ]
+                                                            },
+                                                            "cantidad": {
+                                                                "type": "integer",
+                                                                "minimum": 0
+                                                            },
+                                                            "monto": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "concepto",
+                                                            "etiqueta",
+                                                            "cantidad",
+                                                            "monto"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "periodo",
+                                                "etiqueta",
+                                                "entrega",
+                                                "puede_entregarse",
+                                                "novedades",
+                                                "ajustes",
+                                                "cambios_tras_la_entrega",
+                                                "resumen"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/nomina/novedades/excel": {
+            "get": {
+                "operationId": "novedadNomina.excel",
+                "summary": "Las novedades y los ajustes del mes, en Excel",
+                "tags": [
+                    "NovedadNomina"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/nomina/novedades/entregar": {
+            "post": {
+                "operationId": "novedadNomina.entregar",
+                "summary": "Congela el mes y se lo env\u00eda al jefe de Gesti\u00f3n Financiera",
+                "tags": [
+                    "NovedadNomina"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "periodo": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "periodo"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string"
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "periodo": {
+                                                    "type": "string"
+                                                },
+                                                "etiqueta": {
+                                                    "type": "string"
+                                                },
+                                                "entrega": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "entregada_en": {
+                                                            "type": "string"
+                                                        },
+                                                        "entregada_por": {
+                                                            "type": "string"
+                                                        },
+                                                        "novedades": {
+                                                            "type": "string"
+                                                        },
+                                                        "ajustes": {
+                                                            "type": "string"
+                                                        },
+                                                        "destinatario": {
+                                                            "type": "string"
+                                                        },
+                                                        "aviso": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "entregada_en",
+                                                        "entregada_por",
+                                                        "novedades",
+                                                        "ajustes",
+                                                        "destinatario",
+                                                        "aviso"
+                                                    ]
+                                                },
+                                                "puede_entregarse": {
+                                                    "type": "string"
+                                                },
+                                                "novedades": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "": {
+                                                                "anyOf": [
+                                                                    {
+                                                                        "type": "string"
+                                                                    },
+                                                                    {
+                                                                        "type": "object"
+                                                                    },
+                                                                    {
+                                                                        "type": "null"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "concepto": {
+                                                                "type": "string"
+                                                            },
+                                                            "concepto_etiqueta": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            null,
+                                                            "concepto",
+                                                            "concepto_etiqueta"
+                                                        ]
+                                                    }
+                                                },
+                                                "ajustes": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "": {
+                                                                "type": "string"
+                                                            },
+                                                            "concepto": {
+                                                                "type": "string"
+                                                            },
+                                                            "concepto_etiqueta": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            null,
+                                                            "concepto",
+                                                            "concepto_etiqueta"
+                                                        ]
+                                                    }
+                                                },
+                                                "cambios_tras_la_entrega": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "": {
+                                                                "type": "string"
+                                                            },
+                                                            "concepto": {
+                                                                "type": "string"
+                                                            },
+                                                            "concepto_etiqueta": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            null,
+                                                            "concepto",
+                                                            "concepto_etiqueta"
+                                                        ]
+                                                    }
+                                                },
+                                                "resumen": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "concepto": {
+                                                                "type": "string"
+                                                            },
+                                                            "etiqueta": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "Ingreso",
+                                                                    "Salida",
+                                                                    "Cambio de remuneraci\u00f3n",
+                                                                    "D\u00edas sin remuneraci\u00f3n",
+                                                                    "Subrogaci\u00f3n",
+                                                                    "Encargo",
+                                                                    "Multa",
+                                                                    "Remuneraciones pendientes"
+                                                                ]
+                                                            },
+                                                            "cantidad": {
+                                                                "type": "integer",
+                                                                "minimum": 0
+                                                            },
+                                                            "monto": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "concepto",
+                                                            "etiqueta",
+                                                            "cantidad",
+                                                            "monto"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "periodo",
+                                                "etiqueta",
+                                                "entrega",
+                                                "puede_entregarse",
+                                                "novedades",
+                                                "ajustes",
+                                                "cambios_tras_la_entrega",
+                                                "resumen"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "aviso_financiero": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "aviso_financiero"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/dispensario/odontograma/historia-clinica/{historiaClinicaId}": {
             "get": {
                 "operationId": "odontograma.show",

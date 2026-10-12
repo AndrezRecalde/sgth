@@ -594,6 +594,7 @@ class SubrogacionService implements SubrogacionServiceInterface
         foreach ($vigentes as $subrogacion) {
             $subrogacion->update([
                 'estado' => EstadoSubrogacion::CANCELADA->value,
+                'cancelada_en' => now()->toDateString(),
                 // Se añade, no se reemplaza: el mass-update anterior borraba de
                 // un golpe lo que Talento Humano hubiera anotado al registrarla.
                 // `cancelar()` ya concatenaba; esto hacía lo contrario.
@@ -704,8 +705,11 @@ class SubrogacionService implements SubrogacionServiceInterface
             }
 
             $subrogacion->update([
-                'estado'      => EstadoSubrogacion::CANCELADA,
-                'observacion' => $this->conNota($subrogacion->observacion, "Cancelado: {$motivo}"),
+                'estado'       => EstadoSubrogacion::CANCELADA,
+                // Hasta la víspera surtió efecto: es lo que paga la nómina
+                // (fase 7.3a).
+                'cancelada_en' => now()->toDateString(),
+                'observacion'  => $this->conNota($subrogacion->observacion, "Cancelado: {$motivo}"),
             ]);
 
             $this->cerrarElActoQueLaRespaldaba($subrogacion, $motivo);
@@ -751,6 +755,10 @@ class SubrogacionService implements SubrogacionServiceInterface
 
             $subrogacion->update([
                 'estado'      => EstadoSubrogacion::FINALIZADA,
+                // Termina el día en que rige la cesación, como dice la
+                // bitácora. Hasta aquí conservaba el fin previsto, y la nómina
+                // habría pagado la diferencia de días que no subrogó (fase 7.3a).
+                'fecha_fin'   => $this->finPorCesacion($subrogacion, $cesacion),
                 'observacion' => $this->conNota($subrogacion->observacion, "Finalizada: {$motivo}"),
             ]);
 
@@ -763,6 +771,23 @@ class SubrogacionService implements SubrogacionServiceInterface
         }
 
         return $afectadas->count();
+    }
+
+    /**
+     * El fin de la subrogación que cierra una cesación: el día en que rige, si
+     * es antes del previsto y no antes de que empezara.
+     */
+    private function finPorCesacion(Subrogacion $subrogacion, MovimientoPersonal $cesacion): ?string
+    {
+        $dia = $cesacion->fecha_efectiva;
+
+        if (! $dia || $dia->lt($subrogacion->fecha_inicio)
+            || ($subrogacion->fecha_fin && $subrogacion->fecha_fin->lte($dia))
+        ) {
+            return $subrogacion->fecha_fin?->toDateString();
+        }
+
+        return $dia->toDateString();
     }
 
     /**

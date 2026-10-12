@@ -112,6 +112,7 @@ use App\Http\Controllers\Nomina\ConceptoNominaController;
 use App\Http\Controllers\Nomina\DescuentoRecurrenteController;
 use App\Http\Controllers\Nomina\HandoffErpController;
 use App\Http\Controllers\Nomina\NominaController;
+use App\Http\Controllers\Nomina\NovedadNominaController;
 use App\Http\Controllers\Nomina\RolPagoController;
 use App\Http\Controllers\Reporte\ConfiguracionReporteMovimientoController;
 use App\Http\Controllers\Reporte\ReporteSiithSutController;
@@ -670,6 +671,15 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // inalcanzables y devolvían un 500 desde que se escribieron.
         Route::get('conceptos', [ConceptoNominaController::class, 'index']);
         Route::get('handoffs', [HandoffErpController::class, 'index']);
+
+        // Las novedades del mes, que Financiero aplica en su sistema (fase
+        // 7.3a): verlas y descargarlas, y entregarlas, que congela el mes.
+        Route::get('novedades', [NovedadNominaController::class, 'index'])
+            ->middleware('permission:ver-novedades-nomina');
+        Route::get('novedades/excel', [NovedadNominaController::class, 'excel'])
+            ->middleware('permission:ver-novedades-nomina');
+        Route::post('novedades/entregar', [NovedadNominaController::class, 'entregar'])
+            ->middleware('permission:entregar-novedades-nomina');
 
         Route::apiResource('descuentos-recurrentes', DescuentoRecurrenteController::class)
             ->middleware('role:admin-uath|asistente-uath');

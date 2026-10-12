@@ -6,7 +6,7 @@ use App\Enums\EstadoAccionPersonal;
 use App\Mail\Expediente\LiquidacionObreroMail;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Services\Disciplinario\AvisoFinancieroSancionService;
-use App\Services\Estructura\FirmanteOrganigramaService;
+use App\Services\Estructura\JefeFinanciero;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Mail;
 class AvisoLiquidacionObreroService
 {
     public function __construct(
-        private readonly FirmanteOrganigramaService $organigrama,
+        private readonly JefeFinanciero $jefeFinanciero,
         private readonly AccionPersonalPdfService $pdf,
         private readonly TerminacionObreroService $terminaciones,
     ) {
@@ -49,7 +49,7 @@ class AvisoLiquidacionObreroService
             return null;
         }
 
-        $direccion = $this->direccionDelJefeFinanciero();
+        $direccion = $this->jefeFinanciero->direccion();
 
         if (! $direccion) {
             Log::warning('Liquidación de obrero sin destinatario: la unidad financiera no tiene jefe con usuario', [
@@ -80,18 +80,5 @@ class AvisoLiquidacionObreroService
         }
 
         return AvisoFinancieroSancionService::ENVIADO;
-    }
-
-    private function direccionDelJefeFinanciero(): ?string
-    {
-        $unidad = $this->organigrama->unidadAnclada('es_unidad_financiera');
-
-        if (! $unidad) {
-            return null;
-        }
-
-        $jefe = $this->organigrama->jefeDeUnidadEn($unidad, now()->toDateString())['servidor'];
-
-        return $jefe?->loadMissing('usuario')->usuario?->email;
     }
 }
