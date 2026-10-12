@@ -2,7 +2,9 @@
 
 namespace App\Services\Expediente;
 
+use App\Enums\CausaLicencia;
 use App\Exceptions\ReglaNegocioException;
+use App\Models\Expediente\ClausulaDeLicencia;
 use App\Models\Expediente\ContratoColectivo;
 use App\Models\Expediente\SalarioBasico;
 use Carbon\Carbon;
@@ -44,7 +46,7 @@ class ContratoColectivoService
     /** @return Collection<int, ContratoColectivo> */
     public function listar(): Collection
     {
-        return ContratoColectivo::orderByDesc('vigencia_desde')->orderByDesc('id')->get();
+        return ContratoColectivo::with('clausulasDeLicencia')->orderByDesc('vigencia_desde')->orderByDesc('id')->get();
     }
 
     /** @return Collection<int, SalarioBasico> */
@@ -108,6 +110,107 @@ class ContratoColectivoService
 
             return $contrato->fresh();
         });
+    }
+
+    /**
+     * Registra o corrige una cláusula de licencia del contrato (fase 5.3).
+     *
+     * La que amplía una causa de la ley tiene que dar más días que la ley: los
+     * derechos del trabajador son irrenunciables (Código del Trabajo, Art. 4),
+     * y una cláusula que da menos no se aplicaría. Una causa se amplía una vez
+     * por contrato y caso. La causa nueva lleva su nombre.
+     *
+     * @param  array{clausula: string, causa?: ?string, alcance?: ?string, nombre?: ?string, dias: int|string, dias_por_anio?: int|string|null, observacion?: ?string}  $datos
+     */
+    public function guardarClausulaDeLicencia(
+        ContratoColectivo $contrato, array $datos, ?ClausulaDeLicencia $clausula, int $userId,
+    ): ClausulaDeLicencia {
+        $this->impedirSiYaRespaldaLicencias($clausula);
+
+        $causa = filled($datos['causa'] ?? null) ? CausaLicencia::from($datos['causa']) : null;
+        $alcance = $causa && filled($datos['alcance'] ?? null) ? (string) $datos['alcance'] : null;
+        $dias = (int) $datos['dias'];
+
+        if ($causa) {
+            $this->validarAmpliacion($contrato, $causa, $alcance, $dias, $clausula);
+        }
+
+        $clausula ??= new ClausulaDeLicencia(['contrato_colectivo_id' => $contrato->id, 'created_by' => $userId]);
+
+        $clausula->fill([
+            'clausula'      => trim((string) $datos['clausula']),
+            'causa'         => $causa?->value,
+            'alcance'       => $alcance,
+            'nombre'        => $causa ? null : trim((string) ($datos['nombre'] ?? '')),
+            'dias'          => $dias,
+            'dias_por_anio' => filled($datos['dias_por_anio'] ?? null) ? (int) $datos['dias_por_anio'] : null,
+            'observacion'   => filled($datos['observacion'] ?? null) ? trim((string) $datos['observacion']) : null,
+            'updated_by'    => $userId,
+        ])->save();
+
+        return $clausula->fresh('contratoColectivo');
+    }
+
+    public function eliminarClausulaDeLicencia(ClausulaDeLicencia $clausula): void
+    {
+        $this->impedirSiYaRespaldaLicencias($clausula);
+
+        $clausula->delete();
+    }
+
+    /**
+     * La licencia dice lo que se le concedió con la cláusula: cambiarla o
+     * borrarla después le cambiaría el respaldo a una licencia ya registrada.
+     */
+    private function impedirSiYaRespaldaLicencias(?ClausulaDeLicencia $clausula): void
+    {
+        if ($clausula?->licencias()->exists()) {
+            throw new ReglaNegocioException(
+                "La {$clausula->clausula} ya respalda licencias registradas: no se cambia ni se borra. "
+                    .'Si el contrato colectivo cambió, regístrelo como un contrato nuevo.'
+            );
+        }
+    }
+
+    private function validarAmpliacion(
+        ContratoColectivo $contrato, CausaLicencia $causa, ?string $alcance, int $dias, ?ClausulaDeLicencia $clausula,
+    ): void {
+        if ($alcance === null && $causa->exigeAlcance()) {
+            throw new ReglaNegocioException(
+                "La licencia por {$causa->etiqueta()} distingue de quién es: indique el caso que la cláusula amplía."
+            );
+        }
+
+        if ($alcance !== null && ! array_key_exists($alcance, $causa->alcances())) {
+            throw new ReglaNegocioException("Ese caso no corresponde a la licencia por {$causa->etiqueta()}.");
+        }
+
+        $legal = $causa->tope($alcance);
+
+        if ($legal === null) {
+            throw new ReglaNegocioException(
+                "La licencia por {$causa->etiqueta()} no tiene tope en la ley: dura lo que diga el certificado, y no hay días que ampliar."
+            );
+        }
+
+        if ($dias <= $legal) {
+            throw new ReglaNegocioException(
+                "La ley ya da {$legal} días por {$causa->etiqueta()} ({$causa->baseLegal()}): una cláusula que da {$dias} no la "
+                    .'mejora, y los derechos del trabajador son irrenunciables (Código del Trabajo, Art. 4).'
+            );
+        }
+
+        $otra = ClausulaDeLicencia::where('contrato_colectivo_id', $contrato->id)
+            ->where('causa', $causa->value)
+            ->when($alcance, fn ($q) => $q->where('alcance', $alcance), fn ($q) => $q->whereNull('alcance'))
+            ->when($clausula?->id, fn ($q) => $q->where('id', '!=', $clausula->id))
+            ->first();
+
+        if ($otra) {
+            throw new ReglaNegocioException(
+                "El contrato ya amplía la licencia por {$otra->etiqueta()} en la {$otra->clausula}: corrija esa."
+            );
+        }
     }
 
     /**

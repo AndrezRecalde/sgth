@@ -461,7 +461,7 @@ class VacacionService implements VacacionServiceInterface
             throw new ReglaNegocioException(sprintf(
                 'Las fechas incluyen la licencia %s (%s), del %s al %s: esos días ya tienen una ausencia. Elija otras fechas.',
                 $licencia->folio,
-                $licencia->causa->etiqueta(),
+                $licencia->etiquetaDeLaCausa(),
                 $licencia->fecha_inicio->format('d/m/Y'),
                 $licencia->fecha_fin->format('d/m/Y')
             ));

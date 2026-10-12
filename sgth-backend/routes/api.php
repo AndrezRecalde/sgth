@@ -439,6 +439,13 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->middleware('role:admin-uath');
         Route::get('contratos-colectivos/{contratoColectivo}/documento', [ContratoColectivoController::class, 'descargar'])
             ->middleware('role:admin-uath|asistente-uath');
+        // Sus cláusulas de licencia (fase 5.3).
+        Route::post('contratos-colectivos/{contratoColectivo}/licencias', [ContratoColectivoController::class, 'guardarClausulaDeLicencia'])
+            ->middleware('role:admin-uath');
+        Route::put('contratos-colectivos/{contratoColectivo}/licencias/{clausula}', [ContratoColectivoController::class, 'actualizarClausulaDeLicencia'])
+            ->middleware('role:admin-uath');
+        Route::delete('contratos-colectivos/{contratoColectivo}/licencias/{clausula}', [ContratoColectivoController::class, 'eliminarClausulaDeLicencia'])
+            ->middleware('role:admin-uath');
         Route::post('salarios-basicos', [ContratoColectivoController::class, 'guardarSalarioBasico'])
             ->middleware('role:admin-uath');
 

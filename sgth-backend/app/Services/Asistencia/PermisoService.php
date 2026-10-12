@@ -518,7 +518,7 @@ class PermisoService implements PermisoServiceInterface
                 'El %s está cubierto por la licencia %s (%s), del %s al %s: ese día ya tiene una ausencia justificada.',
                 $fecha->format('d/m/Y'),
                 $licencia->folio,
-                $licencia->causa->etiqueta(),
+                $licencia->etiquetaDeLaCausa(),
                 $licencia->fecha_inicio->format('d/m/Y'),
                 $licencia->fecha_fin->format('d/m/Y')
             ));

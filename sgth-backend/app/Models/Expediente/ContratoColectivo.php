@@ -5,6 +5,7 @@ namespace App\Models\Expediente;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -92,5 +93,11 @@ class ContratoColectivo extends Model
     public function getTieneDictamenAttribute(): bool
     {
         return filled($this->dictamen_finanzas_numero);
+    }
+
+    /** Las cláusulas que amplían o añaden licencias (fase 5.3). */
+    public function clausulasDeLicencia(): HasMany
+    {
+        return $this->hasMany(ClausulaDeLicencia::class)->orderBy('id');
     }
 }

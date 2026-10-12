@@ -11,16 +11,26 @@ import { BuscarServidorSelect } from '@/features/expediente/components/BuscarSer
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { erroresDeCampo } from '@/lib/erroresDeCampo'
 import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
-import { useCausasLicencia, useRegistrarLicencia } from '../hooks/useLicencias'
-import type { CausaLicencia } from '../services/licenciaService'
+import { useCausasDelServidor, useRegistrarLicencia } from '../hooks/useLicencias'
+import type { CausaDelCatalogo, CausaLicencia } from '../services/licenciaService'
 import { diasDeLicencia, licenciaSchema, type LicenciaFormData } from './licencia.schema'
 
 const CAMPOS = ['servidor_id', 'causa', 'alcance', 'fecha_inicio', 'fecha_fin', 'observacion', 'archivo'] as const
 
 /**
+ * El valor de la causa en el selector. Las pactadas comparten código y se
+ * distinguen por su cláusula (fase 5.3).
+ */
+const claveDe = (c: CausaDelCatalogo) => (c.clausula_id ? `${c.codigo}:${c.clausula_id}` : c.codigo)
+
+/**
  * Registrar una licencia con remuneración (fase 5.1): de quién, por qué, qué
  * días y el respaldo en PDF. Queda pendiente; la aprueba quien aprueba esa
  * causa, y entonces se registra en Sirha7. No descuenta vacaciones.
+ *
+ * Las causas dependen del servidor: a un obrero, su contrato colectivo puede
+ * ampliarle los días o darle causas pactadas (fase 5.3). Por eso se elige
+ * primero a quién.
  */
 export function RegistrarLicenciaModal({ opened, onClose }: { opened: boolean; onClose: () => void }) {
   // Se monta al abrir: arranca en blanco sin resetear desde un efecto.
@@ -29,7 +39,6 @@ export function RegistrarLicenciaModal({ opened, onClose }: { opened: boolean; o
 
 function Formulario({ onClose }: { onClose: () => void }) {
   const contained = useContainedInput()
-  const causas = useCausasLicencia().data ?? []
   const registrar = useRegistrarLicencia()
 
   const {
@@ -41,11 +50,17 @@ function Formulario({ onClose }: { onClose: () => void }) {
     },
   })
 
-  const [codigoCausa, alcance, desde, hasta] = useWatch({ control, name: ['causa', 'alcance', 'fecha_inicio', 'fecha_fin'] })
-  const causa = causas.find((c) => c.codigo === codigoCausa)
-  const tope = causa
-    ? (alcance ? causa.alcances.find((a) => a.codigo === alcance)?.tope ?? causa.tope : causa.tope)
-    : null
+  const [servidorId, claveCausa, alcance, desde, hasta] = useWatch({
+    control, name: ['servidor_id', 'causa', 'alcance', 'fecha_inicio', 'fecha_fin'],
+  })
+  const catalogo = useCausasDelServidor(servidorId || null, desde)
+  const causas = catalogo.data?.causas ?? []
+  const contrato = catalogo.data?.contrato
+
+  const causa = causas.find((c) => claveDe(c) === claveCausa)
+  const caso = alcance ? causa?.alcances.find((a) => a.codigo === alcance) : undefined
+  const tope = caso ? caso.tope : causa?.tope ?? null
+  const topeAnual = caso ? caso.tope_anual : causa?.tope_anual ?? null
   const dias = diasDeLicencia(desde, hasta)
   const pasaDelTope = tope != null && dias != null && dias > tope
 
@@ -53,8 +68,9 @@ function Formulario({ onClose }: { onClose: () => void }) {
     try {
       await registrar.mutateAsync({
         servidor_id: v.servidor_id,
-        causa: v.causa as CausaLicencia,
+        causa: (causa?.codigo ?? v.causa) as CausaLicencia,
         alcance: v.alcance || null,
+        clausula_de_licencia_id: causa?.clausula_id ?? null,
         fecha_inicio: v.fecha_inicio,
         fecha_fin: v.fecha_fin,
         observacion: v.observacion?.trim() || null,
@@ -95,11 +111,28 @@ function Formulario({ onClose }: { onClose: () => void }) {
               label="Servidor"
               required
               value={field.value || null}
-              onChange={(id) => field.onChange(id ?? 0)}
+              onChange={(id) => {
+                // Otro servidor, otras causas: la elegida puede no ser suya.
+                field.onChange(id ?? 0)
+                setValue('causa', '')
+                setValue('alcance', null)
+              }}
               error={errors.servidor_id?.message}
             />
           )}
         />
+
+        {contrato?.aviso && (
+          <Alert variant="light" color={SEMANTIC_COLOR.warning} icon={<IconAlertTriangle size={16} />}>
+            <Text size="sm">{contrato.aviso}</Text>
+          </Alert>
+        )}
+        {contrato?.contrato_colectivo && (
+          <Text size="xs" c="dimmed">
+            Es obrero: los topes incluyen lo que amplía el contrato colectivo
+            N.º {contrato.contrato_colectivo.numero}, y sus causas pactadas están en la lista.
+          </Text>
+        )}
 
         <Grid>
           <Grid.Col span={{ base: 12, sm: causa?.alcances.length ? 6 : 12 }}>
@@ -109,8 +142,9 @@ function Formulario({ onClose }: { onClose: () => void }) {
               render={({ field }) => (
                 <Select
                   label="Causa"
-                  placeholder="Seleccione la causa"
-                  data={causas.map((c) => ({ value: c.codigo, label: c.etiqueta }))}
+                  placeholder={servidorId ? 'Seleccione la causa' : 'Elija primero al servidor'}
+                  disabled={!servidorId}
+                  data={causas.map((c) => ({ value: claveDe(c), label: c.etiqueta }))}
                   searchable
                   withAsterisk
                   error={errors.causa?.message}
@@ -149,7 +183,8 @@ function Formulario({ onClose }: { onClose: () => void }) {
 
         {causa && (
           <Text size="xs" c="dimmed">
-            {causa.explicacion} ({causa.base_legal})
+            {causa.explicacion} ({caso?.base_legal ?? causa.base_legal})
+            {topeAnual != null && ` Hasta ${topeAnual} día(s) al año por esa cláusula.`}
           </Text>
         )}
 

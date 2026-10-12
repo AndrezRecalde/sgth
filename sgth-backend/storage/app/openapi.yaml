@@ -10124,14 +10124,7 @@
                                             "type": "object",
                                             "properties": {
                                                 "vigente": {
-                                                    "anyOf": [
-                                                        {
-                                                            "$ref": "#/components/schemas/ContratoColectivo"
-                                                        },
-                                                        {
-                                                            "type": "null"
-                                                        }
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "contratos": {
                                                     "type": "array",
@@ -10324,6 +10317,223 @@
                             "application/json": {
                                 "schema": {
                                     "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/contratos-colectivos/{contratoColectivo}/licencias": {
+            "post": {
+                "operationId": "contratoColectivo.guardarClausulaDeLicencia",
+                "summary": "A\u00f1ade una cl\u00e1usula de licencia al contrato (fase 5.3)",
+                "tags": [
+                    "ContratoColectivo"
+                ],
+                "parameters": [
+                    {
+                        "name": "contratoColectivo",
+                        "in": "path",
+                        "required": true,
+                        "description": "The contrato colectivo ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GuardarClausulaDeLicenciaRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Cl\u00e1usula de licencia registrada."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/ClausulaDeLicencia"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/contratos-colectivos/{contratoColectivo}/licencias/{clausula}": {
+            "put": {
+                "operationId": "contratoColectivo.actualizarClausulaDeLicencia",
+                "tags": [
+                    "ContratoColectivo"
+                ],
+                "parameters": [
+                    {
+                        "name": "contratoColectivo",
+                        "in": "path",
+                        "required": true,
+                        "description": "The contrato colectivo ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "clausula",
+                        "in": "path",
+                        "required": true,
+                        "description": "The clausula ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GuardarClausulaDeLicenciaRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Cl\u00e1usula de licencia actualizada."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/ClausulaDeLicencia"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "contratoColectivo.eliminarClausulaDeLicencia",
+                "tags": [
+                    "ContratoColectivo"
+                ],
+                "parameters": [
+                    {
+                        "name": "contratoColectivo",
+                        "in": "path",
+                        "required": true,
+                        "description": "The contrato colectivo ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "clausula",
+                        "in": "path",
+                        "required": true,
+                        "description": "The clausula ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Cl\u00e1usula de licencia eliminada."
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
                                 }
                             }
                         }
@@ -23722,9 +23932,32 @@
         "/v1/asistencia/licencias/causas": {
             "get": {
                 "operationId": "asistencia.licencias.causas",
-                "summary": "Las causas con su tope, sus casos y su base legal, para el formulario",
+                "summary": "Las causas con su tope, sus casos y su base legal, para el formulario.\nCon `servidor_id`, las suyas en esa `fecha`: a un obrero, con lo que\nampl\u00eda o a\u00f1ade el contrato colectivo que rige (fase 5.3); `meta` dice\nqu\u00e9 contrato, o por qu\u00e9 no se le aplica",
                 "tags": [
                     "Licencia"
+                ],
+                "parameters": [
+                    {
+                        "name": "servidor_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "fecha",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date-time"
+                        }
+                    }
                 ],
                 "responses": {
                     "200": {
@@ -23746,7 +23979,38 @@
                                             "items": {}
                                         },
                                         "meta": {
-                                            "type": "null"
+                                            "type": "object",
+                                            "properties": {
+                                                "obrero": {
+                                                    "type": "string"
+                                                },
+                                                "contrato_colectivo": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "string"
+                                                        },
+                                                        "numero": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "numero"
+                                                    ]
+                                                },
+                                                "aviso": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "obrero",
+                                                "contrato_colectivo",
+                                                "aviso"
+                                            ]
                                         }
                                     },
                                     "required": [
@@ -23761,6 +24025,9 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -48086,7 +48353,7 @@
             },
             "CausaLicencia": {
                 "type": "string",
-                "description": "Las licencias con remuneraci\u00f3n (LOSEP, Art. 27; C\u00f3digo del Trabajo, Art. 152 para los obreros; dise\u00f1o de Acciones de Personal, 4.4 y 9.4; TH N12; fase 5.1). Se registran en Asistencia, sin acci\u00f3n de personal, con su causa, su tope y su respaldo, y no descuentan vacaciones. Hasta aqu\u00ed eran \u00abmotivos\u00bb de la solicitud de vacaciones, sin tope ni respaldo. La licencia sin remuneraci\u00f3n no est\u00e1 aqu\u00ed: es acci\u00f3n de personal (LOSEP 28; fase 2.2). Ni la capacitaci\u00f3n, que es comisi\u00f3n de servicios.  Los topes son por licencia, en d\u00edas calendario, y salen del dise\u00f1o (4.4); la paternidad de 15 d\u00edas es la de la Ley Org\u00e1nica del Derecho al Cuidado Humano (2023). Conviene que Talento Humano o jur\u00eddico revise la tabla: vive aqu\u00ed y en ning\u00fan otro sitio.\n",
+                "description": "Las licencias con remuneraci\u00f3n (LOSEP, Art. 27; C\u00f3digo del Trabajo, Art. 152 para los obreros; dise\u00f1o de Acciones de Personal, 4.4 y 9.4; TH N12; fase 5.1). Se registran en Asistencia, sin acci\u00f3n de personal, con su causa, su tope y su respaldo, y no descuentan vacaciones. Hasta aqu\u00ed eran \u00abmotivos\u00bb de la solicitud de vacaciones, sin tope ni respaldo. La licencia sin remuneraci\u00f3n no est\u00e1 aqu\u00ed: es acci\u00f3n de personal (LOSEP 28; fase 2.2). Ni la capacitaci\u00f3n, que es comisi\u00f3n de servicios.  Los topes son por licencia, en d\u00edas calendario, y salen del dise\u00f1o (4.4); la paternidad de 15 d\u00edas es la de la Ley Org\u00e1nica del Derecho al Cuidado Humano (2023). Conviene que Talento Humano o jur\u00eddico revise la tabla: vive aqu\u00ed y en ning\u00fan otro sitio.  `PACTADA` no es de la ley: es una causa que el contrato colectivo de los obreros a\u00f1ade (fase 5.3). Su nombre, sus d\u00edas y su base son los de la cl\u00e1usula (`ClausulaDeLicencia`), y sin ella no se registra. El contrato tambi\u00e9n puede ampliar los d\u00edas de una causa de la ley.\n",
                 "enum": [
                     "enfermedad",
                     "enfermedad_catastrofica",
@@ -48096,7 +48363,8 @@
                     "adopcion",
                     "hijos_hospitalizados",
                     "calamidad_domestica",
-                    "matrimonio"
+                    "matrimonio",
+                    "pactada"
                 ],
                 "title": "CausaLicencia"
             },
@@ -48780,6 +49048,99 @@
                     "aviso"
                 ],
                 "title": "ClaseAccionPersonalResource"
+            },
+            "ClausulaDeLicencia": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "contrato_colectivo_id": {
+                        "type": "integer"
+                    },
+                    "clausula": {
+                        "type": "string"
+                    },
+                    "causa": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/CausaLicencia"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "alcance": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "nombre": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "dias": {
+                        "type": "integer"
+                    },
+                    "dias_por_anio": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "observacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "updated_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "contrato_colectivo_id",
+                    "clausula",
+                    "causa",
+                    "alcance",
+                    "nombre",
+                    "dias",
+                    "dias_por_anio",
+                    "observacion",
+                    "created_by",
+                    "updated_by",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "ClausulaDeLicencia"
             },
             "ComentarioTicket": {
                 "type": "object",
@@ -52359,6 +52720,71 @@
                 ],
                 "title": "GuardarActaFiniquitoRequest"
             },
+            "GuardarClausulaDeLicenciaRequest": {
+                "type": "object",
+                "description": "Una cl\u00e1usula de licencia del contrato colectivo (fase 5.3): ampl\u00eda una causa\nde la ley o crea una con su nombre. Que mejore la ley y que no se repita lo\ndecide `ContratoColectivoService`, que conoce el contrato.",
+                "properties": {
+                    "clausula": {
+                        "type": "string",
+                        "maxLength": 60
+                    },
+                    "causa": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "enfermedad",
+                            "enfermedad_catastrofica",
+                            "maternidad",
+                            "paternidad",
+                            "fallecimiento_de_la_madre",
+                            "adopcion",
+                            "hijos_hospitalizados",
+                            "calamidad_domestica",
+                            "matrimonio"
+                        ]
+                    },
+                    "alcance": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 40
+                    },
+                    "nombre": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 150
+                    },
+                    "dias": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 365
+                    },
+                    "dias_por_anio": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "maximum": 366
+                    },
+                    "observacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 1000
+                    }
+                },
+                "required": [
+                    "clausula",
+                    "dias"
+                ],
+                "title": "GuardarClausulaDeLicenciaRequest"
+            },
             "GuardarContratoColectivoRequest": {
                 "type": "object",
                 "description": "El contrato colectivo de los obreros (fase 4.6): el documento, su vigencia,\nel dictamen del Ministerio de Finanzas y las cl\u00e1usulas que cambian c\u00e1lculos,\ncon los topes de la ley.",
@@ -53458,6 +53884,12 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "clausula_de_licencia_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -53485,7 +53917,8 @@
                     "created_by",
                     "updated_by",
                     "created_at",
-                    "updated_at"
+                    "updated_at",
+                    "clausula_de_licencia_id"
                 ],
                 "title": "Licencia"
             },
@@ -60965,6 +61398,13 @@
                             "null"
                         ],
                         "maxLength": 40
+                    },
+                    "clausula_de_licencia_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "La pactada sale de una cl\u00e1usula del contrato colectivo (fase 5.3);\nen una causa de la ley, la cl\u00e1usula que la ampl\u00eda la pone el sistema."
                     },
                     "fecha_inicio": {
                         "type": "string",

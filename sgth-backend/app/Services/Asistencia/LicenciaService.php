@@ -12,6 +12,7 @@ use App\Models\Asistencia\Licencia;
 use App\Models\Asistencia\PermisoServidor;
 use App\Models\Asistencia\Vacacion;
 use App\Models\Dispensario\CertificadoMedico;
+use App\Models\Expediente\ClausulaDeLicencia;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
 use App\Services\Expediente\SubrogacionService;
@@ -29,6 +30,8 @@ use Illuminate\Support\Facades\Storage;
  * - Las registra Talento Humano con su causa, sus fechas y el PDF del
  *   respaldo, sin acción de personal y sin descontar vacaciones.
  * - La causa tiene su tope (`CausaLicencia::tope`): pasado, no se registra.
+ *   A un obrero, el contrato colectivo puede ampliarlo o darle una causa
+ *   pactada, con su tope por año si la cláusula lo pone (fase 5.3).
  * - Ocupa todos sus días desde que se registra. No cabe encima de vacaciones,
  *   permisos, un reposo del dispensario, otra licencia o una ausencia de
  *   acción de personal (comisión, licencia sin remuneración); y al revés.
@@ -41,7 +44,10 @@ class LicenciaService
     /** Los que no tienen licencias con remuneración: no son una relación laboral de este tipo. */
     private const SIN_LICENCIAS = [TipoNombramiento::SERVICIOS_PROFESIONALES, TipoNombramiento::ELECCION_POPULAR];
 
-    public function __construct(private AprobacionLicenciaSirha7Service $aprobacion) {}
+    public function __construct(
+        private AprobacionLicenciaSirha7Service $aprobacion,
+        private CatalogoDeLicenciasService $catalogo,
+    ) {}
 
     /**
      * @param array{estado?: ?string, causa?: ?string, causas?: ?list<string>, folio?: ?string, servidor_id?: ?int,
@@ -49,7 +55,9 @@ class LicenciaService
      */
     public function listar(array $filtros): LengthAwarePaginator
     {
-        $query = Licencia::query()->with(['servidor.unidadAdministrativa', 'aprobadoPor.servidor', 'creadoPor.servidor']);
+        $query = Licencia::query()->with([
+            'servidor.unidadAdministrativa', 'aprobadoPor.servidor', 'creadoPor.servidor', 'clausulaDeLicencia.contratoColectivo',
+        ]);
 
         match ($filtros['estado'] ?? null) {
             'pendiente' => $query->whereNull('anulado_en')->whereNull('aprobado_en'),
@@ -95,7 +103,7 @@ class LicenciaService
     /**
      * Registra la licencia, pendiente de aprobación.
      *
-     * @param array{servidor_id: int, causa: string, alcance?: ?string, fecha_inicio: string, fecha_fin: string, observacion?: ?string} $datos
+     * @param array{servidor_id: int, causa: string, alcance?: ?string, clausula_de_licencia_id?: ?int, fecha_inicio: string, fecha_fin: string, observacion?: ?string} $datos
      */
     public function registrar(array $datos, UploadedFile $archivo, int $userId, ?int $servidorDelUsuario): Licencia
     {
@@ -115,14 +123,19 @@ class LicenciaService
         $this->exigirVinculo($servidorId);
         $this->validarAlcance($causa, $alcance);
         $dias = (int) $inicio->diffInDays($fin) + 1;
-        $this->validarTope($causa, $alcance, $dias);
+        $clausulaId = filled($datos['clausula_de_licencia_id'] ?? null) ? (int) $datos['clausula_de_licencia_id'] : null;
 
-        return DB::transaction(function () use ($datos, $archivo, $userId, $servidorId, $causa, $alcance, $inicio, $fin, $dias) {
+        return DB::transaction(function () use ($datos, $archivo, $userId, $servidorId, $causa, $alcance, $clausulaId, $inicio, $fin, $dias) {
             // El mismo bloqueo que las vacaciones del servidor: una licencia y
-            // unas vacaciones a la vez no pasan las dos el cruce.
+            // unas vacaciones a la vez no pasan las dos el cruce. Y dos
+            // licencias de la misma cláusula, su tope por año.
             DB::select('SELECT pg_advisory_xact_lock(?)', [crc32("vacaciones_servidor_{$servidorId}")]);
 
             $this->rechazarSiSeCruza($servidorId, $inicio, $fin);
+
+            ['clausula' => $clausula] = $this->catalogo->resolver($causa, $alcance, $clausulaId, $servidorId, $inicio);
+            $clausula = $this->dentroDelTopeAnual($clausula, $causa, $alcance, $servidorId, $inicio, $dias);
+            $this->validarTope($causa, $alcance, $clausula, $dias);
 
             $ruta = $archivo->store('asistencia/licencias/'.$inicio->year, 'local');
 
@@ -135,6 +148,7 @@ class LicenciaService
                 'servidor_id'      => $servidorId,
                 'causa'            => $causa->value,
                 'alcance'          => $alcance,
+                'clausula_de_licencia_id' => $clausula?->id,
                 'fecha_inicio'     => $inicio->toDateString(),
                 'fecha_fin'        => $fin->toDateString(),
                 'dias'             => $dias,
@@ -215,16 +229,62 @@ class LicenciaService
         }
     }
 
-    private function validarTope(CausaLicencia $causa, ?string $alcance, int $dias): void
+    /**
+     * El tope por licencia: el de la cláusula del contrato colectivo, si la
+     * respalda, o el de la ley.
+     */
+    private function validarTope(CausaLicencia $causa, ?string $alcance, ?ClausulaDeLicencia $clausula, int $dias): void
     {
-        $tope = $causa->tope($alcance);
+        $tope = $clausula?->dias ?? $causa->tope($alcance);
 
         if ($tope !== null && $dias > $tope) {
+            $nombre = $clausula?->esCausaNueva() ? $clausula->nombre : $causa->etiqueta();
+            $base = $clausula
+                ? ($clausula->esCausaNueva() ? '' : $causa->baseLegal().'; ').$clausula->baseLegal()
+                : $causa->baseLegal();
+
             throw new ReglaNegocioException(
-                "La licencia por {$causa->etiqueta()} admite hasta {$tope} días ({$causa->baseLegal()}), "
-                    ."y las fechas suman {$dias}."
+                "La licencia por {$nombre} admite hasta ".CatalogoDeLicenciasService::enDias($tope)
+                    ." ({$base}), y las fechas suman {$dias}."
             );
         }
+    }
+
+    /**
+     * El tope por año de la cláusula, si lo tiene: lo que el obrero ya tomó
+     * por ella en ese año calendario, más esta licencia.
+     *
+     * Pasado el tope, la causa pactada no se registra. La que amplía una causa
+     * de la ley vuelve a los días de la ley, que no tienen tope por año: el
+     * contrato solo puede mejorarla (Código del Trabajo, Art. 4).
+     */
+    private function dentroDelTopeAnual(
+        ?ClausulaDeLicencia $clausula, CausaLicencia $causa, ?string $alcance, int $servidorId, Carbon $inicio, int $dias,
+    ): ?ClausulaDeLicencia {
+        if ($clausula?->dias_por_anio === null) {
+            return $clausula;
+        }
+
+        $tomados = (int) Licencia::where('servidor_id', $servidorId)
+            ->where('clausula_de_licencia_id', $clausula->id)
+            ->whereNull('anulado_en')
+            ->whereYear('fecha_inicio', $inicio->year)
+            ->sum('dias');
+
+        if ($tomados + $dias <= $clausula->dias_por_anio) {
+            return $clausula;
+        }
+
+        if ($clausula->esCausaNueva()) {
+            throw new ReglaNegocioException(
+                "La {$clausula->clausula} del contrato colectivo da hasta ".CatalogoDeLicenciasService::enDias($clausula->dias_por_anio)
+                    ." al año por {$clausula->nombre}: en {$inicio->year} ya se ".($tomados === 1 ? 'tomó ' : 'tomaron ')
+                    .CatalogoDeLicenciasService::enDias($tomados).', y con esta licencia serían '
+                    .CatalogoDeLicenciasService::enDias($tomados + $dias).'.'
+            );
+        }
+
+        return null;
     }
 
     /**
@@ -242,7 +302,7 @@ class LicenciaService
 
         if ($otra) {
             throw new ReglaNegocioException(
-                "Las fechas se cruzan con la licencia {$otra->folio} ({$otra->causa->etiqueta()}), del "
+                "Las fechas se cruzan con la licencia {$otra->folio} ({$otra->etiquetaDeLaCausa()}), del "
                     .$fmt($otra->fecha_inicio).' al '.$fmt($otra->fecha_fin).'.'
             );
         }

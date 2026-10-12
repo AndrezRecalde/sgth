@@ -104,7 +104,7 @@ class CertificadoMedicoService
             throw new ReglaNegocioException(sprintf(
                 'El servidor tiene la licencia %s (%s) del %s al %s: el reposo no cabe sobre esos días.',
                 $licencia->folio,
-                $licencia->causa->etiqueta(),
+                $licencia->etiquetaDeLaCausa(),
                 $licencia->fecha_inicio->format('d/m/Y'),
                 $licencia->fecha_fin->format('d/m/Y')
             ));
