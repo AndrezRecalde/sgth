@@ -119,6 +119,8 @@ export const ROUTES = {
     MI_PERFIL:       '/portal/mi-perfil',
     MIS_PERMISOS:    '/portal/mis-permisos',
     MIS_VACACIONES:  '/portal/mis-vacaciones',
+    /** Renuncia, licencia sin remuneración y jubilación (fase 6.3b). */
+    SOLICITUDES_LABORALES: '/portal/solicitudes-laborales',
     MIS_MARCACIONES: '/portal/mis-marcaciones',
     MARCACION_ONLINE: '/portal/marcacion-online',
     MIS_ACTIVIDADES: '/portal/mis-actividades',

@@ -27029,6 +27029,193 @@
                 }
             }
         },
+        "/v1/autoservicio/mis-solicitudes": {
+            "get": {
+                "operationId": "misSolicitudesAccion.index",
+                "tags": [
+                    "MisSolicitudesAccion"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Mis solicitudes."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {}
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "misSolicitudesAccion.store",
+                "tags": [
+                    "MisSolicitudesAccion"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PresentarSolicitudAccionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string"
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {}
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/autoservicio/mis-solicitudes/{solicitud}/retirar": {
+            "post": {
+                "operationId": "misSolicitudesAccion.retirar",
+                "tags": [
+                    "MisSolicitudesAccion"
+                ],
+                "parameters": [
+                    {
+                        "name": "solicitud",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Solicitud retirada."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {}
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/autoservicio/mis-solicitudes/{solicitud}/documento": {
+            "get": {
+                "operationId": "misSolicitudesAccion.documento",
+                "summary": "El respaldo que present\u00f3",
+                "tags": [
+                    "MisSolicitudesAccion"
+                ],
+                "parameters": [
+                    {
+                        "name": "solicitud",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/expediente/servidores/{servidorId}/movimientos": {
             "get": {
                 "operationId": "movimientoPersonal.index",
@@ -39574,6 +39761,232 @@
                 }
             }
         },
+        "/v1/expediente/solicitudes-accion": {
+            "get": {
+                "operationId": "solicitudAccionPersonal.index",
+                "tags": [
+                    "SolicitudAccionPersonal"
+                ],
+                "parameters": [
+                    {
+                        "name": "estado",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/EstadoSolicitudAccion"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Solicitudes del portal."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {}
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/solicitudes-accion/{solicitud}/preparar": {
+            "post": {
+                "operationId": "solicitudAccionPersonal.preparar",
+                "tags": [
+                    "SolicitudAccionPersonal"
+                ],
+                "parameters": [
+                    {
+                        "name": "solicitud",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Se prepar\u00f3 el borrador de la acci\u00f3n: est\u00e1 en la bandeja."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {}
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/solicitudes-accion/{solicitud}/rechazar": {
+            "post": {
+                "operationId": "solicitudAccionPersonal.rechazar",
+                "tags": [
+                    "SolicitudAccionPersonal"
+                ],
+                "parameters": [
+                    {
+                        "name": "solicitud",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "motivo": {
+                                        "type": "string",
+                                        "minLength": 5,
+                                        "maxLength": 500
+                                    }
+                                },
+                                "required": [
+                                    "motivo"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Solicitud rechazada."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {}
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/solicitudes-accion/{solicitud}/documento": {
+            "get": {
+                "operationId": "solicitudAccionPersonal.documento",
+                "summary": "El respaldo que present\u00f3 el servidor",
+                "tags": [
+                    "SolicitudAccionPersonal"
+                ],
+                "parameters": [
+                    {
+                        "name": "solicitud",
+                        "in": "path",
+                        "required": true,
+                        "description": "The solicitud ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/dispensario/solicitudes-certificacion/pendientes-triaje": {
             "get": {
                 "operationId": "solicitudCertificacion.pendientesTriaje",
@@ -51886,6 +52299,17 @@
                 ],
                 "title": "EstadoPostulante"
             },
+            "EstadoSolicitudAccion": {
+                "type": "string",
+                "description": "En qu\u00e9 qued\u00f3 una solicitud del portal (fase 6.3b): pendiente hasta que Talento Humano prepara su acci\u00f3n \u2014atendida\u2014 o la rechaza con el motivo; el servidor la puede retirar mientras est\u00e1 pendiente.\n",
+                "enum": [
+                    "pendiente",
+                    "atendida",
+                    "rechazada",
+                    "retirada"
+                ],
+                "title": "EstadoSolicitudAccion"
+            },
             "EstadoSubrogacion": {
                 "type": "string",
                 "description": "| |\n|---|\n| `pendiente` <br/> Registrada, pero su Acci\u00f3n de Personal todav\u00eda no se aprueba. No surte ning\u00fan efecto: el subrogante no asume el puesto ni adquiere la facultad de firmar mientras est\u00e9 aqu\u00ed. |\n| `activa` <br/> Acci\u00f3n registrada: el subrogante asume el puesto y puede firmar. |\n| `finalizada` <br/>  |\n| `cancelada` <br/>  |",
@@ -55647,6 +56071,10 @@
                             "null"
                         ]
                     },
+                    "solicitud_folio": {
+                        "type": "string",
+                        "description": "La solicitud del portal que atiende (fase 6.3b)."
+                    },
                     "acto_origen_tipo": {
                         "anyOf": [
                             {
@@ -56162,6 +56590,7 @@
                     "efecto_aplicado_en",
                     "pendiente_de_vigencia",
                     "resolucion_numero",
+                    "solicitud_folio",
                     "acto_origen_tipo",
                     "acto_origen_numero",
                     "acto_origen_fecha",
@@ -57348,6 +57777,52 @@
                     "otro"
                 ],
                 "title": "PresentacionMedicamento"
+            },
+            "PresentarSolicitudAccionRequest": {
+                "type": "object",
+                "description": "Una solicitud desde el portal (fase 6.3b): qu\u00e9 pide, desde cu\u00e1ndo y su\nrespaldo en PDF. Qui\u00e9n puede pedir qu\u00e9 \u2014y los 15 d\u00edas de la renuncia\u2014 lo\ndecide `SolicitudAccionPersonalService`, que conoce su v\u00ednculo.",
+                "properties": {
+                    "tipo": {
+                        "$ref": "#/components/schemas/TipoSolicitudAccion"
+                    },
+                    "causal": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 40
+                    },
+                    "fecha_desde": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "fecha_hasta": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "motivo": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 1000
+                    },
+                    "archivo": {
+                        "type": "string",
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "maxLength": 10240
+                    }
+                },
+                "required": [
+                    "tipo",
+                    "fecha_desde",
+                    "archivo"
+                ],
+                "title": "PresentarSolicitudAccionRequest"
             },
             "ProcedimientoDisciplinario": {
                 "type": "string",
@@ -64238,6 +64713,16 @@
                     "destitucion"
                 ],
                 "title": "TipoSancion"
+            },
+            "TipoSolicitudAccion": {
+                "type": "string",
+                "description": "Lo que el servidor puede pedir desde el portal (dise\u00f1o, 9.13; fase 6.3b). Cada una se atiende preparando la acci\u00f3n de personal de su clase.\n",
+                "enum": [
+                    "renuncia",
+                    "licencia_sin_remuneracion",
+                    "jubilacion"
+                ],
+                "title": "TipoSolicitudAccion"
             },
             "TipoSubrogacion": {
                 "type": "string",

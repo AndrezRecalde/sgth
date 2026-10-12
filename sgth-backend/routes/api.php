@@ -16,6 +16,7 @@ use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Autoservicio\AutoservicioController;
 use App\Http\Controllers\Autoservicio\MisCertificadosMedicosController;
 use App\Http\Controllers\Autoservicio\MisDocumentosLaboralesController;
+use App\Http\Controllers\Autoservicio\MisSolicitudesAccionController;
 use App\Http\Controllers\Bienestar\EncuestaClimaController;
 use App\Http\Controllers\Bienestar\PlanBienestarController;
 use App\Http\Controllers\Capacitacion\CertificadoCapacitacionController;
@@ -88,6 +89,7 @@ use App\Http\Controllers\Expediente\MovimientoPersonalController;
 use App\Http\Controllers\Expediente\AutoridadElectaController;
 use App\Http\Controllers\Expediente\TerminacionObreroController;
 use App\Http\Controllers\Expediente\ContratoColectivoController;
+use App\Http\Controllers\Expediente\SolicitudAccionPersonalController;
 use App\Http\Controllers\Expediente\LoteAccionController;
 use App\Http\Controllers\Expediente\PeriodoDePruebaController;
 use App\Http\Controllers\Expediente\VerificacionCertificadoController;
@@ -491,6 +493,13 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // La vista previa con la marca BORRADOR (fase 6.2): de quien prepara.
         Route::get('movimientos/{movimientoId}/vista-previa', [AccionPersonalPdfController::class, 'vistaPrevia'])
             ->middleware('permission:preparar-accion-personal');
+        // Las solicitudes del portal (fase 6.3b): las atiende quien prepara acciones.
+        Route::middleware('permission:preparar-accion-personal')->group(function () {
+            Route::get('solicitudes-accion', [SolicitudAccionPersonalController::class, 'index']);
+            Route::post('solicitudes-accion/{solicitud}/preparar', [SolicitudAccionPersonalController::class, 'preparar']);
+            Route::post('solicitudes-accion/{solicitud}/rechazar', [SolicitudAccionPersonalController::class, 'rechazar']);
+            Route::get('solicitudes-accion/{solicitud}/documento', [SolicitudAccionPersonalController::class, 'documento']);
+        });
         Route::get('movimientos/{movimiento}', [MovimientoPersonalController::class, 'show']);
         // Editar un borrador es prepararlo: lo hace también el asistente, que
         // hasta la fase 1.3 lo creaba y no podía corregirlo.
@@ -884,6 +893,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::get('mis-documentos', [MisDocumentosLaboralesController::class, 'index']);
         Route::get('mis-documentos/{movimiento}/pdf', [MisDocumentosLaboralesController::class, 'pdf']);
         Route::post('mis-documentos/{movimiento}/acuse', [MisDocumentosLaboralesController::class, 'acuse']);
+        // Las solicitudes de renuncia, licencia sin remuneración y jubilación
+        // (fase 6.3b). Siempre las del propio servidor.
+        Route::get('mis-solicitudes', [MisSolicitudesAccionController::class, 'index']);
+        Route::post('mis-solicitudes', [MisSolicitudesAccionController::class, 'store']);
+        Route::post('mis-solicitudes/{solicitud}/retirar', [MisSolicitudesAccionController::class, 'retirar']);
+        Route::get('mis-solicitudes/{solicitud}/documento', [MisSolicitudesAccionController::class, 'documento']);
 
         // Aquí estaba también `POST solicitar-cita`, retirada el 2026-09-11.
         // Nunca funcionó: escribía en `agendas_medicas` columnas que no existen

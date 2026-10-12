@@ -1096,6 +1096,20 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
    - **3a.** El documento imprime lo que pasó: por el portal, el medio, la fecha y el acuse, o «Pendiente»; en persona, la fecha del «Recibí», o la razón y el testigo.
    - **3a.** En la bandeja, «Sin acuse» filtra lo notificado por el portal que espera el acuse, con los días que lleva. Solo informa: no hay un plazo legal que vencer.
    - **3a.** Fuera: el plazo de 3 días para presentarse (Reglamento a la LOSEP, Art. 20; 6.4) y la licencia con remuneración pedida desde el portal.
+   - **3b.** Las solicitudes van en una tabla aparte, `solicitudes_accion_personal` (folio `SOL-AAAA-NNNNN`), y no como un borrador directo: el titular no ve sus borradores (6.3), pero sí tiene que ver en qué quedó lo que pidió. Estados:
+     - pendiente;
+     - atendida, enlazada a su acción, que el titular ve recién cuando puede verla;
+     - rechazada, con el motivo;
+     - retirada por el servidor mientras estaba pendiente.
+   - **3b.** Solo vínculos de la LOSEP. El obrero tiene el desahucio (Código del Trabajo, Art. 184), y las autoridades y Servicios Profesionales, sus propias salidas. Una pendiente de cada tipo a la vez, con su respaldo en PDF:
+     - **renuncia** (Art. 47 a): la fecha de salida, al menos 15 días después de presentarla, con la carta firmada. Si pasan 15 días sin respuesta, se tiene por aceptada (Reglamento a la LOSEP, Art. 102): Talento Humano ya no la rechaza y la bandeja lo avisa;
+     - **licencia sin remuneración** (Art. 28): solo permanentes, con una de las seis causales y sus fechas. Los topes los valida la acción (2.2);
+     - **jubilación** (Art. 47 j): la fecha, con el certificado del IESS.
+   - **3b.** Talento Humano tiene la pestaña «Solicitudes del portal», con las pendientes primero. Dos acciones:
+     - **«Preparar la acción»**: crea el borrador por `registrarPorClase`, con la clase, la causal, las fechas y la referencia «Solicitud SOL-…». Así aplican todas las reglas del formulario, y la acción dice qué solicitud atiende;
+     - **«Rechazar»**, con el motivo. Nadie atiende la suya.
+   - **3b.** El servidor tiene «Renuncia, licencia y jubilación» en el portal, dentro de Solicitudes: presenta, retira y ve el estado y el motivo.
+   - **3b.** Fuera: el desahucio y la renuncia de Servicios Profesionales, el correo a Talento Humano por cada solicitud y la licencia con remuneración pedida desde el portal.
 
 **Fase 7 — Estructura, nómina y salida**
 1. Operaciones sobre puestos ocupados (traspaso de puesto, revisión de clasificación) y bloqueo de la edición directa y del borrado.

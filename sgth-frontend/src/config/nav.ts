@@ -471,6 +471,12 @@ export const NAV_PORTAL: NavGroup[] = [
         icon:  'IconBeach',
       },
       {
+        // Las solicitudes que se atienden con una acción de personal (fase 6.3b).
+        label: 'Renuncia, licencia y jubilación',
+        href:  ROUTES.PORTAL.SOLICITUDES_LABORALES,
+        icon:  'IconFileDescription',
+      },
+      {
         label: 'Mis viáticos',
         href:  ROUTES.PORTAL.VIATICOS,
         icon:  'IconPlane',

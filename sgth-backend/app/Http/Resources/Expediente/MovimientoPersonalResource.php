@@ -143,6 +143,8 @@ class MovimientoPersonalResource extends JsonResource
             'efecto_aplicado_en'          => $this->efecto_aplicado_en,
             'pendiente_de_vigencia'       => $this->pendienteDeVigencia(),
             'resolucion_numero'           => $this->resolucion_numero,
+            // La solicitud del portal que atiende (fase 6.3b).
+            'solicitud_folio'             => $this->solicitud?->folio,
             // El decreto, acuerdo o resolución que la origina (fase 6.1).
             'acto_origen_tipo'            => $this->acto_origen_tipo,
             'acto_origen_numero'          => $this->acto_origen_numero,

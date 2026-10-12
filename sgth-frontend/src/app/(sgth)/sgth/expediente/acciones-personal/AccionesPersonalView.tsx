@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { Tabs } from '@mantine/core'
 import {
-  IconBuildingBank, IconFileText, IconHourglass, IconInbox, IconSignature, IconStack2, IconUserMinus, IconUserOff,
-  IconUserPlus,
+  IconBuildingBank, IconFileText, IconHourglass, IconInbox, IconMailForward, IconSignature, IconStack2, IconUserMinus,
+  IconUserOff, IconUserPlus,
 } from '@tabler/icons-react'
 import { SelectorServidorCategoria } from '@/features/expediente/components/SelectorServidorCategoria'
 import { MovimientoModal } from '@/features/expediente/components/MovimientoModal'
@@ -16,6 +16,7 @@ import { AutoridadesElectasPanel } from '@/features/expediente/components/Autori
 import { TerminacionesObrerosPanel } from '@/features/expediente/components/TerminacionesObrerosPanel'
 import { IncrementosEnLotePanel } from '@/features/expediente/components/IncrementosEnLotePanel'
 import { ContratoColectivoPanel } from '@/features/expediente/components/ContratoColectivoPanel'
+import { SolicitudesDelPortalPanel } from '@/features/expediente/components/SolicitudesDelPortalPanel'
 import { usePuedePrepararAccion } from '@/features/expediente/hooks/usePuedePrepararAccion'
 import type { FamiliaDelCatalogo, ServidorConRelaciones } from '@/types/api'
 import { PageHeader, PageShell } from '@/components/ui'
@@ -61,6 +62,12 @@ export function AccionesPersonalView() {
               Nueva acción de personal
             </Tabs.Tab>
           )}
+          {/* Renuncias, licencias y jubilaciones pedidas desde el portal (fase 6.3b). */}
+          {puedePreparar && (
+            <Tabs.Tab value="solicitudes" leftSection={<IconMailForward size={16} />}>
+              Solicitudes del portal
+            </Tabs.Tab>
+          )}
           <Tabs.Tab value="ausencias" leftSection={<IconUserOff size={16} />}>
             Ausencias y reemplazos
           </Tabs.Tab>
@@ -86,6 +93,10 @@ export function AccionesPersonalView() {
 
         <Tabs.Panel value="bandeja">
           <BandejaAccionesPersonal />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="solicitudes">
+          <SolicitudesDelPortalPanel />
         </Tabs.Panel>
 
         <Tabs.Panel value="nueva">
