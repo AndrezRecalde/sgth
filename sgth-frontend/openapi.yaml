@@ -18635,7 +18635,7 @@
                                                 "type": "object",
                                                 "properties": {
                                                     "id": {
-                                                        "type": "string"
+                                                        "type": "integer"
                                                     },
                                                     "instrumento": {
                                                         "type": "string"
@@ -18650,7 +18650,10 @@
                                                         "type": "string"
                                                     },
                                                     "descripcion": {
-                                                        "type": "string"
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
                                                     },
                                                     "registrada_en": {
                                                         "type": "string"
@@ -18662,7 +18665,10 @@
                                                         "type": "string"
                                                     },
                                                     "motivo_reversion": {
-                                                        "type": "string"
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
                                                     },
                                                     "vinculos": {
                                                         "type": "string"
@@ -18762,7 +18768,7 @@
                                             "type": "object",
                                             "properties": {
                                                 "id": {
-                                                    "type": "string"
+                                                    "type": "integer"
                                                 },
                                                 "vinculos": {
                                                     "type": "integer",
@@ -19016,7 +19022,7 @@
                                             "type": "object",
                                             "properties": {
                                                 "id": {
-                                                    "type": "string"
+                                                    "type": "integer"
                                                 }
                                             },
                                             "required": [
@@ -30073,9 +30079,6 @@
                     }
                 },
                 "responses": {
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "200": {
                         "description": "",
                         "content": {
@@ -30088,7 +30091,10 @@
                                         },
                                         "mensaje": {
                                             "type": "string",
-                                            "const": "N\u00f3mina calculada exitosamente en borrador."
+                                            "enum": [
+                                                "N\u00f3mina calculada en borrador. Es referencial: sirve para compararla con la de Financiero.",
+                                                "N\u00f3mina calculada exitosamente en borrador."
+                                            ]
                                         },
                                         "datos": {
                                             "$ref": "#/components/schemas/Nomina"
@@ -30112,6 +30118,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -30176,6 +30185,43 @@
                 }
             }
         },
+        "/v1/nomina/{id}/excel": {
+            "get": {
+                "operationId": "nomina.excel",
+                "summary": "La n\u00f3mina por servidor, en Excel, para compararla con la de Financiero\nen la corrida en paralelo (fase 7.3c)",
+                "tags": [
+                    "Nomina"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/nomina/{id}/cerrar": {
             "post": {
                 "operationId": "nomina.cerrar",
@@ -30205,7 +30251,10 @@
                                         },
                                         "mensaje": {
                                             "type": "string",
-                                            "const": "La n\u00f3mina ha sido cerrada y los procesos de ERP y correos se est\u00e1n ejecutando en segundo plano."
+                                            "enum": [
+                                                "La n\u00f3mina qued\u00f3 cerrada para compararla con la de Financiero. Es referencial: no sale al ERP ni a los servidores.",
+                                                "La n\u00f3mina ha sido cerrada y los procesos de ERP y correos se est\u00e1n ejecutando en segundo plano."
+                                            ]
                                         },
                                         "datos": {
                                             "$ref": "#/components/schemas/Nomina"
@@ -30611,10 +30660,23 @@
                                                     "type": "string"
                                                 },
                                                 "novedades": {
-                                                    "type": "object",
-                                                    "additionalProperties": {
+                                                    "type": "array",
+                                                    "items": {
                                                         "type": "object",
                                                         "properties": {
+                                                            "": {
+                                                                "anyOf": [
+                                                                    {
+                                                                        "type": "string"
+                                                                    },
+                                                                    {
+                                                                        "type": "object"
+                                                                    },
+                                                                    {
+                                                                        "type": "null"
+                                                                    }
+                                                                ]
+                                                            },
                                                             "concepto": {
                                                                 "type": "string"
                                                             },
@@ -30623,6 +30685,7 @@
                                                             }
                                                         },
                                                         "required": [
+                                                            null,
                                                             "concepto",
                                                             "concepto_etiqueta"
                                                         ]
@@ -30857,10 +30920,23 @@
                                                     "type": "string"
                                                 },
                                                 "novedades": {
-                                                    "type": "object",
-                                                    "additionalProperties": {
+                                                    "type": "array",
+                                                    "items": {
                                                         "type": "object",
                                                         "properties": {
+                                                            "": {
+                                                                "anyOf": [
+                                                                    {
+                                                                        "type": "string"
+                                                                    },
+                                                                    {
+                                                                        "type": "object"
+                                                                    },
+                                                                    {
+                                                                        "type": "null"
+                                                                    }
+                                                                ]
+                                                            },
                                                             "concepto": {
                                                                 "type": "string"
                                                             },
@@ -30869,6 +30945,7 @@
                                                             }
                                                         },
                                                         "required": [
+                                                            null,
                                                             "concepto",
                                                             "concepto_etiqueta"
                                                         ]
@@ -59584,6 +59661,9 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "referencial": {
+                        "type": "boolean"
                     }
                 },
                 "required": [
@@ -59599,7 +59679,8 @@
                     "cerrado_en",
                     "created_at",
                     "updated_at",
-                    "deleted_at"
+                    "deleted_at",
+                    "referencial"
                 ],
                 "title": "Nomina"
             },
@@ -62330,6 +62411,18 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "dias": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "remuneracion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -62343,7 +62436,9 @@
                     "enviado_en",
                     "created_at",
                     "updated_at",
-                    "deleted_at"
+                    "deleted_at",
+                    "dias",
+                    "remuneracion"
                 ],
                 "title": "RolPago"
             },

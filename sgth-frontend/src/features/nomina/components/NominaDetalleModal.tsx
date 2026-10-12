@@ -1,14 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import { TONO_NOMINA } from "../constants/estadoNomina";
 import {
+  Alert,
+  Button,
+  Group,
   Stack,
   Text,
   Skeleton,
   Card,
   Grid,
 } from "@mantine/core";
-import { SectionHeading, SgthModal, SgthTable, StatusBadge } from "@/components/ui";
+import { IconDownload, IconInfoCircle } from "@tabler/icons-react";
+import { SectionHeading, SgthModal, SgthTable, StatusBadge, notificar } from "@/components/ui";
+import { guardarArchivo } from "@/lib/archivo";
+import { getApiErrorMessage } from "@/types/api";
 import { columnasRolesPago, formatMonto } from "./rolesPago.columns";
 import { useQuery } from "@tanstack/react-query";
 import { nominaService } from "../services/nominaService";
@@ -31,6 +38,20 @@ export function NominaDetalleModal({ opened, onClose, nomina }: Props) {
 
   // roles de pago del detalle
   const roles = (detalle as Nomina)?.roles_pago ?? [];
+  const [descargando, setDescargando] = useState(false);
+
+  /** Por servidor, para compararla con la de Financiero (fase 7.3c). */
+  const descargar = async () => {
+    if (!nomina) return;
+    setDescargando(true);
+    try {
+      guardarArchivo(await nominaService.excel(nomina.id), `nomina_${nomina.periodo}.xlsx`);
+    } catch (e) {
+      notificar.error("No se pudo descargar el Excel", getApiErrorMessage(e));
+    } finally {
+      setDescargando(false);
+    }
+  };
 
   return (
     <SgthModal
@@ -46,6 +67,14 @@ export function NominaDetalleModal({ opened, onClose, nomina }: Props) {
         </Stack>
       ) : (
         <Stack gap="md">
+          {nomina?.referencial && (
+            <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />} title="Nómina referencial">
+              Se calcula en paralelo con la de Financiero, que es la que paga: sobre la remuneración de cada vínculo,
+              por sus días, con las novedades del mes. Al cerrarla se congela para compararla; no sale al ERP ni a
+              los servidores.
+            </Alert>
+          )}
+
           {/* Resumen */}
           <Grid>
             <Grid.Col span={{ base: 6, sm: 3 }}>
@@ -90,7 +119,23 @@ export function NominaDetalleModal({ opened, onClose, nomina }: Props) {
             </Grid.Col>
           </Grid>
 
-          <SectionHeading title="Roles de pago" />
+          <SectionHeading
+            title="Roles de pago"
+            action={
+              <Group gap="xs">
+                <Button
+                  size="xs"
+                  variant="default"
+                  leftSection={<IconDownload size={14} />}
+                  loading={descargando}
+                  disabled={!roles.length}
+                  onClick={descargar}
+                >
+                  Excel por servidor
+                </Button>
+              </Group>
+            }
+          />
 
           {roles.length === 0 ? (
             <Text size="sm" c="dimmed" ta="center">

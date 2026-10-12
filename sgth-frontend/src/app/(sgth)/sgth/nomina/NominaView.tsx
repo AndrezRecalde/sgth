@@ -17,13 +17,13 @@ import { EmptyState, PageHeader, PageShell, SgthTable , confirmar } from '@/comp
 
 /**
  * Nómina: las novedades del mes, que Financiero aplica en su sistema (fase
- * 7.3a), y el cálculo de la nómina del SGTH, que el backend sirve solo a
- * admin-uath.
+ * 7.3a), y el cálculo de la nómina del SGTH sobre el vínculo, referencial
+ * mientras dura la corrida en paralelo (7.3c). Cada parte, con su permiso.
  */
 export function NominaView() {
-  const { hasPermiso, hasRole } = useAuth()
+  const { hasPermiso } = useAuth()
   const veNovedades = hasPermiso('ver-novedades-nomina')
-  const veNominas = hasRole('admin-uath')
+  const veNominas = hasPermiso('ver-nomina-todas')
 
   return (
     <PageShell>
@@ -71,6 +71,7 @@ function NominasPanel() {
 
   const { data: nominas = [], isLoading } = useNominas()
   const { cerrar } = useNominaMutations()
+  const { hasPermiso } = useAuth()
 
   const lista = (nominas as Nomina[]).filter(n =>
     filtroEstado ? n.estado === filtroEstado : true
@@ -83,7 +84,13 @@ function NominasPanel() {
 
   const handleCerrar = (n: Nomina) => confirmar({
     title:   'Cerrar nómina',
-    message: (
+    message: n.referencial ? (
+      <>
+        Se congela la nómina del período <b>{n.periodo}</b> para compararla con
+        la de Financiero. Es referencial: no sale al ERP ni a los servidores. No
+        se puede deshacer.
+      </>
+    ) : (
       <>
         Se cerrará la nómina del período <b>{n.periodo}</b>. No se puede
         deshacer.
@@ -97,11 +104,12 @@ function NominasPanel() {
   const columns = getNominaColumns({
     onVer:    handleVer,
     onCerrar: handleCerrar,
+    puedeCerrar: hasPermiso('cerrar-nomina'),
   })
 
   return (
     <>
-      <NominaToolbar onEstadoChange={setFiltroEstado} />
+      <NominaToolbar onEstadoChange={setFiltroEstado} puedeCalcular={hasPermiso('procesar-nomina')} />
       {lista.length === 0 && !isLoading ? (
         <EmptyState
           icon={IconReportMoney}

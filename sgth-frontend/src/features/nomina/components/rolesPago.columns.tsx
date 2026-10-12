@@ -32,6 +32,13 @@ export const columnasRolesPago: DataTableColumn<RolDeNomina>[] = [
     ),
   },
   {
+    accessor: 'dias',
+    title: 'Días',
+    width: 70,
+    textAlign: 'right',
+    render: (r) => <Text size="sm">{r.dias ?? '—'}</Text>,
+  },
+  {
     accessor: 'total_ingresos',
     title: 'Ingresos',
     textAlign: 'right',

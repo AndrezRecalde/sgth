@@ -99,9 +99,13 @@ final class AutoservicioService implements AutoservicioServiceInterface
 
     public function obtenerMisRolesPago(int $servidorId): array
     {
-        // Traemos los roles sin exponer los detalles internos a menos que sea requerido
+        // Traemos los roles sin exponer los detalles internos a menos que sea requerido.
+        // Solo de nóminas cerradas y que no sean referenciales (fase 7.3c): el
+        // borrador cambia, y la referencial no es lo que se le pagó.
         return RolPago::with('nomina:id,periodo,estado')
             ->where('servidor_id', $servidorId)
+            ->whereHas('nomina', fn ($q) => $q->where('referencial', false)
+                ->whereIn('estado', ['cerrada', 'contabilizada', 'pagada']))
             ->orderBy('created_at', 'desc')
             ->get()
             ->toArray();

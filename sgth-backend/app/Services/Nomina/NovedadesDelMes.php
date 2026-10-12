@@ -49,33 +49,16 @@ class NovedadesDelMes
     /** Las que surtieron efecto: lo que sigue en trámite todavía no rige. */
     private const EMITIDAS = [EstadoAccionPersonal::REGISTRADA, EstadoAccionPersonal::NOTIFICADA];
 
-    /** Los actos que cambian la remuneración del vínculo sin crearlo. */
-    private const CAMBIAN_LA_REMUNERACION = [
-        TipoMovimientoPersonal::REVISION_CLASIFICACION,
-        TipoMovimientoPersonal::ASCENSO,
-        TipoMovimientoPersonal::ASUNCION_DEFINITIVA,
-        TipoMovimientoPersonal::REINTEGRO,
-        TipoMovimientoPersonal::INCREMENTO_REMUNERACION,
-        TipoMovimientoPersonal::CAMBIO_DENOMINACION,
-        TipoMovimientoPersonal::CAMBIO_LUGAR,
-    ];
-
-    /** @var array<int, Collection<int, MovimientoPersonal>> */
-    private array $cambiosPorServidor = [];
-
-    /** @var array<int, Collection<int, EscalaRemuneracionVinculo>> */
-    private array $escalasPorVinculo = [];
-
     public function __construct(
         private readonly TerminacionObreroService $terminaciones,
+        private readonly RemuneracionDelVinculo $remuneracion,
     ) {
     }
 
     /** @return Collection<int, Novedad> */
     public function de(MesDeNomina $mes): Collection
     {
-        $this->cambiosPorServidor = [];
-        $this->escalasPorVinculo = [];
+        $this->remuneracion->olvidar();
 
         return collect()
             ->merge($this->ingresosYSalidas($mes))
@@ -150,7 +133,7 @@ class NovedadesDelMes
                 actoDeEntrada: $vinculo->movimientoOrigen,
                 actoDeSalida: $cierre ?? $vinculo->movimientoCierre,
                 motivoDeSalida: $vinculo->motivo_fin,
-                base: fn (bool $entra) => $this->remuneracionAl($vinculo, $entra ? $vinculo->fecha_inicio : $vinculo->fecha_fin),
+                base: fn (bool $entra) => $this->remuneracion->al($vinculo, $entra ? $vinculo->fecha_inicio : $vinculo->fecha_fin),
                 continuo: fn () => $this->vieneDeOtroVinculo($vinculo),
             );
 
@@ -278,7 +261,7 @@ class NovedadesDelMes
         $inicio = $mes->inicio->toDateString();
 
         $actos = MovimientoPersonal::query()
-            ->whereIn('tipo_movimiento', array_map(fn ($t) => $t->value, self::CAMBIAN_LA_REMUNERACION))
+            ->whereIn('tipo_movimiento', array_map(fn ($t) => $t->value, RemuneracionDelVinculo::CAMBIAN_LA_REMUNERACION))
             ->whereIn('estado', array_map(fn ($e) => $e->value, self::EMITIDAS))
             ->whereDate('fecha_efectiva', '<=', $mes->fin->toDateString())
             ->where(fn (Builder $q) => $q->whereDate('fecha_efectiva', '>=', $inicio)->orWhereDate('fecha_registro', '>=', $inicio))
@@ -290,7 +273,7 @@ class NovedadesDelMes
         $novedades = [];
 
         foreach ($actos as $acto) {
-            $cambio = $this->remuneracionesDelCambio($acto);
+            $cambio = $this->remuneracion->delActo($acto);
 
             if ($cambio === null || abs($cambio['nueva'] - $cambio['anterior']) < 0.005) {
                 continue;
@@ -428,98 +411,6 @@ class NovedadesDelMes
         }
 
         return $novedad;
-    }
-
-    /**
-     * La remuneración que el acto deja y la que había. El reintegro de quien no
-     * superó la prueba del ascenso lo devuelve a la de antes (LOSEP 17 b.5); el
-     * del obrero solo cambia la remuneración si su adenda la cambia.
-     *
-     * @return array{anterior: float, nueva: float}|null
-     */
-    private function remuneracionesDelCambio(MovimientoPersonal $acto): ?array
-    {
-        if ($acto->tipo_movimiento === TipoMovimientoPersonal::REINTEGRO) {
-            if (! $acto->esReintegroDelAscenso()) {
-                return null;
-            }
-
-            $ascenso = $acto->movimientoRelacionado;
-            $anterior = $acto->remuneracion_origen ?? $ascenso?->remuneracion_propuesta;
-            $nueva = $ascenso?->remuneracion_origen;
-        } else {
-            if (in_array($acto->tipo_movimiento, [
-                TipoMovimientoPersonal::INCREMENTO_REMUNERACION,
-                TipoMovimientoPersonal::CAMBIO_DENOMINACION,
-                TipoMovimientoPersonal::CAMBIO_LUGAR,
-            ], true) && ! $acto->cambiaElContratoDeTrabajo()) {
-                return null;
-            }
-
-            $anterior = $acto->remuneracion_origen;
-            $nueva = $acto->remuneracion_propuesta;
-        }
-
-        return $anterior !== null && $nueva !== null
-            ? ['anterior' => (float) $anterior, 'nueva' => (float) $nueva]
-            : null;
-    }
-
-    /**
-     * La remuneración del vínculo en una fecha: la de hoy, salvo que un acto
-     * posterior la haya cambiado, y entonces la que ese acto encontró.
-     */
-    private function remuneracionAl(ContratoServidor $vinculo, ?CarbonInterface $fecha): ?float
-    {
-        $actual = $vinculo->remuneracion !== null ? (float) $vinculo->remuneracion : null;
-
-        if ($fecha === null) {
-            return $actual;
-        }
-
-        $posterior = $this->cambiosDe($vinculo->servidor_id)
-            ->first(function (MovimientoPersonal $acto) use ($vinculo, $fecha) {
-                return $acto->fecha_efectiva->gt($fecha)
-                    && $acto->fecha_efectiva->gte($vinculo->fecha_inicio)
-                    && ($vinculo->fecha_fin === null || $acto->fecha_efectiva->lte($vinculo->fecha_fin))
-                    && $this->remuneracionesDelCambio($acto) !== null;
-            });
-
-        // La nueva escala también la cambia, sin acto (fase 7.3b).
-        $escala = $this->escalasDe($vinculo->id)
-            ->first(fn (EscalaRemuneracionVinculo $fila) => $fila->escala->rige_desde->gt($fecha));
-
-        if ($escala && (! $posterior || $escala->escala->rige_desde->lt($posterior->fecha_efectiva))) {
-            return $escala->remuneracion_anterior !== null ? (float) $escala->remuneracion_anterior : $actual;
-        }
-
-        return $posterior ? $this->remuneracionesDelCambio($posterior)['anterior'] : $actual;
-    }
-
-    /** @return Collection<int, EscalaRemuneracionVinculo> */
-    private function escalasDe(int $contratoId): Collection
-    {
-        return $this->escalasPorVinculo[$contratoId] ??= EscalaRemuneracionVinculo::query()
-            ->where('contrato_id', $contratoId)
-            ->whereHas('escala', fn (Builder $q) => $q->whereNull('revertida_en'))
-            ->with('escala')
-            ->get()
-            ->sortBy(fn (EscalaRemuneracionVinculo $fila) => $fila->escala->rige_desde->toDateString())
-            ->values();
-    }
-
-    /** @return Collection<int, MovimientoPersonal> */
-    private function cambiosDe(int $servidorId): Collection
-    {
-        return $this->cambiosPorServidor[$servidorId] ??= MovimientoPersonal::query()
-            ->where('servidor_id', $servidorId)
-            ->whereIn('tipo_movimiento', array_map(fn ($t) => $t->value, self::CAMBIAN_LA_REMUNERACION))
-            ->whereIn('estado', array_map(fn ($e) => $e->value, self::EMITIDAS))
-            ->whereNotNull('fecha_efectiva')
-            ->with('movimientoRelacionado')
-            ->orderBy('fecha_efectiva')
-            ->orderBy('id')
-            ->get();
     }
 
     // ── Los días sin remuneración ───────────────────────────────────

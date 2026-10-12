@@ -18,9 +18,11 @@ const ESTADO_OPTIONS = [
 
 interface Props {
   onEstadoChange: (v: string | null) => void
+  /** `procesar-nomina` (fase 7.3c): sin él no se ofrece calcular. */
+  puedeCalcular: boolean
 }
 
-export function NominaToolbar({ onEstadoChange }: Props) {
+export function NominaToolbar({ onEstadoChange, puedeCalcular }: Props) {
   const contained    = useContainedInput()
   const { isMobile } = useMobileBreakpoint()
   const { calcular } = useNominaMutations()
@@ -70,16 +72,18 @@ export function NominaToolbar({ onEstadoChange }: Props) {
         onChange={onEstadoChange}
         style={{ minWidth: 160 }}
       />
-      <Button
-        size="sm"
-        variant="light"
-        leftSection={<IconCalculator size={16} />}
-        loading={calcular.isPending}
-        disabled={!mes}
-        onClick={handleCalcular}
-      >
-        Calcular nómina
-      </Button>
+      {puedeCalcular && (
+        <Button
+          size="sm"
+          variant="light"
+          leftSection={<IconCalculator size={16} />}
+          loading={calcular.isPending}
+          disabled={!mes}
+          onClick={handleCalcular}
+        >
+          Calcular nómina
+        </Button>
+      )}
     </>
   )
 

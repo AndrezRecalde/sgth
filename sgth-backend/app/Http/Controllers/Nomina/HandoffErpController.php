@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Nomina;
 
+use App\Enums\Permiso;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\Handoff\HandoffErp;
@@ -11,8 +12,8 @@ class HandoffErpController extends Controller
 {
     public function index()
     {
-        // En una app real usaríamos Policy. Aquí asumiremos rol de admin.
-        if (!auth()->user()->hasRole('admin-uath')) {
+        // Con el permiso de ver la nómina, no con el rol (fase 7.3c).
+        if (! auth()->user()->can(Permiso::VER_NOMINA_TODAS->value)) {
             return ApiResponse::noAutorizado();
         }
 

@@ -20,6 +20,9 @@ class RolPago extends Model
     protected $fillable = [
         'nomina_id',
         'servidor_id',
+        // Los días del mes y la remuneración con que se pagó (fase 7.3c).
+        'dias',
+        'remuneracion',
         'total_ingresos',
         'total_descuentos',
         'total_neto',
@@ -31,6 +34,8 @@ class RolPago extends Model
     {
         return [
             'enviado_por_correo' => 'boolean',
+            'dias'               => 'integer',
+            'remuneracion'       => 'decimal:2',
             'enviado_en'         => 'datetime',
         ];
     }

@@ -1678,9 +1678,14 @@ export type Nomina = {
   fecha_inicio:      string
   fecha_fin:         string
   estado:            EstadoNomina
+  /** Calculada en paralelo con la de Financiero: no sale al ERP ni a los servidores (fase 7.3c). */
+  referencial?:      boolean
   roles_pago?: {
     id:                number
     servidor_id:       number
+    /** Los días del mes y la remuneración con que se pagó (fase 7.3c). */
+    dias?:             number | null
+    remuneracion?:     number | string | null
     total_ingresos?:   number | string | null
     total_descuentos?: number | string | null
     total_neto?:       number | string | null

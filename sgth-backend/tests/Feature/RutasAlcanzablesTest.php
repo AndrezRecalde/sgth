@@ -78,6 +78,13 @@ test('el_comodin_de_nomina_solo_acepta_numeros', function () {
 });
 
 test('las_rutas_de_nomina_que_estaban_rotas_ya_responden', function () {
+    // Desde la fase 7.3c piden los permisos de nómina, no el rol.
+    foreach (['ver-nomina-todas', 'procesar-nomina'] as $permiso) {
+        $this->usuario->givePermissionTo(\Spatie\Permission\Models\Permission::firstOrCreate(
+            ['name' => $permiso, 'guard_name' => 'sanctum']
+        ));
+    }
+
     foreach ([
         '/api/v1/nomina/conceptos',
         '/api/v1/nomina/handoffs',
