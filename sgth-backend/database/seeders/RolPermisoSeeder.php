@@ -88,6 +88,9 @@ class RolPermisoSeeder extends Seeder
             Permiso::PROCESAR_NOMINA,
             Permiso::CERRAR_NOMINA,
             Permiso::GENERAR_HANDOFF_ERP,
+            // Las novedades del mes, y su entrega a Financiero (fase 7.3a).
+            Permiso::VER_NOVEDADES_NOMINA,
+            Permiso::ENTREGAR_NOVEDADES_NOMINA,
             Permiso::VER_ASISTENCIA_UNIDAD,
             Permiso::VER_ASISTENCIA_TODOS,
             Permiso::VER_PERMISOS_TODOS,
@@ -144,6 +147,8 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_NOMINA_UNIDAD,
             Permiso::VER_NOMINA_TODAS,
             Permiso::PROCESAR_NOMINA,
+            // Las ve; entregarlas es del director (fase 7.3a).
+            Permiso::VER_NOVEDADES_NOMINA,
             Permiso::VER_ASISTENCIA_UNIDAD,
             Permiso::VER_ASISTENCIA_TODOS,
             Permiso::VER_PERMISOS_TODOS,
@@ -245,6 +250,8 @@ class RolPermisoSeeder extends Seeder
             Permiso::GESTIONAR_VIATICOS,
             Permiso::LIQUIDAR_VIATICO,
             Permiso::GESTIONAR_TARIFAS_VIATICO,
+            // Las novedades del mes, que aplica en su sistema (fase 7.3a).
+            Permiso::VER_NOVEDADES_NOMINA,
         ]));
 
         // MEDICO
@@ -296,6 +303,7 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_EXPEDIENTE_TODOS,
             Permiso::VER_NOMINA_UNIDAD,
             Permiso::VER_NOMINA_TODAS,
+            Permiso::VER_NOVEDADES_NOMINA,
             Permiso::VER_ASISTENCIA_UNIDAD,
             Permiso::VER_ASISTENCIA_TODOS,
             Permiso::VER_PERMISOS_TODOS,

@@ -30,6 +30,9 @@ class Subrogacion extends Model
         'ausencia_tipo', 'ausencia_id',
         'resolucion_numero',
         'estado', 'observacion', 'registrado_por', 'movimiento_personal_id',
+        // El día en que se canceló, y dejó de surtir efecto (fase 7.3a): la
+        // nómina paga la diferencia hasta la víspera.
+        'cancelada_en',
     ];
 
     protected function casts(): array
@@ -41,6 +44,7 @@ class Subrogacion extends Model
             'estado'       => EstadoSubrogacion::class,
             'fecha_inicio' => 'date',
             'fecha_fin'    => 'date',
+            'cancelada_en' => 'date',
         ];
     }
 

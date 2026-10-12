@@ -45,6 +45,10 @@ enum Permiso: string
     case PROCESAR_NOMINA = 'procesar-nomina';
     case CERRAR_NOMINA = 'cerrar-nomina';
     case GENERAR_HANDOFF_ERP = 'generar-handoff-erp';
+    // Las novedades para nómina del mes, que Financiero aplica en su sistema
+    // (fase 7.3a): verlas, y entregarlas, que congela el mes.
+    case VER_NOVEDADES_NOMINA = 'ver-novedades-nomina';
+    case ENTREGAR_NOVEDADES_NOMINA = 'entregar-novedades-nomina';
 
     // ── MÓDULO 04: Asistencia ────────────────────────────────────
     case VER_ASISTENCIA_PROPIA = 'ver-asistencia-propia';

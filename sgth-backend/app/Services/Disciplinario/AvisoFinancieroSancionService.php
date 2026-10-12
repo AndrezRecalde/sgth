@@ -7,7 +7,7 @@ use App\Enums\EstadoAccionPersonal;
 use App\Mail\Disciplinario\SancionParaNominaMail;
 use App\Models\Disciplinario\SancionDisciplinaria;
 use App\Models\Expediente\MovimientoPersonal;
-use App\Services\Estructura\FirmanteOrganigramaService;
+use App\Services\Estructura\JefeFinanciero;
 use App\Services\Expediente\AccionPersonalPdfService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -34,7 +34,7 @@ class AvisoFinancieroSancionService
     public const FALLO_ENVIO      = 'fallo_envio';
 
     public function __construct(
-        private readonly FirmanteOrganigramaService $organigrama,
+        private readonly JefeFinanciero $jefeFinanciero,
         private readonly AccionPersonalPdfService $pdf,
     ) {
     }
@@ -65,7 +65,7 @@ class AvisoFinancieroSancionService
             return null;
         }
 
-        $direccion = $this->direccionDelJefeFinanciero();
+        $direccion = $this->jefeFinanciero->direccion();
         if (! $direccion) {
             Log::warning('Sanción para nómina sin destinatario: la unidad financiera no tiene jefe con usuario', [
                 'movimiento' => $movimiento->id,
@@ -97,17 +97,5 @@ class AvisoFinancieroSancionService
         }
 
         return self::ENVIADO;
-    }
-
-    private function direccionDelJefeFinanciero(): ?string
-    {
-        $unidad = $this->organigrama->unidadAnclada('es_unidad_financiera');
-        if (! $unidad) {
-            return null;
-        }
-
-        $jefe = $this->organigrama->jefeDeUnidadEn($unidad, now()->toDateString())['servidor'];
-
-        return $jefe?->loadMissing('usuario')->usuario?->email;
     }
 }

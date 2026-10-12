@@ -4677,6 +4677,60 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/nomina/novedades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Las novedades de un mes: derivadas de los actos si está abierto, o como
+         *     se entregaron, con lo que cambió después
+         */
+        get: operations["novedadNomina.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/nomina/novedades/excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Las novedades y los ajustes del mes, en Excel */
+        get: operations["novedadNomina.excel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/nomina/novedades/entregar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Congela el mes y se lo envía al jefe de Gestión Financiera */
+        post: operations["novedadNomina.entregar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/dispensario/odontograma/historia-clinica/{historiaClinicaId}": {
         parameters: {
             query?: never;
@@ -26371,6 +26425,161 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "novedadNomina.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: {
+                            periodo: string;
+                            etiqueta: string;
+                            entrega: {
+                                entregada_en: string;
+                                entregada_por: string;
+                                novedades: string;
+                                ajustes: string;
+                                destinatario: string;
+                                aviso: string;
+                            } | null;
+                            puede_entregarse: string;
+                            novedades: {
+                                [key: string]: {
+                                    ""?: string | Record<string, never> | null;
+                                    concepto: string;
+                                    concepto_etiqueta: string;
+                                };
+                            };
+                            ajustes: {
+                                ""?: string;
+                                concepto: string;
+                                concepto_etiqueta: string;
+                            }[];
+                            cambios_tras_la_entrega: {
+                                [key: string]: {
+                                    ""?: string;
+                                    concepto: string;
+                                    concepto_etiqueta: string;
+                                };
+                            };
+                            resumen: {
+                                concepto: string;
+                                /** @enum {string} */
+                                etiqueta: "Ingreso" | "Salida" | "Cambio de remuneración" | "Días sin remuneración" | "Subrogación" | "Encargo" | "Multa" | "Remuneraciones pendientes";
+                                cantidad: number;
+                                monto: number;
+                            }[];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "novedadNomina.excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "novedadNomina.entregar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    periodo: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: {
+                            periodo: string;
+                            etiqueta: string;
+                            entrega: {
+                                entregada_en: string;
+                                entregada_por: string;
+                                novedades: string;
+                                ajustes: string;
+                                destinatario: string;
+                                aviso: string;
+                            } | null;
+                            puede_entregarse: string;
+                            novedades: {
+                                [key: string]: {
+                                    ""?: string | Record<string, never> | null;
+                                    concepto: string;
+                                    concepto_etiqueta: string;
+                                };
+                            };
+                            ajustes: {
+                                ""?: string;
+                                concepto: string;
+                                concepto_etiqueta: string;
+                            }[];
+                            cambios_tras_la_entrega: {
+                                [key: string]: {
+                                    ""?: string;
+                                    concepto: string;
+                                    concepto_etiqueta: string;
+                                };
+                            };
+                            resumen: {
+                                concepto: string;
+                                /** @enum {string} */
+                                etiqueta: "Ingreso" | "Salida" | "Cambio de remuneración" | "Días sin remuneración" | "Subrogación" | "Encargo" | "Multa" | "Remuneraciones pendientes";
+                                cantidad: number;
+                                monto: number;
+                            }[];
+                        };
+                        meta: {
+                            aviso_financiero: string;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "odontograma.show": {
