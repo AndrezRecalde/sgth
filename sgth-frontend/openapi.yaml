@@ -9166,130 +9166,6 @@
                 }
             }
         },
-        "/v1/reportes/siith-sut/configuracion": {
-            "get": {
-                "operationId": "configuracionReporteMovimiento.index",
-                "tags": [
-                    "ConfiguracionReporteMovimiento"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Configuraci\u00f3n de reportabilidad SIITH/SUT por tipo de movimiento."
-                                        },
-                                        "datos": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/ConfiguracionReporteMovimiento"
-                                            }
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/v1/reportes/siith-sut/configuracion/{configuracion}": {
-            "patch": {
-                "operationId": "configuracionReporteMovimiento.update",
-                "tags": [
-                    "ConfiguracionReporteMovimiento"
-                ],
-                "parameters": [
-                    {
-                        "name": "configuracion",
-                        "in": "path",
-                        "required": true,
-                        "description": "The configuracion ID",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UpdateConfiguracionReporteMovimientoRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Configuraci\u00f3n actualizada."
-                                        },
-                                        "datos": {
-                                            "anyOf": [
-                                                {
-                                                    "$ref": "#/components/schemas/ConfiguracionReporteMovimiento"
-                                                },
-                                                {
-                                                    "type": "null"
-                                                }
-                                            ]
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    }
-                }
-            }
-        },
         "/v1/asistencia/consolidado-permisos": {
             "get": {
                 "operationId": "asistencia.consolidado",
@@ -40797,57 +40673,11 @@
                 }
             }
         },
-        "/v1/reportes/siith-sut/movimientos": {
+        "/v1/reportes/siith-sut": {
             "get": {
-                "operationId": "reporteSiithSut.movimientos",
+                "operationId": "reporteSiithSut.index",
                 "tags": [
                     "ReporteSiithSut"
-                ],
-                "parameters": [
-                    {
-                        "name": "portal",
-                        "in": "query",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "siith",
-                                "sut"
-                            ]
-                        }
-                    },
-                    {
-                        "name": "servidor_id",
-                        "in": "query",
-                        "schema": {
-                            "type": [
-                                "integer",
-                                "null"
-                            ]
-                        }
-                    },
-                    {
-                        "name": "desde",
-                        "in": "query",
-                        "schema": {
-                            "type": [
-                                "string",
-                                "null"
-                            ],
-                            "format": "date-time"
-                        }
-                    },
-                    {
-                        "name": "hasta",
-                        "in": "query",
-                        "schema": {
-                            "type": [
-                                "string",
-                                "null"
-                            ],
-                            "format": "date-time"
-                        }
-                    }
                 ],
                 "responses": {
                     "200": {
@@ -40862,10 +40692,127 @@
                                         },
                                         "mensaje": {
                                             "type": "string",
-                                            "const": "Operaci\u00f3n exitosa."
+                                            "const": "Reporte SIITH/SUT."
                                         },
                                         "datos": {
-                                            "type": "object"
+                                            "type": "array",
+                                            "items": {}
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/reportes/siith-sut/excel": {
+            "get": {
+                "operationId": "reporteSiithSut.excel",
+                "tags": [
+                    "ReporteSiithSut"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/reportes/siith-sut/transcribir": {
+            "post": {
+                "operationId": "reporteSiithSut.transcribir",
+                "summary": "Marca como transcritos los actos, o su anulaci\u00f3n",
+                "tags": [
+                    "ReporteSiithSut"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "portal": {
+                                        "type": "string",
+                                        "enum": [
+                                            "siith",
+                                            "sut"
+                                        ]
+                                    },
+                                    "movimiento_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "minItems": 1,
+                                        "maxItems": 500
+                                    }
+                                },
+                                "required": [
+                                    "portal",
+                                    "movimiento_ids"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "anyOf": [
+                                                {
+                                                    "type": "string"
+                                                },
+                                                {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "Se marc\u00f3 1 acto como transcrito."
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "transcritos": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "transcritos"
+                                            ]
                                         },
                                         "meta": {
                                             "type": "null"
@@ -40890,45 +40837,11 @@
                 }
             }
         },
-        "/v1/reportes/siith-sut/mensual": {
+        "/v1/reportes/siith-sut/configuracion": {
             "get": {
-                "operationId": "reporteSiithSut.mensual",
+                "operationId": "reporteSiithSut.configuracion",
                 "tags": [
                     "ReporteSiithSut"
-                ],
-                "parameters": [
-                    {
-                        "name": "anio",
-                        "in": "query",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "minimum": 2000,
-                            "maximum": 2100
-                        }
-                    },
-                    {
-                        "name": "mes",
-                        "in": "query",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "minimum": 1,
-                            "maximum": 12
-                        }
-                    },
-                    {
-                        "name": "portal",
-                        "in": "query",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "siith",
-                                "sut"
-                            ]
-                        }
-                    }
                 ],
                 "responses": {
                     "200": {
@@ -40943,34 +40856,82 @@
                                         },
                                         "mensaje": {
                                             "type": "string",
-                                            "const": "Operaci\u00f3n exitosa."
+                                            "const": "Qu\u00e9 clase se reporta a cada portal."
                                         },
                                         "datos": {
-                                            "type": "object",
-                                            "properties": {
-                                                "periodo": {
-                                                    "type": "string"
-                                                },
-                                                "portal": {
-                                                    "type": "string"
-                                                },
-                                                "resumen": {
-                                                    "type": "object",
-                                                    "additionalProperties": {
-                                                        "type": "integer"
-                                                    }
-                                                },
-                                                "detalle": {
-                                                    "type": "array",
-                                                    "items": {}
-                                                }
-                                            },
-                                            "required": [
-                                                "periodo",
-                                                "portal",
-                                                "resumen",
-                                                "detalle"
-                                            ]
+                                            "type": "array",
+                                            "items": {}
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/reportes/siith-sut/configuracion/{clase}": {
+            "patch": {
+                "operationId": "reporteSiithSut.actualizarConfiguracion",
+                "tags": [
+                    "ReporteSiithSut"
+                ],
+                "parameters": [
+                    {
+                        "name": "clase",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reportable_siith": {
+                                        "type": "boolean"
+                                    },
+                                    "reportable_sut": {
+                                        "type": "boolean"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string"
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {}
                                         },
                                         "meta": {
                                             "type": "null"
@@ -40988,6 +40949,9 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -54284,53 +54248,6 @@
                     "deleted_at"
                 ],
                 "title": "ConfiguracionReporte"
-            },
-            "ConfiguracionReporteMovimiento": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer"
-                    },
-                    "tipo_movimiento": {
-                        "type": "string"
-                    },
-                    "reportable_siith": {
-                        "type": "boolean"
-                    },
-                    "reportable_sut": {
-                        "type": "boolean"
-                    },
-                    "descripcion": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "created_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    },
-                    "updated_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    }
-                },
-                "required": [
-                    "id",
-                    "tipo_movimiento",
-                    "reportable_siith",
-                    "reportable_sut",
-                    "descripcion",
-                    "created_at",
-                    "updated_at"
-                ],
-                "title": "ConfiguracionReporteMovimiento"
             },
             "ConsultaMedica": {
                 "type": "object",
@@ -70279,25 +70196,6 @@
                     }
                 },
                 "title": "UpdateCapacitacionSsoRequest"
-            },
-            "UpdateConfiguracionReporteMovimientoRequest": {
-                "type": "object",
-                "properties": {
-                    "reportable_siith": {
-                        "type": "boolean"
-                    },
-                    "reportable_sut": {
-                        "type": "boolean"
-                    },
-                    "descripcion": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 2000
-                    }
-                },
-                "title": "UpdateConfiguracionReporteMovimientoRequest"
             },
             "UpdateConsultaMedicaRequest": {
                 "type": "object",

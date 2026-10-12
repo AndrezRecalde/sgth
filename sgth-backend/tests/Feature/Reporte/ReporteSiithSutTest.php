@@ -4,206 +4,172 @@ namespace Tests\Feature\Reporte;
 
 use App\Enums\CategoriaEventoVinculo;
 use App\Enums\EstadoAccionPersonal;
-use App\Models\Estructura\Puesto;
-use App\Models\Estructura\UnidadAdministrativa;
-use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
 use App\Models\Reporte\ConfiguracionReporteMovimiento;
+use App\Models\Reporte\TranscripcionReporte;
 use App\Models\User;
-use App\Services\Reporte\ReporteSiithSutService;
 use Database\Seeders\ConfiguracionReporteMovimientoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
 
+/*
+| Fase 7.5 del diseño de Acciones de Personal (9.12): el reporte de apoyo a la
+| transcripción al SIITH y al SUT. Por clase, el portal por el instrumento del
+| acto, lo registrado en el mes y lo que sigue sin transcribirse, y la
+| anulación de lo ya transcrito.
+|
+| Hoy es el martes 20 de octubre de 2026.
+*/
 beforeEach(function () {
-    Role::firstOrCreate(['name' => 'admin-uath', 'guard_name' => 'sanctum']);
+    foreach (['admin-uath', 'asistente-uath'] as $rol) {
+        Role::firstOrCreate(['name' => $rol, 'guard_name' => 'sanctum']);
+    }
+    permisosDeAccionesPersonal();
+    $this->travelTo(Carbon::parse('2026-10-20 10:00'));
 
     $this->user = User::factory()->create();
     $this->user->assignRole('admin-uath');
     $this->actingAs($this->user, 'sanctum');
 
+    $this->unidad = unidadDePrueba(['nombre' => 'Dirección de Obras']);
+    $this->puesto = puestoDePrueba($this->unidad, 'Analista', ['plazas' => 10]);
+
+    $this->contador = 0;
+    /** Un acto ya registrado, con su clase y su instrumento. */
+    $this->acto = function (string $tipo, string $instrumento, string $registro, array $mas = []): MovimientoPersonal {
+        $this->contador++;
+        $servidor = Servidor::create([
+            'cedula' => str_pad((string) (7800000000 + $this->contador), 10, '0', STR_PAD_LEFT),
+            'nombre' => 'Servidor', 'apellido' => 'Reporte'.$this->contador, 'regimen_laboral' => 'losep',
+        ]);
+
+        return MovimientoPersonal::create([
+            'servidor_id' => $servidor->id, 'tipo_movimiento' => $tipo, 'instrumento' => $instrumento,
+            'categoria' => CategoriaEventoVinculo::ACCION_DE_PERSONAL, 'estado' => EstadoAccionPersonal::REGISTRADA,
+            'descripcion' => 'Acto de prueba.', 'fecha_efectiva' => $registro, 'fecha_registro' => $registro,
+            'codigo_registro' => 'AP-2026-'.str_pad((string) $this->contador, 4, '0', STR_PAD_LEFT),
+            'puesto_destino_id' => $this->puesto->id, 'unidad_destino_id' => $this->unidad->id,
+            'autorizado_por' => $this->user->id,
+            ...$mas,
+        ]);
+    };
+
+    $this->reporte = fn (string $portal, string $periodo = '2026-10', string $situacion = 'pendientes') => $this
+        ->getJson("/api/v1/reportes/siith-sut?portal={$portal}&periodo={$periodo}&situacion={$situacion}")
+        ->assertOk()
+        ->json('datos');
+});
+
+// ── Qué se reporta ──────────────────────────────────────────────
+
+test('la configuración es por clase: al SIITH lo de la LOSEP, al SUT el ingreso y la terminación del obrero', function () {
+    $configuracion = collect($this->getJson('/api/v1/reportes/siith-sut/configuracion')->assertOk()->json('datos'))->keyBy('clase');
+
+    expect($configuracion)->toHaveCount(23)
+        ->and($configuracion['cesacion']['reportable_siith'])->toBeTrue()
+        ->and($configuracion['cesacion']['reportable_sut'])->toBeTrue()
+        ->and($configuracion['subrogacion']['reportable_siith'])->toBeTrue()
+        ->and($configuracion['incremento_remuneracion']['reportable_siith'])->toBeFalse()
+        ->and($configuracion['adenda']['reportable_siith'])->toBeFalse();
+
+    // Volver a sembrar no pisa lo que se cambió.
+    ConfiguracionReporteMovimiento::where('clase', 'sancion')->update(['reportable_siith' => false]);
     (new ConfiguracionReporteMovimientoSeeder())->run();
-
-    $this->unidad = UnidadAdministrativa::create([
-        'codigo' => 'UATH-01', 'nombre' => 'Unidad de Talento Humano', 'nivel' => 1,
-    ]);
-
-    $this->puesto = Puesto::create([
-        'codigo' => 'P-01', 'unidad_administrativa_id' => $this->unidad->id, 'plazas' => 5,
-    ]);
-
-    $this->service = app(ReporteSiithSutService::class);
+    expect(ConfiguracionReporteMovimiento::where('clase', 'sancion')->value('reportable_siith'))->toBeFalse();
 });
 
-function crearServidorConMovimiento(
-    string $tipoNombramiento,
-    string $tipoMovimiento,
-    string $estadoMovimiento,
-    string $fechaEfectiva,
-): Servidor {
-    $unidad = test()->unidad;
-    $puesto = test()->puesto;
+test('el portal lo decide el instrumento: la acción va al SIITH, la hoja del obrero al SUT, el contrato civil a ninguno', function () {
+    $ap = ($this->acto)('ingreso', 'accion_personal', '2026-10-05');
+    $obrero = ($this->acto)('ingreso', 'documento_ct', '2026-10-06');
+    ($this->acto)('ingreso', 'contrato_civil', '2026-10-07');
 
-    $servidor = Servidor::create([
-        'user_id' => User::factory()->create()->id,
-        'cedula'  => (string) random_int(1000000000, 1999999999),
-        'nombre'  => 'Servidor', 'apellido' => 'Reporte',
-        'regimen_laboral' => 'losep',
-        'puesto_id' => $puesto->id,
-        'unidad_administrativa_id' => $unidad->id,
-    ]);
-
-    ContratoServidor::create([
-        'servidor_id'              => $servidor->id,
-        'tipo_nombramiento'        => $tipoNombramiento,
-        'unidad_administrativa_id' => $unidad->id,
-        'puesto_id'                => $puesto->id,
-        'fecha_inicio'             => '2020-01-01',
-        // Servicios Profesionales dura el año calendario y la BD exige el
-        // vencimiento; el resto de nombramientos no lleva plazo.
-        'fecha_fin'                => $tipoNombramiento === 'servicios_profesionales'
-            ? '2020-12-31'
-            : null,
-        'estado'                   => 'vigente',
-    ]);
-
-    MovimientoPersonal::create([
-        'servidor_id'     => $servidor->id,
-        'tipo_movimiento' => $tipoMovimiento,
-        'categoria'       => CategoriaEventoVinculo::ACCION_DE_PERSONAL,
-        'estado'          => $estadoMovimiento,
-        'descripcion'     => "Movimiento {$tipoMovimiento} de prueba",
-        'fecha_efectiva'  => $fechaEfectiva,
-        'autorizado_por'  => test()->user->id,
-    ]);
-
-    return $servidor;
-}
-
-// ── Seeder ─────────────────────────────────────────────────────
-
-test('el seeder crea una fila por cada tipo_movimiento, con los 3 mapeos confirmados y la cesación documentada', function () {
-    // Una fila por caso del enum — no un número fijo, para no romperse
-    // cada vez que se agregue un tipo_movimiento nuevo (ej. TRASPASO).
-    expect(ConfiguracionReporteMovimiento::count())->toBe(count(\App\Enums\TipoMovimientoPersonal::cases()));
-
-    foreach (['ingreso', 'traslado', 'cambio_administrativo'] as $tipo) {
-        $config = ConfiguracionReporteMovimiento::where('tipo_movimiento', $tipo)->first();
-        expect($config->reportable_siith)->toBeTrue();
-        expect($config->reportable_sut)->toBeFalse();
-    }
-
-    // Desde la taxonomía de dos niveles, la categoría "cesación de funciones"
-    // de la norma mapea a su propio tipo_movimiento y ya no al genérico
-    // 'egreso' — pero sigue sin marcarse reportable hasta que la UATH lo
-    // confirme contra el formato exacto.
-    $cesacion = ConfiguracionReporteMovimiento::where('tipo_movimiento', 'cesacion_funciones')->first();
-    expect($cesacion->reportable_siith)->toBeFalse();
-    expect($cesacion->descripcion)->toContain('cesación de funciones');
-
-    // 'egreso' era bitácora y salió del catálogo en la fase 1.2: ya no tiene
-    // fila que configurar.
-    expect(ConfiguracionReporteMovimiento::where('tipo_movimiento', 'egreso')->exists())->toBeFalse();
-
-    // reportable_sut queda en false para absolutamente todo (sin lista confirmada).
-    expect(ConfiguracionReporteMovimiento::where('reportable_sut', true)->count())->toBe(0);
+    expect(collect(($this->reporte)('siith')['actos'])->pluck('movimiento_id')->all())->toBe([$ap->id])
+        ->and(collect(($this->reporte)('sut')['actos'])->pluck('movimiento_id')->all())->toBe([$obrero->id]);
 });
 
-// ── movimientosReportables() ──────────────────────────────────
+test('el ingreso de antes de la columna del instrumento va por su modalidad', function () {
+    // Quedó como acción de personal, pero es el de un contrato civil y el de un obrero.
+    ($this->acto)('ingreso', 'accion_personal', '2026-10-05', ['tipo_nombramiento_propuesto' => 'servicios_profesionales']);
+    $obrero = ($this->acto)('ingreso', 'accion_personal', '2026-10-06', ['tipo_nombramiento_propuesto' => 'codigo_trabajo']);
+    $losep = ($this->acto)('ingreso', 'accion_personal', '2026-10-07', ['tipo_nombramiento_propuesto' => 'nombramiento_provisional']);
 
-test('un ingreso registrado bajo nombramiento LOSEP aparece en el reporte SIITH', function () {
-    $servidor = crearServidorConMovimiento('nombramiento_permanente', 'ingreso', 'registrada', '2026-03-10');
+    expect(collect(($this->reporte)('siith')['actos'])->pluck('movimiento_id')->all())->toBe([$losep->id])
+        ->and(collect(($this->reporte)('sut')['actos'])->pluck('movimiento_id')->all())->toBe([$obrero->id]);
 
-    $resultado = $this->service->movimientosReportables(['portal' => 'siith']);
-
-    expect($resultado)->toHaveCount(1);
-    expect($resultado->first()['servidor_id'])->toBe($servidor->id);
-    expect($resultado->first()['regimen_juridico'])->toBe('losep');
+    $this->postJson('/api/v1/reportes/siith-sut/transcribir', ['portal' => 'sut', 'movimiento_ids' => [$obrero->id]])->assertOk();
 });
 
-test('un movimiento en borrador no aparece en el reporte aunque su tipo sea reportable', function () {
-    crearServidorConMovimiento('nombramiento_permanente', 'ingreso', 'borrador', '2026-03-10');
+test('lo que no se marca como reportable no aparece', function () {
+    ConfiguracionReporteMovimiento::where('clase', 'subrogacion')->update(['reportable_siith' => false]);
+    ($this->acto)('subrogacion', 'accion_personal', '2026-10-05');
+    $cesacion = ($this->acto)('cesacion_funciones', 'accion_personal', '2026-10-06', ['subtipo_movimiento' => 'renuncia']);
 
-    $resultado = $this->service->movimientosReportables(['portal' => 'siith']);
+    $actos = ($this->reporte)('siith')['actos'];
 
-    expect($resultado)->toHaveCount(0);
+    expect(collect($actos)->pluck('movimiento_id')->all())->toBe([$cesacion->id])
+        ->and($actos[0]['clase'])->toBe('Cesación de Funciones')
+        ->and($actos[0]['causal'])->toBe('Renuncia')
+        ->and($actos[0]['destino']['puesto'])->toBe('Analista');
 });
 
-test('un tipo_movimiento no marcado como reportable no aparece aunque esté registrado', function () {
-    crearServidorConMovimiento('nombramiento_permanente', 'licencia_sin_remuneracion', 'registrada', '2026-03-10');
+// ── Lo pendiente y lo transcrito ────────────────────────────────
 
-    $resultado = $this->service->movimientosReportables(['portal' => 'siith']);
+test('lo que no se transcribió sigue pendiente en los meses siguientes, y lo transcrito sale de los pendientes', function () {
+    $septiembre = ($this->acto)('ingreso', 'accion_personal', '2026-09-15');
+    $octubre = ($this->acto)('ingreso', 'accion_personal', '2026-10-05');
 
-    expect($resultado)->toHaveCount(0);
+    expect(collect(($this->reporte)('siith', '2026-10', 'todos')['actos'])->pluck('movimiento_id')->all())->toBe([$octubre->id])
+        ->and(collect(($this->reporte)('siith')['actos'])->pluck('movimiento_id')->all())->toBe([$septiembre->id, $octubre->id]);
+
+    $this->postJson('/api/v1/reportes/siith-sut/transcribir', ['portal' => 'siith', 'movimiento_ids' => [$septiembre->id]])
+        ->assertOk()
+        ->assertJsonPath('datos.transcritos', 1);
+
+    expect(collect(($this->reporte)('siith')['actos'])->pluck('movimiento_id')->all())->toBe([$octubre->id])
+        ->and(collect(($this->reporte)('siith', '2026-09', 'transcritos')['actos'])->pluck('movimiento_id')->all())->toBe([$septiembre->id]);
+
+    // Un acto de otro portal no se marca.
+    $obrero = ($this->acto)('ingreso', 'documento_ct', '2026-10-06');
+    $this->postJson('/api/v1/reportes/siith-sut/transcribir', ['portal' => 'siith', 'movimiento_ids' => [$obrero->id]])->assertStatus(422);
 });
 
-test('un vínculo de servicios profesionales no aparece ni en SIITH ni en SUT', function () {
-    crearServidorConMovimiento('servicios_profesionales', 'ingreso', 'registrada', '2026-03-10');
+test('el acto anulado después de transcribirse vuelve, para anularlo también en el portal', function () {
+    $acto = ($this->acto)('ingreso', 'accion_personal', '2026-10-05');
+    $this->postJson('/api/v1/reportes/siith-sut/transcribir', ['portal' => 'siith', 'movimiento_ids' => [$acto->id]])->assertOk();
 
-    // 'ingreso' es reportable_siith=true, pero el régimen del vínculo es
-    // codigo_civil_losncp — no coincide con 'losep' (siith) ni con
-    // 'codigo_trabajo' (sut).
-    expect($this->service->movimientosReportables(['portal' => 'siith']))->toHaveCount(0);
-    expect($this->service->movimientosReportables(['portal' => 'sut']))->toHaveCount(0);
+    $acto->forceFill(['estado' => EstadoAccionPersonal::ANULADA])->saveQuietly();
+
+    $fila = ($this->reporte)('siith')['actos'][0];
+    expect($fila['movimiento_id'])->toBe($acto->id)
+        ->and($fila['anulacion_pendiente'])->toBeTrue();
+
+    $this->postJson('/api/v1/reportes/siith-sut/transcribir', ['portal' => 'siith', 'movimiento_ids' => [$acto->id]])->assertOk();
+
+    expect(($this->reporte)('siith')['actos'])->toBe([])
+        ->and(TranscripcionReporte::where('movimiento_id', $acto->id)->value('anulacion_transcrita_en'))->not->toBeNull();
 });
 
-test('el filtro de fechas excluye movimientos fuera del rango', function () {
-    crearServidorConMovimiento('nombramiento_permanente', 'ingreso', 'registrada', '2025-01-01');
+// ── Quién ───────────────────────────────────────────────────────
 
-    $resultado = $this->service->movimientosReportables([
-        'portal' => 'siith', 'desde' => '2026-01-01', 'hasta' => '2026-12-31',
-    ]);
+test('el Excel sale con sus columnas, y qué se reporta lo cambia el Director', function () {
+    ($this->acto)('ingreso', 'accion_personal', '2026-10-05');
 
-    expect($resultado)->toHaveCount(0);
-});
+    $this->get('/api/v1/reportes/siith-sut/excel?portal=siith&periodo=2026-10')
+        ->assertOk()
+        ->assertDownload('reporte_siith_2026-10.xlsx');
 
-test('portal desconocido lanza ReglaNegocioException', function () {
-    expect(fn () => $this->service->movimientosReportables(['portal' => 'no-existe']))
-        ->toThrow(\App\Exceptions\ReglaNegocioException::class);
-});
+    $asistente = User::factory()->create();
+    $asistente->assignRole('asistente-uath');
+    $this->actingAs($asistente, 'sanctum');
+    $this->getJson('/api/v1/reportes/siith-sut?portal=siith&periodo=2026-10')->assertOk();
+    $this->patchJson('/api/v1/reportes/siith-sut/configuracion/sancion', ['reportable_siith' => false])->assertForbidden();
 
-// ── reporteMensual() ───────────────────────────────────────────
-
-test('el reporte mensual agrega por tipo_movimiento y expone el detalle', function () {
-    crearServidorConMovimiento('nombramiento_permanente', 'ingreso', 'registrada', '2026-07-05');
-    crearServidorConMovimiento('nombramiento_provisional', 'cambio_administrativo', 'notificada', '2026-07-20');
-    crearServidorConMovimiento('nombramiento_permanente', 'ingreso', 'registrada', '2026-08-01'); // fuera del mes
-
-    $reporte = $this->service->reporteMensual(2026, 7, 'siith');
-
-    expect($reporte['periodo'])->toBe('2026-07');
-    expect($reporte['portal'])->toBe('siith');
-    expect($reporte['resumen'])->toBe(['ingreso' => 1, 'cambio_administrativo' => 1]);
-    expect($reporte['detalle'])->toHaveCount(2);
-});
-
-// ── HTTP ────────────────────────────────────────────────────────
-
-test('GET /reportes/siith-sut/movimientos responde con los datos estructurados', function () {
-    crearServidorConMovimiento('nombramiento_permanente', 'ingreso', 'registrada', '2026-03-10');
-
-    $response = $this->getJson('/api/v1/reportes/siith-sut/movimientos?portal=siith');
-
-    $response->assertStatus(200);
-    expect($response->json('datos'))->toHaveCount(1);
-});
-
-test('GET /reportes/siith-sut/configuracion y PATCH actualizan un flag', function () {
-    $response = $this->getJson('/api/v1/reportes/siith-sut/configuracion');
-    $response->assertStatus(200);
-    expect($response->json('datos'))->toHaveCount(count(\App\Enums\TipoMovimientoPersonal::cases()));
-
-    $config = ConfiguracionReporteMovimiento::where('tipo_movimiento', 'licencia_sin_remuneracion')->first();
-
-    $update = $this->patchJson(
-        "/api/v1/reportes/siith-sut/configuracion/{$config->id}",
-        ['reportable_siith' => true]
-    );
-
-    $update->assertStatus(200);
-    expect($config->fresh()->reportable_siith)->toBeTrue();
+    $this->actingAs($this->user, 'sanctum');
+    $this->patchJson('/api/v1/reportes/siith-sut/configuracion/sancion', ['reportable_siith' => false])->assertOk();
+    expect(ConfiguracionReporteMovimiento::where('clase', 'sancion')->value('reportable_siith'))->toBeFalse();
 });

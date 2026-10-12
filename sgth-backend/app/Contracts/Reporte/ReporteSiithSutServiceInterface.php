@@ -2,22 +2,38 @@
 
 namespace App\Contracts\Reporte;
 
+use App\Enums\ClaseAccionPersonal;
+use App\Models\User;
 use Illuminate\Support\Collection;
 
+/**
+ * El reporte de apoyo a la transcripción al SIITH y al SUT (fase 7.5). No es
+ * una integración: los portales del Ministerio no tienen API, se transcribe a
+ * mano, y esto ordena los datos para transcribir sin errores.
+ */
 interface ReporteSiithSutServiceInterface
 {
     /**
-     * Lista plana de eventos reportables (registrada/notificada) que
-     * coinciden con el portal solicitado, filtrando por tipo_movimiento
-     * configurado como reportable y por el régimen jurídico real de cada
-     * evento (vía ExpedienteService::lineaDeTiempo()).
+     * Los actos del portal y del mes, con lo que hay que transcribir.
      *
-     * @param  array{portal: string, servidor_id?: int, desde?: string, hasta?: string}  $filtros
+     * @param  'siith'|'sut'  $portal
+     * @param  'pendientes'|'transcritos'|'todos'  $situacion
      */
-    public function movimientosReportables(array $filtros): Collection;
+    public function reporte(string $portal, string $periodo, string $situacion): array;
+
+    /** Las filas del Excel, con las mismas columnas. */
+    public function filasDelExcel(string $portal, string $periodo, string $situacion): Collection;
 
     /**
-     * @return array{periodo: string, portal: string, resumen: array<string,int>, detalle: array}
+     * Marca como transcritos los actos, o su anulación si se anularon después.
+     *
+     * @param  list<int>  $movimientoIds
      */
-    public function reporteMensual(int $anio, int $mes, string $portal): array;
+    public function transcribir(string $portal, array $movimientoIds, User $usuario): int;
+
+    /** Qué clase se reporta a cada portal. */
+    public function configuracion(): array;
+
+    /** @param  array{reportable_siith?: bool, reportable_sut?: bool}  $marcas */
+    public function actualizarConfiguracion(ClaseAccionPersonal $clase, array $marcas, User $usuario): array;
 }

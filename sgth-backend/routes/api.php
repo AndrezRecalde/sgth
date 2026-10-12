@@ -116,7 +116,6 @@ use App\Http\Controllers\Nomina\HandoffErpController;
 use App\Http\Controllers\Nomina\NominaController;
 use App\Http\Controllers\Nomina\NovedadNominaController;
 use App\Http\Controllers\Nomina\RolPagoController;
-use App\Http\Controllers\Reporte\ConfiguracionReporteMovimientoController;
 use App\Http\Controllers\Reporte\ReporteSiithSutController;
 use App\Http\Controllers\Reporteria\DashboardController;
 use App\Http\Controllers\Reporteria\ReporteController;
@@ -1174,13 +1173,18 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
     // con API externa: SIITH/SUT no la tienen, se transcribe a mano en su
     // portal — este módulo solo estructura los datos para minimizar error
     // de transcripción).
+    //
+    // Desde la fase 7.5, por clase y con la marca de transcrito: lo ve y lo
+    // marca Talento Humano; qué se reporta lo decide el Director.
     Route::prefix('reportes/siith-sut')
-        ->middleware('role:admin-uath|asistente-uath')
+        ->middleware('permission:preparar-accion-personal|registrar-accion-personal')
         ->group(function () {
-            Route::get('movimientos', [ReporteSiithSutController::class, 'movimientos']);
-            Route::get('mensual', [ReporteSiithSutController::class, 'mensual']);
-            Route::get('configuracion', [ConfiguracionReporteMovimientoController::class, 'index']);
-            Route::patch('configuracion/{configuracion}', [ConfiguracionReporteMovimientoController::class, 'update']);
+            Route::get('/', [ReporteSiithSutController::class, 'index']);
+            Route::get('excel', [ReporteSiithSutController::class, 'excel']);
+            Route::post('transcribir', [ReporteSiithSutController::class, 'transcribir']);
+            Route::get('configuracion', [ReporteSiithSutController::class, 'configuracion']);
+            Route::patch('configuracion/{clase}', [ReporteSiithSutController::class, 'actualizarConfiguracion'])
+                ->middleware('permission:registrar-accion-personal');
         });
 
     // Módulo 09: Viáticos
