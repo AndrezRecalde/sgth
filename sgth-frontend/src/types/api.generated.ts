@@ -2414,6 +2414,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/expediente/desvinculaciones/{desvinculacion}/vacaciones/confirmar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** El Director confirma la liquidación de vacaciones como se calculó (fase 7.4b) */
+        post: operations["desvinculacion.confirmarLiquidacion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/desvinculaciones/{desvinculacion}/indemnizacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** El Director registra la indemnización, dentro del tope del Mandato 2 (fase 7.4b) */
+        post: operations["desvinculacion.registrarIndemnizacion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/desvinculaciones/{desvinculacion}/indemnizacion/devolucion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Devolvió la indemnización: puede reingresar (fase 7.4b) */
+        post: operations["desvinculacion.registrarDevolucion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/dispensario/cie10/buscar": {
         parameters: {
             query?: never;
@@ -20131,11 +20182,10 @@ export interface operations {
                             pasos: {
                                 paso: string;
                                 /** @enum {string} */
-                                etiqueta: "Liquidación de vacaciones no gozadas y de haberes" | "Indemnización o compensación" | "Devolución de los bienes" | "Baja del usuario" | "Certificado laboral" | "Declaración patrimonial de fin de gestión";
+                                etiqueta: "Liquidación de vacaciones no gozadas y de haberes" | "Indemnización o compensación" | "Devolución de los bienes" | "Baja del usuario" | "Certificado laboral" | "Declaración patrimonial de fin de gestión" | "Prohibición de reingreso";
                                 /** @enum {string} */
                                 responsable: "Director de Talento Humano y Financiero" | "Tecnologías de la Información" | "Talento Humano" | "El servidor, ante la Contraloría; Talento Humano la registra";
-                                /** @enum {string} */
-                                estado: "no_aplica" | "hecho" | "pendiente";
+                                estado: string | "no_aplica";
                                 se_marca: boolean;
                                 lo_marca_el_director: boolean;
                                 detalle: string;
@@ -20201,11 +20251,10 @@ export interface operations {
                             pasos: {
                                 paso: string;
                                 /** @enum {string} */
-                                etiqueta: "Liquidación de vacaciones no gozadas y de haberes" | "Indemnización o compensación" | "Devolución de los bienes" | "Baja del usuario" | "Certificado laboral" | "Declaración patrimonial de fin de gestión";
+                                etiqueta: "Liquidación de vacaciones no gozadas y de haberes" | "Indemnización o compensación" | "Devolución de los bienes" | "Baja del usuario" | "Certificado laboral" | "Declaración patrimonial de fin de gestión" | "Prohibición de reingreso";
                                 /** @enum {string} */
                                 responsable: "Director de Talento Humano y Financiero" | "Tecnologías de la Información" | "Talento Humano" | "El servidor, ante la Contraloría; Talento Humano la registra";
-                                /** @enum {string} */
-                                estado: "no_aplica" | "hecho" | "pendiente";
+                                estado: string | "no_aplica";
                                 se_marca: boolean;
                                 lo_marca_el_director: boolean;
                                 detalle: string;
@@ -20273,11 +20322,212 @@ export interface operations {
                             pasos: {
                                 paso: string;
                                 /** @enum {string} */
-                                etiqueta: "Liquidación de vacaciones no gozadas y de haberes" | "Indemnización o compensación" | "Devolución de los bienes" | "Baja del usuario" | "Certificado laboral" | "Declaración patrimonial de fin de gestión";
+                                etiqueta: "Liquidación de vacaciones no gozadas y de haberes" | "Indemnización o compensación" | "Devolución de los bienes" | "Baja del usuario" | "Certificado laboral" | "Declaración patrimonial de fin de gestión" | "Prohibición de reingreso";
                                 /** @enum {string} */
                                 responsable: "Director de Talento Humano y Financiero" | "Tecnologías de la Información" | "Talento Humano" | "El servidor, ante la Contraloría; Talento Humano la registra";
+                                estado: string | "no_aplica";
+                                se_marca: boolean;
+                                lo_marca_el_director: boolean;
+                                detalle: string;
+                                nota: string;
+                                registrado_por: string;
+                                registrado_en: string;
+                                ""?: string;
+                            }[];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "desvinculacion.confirmarLiquidacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The desvinculacion ID */
+                desvinculacion: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Se confirmó la liquidación de vacaciones.";
+                        datos: {
+                            id: number;
+                            servidor_id: number;
+                            servidor: string;
+                            cedula: string;
+                            fecha_salida: string;
+                            causal: string;
+                            acto: string;
+                            movimiento_id: string;
+                            tipo_nombramiento: string;
+                            estado: string;
+                            cerrada_en: string;
+                            cancelada_en: string;
+                            pasos_hechos: number;
+                            pasos_total: number;
+                            motivo_cancelacion: string | null;
+                            pasos: {
+                                paso: string;
                                 /** @enum {string} */
-                                estado: "no_aplica" | "hecho" | "pendiente";
+                                etiqueta: "Liquidación de vacaciones no gozadas y de haberes" | "Indemnización o compensación" | "Devolución de los bienes" | "Baja del usuario" | "Certificado laboral" | "Declaración patrimonial de fin de gestión" | "Prohibición de reingreso";
+                                /** @enum {string} */
+                                responsable: "Director de Talento Humano y Financiero" | "Tecnologías de la Información" | "Talento Humano" | "El servidor, ante la Contraloría; Talento Humano la registra";
+                                estado: string | "no_aplica";
+                                se_marca: boolean;
+                                lo_marca_el_director: boolean;
+                                detalle: string;
+                                nota: string;
+                                registrado_por: string;
+                                registrado_en: string;
+                                ""?: string;
+                            }[];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "desvinculacion.registrarIndemnizacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The desvinculacion ID */
+                desvinculacion: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    concepto: "jubilacion" | "retiro_voluntario" | "supresion" | "despido" | "otro";
+                    monto: number;
+                    resolucion: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Se registró la indemnización: no reingresa mientras no la devuelva.";
+                        datos: {
+                            id: number;
+                            servidor_id: number;
+                            servidor: string;
+                            cedula: string;
+                            fecha_salida: string;
+                            causal: string;
+                            acto: string;
+                            movimiento_id: string;
+                            tipo_nombramiento: string;
+                            estado: string;
+                            cerrada_en: string;
+                            cancelada_en: string;
+                            pasos_hechos: number;
+                            pasos_total: number;
+                            motivo_cancelacion: string | null;
+                            pasos: {
+                                paso: string;
+                                /** @enum {string} */
+                                etiqueta: "Liquidación de vacaciones no gozadas y de haberes" | "Indemnización o compensación" | "Devolución de los bienes" | "Baja del usuario" | "Certificado laboral" | "Declaración patrimonial de fin de gestión" | "Prohibición de reingreso";
+                                /** @enum {string} */
+                                responsable: "Director de Talento Humano y Financiero" | "Tecnologías de la Información" | "Talento Humano" | "El servidor, ante la Contraloría; Talento Humano la registra";
+                                estado: string | "no_aplica";
+                                se_marca: boolean;
+                                lo_marca_el_director: boolean;
+                                detalle: string;
+                                nota: string;
+                                registrado_por: string;
+                                registrado_en: string;
+                                ""?: string;
+                            }[];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "desvinculacion.registrarDevolucion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The desvinculacion ID */
+                desvinculacion: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: date-time */
+                    fecha: string;
+                    documento: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Se registró la devolución de la indemnización: puede reingresar.";
+                        datos: {
+                            id: number;
+                            servidor_id: number;
+                            servidor: string;
+                            cedula: string;
+                            fecha_salida: string;
+                            causal: string;
+                            acto: string;
+                            movimiento_id: string;
+                            tipo_nombramiento: string;
+                            estado: string;
+                            cerrada_en: string;
+                            cancelada_en: string;
+                            pasos_hechos: number;
+                            pasos_total: number;
+                            motivo_cancelacion: string | null;
+                            pasos: {
+                                paso: string;
+                                /** @enum {string} */
+                                etiqueta: "Liquidación de vacaciones no gozadas y de haberes" | "Indemnización o compensación" | "Devolución de los bienes" | "Baja del usuario" | "Certificado laboral" | "Declaración patrimonial de fin de gestión" | "Prohibición de reingreso";
+                                /** @enum {string} */
+                                responsable: "Director de Talento Humano y Financiero" | "Tecnologías de la Información" | "Talento Humano" | "El servidor, ante la Contraloría; Talento Humano la registra";
+                                estado: string | "no_aplica";
                                 se_marca: boolean;
                                 lo_marca_el_director: boolean;
                                 detalle: string;
@@ -27119,7 +27369,7 @@ export interface operations {
                             resumen: {
                                 concepto: string;
                                 /** @enum {string} */
-                                etiqueta: "Ingreso" | "Salida" | "Cambio de remuneración" | "Días sin remuneración" | "Subrogación" | "Encargo" | "Multa" | "Remuneraciones pendientes";
+                                etiqueta: "Ingreso" | "Salida" | "Cambio de remuneración" | "Días sin remuneración" | "Subrogación" | "Encargo" | "Multa" | "Remuneraciones pendientes" | "Vacaciones no gozadas" | "Indemnización";
                                 cantidad: number;
                                 monto: number;
                             }[];
@@ -27206,7 +27456,7 @@ export interface operations {
                             resumen: {
                                 concepto: string;
                                 /** @enum {string} */
-                                etiqueta: "Ingreso" | "Salida" | "Cambio de remuneración" | "Días sin remuneración" | "Subrogación" | "Encargo" | "Multa" | "Remuneraciones pendientes";
+                                etiqueta: "Ingreso" | "Salida" | "Cambio de remuneración" | "Días sin remuneración" | "Subrogación" | "Encargo" | "Multa" | "Remuneraciones pendientes" | "Vacaciones no gozadas" | "Indemnización";
                                 cantidad: number;
                                 monto: number;
                             }[];

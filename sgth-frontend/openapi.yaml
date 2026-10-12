@@ -14805,7 +14805,8 @@
                                                                     "Devoluci\u00f3n de los bienes",
                                                                     "Baja del usuario",
                                                                     "Certificado laboral",
-                                                                    "Declaraci\u00f3n patrimonial de fin de gesti\u00f3n"
+                                                                    "Declaraci\u00f3n patrimonial de fin de gesti\u00f3n",
+                                                                    "Prohibici\u00f3n de reingreso"
                                                                 ]
                                                             },
                                                             "responsable": {
@@ -14818,11 +14819,16 @@
                                                                 ]
                                                             },
                                                             "estado": {
-                                                                "type": "string",
-                                                                "enum": [
-                                                                    "no_aplica",
-                                                                    "hecho",
-                                                                    "pendiente"
+                                                                "anyOf": [
+                                                                    {
+                                                                        "type": "string"
+                                                                    },
+                                                                    {
+                                                                        "type": "string",
+                                                                        "enum": [
+                                                                            "no_aplica"
+                                                                        ]
+                                                                    }
                                                                 ]
                                                             },
                                                             "se_marca": {
@@ -15044,7 +15050,8 @@
                                                                     "Devoluci\u00f3n de los bienes",
                                                                     "Baja del usuario",
                                                                     "Certificado laboral",
-                                                                    "Declaraci\u00f3n patrimonial de fin de gesti\u00f3n"
+                                                                    "Declaraci\u00f3n patrimonial de fin de gesti\u00f3n",
+                                                                    "Prohibici\u00f3n de reingreso"
                                                                 ]
                                                             },
                                                             "responsable": {
@@ -15057,11 +15064,16 @@
                                                                 ]
                                                             },
                                                             "estado": {
-                                                                "type": "string",
-                                                                "enum": [
-                                                                    "no_aplica",
-                                                                    "hecho",
-                                                                    "pendiente"
+                                                                "anyOf": [
+                                                                    {
+                                                                        "type": "string"
+                                                                    },
+                                                                    {
+                                                                        "type": "string",
+                                                                        "enum": [
+                                                                            "no_aplica"
+                                                                        ]
+                                                                    }
                                                                 ]
                                                             },
                                                             "se_marca": {
@@ -15283,7 +15295,8 @@
                                                                     "Devoluci\u00f3n de los bienes",
                                                                     "Baja del usuario",
                                                                     "Certificado laboral",
-                                                                    "Declaraci\u00f3n patrimonial de fin de gesti\u00f3n"
+                                                                    "Declaraci\u00f3n patrimonial de fin de gesti\u00f3n",
+                                                                    "Prohibici\u00f3n de reingreso"
                                                                 ]
                                                             },
                                                             "responsable": {
@@ -15296,11 +15309,707 @@
                                                                 ]
                                                             },
                                                             "estado": {
+                                                                "anyOf": [
+                                                                    {
+                                                                        "type": "string"
+                                                                    },
+                                                                    {
+                                                                        "type": "string",
+                                                                        "enum": [
+                                                                            "no_aplica"
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "se_marca": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "lo_marca_el_director": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "detalle": {
+                                                                "type": "string"
+                                                            },
+                                                            "nota": {
+                                                                "type": "string"
+                                                            },
+                                                            "registrado_por": {
+                                                                "type": "string"
+                                                            },
+                                                            "registrado_en": {
+                                                                "type": "string"
+                                                            },
+                                                            "": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "paso",
+                                                            "etiqueta",
+                                                            "responsable",
+                                                            "estado",
+                                                            "se_marca",
+                                                            "lo_marca_el_director",
+                                                            "detalle",
+                                                            "nota",
+                                                            "registrado_por",
+                                                            "registrado_en",
+                                                            null
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "servidor_id",
+                                                "servidor",
+                                                "cedula",
+                                                "fecha_salida",
+                                                "causal",
+                                                "acto",
+                                                "movimiento_id",
+                                                "tipo_nombramiento",
+                                                "estado",
+                                                "cerrada_en",
+                                                "cancelada_en",
+                                                "pasos_hechos",
+                                                "pasos_total",
+                                                "motivo_cancelacion",
+                                                "pasos"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/desvinculaciones/{desvinculacion}/vacaciones/confirmar": {
+            "post": {
+                "operationId": "desvinculacion.confirmarLiquidacion",
+                "summary": "El Director confirma la liquidaci\u00f3n de vacaciones como se calcul\u00f3 (fase 7.4b)",
+                "tags": [
+                    "Desvinculacion"
+                ],
+                "parameters": [
+                    {
+                        "name": "desvinculacion",
+                        "in": "path",
+                        "required": true,
+                        "description": "The desvinculacion ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Se confirm\u00f3 la liquidaci\u00f3n de vacaciones."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "servidor_id": {
+                                                    "type": "integer"
+                                                },
+                                                "servidor": {
+                                                    "type": "string"
+                                                },
+                                                "cedula": {
+                                                    "type": "string"
+                                                },
+                                                "fecha_salida": {
+                                                    "type": "string"
+                                                },
+                                                "causal": {
+                                                    "type": "string"
+                                                },
+                                                "acto": {
+                                                    "type": "string"
+                                                },
+                                                "movimiento_id": {
+                                                    "type": "string"
+                                                },
+                                                "tipo_nombramiento": {
+                                                    "type": "string"
+                                                },
+                                                "estado": {
+                                                    "type": "string"
+                                                },
+                                                "cerrada_en": {
+                                                    "type": "string"
+                                                },
+                                                "cancelada_en": {
+                                                    "type": "string"
+                                                },
+                                                "pasos_hechos": {
+                                                    "type": "integer",
+                                                    "minimum": 0
+                                                },
+                                                "pasos_total": {
+                                                    "type": "integer",
+                                                    "minimum": 0
+                                                },
+                                                "motivo_cancelacion": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "pasos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "paso": {
+                                                                "type": "string"
+                                                            },
+                                                            "etiqueta": {
                                                                 "type": "string",
                                                                 "enum": [
-                                                                    "no_aplica",
-                                                                    "hecho",
-                                                                    "pendiente"
+                                                                    "Liquidaci\u00f3n de vacaciones no gozadas y de haberes",
+                                                                    "Indemnizaci\u00f3n o compensaci\u00f3n",
+                                                                    "Devoluci\u00f3n de los bienes",
+                                                                    "Baja del usuario",
+                                                                    "Certificado laboral",
+                                                                    "Declaraci\u00f3n patrimonial de fin de gesti\u00f3n",
+                                                                    "Prohibici\u00f3n de reingreso"
+                                                                ]
+                                                            },
+                                                            "responsable": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "Director de Talento Humano y Financiero",
+                                                                    "Tecnolog\u00edas de la Informaci\u00f3n",
+                                                                    "Talento Humano",
+                                                                    "El servidor, ante la Contralor\u00eda; Talento Humano la registra"
+                                                                ]
+                                                            },
+                                                            "estado": {
+                                                                "anyOf": [
+                                                                    {
+                                                                        "type": "string"
+                                                                    },
+                                                                    {
+                                                                        "type": "string",
+                                                                        "enum": [
+                                                                            "no_aplica"
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "se_marca": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "lo_marca_el_director": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "detalle": {
+                                                                "type": "string"
+                                                            },
+                                                            "nota": {
+                                                                "type": "string"
+                                                            },
+                                                            "registrado_por": {
+                                                                "type": "string"
+                                                            },
+                                                            "registrado_en": {
+                                                                "type": "string"
+                                                            },
+                                                            "": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "paso",
+                                                            "etiqueta",
+                                                            "responsable",
+                                                            "estado",
+                                                            "se_marca",
+                                                            "lo_marca_el_director",
+                                                            "detalle",
+                                                            "nota",
+                                                            "registrado_por",
+                                                            "registrado_en",
+                                                            null
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "servidor_id",
+                                                "servidor",
+                                                "cedula",
+                                                "fecha_salida",
+                                                "causal",
+                                                "acto",
+                                                "movimiento_id",
+                                                "tipo_nombramiento",
+                                                "estado",
+                                                "cerrada_en",
+                                                "cancelada_en",
+                                                "pasos_hechos",
+                                                "pasos_total",
+                                                "motivo_cancelacion",
+                                                "pasos"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/desvinculaciones/{desvinculacion}/indemnizacion": {
+            "post": {
+                "operationId": "desvinculacion.registrarIndemnizacion",
+                "summary": "El Director registra la indemnizaci\u00f3n, dentro del tope del Mandato 2 (fase 7.4b)",
+                "tags": [
+                    "Desvinculacion"
+                ],
+                "parameters": [
+                    {
+                        "name": "desvinculacion",
+                        "in": "path",
+                        "required": true,
+                        "description": "The desvinculacion ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "concepto": {
+                                        "type": "string",
+                                        "enum": [
+                                            "jubilacion",
+                                            "retiro_voluntario",
+                                            "supresion",
+                                            "despido",
+                                            "otro"
+                                        ]
+                                    },
+                                    "monto": {
+                                        "type": "number",
+                                        "maximum": 9999999
+                                    },
+                                    "resolucion": {
+                                        "type": "string",
+                                        "minLength": 3,
+                                        "maxLength": 150
+                                    }
+                                },
+                                "required": [
+                                    "concepto",
+                                    "monto",
+                                    "resolucion"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Se registr\u00f3 la indemnizaci\u00f3n: no reingresa mientras no la devuelva."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "servidor_id": {
+                                                    "type": "integer"
+                                                },
+                                                "servidor": {
+                                                    "type": "string"
+                                                },
+                                                "cedula": {
+                                                    "type": "string"
+                                                },
+                                                "fecha_salida": {
+                                                    "type": "string"
+                                                },
+                                                "causal": {
+                                                    "type": "string"
+                                                },
+                                                "acto": {
+                                                    "type": "string"
+                                                },
+                                                "movimiento_id": {
+                                                    "type": "string"
+                                                },
+                                                "tipo_nombramiento": {
+                                                    "type": "string"
+                                                },
+                                                "estado": {
+                                                    "type": "string"
+                                                },
+                                                "cerrada_en": {
+                                                    "type": "string"
+                                                },
+                                                "cancelada_en": {
+                                                    "type": "string"
+                                                },
+                                                "pasos_hechos": {
+                                                    "type": "integer",
+                                                    "minimum": 0
+                                                },
+                                                "pasos_total": {
+                                                    "type": "integer",
+                                                    "minimum": 0
+                                                },
+                                                "motivo_cancelacion": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "pasos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "paso": {
+                                                                "type": "string"
+                                                            },
+                                                            "etiqueta": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "Liquidaci\u00f3n de vacaciones no gozadas y de haberes",
+                                                                    "Indemnizaci\u00f3n o compensaci\u00f3n",
+                                                                    "Devoluci\u00f3n de los bienes",
+                                                                    "Baja del usuario",
+                                                                    "Certificado laboral",
+                                                                    "Declaraci\u00f3n patrimonial de fin de gesti\u00f3n",
+                                                                    "Prohibici\u00f3n de reingreso"
+                                                                ]
+                                                            },
+                                                            "responsable": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "Director de Talento Humano y Financiero",
+                                                                    "Tecnolog\u00edas de la Informaci\u00f3n",
+                                                                    "Talento Humano",
+                                                                    "El servidor, ante la Contralor\u00eda; Talento Humano la registra"
+                                                                ]
+                                                            },
+                                                            "estado": {
+                                                                "anyOf": [
+                                                                    {
+                                                                        "type": "string"
+                                                                    },
+                                                                    {
+                                                                        "type": "string",
+                                                                        "enum": [
+                                                                            "no_aplica"
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "se_marca": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "lo_marca_el_director": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "detalle": {
+                                                                "type": "string"
+                                                            },
+                                                            "nota": {
+                                                                "type": "string"
+                                                            },
+                                                            "registrado_por": {
+                                                                "type": "string"
+                                                            },
+                                                            "registrado_en": {
+                                                                "type": "string"
+                                                            },
+                                                            "": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "paso",
+                                                            "etiqueta",
+                                                            "responsable",
+                                                            "estado",
+                                                            "se_marca",
+                                                            "lo_marca_el_director",
+                                                            "detalle",
+                                                            "nota",
+                                                            "registrado_por",
+                                                            "registrado_en",
+                                                            null
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "servidor_id",
+                                                "servidor",
+                                                "cedula",
+                                                "fecha_salida",
+                                                "causal",
+                                                "acto",
+                                                "movimiento_id",
+                                                "tipo_nombramiento",
+                                                "estado",
+                                                "cerrada_en",
+                                                "cancelada_en",
+                                                "pasos_hechos",
+                                                "pasos_total",
+                                                "motivo_cancelacion",
+                                                "pasos"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/desvinculaciones/{desvinculacion}/indemnizacion/devolucion": {
+            "post": {
+                "operationId": "desvinculacion.registrarDevolucion",
+                "summary": "Devolvi\u00f3 la indemnizaci\u00f3n: puede reingresar (fase 7.4b)",
+                "tags": [
+                    "Desvinculacion"
+                ],
+                "parameters": [
+                    {
+                        "name": "desvinculacion",
+                        "in": "path",
+                        "required": true,
+                        "description": "The desvinculacion ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "fecha": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "documento": {
+                                        "type": "string",
+                                        "minLength": 3,
+                                        "maxLength": 150
+                                    }
+                                },
+                                "required": [
+                                    "fecha",
+                                    "documento"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Se registr\u00f3 la devoluci\u00f3n de la indemnizaci\u00f3n: puede reingresar."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "servidor_id": {
+                                                    "type": "integer"
+                                                },
+                                                "servidor": {
+                                                    "type": "string"
+                                                },
+                                                "cedula": {
+                                                    "type": "string"
+                                                },
+                                                "fecha_salida": {
+                                                    "type": "string"
+                                                },
+                                                "causal": {
+                                                    "type": "string"
+                                                },
+                                                "acto": {
+                                                    "type": "string"
+                                                },
+                                                "movimiento_id": {
+                                                    "type": "string"
+                                                },
+                                                "tipo_nombramiento": {
+                                                    "type": "string"
+                                                },
+                                                "estado": {
+                                                    "type": "string"
+                                                },
+                                                "cerrada_en": {
+                                                    "type": "string"
+                                                },
+                                                "cancelada_en": {
+                                                    "type": "string"
+                                                },
+                                                "pasos_hechos": {
+                                                    "type": "integer",
+                                                    "minimum": 0
+                                                },
+                                                "pasos_total": {
+                                                    "type": "integer",
+                                                    "minimum": 0
+                                                },
+                                                "motivo_cancelacion": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "pasos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "paso": {
+                                                                "type": "string"
+                                                            },
+                                                            "etiqueta": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "Liquidaci\u00f3n de vacaciones no gozadas y de haberes",
+                                                                    "Indemnizaci\u00f3n o compensaci\u00f3n",
+                                                                    "Devoluci\u00f3n de los bienes",
+                                                                    "Baja del usuario",
+                                                                    "Certificado laboral",
+                                                                    "Declaraci\u00f3n patrimonial de fin de gesti\u00f3n",
+                                                                    "Prohibici\u00f3n de reingreso"
+                                                                ]
+                                                            },
+                                                            "responsable": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "Director de Talento Humano y Financiero",
+                                                                    "Tecnolog\u00edas de la Informaci\u00f3n",
+                                                                    "Talento Humano",
+                                                                    "El servidor, ante la Contralor\u00eda; Talento Humano la registra"
+                                                                ]
+                                                            },
+                                                            "estado": {
+                                                                "anyOf": [
+                                                                    {
+                                                                        "type": "string"
+                                                                    },
+                                                                    {
+                                                                        "type": "string",
+                                                                        "enum": [
+                                                                            "no_aplica"
+                                                                        ]
+                                                                    }
                                                                 ]
                                                             },
                                                             "se_marca": {
@@ -31601,7 +32310,9 @@
                                                                     "Subrogaci\u00f3n",
                                                                     "Encargo",
                                                                     "Multa",
-                                                                    "Remuneraciones pendientes"
+                                                                    "Remuneraciones pendientes",
+                                                                    "Vacaciones no gozadas",
+                                                                    "Indemnizaci\u00f3n"
                                                                 ]
                                                             },
                                                             "cantidad": {
@@ -31861,7 +32572,9 @@
                                                                     "Subrogaci\u00f3n",
                                                                     "Encargo",
                                                                     "Multa",
-                                                                    "Remuneraciones pendientes"
+                                                                    "Remuneraciones pendientes",
+                                                                    "Vacaciones no gozadas",
+                                                                    "Indemnizaci\u00f3n"
                                                                 ]
                                                             },
                                                             "cantidad": {

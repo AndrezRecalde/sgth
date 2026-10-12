@@ -98,10 +98,10 @@ test('al cesar sin otro vínculo se abre la desvinculación, con sus pasos', fun
     $this->getJson('/api/v1/expediente/desvinculaciones')
         ->assertOk()
         ->assertJsonPath('datos.data.0.servidor_id', $servidor->id)
-        ->assertJsonPath('datos.data.0.pasos_total', 6);
+        ->assertJsonPath('datos.data.0.pasos_total', 7);
 
     $pasos = ($this->pasos)($desvinculacion);
-    expect($pasos)->toHaveCount(6)
+    expect($pasos)->toHaveCount(7)
         ->and($pasos['bienes']['estado'])->toBe('hecho')
         ->and($pasos['usuario']['estado'])->toBe('pendiente')
         ->and($pasos['usuario']['detalle'])->toContain('sale.uno')
@@ -118,6 +118,7 @@ test('al contrato civil, lo que no le toca no aplica desde que nace', function (
     expect($pasos['vacaciones']['estado'])->toBe('no_aplica')
         ->and($pasos['indemnizacion']['estado'])->toBe('no_aplica')
         ->and($pasos['declaracion']['estado'])->toBe('no_aplica')
+        ->and($pasos['reingreso']['estado'])->toBe('no_aplica')
         ->and($pasos['certificado']['estado'])->toBe('pendiente');
 });
 
@@ -183,7 +184,7 @@ test('el Inventario TI registra la devolución, una vez', function () {
 
 // ── Los pasos que se marcan ─────────────────────────────────────
 
-test('la liquidación la marca el Director, lo que no aplica lleva su motivo, y se cierra sola', function () {
+test('la liquidación la confirma el Director, lo que no aplica lleva su motivo, y se cierra sola', function () {
     $servidor = ($this->servidor)();
     $desvinculacion = Desvinculacion::where('movimiento_cierre_id', ($this->cesar)($servidor)->id)->sole();
     $marcar = fn (string $paso, string $estado, ?string $nota = null) => $this->postJson(
@@ -194,7 +195,8 @@ test('la liquidación la marca el Director, lo que no aplica lleva su motivo, y 
     $asistente = User::factory()->create();
     $asistente->assignRole('asistente-uath');
     $this->actingAs($asistente, 'sanctum');
-    $marcar('vacaciones', 'hecho', 'Liquidada por Financiero, memorando 45.')
+    $this->postJson("/api/v1/expediente/desvinculaciones/{$desvinculacion->id}/vacaciones/confirmar")->assertForbidden();
+    $marcar('vacaciones', 'no_aplica', 'No tenía vacaciones pendientes.')
         ->assertStatus(422)
         ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'lo marca el Director'));
     // Lo que se lee del dato no se marca como hecho a mano.
@@ -204,9 +206,14 @@ test('la liquidación la marca el Director, lo que no aplica lleva su motivo, y 
     $marcar('declaracion', 'no_aplica', 'Falleció: la presentan sus herederos.')->assertOk();
 
     $this->actingAs($this->director, 'sanctum');
-    $marcar('vacaciones', 'hecho', 'Liquidada por Financiero, memorando 45.')->assertOk();
+    // Ya no se marca como hecha a mano: se confirma con su cálculo.
+    $marcar('vacaciones', 'hecho', 'Liquidada por Financiero, memorando 45.')->assertStatus(422);
+    $this->postJson("/api/v1/expediente/desvinculaciones/{$desvinculacion->id}/vacaciones/confirmar")->assertOk();
+    // La prohibición de reingreso depende de la indemnización.
+    $marcar('reingreso', 'no_aplica', 'No cobró nada.')->assertStatus(422);
     $marcar('indemnizacion', 'no_aplica', 'Renuncia sin compensación.')->assertOk()
-        ->assertJsonPath('datos.estado', 'cerrada');
+        ->assertJsonPath('datos.estado', 'cerrada')
+        ->assertJsonPath('datos.pasos.6.estado', 'no_aplica');
 
     expect($desvinculacion->fresh()->estado)->toBe(Desvinculacion::CERRADA);
 
@@ -225,7 +232,5 @@ test('si el cese se anula, la desvinculación se cancela', function () {
         ->and($desvinculacion->fresh()->motivo_cancelacion)->toContain('el vínculo volvió')
         ->and($servidor->fresh('contratoVigente')->contratoVigente)->not->toBeNull();
 
-    $this->postJson("/api/v1/expediente/desvinculaciones/{$desvinculacion->id}/pasos/vacaciones", [
-        'estado' => 'hecho', 'nota' => 'Liquidada por Financiero.',
-    ])->assertStatus(422);
+    $this->postJson("/api/v1/expediente/desvinculaciones/{$desvinculacion->id}/vacaciones/confirmar")->assertStatus(422);
 });

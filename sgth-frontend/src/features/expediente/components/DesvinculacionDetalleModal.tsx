@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { formatFecha, formatFechaHora, fromDateValueOrNull, hoyIso, toDateValue } from '@/lib/fecha'
 import { useDesvinculacion, useDevolverBien, useMarcarPaso } from '../hooks/useDesvinculaciones'
 import type { EstadoPasoDesvinculacion, PasoDeLaDesvinculacion } from '../services/desvinculacionService'
+import { PagoDeLaSalida } from './DesvinculacionPagos'
 
 const ESTADO_PASO: Record<EstadoPasoDesvinculacion, { etiqueta: string; tono: 'success' | 'neutral' | 'warning' }> = {
   hecho: { etiqueta: 'Hecho', tono: 'success' },
@@ -22,10 +23,11 @@ interface Props {
 }
 
 /**
- * Los pasos de una desvinculación (fase 7.4a). Los que se leen de su módulo
- * —bienes, usuario, certificado, declaración— quedan hechos solos; la
- * liquidación y la indemnización las marca el Director. Todo paso puede no
- * aplicar, con su motivo.
+ * Los pasos de una desvinculación (fases 7.4a y 7.4b). Los que se leen de su
+ * módulo —bienes, usuario, certificado, declaración— quedan hechos solos; la
+ * liquidación y la indemnización, cuando el Director las confirma con su
+ * cálculo, y la prohibición de reingreso sigue a la indemnización. Todo paso
+ * puede no aplicar, con su motivo.
  */
 export function DesvinculacionDetalleModal({ desvinculacionId, onClose }: Props) {
   const { data, isLoading, error, refetch } = useDesvinculacion(desvinculacionId)
@@ -67,7 +69,12 @@ export function DesvinculacionDetalleModal({ desvinculacionId, onClose }: Props)
             )}
 
             {data.pasos.map((p) => {
-              const decidido = p.estado !== 'pendiente' && (p.estado === 'no_aplica' || (p.se_marca && !!p.nota))
+              // Lo que se puede deshacer: el «no aplica» decidido, y la liquidación o
+              // la indemnización ya registradas (las deshace el Director).
+              const decidido = p.paso !== 'reingreso' && (
+                (p.estado === 'no_aplica' && !!p.nota)
+                || (p.estado === 'hecho' && (p.paso === 'vacaciones' || p.paso === 'indemnizacion'))
+              )
               const puedeMarcarHecho = p.se_marca && (!p.lo_marca_el_director || esDirector)
 
               return (
@@ -87,6 +94,13 @@ export function DesvinculacionDetalleModal({ desvinculacionId, onClose }: Props)
                         {p.registrado_en ? `, ${formatFechaHora(p.registrado_en)}` : ''}
                       </Text>
                     )}
+
+                    <PagoDeLaSalida
+                      desvinculacionId={data.id}
+                      paso={p}
+                      esDirector={esDirector}
+                      abierta={!cancelada}
+                    />
 
                     {(p.bienes ?? []).map((b) => (
                       <Group key={b.asignacion_id} justify="space-between" wrap="nowrap" gap="sm">
@@ -121,7 +135,7 @@ export function DesvinculacionDetalleModal({ desvinculacionId, onClose }: Props)
                             Marcar como hecho
                           </Button>
                         )}
-                        {p.estado === 'pendiente' && (
+                        {p.estado === 'pendiente' && p.paso !== 'reingreso' && (
                           <Button
                             size="compact-xs"
                             variant="subtle"

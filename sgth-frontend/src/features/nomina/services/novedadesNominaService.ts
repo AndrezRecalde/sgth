@@ -10,6 +10,8 @@ export type ConceptoNovedadNomina =
   | 'encargo'
   | 'multa'
   | 'remuneraciones_pendientes'
+  | 'vacaciones_no_gozadas'
+  | 'indemnizacion'
 
 /**
  * Una novedad para nómina (fase 7.3a): lo que Financiero aplica en su sistema,

@@ -1,7 +1,8 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { notificar } from '@/components/ui'
 import {
-  desvinculacionService, type EstadoPasoDesvinculacion, type FiltrosDesvinculaciones, type PasoDesvinculacion,
+  desvinculacionService, type ConceptoIndemnizacion, type EstadoPasoDesvinculacion, type FiltrosDesvinculaciones,
+  type PasoDesvinculacion,
 } from '../services/desvinculacionService'
 
 /** Las desvinculaciones, por estado y por páginas (fase 7.4a). */
@@ -36,6 +37,35 @@ export function useMarcarPaso(id: number) {
     },
     onError: notificar.alFallar('No se pudo actualizar el paso'),
   })
+}
+
+/** Lo que paga la salida (fase 7.4b): la liquidación, la indemnización y su devolución. */
+export function usePagosDeLaSalida(id: number) {
+  const qc = useQueryClient()
+  const alTerminar = (titulo: string) => (r: { mensaje: string }) => {
+    notificar.exito(titulo, r.mensaje)
+    qc.invalidateQueries({ queryKey: ['desvinculaciones'] })
+    qc.invalidateQueries({ queryKey: ['novedades-nomina'] })
+  }
+
+  return {
+    confirmar: useMutation({
+      mutationFn: () => desvinculacionService.confirmarLiquidacion(id),
+      onSuccess: alTerminar('Liquidación confirmada'),
+      onError: notificar.alFallar('No se pudo confirmar la liquidación'),
+    }),
+    indemnizacion: useMutation({
+      mutationFn: (datos: { concepto: ConceptoIndemnizacion; monto: number; resolucion: string }) =>
+        desvinculacionService.registrarIndemnizacion(id, datos),
+      onSuccess: alTerminar('Indemnización registrada'),
+      onError: notificar.alFallar('No se pudo registrar la indemnización'),
+    }),
+    devolucion: useMutation({
+      mutationFn: (datos: { fecha: string; documento: string }) => desvinculacionService.registrarDevolucion(id, datos),
+      onSuccess: alTerminar('Devolución registrada'),
+      onError: notificar.alFallar('No se pudo registrar la devolución'),
+    }),
+  }
 }
 
 export function useDevolverBien(id: number) {
