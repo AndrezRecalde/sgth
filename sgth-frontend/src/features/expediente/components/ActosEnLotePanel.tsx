@@ -1,22 +1,45 @@
 'use client'
 
 import { useState } from 'react'
-import { Alert, Button, Group, Stack, Text } from '@mantine/core'
+import { Alert, Button, Group, Select, Stack, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconArrowBackUp, IconBan, IconChecks, IconInfoCircle, IconList, IconPlus, IconStack2 } from '@tabler/icons-react'
+import {
+  IconArrowBackUp, IconBan, IconChecks, IconDownload, IconInfoCircle, IconList, IconMailForward, IconPlus, IconStack2,
+} from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
 import {
-  DataState, MotivoModal, SgthModal, SgthTable, StatusBadge, TableActions, confirmar, type TableAction,
+  DataState, MotivoModal, PAGINACION_ES, SgthModal, SgthTable, StatusBadge, TableActions, Toolbar, confirmar, notificar,
+  type TableAction,
 } from '@/components/ui'
 import { useAuth } from '@/hooks/useAuth'
+import { useContainedInput } from '@/hooks/useContainedInput'
+import { guardarArchivo } from '@/lib/archivo'
 import { formatFecha } from '@/lib/fecha'
+import { getApiErrorMessage } from '@/types/api'
 import {
-  useDescartarLote, useLoteAccion, useLotesAccion, useRegistrarLote, useRevertirLote,
+  useDescartarLote, useLotesAccion, useNotificarLote, useRegistrarLote, useRevertirLote,
 } from '../hooks/useContratoColectivo'
-import type { ActoDelLote, LoteAccion, ResultadoDelLote } from '../services/contratoColectivoService'
+import {
+  loteAccionService, type FiltrosLotes, type LoteAccion, type NotificacionDelLote, type ResultadoDelLote,
+} from '../services/contratoColectivoService'
 import { ESTADO_LABELS } from '../utils/estadoAccionPersonal'
 import { dinero } from '../utils/dinero'
+import { ActosDelLoteModal } from './ActosDelLoteModal'
 import { IncrementoEnLoteModal } from './IncrementoEnLoteModal'
+
+const POR_PAGINA = 15
+
+const TIPOS = [
+  { value: 'incremento_obreros', label: 'Incremento de obreros' },
+  { value: 'traspaso_puesto', label: 'Traspaso de puesto' },
+  { value: 'revision_clasificacion', label: 'Revisión de la clasificación' },
+]
+
+const SITUACIONES = [
+  { value: 'en_tramite', label: 'Con actos en trámite' },
+  { value: 'registrado', label: 'Registrados' },
+  { value: 'anulado', label: 'Descartados o revertidos' },
+]
 
 const enTramite = (l: LoteAccion) => (l.por_estado.borrador ?? 0) + (l.por_estado.suscrita ?? 0)
 const registrados = (l: LoteAccion) => (l.por_estado.registrada ?? 0) + (l.por_estado.notificada ?? 0)
@@ -39,11 +62,26 @@ const calculo = (l: LoteAccion) => (l.parametros.modo === 'porcentaje'
  * ocupante. Los dos se preparan desde Estructura.
  */
 export function ActosEnLotePanel() {
-  const { data: lotes = [], isLoading, error, refetch } = useLotesAccion()
+  const contained = useContainedInput('sm')
+  // Por páginas y con filtros desde la fase 7.2: antes traía todos.
+  const [tipo, setTipo] = useState<FiltrosLotes['tipo'] | null>(null)
+  const [situacion, setSituacion] = useState<FiltrosLotes['situacion'] | null>(null)
+  const [pagina, setPagina] = useState(1)
+  const { data, isLoading, error, refetch } = useLotesAccion({
+    ...(tipo ? { tipo } : {}),
+    ...(situacion ? { situacion } : {}),
+    page: pagina,
+    per_page: POR_PAGINA,
+  })
+  const lotes = data?.data ?? []
   const { hasPermiso } = useAuth()
   const puedePreparar = hasPermiso('preparar-accion-personal')
   const puedeRegistrar = hasPermiso('suscribir-accion-personal') && hasPermiso('registrar-accion-personal')
   const puedeAnular = hasPermiso('anular-accion-personal')
+  const puedeNotificar = hasPermiso('notificar-accion-personal')
+  const [descargando, setDescargando] = useState<number | null>(null)
+  const [notificacion, setNotificacion] = useState<NotificacionDelLote | null>(null)
+  const notificarLote = useNotificarLote()
 
   const [nuevoAbierto, { open: abrirNuevo, close: cerrarNuevo }] = useDisclosure(false)
   const [verId, setVerId] = useState<number | null>(null)
@@ -71,8 +109,42 @@ export function ActosEnLotePanel() {
     }),
   })
 
+  /** Un ZIP con el documento de cada acto: BORRADOR lo que sigue en trámite (fase 7.2). */
+  const descargar = async (l: LoteAccion) => {
+    setDescargando(l.id)
+    try {
+      guardarArchivo(await loteAccionService.documentos(l.id), `lote_${l.id}_documentos.zip`)
+    } catch (e) {
+      notificar.error('No se pudieron descargar los documentos', getApiErrorMessage(e))
+    } finally {
+      setDescargando(null)
+    }
+  }
+
+  const pedirNotificacion = (l: LoteAccion) => confirmar({
+    title: 'Notificar el lote por el portal',
+    message: `Se notifican por el portal los ${l.por_estado.registrada ?? 0} actos registrados que no se han notificado: `
+      + 'cada servidor lo ve en «Mis documentos laborales», le llega al correo y acusa recibo. La notificación en '
+      + 'persona se hace desde cada acto.',
+    confirmLabel: 'Notificar',
+    onConfirm: () => notificarLote.mutate(l.id, {
+      onSuccess: (r) => { if (r.datos.omitidos.length) setNotificacion(r.datos) },
+    }),
+  })
+
   const accionesDe = (l: LoteAccion): TableAction[] => [
     { label: 'Ver sus actos', icon: <IconList size={14} />, onClick: () => setVerId(l.id) },
+    ...(puedePreparar && (enTramite(l) + registrados(l)) > 0
+      ? [{
+          label: descargando === l.id ? 'Preparando los documentos…' : 'Descargar los documentos',
+          icon: <IconDownload size={14} />,
+          onClick: () => { if (descargando === null) descargar(l) },
+        }]
+      : []),
+    // La hoja del obrero no se notifica: aparece en su portal al registrarse.
+    ...(puedeNotificar && l.tipo !== 'incremento_obreros' && (l.por_estado.registrada ?? 0) > 0
+      ? [{ label: 'Notificar por el portal', icon: <IconMailForward size={14} />, onClick: () => pedirNotificacion(l) }]
+      : []),
     ...(puedeRegistrar && enTramite(l) > 0
       ? [{ label: 'Suscribir y registrar', icon: <IconChecks size={14} />, onClick: () => pedirRegistro(l) }]
       : []),
@@ -161,11 +233,32 @@ export function ActosEnLotePanel() {
         revierten todas a la vez.
       </Alert>
 
-      {puedePreparar && (
-        <Group justify="flex-end">
+      <Toolbar
+        actions={puedePreparar && (
           <Button leftSection={<IconPlus size={16} />} onClick={abrirNuevo}>Nuevo incremento en lote</Button>
-        </Group>
-      )}
+        )}
+      >
+        <Select
+          label="Tipo"
+          placeholder="Todos"
+          data={TIPOS}
+          value={tipo ?? null}
+          onChange={(v) => { setTipo((v as FiltrosLotes['tipo']) ?? null); setPagina(1) }}
+          clearable
+          {...contained}
+          style={{ minWidth: 240 }}
+        />
+        <Select
+          label="Situación"
+          placeholder="Todas"
+          data={SITUACIONES}
+          value={situacion ?? null}
+          onChange={(v) => { setSituacion((v as FiltrosLotes['situacion']) ?? null); setPagina(1) }}
+          clearable
+          {...contained}
+          style={{ minWidth: 240 }}
+        />
+      </Toolbar>
 
       <DataState
         loading={isLoading}
@@ -173,13 +266,25 @@ export function ActosEnLotePanel() {
         errorTitle="No se pudieron cargar los lotes"
         onRetry={refetch}
         empty={!lotes.length}
+        page={pagina}
         emptyProps={{
           icon: IconStack2,
           title: 'Sin actos en lote',
-          description: 'Aquí aparecen los incrementos de los obreros, los traspasos de puestos y las revisiones de su clasificación.',
+          description: tipo || situacion
+            ? 'Ningún lote coincide con los filtros.'
+            : 'Aquí aparecen los incrementos de los obreros, los traspasos de puestos y las revisiones de su clasificación.',
         }}
       >
-        <SgthTable records={lotes} columns={columnas} minHeight={200} />
+        <SgthTable
+          {...PAGINACION_ES}
+          records={lotes}
+          columns={columnas}
+          totalRecords={data?.total ?? 0}
+          recordsPerPage={POR_PAGINA}
+          page={pagina}
+          onPageChange={setPagina}
+          minHeight={200}
+        />
       </DataState>
 
       <IncrementoEnLoteModal opened={nuevoAbierto} onClose={cerrarNuevo} />
@@ -221,6 +326,17 @@ export function ActosEnLotePanel() {
         )}
       />
 
+      <SgthModal opened={!!notificacion} onClose={() => setNotificacion(null)} title="Lo que no se notificó" size="lg">
+        {notificacion && (
+          <Stack gap="xs">
+            <Text size="sm">Se notificaron {notificacion.notificados}. Estos no:</Text>
+            {notificacion.omitidos.map((o) => (
+              <Text key={o.movimiento_id} size="sm"><b>{o.nombre}</b>: {o.motivo}</Text>
+            ))}
+          </Stack>
+        )}
+      </SgthModal>
+
       <SgthModal opened={!!resultado} onClose={() => setResultado(null)} title="Lo que quedó pendiente" size="lg">
         {resultado && (
           <Stack gap="xs">
@@ -234,47 +350,5 @@ export function ActosEnLotePanel() {
         )}
       </SgthModal>
     </Stack>
-  )
-}
-
-function ActosDelLoteModal({ loteId, onClose }: { loteId: number | null; onClose: () => void }) {
-  const { data, isLoading, error, refetch } = useLoteAccion(loteId)
-  const traspaso = data?.tipo === 'traspaso_puesto'
-
-  const columnas: DataTableColumn<ActoDelLote>[] = [
-    {
-      accessor: 'nombre',
-      title: data?.tipo === 'incremento_obreros' ? 'Obrero' : 'Ocupante',
-      render: (a) => (
-        <div>
-          <Text size="sm">{a.nombre}</Text>
-          <Text size="xs" c="dimmed">{a.cedula ?? '—'}</Text>
-        </div>
-      ),
-    },
-    // En el traspaso la remuneración no cambia: el puesto se va con ella.
-    ...(traspaso ? [] : [
-      { accessor: 'remuneracion_actual', title: 'Actual', width: 110, render: (a: ActoDelLote) => dinero(a.remuneracion_actual) },
-      { accessor: 'remuneracion_nueva', title: 'Nueva', width: 110, render: (a: ActoDelLote) => dinero(a.remuneracion_nueva) },
-    ]),
-    {
-      accessor: 'estado',
-      title: 'Estado',
-      width: 170,
-      render: (a) => (
-        <div>
-          <Text size="sm">{ESTADO_LABELS[a.estado]}</Text>
-          {a.codigo_registro && <Text size="xs" c="dimmed">{a.codigo_registro}</Text>}
-        </div>
-      ),
-    },
-  ]
-
-  return (
-    <SgthModal opened={loteId != null} onClose={onClose} title="Actos del lote" size="xl">
-      <DataState loading={isLoading} error={error} errorTitle="No se pudo cargar el lote" onRetry={refetch}>
-        <SgthTable records={data?.actos ?? []} columns={columnas} idAccessor="movimiento_id" minHeight={120} maxHeight={480} />
-      </DataState>
-    </SgthModal>
   )
 }

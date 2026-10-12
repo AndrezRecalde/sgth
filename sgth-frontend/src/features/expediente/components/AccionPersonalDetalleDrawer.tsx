@@ -3,11 +3,13 @@
 import {
   DataState, DetailList, SectionHeading, SgthDrawer,
 } from '@/components/ui'
-import { Alert, Group, Stack, Text } from '@mantine/core'
+import { useState } from 'react'
+import { Alert, Button, Group, Stack, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconAlertTriangle, IconFileOff, IconInfoCircle, IconUserOff } from '@tabler/icons-react'
+import { IconAlertTriangle, IconFileOff, IconStack2, IconUserOff } from '@tabler/icons-react'
 import { useMovimiento } from '../hooks/useMovimientoMutations'
 import { AccionAnotaciones } from './AccionAnotaciones'
+import { ActosDelLoteModal } from './ActosDelLoteModal'
 import { AccionLiquidacionReferencial } from './AccionLiquidacionReferencial'
 import { EstadoAccionBadge } from './EstadoAccionBadge'
 import { AccionBotonEditar } from './AccionBotonEditar'
@@ -49,6 +51,9 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
 
   /** Referencia de la certificación presupuestaria, exigida al suscribir. */
   const [dictamenOpened, { open: abrirDictamen, close: cerrarDictamen }] = useDisclosure(false)
+
+  /** El lote del que nació la acción, abierto desde la ficha (fase 7.2). */
+  const [loteVisto, setLoteVisto] = useState<number | null>(null)
 
   const contenido = (m: MovimientoPersonal) => {
     const estado = m.estado
@@ -128,15 +133,23 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
 
         <AccionRelacionada m={m} />
 
-        {/* El traspaso de un puesto y la revisión de su clasificación van con
-            su lote (fases 7.1a y 7.1b). */}
-        {(m.clase === 'traspaso_puesto' || m.clase === 'revision_clasificacion')
-          && (estado === 'borrador' || estado === 'suscrita') && (
-          <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
-            Es parte del lote #{m.lote_id}: se suscribe, se registra y se anula desde «Actos en lote»,
-            con los actos de los demás ocupantes.
+        {/* La acción que nació en un lote lo dice, y lo abre (fase 7.2). El
+            traspaso y la revisión, además, se tramitan con él (7.1a y 7.1b). */}
+        {m.lote_id && (
+          <Alert variant="light" color="ocean" icon={<IconStack2 size={16} />}>
+            <Group justify="space-between" wrap="nowrap" gap="sm">
+              <Text size="sm">
+                {(m.clase === 'traspaso_puesto' || m.clase === 'revision_clasificacion')
+                  && (estado === 'borrador' || estado === 'suscrita')
+                  ? `Es parte del lote #${m.lote_id}: se suscribe, se registra y se anula desde «Actos en lote», con los actos de los demás ocupantes.`
+                  : `Es parte del lote #${m.lote_id}.`}
+              </Text>
+              <Button size="xs" variant="light" onClick={() => setLoteVisto(m.lote_id ?? null)}>Ver el lote</Button>
+            </Group>
           </Alert>
         )}
+
+        <ActosDelLoteModal loteId={loteVisto} onClose={() => setLoteVisto(null)} />
 
         {esIngreso && estado === 'suscrita' && (
           <Alert variant="light" color="amber" icon={<IconAlertTriangle size={16} />}>

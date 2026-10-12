@@ -480,6 +480,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->middleware('permission:anular-accion-personal');
         Route::post('lotes-accion/{lote}/revertir', [LoteAccionController::class, 'revertir'])
             ->middleware('permission:anular-accion-personal');
+        // Operar el lote como conjunto (fase 7.2): sus documentos en un ZIP, y
+        // la notificación por el portal de lo registrado.
+        Route::get('lotes-accion/{lote}/documentos', [LoteAccionController::class, 'documentos'])
+            ->middleware('permission:preparar-accion-personal');
+        Route::post('lotes-accion/{lote}/notificar', [LoteAccionController::class, 'notificar'])
+            ->middleware('permission:notificar-accion-personal');
 
         // El ascendido que no superó la prueba vuelve a su puesto (fase 3.3).
         Route::post('contratos/{contrato}/reintegro-del-ascenso', [PeriodoDePruebaController::class, 'reintegroDelAscenso'])

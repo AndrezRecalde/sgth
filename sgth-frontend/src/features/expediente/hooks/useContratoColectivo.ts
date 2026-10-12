@@ -1,10 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { notificar } from '@/components/ui'
 import {
   contratoColectivoService,
   loteAccionService,
   type ClausulaDeLicenciaData,
   type ContratoColectivoData,
+  type FiltrosLotes,
   type IncrementoEnLoteData,
   type SalarioBasicoData,
 } from '../services/contratoColectivoService'
@@ -87,11 +88,13 @@ export function useEliminarClausulaDeLicencia() {
 }
 
 /** Los lotes de acciones: hoy, el incremento de los obreros (fase 4.6). */
-export function useLotesAccion() {
+/** Por páginas y con filtros (fase 7.2). */
+export function useLotesAccion(filtros: FiltrosLotes = {}) {
   return useQuery({
-    queryKey: ['lotes-accion'],
-    queryFn: loteAccionService.listar,
+    queryKey: ['lotes-accion', 'listado', filtros],
+    queryFn: () => loteAccionService.listar(filtros),
     staleTime: 1000 * 30,
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -159,6 +162,27 @@ export function useDescartarLote() {
       invalidarTodo(qc)
     },
     onError: notificar.alFallar('No se pudo descartar el lote'),
+  })
+}
+
+/**
+ * Notifica por el portal lo registrado del lote: cada acto con su correo. Lo
+ * que no se pudo, se dice (fase 7.2).
+ */
+export function useNotificarLote() {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: number) => loteAccionService.notificar(id),
+    onSuccess: (r) => {
+      if (r.datos.omitidos.length) {
+        notificar.aviso('Lote notificado en parte', r.mensaje)
+      } else {
+        notificar.exito('Lote notificado', r.mensaje)
+      }
+      invalidarTodo(qc)
+    },
+    onError: notificar.alFallar('No se pudo notificar el lote'),
   })
 }
 

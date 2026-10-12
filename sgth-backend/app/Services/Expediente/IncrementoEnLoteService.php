@@ -16,6 +16,7 @@ use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\LoteAccion;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -238,20 +239,31 @@ class IncrementoEnLoteService
 
     /**
      * Los lotes, del más reciente al más antiguo, con cuántos de sus actos hay
-     * en cada estado.
+     * en cada estado. Desde la fase 7.2, por páginas y con filtros: el tipo, y
+     * en qué situación está —algo en trámite, todo registrado, o todo anulado
+     * porque se descartó o se revirtió—.
      *
-     * @return list<array<string, mixed>>
+     * @param  array{tipo?: ?string, situacion?: ?string, per_page?: int|string|null}  $filtros
      */
-    public function listar(): array
+    public function listar(array $filtros = []): LengthAwarePaginator
     {
+        $enTramite = [EstadoAccionPersonal::BORRADOR->value, EstadoAccionPersonal::SUSCRITA->value];
+        $registrados = [EstadoAccionPersonal::REGISTRADA->value, EstadoAccionPersonal::NOTIFICADA->value];
+
         return LoteAccion::query()
             ->with(['creadoPor:id,usuario_ti,servidor_id', 'creadoPor.servidor:id,nombre,apellido'])
+            ->when($filtros['tipo'] ?? null, fn ($q, $tipo) => $q->where('tipo', $tipo))
+            ->when(($filtros['situacion'] ?? null) === 'en_tramite', fn ($q) => $q
+                ->whereHas('movimientos', fn ($m) => $m->whereIn('estado', $enTramite)))
+            ->when(($filtros['situacion'] ?? null) === 'registrado', fn ($q) => $q
+                ->whereHas('movimientos', fn ($m) => $m->whereIn('estado', $registrados))
+                ->whereDoesntHave('movimientos', fn ($m) => $m->whereIn('estado', $enTramite)))
+            ->when(($filtros['situacion'] ?? null) === 'anulado', fn ($q) => $q
+                ->whereDoesntHave('movimientos', fn ($m) => $m->where('estado', '!=', EstadoAccionPersonal::ANULADA->value)))
             ->orderByDesc('created_at')
             ->orderByDesc('id')
-            ->get()
-            ->map(fn (LoteAccion $lote) => $this->resumen($lote))
-            ->values()
-            ->all();
+            ->paginate(min((int) ($filtros['per_page'] ?? 15), 100))
+            ->through(fn (LoteAccion $lote) => $this->resumen($lote));
     }
 
     /** @return array<string, mixed> */

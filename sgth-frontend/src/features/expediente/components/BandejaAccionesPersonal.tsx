@@ -39,7 +39,8 @@ export function BandejaAccionesPersonal() {
   const estadoFijo = sinAcuse || sinPosesion
   const [pagina, setPagina] = useState(1)
   // Los actos de un lote: el incremento de los obreros (fase 4.6).
-  const lotes = (useLotesAccion().data ?? []).map((l) => ({
+  // Los más recientes: el listado va por páginas desde la fase 7.2.
+  const lotes = (useLotesAccion({ per_page: 100 }).data?.data ?? []).map((l) => ({
     value: String(l.id),
     label: `Lote #${l.id} · ${l.documento_origen} · ${formatFecha(l.fecha_efectiva)}`,
   }))
