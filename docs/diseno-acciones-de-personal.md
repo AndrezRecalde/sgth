@@ -1161,7 +1161,19 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
    - **1b.** Lo firmado no se reescribe: toda acción nueva guarda el grupo y la denominación de origen al crearse (`grupo_ocupacional_origen_id`, `cargo_origen_id`) y los de destino al registrarse (`…_destino_id`); la revisión trae los suyos desde el lote. El documento imprime lo guardado; lo anterior a la fase sigue leyendo el puesto.
    - **1b.** Con el puesto ocupado, Estructura ya no cambia a mano el grupo ni el cargo. El cargo se sigue renombrando para corregir cómo está escrito, pero si tiene puestos ocupados pide el motivo y lo deja en el registro de auditoría con el nombre de antes y el de después: cambiar la denominación es reclasificar. La denominación genérica, el CIUO y la misión se editan como siempre.
    - **1b.** Fuera: bajar el grado de un puesto ocupado conservando el sueldo, que espera a la 7.3, y la pantalla del historial del puesto.
-2. Actos en lote.
+2. Actos en lote: operar el lote como conjunto.
+   - Hasta aquí los documentos se descargaban y los actos se notificaban de uno en uno: un lote de cuarenta obreros eran cuarenta descargas.
+   - **Documentos en un ZIP** («Descargar los documentos», con el permiso de preparar): uno por acto, en el orden del lote, con el número del registro y la cédula en el nombre (`01_AP-2026-0123_0912345678.pdf`).
+     - Lo que sigue en trámite va con la marca BORRADOR de la vista previa (6.2), para revisarlo antes de registrar; lo registrado, el definitivo, para imprimirlo y firmarlo. Lo anulado no va.
+     - La vista previa de lo propio no va: la revisa otra persona de Talento Humano. Lo que no va se dice en un `omitidos.txt` dentro del ZIP.
+   - **«Notificar por el portal»** (con el permiso de notificar): lo registrado que no se notificó pasa a notificado por el portal, y cada acto manda su correo y espera su acuse (6.3a).
+     - Cada acto va por su lado: si uno no se puede, los demás siguen, y la pantalla dice cuál y por qué.
+     - No se notifican la hoja de registro interno del obrero (aparece en su portal al registrarse; el incremento en lote no ofrece el botón), lo ya notificado ni lo propio.
+     - En persona sigue siendo de uno en uno, desde cada acto: el «Recibí» o la negativa con testigo.
+   - **El listado** va por páginas y filtra por tipo y por situación: con algo en trámite, todo registrado, o todo anulado (descartado o revertido). La bandeja muestra en su filtro los cien lotes más recientes.
+   - **«Ver el lote»** desde la ficha de cualquier acto que nació en uno, también los del incremento de los obreros.
+   - Se registran como antes: el incremento, de uno en uno, y el que falla se corrige desde la bandeja; el traspaso y la revisión, enteros.
+   - Fuera: el incremento de la escala de la LOSEP, que espera la respuesta de Talento Humano sobre si emite acciones de personal y va con la 7.3.
 3. Novedades de nómina; la nómina lee el vínculo (con un mes de corrida en paralelo).
 4. Desvinculación.
 5. Reporte SIITH por clase, con su pantalla.

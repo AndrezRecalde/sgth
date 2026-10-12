@@ -11,10 +11,12 @@ use App\Models\Estructura\Puesto;
 use App\Models\Expediente\LoteAccion;
 use App\Services\Expediente\IncrementoEnLoteService;
 use App\Services\Expediente\LoteEnteroService;
+use App\Services\Expediente\OperacionDelLoteService;
 use App\Services\Expediente\RevisionDeClasificacionService;
 use App\Services\Expediente\TraspasoDePuestoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Los actos que nacen juntos (diseño de Acciones de Personal, 8.5): el
@@ -29,12 +31,48 @@ class LoteAccionController extends Controller
         private TraspasoDePuestoService $traspasos,
         private RevisionDeClasificacionService $revisiones,
         private LoteEnteroService $enteros,
+        private OperacionDelLoteService $operaciones,
     ) {
     }
 
-    public function index(): JsonResponse
+    /** Por páginas, con filtros por tipo y por situación (fase 7.2). */
+    public function index(Request $request): JsonResponse
     {
-        return ApiResponse::ok($this->incrementos->listar(), 'Lotes de acciones.');
+        $filtros = $request->validate([
+            'tipo'      => ['nullable', 'in:'.implode(',', [LoteAccion::INCREMENTO_OBREROS, LoteAccion::TRASPASO_PUESTO, LoteAccion::REVISION_CLASIFICACION])],
+            'situacion' => ['nullable', 'in:en_tramite,registrado,anulado'],
+            'per_page'  => ['nullable', 'integer', 'min:1', 'max:100'],
+        ], [], ['tipo' => 'tipo de lote', 'situacion' => 'situación del lote']);
+
+        return ApiResponse::ok($this->incrementos->listar($filtros), 'Lotes de acciones.');
+    }
+
+    /**
+     * Los documentos del lote en un ZIP (fase 7.2): lo que sigue en trámite,
+     * con la marca BORRADOR; lo registrado, el definitivo.
+     */
+    public function documentos(Request $request, LoteAccion $lote): BinaryFileResponse
+    {
+        $ruta = $this->operaciones->documentos($lote, $request->user());
+
+        return response()->download($ruta, "lote_{$lote->id}_documentos.zip", ['Content-Type' => 'application/zip'])
+            ->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Notifica por el portal lo registrado del lote que no se notificó, cada
+     * acto con su correo y su acuse (fase 7.2).
+     */
+    public function notificar(Request $request, LoteAccion $lote): JsonResponse
+    {
+        $resultado = $this->operaciones->notificar($lote, $request->user());
+
+        return ApiResponse::ok(
+            [...$resultado, 'lote' => $this->incrementos->detalle($lote->fresh())],
+            $resultado['omitidos'] === []
+                ? "Se notificaron {$resultado['notificados']} actos del lote."
+                : "Se notificaron {$resultado['notificados']} actos; ".count($resultado['omitidos']).' quedaron sin notificar.'
+        );
     }
 
     public function show(LoteAccion $lote): JsonResponse

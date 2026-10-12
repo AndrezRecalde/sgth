@@ -229,5 +229,6 @@ test('el asistente prepara el lote, pero no lo registra', function () {
         ->json('datos.id');
 
     $this->postJson("/api/v1/expediente/lotes-accion/{$id}/registrar")->assertForbidden();
-    $this->getJson('/api/v1/expediente/lotes-accion')->assertOk()->assertJsonPath('datos.0.id', $id);
+    // Por páginas desde la fase 7.2.
+    $this->getJson('/api/v1/expediente/lotes-accion')->assertOk()->assertJsonPath('datos.data.0.id', $id);
 });

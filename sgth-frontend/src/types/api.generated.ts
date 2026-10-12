@@ -3988,6 +3988,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Por páginas, con filtros por tipo y por situación (fase 7.2) */
         get: operations["loteAccion.index"];
         put?: never;
         post?: never;
@@ -4169,6 +4170,46 @@ export interface paths {
          *     actos, y el puesto y sus ocupantes vuelven a como estaban (7.1a, 7.1b)
          */
         post: operations["loteAccion.revertir"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/lotes-accion/{lote}/documentos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Los documentos del lote en un ZIP (fase 7.2): lo que sigue en trámite,
+         *     con la marca BORRADOR; lo registrado, el definitivo
+         */
+        get: operations["loteAccion.documentos"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/lotes-accion/{lote}/notificar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Notifica por el portal lo registrado del lote que no se notificó, cada
+         *     acto con su correo y su acuse (fase 7.2)
+         */
+        post: operations["loteAccion.notificar"];
         delete?: never;
         options?: never;
         head?: never;
@@ -24452,7 +24493,11 @@ export interface operations {
     };
     "loteAccion.index": {
         parameters: {
-            query?: never;
+            query?: {
+                tipo?: "incremento_obreros" | "traspaso_puesto" | "revision_clasificacion" | null;
+                situacion?: "en_tramite" | "registrado" | "anulado" | null;
+                per_page?: number | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -24468,43 +24513,13 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Lotes de acciones.";
-                        datos: {
-                            id: number;
-                            tipo: string;
-                            descripcion: string;
-                            fecha_efectiva: string;
-                            documento_origen: string;
-                            dictamen_presupuestario_ref: string | null;
-                            parametros: unknown[];
-                            contrato_colectivo_id: number | null;
-                            /** @description El puesto y las unidades del traspaso (fase 7.1a). */
-                            traspaso: {
-                                puesto_id: unknown;
-                                puesto: string | null;
-                                unidad_origen: string | null;
-                                unidad_destino: string | null;
-                                criterio: string | null;
-                            } | null;
-                            /**
-                             * @description La causal y los puestos de la revisión, de cómo estaban a cómo
-                             *     quedan (fase 7.1b).
-                             */
-                            revision: {
-                                causal: string | null;
-                                puestos: unknown[];
-                            } | null;
-                            creado_por: string;
-                            created_at: string;
-                            total: string;
-                            por_estado: {
-                                [key: string]: number;
-                            };
-                        }[];
+                        datos: components["schemas"]["LengthAwarePaginator"];
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "loteAccion.previsualizar": {
@@ -25165,6 +25180,109 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
             404: components["responses"]["ModelNotFoundException"];
             422: components["responses"]["ValidationException"];
+        };
+    };
+    "loteAccion.documentos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The lote ID */
+                lote: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    /** @example attachment */
+                    "Content-Disposition": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/zip": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "loteAccion.notificar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The lote ID */
+                lote: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: {
+                            notificados: number;
+                            omitidos: {
+                                movimiento_id: string;
+                                nombre: string;
+                                motivo: string;
+                            }[];
+                            lote: {
+                                id: number;
+                                tipo: string;
+                                descripcion: string;
+                                fecha_efectiva: string;
+                                documento_origen: string;
+                                dictamen_presupuestario_ref: string | null;
+                                parametros: unknown[];
+                                contrato_colectivo_id: number | null;
+                                /** @description El puesto y las unidades del traspaso (fase 7.1a). */
+                                traspaso: {
+                                    puesto_id: unknown;
+                                    puesto: string | null;
+                                    unidad_origen: string | null;
+                                    unidad_destino: string | null;
+                                    criterio: string | null;
+                                } | null;
+                                /**
+                                 * @description La causal y los puestos de la revisión, de cómo estaban a cómo
+                                 *     quedan (fase 7.1b).
+                                 */
+                                revision: {
+                                    causal: string | null;
+                                    puestos: unknown[];
+                                } | null;
+                                creado_por: string;
+                                created_at: string;
+                                total: string;
+                                por_estado: {
+                                    [key: string]: number;
+                                };
+                                actos: {
+                                    movimiento_id: number;
+                                    codigo_registro: string | null;
+                                    estado: string;
+                                    nombre: string;
+                                    cedula: string;
+                                    remuneracion_actual: number | null;
+                                    remuneracion_nueva: number | null;
+                                }[];
+                            };
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
         };
     };
     "mantenimientos.index": {

@@ -1,5 +1,5 @@
 import api from '@/lib/axios'
-import type { ApiResponse, EstadoAccionPersonal } from '@/types/api'
+import type { ApiResponse, EstadoAccionPersonal, PaginatedResponse } from '@/types/api'
 import type { CausaLicencia } from '@/features/asistencia/services/licenciaService'
 
 /**
@@ -163,6 +163,22 @@ export type ActoDelLote = {
 
 export type LoteAccionDetalle = LoteAccion & { actos: ActoDelLote[] }
 
+/** Los filtros del listado de lotes (fase 7.2). */
+export type FiltrosLotes = {
+  tipo?: LoteAccion['tipo']
+  /** Algo en trámite, todo registrado, o todo anulado: descartado o revertido. */
+  situacion?: 'en_tramite' | 'registrado' | 'anulado'
+  page?: number
+  per_page?: number
+}
+
+/** Lo que pasó al notificar el lote por el portal (fase 7.2). */
+export type NotificacionDelLote = {
+  notificados: number
+  omitidos: { movimiento_id: number; nombre: string; motivo: string }[]
+  lote: LoteAccionDetalle
+}
+
 export type ResultadoDelLote = {
   registrados: number
   fallidos: { movimiento_id: number; nombre: string; mensaje: string }[]
@@ -212,8 +228,11 @@ export const contratoColectivoService = {
 }
 
 export const loteAccionService = {
-  listar: () =>
-    api.get<ApiResponse<LoteAccion[]>>('/expediente/lotes-accion').then((r) => r.data.datos),
+  /** Por páginas y con filtros desde la fase 7.2. */
+  listar: (filtros: FiltrosLotes = {}) =>
+    api
+      .get<ApiResponse<PaginatedResponse<LoteAccion>>>('/expediente/lotes-accion', { params: filtros })
+      .then((r) => r.data.datos),
 
   detalle: (id: number) =>
     api.get<ApiResponse<LoteAccionDetalle>>(`/expediente/lotes-accion/${id}`).then((r) => r.data.datos),
@@ -237,6 +256,14 @@ export const loteAccionService = {
     api
       .post<ApiResponse<{ anulados: number; lote: LoteAccionDetalle }>>(`/expediente/lotes-accion/${id}/descartar`, { motivo })
       .then((r) => r.data),
+
+  /** Los documentos del lote en un ZIP: BORRADOR lo que sigue en trámite (fase 7.2). */
+  documentos: (id: number) =>
+    api.get(`/expediente/lotes-accion/${id}/documentos`, { responseType: 'blob' }).then((r) => r.data as Blob),
+
+  /** Notifica por el portal lo registrado que no se notificó (fase 7.2). */
+  notificar: (id: number) =>
+    api.post<ApiResponse<NotificacionDelLote>>(`/expediente/lotes-accion/${id}/notificar`).then((r) => r.data),
 
   /** Deja sin efecto el traspaso registrado, entero (fase 7.1a). */
   revertir: (id: number, motivo: string) =>
