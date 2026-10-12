@@ -96,7 +96,8 @@ function Formulario({ grados, onClose }: { grados: GrupoOcupacional[]; onClose: 
         <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
           Sube la RMU de los grados en el catálogo y la de cada servidor que los ocupa, sin acción de personal: cada uno
           queda anotado en la bitácora de su vínculo y la nómina recibe sus novedades. Nadie baja: quien ya cobra la
-          RMU nueva o más se queda como está. Las autoridades electas y los obreros no van: lo suyo tiene su propio camino.
+          RMU nueva o más se queda como está. Rige hoy o antes; si es antes, la nómina recibe la diferencia de cada
+          mes. Las autoridades electas y los obreros no van: lo suyo tiene su propio camino.
           {!puedeRegistrar && ' La registra el Director de Talento Humano: aquí puede revisar a quién sube.'}
         </Alert>
 
@@ -137,8 +138,10 @@ function Formulario({ grados, onClose }: { grados: GrupoOcupacional[]; onClose: 
         {previa.data && pedidos.length > 0 && (
           <Stack gap={4}>
             <Text size="sm" fw={600}>
-              {suben.length === 1 ? 'Sube 1 servidor' : `Suben ${suben.length} servidores`}
-              {quedan.length > 0 && ` · ${quedan.length} ya cobra(n) la RMU nueva o más`}
+              {suben.length === 0
+                ? 'No sube ningún servidor: nadie ocupa esos grados por debajo de la RMU nueva.'
+                : suben.length === 1 ? 'Sube 1 servidor' : `Suben ${suben.length} servidores`}
+              {suben.length > 0 && quedan.length > 0 && ` · ${quedan.length} ya cobra(n) la RMU nueva o más`}
             </Text>
             {suben.map((v) => (
               <Text key={v.contrato_id} size="xs">
@@ -188,7 +191,7 @@ function Formulario({ grados, onClose }: { grados: GrupoOcupacional[]; onClose: 
             render={({ field }) => (
               <DatePickerInput
                 label="Rige desde"
-                description="Hoy o antes. Si es antes, la nómina recibe la diferencia de cada mes."
+                description="Hoy o antes."
                 withAsterisk
                 valueFormat="DD/MM/YYYY"
                 maxDate={hoyIso()}
@@ -201,7 +204,7 @@ function Formulario({ grados, onClose }: { grados: GrupoOcupacional[]; onClose: 
           />
           <TextInput
             label="Dictamen presupuestario"
-            description="Sube el gasto en personal: es obligatorio."
+            description="Sube el gasto: es obligatorio."
             withAsterisk
             error={errors.dictamen_presupuestario_ref?.message}
             {...contained}
