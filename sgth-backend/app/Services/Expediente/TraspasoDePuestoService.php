@@ -5,7 +5,9 @@ namespace App\Services\Expediente;
 use App\Enums\CriterioTraspasoPuesto;
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\InstrumentoActo;
+use App\Enums\RolPuesto;
 use App\Enums\TipoMovimientoPersonal;
+use App\Enums\TipoNombramiento;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
@@ -37,11 +39,16 @@ use Illuminate\Support\Facades\DB;
  *   empleador (Código del Trabajo, Art. 192; fase 4.3), y el de Servicios
  *   Profesionales, por la de su contrato civil (fase 4.2). Con uno de ellos en
  *   el puesto, el traspaso no se prepara y se dice por qué.
+ * - Ni el puesto de una autoridad electa ni una jefatura se traspasan: ver
+ *   `impedimentoDelPuesto()`.
  * - El traspaso a otra institución no está aquí: cierra el vínculo, y pide el
  *   dictamen de Finanzas y la aprobación del Ministerio del Trabajo.
  */
 class TraspasoDePuestoService
 {
+    private const AUTORIDAD = 'Es el puesto de una autoridad de elección popular: la dignidad la fija la ley '
+        .'(Constitución y COOTAD) y no se traspasa entre unidades.';
+
     public function __construct(
         private readonly MovimientoPersonalService $movimientos,
         private readonly MovimientoPersonalStateService $estados,
@@ -218,6 +225,39 @@ class TraspasoDePuestoService
     }
 
     /**
+     * Lo que impide traspasar el puesto por lo que es, aunque no haya nada en
+     * trámite. Lo lee también la pantalla, para no ofrecer el traspaso
+     * (`admite_traspaso` del puesto). Null si se puede traspasar.
+     *
+     * - El de una autoridad electa: la dignidad la fija la ley, y su titular es
+     *   la autoridad nominadora que el Art. 37 faculta, no un servidor suyo.
+     * - Una jefatura: es la conducción de su unidad. De ella salen el jefe de
+     *   sus servidores y los firmantes del organigrama, y traspasarla sola
+     *   dejaría a la unidad sin ellos —sus acciones ya no se podrían suscribir—.
+     *   Si se reorganiza la unidad, la jefatura va con ella.
+     * - El de obreros: su cambio de unidad va por la adenda del contrato.
+     */
+    public static function impedimentoDelPuesto(Puesto $puesto): ?string
+    {
+        return match (true) {
+            $puesto->rol_puesto === RolPuesto::DIGNATARIO => self::AUTORIDAD,
+            (bool) $puesto->es_jefe => 'Es la jefatura de su unidad: de ella salen el jefe de sus servidores y los '
+                .'firmantes del organigrama, y traspasarla sola dejaría a la unidad sin ellos. Si se reorganiza la '
+                .'unidad, la jefatura va con ella: se edita la unidad en el organigrama. Si otra persona va a dirigir '
+                .'otra unidad, es un nombramiento o un encargo.',
+            $puesto->regimen_laboral === 'codigo_trabajo' => 'Es un puesto de obreros: su cambio de unidad va por la '
+                .'adenda que firman el empleador y cada trabajador (Código del Trabajo, Art. 192), con el cambio de '
+                .'lugar de trabajo.',
+            default => null,
+        };
+    }
+
+    public static function admiteTraspaso(Puesto $puesto): bool
+    {
+        return self::impedimentoDelPuesto($puesto) === null;
+    }
+
+    /**
      * @param  Collection<int, ContratoServidor>  $ocupantes
      * @return list<string>
      */
@@ -229,14 +269,18 @@ class TraspasoDePuestoService
             $impedimentos[] = 'El puesto está inactivo.';
         }
 
-        if ($puesto->regimen_laboral === 'codigo_trabajo') {
-            $impedimentos[] = 'Es un puesto de obreros: su cambio de unidad va por la adenda que firman el empleador '
-                .'y cada trabajador (Código del Trabajo, Art. 192), con el cambio de lugar de trabajo.';
+        if ($delPuesto = self::impedimentoDelPuesto($puesto)) {
+            $impedimentos[] = $delPuesto;
+        } elseif ($ocupantes->contains(fn (ContratoServidor $c) => $c->tipo_nombramiento === TipoNombramiento::ELECCION_POPULAR)) {
+            // Una autoridad en un puesto que no está marcado como dignatario.
+            $impedimentos[] = self::AUTORIDAD;
         }
 
-        $conOtroDocumento = $ocupantes->filter(fn (ContratoServidor $c) => InstrumentoActo::para(
+        // La adenda es del obrero y de Servicios Profesionales; la autoridad ya
+        // salió arriba.
+        $conOtroDocumento = $ocupantes->filter(fn (ContratoServidor $c) => ! in_array(InstrumentoActo::para(
             TipoMovimientoPersonal::TRASPASO_PUESTO, $c->tipo_nombramiento,
-        ) !== InstrumentoActo::ACCION_PERSONAL);
+        ), [InstrumentoActo::ACCION_PERSONAL, InstrumentoActo::ACTO_AUTORIDAD], true));
 
         if ($conOtroDocumento->isNotEmpty()) {
             $impedimentos[] = 'El traspaso emite acción de personal, y no la reciben '
@@ -254,8 +298,6 @@ class TraspasoDePuestoService
                 $impedimentos[] = 'El puesto ya está en esa unidad.';
             } elseif (! UnidadAdministrativa::whereKey($unidadDestinoId)->exists()) {
                 $impedimentos[] = 'La unidad de destino no existe.';
-            } elseif ($puesto->es_jefe && Puesto::where('unidad_administrativa_id', $unidadDestinoId)->where('es_jefe', true)->exists()) {
-                $impedimentos[] = 'La unidad de destino ya tiene su jefatura: un puesto de jefatura no puede llegar a ella.';
             }
         }
 

@@ -1299,6 +1299,8 @@ export type PuestoConRelaciones = {
   ocupado?: boolean
   /** Ni ocupado ni con historia: se puede borrar. Si no, se desactiva. */
   puede_eliminar?: boolean
+  /** Ni la autoridad electa, ni la jefatura, ni el de obreros se traspasan. */
+  admite_traspaso?: boolean
 }
 
 // ── Plantilla ────────────────────────────────────

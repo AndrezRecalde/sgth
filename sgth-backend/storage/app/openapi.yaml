@@ -25650,17 +25650,10 @@
                                                     "items": {
                                                         "anyOf": [
                                                             {
-                                                                "type": "string"
+                                                                "type": "null"
                                                             },
                                                             {
-                                                                "type": "string",
-                                                                "enum": [
-                                                                    "El puesto est\u00e1 inactivo.",
-                                                                    "El puesto ya est\u00e1 en esa unidad.",
-                                                                    "La unidad de destino no existe.",
-                                                                    "La unidad de destino ya tiene su jefatura: un puesto de jefatura no puede llegar a ella.",
-                                                                    "Usted ocupa este puesto: el traspaso lo prepara otra persona de Talento Humano."
-                                                                ]
+                                                                "type": "string"
                                                             }
                                                         ]
                                                     }
@@ -59378,6 +59371,10 @@
                     "puede_eliminar": {
                         "type": "boolean"
                     },
+                    "admite_traspaso": {
+                        "type": "boolean",
+                        "description": "Ni la autoridad electa, ni la jefatura, ni el de obreros se\ntraspasan: la pantalla no lo ofrece."
+                    },
                     "cargo": {
                         "type": "object",
                         "properties": {
@@ -59513,6 +59510,7 @@
                     "rmu",
                     "ocupado",
                     "puede_eliminar",
+                    "admite_traspaso",
                     "ocupantes"
                 ],
                 "title": "PuestoResource"

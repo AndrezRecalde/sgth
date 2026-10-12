@@ -122,14 +122,30 @@ test('la vista previa dice quiénes lo recibirían y qué lo impide', function (
             && str_contains($i[0], 'vacante') && str_contains($i[1], 'ya está en esa unidad'));
 });
 
-test('una jefatura no llega a una unidad que ya tiene la suya', function () {
-    puestoJefeDePrueba($this->destino);
+test('ni la jefatura ni el puesto de una autoridad electa se traspasan', function () {
+    // La jefatura es la conducción de su unidad: va con ella.
     $jefatura = puestoJefeDePrueba($this->origen);
     ($this->ocupante)($jefatura);
 
     $this->postJson('/api/v1/expediente/lotes-accion/traspaso-puesto', ($this->datos)(['puesto_id' => $jefatura->id]))
         ->assertStatus(422)
-        ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'ya tiene su jefatura'));
+        ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'Es la jefatura de su unidad'));
+
+    // El Prefecto: su dignidad la fija la ley, y no hay adenda que pedirle.
+    $prefectura = puestoDePrueba(unidadDePrueba(['nombre' => 'Prefectura']), 'Prefecto/a Provincial', ['rol_puesto' => 'dignatario']);
+    ($this->ocupante)($prefectura, 'eleccion_popular');
+
+    $this->postJson('/api/v1/expediente/lotes-accion/traspaso-puesto/previsualizar', ['puesto_id' => $prefectura->id])
+        ->assertOk()
+        ->assertJsonPath('datos.impedimentos', fn (array $i) => count($i) === 1
+            && str_contains($i[0], 'autoridad de elección popular') && ! str_contains($i[0], 'adenda'));
+
+    // Y la autoridad en un puesto que no está marcado como dignatario, igual.
+    $otro = puestoDePrueba($this->origen, 'Viceprefecto/a');
+    ($this->ocupante)($otro, 'eleccion_popular');
+
+    $this->postJson('/api/v1/expediente/lotes-accion/traspaso-puesto/previsualizar', ['puesto_id' => $otro->id])
+        ->assertJsonPath('datos.impedimentos', fn (array $i) => count($i) === 1 && str_contains($i[0], 'autoridad'));
 });
 
 test('el obrero y quien tiene Servicios Profesionales no entran, y se dice por qué', function () {

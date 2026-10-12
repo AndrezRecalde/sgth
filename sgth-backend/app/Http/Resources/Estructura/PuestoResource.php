@@ -2,6 +2,7 @@
 namespace App\Http\Resources\Estructura;
 
 use App\Services\Estructura\ProteccionDePuestoOcupado;
+use App\Services\Expediente\TraspasoDePuestoService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -29,6 +30,9 @@ class PuestoResource extends JsonResource
             // con historia, no se elimina (fase 7.1a).
             'ocupado'                   => ProteccionDePuestoOcupado::ocupado($this->resource),
             'puede_eliminar'            => ProteccionDePuestoOcupado::puedeEliminarse($this->resource),
+            // Ni la autoridad electa, ni la jefatura, ni el de obreros se
+            // traspasan: la pantalla no lo ofrece.
+            'admite_traspaso'           => TraspasoDePuestoService::admiteTraspaso($this->resource),
 
             'cargo' => $this->whenLoaded('cargo', fn() => [
                 'id'                     => $this->cargo->id,

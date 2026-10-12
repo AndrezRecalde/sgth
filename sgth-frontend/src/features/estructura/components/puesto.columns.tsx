@@ -104,9 +104,11 @@ export const getPuestoColumns = (
         },
         {
           // Ocupado, cambia de unidad con el acto de cada ocupante (fase 7.1a).
+          // La autoridad electa y la jefatura no se traspasan: la jefatura va
+          // con su unidad.
           label: 'Traspasar a otra unidad',
           icon: <IconArrowsExchange size={14} />,
-          hidden: !puedeTraspasar || !puesto.ocupado,
+          hidden: !puedeTraspasar || !puesto.ocupado || puesto.admite_traspaso === false,
           onClick: () => onTraspasar(puesto),
         },
         {

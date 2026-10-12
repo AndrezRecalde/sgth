@@ -10491,6 +10491,11 @@ export interface components {
              */
             ocupado: boolean;
             puede_eliminar: boolean;
+            /**
+             * @description Ni la autoridad electa, ni la jefatura, ni el de obreros se
+             *     traspasan: la pantalla no lo ofrece.
+             */
+            admite_traspaso: boolean;
             cargo?: {
                 id: number;
                 nombre: string;
@@ -24566,7 +24571,7 @@ export interface operations {
                                 cedula: string;
                                 tipo_nombramiento: string;
                             }[];
-                            impedimentos: (string | ("El puesto está inactivo." | "El puesto ya está en esa unidad." | "La unidad de destino no existe." | "La unidad de destino ya tiene su jefatura: un puesto de jefatura no puede llegar a ella." | "Usted ocupa este puesto: el traspaso lo prepara otra persona de Talento Humano."))[];
+                            impedimentos: (null | string)[];
                             /**
                              * @description Los del Art. 69, numeral 1, para el selector: así la pantalla no
                              *     los copia.

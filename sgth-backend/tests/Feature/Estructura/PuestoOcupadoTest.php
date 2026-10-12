@@ -115,13 +115,19 @@ test('no se elimina el ocupado ni el que tiene historia; el que nunca se usó, s
         ->and(Puesto::find($conHistoria->id))->not->toBeNull();
 });
 
-test('el listado dice si está ocupado y si se puede eliminar', function () {
+test('el listado dice si está ocupado, si se puede eliminar y si admite el traspaso', function () {
     $vacante = puestoDePrueba($this->unidad, 'Asistente');
+    $jefatura = puestoJefeDePrueba($this->unidad);
+    $prefecto = puestoDePrueba($this->otra, 'Prefecto/a Provincial', ['rol_puesto' => 'dignatario']);
 
     $filas = collect($this->getJson('/api/v1/estructura/puestos?per_page=50')->assertOk()->json('datos'))->keyBy('id');
 
     expect($filas[$this->ocupado->id]['ocupado'])->toBeTrue()
         ->and($filas[$this->ocupado->id]['puede_eliminar'])->toBeFalse()
+        ->and($filas[$this->ocupado->id]['admite_traspaso'])->toBeTrue()
         ->and($filas[$vacante->id]['ocupado'])->toBeFalse()
-        ->and($filas[$vacante->id]['puede_eliminar'])->toBeTrue();
+        ->and($filas[$vacante->id]['puede_eliminar'])->toBeTrue()
+        // Ni la jefatura ni el puesto de una autoridad se traspasan.
+        ->and($filas[$jefatura->id]['admite_traspaso'])->toBeFalse()
+        ->and($filas[$prefecto->id]['admite_traspaso'])->toBeFalse();
 });
