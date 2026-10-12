@@ -187,6 +187,13 @@ class MovimientoPersonalStateService
                 $movimiento,
                 $datos['fecha_suscripcion'] ?? null
             );
+
+            // Y la base legal que imprime: la que Talento Humano dejó en el
+            // borrador o, si la vació, la de su clase (fase 6.1). Desde aquí
+            // no cambia, aunque cambie la tabla de la clase.
+            if (blank($movimiento->base_legal)) {
+                $movimiento->base_legal = $movimiento->baseLegalDeLaClase();
+            }
         } elseif ($instrumento === InstrumentoActo::ACTO_AUTORIDAD) {
             // El acto de una autoridad electa lleva su documento de origen, y
             // su constancia la firma solo Talento Humano (fase 4.1b).

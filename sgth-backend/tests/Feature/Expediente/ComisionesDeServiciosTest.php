@@ -232,8 +232,11 @@ test('el documento imprime la institución, el período y la obligación de volv
         'logo'               => public_path('images/logo-gadpe.png'),
     ])->render();
 
+    // Desde la fase 6.1 el período va en su columna, en lugar de la situación
+    // propuesta: la comisión no mueve al servidor de su puesto.
     expect($html)->toContain('Universidad Central del Ecuador')
-        ->and($html)->toContain('del 01/03/2027')
-        ->and($html)->toContain('al 28/02/2028')
+        ->and($html)->toContain('>Período<')
+        ->and($html)->toContain('01/03/2027')
+        ->and($html)->toContain('28/02/2028')
         ->and($html)->toContain('un tiempo igual');
 });

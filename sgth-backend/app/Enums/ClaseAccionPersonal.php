@@ -425,6 +425,73 @@ enum ClaseAccionPersonal: string
     }
 
     /**
+     * La base legal que la acción de personal imprime en su explicación (diseño,
+     * 4.2 y 6.5; fase 6.1). La de la causal, si la tiene, es más precisa —dice
+     * la letra del Art. 47 o del 28— y la reemplaza. Null en las clases que no
+     * se formalizan con este formulario.
+     */
+    public function baseLegal(?SubtipoMovimientoPersonal $causal = null): ?string
+    {
+        if ($causal?->baseLegal()) {
+            return $causal->baseLegal();
+        }
+
+        return match ($this) {
+            self::INGRESO                   => 'LOSEP Arts. 16 a 18; Reglamento a la LOSEP Art. 19',
+            self::NOMBRAMIENTO_DEFINITIVO   => 'LOSEP Art. 17 b.5; Reglamento a la LOSEP Arts. 224 a 227',
+            self::REINTEGRO                 => 'LOSEP Art. 32',
+            self::RESTITUCION               => 'LOSEP Art. 46',
+            self::ASCENSO                   => 'LOSEP Art. 68; Reglamento a la LOSEP Arts. 190 y 191',
+            self::TRASLADO                  => 'LOSEP Arts. 35 y 36',
+            self::INTERCAMBIO_VOLUNTARIO    => 'LOSEP Arts. 39 y 40',
+            self::COMISION_CON_REMUNERACION => 'LOSEP Art. 30',
+            self::COMISION_SIN_REMUNERACION => 'LOSEP Art. 31',
+            self::LICENCIA_SIN_REMUNERACION => 'LOSEP Art. 28',
+            self::SUBROGACION               => 'LOSEP Art. 126; Reglamento a la LOSEP Art. 270',
+            self::ENCARGO                   => 'LOSEP Art. 127; Reglamento a la LOSEP Art. 271',
+            self::SANCION                   => 'LOSEP Art. 43; Reglamento a la LOSEP Art. 87',
+            self::CESACION                  => 'LOSEP Art. 47',
+            default                         => null,
+        };
+    }
+
+    /**
+     * La casilla del formulario del Ministerio que marca la acción (diseño,
+     * 4.2; fase 6.1). La cesación toma la de su causal; la sanción y las clases
+     * que el formulario no nombra van en «Otro», con su nombre.
+     */
+    public function casilla(?SubtipoMovimientoPersonal $causal = null): CasillaAccionPersonal
+    {
+        return match ($this) {
+            self::INGRESO                   => CasillaAccionPersonal::INGRESO,
+            self::NOMBRAMIENTO_DEFINITIVO   => CasillaAccionPersonal::NOMBRAMIENTO,
+            self::REINTEGRO                 => CasillaAccionPersonal::REINTEGRO,
+            self::RESTITUCION               => CasillaAccionPersonal::RESTITUCION,
+            self::ASCENSO                   => CasillaAccionPersonal::ASCENSO,
+            self::TRASLADO                  => CasillaAccionPersonal::TRASLADO,
+            self::INTERCAMBIO_VOLUNTARIO    => CasillaAccionPersonal::INTERCAMBIO,
+            self::COMISION_CON_REMUNERACION,
+            self::COMISION_SIN_REMUNERACION => CasillaAccionPersonal::COMISION_SERVICIOS,
+            self::LICENCIA_SIN_REMUNERACION => CasillaAccionPersonal::LICENCIA,
+            self::SUBROGACION               => CasillaAccionPersonal::SUBROGACION,
+            self::ENCARGO                   => CasillaAccionPersonal::ENCARGO,
+            self::CESACION                  => CasillaAccionPersonal::deLaCesacion($causal),
+            default                         => CasillaAccionPersonal::OTRO,
+        };
+    }
+
+    /**
+     * ¿Lleva el acta de posesión del cargo? Solo lo que pone al servidor en un
+     * puesto que ejerce: el ingreso, el ascenso, el nombramiento definitivo y
+     * el encargo (diseño, 6.4). El documento la imprimía en todas, también en
+     * las sanciones y las cesaciones.
+     */
+    public function llevaPosesion(): bool
+    {
+        return in_array($this, [self::INGRESO, self::ASCENSO, self::NOMBRAMIENTO_DEFINITIVO, self::ENCARGO], true);
+    }
+
+    /**
      * La credencial del CNE, el acta de posesión y el fin del período: los
      * pide el inicio del período de una autoridad electa [TH 2; fase 4.1].
      */

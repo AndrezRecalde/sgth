@@ -68,6 +68,12 @@ const camposDelFormulario = z.object({
 
   requiere_dictamen_medico: z.boolean().optional().nullable(),
   resolucion_numero: z.string().max(100).optional().nullable(),
+  // El documento con el formato del Ministerio (fase 6.1): la base legal que
+  // imprime y el decreto, acuerdo o resolución que la origina.
+  base_legal:         z.string().max(1000, 'Máximo 1000 caracteres').optional().nullable(),
+  acto_origen_tipo:   z.enum(['decreto', 'acuerdo', 'resolucion']).optional().nullable(),
+  acto_origen_numero: z.string().max(100).optional().nullable(),
+  acto_origen_fecha:  z.string().optional().nullable(),
   observacion:     z.string().max(1000).optional().nullable(),
   caucionado:      z.boolean().optional().nullable(),
   caucion_numero:  z.string().max(100).optional().nullable(),
@@ -92,6 +98,14 @@ export function crearMovimientoSchema(
     const clase = buscarClase(catalogo, data.clase)
 
     if (!clase) return
+
+    // El acto que la origina va con su tipo y su número, o sin ninguno (6.1).
+    if (data.acto_origen_tipo && !data.acto_origen_numero?.trim()) {
+      ctx.addIssue({ path: ['acto_origen_numero'], code: 'custom', message: 'Indique el número del acto' })
+    }
+    if (!data.acto_origen_tipo && data.acto_origen_numero?.trim()) {
+      ctx.addIssue({ path: ['acto_origen_tipo'], code: 'custom', message: 'Indique si es decreto, acuerdo o resolución' })
+    }
 
     // El traslado, previo informe de la UATH (LOSEP Art. 35; fase 3.1). A
     // quién se le pide lo dice el catálogo.

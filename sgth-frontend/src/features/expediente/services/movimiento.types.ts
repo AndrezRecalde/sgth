@@ -63,6 +63,10 @@ export type ActualizarBorradorData = {
   puede_marcar?: boolean | null
   requiere_dictamen_medico?: boolean | null
   resolucion_numero?: string | null
+  base_legal?: string | null
+  acto_origen_tipo?: 'decreto' | 'acuerdo' | 'resolucion' | null
+  acto_origen_numero?: string | null
+  acto_origen_fecha?: string | null
   observacion?: string | null
   lugar_trabajo?: string | null
   institucion_destino?: string | null

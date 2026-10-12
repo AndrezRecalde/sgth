@@ -7964,6 +7964,12 @@ export interface components {
             requiere_vinculo: boolean;
             nombramientos_elegibles: components["schemas"]["TipoNombramiento"][];
             causales: components["schemas"]["CausalAccionPersonalResource"][];
+            /**
+             * @description La que el formulario propone para la explicación del documento;
+             *     con causal, manda la de la causal (fase 6.1).
+             * @enum {string|null}
+             */
+            base_legal: "LOSEP Arts. 16 a 18; Reglamento a la LOSEP Art. 19" | "LOSEP Art. 17 b.5; Reglamento a la LOSEP Arts. 224 a 227" | "LOSEP Art. 32" | "LOSEP Art. 46" | "LOSEP Art. 68; Reglamento a la LOSEP Arts. 190 y 191" | "LOSEP Arts. 35 y 36" | "LOSEP Arts. 39 y 40" | "LOSEP Art. 30" | "LOSEP Art. 31" | "LOSEP Art. 28" | "LOSEP Art. 126; Reglamento a la LOSEP Art. 270" | "LOSEP Art. 127; Reglamento a la LOSEP Art. 271" | "LOSEP Art. 43; Reglamento a la LOSEP Art. 87" | "LOSEP Art. 47" | "LOSEP Art. 47 a; Reglamento Art. 102" | "LOSEP Art. 47 e; Reglamento Art. 105" | "LOSEP Art. 17 b.5" | "Reglamento a la LOSEP Art. 146 a" | "Reglamento a la LOSEP Art. 146 f" | "Reglamento a la LOSEP Art. 146 b" | "Reglamento a la LOSEP Art. 146 g" | "LOSEP Arts. 47 f y 48" | "LOSEP Art. 47 j" | "LOSEP Art. 47 i y k; Mandato Constituyente 2" | "LOSEP Art. 47 b" | "LOSEP Art. 47 d" | "LOSEP Art. 47 l" | "Código del Trabajo Art. 172" | "Constitución Art. 105" | "COOTAD Arts. 333–336" | "El plazo del contrato" | "Código Civil Art. 1561" | "La cláusula de terminación del contrato" | "Código del Trabajo, Arts. 184 y 185" | "Código del Trabajo, Art. 169 núm. 2" | "Código del Trabajo, Art. 169 núm. 3" | "Código del Trabajo, Art. 15" | "Código del Trabajo, Arts. 185 y 188" | "Código del Trabajo, Art. 216; Mandato Constituyente 2" | "Mandato Constituyente 2, art. 8" | "Código del Trabajo, Art. 169 núm. 5" | "Código del Trabajo, Art. 169 núm. 6" | "LOSEP Art. 28 a" | "LOSEP Art. 28 b" | "LOSEP Art. 28 c" | "LOSEP Art. 28 d" | "LOSEP Art. 28 e" | "LOSEP Art. 28 f" | "LOSEP Art. 43 b" | "LOSEP Art. 43 c" | "LOSEP Art. 43 d" | null;
             pide_situacion_propuesta: boolean;
             pide_periodo: boolean;
             pide_institucion_destino: boolean;
@@ -9436,6 +9442,11 @@ export interface components {
             /** Format: date-time */
             fecha_providencia: string | null;
             lote_id: number | null;
+            base_legal: string | null;
+            acto_origen_tipo: components["schemas"]["TipoActoDeOrigen"] | null;
+            acto_origen_numero: string | null;
+            /** Format: date-time */
+            acto_origen_fecha: string | null;
         };
         /** MovimientoPersonalResource */
         MovimientoPersonalResource: {
@@ -9486,6 +9497,17 @@ export interface components {
             categoria: components["schemas"]["CategoriaEventoVinculo"] | null;
             estado: components["schemas"]["EstadoAccionPersonal"];
             descripcion: string;
+            /**
+             * @description La base legal del documento (fase 6.1): la guardada —congelada
+             *     al suscribir— y la que pone su clase, para proponerla.
+             */
+            base_legal: string | null;
+            base_legal_de_la_clase: string | null;
+            /**
+             * @description La casilla que marca en la rejilla del formulario del Ministerio.
+             * @enum {string}
+             */
+            casilla: "Ingreso" | "Nombramiento" | "Ascenso" | "Subrogación" | "Encargo" | "Vacaciones" | "Traslado" | "Traspaso" | "Cambio administrativo" | "Intercambio" | "Comisión de servicios" | "Licencia" | "Revalorización" | "Reclasificación" | "Ubicación" | "Reintegro" | "Restitución" | "Renuncia" | "Supresión" | "Destitución" | "Remoción" | "Jubilación" | "Otro";
             observacion: string | null;
             /** Format: date-time */
             fecha_efectiva: string;
@@ -9571,6 +9593,9 @@ export interface components {
             efecto_aplicado_en: string | null;
             pendiente_de_vigencia: boolean;
             resolucion_numero: string | null;
+            acto_origen_tipo: components["schemas"]["TipoActoDeOrigen"] | null;
+            acto_origen_numero: string | null;
+            acto_origen_fecha: string;
             /** @description El informe de la UATH del traslado (fase 3.1). */
             informe_uath_numero: string | null;
             /** @description La sentencia de una restitución (fase 2.6). */
@@ -11270,6 +11295,16 @@ export interface components {
              */
             cubre_movimiento_id?: number | null;
             resolucion_numero?: string | null;
+            /**
+             * @description El documento con el formato del Ministerio (fase 6.1): la base
+             *     legal que imprime —se congela al suscribir— y el decreto,
+             *     acuerdo o resolución que la origina, que van juntos.
+             */
+            base_legal?: string | null;
+            acto_origen_tipo?: components["schemas"]["TipoActoDeOrigen"];
+            acto_origen_numero?: string | null;
+            /** Format: date-time */
+            acto_origen_fecha?: string | null;
             observacion?: string | null;
             codigo?: string | null;
             lugar_trabajo?: string | null;
@@ -11780,6 +11815,12 @@ export interface components {
             deleted_at: string | null;
             categoria_id: number | null;
         };
+        /**
+         * TipoActoDeOrigen
+         * @description El acto que origina la acción de personal, como lo pide el encabezado del formulario del Ministerio: decreto, acuerdo o resolución, con su número y su fecha (diseño, 6.5; fase 6.1). Sin él, las tres casillas salen vacías.
+         * @enum {string}
+         */
+        TipoActoDeOrigen: "decreto" | "acuerdo" | "resolucion";
         /**
          * TipoAnotacionAccion
          * @description Lo que se le anota a una acción de personal después de emitida (diseño de Acciones de Personal, 8.1; fase 1.4). Un acto registrado no se reescribe: lo que pasa después va aquí, aparte, con quién y cuándo.
@@ -12416,6 +12457,16 @@ export interface components {
             cubre_movimiento_id?: number | null;
             requiere_dictamen_medico?: boolean | null;
             resolucion_numero?: string | null;
+            /**
+             * @description El documento con el formato del Ministerio (fase 6.1): la base
+             *     legal que imprime —se congela al suscribir— y el decreto,
+             *     acuerdo o resolución que la origina, que van juntos.
+             */
+            base_legal?: string | null;
+            acto_origen_tipo?: components["schemas"]["TipoActoDeOrigen"];
+            acto_origen_numero?: string | null;
+            /** Format: date-time */
+            acto_origen_fecha?: string | null;
             observacion?: string | null;
             codigo?: string | null;
             lugar_trabajo?: string | null;

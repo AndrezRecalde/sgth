@@ -4,6 +4,8 @@ namespace App\Services\Expediente;
 
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\RolFirmaAccionPersonal;
+use App\Enums\TipoMovimientoPersonal;
+use App\Enums\TipoNombramiento;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Expediente\MovimientoPersonal;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -11,6 +13,23 @@ use Barryvdh\DomPDF\Facade\Pdf;
 class AccionPersonalPdfService
 {
     public function generarContent(int $movimientoId): array
+    {
+        ['vista' => $vista, 'datos' => $datos, 'archivo' => $archivo] = $this->documento($movimientoId);
+
+        return [
+            'content'  => Pdf::loadView($vista, $datos)->setPaper('a4', 'portrait')->output(),
+            'filename' => $archivo,
+        ];
+    }
+
+    /**
+     * El documento de la acción sin pasarlo a PDF: qué plantilla, con qué
+     * datos y cómo se llama el archivo. Lo usa la descarga, y lo pueden
+     * renderizar las pruebas y la vista previa (fase 6.2) sin dompdf.
+     *
+     * @return array{vista: string, datos: array<string, mixed>, archivo: string}
+     */
+    public function documento(int $movimientoId): array
     {
         $movimiento = MovimientoPersonal::with([
             'servidor',
@@ -31,6 +50,9 @@ class AccionPersonalPdfService
             // enlazada distingue cuál de los dos es, y el documento debe
             // decirlo por su nombre.
             'subrogacion.subrogado',
+            // A quién reemplaza un ingreso de reemplazo (fase 6.1).
+            'cubreMovimiento.servidor',
+            'cubreMovimiento.puestoOrigen.cargo',
         ])->findOrFail($movimientoId);
 
         // El formato impreso es el de una Acción de Personal. Desde la fase 1.2
@@ -128,17 +150,16 @@ class AccionPersonalPdfService
         // tiene una constancia, con su número AU, que firma Talento Humano [TH 6;
         // fase 4.1b].
         if ($movimiento->instrumento === \App\Enums\InstrumentoActo::ACTO_AUTORIDAD) {
-            $pdf = Pdf::loadView('pdf.expediente.constancia-autoridad', [
-                'movimiento'         => $movimiento,
-                'anulada'            => $movimiento->estado === EstadoAccionPersonal::ANULADA,
-                'servidor'           => $movimiento->servidor,
-                'firmaTalentoHumano' => $this->firma($movimiento, 'firmante_th', RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO),
-                'logo'               => public_path('images/logo-gadpe.png'),
-            ])->setPaper('a4', 'portrait');
-
             return [
-                'content'  => $pdf->output(),
-                'filename' => 'constancia_'.$movimiento->codigo_registro
+                'vista' => 'pdf.expediente.constancia-autoridad',
+                'datos' => [
+                    'movimiento'         => $movimiento,
+                    'anulada'            => $movimiento->estado === EstadoAccionPersonal::ANULADA,
+                    'servidor'           => $movimiento->servidor,
+                    'firmaTalentoHumano' => $this->firma($movimiento, 'firmante_th', RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO),
+                    'logo'               => public_path('images/logo-gadpe.png'),
+                ],
+                'archivo' => 'constancia_'.$movimiento->codigo_registro
                     .($movimiento->estado === EstadoAccionPersonal::ANULADA ? '_ANULADA' : '').'.pdf',
             ];
         }
@@ -147,45 +168,140 @@ class AccionPersonalPdfService
         // con su número RI, que firma Talento Humano [TH N8; fase 4.3]. Es la
         // que va a Financiero con la multa.
         if ($movimiento->esDelRegistroInterno()) {
-            $pdf = Pdf::loadView('pdf.expediente.registro-interno', [
-                'movimiento'         => $movimiento,
-                'descuento'          => $descuento,
-                // La liquidación referencial de su terminación (fase 4.5).
-                'liquidacion'        => app(TerminacionObreroService::class)->liquidacion($movimiento),
-                'anulada'            => $movimiento->estado === EstadoAccionPersonal::ANULADA,
-                'servidor'           => $movimiento->servidor,
-                'firmaTalentoHumano' => $this->firma($movimiento, 'firmante_th', RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO),
-                'logo'               => public_path('images/logo-gadpe.png'),
-            ])->setPaper('a4', 'portrait');
-
             return [
-                'content'  => $pdf->output(),
-                'filename' => 'registro_interno_'.$movimiento->codigo_registro
+                'vista' => 'pdf.expediente.registro-interno',
+                'datos' => [
+                    'movimiento'         => $movimiento,
+                    'descuento'          => $descuento,
+                    // La liquidación referencial de su terminación (fase 4.5).
+                    'liquidacion'        => app(TerminacionObreroService::class)->liquidacion($movimiento),
+                    'anulada'            => $movimiento->estado === EstadoAccionPersonal::ANULADA,
+                    'servidor'           => $movimiento->servidor,
+                    'firmaTalentoHumano' => $this->firma($movimiento, 'firmante_th', RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO),
+                    'logo'               => public_path('images/logo-gadpe.png'),
+                ],
+                'archivo' => 'registro_interno_'.$movimiento->codigo_registro
                     .($movimiento->estado === EstadoAccionPersonal::ANULADA ? '_ANULADA' : '').'.pdf',
             ];
         }
 
-        $pdf = Pdf::loadView('pdf.expediente.accion-personal', [
-            'movimiento'   => $movimiento,
-            'descuento'    => $descuento,
-            'anulada'      => $movimiento->estado === EstadoAccionPersonal::ANULADA,
-            'servidor'     => $movimiento->servidor,
-            'firmaAutoridad' => $this->firma($movimiento, 'firmante_autoridad', RolFirmaAccionPersonal::AUTORIDAD_NOMINADORA),
-            'firmaTalentoHumano' => $this->firma($movimiento, 'firmante_th', RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO),
-            'logo'         => public_path('images/logo-gadpe.png'),
-        ])->setPaper('a4', 'portrait');
-
         return [
-            'content'  => $pdf->output(),
+            'vista' => 'pdf.expediente.accion-personal',
+            'datos' => [
+                'movimiento'   => $movimiento,
+                'descuento'    => $descuento,
+                // El formato del Ministerio (fase 6.1): la modalidad del vínculo en
+                // las dos situaciones y a quién reemplaza.
+                ...$this->modalidades($movimiento),
+                'reemplazo'    => $this->reemplazoDe($movimiento),
+                'anulada'      => $movimiento->estado === EstadoAccionPersonal::ANULADA,
+                'servidor'     => $movimiento->servidor,
+                'firmaAutoridad' => $this->firma($movimiento, 'firmante_autoridad', RolFirmaAccionPersonal::AUTORIDAD_NOMINADORA),
+                'firmaTalentoHumano' => $this->firma($movimiento, 'firmante_th', RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO),
+                'logo'         => public_path('images/logo-gadpe.png'),
+            ],
             // codigo_registro es el que genera el sistema al registrar la
             // acción; 'codigo' es un campo libre que casi nunca se llena.
-            'filename' => 'accion_personal_'
+            'archivo' => 'accion_personal_'
                 .($movimiento->codigo_registro ?: $movimiento->codigo ?: $movimiento->id)
                 // Para que el archivo anulado no se confunda con el vigente en
                 // la carpeta de quien descarga los dos.
                 .($movimiento->estado === EstadoAccionPersonal::ANULADA ? '_ANULADA' : '')
                 .'.pdf',
         ];
+    }
+
+    /**
+     * La modalidad del vínculo antes y después del acto (diseño, 6.5). La de
+     * antes es la del contrato que regía cuando la acción tomó efecto —no el
+     * de hoy: un documento reimpreso tras una cesación tiene que seguir
+     * diciendo cuál tenía—; la propuesta, la que el acto fija, o la misma si
+     * no la cambia.
+     *
+     * @return array{modalidadActual: ?TipoNombramiento, modalidadPropuesta: ?TipoNombramiento}
+     */
+    private function modalidades(MovimientoPersonal $movimiento): array
+    {
+        $anterior = $movimiento->tipo_movimiento?->creaVinculo()
+            ? null
+            : $movimiento->servidor?->contratos()
+                ->where('estado', '!=', 'cancelado')
+                ->whereDate('fecha_inicio', '<', $movimiento->fecha_efectiva ?? now())
+                ->orderByDesc('fecha_inicio')
+                ->orderByDesc('id')
+                ->first()?->tipo_nombramiento;
+
+        $propuesta = match (true) {
+            $movimiento->tipo_nombramiento_propuesto !== null              => $movimiento->tipo_nombramiento_propuesto,
+            (bool) $movimiento->tipo_movimiento?->convierteNombramiento()  => TipoNombramiento::PERMANENTE,
+            $movimiento->proponeSituacion()                                => $anterior,
+            default                                                        => null,
+        };
+
+        return ['modalidadActual' => $anterior, 'modalidadPropuesta' => $propuesta];
+    }
+
+    /**
+     * «Reemplaza a / en el puesto de / quien cesó por / acción N.º», en la
+     * segunda página (diseño, 6.5). Sale de la ausencia que cubre un ingreso
+     * de reemplazo, del titular de una subrogación, o de la cesación de quien
+     * ocupaba antes el puesto. Null si no hay a quién. `rotulo_por` dice si
+     * el anterior cesó o solo está ausente: el titular de una comisión no cesó.
+     *
+     * @return array{a: string, puesto: ?string, rotulo_por: string, por: ?string, accion: ?string}|null
+     */
+    private function reemplazoDe(MovimientoPersonal $movimiento): ?array
+    {
+        $nombre = fn ($s) => $s ? trim("{$s->apellido} {$s->nombre}") : null;
+
+        if ($ausencia = $movimiento->cubreMovimiento) {
+            return [
+                'a'      => $nombre($ausencia->servidor) ?? '—',
+                'puesto' => $ausencia->puestoOrigen?->cargo?->nombre,
+                'rotulo_por' => 'Ausente por',
+                'por'    => $ausencia->etiquetaAusencia() ?? $ausencia->etiqueta(),
+                'accion' => $ausencia->codigo_registro,
+            ];
+        }
+
+        if ($titular = $movimiento->subrogacion?->subrogado) {
+            return [
+                'a'      => $nombre($titular),
+                'puesto' => $movimiento->puestoDestino?->cargo?->nombre,
+                'rotulo_por' => 'Ausente por',
+                'por'    => $movimiento->subrogacion->motivo?->etiqueta(),
+                'accion' => null,
+            ];
+        }
+
+        // Quien ocupaba el puesto al que llega: la última cesación desde él.
+        $llegaA = in_array($movimiento->tipo_movimiento, [
+            TipoMovimientoPersonal::INGRESO, TipoMovimientoPersonal::ASCENSO,
+            TipoMovimientoPersonal::RESTITUCION, TipoMovimientoPersonal::SUBROGACION,
+        ], true) ? $movimiento->puesto_destino_id : null;
+
+        if (! $llegaA) {
+            return null;
+        }
+
+        $cesacion = MovimientoPersonal::query()
+            ->with('servidor')
+            ->where('tipo_movimiento', TipoMovimientoPersonal::CESACION_FUNCIONES->value)
+            ->where('puesto_origen_id', $llegaA)
+            ->where('servidor_id', '!=', $movimiento->servidor_id)
+            ->whereIn('estado', [EstadoAccionPersonal::REGISTRADA->value, EstadoAccionPersonal::NOTIFICADA->value])
+            ->whereDate('fecha_efectiva', '<=', $movimiento->fecha_efectiva ?? now())
+            ->orderByDesc('fecha_efectiva')
+            ->orderByDesc('id')
+            ->first();
+
+        return $cesacion ? [
+            'a'      => $nombre($cesacion->servidor) ?? '—',
+            'puesto' => $movimiento->puestoDestino?->cargo?->nombre,
+            'rotulo_por' => 'Quien cesó por',
+            'por'    => $cesacion->causal()?->etiqueta() ?? $cesacion->etiqueta(),
+            'accion' => $cesacion->codigo_registro,
+        ] : null;
     }
 
     /**
