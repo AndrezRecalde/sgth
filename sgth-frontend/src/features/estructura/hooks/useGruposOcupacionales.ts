@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import api from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
 
-type GrupoOcupacional = {
+export type GrupoOcupacional = {
   id: number
   grado_codigo: string
   grado_numerico: number | null
@@ -13,6 +13,8 @@ type GrupoOcupacional = {
   nivel_complejidad: string | null
   rol_puesto: string | null
   activo: boolean
+  /** Si sube con la nueva escala: la LOSEP, sin autoridades electas ni obreros (fase 7.3b). */
+  admite_escala: boolean
 }
 
 export function useGruposOcupacionales() {

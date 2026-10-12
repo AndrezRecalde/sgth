@@ -1,26 +1,17 @@
 "use client";
 
-import { Select, Stack, Text } from "@mantine/core";
-import { IconLayersIntersect } from "@tabler/icons-react";
+import { Button, Select, Stack, Text } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { IconLayersIntersect, IconTrendingUp } from "@tabler/icons-react";
 import { DataState, SgthTable, StatusBadge, Toolbar } from "@/components/ui";
 import { REGIMEN_LABELS } from "@/lib/regimen";
-import { useGruposOcupacionales } from "../hooks/useGruposOcupacionales";
+import { useAuth } from "@/hooks/useAuth";
+import { useGruposOcupacionales, type GrupoOcupacional } from "../hooks/useGruposOcupacionales";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import { useState } from "react";
 import type { DataTableColumn } from "mantine-datatable";
-
-type GrupoOcupacional = {
-  id: number;
-  grado_codigo: string;
-  grado_numerico: number | null;
-  grupo: string;
-  denominacion_generica: string | null;
-  rmu: number;
-  regimen: "losep" | "codigo_trabajo";
-  nivel_complejidad: string | null;
-  rol_puesto: string | null;
-  activo: boolean;
-};
+import { EscalasRemuneracionSection } from "./EscalasRemuneracionSection";
+import { NuevaEscalaModal } from "./NuevaEscalaModal";
 
 const REGIMEN_OPTIONS = [
   { value: "", label: "Todos los regímenes" },
@@ -33,6 +24,11 @@ export function GruposOcupacionalesTab() {
   const contained = useContainedInput();
 
   const { data: grupos = [], isLoading, error } = useGruposOcupacionales();
+  // La nueva escala de la LOSEP (fase 7.3b): la prepara quien prepara
+  // acciones; la registra el Director.
+  const { hasPermiso } = useAuth();
+  const veEscalas = hasPermiso("preparar-accion-personal") || hasPermiso("registrar-accion-personal");
+  const [escalaAbierta, { open: abrirEscala, close: cerrarEscala }] = useDisclosure(false);
 
   const filtrados = regimen
     ? (grupos as GrupoOcupacional[]).filter((g) => g.regimen === regimen)
@@ -105,7 +101,13 @@ export function GruposOcupacionalesTab() {
 
   return (
     <Stack gap="md">
-      <Toolbar>
+      <Toolbar
+        actions={veEscalas && (
+          <Button leftSection={<IconTrendingUp size={16} />} onClick={abrirEscala}>
+            Nueva escala
+          </Button>
+        )}
+      >
         <Select
           label="Régimen"
           placeholder="Todos los regímenes"
@@ -136,6 +138,10 @@ export function GruposOcupacionalesTab() {
           minHeight={200}
         />
       </DataState>
+
+      {veEscalas && <EscalasRemuneracionSection />}
+
+      <NuevaEscalaModal opened={escalaAbierta} onClose={cerrarEscala} />
     </Stack>
   );
 }

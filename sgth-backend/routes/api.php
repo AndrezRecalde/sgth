@@ -59,6 +59,7 @@ use App\Http\Controllers\Dispensario\SolicitudCertificacionController;
 use App\Http\Controllers\Dispensario\TriajeController;
 use App\Http\Controllers\Estructura\CargoController;
 use App\Http\Controllers\Estructura\ExtensionTelefonicaController;
+use App\Http\Controllers\Estructura\EscalaRemuneracionController;
 use App\Http\Controllers\Estructura\GrupoOcupacionalController;
 use App\Http\Controllers\Estructura\OrganigramaController;
 use App\Http\Controllers\Estructura\OrganigramaPdfController;
@@ -287,6 +288,18 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
 
         Route::get('grupos-ocupacionales', [GrupoOcupacionalController::class, 'index'])
             ->name('estructura.grupos-ocupacionales');
+
+        // La nueva escala de remuneraciones de la LOSEP (fase 7.3b): la prepara
+        // quien prepara acciones; la registra y la revierte el Director.
+        Route::get('escalas-remuneracion', [EscalaRemuneracionController::class, 'index'])
+            ->middleware('permission:preparar-accion-personal|registrar-accion-personal');
+        Route::post('escalas-remuneracion/previsualizar', [EscalaRemuneracionController::class, 'previsualizar'])
+            ->middleware('permission:preparar-accion-personal|registrar-accion-personal')
+            ->name('estructura.escalas-remuneracion.previsualizar');
+        Route::post('escalas-remuneracion', [EscalaRemuneracionController::class, 'store'])
+            ->middleware('permission:registrar-accion-personal');
+        Route::post('escalas-remuneracion/{escala}/revertir', [EscalaRemuneracionController::class, 'revertir'])
+            ->middleware('permission:anular-accion-personal');
 
         // Catálogo de partidas presupuestarias. La lectura queda abierta a
         // cualquier usuario autenticado porque alimenta los selectores de
