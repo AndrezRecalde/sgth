@@ -18,6 +18,7 @@ import { getPuestoColumns } from "./puesto.columns";
 import { PuestoModal } from "./PuestoModal";
 import { PuestoActividadesDrawer } from "./PuestoActividadesDrawer";
 import { TraspasoPuestoModal } from "./TraspasoPuestoModal";
+import { RevisionClasificacionModal } from "./RevisionClasificacionModal";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import type { PuestoConRelaciones, UnidadConRelaciones } from "@/types/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -32,6 +33,8 @@ export function PuestosTab() {
   // (fase 7.1a): lo prepara quien prepara acciones.
   const puedeTraspasar = hasPermiso("preparar-accion-personal");
   const [aTraspasar, setATraspasar] = useState<PuestoConRelaciones | null>(null);
+  // Y la revisión de su clasificación (fase 7.1b).
+  const [aRevisar, setARevisar] = useState<PuestoConRelaciones | null>(null);
   const [page, setPage] = useState(1);
   const [unidadIds, setUnidadIds] = useState<string[]>([]);
   const [editPuesto, setEditPuesto] = useState<PuestoConRelaciones | null>(null);
@@ -146,6 +149,7 @@ export function PuestosTab() {
             onDelete: handleDelete,
             onActividades: handleActividades,
             onTraspasar: setATraspasar,
+            onRevisar: setARevisar,
             puedeGestionar,
             puedeTraspasar,
           })}
@@ -166,6 +170,11 @@ export function PuestosTab() {
       <TraspasoPuestoModal
         puesto={aTraspasar}
         onClose={() => setATraspasar(null)}
+      />
+
+      <RevisionClasificacionModal
+        puesto={aRevisar}
+        onClose={() => setARevisar(null)}
       />
 
       <PuestoActividadesDrawer

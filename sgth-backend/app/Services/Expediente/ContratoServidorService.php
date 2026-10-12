@@ -927,6 +927,84 @@ class ContratoServidorService
     }
 
     /**
+     * La revisión de la clasificación (LOSEP Arts. 61 y 62; fase 7.1b): el
+     * puesto cambia de grado o de denominación, y su ocupante cobra la
+     * remuneración que el acto fijó —la del grado nuevo, o la suya si era
+     * mayor: nunca baja—. El primer acto del puesto que surte efecto lo
+     * cambia; cada uno, la remuneración de su ocupante.
+     */
+    public function aplicarRevisionDeClasificacion(MovimientoPersonal $revision): void
+    {
+        $vigente = Servidor::with('contratoVigente')->findOrFail($revision->servidor_id)->contratoVigente;
+
+        if (! $vigente || (int) $vigente->puesto_id !== (int) $revision->puesto_destino_id) {
+            throw new ReglaNegocioException(
+                'El servidor ya no ocupa el puesto que se revisa: revise su vínculo antes de registrar la revisión.'
+            );
+        }
+
+        $puesto = Puesto::findOrFail($revision->puesto_destino_id);
+        $cambios = array_filter([
+            'grupo_ocupacional_id' => $revision->grupo_ocupacional_destino_id,
+            'cargo_id'             => $revision->cargo_destino_id,
+        ], fn ($valor, $campo) => $valor !== null && (int) $puesto->{$campo} !== (int) $valor, ARRAY_FILTER_USE_BOTH);
+
+        if ($cambios !== []) {
+            PuestoObserver::conCausa(
+                'Revisión de la clasificación '.($revision->codigo_registro ?? "#{$revision->id}")
+                    .($revision->lote_id ? ", lote #{$revision->lote_id}" : ''),
+                fn () => $puesto->update($cambios),
+            );
+        }
+
+        if ($revision->remuneracion_propuesta !== null) {
+            $vigente->update(['remuneracion' => $revision->remuneracion_propuesta]);
+        }
+    }
+
+    /**
+     * Anular un acto de la revisión: su ocupante vuelve a la remuneración de
+     * antes, y el puesto a su grado y su denominación cuando ya no queda ningún
+     * acto del lote sobre él con efecto. Se anula desde el lote.
+     */
+    public function deshacerRevisionDeClasificacion(MovimientoPersonal $revision): void
+    {
+        $vigente = Servidor::with('contratoVigente')->findOrFail($revision->servidor_id)->contratoVigente;
+
+        if ($vigente && (int) $vigente->puesto_id === (int) $revision->puesto_destino_id && $revision->remuneracion_origen !== null) {
+            $vigente->update(['remuneracion' => $revision->remuneracion_origen]);
+        }
+
+        $quedan = MovimientoPersonal::query()
+            ->where('lote_id', $revision->lote_id)
+            ->where('puesto_destino_id', $revision->puesto_destino_id)
+            ->where('id', '!=', $revision->id)
+            ->whereIn('estado', [EstadoAccionPersonal::REGISTRADA->value, EstadoAccionPersonal::NOTIFICADA->value])
+            ->whereNotNull('efecto_aplicado_en')
+            ->exists();
+
+        $puesto = Puesto::find($revision->puesto_destino_id);
+
+        if ($quedan || ! $puesto) {
+            return;
+        }
+
+        // El grado y la denominación con que el acto lo encontró.
+        $antes = array_filter([
+            'grupo_ocupacional_id' => $revision->grupo_ocupacional_origen_id,
+            'cargo_id'             => $revision->cargo_origen_id,
+        ], fn ($valor, $campo) => $valor !== null && (int) $puesto->{$campo} !== (int) $valor, ARRAY_FILTER_USE_BOTH);
+
+        if ($antes !== []) {
+            PuestoObserver::conCausa(
+                'Anulación de la revisión '.($revision->codigo_registro ?? "#{$revision->id}")
+                    .($revision->lote_id ? ", lote #{$revision->lote_id}" : ''),
+                fn () => $puesto->update($antes),
+            );
+        }
+    }
+
+    /**
      * El nombramiento definitivo (LOSEP 17 b.5; fase 3.2): el provisional de
      * prueba pasa a permanente en el mismo vínculo, que no se cierra, así que
      * la antigüedad sigue corriendo. El número, la partida y la remuneración se

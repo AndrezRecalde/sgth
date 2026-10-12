@@ -21,6 +21,9 @@ import { IncrementoEnLoteModal } from './IncrementoEnLoteModal'
 const enTramite = (l: LoteAccion) => (l.por_estado.borrador ?? 0) + (l.por_estado.suscrita ?? 0)
 const registrados = (l: LoteAccion) => (l.por_estado.registrada ?? 0) + (l.por_estado.notificada ?? 0)
 const esTraspaso = (l: LoteAccion) => l.tipo === 'traspaso_puesto'
+const esRevision = (l: LoteAccion) => l.tipo === 'revision_clasificacion'
+/** El traspaso y la revisión se registran y se anulan enteros (7.1a, 7.1b). */
+const esEntero = (l: LoteAccion) => esTraspaso(l) || esRevision(l)
 
 const calculo = (l: LoteAccion) => (l.parametros.modo === 'porcentaje'
   ? `${l.parametros.valor} %`
@@ -31,7 +34,9 @@ const calculo = (l: LoteAccion) => (l.parametros.modo === 'porcentaje'
  * (fase 4.6) prepara un borrador por obrero; se registran uno por uno, y el que
  * falla queda en su estado. El traspaso de un puesto (fase 7.1a), uno por
  * ocupante: se registran y se anulan todos a la vez, porque un puesto no puede
- * quedar con unos ocupantes en cada unidad. Se prepara desde Estructura.
+ * quedar con unos ocupantes en cada unidad. La revisión de la clasificación
+ * (7.1b), igual: el grado o la denominación de uno o varios puestos, una por
+ * ocupante. Los dos se preparan desde Estructura.
  */
 export function ActosEnLotePanel() {
   const { data: lotes = [], isLoading, error, refetch } = useLotesAccion()
@@ -55,7 +60,10 @@ export function ActosEnLotePanel() {
     message: esTraspaso(l)
       ? `Se suscriben y registran los ${enTramite(l)} actos del traspaso, todos o ninguno. Desde el `
         + `${formatFecha(l.fecha_efectiva)} el puesto y sus ocupantes pasan a ${l.traspaso?.unidad_destino ?? 'la unidad nueva'}.`
-      : `Se suscriben y registran los ${enTramite(l)} actos que siguen en trámite, uno por uno y con las `
+      : esRevision(l)
+        ? `Se suscriben y registran los ${enTramite(l)} actos de la revisión, todos o ninguno. Desde el `
+          + `${formatFecha(l.fecha_efectiva)} cada puesto cambia de grado o de denominación, y sus ocupantes de remuneración.`
+        : `Se suscriben y registran los ${enTramite(l)} actos que siguen en trámite, uno por uno y con las `
         + `validaciones de siempre. Cada uno sube la remuneración del obrero desde el ${formatFecha(l.fecha_efectiva)}.`,
     confirmLabel: 'Suscribir y registrar',
     onConfirm: () => registrar.mutate(l.id, {
@@ -68,12 +76,17 @@ export function ActosEnLotePanel() {
     ...(puedeRegistrar && enTramite(l) > 0
       ? [{ label: 'Suscribir y registrar', icon: <IconChecks size={14} />, onClick: () => pedirRegistro(l) }]
       : []),
-    // El traspaso registrado no se descarta: se revierte, entero.
-    ...(puedeAnular && enTramite(l) > 0 && !(esTraspaso(l) && registrados(l) > 0)
+    // El traspaso y la revisión registrados no se descartan: se revierten, enteros.
+    ...(puedeAnular && enTramite(l) > 0 && !(esEntero(l) && registrados(l) > 0)
       ? [{ label: 'Descartar lo que sigue en trámite', icon: <IconBan size={14} />, color: 'red', onClick: () => setADescartar(l) }]
       : []),
-    ...(puedeAnular && esTraspaso(l) && registrados(l) > 0
-      ? [{ label: 'Revertir el traspaso', icon: <IconArrowBackUp size={14} />, color: 'red', onClick: () => setARevertir(l) }]
+    ...(puedeAnular && esEntero(l) && registrados(l) > 0
+      ? [{
+          label: esTraspaso(l) ? 'Revertir el traspaso' : 'Revertir la revisión',
+          icon: <IconArrowBackUp size={14} />,
+          color: 'red',
+          onClick: () => setARevertir(l),
+        }]
       : []),
   ]
 
@@ -86,9 +99,15 @@ export function ActosEnLotePanel() {
           <Text size="sm" fw={500}>
             {esTraspaso(l)
               ? `Traspaso de ${l.traspaso?.puesto ?? 'puesto'}: ${l.traspaso?.unidad_origen ?? '—'} → ${l.traspaso?.unidad_destino ?? '—'}`
-              : `Incremento de ${calculo(l)}`} · desde el {formatFecha(l.fecha_efectiva)}
+              : esRevision(l)
+                ? `${l.revision?.causal ?? 'Revisión'} de ${l.revision?.puestos.length ?? 0} puesto(s)`
+                : `Incremento de ${calculo(l)}`} · desde el {formatFecha(l.fecha_efectiva)}
           </Text>
-          <Text size="xs" c="dimmed" lineClamp={1}>{l.descripcion}</Text>
+          {esRevision(l)
+            ? (l.revision?.puestos ?? []).map((p) => (
+              <Text key={p.puesto_id} size="xs" c="dimmed" lineClamp={1}>{p.antes} → {p.despues}</Text>
+            ))
+            : <Text size="xs" c="dimmed" lineClamp={1}>{l.descripcion}</Text>}
         </div>
       ),
     },
@@ -100,7 +119,9 @@ export function ActosEnLotePanel() {
         <div>
           <Text size="sm">{esTraspaso(l) ? `Informe UATH ${l.documento_origen}` : l.documento_origen}</Text>
           <Text size="xs" c="dimmed" lineClamp={1}>
-            {esTraspaso(l) ? l.traspaso?.criterio : `Dictamen ${l.dictamen_presupuestario_ref}`}
+            {esTraspaso(l)
+              ? l.traspaso?.criterio
+              : l.dictamen_presupuestario_ref ? `Dictamen ${l.dictamen_presupuestario_ref}` : 'Sin dictamen: no sube la remuneración'}
           </Text>
         </div>
       ),
@@ -135,8 +156,9 @@ export function ActosEnLotePanel() {
       <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
         Los actos que nacen juntos. El incremento de la tabla sectorial o del contrato colectivo da un
         borrador por obrero, cada uno con su hoja de registro interno; se registran uno por uno, y el que
-        falla se corrige desde la bandeja. El traspaso de un puesto a otra unidad se prepara en Estructura
-        y da una acción por ocupante, que se registran y se revierten todas a la vez.
+        falla se corrige desde la bandeja. El traspaso de un puesto a otra unidad y la revisión de su
+        clasificación se preparan en Estructura y dan una acción por ocupante, que se registran y se
+        revierten todas a la vez.
       </Alert>
 
       {puedePreparar && (
@@ -154,7 +176,7 @@ export function ActosEnLotePanel() {
         emptyProps={{
           icon: IconStack2,
           title: 'Sin actos en lote',
-          description: 'Aquí aparecen los incrementos de los obreros y los traspasos de puestos.',
+          description: 'Aquí aparecen los incrementos de los obreros, los traspasos de puestos y las revisiones de su clasificación.',
         }}
       >
         <SgthTable records={lotes} columns={columnas} minHeight={200} />
@@ -168,8 +190,8 @@ export function ActosEnLotePanel() {
         onClose={() => setADescartar(null)}
         title="Descartar el lote"
         descripcion={aDescartar
-          ? (esTraspaso(aDescartar)
-            ? `Se anulan los ${enTramite(aDescartar)} actos del traspaso. El puesto sigue donde está.`
+          ? (esEntero(aDescartar)
+            ? `Se anulan los ${enTramite(aDescartar)} actos del lote. El puesto sigue como está.`
             : `Se anulan los ${enTramite(aDescartar)} actos que siguen en trámite. Lo ya registrado no: se anula uno por uno, desde su acto.`)
           : ''}
         confirmLabel="Anular lo que sigue en trámite"
@@ -184,11 +206,13 @@ export function ActosEnLotePanel() {
       <MotivoModal
         opened={!!aRevertir}
         onClose={() => setARevertir(null)}
-        title="Revertir el traspaso"
+        title={aRevertir && esRevision(aRevertir) ? 'Revertir la revisión' : 'Revertir el traspaso'}
         descripcion={aRevertir
-          ? `Se anulan los actos del traspaso, y el puesto y sus ocupantes vuelven a ${aRevertir.traspaso?.unidad_origen ?? 'su unidad de origen'}.`
+          ? (esRevision(aRevertir)
+            ? 'Se anulan los actos de la revisión: cada puesto vuelve a su grado y su denominación, y sus ocupantes a su remuneración.'
+            : `Se anulan los actos del traspaso, y el puesto y sus ocupantes vuelven a ${aRevertir.traspaso?.unidad_origen ?? 'su unidad de origen'}.`)
           : ''}
-        confirmLabel="Revertir el traspaso"
+        confirmLabel="Revertir"
         destructiva
         cargando={revertir.isPending}
         onConfirm={(motivo) => aRevertir && revertir.mutate(
@@ -220,7 +244,7 @@ function ActosDelLoteModal({ loteId, onClose }: { loteId: number | null; onClose
   const columnas: DataTableColumn<ActoDelLote>[] = [
     {
       accessor: 'nombre',
-      title: traspaso ? 'Ocupante' : 'Obrero',
+      title: data?.tipo === 'incremento_obreros' ? 'Obrero' : 'Ocupante',
       render: (a) => (
         <div>
           <Text size="sm">{a.nombre}</Text>

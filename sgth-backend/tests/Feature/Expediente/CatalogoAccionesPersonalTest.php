@@ -205,8 +205,10 @@ test('cada clase aplica exactamente a los nombramientos de antes', function () {
         // obreros (4.3).
         'adenda'       => ['servicios_profesionales'],
         'cambio_lugar' => ['codigo_trabajo'],
-        // El traspaso de puesto nace en Estructura, en un lote (7.1a).
+        // El traspaso de puesto y la revisión de la clasificación nacen en
+        // Estructura, en un lote (7.1a y 7.1b).
         'traspaso_puesto' => [],
+        'revision_clasificacion' => [],
     ];
 
     foreach (ClaseAccionPersonal::cases() as $clase) {

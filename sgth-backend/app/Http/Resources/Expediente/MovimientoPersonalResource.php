@@ -109,6 +109,12 @@ class MovimientoPersonalResource extends JsonResource
             'prorroga_causa_etiqueta' => $this->prorroga_causa?->etiqueta(),
             'puesto_origen_id'  => $this->puesto_origen_id,
             'puesto_destino_id' => $this->puesto_destino_id,
+            // El grupo y la denominación con que se firmó (fase 7.1b): una
+            // revisión de la clasificación posterior no los cambia.
+            'grupo_ocupacional_origen_id'  => $this->grupo_ocupacional_origen_id,
+            'cargo_origen_id'              => $this->cargo_origen_id,
+            'grupo_ocupacional_destino_id' => $this->grupo_ocupacional_destino_id,
+            'cargo_destino_id'             => $this->cargo_destino_id,
 
             // Datos del vínculo que Talento Humano fija en borrador y que se
             // materializan en el ContratoServidor al registrar la acción.

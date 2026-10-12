@@ -768,6 +768,12 @@ class MovimientoPersonalService
         $datos['puesto_origen_id'] ??= $vigente->puesto_id;
         $datos['unidad_origen_id'] ??= $vigente->unidad_administrativa_id;
 
+        // El grupo y la denominación del puesto, también congelados (fase
+        // 7.1b): si después se reclasifica, el documento sigue diciendo con
+        // cuáles se firmó.
+        $datos['grupo_ocupacional_origen_id'] ??= $vigente->puesto?->grupo_ocupacional_id;
+        $datos['cargo_origen_id'] ??= $vigente->puesto?->cargo_id;
+
         // La remuneración se toma del contrato, no del puesto: en Código del
         // Trabajo y Servicios Profesionales el puesto no define ninguna, y aun
         // en LOSEP el contrato puede llevar un monto ajustado.

@@ -52,6 +52,7 @@ enum ClaseAccionPersonal: string
     case ADENDA                    = 'adenda';
     case CAMBIO_LUGAR              = 'cambio_lugar';
     case TRASPASO_PUESTO           = 'traspaso_puesto';
+    case REVISION_CLASIFICACION    = 'revision_clasificacion';
 
     public function etiqueta(): string
     {
@@ -78,6 +79,7 @@ enum ClaseAccionPersonal: string
             self::ADENDA                    => 'Adenda al contrato',
             self::CAMBIO_LUGAR              => 'Cambio de Lugar de Trabajo',
             self::TRASPASO_PUESTO           => 'Traspaso de Puesto',
+            self::REVISION_CLASIFICACION    => 'Revisión de la Clasificación',
         };
     }
 
@@ -107,7 +109,8 @@ enum ClaseAccionPersonal: string
 
             self::INCREMENTO_REMUNERACION,
             self::CAMBIO_OCUPACION,
-            self::CAMBIO_LUGAR => FamiliaAccionPersonal::PUESTO_REMUNERACION,
+            self::CAMBIO_LUGAR,
+            self::REVISION_CLASIFICACION => FamiliaAccionPersonal::PUESTO_REMUNERACION,
 
             self::SANCION  => FamiliaAccionPersonal::REGIMEN_DISCIPLINARIO,
             self::CESACION => FamiliaAccionPersonal::CESACION,
@@ -137,11 +140,12 @@ enum ClaseAccionPersonal: string
         //
         // Ni la asunción definitiva (fase 4.1b): nace del cese del Prefecto.
         //
-        // Ni el traspaso de puesto (fase 7.1a): nace en Estructura, en un lote
-        // con un acto por ocupante, porque lo que cambia es el puesto.
+        // Ni el traspaso de puesto (fase 7.1a) ni la revisión de la
+        // clasificación (7.1b): nacen en Estructura, en un lote con un acto por
+        // ocupante, porque lo que cambia es el puesto.
         return ! in_array($this, [
             self::SUBROGACION, self::ENCARGO, self::REINTEGRO, self::SANCION, self::NOMBRAMIENTO_DEFINITIVO,
-            self::ASUNCION_DEFINITIVA, self::TRASPASO_PUESTO,
+            self::ASUNCION_DEFINITIVA, self::TRASPASO_PUESTO, self::REVISION_CLASIFICACION,
         ], true);
     }
 
@@ -184,6 +188,8 @@ enum ClaseAccionPersonal: string
                 SubtipoMovimientoPersonal::SANCION_PECUNIARIA,
                 SubtipoMovimientoPersonal::SUSPENSION_SIN_REMUNERACION,
             ],
+            // Revalorización, reclasificación y ubicación (fase 7.1b).
+            self::REVISION_CLASIFICACION => TipoMovimientoPersonal::REVISION_CLASIFICACION->subtiposPermitidos(),
             default        => [],
         };
     }
@@ -308,6 +314,7 @@ enum ClaseAccionPersonal: string
             self::ADENDA => [TipoMovimientoPersonal::ADENDA, null],
             self::CAMBIO_LUGAR => [TipoMovimientoPersonal::CAMBIO_LUGAR, null],
             self::TRASPASO_PUESTO => [TipoMovimientoPersonal::TRASPASO_PUESTO, null],
+            self::REVISION_CLASIFICACION => [TipoMovimientoPersonal::REVISION_CLASIFICACION, $causal],
         };
     }
 
@@ -337,6 +344,10 @@ enum ClaseAccionPersonal: string
 
         if ($subtipo?->esLicenciaSinRemuneracion()) {
             return self::LICENCIA_SIN_REMUNERACION;
+        }
+
+        if (in_array($subtipo, TipoMovimientoPersonal::REVISION_CLASIFICACION->subtiposPermitidos(), true)) {
+            return self::REVISION_CLASIFICACION;
         }
 
         return match ($subtipo) {
@@ -370,6 +381,7 @@ enum ClaseAccionPersonal: string
                 TipoMovimientoPersonal::ADENDA                    => self::ADENDA,
                 TipoMovimientoPersonal::CAMBIO_LUGAR              => self::CAMBIO_LUGAR,
                 TipoMovimientoPersonal::TRASPASO_PUESTO           => self::TRASPASO_PUESTO,
+                TipoMovimientoPersonal::REVISION_CLASIFICACION    => self::REVISION_CLASIFICACION,
                 default                                           => null,
             },
         };
@@ -452,6 +464,7 @@ enum ClaseAccionPersonal: string
             self::ASCENSO                   => 'LOSEP Art. 68; Reglamento a la LOSEP Arts. 190 y 191',
             self::TRASLADO                  => 'LOSEP Arts. 35 y 36',
             self::TRASPASO_PUESTO           => 'LOSEP Art. 37; Reglamento a la LOSEP Art. 69',
+            self::REVISION_CLASIFICACION    => 'LOSEP Arts. 61 y 62; Reglamento a la LOSEP Arts. 163 y 173',
             self::INTERCAMBIO_VOLUNTARIO    => 'LOSEP Arts. 39 y 40',
             self::COMISION_CON_REMUNERACION => 'LOSEP Art. 30',
             self::COMISION_SIN_REMUNERACION => 'LOSEP Art. 31',
@@ -479,6 +492,7 @@ enum ClaseAccionPersonal: string
             self::ASCENSO                   => CasillaAccionPersonal::ASCENSO,
             self::TRASLADO                  => CasillaAccionPersonal::TRASLADO,
             self::TRASPASO_PUESTO           => CasillaAccionPersonal::TRASPASO,
+            self::REVISION_CLASIFICACION    => CasillaAccionPersonal::deLaRevision($causal),
             self::INTERCAMBIO_VOLUNTARIO    => CasillaAccionPersonal::INTERCAMBIO,
             self::COMISION_CON_REMUNERACION,
             self::COMISION_SIN_REMUNERACION => CasillaAccionPersonal::COMISION_SERVICIOS,

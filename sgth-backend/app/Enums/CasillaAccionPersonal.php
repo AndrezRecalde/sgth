@@ -12,9 +12,9 @@ namespace App\Enums;
  * nombre o de orden, se corrige aquí y en ningún otro sitio.
  *
  * Varias no las usa todavía ninguna clase: las vacaciones no son acción de
- * personal [TH N11], y la revalorización, la reclasificación, la ubicación y la
- * supresión llegan con las operaciones sobre puestos (fase 7). El traspaso, el
- * del puesto, llegó en la 7.1a.
+ * personal [TH N11], y la supresión llega con las operaciones sobre puestos
+ * (fase 7). El traspaso del puesto llegó en la 7.1a, y la revalorización, la
+ * reclasificación y la ubicación, con la revisión de la clasificación (7.1b).
  */
 enum CasillaAccionPersonal: string
 {
@@ -84,6 +84,17 @@ enum CasillaAccionPersonal: string
             SubtipoMovimientoPersonal::REMOCION    => self::REMOCION,
             SubtipoMovimientoPersonal::JUBILACION  => self::JUBILACION,
             default                                => self::OTRO,
+        };
+    }
+
+    /** La de la revisión de la clasificación, por su causal (fase 7.1b). */
+    public static function deLaRevision(?SubtipoMovimientoPersonal $causal): self
+    {
+        return match ($causal) {
+            SubtipoMovimientoPersonal::REVALORIZACION  => self::REVALORIZACION,
+            SubtipoMovimientoPersonal::RECLASIFICACION => self::RECLASIFICACION,
+            SubtipoMovimientoPersonal::UBICACION       => self::UBICACION,
+            default                                    => self::OTRO,
         };
     }
 }

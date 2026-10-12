@@ -80,13 +80,15 @@ beforeEach(function () {
 // ── Coherencia tipo ↔ subtipo ───────────────────────────────────
 
 // La licencia sin remuneración se sumó en la fase 2.2: su subtipo es la causal
-// de LOSEP Art. 28.
+// de LOSEP Art. 28. Y la revisión de la clasificación en la 7.1b: revalorización,
+// reclasificación o ubicación.
 test('los tipos paraguas exigen subtipo y el resto no lo admite', function () {
     $conSubtipo = [
         TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO,
         TipoMovimientoPersonal::REGIMEN_DISCIPLINARIO,
         TipoMovimientoPersonal::CESACION_FUNCIONES,
         TipoMovimientoPersonal::LICENCIA_SIN_REMUNERACION,
+        TipoMovimientoPersonal::REVISION_CLASIFICACION,
     ];
 
     foreach (TipoMovimientoPersonal::cases() as $tipo) {
@@ -566,8 +568,10 @@ test('tieneDocumentoImprimible() cubre todo acto formal, que es todo lo que qued
         // de un obrero, con su hoja de registro interno (4.3).
         TipoMovimientoPersonal::ADENDA,
         TipoMovimientoPersonal::CAMBIO_LUGAR,
-        // Y el traspaso de puesto, una acción por ocupante (7.1a).
+        // Y el traspaso de puesto y la revisión de la clasificación, una
+        // acción por ocupante (7.1a y 7.1b).
         TipoMovimientoPersonal::TRASPASO_PUESTO,
+        TipoMovimientoPersonal::REVISION_CLASIFICACION,
     ];
 
     // La bitácora del expediente —novedad de contrato, cambio de puesto,

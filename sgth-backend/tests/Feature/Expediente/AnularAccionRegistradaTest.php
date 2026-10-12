@@ -478,8 +478,10 @@ test('tocaElVinculo() cubre exactamente las ramas que aplican un efecto al regis
             || $tipo->asumeLaPrimeraAutoridad()
             // Y la adenda cambia el contrato civil (fase 4.2).
             || $tipo->esAdenda()
-            // Y el traspaso de puesto, la unidad del vínculo (fase 7.1a).
+            // Y el traspaso de puesto, la unidad del vínculo (fase 7.1a), y la
+            // revisión de la clasificación, su remuneración (7.1b).
             || $movimiento->esTraspasoDePuesto()
+            || $movimiento->esRevisionDeClasificacion()
             || $movimiento->reubicaAlServidor()
             || (bool) $movimiento->subtipoEfectivo()?->cierraVinculo();
 

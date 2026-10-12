@@ -69,6 +69,10 @@ enum TipoMovimientoPersonal: string
     // Estructura. No es el `traspaso` de arriba, que es el traslado de un
     // permanente (Art. 35).
     case TRASPASO_PUESTO           = 'traspaso_puesto';
+    // El puesto cambia de grado o de denominación —revalorización,
+    // reclasificación o ubicación— y con él la remuneración de sus ocupantes
+    // (LOSEP Arts. 61 y 62; fase 7.1b). Nace en un lote, desde Estructura.
+    case REVISION_CLASIFICACION    = 'revision_clasificacion';
 
     public function etiqueta(): string
     {
@@ -97,6 +101,7 @@ enum TipoMovimientoPersonal: string
             self::ADENDA                    => 'Adenda',
             self::CAMBIO_LUGAR              => 'Cambio de Lugar',
             self::TRASPASO_PUESTO           => 'Traspaso de Puesto',
+            self::REVISION_CLASIFICACION    => 'Revisión de la Clasificación',
         };
     }
 
@@ -157,6 +162,12 @@ enum TipoMovimientoPersonal: string
                 SubtipoMovimientoPersonal::REVOCATORIA_DEL_MANDATO,
                 SubtipoMovimientoPersonal::REMOCION_POR_EL_CONSEJO,
                 SubtipoMovimientoPersonal::FIN_DEL_PERIODO,
+            ],
+            // Las tres de la revisión de la clasificación (fase 7.1b).
+            self::REVISION_CLASIFICACION => [
+                SubtipoMovimientoPersonal::REVALORIZACION,
+                SubtipoMovimientoPersonal::RECLASIFICACION,
+                SubtipoMovimientoPersonal::UBICACION,
             ],
             // LOSEP Art. 28, y la transitoria de obreros y autoridades (fase 2.2).
             self::LICENCIA_SIN_REMUNERACION => [
@@ -236,6 +247,9 @@ enum TipoMovimientoPersonal: string
             // El traspaso de puesto: el vínculo sigue en el mismo puesto, en la
             // unidad nueva (fase 7.1a).
             self::TRASPASO_PUESTO,
+            // La revisión de la clasificación: la remuneración del vínculo
+            // (fase 7.1b).
+            self::REVISION_CLASIFICACION,
         ], true);
     }
 
@@ -352,6 +366,7 @@ enum TipoMovimientoPersonal: string
             self::ADENDA,
             self::CAMBIO_LUGAR,
             self::TRASPASO_PUESTO,
+            self::REVISION_CLASIFICACION,
         ], true) || $this->subtipoEquivalente() !== null;
     }
 

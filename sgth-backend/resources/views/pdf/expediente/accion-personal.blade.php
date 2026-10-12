@@ -371,6 +371,18 @@
             ?? $movimiento->puestoDestino->partidaPresupuestaria->codigo
             ?? null);
 
+    // El grupo y la denominación con que se firmó (fase 7.1b): congelados en
+    // la acción, para que una revisión de la clasificación posterior no
+    // reescriba el documento. Lo anterior a la fase lee el puesto, como antes.
+    $grupoOrigen = $movimiento->grupoOcupacionalOrigen ?? $movimiento->puestoOrigen?->grupoOcupacional;
+    $cargoOrigen = $movimiento->cargoOrigen ?? $movimiento->puestoOrigen?->cargo;
+    $grupoPropuesto = $mismoPuesto
+        ? $grupoOrigen
+        : ($movimiento->grupoOcupacionalDestino ?? $puestoPropuesto?->grupoOcupacional);
+    $cargoPropuesto = $mismoPuesto
+        ? $cargoOrigen
+        : ($movimiento->cargoDestino ?? $puestoPropuesto?->cargo);
+
     // ── El formato del Ministerio (diseño, 6.5; fase 6.1) ──────────
     // Los arma AccionPersonalPdfService; quien renderiza la vista sin él
     // —una prueba— los recibe vacíos.
@@ -625,9 +637,9 @@
             @else
                 <div class="campo"><span class="label">Modalidad</span><span class="valor">{!! $dato($modalidadActual?->etiqueta()) !!}</span></div>
                 <div class="campo"><span class="label">Dirección</span><span class="valor">{!! $dato($movimiento->unidadOrigen->nombre ?? null) !!}</span></div>
-                <div class="campo"><span class="label">Grupo ocupacional</span><span class="valor">{!! $dato($movimiento->puestoOrigen->grupoOcupacional->denominacion_generica ?? null) !!}</span></div>
-                <div class="campo"><span class="label">Puesto</span><span class="valor fuerte">{!! $dato($movimiento->puestoOrigen->cargo->nombre ?? null) !!}</span></div>
-                <div class="campo"><span class="label">Grado</span><span class="valor">{!! $dato($movimiento->puestoOrigen->grupoOcupacional->grado_codigo ?? null) !!}</span></div>
+                <div class="campo"><span class="label">Grupo ocupacional</span><span class="valor">{!! $dato($grupoOrigen->denominacion_generica ?? null) !!}</span></div>
+                <div class="campo"><span class="label">Puesto</span><span class="valor fuerte">{!! $dato($cargoOrigen->nombre ?? null) !!}</span></div>
+                <div class="campo"><span class="label">Grado</span><span class="valor">{!! $dato($grupoOrigen->grado_codigo ?? null) !!}</span></div>
                 <div class="campo"><span class="label">Lugar de trabajo</span><span class="valor">{!! $dato($movimiento->lugar_trabajo ?: 'Esmeraldas') !!}</span></div>
                 <div class="campo"><span class="label">R.M.U.</span><span class="valor fuerte">{!! $dato($fmtRmu($rmuOrigen)) !!}</span></div>
                 <div class="campo"><span class="label">Partida presupuestaria</span><span class="valor">{!! $dato($partidaOrigen) !!}</span></div>
@@ -660,9 +672,9 @@
         @else
             <div class="campo"><span class="label">Modalidad</span><span class="valor">{!! $dato($modalidadPropuesta?->etiqueta()) !!}</span></div>
             <div class="campo"><span class="label">Dirección</span><span class="valor">{!! $dato($unidadPropuesta->nombre ?? null) !!}</span></div>
-            <div class="campo"><span class="label">Grupo ocupacional</span><span class="valor">{!! $dato($puestoPropuesto->grupoOcupacional->denominacion_generica ?? null) !!}</span></div>
-            <div class="campo"><span class="label">Puesto</span><span class="valor fuerte">{!! $dato($puestoPropuesto->cargo->nombre ?? null) !!}</span></div>
-            <div class="campo"><span class="label">Grado</span><span class="valor">{!! $dato($puestoPropuesto->grupoOcupacional->grado_codigo ?? null) !!}</span></div>
+            <div class="campo"><span class="label">Grupo ocupacional</span><span class="valor">{!! $dato($grupoPropuesto->denominacion_generica ?? null) !!}</span></div>
+            <div class="campo"><span class="label">Puesto</span><span class="valor fuerte">{!! $dato($cargoPropuesto->nombre ?? null) !!}</span></div>
+            <div class="campo"><span class="label">Grado</span><span class="valor">{!! $dato($grupoPropuesto->grado_codigo ?? null) !!}</span></div>
             <div class="campo"><span class="label">Lugar de trabajo</span><span class="valor">{!! $dato($puestoPropuesto ? ($movimiento->lugar_trabajo ?: 'Esmeraldas') : null) !!}</span></div>
             <div class="campo"><span class="label">R.M.U.</span><span class="valor fuerte">{!! $dato($fmtRmu($rmuPropuesta)) !!}</span></div>
             <div class="campo"><span class="label">Partida presupuestaria</span><span class="valor">{!! $dato($partidaPropuesta) !!}</span></div>

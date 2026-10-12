@@ -14,7 +14,8 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * el incremento de remuneración de los obreros, por la tabla sectorial o el
  * contrato colectivo: un acto por obrero, cada uno con su hoja de registro
  * interno. Desde la fase 7.1a, el traspaso de un puesto: un acto por ocupante,
- * que se registran y se anulan juntos. En la 7.1b, la revisión de clasificación.
+ * que se registran y se anulan juntos. Desde la 7.1b, la revisión de la
+ * clasificación de uno o varios puestos, igual: uno por ocupante, enteros.
  *
  * El lote no reemplaza a sus actos: cada uno se tramita y se anula por sí
  * mismo. El lote guarda lo común —el documento de origen, el dictamen, la
@@ -27,6 +28,8 @@ class LoteAccion extends Model
     public const INCREMENTO_OBREROS = 'incremento_obreros';
 
     public const TRASPASO_PUESTO = 'traspaso_puesto';
+
+    public const REVISION_CLASIFICACION = 'revision_clasificacion';
 
     protected $table = 'lotes_accion';
 
