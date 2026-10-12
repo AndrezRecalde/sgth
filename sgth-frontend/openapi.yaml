@@ -23410,6 +23410,729 @@
                 }
             }
         },
+        "/v1/asistencia/licencias": {
+            "get": {
+                "operationId": "asistencia.licencias.index",
+                "tags": [
+                    "Licencia"
+                ],
+                "parameters": [
+                    {
+                        "name": "estado",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "pendiente",
+                                "aprobada",
+                                "anulada"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "causa",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/CausaLicencia"
+                        }
+                    },
+                    {
+                        "name": "folio",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 30
+                        }
+                    },
+                    {
+                        "name": "servidor_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "unidad_administrativa_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "fecha_desde",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "fecha_hasta",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Licencias."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Licencia"
+                                                    }
+                                                },
+                                                "first_page_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "next_page_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "prev_page_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "data",
+                                                "first_page_url",
+                                                "from",
+                                                "last_page_url",
+                                                "last_page",
+                                                "links",
+                                                "next_page_url",
+                                                "path",
+                                                "per_page",
+                                                "prev_page_url",
+                                                "to",
+                                                "total"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "asistencia.licencias.store",
+                "tags": [
+                    "Licencia"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreLicenciaRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Licencia registrada: queda pendiente de aprobaci\u00f3n."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {}
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/asistencia/licencias/causas": {
+            "get": {
+                "operationId": "asistencia.licencias.causas",
+                "summary": "Las causas con su tope, sus casos y su base legal, para el formulario",
+                "tags": [
+                    "Licencia"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Causas de licencia."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {}
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/asistencia/licencias/{id}/documento": {
+            "get": {
+                "operationId": "asistencia.licencias.documento",
+                "summary": "Descarga el respaldo: vive en el disco privado",
+                "tags": [
+                    "Licencia"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "La licencia no tiene el respaldo adjunto."
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "errores": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "errores"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/asistencia/licencias/{id}/sirha7": {
+            "get": {
+                "operationId": "asistencia.licencias.sirha7.previa",
+                "tags": [
+                    "Licencia"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Lo que se registrar\u00e1 en Sirha7."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "pendiente": {
+                                                    "type": "boolean"
+                                                },
+                                                "motivo": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "registrable_en_sirha7": {
+                                                    "type": "string"
+                                                },
+                                                "motivo_sin_sirha7": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "desde": {
+                                                    "type": "string"
+                                                },
+                                                "hasta": {
+                                                    "type": "string"
+                                                },
+                                                "jornada_completa": {
+                                                    "type": "boolean"
+                                                },
+                                                "tramos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "desde": {
+                                                                "type": "string"
+                                                            },
+                                                            "hasta": {
+                                                                "type": "string"
+                                                            },
+                                                            "referencia": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "desde",
+                                                            "hasta",
+                                                            "referencia"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "pendiente",
+                                                "motivo",
+                                                "registrable_en_sirha7",
+                                                "motivo_sin_sirha7",
+                                                "desde",
+                                                "hasta",
+                                                "jornada_completa",
+                                                "tramos"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/asistencia/licencias/{id}/aprobar-sirha7": {
+            "post": {
+                "operationId": "asistencia.licencias.sirha7.aprobar",
+                "tags": [
+                    "Licencia"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AprobarPermisoSirha7Request"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/asistencia/licencias/{id}/aprobar-sin-sirha7": {
+            "post": {
+                "operationId": "asistencia.licencias.aprobar-sin-sirha7",
+                "tags": [
+                    "Licencia"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AprobarCertificadoSinSirha7Request"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Licencia aprobada sin registrarla en Sirha7."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {}
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/asistencia/licencias/{id}/anular": {
+            "post": {
+                "operationId": "asistencia.licencias.anular",
+                "tags": [
+                    "Licencia"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "motivo": {
+                                        "type": "string",
+                                        "minLength": 5,
+                                        "maxLength": 500
+                                    }
+                                },
+                                "required": [
+                                    "motivo"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/viaticos/{viaticoId}/liquidacion": {
             "get": {
                 "operationId": "liquidacionViatico.obtener",
@@ -47247,6 +47970,22 @@
                 ],
                 "title": "CategoriaRiesgoLaboral"
             },
+            "CausaLicencia": {
+                "type": "string",
+                "description": "Las licencias con remuneraci\u00f3n (LOSEP, Art. 27; C\u00f3digo del Trabajo, Art. 152 para los obreros; dise\u00f1o de Acciones de Personal, 4.4 y 9.4; TH N12; fase 5.1). Se registran en Asistencia, sin acci\u00f3n de personal, con su causa, su tope y su respaldo, y no descuentan vacaciones. Hasta aqu\u00ed eran \u00abmotivos\u00bb de la solicitud de vacaciones, sin tope ni respaldo. La licencia sin remuneraci\u00f3n no est\u00e1 aqu\u00ed: es acci\u00f3n de personal (LOSEP 28; fase 2.2). Ni la capacitaci\u00f3n, que es comisi\u00f3n de servicios.  Los topes son por licencia, en d\u00edas calendario, y salen del dise\u00f1o (4.4); la paternidad de 15 d\u00edas es la de la Ley Org\u00e1nica del Derecho al Cuidado Humano (2023). Conviene que Talento Humano o jur\u00eddico revise la tabla: vive aqu\u00ed y en ning\u00fan otro sitio.\n",
+                "enum": [
+                    "enfermedad",
+                    "enfermedad_catastrofica",
+                    "maternidad",
+                    "paternidad",
+                    "fallecimiento_de_la_madre",
+                    "adopcion",
+                    "hijos_hospitalizados",
+                    "calamidad_domestica",
+                    "matrimonio"
+                ],
+                "title": "CausaLicencia"
+            },
             "CausaProrrogaLicencia": {
                 "type": "string",
                 "description": "Por qu\u00e9 el Consejo Provincial prorroga una licencia m\u00e1s all\u00e1 de los 60 d\u00edas acumulados (COOTAD Art. 47 s; fase 4.1b).\n",
@@ -52469,6 +53208,172 @@
                 "type": "array",
                 "items": {},
                 "title": "LengthAwarePaginator"
+            },
+            "Licencia": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "folio": {
+                        "type": "string"
+                    },
+                    "servidor_id": {
+                        "type": "integer"
+                    },
+                    "causa": {
+                        "$ref": "#/components/schemas/CausaLicencia"
+                    },
+                    "alcance": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "fecha_inicio": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "fecha_fin": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "dias": {
+                        "type": "integer"
+                    },
+                    "observacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "documento_nombre": {
+                        "type": "string"
+                    },
+                    "aprobado_por": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "aprobado_en": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "registro_sirha7": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "nota_aprobacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "sirha7_leave_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "sirha7_leave_nombre": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "sirha7_userid": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "sirha7_dias_omitidos": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {}
+                    },
+                    "anulado_por": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "anulado_en": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "motivo_anulacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "updated_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "folio",
+                    "servidor_id",
+                    "causa",
+                    "alcance",
+                    "fecha_inicio",
+                    "fecha_fin",
+                    "dias",
+                    "observacion",
+                    "documento_nombre",
+                    "aprobado_por",
+                    "aprobado_en",
+                    "registro_sirha7",
+                    "nota_aprobacion",
+                    "sirha7_leave_id",
+                    "sirha7_leave_nombre",
+                    "sirha7_userid",
+                    "sirha7_dias_omitidos",
+                    "anulado_por",
+                    "anulado_en",
+                    "motivo_anulacion",
+                    "created_by",
+                    "updated_by",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "Licencia"
             },
             "LiquidacionViatico": {
                 "type": "object",
@@ -59918,6 +60823,54 @@
                 ],
                 "title": "StoreInventarioMedicinaRequest"
             },
+            "StoreLicenciaRequest": {
+                "type": "object",
+                "description": "Registrar una licencia con remuneraci\u00f3n (fase 5.1): de qui\u00e9n, por qu\u00e9, qu\u00e9\nd\u00edas y su respaldo en PDF. El tope y los cruces los mira el servicio.",
+                "properties": {
+                    "servidor_id": {
+                        "type": "integer"
+                    },
+                    "causa": {
+                        "$ref": "#/components/schemas/CausaLicencia"
+                    },
+                    "alcance": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 40
+                    },
+                    "fecha_inicio": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "fecha_fin": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "observacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 1000
+                    },
+                    "archivo": {
+                        "type": "string",
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "maxLength": 10240
+                    }
+                },
+                "required": [
+                    "servidor_id",
+                    "causa",
+                    "fecha_inicio",
+                    "fecha_fin",
+                    "archivo"
+                ],
+                "title": "StoreLicenciaRequest"
+            },
             "StoreMovimientoPersonalRequest": {
                 "type": "object",
                 "properties": {
@@ -61129,7 +62082,12 @@
                         ]
                     },
                     "motivo": {
-                        "$ref": "#/components/schemas/MotivoVacacion"
+                        "type": "string",
+                        "description": "Solo vacaciones (fase 5.1): las licencias tienen su pantalla, y\nlos dem\u00e1s motivos quedan para lo ya registrado.",
+                        "enum": [
+                            "vacaciones_anuales",
+                            "permiso_cargo_vacaciones"
+                        ]
                     },
                     "fecha_inicio": {
                         "type": "string",

@@ -3,7 +3,7 @@ namespace App\Http\Requests\Asistencia;
 
 use App\Enums\MotivoVacacion;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules\Enum;
+use Illuminate\Validation\Rule;
 
 class StoreVacacionRequest extends FormRequest
 {
@@ -14,7 +14,9 @@ class StoreVacacionRequest extends FormRequest
         return [
             'servidor_id'      => 'nullable|exists:servidores,id',
             'jefe_id'          => 'nullable|exists:servidores,id',
-            'motivo'           => ['required', new Enum(MotivoVacacion::class)],
+            // Solo vacaciones (fase 5.1): las licencias tienen su pantalla, y
+            // los demás motivos quedan para lo ya registrado.
+            'motivo'           => ['required', Rule::in(MotivoVacacion::queSeSolicitan())],
             'fecha_inicio'     => 'required|date',
             'fecha_fin'        => 'required|date|after_or_equal:fecha_inicio',
             'fecha_retorno'    => 'nullable|date|after:fecha_fin',
@@ -27,6 +29,14 @@ class StoreVacacionRequest extends FormRequest
             // mandar y ningún servicio leía nunca: de qué períodos salen los
             // días lo decide el reparto al aprobar, y queda en
             // `vacacion_descuentos`.
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'motivo.in' => 'La solicitud es de vacaciones: las licencias con remuneración se registran en Asistencia › '
+                .'Licencias, y la licencia sin remuneración o la capacitación, en Acciones de Personal.',
         ];
     }
 }

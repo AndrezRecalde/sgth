@@ -122,6 +122,7 @@ class RolPermisoSeeder extends Seeder
             Permiso::SOLICITAR_CERTIFICACION_MEDICA,
             Permiso::ANULAR_PERMISO_PENDIENTE,
             Permiso::APROBAR_PERMISO_SIRHA7,
+            Permiso::GESTIONAR_LICENCIAS,
             // Opera Recepción y Trabajo Social cuando no hay nadie: antes lo
             // hacía por su rol en la ruta, ahora con los permisos.
             Permiso::CONFIRMAR_RECEPCION,
@@ -159,6 +160,7 @@ class RolPermisoSeeder extends Seeder
             // saldo y sigue siendo de admin-uath (`anular-permiso`).
             Permiso::ANULAR_PERMISO_PENDIENTE,
             Permiso::APROBAR_PERMISO_SIRHA7,
+            Permiso::GESTIONAR_LICENCIAS,
             // Confirma y rechaza el documento físico, como hacía por su rol en
             // la ruta de confirmar.
             Permiso::CONFIRMAR_RECEPCION,

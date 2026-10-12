@@ -49,6 +49,8 @@ beforeEach(function () {
 
     $this->titular   = ($this->servidor)(['nombre' => 'Tito', 'apellido' => 'Titular']);
     $this->reemplazo = ($this->servidor)();
+    // Desde la fase 5.1 solo se piden vacaciones: el titular necesita período.
+    periodoVacacionesDePrueba($this->titular);
 
     $uath = User::create([
         'email'        => 'uath-reemplazo@example.com',
@@ -63,7 +65,7 @@ beforeEach(function () {
     $this->lunes = now()->addWeeks(3)->next(Carbon::MONDAY);
     $this->pedir = fn (array $extra = []) => $this->postJson('/api/v1/asistencia/vacaciones', array_merge([
         'servidor_id'      => $this->titular->id,
-        'motivo'           => 'matrimonio',
+        'motivo'           => 'vacaciones_anuales',
         'fecha_inicio'     => $this->lunes->toDateString(),
         'fecha_fin'        => $this->lunes->copy()->addDays(2)->toDateString(),
         'dias_solicitados' => 3,

@@ -32,19 +32,16 @@ export const MOTIVO_LABELS: Record<MotivoVacacion, string> = {
   licencia_con_goce:         'Licencia con goce',
 }
 
-/** Los motivos que se ofrecen al registrar una solicitud. */
+/**
+ * Los motivos que se ofrecen al registrar una solicitud: solo vacaciones
+ * (`MotivoVacacion::seSolicita()`, fase 5.1). Las licencias con remuneración
+ * se registran en Asistencia › Licencias, y la sin remuneración y la
+ * capacitación son acciones de personal. Los demás motivos siguen en
+ * `MOTIVO_LABELS` para lo ya registrado.
+ */
 export const MOTIVO_OPCIONES: { value: MotivoVacacion; label: string }[] = [
   { value: 'vacaciones_anuales',        label: 'Vacaciones Anuales (mayor a 5 días)' },
   { value: 'permiso_cargo_vacaciones',  label: 'Permiso con Cargo a Vacaciones (máx. 5 días)' },
-  { value: 'licencia_sin_goce',         label: 'Licencia sin Goce de Haberes' },
-  { value: 'matrimonio',                label: 'Matrimonio' },
-  { value: 'capacitacion',              label: 'Capacitación y/o Adiestramiento' },
-  { value: 'enfermedad',                label: 'Enfermedad' },
-  { value: 'maternidad',                label: 'Maternidad' },
-  { value: 'paternidad',                label: 'Paternidad' },
-  { value: 'estudios_sin_remuneracion', label: 'Estudios sin Remuneración' },
-  { value: 'calamidad_domestica',       label: 'Calamidad Doméstica' },
-  { value: 'licencia_con_goce',         label: 'Licencia con Goce de Sueldo' },
 ]
 
 /** Los motivos que descuentan del saldo: `MotivoVacacion::descuentaVacaciones()`. */

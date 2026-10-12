@@ -3714,6 +3714,120 @@ export interface paths {
         patch: operations["itemReceta.update"];
         trace?: never;
     };
+    "/v1/asistencia/licencias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["asistencia.licencias.index"];
+        put?: never;
+        post: operations["asistencia.licencias.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/asistencia/licencias/causas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Las causas con su tope, sus casos y su base legal, para el formulario */
+        get: operations["asistencia.licencias.causas"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/asistencia/licencias/{id}/documento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Descarga el respaldo: vive en el disco privado */
+        get: operations["asistencia.licencias.documento"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/asistencia/licencias/{id}/sirha7": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["asistencia.licencias.sirha7.previa"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/asistencia/licencias/{id}/aprobar-sirha7": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["asistencia.licencias.sirha7.aprobar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/asistencia/licencias/{id}/aprobar-sin-sirha7": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["asistencia.licencias.aprobar-sin-sirha7"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/asistencia/licencias/{id}/anular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["asistencia.licencias.anular"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/viaticos/{viaticoId}/liquidacion": {
         parameters: {
             query?: never;
@@ -7667,6 +7781,12 @@ export interface components {
          */
         CategoriaRiesgoLaboral: "fisico" | "seguridad" | "quimico" | "biologico" | "ergonomico" | "psicosocial";
         /**
+         * CausaLicencia
+         * @description Las licencias con remuneración (LOSEP, Art. 27; Código del Trabajo, Art. 152 para los obreros; diseño de Acciones de Personal, 4.4 y 9.4; TH N12; fase 5.1). Se registran en Asistencia, sin acción de personal, con su causa, su tope y su respaldo, y no descuentan vacaciones. Hasta aquí eran «motivos» de la solicitud de vacaciones, sin tope ni respaldo. La licencia sin remuneración no está aquí: es acción de personal (LOSEP 28; fase 2.2). Ni la capacitación, que es comisión de servicios.  Los topes son por licencia, en días calendario, y salen del diseño (4.4); la paternidad de 15 días es la de la Ley Orgánica del Derecho al Cuidado Humano (2023). Conviene que Talento Humano o jurídico revise la tabla: vive aquí y en ningún otro sitio.
+         * @enum {string}
+         */
+        CausaLicencia: "enfermedad" | "enfermedad_catastrofica" | "maternidad" | "paternidad" | "fallecimiento_de_la_madre" | "adopcion" | "hijos_hospitalizados" | "calamidad_domestica" | "matrimonio";
+        /**
          * CausaProrrogaLicencia
          * @description Por qué el Consejo Provincial prorroga una licencia más allá de los 60 días acumulados (COOTAD Art. 47 s; fase 4.1b).
          * @enum {string}
@@ -9001,6 +9121,40 @@ export interface components {
         };
         /** LengthAwarePaginator */
         LengthAwarePaginator: unknown[];
+        /** Licencia */
+        Licencia: {
+            id: number;
+            folio: string;
+            servidor_id: number;
+            causa: components["schemas"]["CausaLicencia"];
+            alcance: string | null;
+            /** Format: date-time */
+            fecha_inicio: string;
+            /** Format: date-time */
+            fecha_fin: string;
+            dias: number;
+            observacion: string | null;
+            documento_nombre: string;
+            aprobado_por: number | null;
+            /** Format: date-time */
+            aprobado_en: string | null;
+            registro_sirha7: string | null;
+            nota_aprobacion: string | null;
+            sirha7_leave_id: number | null;
+            sirha7_leave_nombre: string | null;
+            sirha7_userid: number | null;
+            sirha7_dias_omitidos: unknown[] | null;
+            anulado_por: number | null;
+            /** Format: date-time */
+            anulado_en: string | null;
+            motivo_anulacion: string | null;
+            created_by: number | null;
+            updated_by: number | null;
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
         /** LiquidacionViatico */
         LiquidacionViatico: {
             id: number;
@@ -10879,6 +11033,23 @@ export interface components {
             concentracion?: string | null;
             stock_minimo: number;
         };
+        /**
+         * StoreLicenciaRequest
+         * @description Registrar una licencia con remuneración (fase 5.1): de quién, por qué, qué
+         *     días y su respaldo en PDF. El tope y los cruces los mira el servicio.
+         */
+        StoreLicenciaRequest: {
+            servidor_id: number;
+            causa: components["schemas"]["CausaLicencia"];
+            alcance?: string | null;
+            /** Format: date-time */
+            fecha_inicio: string;
+            /** Format: date-time */
+            fecha_fin: string;
+            observacion?: string | null;
+            /** Format: binary */
+            archivo: string;
+        };
         /** StoreMovimientoPersonalRequest */
         StoreMovimientoPersonalRequest: {
             /**
@@ -11281,7 +11452,12 @@ export interface components {
         StoreVacacionRequest: {
             servidor_id?: number | null;
             jefe_id?: number | null;
-            motivo: components["schemas"]["MotivoVacacion"];
+            /**
+             * @description Solo vacaciones (fase 5.1): las licencias tienen su pantalla, y
+             *     los demás motivos quedan para lo ya registrado.
+             * @enum {string}
+             */
+            motivo: "vacaciones_anuales" | "permiso_cargo_vacaciones";
             /** Format: date-time */
             fecha_inicio: string;
             /** Format: date-time */
@@ -22939,6 +23115,296 @@ export interface operations {
                 };
             };
             404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "asistencia.licencias.index": {
+        parameters: {
+            query?: {
+                estado?: "pendiente" | "aprobada" | "anulada" | null;
+                causa?: components["schemas"]["CausaLicencia"];
+                folio?: string | null;
+                servidor_id?: number | null;
+                unidad_administrativa_id?: number | null;
+                fecha_desde?: string | null;
+                fecha_hasta?: string | null;
+                per_page?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Licencias.";
+                        datos: {
+                            current_page: number;
+                            data: components["schemas"]["Licencia"][];
+                            first_page_url: string | null;
+                            from: number | null;
+                            last_page_url: string | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            next_page_url: string | null;
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            prev_page_url: string | null;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "asistencia.licencias.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["StoreLicenciaRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Licencia registrada: queda pendiente de aprobación.";
+                        datos: unknown[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "asistencia.licencias.causas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Causas de licencia.";
+                        datos: unknown[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "asistencia.licencias.documento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "La licencia no tiene el respaldo adjunto.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
+        };
+    };
+    "asistencia.licencias.sirha7.previa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Lo que se registrará en Sirha7.";
+                        datos: {
+                            pendiente: boolean;
+                            motivo: string | null;
+                            registrable_en_sirha7: string;
+                            motivo_sin_sirha7: string | null;
+                            desde: string;
+                            hasta: string;
+                            jornada_completa: boolean;
+                            tramos: {
+                                desde: string;
+                                hasta: string;
+                                referencia: string;
+                            }[];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "asistencia.licencias.sirha7.aprobar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AprobarPermisoSirha7Request"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "asistencia.licencias.aprobar-sin-sirha7": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AprobarCertificadoSinSirha7Request"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Licencia aprobada sin registrarla en Sirha7.";
+                        datos: unknown[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "asistencia.licencias.anular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    motivo: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
         };
     };
