@@ -1,5 +1,35 @@
 import api from '@/lib/axios'
 import type { ApiResponse, EstadoAccionPersonal } from '@/types/api'
+import type { CausaLicencia } from '@/features/asistencia/services/licenciaService'
+
+/**
+ * Una cláusula del contrato colectivo que toca licencias (fase 5.3): o amplía
+ * los días de una causa de la ley (`causa`, y `alcance` si la causa distingue
+ * casos), o crea una que la ley no tiene (`nombre`).
+ */
+export type ClausulaDeLicencia = {
+  id: number
+  contrato_colectivo_id: number
+  clausula: string
+  causa: Exclude<CausaLicencia, 'pactada'> | null
+  alcance: string | null
+  nombre: string | null
+  /** Por licencia. */
+  dias: number
+  /** Lo que el obrero puede tomar por ella en un año calendario, si lo pone. */
+  dias_por_anio: number | null
+  observacion: string | null
+}
+
+export type ClausulaDeLicenciaData = {
+  clausula: string
+  causa?: string | null
+  alcance?: string | null
+  nombre?: string | null
+  dias: number
+  dias_por_anio?: number | null
+  observacion?: string | null
+}
 
 /**
  * El contrato colectivo de los obreros (fase 4.6): el documento, su vigencia,
@@ -24,6 +54,7 @@ export type ContratoColectivo = {
   tiene_documento: boolean
   /** Sin el dictamen, el contrato se tiene por inexistente y sus cláusulas no se aplican. */
   tiene_dictamen: boolean
+  clausulas_de_licencia?: ClausulaDeLicencia[]
 }
 
 export type SalarioBasico = {
@@ -147,6 +178,15 @@ export const contratoColectivoService = {
 
   guardarSalarioBasico: (data: SalarioBasicoData) =>
     api.post<ApiResponse<SalarioBasico>>('/expediente/salarios-basicos', data).then((r) => r.data.datos),
+
+  guardarClausulaDeLicencia: (contratoId: number, data: ClausulaDeLicenciaData, id?: number) =>
+    (id
+      ? api.put<ApiResponse<ClausulaDeLicencia>>(`${URL}/${contratoId}/licencias/${id}`, data)
+      : api.post<ApiResponse<ClausulaDeLicencia>>(`${URL}/${contratoId}/licencias`, data)
+    ).then((r) => r.data.datos),
+
+  eliminarClausulaDeLicencia: (contratoId: number, id: number) =>
+    api.delete<ApiResponse<null>>(`${URL}/${contratoId}/licencias/${id}`).then((r) => r.data),
 }
 
 export const loteAccionService = {

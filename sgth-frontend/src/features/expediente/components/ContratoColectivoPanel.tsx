@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Alert, Button, Stack, Text } from '@mantine/core'
-import { IconDownload, IconEdit, IconFileText, IconInfoCircle, IconPlus } from '@tabler/icons-react'
+import { IconCalendarPlus, IconDownload, IconEdit, IconFileText, IconInfoCircle, IconPlus } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
 import {
   DataState, DetailList, SectionHeading, SgthTable, StatusBadge, TableActions, notificar, type TableAction,
@@ -17,6 +17,7 @@ import {
 } from '../services/contratoColectivoService'
 import { dinero } from '../utils/dinero'
 import { BloqueDetalle } from './BloqueDetalle'
+import { ClausulasDeLicenciaDrawer } from './ClausulasDeLicenciaDrawer'
 import { ContratoColectivoModal } from './ContratoColectivoModal'
 import { SalarioBasicoModal } from './SalarioBasicoModal'
 
@@ -36,8 +37,11 @@ export function ContratoColectivoPanel() {
 
   const [contratoAbierto, setContratoAbierto] = useState<{ contrato: ContratoColectivo | null } | null>(null)
   const [salarioAbierto, setSalarioAbierto] = useState<{ salario: SalarioBasico | null } | null>(null)
+  // Por id y no el objeto: tras guardar una cláusula, el contrato se relee.
+  const [licenciasDe, setLicenciasDe] = useState<number | null>(null)
 
   const vigente = data?.vigente ?? null
+  const contratoDeLicencias = data?.contratos.find((c) => c.id === licenciasDe) ?? null
 
   const descargar = async (c: ContratoColectivo) => {
     try {
@@ -51,6 +55,7 @@ export function ContratoColectivoPanel() {
     ...(puedeCargar
       ? [{ label: 'Corregir', icon: <IconEdit size={14} />, onClick: () => setContratoAbierto({ contrato: c }) }]
       : []),
+    { label: 'Licencias pactadas', icon: <IconCalendarPlus size={14} />, onClick: () => setLicenciasDe(c.id) },
     ...(c.tiene_documento
       ? [{ label: 'Descargar el PDF', icon: <IconDownload size={14} />, onClick: () => descargar(c) }]
       : []),
@@ -111,7 +116,8 @@ export function ContratoColectivoPanel() {
       <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
         Las cláusulas del contrato colectivo cambian cálculos de los obreros: los días
         adicionales de vacaciones, las bonificaciones por jubilación y por retiro
-        voluntario —con los topes del Mandato 2— y el incremento pactado. Solo se aplica
+        voluntario —con los topes del Mandato 2—, el incremento pactado y las licencias
+        que amplía o añade. Solo se aplica
         el que rige con el dictamen del Ministerio de Finanzas; sin él, rige la ley sola.
       </Alert>
 
@@ -135,6 +141,12 @@ export function ContratoColectivoPanel() {
                   { label: 'Bonificación por jubilación', value: clausula(vigente.bonificacion_jubilacion_sbu, 'salarios básicos por año') },
                   { label: 'Bonificación por retiro voluntario', value: clausula(vigente.bonificacion_retiro_sbu, 'salarios básicos por año') },
                   { label: 'Incremento pactado', value: clausula(vigente.incremento_pactado_porcentaje, '%') },
+                  {
+                    label: 'Licencias pactadas',
+                    value: vigente.clausulas_de_licencia?.length
+                      ? `${vigente.clausulas_de_licencia.length} cláusula(s)`
+                      : 'Sin cláusula',
+                  },
                 ]}
               />
             ) : (
@@ -206,6 +218,11 @@ export function ContratoColectivoPanel() {
         opened={!!salarioAbierto}
         salario={salarioAbierto?.salario ?? null}
         onClose={() => setSalarioAbierto(null)}
+      />
+      <ClausulasDeLicenciaDrawer
+        contrato={contratoDeLicencias}
+        puedeCargar={puedeCargar}
+        onClose={() => setLicenciasDe(null)}
       />
     </Stack>
   )

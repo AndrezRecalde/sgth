@@ -86,7 +86,11 @@ export function LicenciasTab() {
       render: (l) => (
         <div>
           <Text size="sm">{l.causa_etiqueta}</Text>
-          <Text size="xs" c="dimmed">{l.folio}{l.alcance_etiqueta ? ` · ${l.alcance_etiqueta}` : ''}</Text>
+          <Text size="xs" c="dimmed">
+            {l.folio}
+            {l.alcance_etiqueta ? ` · ${l.alcance_etiqueta}` : ''}
+            {l.clausula ? ` · contrato colectivo, ${l.clausula.clausula}` : ''}
+          </Text>
         </div>
       ),
     },

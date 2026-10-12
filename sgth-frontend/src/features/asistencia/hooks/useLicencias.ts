@@ -23,6 +23,19 @@ export function useCausasLicencia() {
   })
 }
 
+/**
+ * Las causas de un servidor en la fecha de inicio: a un obrero, con lo que su
+ * contrato colectivo amplía o añade (fase 5.3). Sin servidor no se piden.
+ */
+export function useCausasDelServidor(servidorId?: number | null, fecha?: string) {
+  return useQuery({
+    queryKey: ['licencias-causas', servidorId, fecha || null],
+    queryFn: () => licenciaService.causasDe(Number(servidorId), fecha),
+    enabled: Boolean(servidorId),
+    staleTime: 1000 * 60 * 5,
+  })
+}
+
 export function usePreviaLicencia(id: number | null) {
   return useQuery({
     queryKey: ['licencia-previa', id],

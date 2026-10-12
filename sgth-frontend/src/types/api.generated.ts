@@ -1788,6 +1788,39 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/expediente/contratos-colectivos/{contratoColectivo}/licencias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Añade una cláusula de licencia al contrato (fase 5.3) */
+        post: operations["contratoColectivo.guardarClausulaDeLicencia"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/contratos-colectivos/{contratoColectivo}/licencias/{clausula}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["contratoColectivo.actualizarClausulaDeLicencia"];
+        post?: never;
+        delete: operations["contratoColectivo.eliminarClausulaDeLicencia"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/expediente/salarios-basicos": {
         parameters: {
             query?: never;
@@ -3737,7 +3770,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Las causas con su tope, sus casos y su base legal, para el formulario */
+        /**
+         * Las causas con su tope, sus casos y su base legal, para el formulario.
+         *     Con `servidor_id`, las suyas en esa `fecha`: a un obrero, con lo que
+         *     amplía o añade el contrato colectivo que rige (fase 5.3); `meta` dice
+         *     qué contrato, o por qué no se le aplica
+         */
         get: operations["asistencia.licencias.causas"];
         put?: never;
         post?: never;
@@ -7802,10 +7840,10 @@ export interface components {
         CategoriaRiesgoLaboral: "fisico" | "seguridad" | "quimico" | "biologico" | "ergonomico" | "psicosocial";
         /**
          * CausaLicencia
-         * @description Las licencias con remuneración (LOSEP, Art. 27; Código del Trabajo, Art. 152 para los obreros; diseño de Acciones de Personal, 4.4 y 9.4; TH N12; fase 5.1). Se registran en Asistencia, sin acción de personal, con su causa, su tope y su respaldo, y no descuentan vacaciones. Hasta aquí eran «motivos» de la solicitud de vacaciones, sin tope ni respaldo. La licencia sin remuneración no está aquí: es acción de personal (LOSEP 28; fase 2.2). Ni la capacitación, que es comisión de servicios.  Los topes son por licencia, en días calendario, y salen del diseño (4.4); la paternidad de 15 días es la de la Ley Orgánica del Derecho al Cuidado Humano (2023). Conviene que Talento Humano o jurídico revise la tabla: vive aquí y en ningún otro sitio.
+         * @description Las licencias con remuneración (LOSEP, Art. 27; Código del Trabajo, Art. 152 para los obreros; diseño de Acciones de Personal, 4.4 y 9.4; TH N12; fase 5.1). Se registran en Asistencia, sin acción de personal, con su causa, su tope y su respaldo, y no descuentan vacaciones. Hasta aquí eran «motivos» de la solicitud de vacaciones, sin tope ni respaldo. La licencia sin remuneración no está aquí: es acción de personal (LOSEP 28; fase 2.2). Ni la capacitación, que es comisión de servicios.  Los topes son por licencia, en días calendario, y salen del diseño (4.4); la paternidad de 15 días es la de la Ley Orgánica del Derecho al Cuidado Humano (2023). Conviene que Talento Humano o jurídico revise la tabla: vive aquí y en ningún otro sitio.  `PACTADA` no es de la ley: es una causa que el contrato colectivo de los obreros añade (fase 5.3). Su nombre, sus días y su base son los de la cláusula (`ClausulaDeLicencia`), y sin ella no se registra. El contrato también puede ampliar los días de una causa de la ley.
          * @enum {string}
          */
-        CausaLicencia: "enfermedad" | "enfermedad_catastrofica" | "maternidad" | "paternidad" | "fallecimiento_de_la_madre" | "adopcion" | "hijos_hospitalizados" | "calamidad_domestica" | "matrimonio";
+        CausaLicencia: "enfermedad" | "enfermedad_catastrofica" | "maternidad" | "paternidad" | "fallecimiento_de_la_madre" | "adopcion" | "hijos_hospitalizados" | "calamidad_domestica" | "matrimonio" | "pactada";
         /**
          * CausaProrrogaLicencia
          * @description Por qué el Consejo Provincial prorroga una licencia más allá de los 60 días acumulados (COOTAD Art. 47 s; fase 4.1b).
@@ -7953,6 +7991,24 @@ export interface components {
             documento_ct_para: components["schemas"]["TipoNombramiento"][];
             dictamen_medico_por_defecto: boolean;
             aviso: string | null;
+        };
+        /** ClausulaDeLicencia */
+        ClausulaDeLicencia: {
+            id: number;
+            contrato_colectivo_id: number;
+            clausula: string;
+            causa: components["schemas"]["CausaLicencia"] | null;
+            alcance: string | null;
+            nombre: string | null;
+            dias: number;
+            dias_por_anio: number | null;
+            observacion: string | null;
+            created_by: number | null;
+            updated_by: number | null;
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
         };
         /** ComentarioTicket */
         ComentarioTicket: {
@@ -8884,6 +8940,22 @@ export interface components {
             archivo?: string | null;
         };
         /**
+         * GuardarClausulaDeLicenciaRequest
+         * @description Una cláusula de licencia del contrato colectivo (fase 5.3): amplía una causa
+         *     de la ley o crea una con su nombre. Que mejore la ley y que no se repita lo
+         *     decide `ContratoColectivoService`, que conoce el contrato.
+         */
+        GuardarClausulaDeLicenciaRequest: {
+            clausula: string;
+            /** @enum {string|null} */
+            causa?: "enfermedad" | "enfermedad_catastrofica" | "maternidad" | "paternidad" | "fallecimiento_de_la_madre" | "adopcion" | "hijos_hospitalizados" | "calamidad_domestica" | "matrimonio" | null;
+            alcance?: string | null;
+            nombre?: string | null;
+            dias: number;
+            dias_por_anio?: number | null;
+            observacion?: string | null;
+        };
+        /**
          * GuardarContratoColectivoRequest
          * @description El contrato colectivo de los obreros (fase 4.6): el documento, su vigencia,
          *     el dictamen del Ministerio de Finanzas y las cláusulas que cambian cálculos,
@@ -9174,6 +9246,7 @@ export interface components {
             created_at: string | null;
             /** Format: date-time */
             updated_at: string | null;
+            clausula_de_licencia_id: number | null;
         };
         /** LiquidacionViatico */
         LiquidacionViatico: {
@@ -11072,6 +11145,11 @@ export interface components {
             servidor_id: number;
             causa: components["schemas"]["CausaLicencia"];
             alcance?: string | null;
+            /**
+             * @description La pactada sale de una cláusula del contrato colectivo (fase 5.3);
+             *     en una causa de la ley, la cláusula que la amplía la pone el sistema.
+             */
+            clausula_de_licencia_id?: number | null;
             /** Format: date-time */
             fecha_inicio: string;
             /** Format: date-time */
@@ -17252,7 +17330,7 @@ export interface operations {
                         /** @constant */
                         mensaje: "Contrato colectivo.";
                         datos: {
-                            vigente: components["schemas"]["ContratoColectivo"] | null;
+                            vigente: string;
                             contratos: components["schemas"]["ContratoColectivo"][];
                             salarios_basicos: components["schemas"]["SalarioBasico"][];
                         };
@@ -17347,6 +17425,110 @@ export interface operations {
                 };
                 content: {
                     "application/json": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "contratoColectivo.guardarClausulaDeLicencia": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The contrato colectivo ID */
+                contratoColectivo: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuardarClausulaDeLicenciaRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Cláusula de licencia registrada.";
+                        datos: components["schemas"]["ClausulaDeLicencia"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "contratoColectivo.actualizarClausulaDeLicencia": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The contrato colectivo ID */
+                contratoColectivo: number;
+                /** @description The clausula ID */
+                clausula: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuardarClausulaDeLicenciaRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Cláusula de licencia actualizada.";
+                        datos: components["schemas"]["ClausulaDeLicencia"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "contratoColectivo.eliminarClausulaDeLicencia": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The contrato colectivo ID */
+                contratoColectivo: number;
+                /** @description The clausula ID */
+                clausula: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Cláusula de licencia eliminada.";
+                        datos: null;
+                        meta: null;
+                    };
                 };
             };
             401: components["responses"]["AuthenticationException"];
@@ -23250,7 +23432,10 @@ export interface operations {
     };
     "asistencia.licencias.causas": {
         parameters: {
-            query?: never;
+            query?: {
+                servidor_id?: number | null;
+                fecha?: string | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -23267,12 +23452,20 @@ export interface operations {
                         /** @constant */
                         mensaje: "Causas de licencia.";
                         datos: unknown[];
-                        meta: null;
+                        meta: {
+                            obrero: string;
+                            contrato_colectivo: {
+                                id: string;
+                                numero: string;
+                            } | null;
+                            aviso: string;
+                        };
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "asistencia.licencias.documento": {

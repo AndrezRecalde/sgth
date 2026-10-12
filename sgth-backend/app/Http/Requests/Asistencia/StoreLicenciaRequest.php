@@ -25,6 +25,7 @@ class StoreLicenciaRequest extends FormRequest
             'servidor_id'  => 'servidor',
             'causa'        => 'causa de la licencia',
             'alcance'      => 'caso',
+            'clausula_de_licencia_id' => 'cláusula del contrato colectivo',
             'fecha_inicio' => 'fecha de inicio',
             'fecha_fin'    => 'fecha de fin',
             'observacion'  => 'observación',
@@ -38,6 +39,9 @@ class StoreLicenciaRequest extends FormRequest
             'servidor_id'  => ['required', 'integer', 'exists:servidores,id'],
             'causa'        => ['required', new Enum(CausaLicencia::class)],
             'alcance'      => ['nullable', 'string', 'max:40'],
+            // La pactada sale de una cláusula del contrato colectivo (fase 5.3);
+            // en una causa de la ley, la cláusula que la amplía la pone el sistema.
+            'clausula_de_licencia_id' => ['nullable', 'required_if:causa,pactada', 'integer', 'exists:clausulas_de_licencia,id'],
             'fecha_inicio' => ['required', 'date'],
             'fecha_fin'    => ['required', 'date', 'after_or_equal:fecha_inicio'],
             'observacion'  => ['nullable', 'string', 'max:1000'],

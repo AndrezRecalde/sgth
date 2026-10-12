@@ -1022,7 +1022,7 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
    - Salario básico por año (`salarios_basicos`), en la misma pestaña. La nómina lo leerá en la fase 7.
    - Incremento en lote (`lotes_accion`, `movimientos_personal.lote_id`), en la pestaña «Incrementos en lote»: a todos los obreros con contrato vigente o a los de una unidad, en porcentaje o en monto, o el pactado del contrato colectivo vigente. La vista previa dice a quiénes alcanza y a quiénes omite —sin remuneración en el contrato, con un incremento en trámite, quien lo tramita sobre sí mismo—. Prepara un borrador por obrero, todos o ninguno, cada uno con su hoja de registro interno: el acuerdo o la cláusula hace las veces de la adenda («Documento de origen» en la hoja) y el dictamen presupuestario es uno para todos.
    - Desde el lote se suscriben y registran los que siguen en trámite, uno por uno y con las validaciones de siempre; el que falla queda en su estado y se informa. Pide los permisos de suscribir y de registrar. Descartar anula lo que sigue en trámite, con su motivo; lo registrado se anula acto por acto. La bandeja filtra por lote.
-   - Fuera: las licencias adicionales (fase 5), la jubilación patronal mensual (CT 216, por ordenanza), la nómina con el básico (fase 7) y los lotes de la revisión de clasificación y el traspaso de puestos (fase 7), que usarán la misma tabla.
+   - Fuera: las licencias adicionales (fase 5.3), la jubilación patronal mensual (CT 216, por ordenanza), la nómina con el básico (fase 7) y los lotes de la revisión de clasificación y el traspaso de puestos (fase 7), que usarán la misma tabla.
 
 **Fase 5 — Asistencia y reemplazos**
 1. Licencias fuera de las vacaciones: registro con causa, tope y certificado, sin acción; Sirha7.
@@ -1032,7 +1032,7 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
    - Ocupa sus días desde que se registra: no cabe sobre vacaciones, permisos, un reposo del Dispensario, otra licencia o una ausencia de acción de personal, y al revés —las vacaciones, los permisos y los certificados del Dispensario tampoco caben sobre ella—. El reposo largo del IESS es una licencia por enfermedad con su certificado; los reposos del Dispensario siguen su flujo.
    - Aprobarla la registra en Sirha7 como los certificados médicos: quien aprueba elige el tipo; las de salud y la calamidad las aprueba Trabajo Social, las demás Talento Humano; se aprueba sin Sirha7 con una nota si TH ya la cargó; anularla retira lo escrito. Sirha7 no admite más de 31 días por llamada: la licencia larga va en tramos parejos, cada uno con su referencia («SGTH LIC-…-1», «-2»…), y si un tramo falla se retiran los ya escritos.
    - La solicitud de vacaciones solo ofrece «Vacaciones anuales» y «Permiso con cargo a vacaciones»; lo ya registrado con los otros motivos queda como histórico, sin migrar.
-   - Fuera: la solicitud desde el portal (fase 6.3), las licencias adicionales del contrato colectivo, la nómina y el SIITH.
+   - Fuera: la solicitud desde el portal (fase 6.3), las licencias adicionales del contrato colectivo (fase 5.3), la nómina y el SIITH.
 2. Subrogación y encargo separados; nivel jerárquico superior; enlace con la ausencia; Viceprefecto por el bloque 9.14.
    - Hasta aquí las dos figuras compartían reglas: cualquier puesto se subrogaba, la fecha de fin era obligatoria también en el encargo y el motivo se elegía de una lista, sin comprobar que el titular estuviera ausente.
    - La subrogación procede solo sobre un puesto del nivel jerárquico superior (LOSEP, Art. 126): el grado del grupo ocupacional empieza por «NJS». El encargo, sobre cualquier puesto vacante.
@@ -1040,6 +1040,16 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
    - La subrogación dice qué ausencia del titular la motiva (`ausencia_tipo`, `ausencia_id`; `TipoAusenciaTitular`): unas vacaciones aprobadas o gozadas, una licencia de la 5.1, un reposo del Dispensario o una comisión o licencia por acción de personal. Cabe dentro de sus fechas y el motivo sale de ella. «Otra ausencia», la que no está en el SGTH, exige el número de la resolución. El formulario las lista desde `GET expediente/subrogaciones/ausencias-del-titular` y propone sus fechas.
    - La sigue: si se anulan las vacaciones, la licencia, el reposo o la acción, la subrogación se cancela con su acción; si un reintegro acorta la ausencia, termina la víspera y su acción, si sigue en borrador, dice el fin nuevo.
    - Al Prefecto no se le subroga desde el módulo general: lo rechaza y remite a «Subrogación por ley» (bloque 9.14, fase 4.1b), que no pide ni el nivel ni la ausencia de esta pantalla.
+3. Licencias adicionales del contrato colectivo (9.15): las cláusulas que amplían o añaden licencias a los obreros.
+   - La 4.6 dejó esta cláusula para la fase 5 y la 5.1 la dejó fuera: a un obrero solo se le aplicaban los topes de la ley, aunque su contrato le diera más días o causas que la ley no tiene. Sin la copia del contrato, las cláusulas no se escriben en el código: Talento Humano las carga en el contrato colectivo («Licencias pactadas», tabla `clausulas_de_licencia`).
+   - Cada cláusula hace una de dos cosas. Amplía los días de una causa de la ley (`causa`, con su `alcance` si la causa distingue casos, como la calamidad): tiene que dar más días que la ley, porque los derechos del trabajador son irrenunciables (Código del Trabajo, Art. 4); una causa se amplía una vez por contrato y caso, y la catastrófica, que no tiene tope, no se amplía. O crea una causa que la ley no tiene (`nombre`). Los días son por licencia; `dias_por_anio`, opcional, es lo que se puede tomar por ella en un año calendario.
+   - Se aplica a los obreros (nombramiento del Código del Trabajo) con el contrato que rige en la fecha de inicio de la licencia y tiene el dictamen de Finanzas; sin dictamen, el contrato se tiene por inexistente y valen los días de la ley, y el formulario lo dice.
+   - La licencia guarda la cláusula que la respalda (`clausula_de_licencia_id`). La pactada va con `causa = 'pactada'`, su nombre y su base («Contrato colectivo N.º …, cláusula …») salen de la cláusula, y sin ella no se registra. En una causa de la ley, la cláusula sale sola cuando da más días, y la base suma la ley y la cláusula.
+   - El tope por año cuenta lo tomado por esa cláusula en el año de la fecha de inicio, sin las anuladas. Pasado, la pactada no se registra; la que amplía una causa vuelve a los días de la ley, que no tienen tope por año.
+   - La que ya respalda una licencia no se cambia ni se borra: si el contrato cambió, se registra el contrato nuevo.
+   - Se aprueban como las de la 5.1: la ampliada, quien aprueba su causa; la pactada, Talento Humano. Sirha7 en tramos de 31 días, los cruces y el «no descuenta vacaciones», igual.
+   - El catálogo de causas va por servidor y fecha (`GET asistencia/licencias/causas?servidor_id=&fecha=`), con los topes ya ampliados, las pactadas aparte y en `meta` el contrato o el aviso. Sin servidor, para los filtros, la pactada es una causa más.
+   - Fuera: la licencia sin remuneración pactada (va con hoja de registro interno, 9.15), los permisos por horas pactados (módulo de Permisos) y la nómina.
 
 **Fase 6 — Documento y notificación**
 1. PDF de la acción de personal con el formato del Ministerio (6.5).
@@ -1053,7 +1063,7 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
 4. Desvinculación.
 5. Reporte SIITH por clase, con su pantalla.
 
-Total: 6 + 7 + 3 + 6 + 2 + 3 + 5 = **32 PRs**.
+Total: 6 + 7 + 3 + 6 + 3 + 3 + 5 = **33 PRs**.
 
 ---
 

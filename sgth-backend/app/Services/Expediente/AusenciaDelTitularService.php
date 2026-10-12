@@ -115,7 +115,7 @@ class AusenciaDelTitularService
 
     private function deLicencia(Licencia $l): array
     {
-        return $this->forma(TipoAusenciaTitular::LICENCIA, $l->id, "Licencia {$l->folio} ({$l->causa->etiqueta()})",
+        return $this->forma(TipoAusenciaTitular::LICENCIA, $l->id, "Licencia {$l->folio} ({$l->etiquetaDeLaCausa()})",
             $l->fecha_inicio, $l->fecha_fin, MotivoSubrogacion::LICENCIA);
     }
 

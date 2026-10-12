@@ -3,6 +3,7 @@
 namespace App\Models\Asistencia;
 
 use App\Enums\CausaLicencia;
+use App\Models\Expediente\ClausulaDeLicencia;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,6 +22,10 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * La registra Talento Humano y queda pendiente; al aprobarla se escribe en
  * Sirha7, como los certificados médicos. Ocupa todos sus días desde que se
  * registra: sobre ella no caben vacaciones, permisos, reposos ni otra licencia.
+ *
+ * A un obrero, el contrato colectivo puede darle más días o una causa que la
+ * ley no tiene (fase 5.3): entonces la licencia guarda la cláusula que la
+ * respalda, y su nombre, su base y su tope salen de ella.
  */
 class Licencia extends Model
 {
@@ -36,6 +41,7 @@ class Licencia extends Model
         'servidor_id',
         'causa',
         'alcance',
+        'clausula_de_licencia_id',
         'fecha_inicio',
         'fecha_fin',
         'dias',
@@ -67,7 +73,7 @@ class Licencia extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['causa', 'alcance', 'fecha_inicio', 'fecha_fin', 'aprobado_en', 'registro_sirha7', 'anulado_en', 'motivo_anulacion'])
+            ->logOnly(['causa', 'alcance', 'clausula_de_licencia_id', 'fecha_inicio', 'fecha_fin', 'aprobado_en', 'registro_sirha7', 'anulado_en', 'motivo_anulacion'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
     }
@@ -81,6 +87,35 @@ class Licencia extends Model
             ->whereDate('fecha_fin', '>=', $desde)
             ->orderBy('fecha_inicio')
             ->orderBy('id');
+    }
+
+    /** Su causa en palabras: la de la ley, o la que el contrato colectivo nombra. */
+    public function etiquetaDeLaCausa(): string
+    {
+        return $this->causa === CausaLicencia::PACTADA
+            ? ($this->clausulaDeLicencia?->nombre ?? $this->causa->etiqueta())
+            : $this->causa->etiqueta();
+    }
+
+    /** La ley, la cláusula del contrato colectivo, o las dos. */
+    public function baseLegal(): string
+    {
+        $clausula = $this->clausulaDeLicencia;
+
+        return match (true) {
+            $clausula === null                     => $this->causa->baseLegal(),
+            $this->causa === CausaLicencia::PACTADA => $clausula->baseLegal(),
+            default                                => $this->causa->baseLegal().'; '.$clausula->baseLegal(),
+        };
+    }
+
+    /**
+     * Los días que admitía al registrarse: los de la ley, o los de la cláusula
+     * que la respalda —que solo se guarda cuando da más—. Null si no tiene tope.
+     */
+    public function tope(): ?int
+    {
+        return $this->clausulaDeLicencia?->dias ?? $this->causa->tope($this->alcance);
     }
 
     /** @return 'pendiente'|'aprobada'|'anulada' */
@@ -115,6 +150,11 @@ class Licencia extends Model
     public function servidor(): BelongsTo
     {
         return $this->belongsTo(Servidor::class);
+    }
+
+    public function clausulaDeLicencia(): BelongsTo
+    {
+        return $this->belongsTo(ClausulaDeLicencia::class);
     }
 
     public function aprobadoPor(): BelongsTo

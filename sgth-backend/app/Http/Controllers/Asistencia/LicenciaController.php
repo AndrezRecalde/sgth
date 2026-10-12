@@ -13,6 +13,7 @@ use App\Http\Responses\ApiResponse;
 use App\Models\Asistencia\Licencia;
 use App\Policies\Asistencia\LicenciaPolicy;
 use App\Services\Asistencia\AprobacionLicenciaSirha7Service;
+use App\Services\Asistencia\CatalogoDeLicenciasService;
 use App\Services\Asistencia\LicenciaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -62,24 +63,27 @@ class LicenciaController extends Controller
         return ApiResponse::ok($pagina, 'Licencias.');
     }
 
-    /** Las causas con su tope, sus casos y su base legal, para el formulario. */
-    public function causas(): JsonResponse
+    /**
+     * Las causas con su tope, sus casos y su base legal, para el formulario.
+     * Con `servidor_id`, las suyas en esa `fecha`: a un obrero, con lo que
+     * amplía o añade el contrato colectivo que rige (fase 5.3); `meta` dice
+     * qué contrato, o por qué no se le aplica.
+     */
+    public function causas(Request $request, CatalogoDeLicenciasService $catalogo): JsonResponse
     {
         $this->authorize('verAny', Licencia::class);
 
-        return ApiResponse::ok(array_map(fn (CausaLicencia $c) => [
-            'codigo'        => $c->value,
-            'etiqueta'      => $c->etiqueta(),
-            'base_legal'    => $c->baseLegal(),
-            'explicacion'   => $c->explicacionDelTope(),
-            'tope'          => $c->tope(),
-            'exige_alcance' => $c->exigeAlcance(),
-            'alcances'      => array_map(
-                fn (string $codigo, array $a) => ['codigo' => $codigo, 'etiqueta' => $a['etiqueta'], 'tope' => $c->tope($codigo)],
-                array_keys($c->alcances()),
-                $c->alcances(),
-            ),
-        ], CausaLicencia::cases()), 'Causas de licencia.');
+        $datos = $request->validate([
+            'servidor_id' => ['nullable', 'integer', 'exists:servidores,id'],
+            'fecha'       => ['nullable', 'date'],
+        ], [], ['servidor_id' => 'servidor', 'fecha' => 'fecha de inicio']);
+
+        $resultado = $catalogo->catalogo(
+            isset($datos['servidor_id']) ? (int) $datos['servidor_id'] : null,
+            $datos['fecha'] ?? null,
+        );
+
+        return ApiResponse::ok($resultado['causas'], 'Causas de licencia.', 200, $resultado['meta']);
     }
 
     public function store(StoreLicenciaRequest $request): JsonResponse
@@ -172,7 +176,9 @@ class LicenciaController extends Controller
 
     private function respuesta(Licencia $licencia, Request $request): array
     {
-        $licencia->load(['servidor.unidadAdministrativa', 'aprobadoPor.servidor', 'creadoPor.servidor']);
+        $licencia->load([
+            'servidor.unidadAdministrativa', 'aprobadoPor.servidor', 'creadoPor.servidor', 'clausulaDeLicencia.contratoColectivo',
+        ]);
 
         return (new LicenciaResource($licencia))->resolve($request);
     }

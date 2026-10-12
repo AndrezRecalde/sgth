@@ -3,6 +3,7 @@ import { notificar } from '@/components/ui'
 import {
   contratoColectivoService,
   loteAccionService,
+  type ClausulaDeLicenciaData,
   type ContratoColectivoData,
   type IncrementoEnLoteData,
   type SalarioBasicoData,
@@ -48,6 +49,40 @@ export function useGuardarSalarioBasico() {
       qc.invalidateQueries({ queryKey: ['contrato-colectivo'] })
     },
     onError: notificar.alFallarSalvoCampos('No se pudo guardar el salario básico'),
+  })
+}
+
+/**
+ * Las cláusulas de licencia del contrato (fase 5.3). Cambian las causas que el
+ * formulario de licencias ofrece a los obreros: se refrescan las dos cosas.
+ */
+export function useGuardarClausulaDeLicencia() {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ contratoId, data, id }: { contratoId: number; data: ClausulaDeLicenciaData; id?: number }) =>
+      contratoColectivoService.guardarClausulaDeLicencia(contratoId, data, id),
+    onSuccess: (clausula) => {
+      notificar.exito('Cláusula de licencia guardada', clausula.clausula)
+      qc.invalidateQueries({ queryKey: ['contrato-colectivo'] })
+      qc.invalidateQueries({ queryKey: ['licencias-causas'] })
+    },
+    onError: notificar.alFallarSalvoCampos('No se pudo guardar la cláusula'),
+  })
+}
+
+export function useEliminarClausulaDeLicencia() {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ contratoId, id }: { contratoId: number; id: number }) =>
+      contratoColectivoService.eliminarClausulaDeLicencia(contratoId, id),
+    onSuccess: () => {
+      notificar.exito('Cláusula de licencia eliminada')
+      qc.invalidateQueries({ queryKey: ['contrato-colectivo'] })
+      qc.invalidateQueries({ queryKey: ['licencias-causas'] })
+    },
+    onError: notificar.alFallar('No se pudo eliminar la cláusula'),
   })
 }
 

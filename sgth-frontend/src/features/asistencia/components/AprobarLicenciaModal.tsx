@@ -98,6 +98,8 @@ export function AprobarLicenciaModal({ licencia, onClose }: Props) {
                 { label: 'Servidor', value: [servidor?.apellido, servidor?.nombre].filter(Boolean).join(' ') },
                 { label: 'Folio', value: mostrada.folio },
                 { label: 'Causa', value: mostrada.alcance_etiqueta ? `${mostrada.causa_etiqueta} · ${mostrada.alcance_etiqueta}` : mostrada.causa_etiqueta },
+                // Una pactada o ampliada dice la cláusula del contrato colectivo (fase 5.3).
+                { label: 'Base legal', value: mostrada.base_legal },
                 { label: 'Días', value: `${formatFecha(mostrada.fecha_inicio)} al ${formatFecha(mostrada.fecha_fin)} (${mostrada.dias})` },
               ]}
             />

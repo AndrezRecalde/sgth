@@ -16,6 +16,11 @@ namespace App\Enums;
  * la paternidad de 15 días es la de la Ley Orgánica del Derecho al Cuidado
  * Humano (2023). Conviene que Talento Humano o jurídico revise la tabla: vive
  * aquí y en ningún otro sitio.
+ *
+ * `PACTADA` no es de la ley: es una causa que el contrato colectivo de los
+ * obreros añade (fase 5.3). Su nombre, sus días y su base son los de la
+ * cláusula (`ClausulaDeLicencia`), y sin ella no se registra. El contrato
+ * también puede ampliar los días de una causa de la ley.
  */
 enum CausaLicencia: string
 {
@@ -28,6 +33,7 @@ enum CausaLicencia: string
     case HIJOS_HOSPITALIZADOS      = 'hijos_hospitalizados';
     case CALAMIDAD_DOMESTICA       = 'calamidad_domestica';
     case MATRIMONIO                = 'matrimonio';
+    case PACTADA                   = 'pactada';
 
     public function etiqueta(): string
     {
@@ -41,6 +47,7 @@ enum CausaLicencia: string
             self::HIJOS_HOSPITALIZADOS      => 'Hijos hospitalizados o con patologías degenerativas',
             self::CALAMIDAD_DOMESTICA       => 'Calamidad doméstica',
             self::MATRIMONIO                => 'Matrimonio o unión de hecho',
+            self::PACTADA                   => 'Pactada en el contrato colectivo',
         };
     }
 
@@ -56,6 +63,7 @@ enum CausaLicencia: string
             self::HIJOS_HOSPITALIZADOS      => 'LOSEP, Art. 27 h; Código del Trabajo, Art. 152',
             self::CALAMIDAD_DOMESTICA       => 'LOSEP, Art. 27 i',
             self::MATRIMONIO                => 'LOSEP, Art. 27 j',
+            self::PACTADA                   => 'Contrato colectivo',
         };
     }
 
@@ -72,6 +80,7 @@ enum CausaLicencia: string
             self::HIJOS_HOSPITALIZADOS      => '25 días.',
             self::CALAMIDAD_DOMESTICA       => '8 días por el cónyuge, los padres o los hijos; 3 por otros parientes.',
             self::MATRIMONIO                => '3 días.',
+            self::PACTADA                   => 'Los días que diga su cláusula.',
         };
     }
 
@@ -130,6 +139,8 @@ enum CausaLicencia: string
             self::ADOPCION                  => 30,
             self::HIJOS_HOSPITALIZADOS      => 25,
             self::MATRIMONIO                => 3,
+            // La de su cláusula: sin ella no hay licencia pactada.
+            self::PACTADA                   => null,
         };
     }
 
@@ -150,5 +161,16 @@ enum CausaLicencia: string
     public static function valores(): array
     {
         return array_map(fn (self $c) => $c->value, self::cases());
+    }
+
+    /**
+     * Las de la ley, sin la pactada: las que se ofrecen a todos y las que una
+     * cláusula del contrato colectivo puede ampliar.
+     *
+     * @return list<self>
+     */
+    public static function legales(): array
+    {
+        return array_values(array_filter(self::cases(), fn (self $c) => $c !== self::PACTADA));
     }
 }

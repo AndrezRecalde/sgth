@@ -8,6 +8,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * Una licencia con remuneración (fase 5.1): de quién, por qué, qué días, su
  * tope y en qué quedó. El respaldo no sale: se descarga por su endpoint.
+ * Si la respalda una cláusula del contrato colectivo (fase 5.3), el nombre, la
+ * base y el tope salen de ella.
  *
  * @mixin \App\Models\Asistencia\Licencia
  */
@@ -31,11 +33,17 @@ class LicenciaResource extends JsonResource
                 'unidad'   => $this->servidor->unidadAdministrativa?->nombre,
             ] : null,
             'causa'                 => $causa->value,
-            'causa_etiqueta'        => $causa->etiqueta(),
+            'causa_etiqueta'        => $this->etiquetaDeLaCausa(),
             'alcance'               => $this->alcance,
             'alcance_etiqueta'      => $this->alcance ? ($causa->alcances()[$this->alcance]['etiqueta'] ?? null) : null,
-            'base_legal'            => $causa->baseLegal(),
-            'tope'                  => $causa->tope($this->alcance),
+            'clausula_de_licencia_id' => $this->clausula_de_licencia_id,
+            'clausula'              => $this->clausulaDeLicencia ? [
+                'id'       => $this->clausulaDeLicencia->id,
+                'clausula' => $this->clausulaDeLicencia->clausula,
+                'contrato' => $this->clausulaDeLicencia->contratoColectivo?->numero,
+            ] : null,
+            'base_legal'            => $this->baseLegal(),
+            'tope'                  => $this->tope(),
             'fecha_inicio'          => $this->fecha_inicio?->toDateString(),
             'fecha_fin'             => $this->fecha_fin?->toDateString(),
             'dias'                  => $this->dias,
