@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { Tabs } from '@mantine/core'
 import {
-  IconBuildingBank, IconFileText, IconHourglass, IconInbox, IconMailForward, IconSignature, IconStack2, IconUserMinus,
-  IconUserOff, IconUserPlus,
+  IconBuildingBank, IconDoorExit, IconFileText, IconHourglass, IconInbox, IconMailForward, IconSignature, IconStack2,
+  IconUserMinus, IconUserOff, IconUserPlus,
 } from '@tabler/icons-react'
 import { SelectorServidorCategoria } from '@/features/expediente/components/SelectorServidorCategoria'
 import { MovimientoModal } from '@/features/expediente/components/MovimientoModal'
@@ -15,6 +15,7 @@ import { PeriodosDePruebaPanel } from '@/features/expediente/components/Periodos
 import { AutoridadesElectasPanel } from '@/features/expediente/components/AutoridadesElectasPanel'
 import { TerminacionesObrerosPanel } from '@/features/expediente/components/TerminacionesObrerosPanel'
 import { ActosEnLotePanel } from '@/features/expediente/components/ActosEnLotePanel'
+import { DesvinculacionesPanel } from '@/features/expediente/components/DesvinculacionesPanel'
 import { ContratoColectivoPanel } from '@/features/expediente/components/ContratoColectivoPanel'
 import { SolicitudesDelPortalPanel } from '@/features/expediente/components/SolicitudesDelPortalPanel'
 import { usePuedePrepararAccion } from '@/features/expediente/hooks/usePuedePrepararAccion'
@@ -83,6 +84,9 @@ export function AccionesPersonalView() {
           <Tabs.Tab value="lotes" leftSection={<IconStack2 size={16} />}>
             Actos en lote
           </Tabs.Tab>
+          <Tabs.Tab value="desvinculaciones" leftSection={<IconDoorExit size={16} />}>
+            Desvinculaciones
+          </Tabs.Tab>
           <Tabs.Tab value="contrato-colectivo" leftSection={<IconFileText size={16} />}>
             Contrato colectivo
           </Tabs.Tab>
@@ -146,6 +150,10 @@ export function AccionesPersonalView() {
 
         <Tabs.Panel value="contrato-colectivo">
           <ContratoColectivoPanel />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="desvinculaciones">
+          <DesvinculacionesPanel />
         </Tabs.Panel>
 
         <Tabs.Panel value="firmantes">

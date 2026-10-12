@@ -91,6 +91,7 @@ use App\Http\Controllers\Expediente\AutoridadElectaController;
 use App\Http\Controllers\Expediente\TerminacionObreroController;
 use App\Http\Controllers\Expediente\ContratoColectivoController;
 use App\Http\Controllers\Expediente\SolicitudAccionPersonalController;
+use App\Http\Controllers\Expediente\DesvinculacionController;
 use App\Http\Controllers\Expediente\LoteAccionController;
 use App\Http\Controllers\Expediente\PeriodoDePruebaController;
 use App\Http\Controllers\Expediente\VerificacionCertificadoController;
@@ -465,6 +466,19 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->middleware('role:admin-uath');
         Route::post('salarios-basicos', [ContratoColectivoController::class, 'guardarSalarioBasico'])
             ->middleware('role:admin-uath');
+
+        // La desvinculación de quien sale (diseño, 9.9; fase 7.4a): la ve y la
+        // gestiona Talento Humano. La liquidación y la indemnización, además,
+        // las marca el Director (lo comprueba el servicio).
+        Route::get('desvinculaciones', [DesvinculacionController::class, 'index'])
+            ->middleware('permission:preparar-accion-personal|registrar-accion-personal');
+        Route::get('desvinculaciones/{desvinculacion}', [DesvinculacionController::class, 'show'])
+            ->middleware('permission:preparar-accion-personal|registrar-accion-personal');
+        Route::post('desvinculaciones/{desvinculacion}/pasos/{paso}', [DesvinculacionController::class, 'marcar'])
+            ->middleware('permission:preparar-accion-personal|registrar-accion-personal');
+        Route::post('desvinculaciones/{desvinculacion}/bienes/{asignacion}/devolver', [DesvinculacionController::class, 'devolverBien'])
+            ->whereNumber('asignacion')
+            ->middleware('permission:preparar-accion-personal|registrar-accion-personal');
 
         // El incremento de los obreros en lote (fase 4.6). Prepararlo es
         // preparar acciones; registrarlo pide suscribir y registrar, como acto
@@ -1047,6 +1061,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             // el equipo, y la única salida documental de este registro.
             Route::get('asignaciones/{asignacion}/acta',
                 [AsignacionBienController::class, 'acta'])
+                ->middleware('role:tecnico-dtic|admin-ti');
+            // La devolución, que la desvinculación espera (fase 7.4a).
+            Route::post('asignaciones/{asignacion}/devolver',
+                [AsignacionBienController::class, 'devolver'])
                 ->middleware('role:tecnico-dtic|admin-ti');
 
             // Mantenimientos

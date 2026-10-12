@@ -654,6 +654,12 @@ class MovimientoPersonalStateService
     {
         $this->subrogacionService->cerrarPorCesacion($cesacion);
 
+        // Si no le queda otro vínculo, empieza su desvinculación: los bienes,
+        // el usuario, el certificado, la declaración de fin de gestión y lo que
+        // se le paga (diseño, 9.9; fase 7.4a). Por el contenedor, como el
+        // resto de lo que depende de este servicio.
+        app(DesvinculacionService::class)->abrirPorCierre($cesacion);
+
         $reemplazos = ContratoServidor::where('estado', 'vigente')
             ->whereIn('cubre_movimiento_id', MovimientoPersonal::where('servidor_id', $cesacion->servidor_id)->select('id'))
             ->get();
@@ -1218,6 +1224,9 @@ class MovimientoPersonalStateService
         }
 
         $this->contratoServidorService->reabrirPorAnulacion($contrato);
+
+        // El vínculo volvió: la desvinculación que abrió el cese no sigue.
+        app(DesvinculacionService::class)->cancelarPorAnulacion($movimiento);
     }
 
     /**

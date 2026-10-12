@@ -207,6 +207,33 @@ final class InventarioTiService implements InventarioTiServiceInterface
     }
 
     /**
+     * La devolución del bien (fase 7.4a): hasta aquí se asignaba y nada lo
+     * devolvía, aunque la columna existía. Es un paso de la desvinculación:
+     * quien sale entrega lo que tiene a su cargo.
+     */
+    public function devolverBien(AsignacionBien $asignacion, string $fecha, ?string $observaciones): AsignacionBien
+    {
+        if ($asignacion->fecha_devolucion !== null || $asignacion->estado !== 'activa') {
+            throw new ReglaNegocioException('Ese bien ya se devolvió.');
+        }
+
+        if ($asignacion->fecha_asignacion && $fecha < $asignacion->fecha_asignacion->toDateString()) {
+            throw new ReglaNegocioException('La devolución no puede ser anterior a la asignación del '
+                .$asignacion->fecha_asignacion->format('d/m/Y').'.');
+        }
+
+        $asignacion->update([
+            'estado'           => 'devuelta',
+            'fecha_devolucion' => $fecha,
+            'observaciones'    => trim(collect([$asignacion->observaciones, $observaciones ? "Devolución: {$observaciones}" : null])
+                ->filter()->implode("\n")) ?: null,
+            'updated_by'       => auth()->id(),
+        ]);
+
+        return $asignacion->fresh('bien');
+    }
+
+    /**
      * El acta de entrega-recepción del bien, en PDF.
      *
      * Se genera al pedirla y no se archiva: es el mismo criterio del resto de
