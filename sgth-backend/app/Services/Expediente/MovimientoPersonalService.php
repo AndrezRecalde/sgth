@@ -166,6 +166,13 @@ class MovimientoPersonalService
         }
         self::impedirIngresoDeAutoridad($tipoMovimiento, $datos['tipo_nombramiento_propuesto'] ?? null);
 
+        // Quien cobró una indemnización al salir no reingresa mientras no la
+        // devuelva (Mandato Constituyente 2, art. 8; fase 7.4b). La restitución
+        // y el período de una autoridad no son un ingreso.
+        if ($tipoMovimiento === TipoMovimientoPersonal::INGRESO) {
+            app(DesvinculacionService::class)->impedirReingresoProhibido($servidor->id);
+        }
+
         if ($tipoMovimiento->esAccionDePersonal()) {
             $this->validarElegibilidad($servidor, $tipoMovimiento, $subtipo);
         }

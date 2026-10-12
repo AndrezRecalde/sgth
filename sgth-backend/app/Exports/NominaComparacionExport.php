@@ -24,6 +24,9 @@ class NominaComparacionExport implements FromCollection, WithHeadings, ShouldAut
         'SUBROGACION'               => 'SUBROGACIÓN',
         'ENCARGO'                   => 'ENCARGO',
         'REMUNERACIONES_PENDIENTES' => 'REMUNERACIONES PENDIENTES',
+        // Lo que paga la salida (fase 7.4b).
+        'VACACIONES_PAGADAS'        => 'VACACIONES NO GOZADAS',
+        'INDEMNIZACION'             => 'INDEMNIZACIÓN',
         'DECIMO_TERCERO'            => 'DÉCIMO TERCERO',
         'DECIMO_CUARTO'             => 'DÉCIMO CUARTO',
         'DIAS_SIN_REMUNERACION'     => 'DÍAS SIN REMUNERACIÓN',

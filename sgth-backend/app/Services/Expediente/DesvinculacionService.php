@@ -31,17 +31,29 @@ use Illuminate\Support\Facades\DB;
  * Los pasos que otro módulo registra se leen de él: los bienes que siguen
  * asignados en el Inventario TI, el usuario que sigue activo, el certificado
  * laboral emitido después de la salida, la declaración patrimonial de fin de
- * gestión. La liquidación de vacaciones y la indemnización las marca el
- * Director hasta que tengan su cálculo (7.4b). Todo paso puede no aplicar,
- * con su motivo; lo que no le toca al contrato civil no aplica desde que nace.
+ * gestión. La liquidación de vacaciones la calcula el sistema y la confirma
+ * el Director; la indemnización la registra él, dentro del tope del Mandato 2,
+ * y quien la cobra no reingresa mientras no la devuelva (fase 7.4b). Todo paso
+ * puede no aplicar, con su motivo; lo que no le toca al contrato civil no
+ * aplica desde que nace.
  *
  * Se cierra sola cuando cada paso está hecho o no aplica, y se cancela si el
  * cese se anula.
  */
 class DesvinculacionService
 {
+    /** Lo que puede cobrar quien sale, con su tope (fase 7.4b). */
+    public const CONCEPTOS_DE_INDEMNIZACION = [
+        'jubilacion'        => 'Compensación por jubilación',
+        'retiro_voluntario' => 'Compensación por retiro voluntario',
+        'supresion'         => 'Indemnización por supresión del puesto',
+        'despido'           => 'Indemnización por despido o desahucio',
+        'otro'              => 'Otra',
+    ];
+
     public function __construct(
         private readonly InventarioTiServiceInterface $inventario,
+        private readonly LiquidacionDeLaSalida $liquidacion,
     ) {
     }
 
@@ -147,12 +159,42 @@ class DesvinculacionService
             throw new ReglaNegocioException('La desvinculación se canceló: el cese se anuló y el vínculo volvió.');
         }
 
-        if ($estado === DesvinculacionPaso::HECHO && ! $paso->seMarca()) {
-            throw new ReglaNegocioException("«{$paso->etiqueta()}» queda hecho solo, cuando lo registra su módulo. Si no corresponde, márquelo como que no aplica.");
+        if ($paso === PasoDesvinculacion::REINGRESO) {
+            throw new ReglaNegocioException('La prohibición de reingreso depende de la indemnización: se marca sola al registrarla y se levanta con su devolución.');
         }
 
-        if ($paso->loMarcaElDirector() && $estado !== DesvinculacionPaso::PENDIENTE && ! $usuario->can('registrar-accion-personal')) {
+        if ($estado === DesvinculacionPaso::HECHO && ! $paso->seMarca()) {
+            throw new ReglaNegocioException($paso->loMarcaElDirector()
+                ? "«{$paso->etiqueta()}» queda hecha cuando el Director la confirma con su cálculo."
+                : "«{$paso->etiqueta()}» queda hecho solo, cuando lo registra su módulo. Si no corresponde, márquelo como que no aplica.");
+        }
+
+        if ($paso->loMarcaElDirector() && ! $usuario->can('registrar-accion-personal')) {
             throw new ReglaNegocioException("«{$paso->etiqueta()}» lo marca el Director de Talento Humano: es dinero que va a Financiero.");
+        }
+
+        $hecha = match ($paso) {
+            PasoDesvinculacion::VACACIONES    => $desvinculacion->vacaciones_confirmada_en !== null,
+            PasoDesvinculacion::INDEMNIZACION => $desvinculacion->indemnizacion_registrada_en !== null,
+            default                           => false,
+        };
+
+        if ($hecha && $estado === DesvinculacionPaso::NO_APLICA) {
+            throw new ReglaNegocioException("«{$paso->etiqueta()}» ya se registró: deshágala primero si no corresponde.");
+        }
+
+        // Volver a pendiente deshace lo confirmado: si el mes ya se entregó a
+        // Financiero, la diferencia le llega como ajuste (fase 7.3a).
+        if ($hecha && $estado === DesvinculacionPaso::PENDIENTE) {
+            $desvinculacion->update($paso === PasoDesvinculacion::VACACIONES ? [
+                'vacaciones_dias' => null, 'vacaciones_remuneracion' => null, 'vacaciones_monto' => null,
+                'vacaciones_detalle' => null, 'vacaciones_confirmada_por' => null, 'vacaciones_confirmada_en' => null,
+            ] : [
+                'indemnizacion_concepto' => null, 'indemnizacion_monto' => null, 'indemnizacion_resolucion' => null,
+                'indemnizacion_tope' => null, 'indemnizacion_registrada_por' => null, 'indemnizacion_registrada_en' => null,
+                'indemnizacion_devuelta_en' => null, 'indemnizacion_devolucion_documento' => null,
+                'indemnizacion_devolucion_registrada_por' => null,
+            ]);
         }
 
         if ($estado !== DesvinculacionPaso::PENDIENTE && mb_strlen(trim((string) $nota)) < 5) {
@@ -172,6 +214,117 @@ class DesvinculacionService
         );
 
         return $this->detalle($desvinculacion->fresh());
+    }
+
+    /**
+     * El Director confirma la liquidación de vacaciones: queda congelada como
+     * se calculó, y llega a Financiero en las novedades del mes de la salida.
+     */
+    public function confirmarLiquidacion(Desvinculacion $desvinculacion, User $usuario): array
+    {
+        $this->exigirDirector($usuario, 'La liquidación la confirma el Director de Talento Humano: es dinero que va a Financiero.');
+        $this->exigirAbierta($desvinculacion);
+
+        if ($desvinculacion->vacaciones_confirmada_en !== null) {
+            throw new ReglaNegocioException('La liquidación ya se confirmó.');
+        }
+
+        $calculo = $this->liquidacion->vacaciones($desvinculacion);
+
+        if ($calculo['remuneracion'] === null) {
+            throw new ReglaNegocioException('El vínculo no tiene la remuneración guardada: sin ella no hay con qué valorar los días.');
+        }
+
+        $desvinculacion->update([
+            'vacaciones_dias'           => $calculo['dias'],
+            'vacaciones_remuneracion'   => $calculo['remuneracion'],
+            'vacaciones_monto'          => $calculo['monto'],
+            'vacaciones_detalle'        => $calculo,
+            'vacaciones_confirmada_por' => $usuario->id,
+            'vacaciones_confirmada_en'  => now(),
+        ]);
+
+        return $this->detalle($desvinculacion->fresh());
+    }
+
+    /**
+     * El Director registra la indemnización o compensación, dentro del tope
+     * del Mandato 2. Desde ese momento, quien la cobró no reingresa mientras
+     * no la devuelva.
+     *
+     * @param  array{concepto: string, monto: float|string, resolucion: string}  $datos
+     */
+    public function registrarIndemnizacion(Desvinculacion $desvinculacion, array $datos, User $usuario): array
+    {
+        $this->exigirDirector($usuario, 'La indemnización la registra el Director de Talento Humano: es dinero que va a Financiero.');
+        $this->exigirAbierta($desvinculacion);
+
+        if ($desvinculacion->indemnizacion_registrada_en !== null) {
+            throw new ReglaNegocioException('La indemnización ya se registró.');
+        }
+
+        $tope = $this->liquidacion->topeDeLaIndemnizacion($desvinculacion);
+        $monto = round((float) $datos['monto'], 2);
+
+        if ($tope['tope'] === null) {
+            throw new ReglaNegocioException('Sin el salario básico del año de la salida no se calcula el tope del Mandato 2: cárguelo en «Contrato colectivo».');
+        }
+
+        if ($monto > $tope['tope']) {
+            throw new ReglaNegocioException('Pasa el tope del Mandato Constituyente 2: '.LiquidacionDeLaSalida::SALARIOS_POR_ANIO
+                .' salarios básicos por año de servicio, hasta '.LiquidacionDeLaSalida::SALARIOS_MAXIMOS.': $'
+                .number_format($tope['tope'], 2, ',', '.').' para '.number_format((float) $tope['anios'], 2, ',', '.').' años.');
+        }
+
+        $desvinculacion->update([
+            'indemnizacion_concepto'       => $datos['concepto'],
+            'indemnizacion_monto'          => $monto,
+            'indemnizacion_resolucion'     => trim($datos['resolucion']),
+            'indemnizacion_tope'           => $tope['tope'],
+            'indemnizacion_registrada_por' => $usuario->id,
+            'indemnizacion_registrada_en'  => now(),
+        ]);
+
+        return $this->detalle($desvinculacion->fresh());
+    }
+
+    /** Devolvió la indemnización: ya puede reingresar (Mandato 2, art. 8). */
+    public function registrarDevolucion(Desvinculacion $desvinculacion, string $fecha, string $documento, User $usuario): array
+    {
+        if (! $desvinculacion->prohibeElReingreso()) {
+            throw new ReglaNegocioException('No hay una indemnización cobrada sin devolver en esta salida.');
+        }
+
+        $desvinculacion->update([
+            'indemnizacion_devuelta_en'               => $fecha,
+            'indemnizacion_devolucion_documento'      => trim($documento),
+            'indemnizacion_devolucion_registrada_por' => $usuario->id,
+        ]);
+
+        return $this->detalle($desvinculacion->fresh());
+    }
+
+    /**
+     * Quien cobró una indemnización al salir y no la devolvió no reingresa
+     * (Mandato Constituyente 2, art. 8). Lo llama el registro del ingreso; la
+     * restitución que ordena un juez y el período de una autoridad electa no
+     * pasan por aquí.
+     */
+    public function impedirReingresoProhibido(int $servidorId): void
+    {
+        $salida = Desvinculacion::where('servidor_id', $servidorId)
+            ->where('estado', '!=', Desvinculacion::CANCELADA)
+            ->whereNotNull('indemnizacion_registrada_en')
+            ->where('indemnizacion_monto', '>', 0)
+            ->whereNull('indemnizacion_devuelta_en')
+            ->orderByDesc('fecha_salida')
+            ->first();
+
+        if ($salida) {
+            throw new ReglaNegocioException('Cobró una indemnización al salir el '.$salida->fecha_salida->format('d/m/Y')
+                .' ('.(self::CONCEPTOS_DE_INDEMNIZACION[$salida->indemnizacion_concepto] ?? 'indemnización').'): no puede reingresar mientras no la devuelva '
+                .'(Mandato Constituyente 2, art. 8). Si ya la devolvió, regístrelo en su desvinculación.');
+        }
     }
 
     /**
@@ -222,14 +375,10 @@ class DesvinculacionService
 
         return collect(PasoDesvinculacion::cases())->map(function (PasoDesvinculacion $paso) use ($desvinculacion, $decididos) {
             $decidido = $decididos->get($paso->value);
-            [$delDato, $detalle, $extra] = $this->segunElDato($paso, $desvinculacion);
+            [$delDato, $detalle, $extra] = $this->segunElDato($paso, $desvinculacion, $decididos);
 
-            $estado = match (true) {
-                $decidido?->estado === DesvinculacionPaso::NO_APLICA => DesvinculacionPaso::NO_APLICA,
-                $delDato === true                                    => DesvinculacionPaso::HECHO,
-                $paso->seMarca() && $decidido?->estado === DesvinculacionPaso::HECHO => DesvinculacionPaso::HECHO,
-                default                                              => DesvinculacionPaso::PENDIENTE,
-            };
+            // Lo que no aplica, por decisión; si no, lo que dice el dato.
+            $estado = $decidido?->estado === DesvinculacionPaso::NO_APLICA ? DesvinculacionPaso::NO_APLICA : $delDato;
 
             $quien = $decidido?->registradoPor;
 
@@ -250,47 +399,146 @@ class DesvinculacionService
     }
 
     /**
-     * Lo que dice el dato del paso: si ya está hecho (null si no se lee de
-     * ningún lado), el texto para la pantalla y lo que la acompaña.
+     * Lo que dice el dato del paso: su estado, el texto para la pantalla y lo
+     * que lo acompaña.
      *
-     * @return array{0: ?bool, 1: string, 2: array<string, mixed>}
+     * @param  \Illuminate\Support\Collection<string, DesvinculacionPaso>  $decididos
+     * @return array{0: string, 1: string, 2: array<string, mixed>}
      */
-    private function segunElDato(PasoDesvinculacion $paso, Desvinculacion $desvinculacion): array
+    private function segunElDato(PasoDesvinculacion $paso, Desvinculacion $desvinculacion, Collection $decididos): array
     {
         $servidorId = $desvinculacion->servidor_id;
+        $hecho = DesvinculacionPaso::HECHO;
+        $pendiente = DesvinculacionPaso::PENDIENTE;
 
         return match ($paso) {
             PasoDesvinculacion::BIENES => $this->bienes($servidorId),
 
             PasoDesvinculacion::USUARIO => ($usuario = User::where('servidor_id', $servidorId)->where('activo', true)->first())
-                ? [false, "El usuario {$usuario->usuario_ti} sigue activo: lo da de baja Tecnologías de la Información, en Usuarios.", []]
-                : [true, 'Ya no tiene un usuario activo.', []],
+                ? [$pendiente, "El usuario {$usuario->usuario_ti} sigue activo: lo da de baja Tecnologías de la Información, en Usuarios.", []]
+                : [$hecho, 'Ya no tiene un usuario activo.', []],
 
             PasoDesvinculacion::CERTIFICADO => ($emision = EmisionCertificadoLaboral::where('servidor_id', $servidorId)
                 ->whereDate('emitido_en', '>=', $desvinculacion->fecha_salida->toDateString())
                 ->orderByDesc('emitido_en')
                 ->first())
-                ? [true, "Se emitió el {$emision->codigo} el {$emision->emitido_en->format('d/m/Y')}.", []]
-                : [false, 'Se emite desde el expediente, después de la salida.', []],
+                ? [$hecho, "Se emitió el {$emision->codigo} el {$emision->emitido_en->format('d/m/Y')}.", []]
+                : [$pendiente, 'Se emite desde el expediente, después de la salida.', []],
 
             PasoDesvinculacion::DECLARACION => ($declaracion = DeclaracionJuramentada::where('servidor_id', $servidorId)
                 ->where('tipo_declaracion', TipoDeclaracion::FIN_GESTION->value)
                 ->whereDate('fecha_declaracion', '>=', $desvinculacion->contrato?->fecha_inicio?->toDateString() ?? $desvinculacion->fecha_salida->toDateString())
                 ->orderByDesc('fecha_declaracion')
                 ->first())
-                ? [true, "Registrada la del {$declaracion->fecha_declaracion->format('d/m/Y')}.", []]
-                : [false, 'La presenta ante la Contraloría al terminar sus funciones, y se registra en el expediente.', []],
+                ? [$hecho, "Registrada la del {$declaracion->fecha_declaracion->format('d/m/Y')}.", []]
+                : [$pendiente, 'La presenta ante la Contraloría al terminar sus funciones, y se registra en el expediente.', []],
 
-            PasoDesvinculacion::VACACIONES => $desvinculacion->movimientoCierre?->actaFiniquito
-                ? [true, 'El acta de finiquito de la terminación ya se registró: liquida lo que el Código del Trabajo le debe.', []]
-                : [null, 'Las vacaciones no gozadas y lo que se le debe del último mes. Hasta que el sistema la calcule, se marca cuando Financiero la liquide.', []],
+            PasoDesvinculacion::VACACIONES => $this->vacaciones($desvinculacion),
 
-            PasoDesvinculacion::INDEMNIZACION => [null,
-                'Solo si corresponde —jubilación, retiro voluntario, supresión, despido—, dentro de los topes del Mandato 2: 7 salarios básicos por año, hasta 210.', []],
+            PasoDesvinculacion::INDEMNIZACION => $this->indemnizacion($desvinculacion),
+
+            PasoDesvinculacion::REINGRESO => $this->reingreso($desvinculacion, $decididos),
         };
     }
 
-    /** @return array{0: bool, 1: string, 2: array{bienes: list<array<string, mixed>>}} */
+    /** @return array{0: string, 1: string, 2: array<string, mixed>} */
+    private function vacaciones(Desvinculacion $desvinculacion): array
+    {
+        if ($desvinculacion->vacaciones_confirmada_en !== null) {
+            return [DesvinculacionPaso::HECHO,
+                'Confirmada: '.$this->numero((float) $desvinculacion->vacaciones_dias).' días, $'.$this->numero((float) $desvinculacion->vacaciones_monto)
+                    .' de referencia. Llega a Financiero en las novedades del mes de la salida.',
+                ['liquidacion' => $desvinculacion->vacaciones_detalle, 'confirmada' => true]];
+        }
+
+        $calculo = $this->liquidacion->vacaciones($desvinculacion);
+
+        return [DesvinculacionPaso::PENDIENTE,
+            'Calculada: '.$this->numero($calculo['dias']).' días'
+                .($calculo['monto'] !== null ? ', $'.$this->numero($calculo['monto']).' de referencia' : ', sin la remuneración del vínculo')
+                .'. La confirma el Director.',
+            ['liquidacion' => $calculo, 'confirmada' => false]];
+    }
+
+    /** @return array{0: string, 1: string, 2: array<string, mixed>} */
+    private function indemnizacion(Desvinculacion $desvinculacion): array
+    {
+        $tope = $this->liquidacion->topeDeLaIndemnizacion($desvinculacion);
+        // Al obrero se le propone el total de su liquidación referencial (4.5).
+        $sugerido = $desvinculacion->movimientoCierre
+            ? (app(TerminacionObreroService::class)->liquidacion($desvinculacion->movimientoCierre)['total'] ?? null)
+            : null;
+
+        $extra = ['indemnizacion' => [
+            'conceptos'      => self::CONCEPTOS_DE_INDEMNIZACION,
+            'salario_basico' => $tope['salario_basico'],
+            'anios'          => $tope['anios'],
+            'tope'           => $tope['tope'],
+            'sugerido'       => $sugerido,
+            'concepto'       => $desvinculacion->indemnizacion_concepto,
+            'monto'          => $desvinculacion->indemnizacion_monto !== null ? (float) $desvinculacion->indemnizacion_monto : null,
+            'resolucion'     => $desvinculacion->indemnizacion_resolucion,
+        ]];
+
+        if ($desvinculacion->indemnizacion_registrada_en !== null) {
+            return [DesvinculacionPaso::HECHO,
+                (self::CONCEPTOS_DE_INDEMNIZACION[$desvinculacion->indemnizacion_concepto] ?? 'Indemnización').': $'
+                    .$this->numero((float) $desvinculacion->indemnizacion_monto).', '.$desvinculacion->indemnizacion_resolucion.'.',
+                $extra];
+        }
+
+        return [DesvinculacionPaso::PENDIENTE,
+            'Solo si corresponde —jubilación, retiro voluntario, supresión, despido—, hasta el tope del Mandato 2: '
+                .($tope['tope'] !== null ? '$'.$this->numero($tope['tope']).'.' : 'falta el salario básico del año de la salida.'),
+            $extra];
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<string, DesvinculacionPaso>  $decididos
+     * @return array{0: string, 1: string, 2: array<string, mixed>}
+     */
+    private function reingreso(Desvinculacion $desvinculacion, Collection $decididos): array
+    {
+        $extra = ['reingreso' => [
+            'prohibido'  => $desvinculacion->prohibeElReingreso(),
+            'devuelta_en' => $desvinculacion->indemnizacion_devuelta_en?->toDateString(),
+            'documento'  => $desvinculacion->indemnizacion_devolucion_documento,
+        ]];
+
+        if ($desvinculacion->indemnizacion_registrada_en !== null && (float) $desvinculacion->indemnizacion_monto > 0) {
+            return [DesvinculacionPaso::HECHO, $desvinculacion->indemnizacion_devuelta_en
+                ? 'Devolvió la indemnización el '.$desvinculacion->indemnizacion_devuelta_en->format('d/m/Y').': puede reingresar.'
+                : 'Cobró una indemnización: no reingresa al sector público mientras no la devuelva (Mandato Constituyente 2, art. 8).',
+                $extra];
+        }
+
+        if ($decididos->get(PasoDesvinculacion::INDEMNIZACION->value)?->estado === DesvinculacionPaso::NO_APLICA) {
+            return [DesvinculacionPaso::NO_APLICA, 'No cobró indemnización: puede reingresar.', $extra];
+        }
+
+        return [DesvinculacionPaso::PENDIENTE, 'Depende de la indemnización: si la cobra, no reingresa mientras no la devuelva.', $extra];
+    }
+
+    private function exigirDirector(User $usuario, string $mensaje): void
+    {
+        if (! $usuario->can('registrar-accion-personal')) {
+            throw new ReglaNegocioException($mensaje);
+        }
+    }
+
+    private function exigirAbierta(Desvinculacion $desvinculacion): void
+    {
+        if ($desvinculacion->estado === Desvinculacion::CANCELADA) {
+            throw new ReglaNegocioException('La desvinculación se canceló: el cese se anuló y el vínculo volvió.');
+        }
+    }
+
+    private function numero(float $valor): string
+    {
+        return number_format($valor, 2, ',', '.');
+    }
+
+    /** @return array{0: string, 1: string, 2: array{bienes: list<array<string, mixed>>}} */
     private function bienes(int $servidorId): array
     {
         $asignaciones = AsignacionBien::where('servidor_id', $servidorId)
@@ -309,8 +557,8 @@ class DesvinculacionService
         ])->values()->all();
 
         return $asignaciones->isEmpty()
-            ? [true, 'No tiene bienes a su cargo en el Inventario TI.', ['bienes' => []]]
-            : [false, $asignaciones->count() === 1 ? 'Tiene 1 bien a su cargo.' : "Tiene {$asignaciones->count()} bienes a su cargo.", ['bienes' => $bienes]];
+            ? [DesvinculacionPaso::HECHO, 'No tiene bienes a su cargo en el Inventario TI.', ['bienes' => []]]
+            : [DesvinculacionPaso::PENDIENTE, $asignaciones->count() === 1 ? 'Tiene 1 bien a su cargo.' : "Tiene {$asignaciones->count()} bienes a su cargo.", ['bienes' => $bienes]];
     }
 
     private function resumen(Desvinculacion $desvinculacion): array

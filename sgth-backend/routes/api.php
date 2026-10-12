@@ -479,6 +479,14 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::post('desvinculaciones/{desvinculacion}/bienes/{asignacion}/devolver', [DesvinculacionController::class, 'devolverBien'])
             ->whereNumber('asignacion')
             ->middleware('permission:preparar-accion-personal|registrar-accion-personal');
+        // La liquidación y la indemnización, del Director (fase 7.4b); la
+        // devolución de la indemnización la registra Talento Humano.
+        Route::post('desvinculaciones/{desvinculacion}/vacaciones/confirmar', [DesvinculacionController::class, 'confirmarLiquidacion'])
+            ->middleware('permission:registrar-accion-personal');
+        Route::post('desvinculaciones/{desvinculacion}/indemnizacion', [DesvinculacionController::class, 'registrarIndemnizacion'])
+            ->middleware('permission:registrar-accion-personal');
+        Route::post('desvinculaciones/{desvinculacion}/indemnizacion/devolucion', [DesvinculacionController::class, 'registrarDevolucion'])
+            ->middleware('permission:preparar-accion-personal|registrar-accion-personal');
 
         // El incremento de los obreros en lote (fase 4.6). Prepararlo es
         // preparar acciones; registrarlo pide suscribir y registrar, como acto

@@ -15,6 +15,8 @@ const TONO: Record<ConceptoNovedadNomina, SemanticTone> = {
   encargo: 'success',
   multa: 'danger',
   remuneraciones_pendientes: 'success',
+  vacaciones_no_gozadas: 'success',
+  indemnizacion: 'success',
 }
 
 function monto(v: number | null): React.ReactNode {

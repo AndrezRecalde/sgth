@@ -52,6 +52,10 @@ class NominaService implements NominaServiceInterface
         ConceptoNovedadNomina::ENCARGO->value                   => 'ENCARGO',
         ConceptoNovedadNomina::MULTA->value                     => 'MULTA_DISCIPLINARIA',
         ConceptoNovedadNomina::REMUNERACIONES_PENDIENTES->value => 'REMUNERACIONES_PENDIENTES',
+        // Lo que paga la salida (fase 7.4b): fuera de la base del IESS hasta
+        // que Financiero diga lo contrario.
+        ConceptoNovedadNomina::VACACIONES_NO_GOZADAS->value     => 'VACACIONES_PAGADAS',
+        ConceptoNovedadNomina::INDEMNIZACION->value             => 'INDEMNIZACION',
     ];
 
     public function __construct(

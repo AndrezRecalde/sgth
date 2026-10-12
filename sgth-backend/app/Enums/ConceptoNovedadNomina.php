@@ -25,6 +25,10 @@ enum ConceptoNovedadNomina: string
     case MULTA = 'multa';
     /** Lo que se le debe por el tiempo fuera: la restitución y el reintegro del obrero. */
     case REMUNERACIONES_PENDIENTES = 'remuneraciones_pendientes';
+    /** La liquidación de las vacaciones no gozadas, al salir (fase 7.4b). */
+    case VACACIONES_NO_GOZADAS = 'vacaciones_no_gozadas';
+    /** La indemnización o compensación por la salida, dentro del tope del Mandato 2. */
+    case INDEMNIZACION = 'indemnizacion';
 
     public function etiqueta(): string
     {
@@ -37,6 +41,8 @@ enum ConceptoNovedadNomina: string
             self::ENCARGO                   => 'Encargo',
             self::MULTA                     => 'Multa',
             self::REMUNERACIONES_PENDIENTES => 'Remuneraciones pendientes',
+            self::VACACIONES_NO_GOZADAS     => 'Vacaciones no gozadas',
+            self::INDEMNIZACION             => 'Indemnización',
         };
     }
 }

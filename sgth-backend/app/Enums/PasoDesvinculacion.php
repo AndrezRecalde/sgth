@@ -3,9 +3,10 @@
 namespace App\Enums;
 
 /**
- * Los pasos de la desvinculación (diseño, 9.9; fase 7.4a). Los que otro módulo
- * ya registra se leen de él; los demás los decide Talento Humano. La
- * prohibición de reingreso llega con la indemnización (7.4b).
+ * Los pasos de la desvinculación (diseño, 9.9; fases 7.4a y 7.4b). Ninguno se
+ * marca como hecho a mano: los que otro módulo registra se leen de él, y la
+ * liquidación y la indemnización quedan hechas cuando el Director las
+ * confirma con su cálculo. Cualquiera puede no aplicar, con su motivo.
  */
 enum PasoDesvinculacion: string
 {
@@ -15,6 +16,8 @@ enum PasoDesvinculacion: string
     case USUARIO      = 'usuario';
     case CERTIFICADO  = 'certificado';
     case DECLARACION  = 'declaracion';
+    /** Mandato Constituyente 2, art. 8: quien cobró una indemnización (7.4b). */
+    case REINGRESO    = 'reingreso';
 
     public function etiqueta(): string
     {
@@ -25,6 +28,7 @@ enum PasoDesvinculacion: string
             self::USUARIO       => 'Baja del usuario',
             self::CERTIFICADO   => 'Certificado laboral',
             self::DECLARACION   => 'Declaración patrimonial de fin de gestión',
+            self::REINGRESO     => 'Prohibición de reingreso',
         };
     }
 
@@ -36,31 +40,33 @@ enum PasoDesvinculacion: string
             self::BIENES, self::USUARIO           => 'Tecnologías de la Información',
             self::CERTIFICADO                     => 'Talento Humano',
             self::DECLARACION                     => 'El servidor, ante la Contraloría; Talento Humano la registra',
+            self::REINGRESO                       => 'Talento Humano',
         };
     }
 
     /**
-     * ¿Lo decide Talento Humano? Los demás se leen del dato: cuando el bien se
-     * devuelve, el usuario se da de baja, el certificado se emite o la
-     * declaración se registra, el paso queda hecho solo.
+     * ¿Se marca como hecho a mano? Ninguno desde la fase 7.4b: los que otro
+     * módulo registra quedan hechos solos, y la liquidación y la indemnización,
+     * cuando el Director las confirma con su cálculo.
      */
     public function seMarca(): bool
     {
-        return in_array($this, [self::VACACIONES, self::INDEMNIZACION], true);
+        return false;
     }
 
     /**
-     * ¿Lo marca el Director? La liquidación y la indemnización son dinero que
-     * va a Financiero, como registrar una acción [TH 22].
+     * ¿Lo decide el Director? La liquidación y la indemnización son dinero que
+     * va a Financiero, como registrar una acción [TH 22]: también su «no
+     * aplica».
      */
     public function loMarcaElDirector(): bool
     {
-        return $this->seMarca();
+        return in_array($this, [self::VACACIONES, self::INDEMNIZACION], true);
     }
 
     /** Lo que no le toca al contrato civil: no es servidor (TH N6). */
     public function noAplicaAServiciosProfesionales(): bool
     {
-        return in_array($this, [self::VACACIONES, self::INDEMNIZACION, self::DECLARACION], true);
+        return in_array($this, [self::VACACIONES, self::INDEMNIZACION, self::DECLARACION, self::REINGRESO], true);
     }
 }

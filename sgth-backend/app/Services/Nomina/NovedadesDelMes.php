@@ -13,6 +13,7 @@ use App\Enums\TipoSancion;
 use App\Enums\TipoSubrogacion;
 use App\Models\Disciplinario\SancionDisciplinaria;
 use App\Models\Estructura\EscalaRemuneracionVinculo;
+use App\Models\Expediente\Desvinculacion;
 use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Subrogacion;
@@ -69,6 +70,7 @@ class NovedadesDelMes
             ->merge($this->subrogaciones($mes))
             ->merge($this->multas($mes))
             ->merge($this->remuneracionesPendientes($mes))
+            ->merge($this->deLaSalida($mes))
             ->sortBy([
                 ['servidor', 'asc'],
                 fn (array $a, array $b) => array_search($a['concepto'], ConceptoNovedadNomina::cases(), true)
@@ -724,6 +726,65 @@ class NovedadesDelMes
                 base: null,
                 monto: $monto !== null ? round($monto, 2) : null,
             );
+        }
+
+        return $novedades;
+    }
+
+    // ── Lo que paga la salida ───────────────────────────────────────
+
+    /**
+     * La liquidación de vacaciones que confirmó el Director y la indemnización
+     * que registró (fase 7.4b), en el mes de la salida. Si se confirman después
+     * de entregar ese mes, llegan como ajuste en el siguiente.
+     *
+     * @return list<Novedad>
+     */
+    private function deLaSalida(MesDeNomina $mes): array
+    {
+        $salidas = Desvinculacion::query()
+            ->where('estado', '!=', Desvinculacion::CANCELADA)
+            ->whereBetween('fecha_salida', [$mes->inicio->toDateString(), $mes->fin->toDateString()])
+            ->where(fn (Builder $q) => $q->whereNotNull('vacaciones_confirmada_en')->orWhereNotNull('indemnizacion_registrada_en'))
+            ->with(['servidor:id,nombre,segundo_nombre,apellido,segundo_apellido,cedula', 'movimientoCierre:id,codigo_registro'])
+            ->orderBy('id')
+            ->get();
+
+        $novedades = [];
+
+        foreach ($salidas as $salida) {
+            if ($salida->vacaciones_confirmada_en !== null) {
+                $novedades[] = $this->novedad(
+                    $mes,
+                    clave: "vacaciones:desvinculacion:{$salida->id}",
+                    concepto: ConceptoNovedadNomina::VACACIONES_NO_GOZADAS,
+                    servidor: $salida->servidor,
+                    detalle: 'Vacaciones no gozadas al salir el '.$salida->fecha_salida->format('d/m/Y').': '
+                        .rtrim(rtrim(number_format((float) $salida->vacaciones_dias, 2, ',', '.'), '0'), ',').' días a '
+                        .$this->dinero((float) $salida->vacaciones_remuneracion).' ÷ 30.',
+                    contratoId: $salida->contrato_id,
+                    movimiento: $salida->movimientoCierre,
+                    desde: $salida->fecha_salida,
+                    dias: null,
+                    base: (float) $salida->vacaciones_remuneracion,
+                    monto: round((float) $salida->vacaciones_monto, 2),
+                );
+            }
+
+            if ($salida->indemnizacion_registrada_en !== null) {
+                $novedades[] = $this->novedad(
+                    $mes,
+                    clave: "indemnizacion:desvinculacion:{$salida->id}",
+                    concepto: ConceptoNovedadNomina::INDEMNIZACION,
+                    servidor: $salida->servidor,
+                    detalle: (\App\Services\Expediente\DesvinculacionService::CONCEPTOS_DE_INDEMNIZACION[$salida->indemnizacion_concepto] ?? 'Indemnización')
+                        .", {$salida->indemnizacion_resolucion}, dentro del tope del Mandato 2 ({$this->dinero((float) $salida->indemnizacion_tope)}).",
+                    contratoId: $salida->contrato_id,
+                    movimiento: $salida->movimientoCierre,
+                    desde: $salida->fecha_salida,
+                    monto: round((float) $salida->indemnizacion_monto, 2),
+                );
+            }
         }
 
         return $novedades;
