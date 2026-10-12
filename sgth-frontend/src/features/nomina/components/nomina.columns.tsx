@@ -1,5 +1,5 @@
 import { TONO_NOMINA } from '../constants/estadoNomina'
-import { Text } from '@mantine/core'
+import { Group, Text } from '@mantine/core'
 import { TableActions } from '@/components/ui/TableActions'
 import { IconEye, IconLock } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
@@ -26,10 +26,12 @@ function formatMonto(v?: number | string | null): string {
 type Handlers = {
   onVer:    (n: Nomina) => void
   onCerrar: (n: Nomina) => void
+  /** `cerrar-nomina` (fase 7.3c): sin él no se ofrece. */
+  puedeCerrar: boolean
 }
 
 export const getNominaColumns = (
-  { onVer, onCerrar }: Handlers
+  { onVer, onCerrar, puedeCerrar }: Handlers
 ): DataTableColumn<Nomina>[] => [
   {
     accessor: 'periodo',
@@ -95,11 +97,15 @@ export const getNominaColumns = (
   {
     accessor: 'estado',
     title:    'Estado',
-    width:    120,
-    render: ({ estado }) => (
-      <StatusBadge tone={TONO_NOMINA[estado] ?? 'neutral'}>
-        {ESTADO_LABELS[estado] ?? estado}
-      </StatusBadge>
+    width:    170,
+    render: ({ estado, referencial }) => (
+      <Group gap={4} wrap="nowrap">
+        <StatusBadge tone={TONO_NOMINA[estado] ?? 'neutral'}>
+          {ESTADO_LABELS[estado] ?? estado}
+        </StatusBadge>
+        {/* Calculada en paralelo con la de Financiero (fase 7.3c). */}
+        {referencial && <StatusBadge tone="info">Referencial</StatusBadge>}
+      </Group>
     ),
   },
   {
@@ -117,7 +123,7 @@ export const getNominaColumns = (
           label:   'Cerrar nómina',
           icon:    <IconLock size={14} />,
           onClick: () => onCerrar(nomina),
-          hidden: nomina.estado !== 'borrador' && nomina.estado !== 'en_proceso',
+          hidden: !puedeCerrar || (nomina.estado !== 'borrador' && nomina.estado !== 'en_proceso'),
         },
       ]} />
     ),

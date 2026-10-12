@@ -22,6 +22,8 @@ class DetalleNomina extends Model
         'nomina_id',
         'servidor_id',
         'concepto_nomina_id',
+        // La cuota de un préstamo: se cuenta como pagada al cerrar (fase 7.3c).
+        'descuento_recurrente_id',
         'valor',
         'observacion',
     ];
@@ -46,5 +48,10 @@ class DetalleNomina extends Model
     public function concepto(): BelongsTo
     {
         return $this->belongsTo(ConceptoNomina::class, 'concepto_nomina_id');
+    }
+
+    public function descuentoRecurrente(): BelongsTo
+    {
+        return $this->belongsTo(DescuentoRecurrente::class);
     }
 }

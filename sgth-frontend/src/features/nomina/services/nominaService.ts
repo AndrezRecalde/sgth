@@ -19,6 +19,11 @@ export const nominaService = {
     api.post<ApiResponse<Nomina>>(`/nomina/${id}/cerrar`)
       .then(r => r.data.datos),
 
+  /** Por servidor, para compararla con la de Financiero (fase 7.3c). */
+  excel: (id: number) =>
+    api.get(`/nomina/${id}/excel`, { responseType: 'blob' })
+      .then(r => r.data as Blob),
+
   conceptos: () =>
     api.get<ApiResponse<ConceptoNomina[]>>('/nomina/conceptos')
       .then(r => r.data.datos ?? []),

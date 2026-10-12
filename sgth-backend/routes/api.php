@@ -694,12 +694,15 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::post('novedades/entregar', [NovedadNominaController::class, 'entregar'])
             ->middleware('permission:entregar-novedades-nomina');
 
+        // Quien procesa la nómina, no un rol (fase 7.3c).
         Route::apiResource('descuentos-recurrentes', DescuentoRecurrenteController::class)
-            ->middleware('role:admin-uath|asistente-uath');
+            ->middleware('permission:procesar-nomina');
 
         // Y el comodín solo acepta números, para que el orden deje de ser lo
         // único que sostiene esto cuando alguien añada otra ruta literal.
         Route::get('{id}', [NominaController::class, 'show'])->whereNumber('id');
+        // Por servidor, para compararla con la de Financiero (fase 7.3c).
+        Route::get('{id}/excel', [NominaController::class, 'excel'])->whereNumber('id');
         Route::post('{id}/cerrar', [NominaController::class, 'cerrar'])
             ->whereNumber('id');
 

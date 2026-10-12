@@ -4680,6 +4680,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/nomina/{id}/excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * La nómina por servidor, en Excel, para compararla con la de Financiero
+         *     en la corrida en paralelo (fase 7.3c)
+         */
+        get: operations["nomina.excel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/nomina/{id}/cerrar": {
         parameters: {
             query?: never;
@@ -10308,6 +10328,7 @@ export interface components {
             updated_at: string | null;
             /** Format: date-time */
             deleted_at: string | null;
+            referencial: boolean;
         };
         /** NormativaLegalSso */
         NormativaLegalSso: {
@@ -11055,6 +11076,8 @@ export interface components {
             updated_at: string | null;
             /** Format: date-time */
             deleted_at: string | null;
+            dias: number | null;
+            remuneracion: string | null;
         };
         /**
          * RolPuesto
@@ -21791,16 +21814,16 @@ export interface operations {
                         /** @constant */
                         mensaje: "Escalas de remuneraciones.";
                         datos: {
-                            id: string;
+                            id: number;
                             instrumento: string;
                             fecha_instrumento: string;
                             rige_desde: string;
                             dictamen_presupuestario_ref: string;
-                            descripcion: string;
+                            descripcion: string | null;
                             registrada_en: string;
                             registrada_por: string;
                             revertida_en: string;
-                            motivo_reversion: string;
+                            motivo_reversion: string | null;
                             vinculos: string;
                             grados: {
                                 grado: string;
@@ -21838,7 +21861,7 @@ export interface operations {
                         exito: boolean;
                         mensaje: string;
                         datos: {
-                            id: string;
+                            id: number;
                             vinculos: number;
                         };
                         meta: null;
@@ -21929,7 +21952,7 @@ export interface operations {
                         exito: boolean;
                         mensaje: string;
                         datos: {
-                            id: string;
+                            id: number;
                         };
                         meta: null;
                     };
@@ -26459,8 +26482,8 @@ export interface operations {
                 content: {
                     "application/json": {
                         exito: boolean;
-                        /** @constant */
-                        mensaje: "Nómina calculada exitosamente en borrador.";
+                        /** @enum {string} */
+                        mensaje: "Nómina calculada en borrador. Es referencial: sirve para compararla con la de Financiero." | "Nómina calculada exitosamente en borrador.";
                         datos: components["schemas"]["Nomina"];
                         meta: null;
                     };
@@ -26501,6 +26524,29 @@ export interface operations {
             404: components["responses"]["ModelNotFoundException"];
         };
     };
+    "nomina.excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
     "nomina.cerrar": {
         parameters: {
             query?: never;
@@ -26519,8 +26565,8 @@ export interface operations {
                 content: {
                     "application/json": {
                         exito: boolean;
-                        /** @constant */
-                        mensaje: "La nómina ha sido cerrada y los procesos de ERP y correos se están ejecutando en segundo plano.";
+                        /** @enum {string} */
+                        mensaje: "La nómina quedó cerrada para compararla con la de Financiero. Es referencial: no sale al ERP ni a los servidores." | "La nómina ha sido cerrada y los procesos de ERP y correos se están ejecutando en segundo plano.";
                         datos: components["schemas"]["Nomina"];
                         meta: null;
                     };
@@ -26696,11 +26742,10 @@ export interface operations {
                             } | null;
                             puede_entregarse: string;
                             novedades: {
-                                [key: string]: {
-                                    concepto: string;
-                                    concepto_etiqueta: string;
-                                };
-                            };
+                                ""?: string | Record<string, never> | null;
+                                concepto: string;
+                                concepto_etiqueta: string;
+                            }[];
                             ajustes: {
                                 ""?: string;
                                 concepto: string;
@@ -26784,11 +26829,10 @@ export interface operations {
                             } | null;
                             puede_entregarse: string;
                             novedades: {
-                                [key: string]: {
-                                    concepto: string;
-                                    concepto_etiqueta: string;
-                                };
-                            };
+                                ""?: string | Record<string, never> | null;
+                                concepto: string;
+                                concepto_etiqueta: string;
+                            }[];
                             ajustes: {
                                 ""?: string;
                                 concepto: string;

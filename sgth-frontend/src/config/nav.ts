@@ -126,10 +126,10 @@ export const NAV_SGTH: NavGroup[] = [
         label: 'Nómina',
         href:  ROUTES.SGTH.NOMINA,
         icon:  'IconCash',
-        // Las novedades del mes (fase 7.3a) y el cálculo, que el backend sirve
-        // a admin-uath. Sin esto salía en el menú de todos los roles, y quien
-        // no era admin-uath se encontraba un 403 al abrirla.
-        permisos: ['ver-novedades-nomina'],
+        // Las novedades del mes (fase 7.3a) y el cálculo (7.3c), cada uno con
+        // su permiso. Sin esto salía en el menú de todos los roles, y quien no
+        // podía abrirla se encontraba un 403.
+        permisos: ['ver-novedades-nomina', 'ver-nomina-todas'],
       },
       {
         label: 'Asistencia',

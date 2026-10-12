@@ -24,6 +24,8 @@ class Nomina extends Model
         'fecha_inicio',
         'fecha_fin',
         'estado',
+        // Calculada en paralelo con la de Financiero (fase 7.3c).
+        'referencial',
         'total_ingresos',
         'total_descuentos',
         'total_neto',
@@ -37,6 +39,7 @@ class Nomina extends Model
             'fecha_inicio' => 'date',
             'fecha_fin'    => 'date',
             'estado'       => EstadoNomina::class,
+            'referencial'  => 'boolean',
             'cerrado_en'   => 'datetime',
         ];
     }
