@@ -4,6 +4,7 @@ namespace App\Models\Expediente;
 
 use App\Enums\EstadoSubrogacion;
 use App\Enums\MotivoSubrogacion;
+use App\Enums\TipoAusenciaTitular;
 use App\Enums\TipoSubrogacion;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
@@ -36,7 +37,7 @@ class Subrogacion extends Model
         return [
             'tipo'         => TipoSubrogacion::class,
             'motivo'       => MotivoSubrogacion::class,
-            'ausencia_tipo' => \App\Enums\TipoAusenciaTitular::class,
+            'ausencia_tipo' => TipoAusenciaTitular::class,
             'estado'       => EstadoSubrogacion::class,
             'fecha_inicio' => 'date',
             'fecha_fin'    => 'date',

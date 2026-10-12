@@ -2,11 +2,14 @@
 
 namespace App\Services\Dispensario;
 
+use App\Enums\TipoAusenciaTitular;
 use App\Exceptions\ReglaNegocioException;
+use App\Models\Asistencia\Licencia;
 use App\Models\Dispensario\CertificadoMedico;
 use App\Models\Dispensario\ConsultaMedica;
 use App\Models\Dispensario\HistoriaClinica;
 use App\Services\Asistencia\AprobacionCertificadoSirha7Service;
+use App\Services\Expediente\SubrogacionService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -95,7 +98,7 @@ class CertificadoMedicoService
 
     private function rechazarSiHayLicencia(int $servidorId, Carbon $inicio, Carbon $fin): void
     {
-        $licencia = \App\Models\Asistencia\Licencia::vigentesDe($servidorId, $inicio->toDateString(), $fin->toDateString())->first();
+        $licencia = Licencia::vigentesDe($servidorId, $inicio->toDateString(), $fin->toDateString())->first();
 
         if ($licencia) {
             throw new ReglaNegocioException(sprintf(
@@ -169,8 +172,8 @@ class CertificadoMedicoService
             ]);
 
             // La subrogación que este reposo motivaba se cancela con él (fase 5.2).
-            app(\App\Services\Expediente\SubrogacionService::class)->cancelarPorAusencia(
-                \App\Enums\TipoAusenciaTitular::REPOSO,
+            app(SubrogacionService::class)->cancelarPorAusencia(
+                TipoAusenciaTitular::REPOSO,
                 $certificado->id,
                 "Se anuló el reposo médico {$certificado->folio} del titular.",
             );

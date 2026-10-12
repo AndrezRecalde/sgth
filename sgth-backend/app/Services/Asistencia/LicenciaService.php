@@ -5,6 +5,7 @@ namespace App\Services\Asistencia;
 use App\Enums\CausaLicencia;
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\EstadoPermiso;
+use App\Enums\TipoAusenciaTitular;
 use App\Enums\TipoNombramiento;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Asistencia\Licencia;
@@ -13,6 +14,7 @@ use App\Models\Asistencia\Vacacion;
 use App\Models\Dispensario\CertificadoMedico;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
+use App\Services\Expediente\SubrogacionService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
@@ -169,8 +171,8 @@ class LicenciaService
 
             // La subrogación que esta licencia motivaba se cancela con ella
             // (fase 5.2).
-            app(\App\Services\Expediente\SubrogacionService::class)->cancelarPorAusencia(
-                \App\Enums\TipoAusenciaTitular::LICENCIA,
+            app(SubrogacionService::class)->cancelarPorAusencia(
+                TipoAusenciaTitular::LICENCIA,
                 $licencia->id,
                 "Se anuló la licencia {$licencia->folio} del titular: {$motivo}",
             );

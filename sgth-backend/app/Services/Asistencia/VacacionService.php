@@ -7,7 +7,9 @@ use App\Contracts\Asistencia\VacacionServiceInterface;
 use App\Enums\EstadoPermiso;
 use App\Enums\MotivoVacacion;
 use App\Enums\RegimenLaboral;
+use App\Enums\TipoAusenciaTitular;
 use App\Exceptions\ReglaNegocioException;
+use App\Models\Asistencia\Licencia;
 use App\Models\Asistencia\PermisoServidor;
 use App\Models\Asistencia\Vacacion;
 use App\Models\Dispensario\CertificadoMedico;
@@ -15,6 +17,7 @@ use App\Models\Expediente\Servidor;
 use App\Models\User;
 use App\Services\Asistencia\Motores\VacacionCodigoTrabajoService;
 use App\Services\Asistencia\Motores\VacacionLosepService;
+use App\Services\Expediente\SubrogacionService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -319,8 +322,8 @@ class VacacionService implements VacacionServiceInterface
 
             // La subrogación que estas vacaciones motivaban se cancela con
             // ellas (fase 5.2).
-            app(\App\Services\Expediente\SubrogacionService::class)->cancelarPorAusencia(
-                \App\Enums\TipoAusenciaTitular::VACACION,
+            app(SubrogacionService::class)->cancelarPorAusencia(
+                TipoAusenciaTitular::VACACION,
                 $vacacion->id,
                 'Se anularon las vacaciones '.($vacacion->folio ?? "#{$vacacion->id}")." del titular: {$motivo}",
             );
@@ -452,7 +455,7 @@ class VacacionService implements VacacionServiceInterface
 
         // Y las licencias con remuneración, que desde la fase 5.1 ya no son
         // motivos de vacaciones: ocupan sus días desde que se registran.
-        $licencia = \App\Models\Asistencia\Licencia::vigentesDe($servidorId, $inicio->toDateString(), $fin->toDateString())->first();
+        $licencia = Licencia::vigentesDe($servidorId, $inicio->toDateString(), $fin->toDateString())->first();
 
         if ($licencia) {
             throw new ReglaNegocioException(sprintf(
