@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Resources\Estructura;
 
+use App\Services\Estructura\ProteccionDePuestoOcupado;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -24,6 +25,10 @@ class PuestoResource extends JsonResource
             'es_jefe'                   => $this->es_jefe,
             'activo'                    => $this->activo,
             'rmu'                       => $this->rmu,
+            // Ocupado, la unidad cambia con el traspaso y no se desactiva;
+            // con historia, no se elimina (fase 7.1a).
+            'ocupado'                   => ProteccionDePuestoOcupado::ocupado($this->resource),
+            'puede_eliminar'            => ProteccionDePuestoOcupado::puedeEliminarse($this->resource),
 
             'cargo' => $this->whenLoaded('cargo', fn() => [
                 'id'                     => $this->cargo->id,

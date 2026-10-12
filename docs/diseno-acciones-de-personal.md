@@ -1133,6 +1133,22 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
 
 **Fase 7 — Estructura, nómina y salida**
 1. Operaciones sobre puestos ocupados (traspaso de puesto, revisión de clasificación) y bloqueo de la edición directa y del borrado.
+   - Va en dos PR: 1a, el bloqueo, el historial y el traspaso; 1b, la revisión de la clasificación. Cada uno bloquea lo que reemplaza.
+   - Hasta aquí Estructura dejaba cambiar la unidad, el grupo, la denominación y el régimen de un puesto ocupado, bajarle las plazas, desactivarlo y borrarlo, sin acto. El ocupante se quedaba con el contrato en la unidad de antes, o sin puesto: la nómina lo saltaba y sus documentos salían en blanco.
+   - **1a.** Ocupado es tener un contrato vigente de cualquier modalidad, la reserva de un ascendido o una acción registrada que espera su fecha con ese destino (`Puesto::scopeConOcupacion`, que el listado calcula en la misma consulta). Con un ocupante (`ProteccionDePuestoOcupado`):
+     - la unidad cambia solo por el traspaso;
+     - el régimen no cambia y el puesto no se desactiva;
+     - las plazas no bajan de las ocupadas, ocupado o no.
+   - **1a.** No se borra lo ocupado ni lo que tiene historia —un contrato, aunque esté cerrado, una acción que lo nombre o una subrogación—: se desactiva [TH N16]. La jefatura tampoco se lleva a una unidad que ya tiene la suya; antes eso reventaba el índice de la base.
+   - **1a.** El registro de auditoría del puesto guarda el antes, el después y la causa: «Edición directa en Estructura», o el acto y el lote que lo cambiaron. Sin tabla nueva.
+   - **1a.** Traspaso de puesto (`traspaso_puesto`, LOSEP Art. 37; Reglamento a la LOSEP Art. 69): en Estructura, «Traspasar a otra unidad», con la unidad, el informe técnico de la UATH y su criterio del Art. 69, la fecha y la explicación.
+     - Nace un lote (`lotes_accion`, tipo `traspaso_puesto`) con una acción por ocupante, que marca la casilla TRASPASO: el mismo puesto, con su partida y su remuneración, en la unidad nueva.
+     - No se prepara si el puesto está vacante —se edita directo—, inactivo, con acciones en trámite o por regir sobre él o sus ocupantes, si es una jefatura que llega a una unidad con jefe, o si quien lo prepara es un ocupante.
+     - Solo puestos de la LOSEP y ocupantes que reciben acción de personal. El cambio de unidad del obrero va por la adenda firmada (CT 192; el cambio de lugar de la 4.3), y el de Servicios Profesionales, por la de su contrato civil (4.2): con uno de ellos, el traspaso no se prepara y se dice por qué.
+   - **1a.** Se suscribe y registra el lote entero, en una transacción: si uno falla, ninguno queda registrado. Al surtir efecto, el primer acto mueve el puesto y cada uno el contrato de su ocupante, con la copia del servidor. Lo que rige más tarde lo aplica el comando diario.
+   - **1a.** Los actos del traspaso no se suscriben, registran ni anulan sueltos: desde el lote. En trámite se descarta; registrado, se revierte, y el puesto y sus ocupantes vuelven a la unidad de origen. Cada acto se notifica por su lado.
+   - **1a.** «Incrementos en lote» pasa a «Actos en lote»: lista los dos tipos, con «Revertir el traspaso». El ascendido que vuelve a su puesto reservado vuelve a la unidad en que esté hoy el puesto.
+   - **1a.** Fuera: el traspaso a otra institución (cierra el vínculo, con el dictamen de Finanzas y la aprobación del Ministerio del Trabajo), y el grupo, la denominación y el renombrado de cargos con puestos ocupados, que van en la 1b.
 2. Actos en lote.
 3. Novedades de nómina; la nómina lee el vínculo (con un mes de corrida en paralelo).
 4. Desvinculación.

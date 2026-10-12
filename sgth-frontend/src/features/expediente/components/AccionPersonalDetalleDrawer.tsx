@@ -5,7 +5,7 @@ import {
 } from '@/components/ui'
 import { Alert, Group, Stack, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconAlertTriangle, IconFileOff, IconUserOff } from '@tabler/icons-react'
+import { IconAlertTriangle, IconFileOff, IconInfoCircle, IconUserOff } from '@tabler/icons-react'
 import { useMovimiento } from '../hooks/useMovimientoMutations'
 import { AccionAnotaciones } from './AccionAnotaciones'
 import { AccionLiquidacionReferencial } from './AccionLiquidacionReferencial'
@@ -127,6 +127,14 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
         )}
 
         <AccionRelacionada m={m} />
+
+        {/* El traspaso de un puesto va con su lote (fase 7.1a). */}
+        {m.clase === 'traspaso_puesto' && (estado === 'borrador' || estado === 'suscrita') && (
+          <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
+            Es parte del traspaso del lote #{m.lote_id}: se suscribe, se registra y se anula desde
+            «Actos en lote», con los actos de los demás ocupantes.
+          </Alert>
+        )}
 
         {esIngreso && estado === 'suscrita' && (
           <Alert variant="light" color="amber" icon={<IconAlertTriangle size={16} />}>

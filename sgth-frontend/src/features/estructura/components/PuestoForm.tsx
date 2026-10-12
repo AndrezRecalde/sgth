@@ -37,10 +37,17 @@ const REGIMEN_OPTIONS = [
 
 interface Props {
   initialValues?: Partial<PuestoFormData>
+  /**
+   * Con un ocupante, la unidad cambia con el traspaso de puesto, el régimen no
+   * cambia y no se desactiva (fase 7.1a). El backend lo exige igual.
+   */
+  ocupado?: boolean
   onSubmit: (values: PuestoFormData) => void
 }
 
-export function PuestoForm({ initialValues, onSubmit }: Props) {
+const SOLO_CON_TRASPASO = 'Ocupado: pasa a otra unidad con «Traspasar a otra unidad».'
+
+export function PuestoForm({ initialValues, ocupado = false, onSubmit }: Props) {
   const contained = useContainedInput()
   const { data: unidadesRaw } = useTodasUnidades({ nivel: 2 })
   const { data: gruposRaw }   = useGruposOcupacionales()
@@ -101,6 +108,15 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
       <LoadingOverlay visible={!isReady} zIndex={10} />
       <form id="puesto-form" onSubmit={handleSubmit(onSubmit)} noValidate>
         <Grid>
+          {ocupado && (
+            <Grid.Col span={12}>
+              <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
+                El puesto está ocupado. Pasa a otra unidad con «Traspasar a otra unidad», que emite la
+                acción de personal de cada ocupante (LOSEP Art. 37). Mientras lo esté, el régimen no
+                cambia, no se desactiva y las plazas no bajan de las ocupadas.
+              </Alert>
+            </Grid.Col>
+          )}
           <Grid.Col span={{ base: 12, sm: 8 }}>
             <Controller
               name="cargo_id"
@@ -127,6 +143,7 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
                 <Select
                   label="Régimen laboral"
                   data={REGIMEN_OPTIONS}
+                  disabled={ocupado}
                   {...contained}
                   value={field.value ?? 'losep'}
                   onChange={(v) =>
@@ -145,8 +162,10 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
                 <Select
                   label="Unidad administrativa"
                   placeholder="Seleccionar gestión"
+                  description={ocupado ? SOLO_CON_TRASPASO : undefined}
                   data={unidadOptions}
                   searchable
+                  disabled={ocupado}
                   {...contained}
                   value={field.value ? String(field.value) : ''}
                   onChange={(v) => field.onChange(v ? Number(v) : undefined)}
@@ -280,6 +299,8 @@ export function PuestoForm({ initialValues, onSubmit }: Props) {
               render={({ field }) => (
                 <Switch
                   label="Puesto activo"
+                  description={ocupado ? 'Ocupado: no se desactiva.' : undefined}
+                  disabled={ocupado && field.value}
                   checked={field.value}
                   onChange={(e) => field.onChange(e.currentTarget.checked)}
                   mt="xs"

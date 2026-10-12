@@ -659,7 +659,19 @@ class MovimientoPersonal extends Model
             // Lo que cambia del contrato de trabajo de un obrero (fase 4.3).
             || $this->cambiaElContratoDeTrabajo()
             || $this->reubicaAlServidor()
+            // El traspaso de puesto: la unidad del vínculo (fase 7.1a).
+            || $this->esTraspasoDePuesto()
             || (bool) $this->subtipoEfectivo()?->cierraVinculo();
+    }
+
+    /**
+     * ¿Es uno de los actos del traspaso de un puesto (LOSEP Art. 37; fase
+     * 7.1a)? Se suscribe, se registra y se anula con su lote, todos a la vez:
+     * un puesto no puede quedar con unos ocupantes en cada unidad.
+     */
+    public function esTraspasoDePuesto(): bool
+    {
+        return $this->tipo_movimiento === TipoMovimientoPersonal::TRASPASO_PUESTO;
     }
 
     /**
@@ -818,7 +830,9 @@ class MovimientoPersonal extends Model
             // Y lo que cambia del contrato de trabajo de un obrero (fase 4.3).
             || $this->cambiaElContratoDeTrabajo()
             || $this->tipo_movimiento === TipoMovimientoPersonal::SUBROGACION
-            || $this->reubicaAlServidor();
+            || $this->reubicaAlServidor()
+            // El traspaso: el mismo puesto, en la unidad nueva (fase 7.1a).
+            || $this->esTraspasoDePuesto();
     }
 
     /**

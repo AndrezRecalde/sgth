@@ -5,6 +5,7 @@ use App\Enums\NivelComplejidadPuesto;
 use App\Enums\RolPuesto;
 use App\Observers\PuestoObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -74,6 +75,53 @@ class Puesto extends Model
     public function contratos(): HasMany
     {
         return $this->hasMany(\App\Models\Expediente\ContratoServidor::class);
+    }
+
+    /**
+     * Si está ocupado y si tiene historia, calculados en la misma consulta
+     * (fase 7.1a): el listado los necesita para cada fila, y uno por fila serían
+     * dos consultas más cada vez. Lo lee `ProteccionDePuestoOcupado`, que
+     * consulta así mismo cuando el puesto llega sin ellos.
+     *
+     * - `ocupado`: un contrato vigente que lo ocupa o lo reserva —el del
+     *   ascendido en prueba—, o una acción registrada que lo tiene de destino y
+     *   todavía no rige.
+     * - `con_historia`: cualquier contrato, también los cerrados o anulados,
+     *   cualquier acción que lo nombre de origen o de destino, o una subrogación.
+     */
+    public function scopeConOcupacion(Builder $query): Builder
+    {
+        if ($query->getQuery()->columns === null) {
+            $query->select('puestos.*');
+        }
+
+        return $query->selectRaw(<<<'SQL'
+            (
+                exists (
+                    select 1 from contratos_servidor c
+                    where c.deleted_at is null and c.estado = 'vigente'
+                      and (c.puesto_id = puestos.id or c.puesto_reservado_id = puestos.id)
+                )
+                or exists (
+                    select 1 from movimientos_personal m
+                    where m.puesto_destino_id = puestos.id
+                      and m.estado in ('registrada', 'notificada')
+                      and m.codigo_registro is not null
+                      and m.efecto_aplicado_en is null
+                )
+            ) as ocupado,
+            (
+                exists (
+                    select 1 from contratos_servidor c
+                    where c.puesto_id = puestos.id or c.puesto_reservado_id = puestos.id
+                )
+                or exists (
+                    select 1 from movimientos_personal m
+                    where m.puesto_origen_id = puestos.id or m.puesto_destino_id = puestos.id
+                )
+                or exists (select 1 from subrogaciones s where s.puesto_subrogado_id = puestos.id)
+            ) as con_historia
+            SQL);
     }
 
     public function contratosVigentes(): HasMany

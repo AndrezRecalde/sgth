@@ -17,6 +17,7 @@ import {
 import { getPuestoColumns } from "./puesto.columns";
 import { PuestoModal } from "./PuestoModal";
 import { PuestoActividadesDrawer } from "./PuestoActividadesDrawer";
+import { TraspasoPuestoModal } from "./TraspasoPuestoModal";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import type { PuestoConRelaciones, UnidadConRelaciones } from "@/types/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -27,6 +28,10 @@ export function PuestosTab() {
   // consulta sin ver botones que el backend le negaría.
   const { hasPermiso } = useAuth();
   const puedeGestionar = hasPermiso("gestionar-puestos");
+  // El traspaso de un puesto ocupado es un lote de acciones de personal
+  // (fase 7.1a): lo prepara quien prepara acciones.
+  const puedeTraspasar = hasPermiso("preparar-accion-personal");
+  const [aTraspasar, setATraspasar] = useState<PuestoConRelaciones | null>(null);
   const [page, setPage] = useState(1);
   const [unidadIds, setUnidadIds] = useState<string[]>([]);
   const [editPuesto, setEditPuesto] = useState<PuestoConRelaciones | null>(null);
@@ -140,7 +145,9 @@ export function PuestosTab() {
             onEdit: handleEdit,
             onDelete: handleDelete,
             onActividades: handleActividades,
+            onTraspasar: setATraspasar,
             puedeGestionar,
+            puedeTraspasar,
           })}
           totalRecords={data?.total || records.length || 0}
           recordsPerPage={15}
@@ -154,6 +161,11 @@ export function PuestosTab() {
         opened={modalOpened}
         onClose={handleClose}
         puesto={editPuesto}
+      />
+
+      <TraspasoPuestoModal
+        puesto={aTraspasar}
+        onClose={() => setATraspasar(null)}
       />
 
       <PuestoActividadesDrawer

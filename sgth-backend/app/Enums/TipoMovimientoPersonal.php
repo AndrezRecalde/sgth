@@ -64,6 +64,11 @@ enum TipoMovimientoPersonal: string
     // El obrero pasa a otra unidad, en un puesto de la misma denominación, o a
     // otro lugar de trabajo, por adenda de su contrato (CT 192; fase 4.3).
     case CAMBIO_LUGAR              = 'cambio_lugar';
+    // El puesto, con su partida, pasa a otra unidad de la institución, y con
+    // él sus ocupantes (LOSEP Art. 37; fase 7.1a). Nace en un lote, desde
+    // Estructura. No es el `traspaso` de arriba, que es el traslado de un
+    // permanente (Art. 35).
+    case TRASPASO_PUESTO           = 'traspaso_puesto';
 
     public function etiqueta(): string
     {
@@ -91,6 +96,7 @@ enum TipoMovimientoPersonal: string
             self::ASUNCION_DEFINITIVA       => 'Asunción Definitiva',
             self::ADENDA                    => 'Adenda',
             self::CAMBIO_LUGAR              => 'Cambio de Lugar',
+            self::TRASPASO_PUESTO           => 'Traspaso de Puesto',
         };
     }
 
@@ -227,6 +233,9 @@ enum TipoMovimientoPersonal: string
             self::CAMBIO_DENOMINACION,
             self::INCREMENTO_REMUNERACION,
             self::CAMBIO_LUGAR,
+            // El traspaso de puesto: el vínculo sigue en el mismo puesto, en la
+            // unidad nueva (fase 7.1a).
+            self::TRASPASO_PUESTO,
         ], true);
     }
 
@@ -342,6 +351,7 @@ enum TipoMovimientoPersonal: string
             self::ASUNCION_DEFINITIVA,
             self::ADENDA,
             self::CAMBIO_LUGAR,
+            self::TRASPASO_PUESTO,
         ], true) || $this->subtipoEquivalente() !== null;
     }
 

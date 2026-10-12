@@ -108,6 +108,8 @@ function invalidarTodo(qc: ReturnType<typeof useQueryClient>) {
   qc.invalidateQueries({ queryKey: ['lotes-accion'] })
   qc.invalidateQueries({ queryKey: ['bandeja-movimientos'] })
   qc.invalidateQueries({ queryKey: ['movimientos'] })
+  // El traspaso mueve el puesto de unidad (fase 7.1a).
+  qc.invalidateQueries({ queryKey: ['puestos'] })
 }
 
 export function usePrevisualizarIncremento() {
@@ -157,5 +159,19 @@ export function useDescartarLote() {
       invalidarTodo(qc)
     },
     onError: notificar.alFallar('No se pudo descartar el lote'),
+  })
+}
+
+/** El traspaso registrado, entero: el puesto y sus ocupantes vuelven (fase 7.1a). */
+export function useRevertirLote() {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, motivo }: { id: number; motivo: string }) => loteAccionService.revertir(id, motivo),
+    onSuccess: (r) => {
+      notificar.exito('Traspaso revertido', r.mensaje)
+      invalidarTodo(qc)
+    },
+    onError: notificar.alFallar('No se pudo revertir el traspaso'),
   })
 }

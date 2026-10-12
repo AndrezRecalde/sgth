@@ -45,6 +45,7 @@ export function PuestoModal({ opened, onClose, puesto }: Props) {
             es_jefe:           puesto?.es_jefe,
             activo:            puesto?.activo,
           } : undefined}
+          ocupado={isEditing && !!puesto?.ocupado}
           onSubmit={handleSubmit}
         />
       </Stack>

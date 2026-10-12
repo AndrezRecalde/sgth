@@ -4031,6 +4031,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/expediente/lotes-accion/traspaso-puesto/previsualizar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Quiénes recibirían el acto del traspaso, y lo que lo impide (fase 7.1a) */
+        post: operations["loteAccion.previsualizarTraspaso"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/lotes-accion/traspaso-puesto": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Prepara un borrador por ocupante, todos o ninguno (fase 7.1a) */
+        post: operations["loteAccion.traspasar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/expediente/lotes-accion/{lote}": {
         parameters: {
             query?: never;
@@ -4058,7 +4092,7 @@ export interface paths {
         put?: never;
         /**
          * Suscribe y registra lo que del lote sigue en trámite. Pide los dos
-         *     permisos, como hacerlo acto por acto
+         *     permisos, como hacerlo acto por acto. El traspaso, todos o ninguno
          */
         post: operations["loteAccion.registrar"];
         delete?: never;
@@ -4078,6 +4112,26 @@ export interface paths {
         put?: never;
         /** Anula lo que del lote sigue en trámite */
         post: operations["loteAccion.descartar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/lotes-accion/{lote}/revertir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Deja sin efecto el traspaso registrado: anula todos sus actos, y el
+         *     puesto y sus ocupantes vuelven a la unidad de origen (fase 7.1a)
+         */
+        post: operations["loteAccion.revertir"];
         delete?: never;
         options?: never;
         head?: never;
@@ -8158,12 +8212,12 @@ export interface components {
          * @description La clase legal de una acción de personal: el acto que se registra, con el nombre que le da la LOSEP (diseño de Acciones de Personal, sección 4). Es la identidad pública del catálogo. El frontend elige una clase —y, en la cesación, una causal— y el backend la traduce al par tipo/subtipo con el que todavía se guarda y opera cada acción. Esa traducción vive aquí, en `tipoYSubtipo()`, y su inversa en `desde()`: son las dos únicas puertas entre los dos vocabularios.  Las reglas no se repiten. La elegibilidad por nombramiento se pregunta a `TipoMovimientoPersonal` y `SubtipoMovimientoPersonal`, que siguen siendo su única fuente: esta clase solo las agrupa con el nombre legal. Lo que es solo de formulario —qué bloques pide, el aviso de la comisión— sí vive aquí, y `CatalogoAccionesPersonalTest` comprueba que coincida con lo que el tipo/subtipo traducido hace de verdad.  Nombres que cambian respecto de los que veía Talento Humano, todos aceptados el 2026-10-09 (cuestionario, preguntas N1, 9 y 15):  - el «Traspaso» de los permanentes y la «Prestación de servicios» de los    demás son el mismo acto, el **traslado** del Art. 35;  - el «Traslado administrativo» entre instituciones es el **intercambio    voluntario** del Art. 39;  - el «Cambio de denominación» de los obreros es el **cambio de ocupación**    del Art. 192 del Código del Trabajo.
          * @enum {string}
          */
-        ClaseAccionPersonal: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "subrogacion" | "encargo" | "incremento_remuneracion" | "cambio_ocupacion" | "sancion" | "cesacion" | "reintegro" | "restitucion" | "nombramiento_definitivo" | "ascenso" | "inicio_periodo" | "licencia_consejo" | "asuncion_definitiva" | "adenda" | "cambio_lugar";
+        ClaseAccionPersonal: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "subrogacion" | "encargo" | "incremento_remuneracion" | "cambio_ocupacion" | "sancion" | "cesacion" | "reintegro" | "restitucion" | "nombramiento_definitivo" | "ascenso" | "inicio_periodo" | "licencia_consejo" | "asuncion_definitiva" | "adenda" | "cambio_lugar" | "traspaso_puesto";
         /** ClaseAccionPersonalResource */
         ClaseAccionPersonalResource: {
             codigo: components["schemas"]["ClaseAccionPersonal"];
             /** @enum {string} */
-            etiqueta: "Ingreso y Vinculación" | "Traslado" | "Intercambio Voluntario" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Licencia sin Remuneración" | "Subrogación" | "Encargo" | "Incremento de Remuneración" | "Cambio de Ocupación" | "Sanción Disciplinaria" | "Cesación de Funciones" | "Reintegro" | "Restitución" | "Nombramiento Definitivo" | "Ascenso" | "Inicio del Período" | "Licencia concedida por el Consejo" | "Asunción Definitiva" | "Adenda al contrato" | "Cambio de Lugar de Trabajo";
+            etiqueta: "Ingreso y Vinculación" | "Traslado" | "Intercambio Voluntario" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Licencia sin Remuneración" | "Subrogación" | "Encargo" | "Incremento de Remuneración" | "Cambio de Ocupación" | "Sanción Disciplinaria" | "Cesación de Funciones" | "Reintegro" | "Restitución" | "Nombramiento Definitivo" | "Ascenso" | "Inicio del Período" | "Licencia concedida por el Consejo" | "Asunción Definitiva" | "Adenda al contrato" | "Cambio de Lugar de Trabajo" | "Traspaso de Puesto";
             familia: components["schemas"]["FamiliaAccionPersonal"];
             se_crea_desde_formulario: boolean;
             requiere_vinculo: boolean;
@@ -8174,7 +8228,7 @@ export interface components {
              *     con causal, manda la de la causal (fase 6.1).
              * @enum {string|null}
              */
-            base_legal: "LOSEP Arts. 16 a 18; Reglamento a la LOSEP Art. 19" | "LOSEP Art. 17 b.5; Reglamento a la LOSEP Arts. 224 a 227" | "LOSEP Art. 32" | "LOSEP Art. 46" | "LOSEP Art. 68; Reglamento a la LOSEP Arts. 190 y 191" | "LOSEP Arts. 35 y 36" | "LOSEP Arts. 39 y 40" | "LOSEP Art. 30" | "LOSEP Art. 31" | "LOSEP Art. 28" | "LOSEP Art. 126; Reglamento a la LOSEP Art. 270" | "LOSEP Art. 127; Reglamento a la LOSEP Art. 271" | "LOSEP Art. 43; Reglamento a la LOSEP Art. 87" | "LOSEP Art. 47" | "LOSEP Art. 47 a; Reglamento Art. 102" | "LOSEP Art. 47 e; Reglamento Art. 105" | "LOSEP Art. 17 b.5" | "Reglamento a la LOSEP Art. 146 a" | "Reglamento a la LOSEP Art. 146 f" | "Reglamento a la LOSEP Art. 146 b" | "Reglamento a la LOSEP Art. 146 g" | "LOSEP Arts. 47 f y 48" | "LOSEP Art. 47 j" | "LOSEP Art. 47 i y k; Mandato Constituyente 2" | "LOSEP Art. 47 b" | "LOSEP Art. 47 d" | "LOSEP Art. 47 l" | "Código del Trabajo Art. 172" | "Constitución Art. 105" | "COOTAD Arts. 333–336" | "El plazo del contrato" | "Código Civil Art. 1561" | "La cláusula de terminación del contrato" | "Código del Trabajo, Arts. 184 y 185" | "Código del Trabajo, Art. 169 núm. 2" | "Código del Trabajo, Art. 169 núm. 3" | "Código del Trabajo, Art. 15" | "Código del Trabajo, Arts. 185 y 188" | "Código del Trabajo, Art. 216; Mandato Constituyente 2" | "Mandato Constituyente 2, art. 8" | "Código del Trabajo, Art. 169 núm. 5" | "Código del Trabajo, Art. 169 núm. 6" | "LOSEP Art. 28 a" | "LOSEP Art. 28 b" | "LOSEP Art. 28 c" | "LOSEP Art. 28 d" | "LOSEP Art. 28 e" | "LOSEP Art. 28 f" | "LOSEP Art. 43 b" | "LOSEP Art. 43 c" | "LOSEP Art. 43 d" | null;
+            base_legal: "LOSEP Arts. 16 a 18; Reglamento a la LOSEP Art. 19" | "LOSEP Art. 17 b.5; Reglamento a la LOSEP Arts. 224 a 227" | "LOSEP Art. 32" | "LOSEP Art. 46" | "LOSEP Art. 68; Reglamento a la LOSEP Arts. 190 y 191" | "LOSEP Arts. 35 y 36" | "LOSEP Art. 37; Reglamento a la LOSEP Art. 69" | "LOSEP Arts. 39 y 40" | "LOSEP Art. 30" | "LOSEP Art. 31" | "LOSEP Art. 28" | "LOSEP Art. 126; Reglamento a la LOSEP Art. 270" | "LOSEP Art. 127; Reglamento a la LOSEP Art. 271" | "LOSEP Art. 43; Reglamento a la LOSEP Art. 87" | "LOSEP Art. 47" | "LOSEP Art. 47 a; Reglamento Art. 102" | "LOSEP Art. 47 e; Reglamento Art. 105" | "LOSEP Art. 17 b.5" | "Reglamento a la LOSEP Art. 146 a" | "Reglamento a la LOSEP Art. 146 f" | "Reglamento a la LOSEP Art. 146 b" | "Reglamento a la LOSEP Art. 146 g" | "LOSEP Arts. 47 f y 48" | "LOSEP Art. 47 j" | "LOSEP Art. 47 i y k; Mandato Constituyente 2" | "LOSEP Art. 47 b" | "LOSEP Art. 47 d" | "LOSEP Art. 47 l" | "Código del Trabajo Art. 172" | "Constitución Art. 105" | "COOTAD Arts. 333–336" | "El plazo del contrato" | "Código Civil Art. 1561" | "La cláusula de terminación del contrato" | "Código del Trabajo, Arts. 184 y 185" | "Código del Trabajo, Art. 169 núm. 2" | "Código del Trabajo, Art. 169 núm. 3" | "Código del Trabajo, Art. 15" | "Código del Trabajo, Arts. 185 y 188" | "Código del Trabajo, Art. 216; Mandato Constituyente 2" | "Mandato Constituyente 2, art. 8" | "Código del Trabajo, Art. 169 núm. 5" | "Código del Trabajo, Art. 169 núm. 6" | "LOSEP Art. 28 a" | "LOSEP Art. 28 b" | "LOSEP Art. 28 c" | "LOSEP Art. 28 d" | "LOSEP Art. 28 e" | "LOSEP Art. 28 f" | "LOSEP Art. 43 b" | "LOSEP Art. 43 c" | "LOSEP Art. 43 d" | null;
             pide_situacion_propuesta: boolean;
             pide_periodo: boolean;
             pide_institucion_destino: boolean;
@@ -8421,6 +8475,12 @@ export interface components {
             /** Format: date-time */
             updated_at: string | null;
         };
+        /**
+         * CriterioTraspasoPuesto
+         * @description Por qué se traspasa un puesto a otra unidad de la misma institución: los criterios del Reglamento a la LOSEP, Art. 69, numeral 1 (fase 7.1a). El informe técnico de la UATH dice cuál aplica.
+         * @enum {string}
+         */
+        CriterioTraspasoPuesto: "reorganizacion_interna" | "nuevas_atribuciones" | "nuevas_estructuras" | "reforma_de_estructura" | "desconcentracion" | "simplificacion_de_tramites" | "evitar_duplicacion" | "racionalizacion" | "reglamento_interno";
         /** CuentaBancariaServidor */
         CuentaBancariaServidor: {
             id: number;
@@ -10425,6 +10485,12 @@ export interface components {
             es_jefe: boolean;
             activo: boolean;
             rmu: string;
+            /**
+             * @description Ocupado, la unidad cambia con el traspaso y no se desactiva;
+             *     con historia, no se elimina (fase 7.1a).
+             */
+            ocupado: boolean;
+            puede_eliminar: boolean;
             cargo?: {
                 id: number;
                 nombre: string;
@@ -12199,7 +12265,7 @@ export interface components {
          * TipoMovimientoPersonal
          * @enum {string}
          */
-        TipoMovimientoPersonal: "traslado" | "subrogacion" | "comision_servicios" | "ingreso" | "cambio_denominacion" | "prestacion_servicios" | "cambio_administrativo" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "traspaso" | "destitucion" | "cesacion_funciones" | "regimen_disciplinario" | "reintegro" | "restitucion" | "nombramiento_definitivo" | "ascenso" | "inicio_periodo" | "licencia_consejo" | "asuncion_definitiva" | "adenda" | "cambio_lugar";
+        TipoMovimientoPersonal: "traslado" | "subrogacion" | "comision_servicios" | "ingreso" | "cambio_denominacion" | "prestacion_servicios" | "cambio_administrativo" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "traspaso" | "destitucion" | "cesacion_funciones" | "regimen_disciplinario" | "reintegro" | "restitucion" | "nombramiento_definitivo" | "ascenso" | "inicio_periodo" | "licencia_consejo" | "asuncion_definitiva" | "adenda" | "cambio_lugar" | "traspaso_puesto";
         /**
          * TipoNombramiento
          * @enum {string}
@@ -12340,6 +12406,22 @@ export interface components {
             impugnacion_referencia?: string | null;
             /** Format: date-time */
             fecha_impugnacion?: string | null;
+        };
+        /**
+         * TraspasoDePuestoRequest
+         * @description El traspaso de un puesto a otra unidad (LOSEP Art. 37; Reglamento a la LOSEP
+         *     Art. 69; fase 7.1a). La vista previa pide solo el puesto y, si la hay, la
+         *     unidad; prepararlo pide además el informe técnico de la UATH, su criterio,
+         *     la explicación y la fecha en que rige.
+         */
+        TraspasoDePuestoRequest: {
+            puesto_id: number;
+            unidad_destino_id: number;
+            criterio: components["schemas"]["CriterioTraspasoPuesto"];
+            informe_uath_numero: string;
+            descripcion: string;
+            /** Format: date-time */
+            fecha_efectiva: string;
         };
         /** Triaje */
         Triaje: {
@@ -24309,9 +24391,17 @@ export interface operations {
                             descripcion: string;
                             fecha_efectiva: string;
                             documento_origen: string;
-                            dictamen_presupuestario_ref: string;
+                            dictamen_presupuestario_ref: string | null;
                             parametros: unknown[];
                             contrato_colectivo_id: number | null;
+                            /** @description El puesto y las unidades del traspaso (fase 7.1a). */
+                            traspaso: {
+                                puesto_id: unknown;
+                                puesto: string | null;
+                                unidad_origen: string | null;
+                                unidad_destino: string | null;
+                                criterio: string | null;
+                            } | null;
                             creado_por: string;
                             created_at: string;
                             total: string;
@@ -24406,9 +24496,130 @@ export interface operations {
                             descripcion: string;
                             fecha_efectiva: string;
                             documento_origen: string;
-                            dictamen_presupuestario_ref: string;
+                            dictamen_presupuestario_ref: string | null;
                             parametros: unknown[];
                             contrato_colectivo_id: number | null;
+                            /** @description El puesto y las unidades del traspaso (fase 7.1a). */
+                            traspaso: {
+                                puesto_id: unknown;
+                                puesto: string | null;
+                                unidad_origen: string | null;
+                                unidad_destino: string | null;
+                                criterio: string | null;
+                            } | null;
+                            creado_por: string;
+                            created_at: string;
+                            total: string;
+                            por_estado: {
+                                [key: string]: number;
+                            };
+                            actos: {
+                                movimiento_id: number;
+                                codigo_registro: string | null;
+                                estado: string;
+                                nombre: string;
+                                cedula: string;
+                                remuneracion_actual: number | null;
+                                remuneracion_nueva: number | null;
+                            }[];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "loteAccion.previsualizarTraspaso": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TraspasoDePuestoRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Vista previa del traspaso.";
+                        datos: {
+                            puesto: {
+                                id: number;
+                                cargo: string;
+                                unidad: string;
+                                es_jefe: boolean;
+                            };
+                            ocupantes: {
+                                servidor_id: number;
+                                nombre: string;
+                                cedula: string;
+                                tipo_nombramiento: string;
+                            }[];
+                            impedimentos: (string | ("El puesto está inactivo." | "El puesto ya está en esa unidad." | "La unidad de destino no existe." | "La unidad de destino ya tiene su jefatura: un puesto de jefatura no puede llegar a ella." | "Usted ocupa este puesto: el traspaso lo prepara otra persona de Talento Humano."))[];
+                            /**
+                             * @description Los del Art. 69, numeral 1, para el selector: así la pantalla no
+                             *     los copia.
+                             */
+                            criterios: unknown[];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "loteAccion.traspasar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TraspasoDePuestoRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Traspaso de puesto preparado.";
+                        datos: {
+                            id: number;
+                            tipo: string;
+                            descripcion: string;
+                            fecha_efectiva: string;
+                            documento_origen: string;
+                            dictamen_presupuestario_ref: string | null;
+                            parametros: unknown[];
+                            contrato_colectivo_id: number | null;
+                            /** @description El puesto y las unidades del traspaso (fase 7.1a). */
+                            traspaso: {
+                                puesto_id: unknown;
+                                puesto: string | null;
+                                unidad_origen: string | null;
+                                unidad_destino: string | null;
+                                criterio: string | null;
+                            } | null;
                             creado_por: string;
                             created_at: string;
                             total: string;
@@ -24460,9 +24671,17 @@ export interface operations {
                             descripcion: string;
                             fecha_efectiva: string;
                             documento_origen: string;
-                            dictamen_presupuestario_ref: string;
+                            dictamen_presupuestario_ref: string | null;
                             parametros: unknown[];
                             contrato_colectivo_id: number | null;
+                            /** @description El puesto y las unidades del traspaso (fase 7.1a). */
+                            traspaso: {
+                                puesto_id: unknown;
+                                puesto: string | null;
+                                unidad_origen: string | null;
+                                unidad_destino: string | null;
+                                criterio: string | null;
+                            } | null;
                             creado_por: string;
                             created_at: string;
                             total: string;
@@ -24508,21 +24727,34 @@ export interface operations {
                         exito: boolean;
                         mensaje: string;
                         datos: {
-                            registrados: number;
-                            fallidos: {
-                                movimiento_id: number;
-                                nombre: string;
-                                mensaje: string;
-                            }[];
+                            ""?: {
+                                registrados: number;
+                                fallidos: string[];
+                            } | {
+                                registrados: number;
+                                fallidos: {
+                                    movimiento_id: number;
+                                    nombre: string;
+                                    mensaje: string;
+                                }[];
+                            };
                             lote: {
                                 id: number;
                                 tipo: string;
                                 descripcion: string;
                                 fecha_efectiva: string;
                                 documento_origen: string;
-                                dictamen_presupuestario_ref: string;
+                                dictamen_presupuestario_ref: string | null;
                                 parametros: unknown[];
                                 contrato_colectivo_id: number | null;
+                                /** @description El puesto y las unidades del traspaso (fase 7.1a). */
+                                traspaso: {
+                                    puesto_id: unknown;
+                                    puesto: string | null;
+                                    unidad_origen: string | null;
+                                    unidad_destino: string | null;
+                                    criterio: string | null;
+                                } | null;
                                 creado_por: string;
                                 created_at: string;
                                 total: string;
@@ -24582,9 +24814,88 @@ export interface operations {
                                 descripcion: string;
                                 fecha_efectiva: string;
                                 documento_origen: string;
-                                dictamen_presupuestario_ref: string;
+                                dictamen_presupuestario_ref: string | null;
                                 parametros: unknown[];
                                 contrato_colectivo_id: number | null;
+                                /** @description El puesto y las unidades del traspaso (fase 7.1a). */
+                                traspaso: {
+                                    puesto_id: unknown;
+                                    puesto: string | null;
+                                    unidad_origen: string | null;
+                                    unidad_destino: string | null;
+                                    criterio: string | null;
+                                } | null;
+                                creado_por: string;
+                                created_at: string;
+                                total: string;
+                                por_estado: {
+                                    [key: string]: number;
+                                };
+                                actos: {
+                                    movimiento_id: number;
+                                    codigo_registro: string | null;
+                                    estado: string;
+                                    nombre: string;
+                                    cedula: string;
+                                    remuneracion_actual: number | null;
+                                    remuneracion_nueva: number | null;
+                                }[];
+                            };
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "loteAccion.revertir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The lote ID */
+                lote: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    motivo: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: {
+                            anulados: number;
+                            lote: {
+                                id: number;
+                                tipo: string;
+                                descripcion: string;
+                                fecha_efectiva: string;
+                                documento_origen: string;
+                                dictamen_presupuestario_ref: string | null;
+                                parametros: unknown[];
+                                contrato_colectivo_id: number | null;
+                                /** @description El puesto y las unidades del traspaso (fase 7.1a). */
+                                traspaso: {
+                                    puesto_id: unknown;
+                                    puesto: string | null;
+                                    unidad_origen: string | null;
+                                    unidad_destino: string | null;
+                                    criterio: string | null;
+                                } | null;
                                 creado_por: string;
                                 created_at: string;
                                 total: string;
