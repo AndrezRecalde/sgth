@@ -1081,6 +1081,21 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
    - En la pantalla, el botón «Vista previa» en el pie de la acción la abre en otra pestaña. Si el navegador la bloquea, la descarga.
    - Fuera: los certificados y las resoluciones de otros módulos, que no son actos del expediente.
 3. Portal «Mis documentos laborales» con acuse de recibo, aviso al correo institucional y razón con testigo; solicitudes de renuncia, licencia y jubilación.
+   - Va en dos PR: 3a, la notificación y el portal; 3b, las solicitudes.
+   - **3a.** Hasta aquí, notificar solo guardaba quién y cuándo: al servidor no le llegaba nada, no había acuse y la negativa no dejaba constancia.
+   - **3a.** Al pasar a «notificada», Talento Humano elige el medio (`notificacion_medio`):
+     - **por el portal**, el valor por defecto: el documento aparece en «Mis documentos laborales» y el correo sale cuando la notificación ya quedó guardada (`AvisoNotificacionService`), con el PDF adjunto;
+     - **en persona**, si **la recibió** —su «Recibí» es el acuse— o si **se negó**, con la razón y un testigo, nombre y cédula, que también exige la base por CHECK.
+   - **3a.** El correo sigue la regla de la UATH del certificado laboral: el institucional de su cuenta y, si no tiene, el personal. Si no hay dirección o el envío falla, la notificación queda igual y la acción lo dice (`correo_destino`: sin_direccion o fallo) para entregarlo a mano.
+   - **3a.** «Mis documentos laborales» (`/portal/documentos`, que era un enlace roto del portal):
+     - muestra las acciones de personal desde que se notifican, y las anuladas después, con su sello;
+     - muestra las hojas RI y las constancias AU desde que se registran, porque no se notifican;
+     - nunca muestra un borrador, una suscrita ni lo de otro servidor (404).
+   - **3a.** El servidor descarga el PDF y acusa recibo de lo notificado por el portal: una sola vez, con la fecha y la hora (`acuse_en`). Si tiene pendientes, la portada del portal se lo dice.
+   - **3a.** La guarda de inmutabilidad deja escribir el acuse y el correo una sola vez, después de notificar. Los datos de la notificación solo se escriben en el paso de notificar: antes, con la acción ya notificada, se podía reescribir quién y cuándo la notificó.
+   - **3a.** El documento imprime lo que pasó: por el portal, el medio, la fecha y el acuse, o «Pendiente»; en persona, la fecha del «Recibí», o la razón y el testigo.
+   - **3a.** En la bandeja, «Sin acuse» filtra lo notificado por el portal que espera el acuse, con los días que lleva. Solo informa: no hay un plazo legal que vencer.
+   - **3a.** Fuera: el plazo de 3 días para presentarse (Reglamento a la LOSEP, Art. 20; 6.4) y la licencia con remuneración pedida desde el portal.
 
 **Fase 7 — Estructura, nómina y salida**
 1. Operaciones sobre puestos ocupados (traspaso de puesto, revisión de clasificación) y bloqueo de la edición directa y del borrado.

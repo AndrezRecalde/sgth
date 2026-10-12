@@ -7,7 +7,33 @@ import { BloqueDetalle } from './BloqueDetalle'
 import { etiquetaNombramiento } from '../utils/tipoNombramientoOptions'
 import { dinero } from '../utils/dinero'
 import type { MovimientoPersonal } from '@/types/api'
-import { formatFecha } from '@/lib/fecha'
+import { formatFecha, formatFechaHora } from '@/lib/fecha'
+
+const CORREO: Record<string, string> = {
+  institucional: 'Enviado al correo institucional',
+  personal: 'Enviado al correo personal: no tiene cuenta',
+  sin_direccion: 'No salió: no tiene correo. Entréguelo en persona',
+  fallo: 'No salió: falló el envío. Entréguelo en persona',
+}
+
+/** Cómo se notificó, el acuse y el correo (fase 6.3a). */
+function notificacionDe(m: MovimientoPersonal): { label: string; value: string | null | undefined }[] {
+  if (m.notificacion_medio === 'portal') {
+    return [
+      { label: 'Notificada', value: `Por el portal · ${formatFecha(m.fecha_notificacion)}` },
+      { label: 'Correo', value: m.correo_destino ? CORREO[m.correo_destino] : 'Enviándose' },
+      { label: 'Acuse de recibo', value: m.acuse_en ? formatFechaHora(m.acuse_en) : 'Pendiente' },
+    ]
+  }
+
+  return m.notificacion_resultado === 'negada'
+    ? [
+        { label: 'Notificada', value: `En persona · ${formatFecha(m.fecha_notificacion)} · se negó a recibirla` },
+        { label: 'Razón de la negativa', value: m.notificacion_razon },
+        { label: 'Testigo', value: `${m.notificacion_testigo_nombre ?? '—'} · CI ${m.notificacion_testigo_cedula ?? '—'}` },
+      ]
+    : [{ label: 'Notificada', value: `En persona · ${formatFecha(m.fecha_notificacion)} · firmó el «Recibí»` }]
+}
 
 /** Cómo se nombra el acto que la origina (fase 6.1). */
 const ACTO_DE_ORIGEN = { decreto: 'Decreto', acuerdo: 'Acuerdo', resolucion: 'Resolución' } as const
@@ -121,6 +147,8 @@ export function AccionRespaldos({ m }: { m: MovimientoPersonal }) {
                     + (m.acto_origen_fecha ? ` · ${formatFecha(m.acto_origen_fecha)}` : ''),
                 }]
               : []),
+            // La notificación al servidor (fase 6.3a).
+            ...(m.notificacion_medio ? notificacionDe(m) : []),
             {
               label: 'Dictamen médico',
               value: m.requiere_dictamen_medico

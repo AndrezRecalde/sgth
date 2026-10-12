@@ -450,7 +450,8 @@ export const NAV_PORTAL: NavGroup[] = [
         icon:  'IconFileText',
       },
       {
-        label: 'Mis Documentos',
+        // Las acciones notificadas y su acuse de recibo (fase 6.3a).
+        label: 'Mis documentos laborales',
         href:  ROUTES.PORTAL.DOCUMENTOS,
         icon:  'IconFolder',
       },

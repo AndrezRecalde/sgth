@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Select, Stack, Text } from '@mantine/core'
+import { Select, Stack, Switch, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconFileDescription } from '@tabler/icons-react'
 import { DataState, PAGINACION_ES, SgthTable, Toolbar } from '@/components/ui'
@@ -31,6 +31,8 @@ export function BandejaAccionesPersonal() {
   const [estado, setEstado] = useState<EstadoAccionPersonal | null>('borrador')
   const [instrumento, setInstrumento] = useState<InstrumentoActo | null>(null)
   const [lote, setLote] = useState<string | null>(null)
+  // Lo notificado por el portal que espera el acuse (fase 6.3a).
+  const [sinAcuse, setSinAcuse] = useState(false)
   const [pagina, setPagina] = useState(1)
   // Los actos de un lote: el incremento de los obreros (fase 4.6).
   const lotes = (useLotesAccion().data ?? []).map((l) => ({
@@ -45,9 +47,12 @@ export function BandejaAccionesPersonal() {
   const [detalleOpened, { open: abrirDetalle, close: cerrarDetalle }] = useDisclosure(false)
 
   const { data, isLoading, error, refetch } = useBandejaMovimientos({
-    ...(estado ? { estado } : {}),
+    // «Sin acuse» ya es de las notificadas: con el estado del selector —que
+    // abre en borrador— la consulta no traería nada.
+    ...(estado && !sinAcuse ? { estado } : {}),
     ...(instrumento ? { instrumento } : {}),
     ...(lote ? { lote_id: Number(lote) } : {}),
+    ...(sinAcuse ? { sin_acuse: true } : {}),
     page: pagina,
   })
 
@@ -79,7 +84,9 @@ export function BandejaAccionesPersonal() {
       <Toolbar
         actions={
           <Text size="sm" c="dimmed">
-            {total} acción(es) {estado ? `en ${ESTADO_LABELS[estado].toLowerCase()}` : 'en total'}
+            {total} acción(es) {sinAcuse
+              ? 'notificadas sin acuse'
+              : estado ? `en ${ESTADO_LABELS[estado].toLowerCase()}` : 'en total'}
           </Text>
         }
       >
@@ -87,8 +94,10 @@ export function BandejaAccionesPersonal() {
           label="Estado"
           placeholder="Todos"
           data={ESTADO_OPTIONS}
-          value={estado}
+          value={sinAcuse ? 'notificada' : estado}
           onChange={cambiarEstado}
+          // Con «Sin acuse», el estado es el de notificada: el selector lo dice.
+          disabled={sinAcuse}
           clearable
           {...contained}
           style={{ minWidth: 260 }}
@@ -102,6 +111,12 @@ export function BandejaAccionesPersonal() {
           clearable
           {...contained}
           style={{ minWidth: 240 }}
+        />
+        <Switch
+          label="Sin acuse"
+          description="Notificadas por el portal que esperan el acuse"
+          checked={sinAcuse}
+          onChange={(e) => { setSinAcuse(e.currentTarget.checked); setPagina(1) }}
         />
         {lotes.length > 0 && (
           <Select

@@ -4233,6 +4233,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/autoservicio/mis-documentos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["misDocumentosLaborales.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/autoservicio/mis-documentos/{movimiento}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["misDocumentosLaborales.pdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/autoservicio/mis-documentos/{movimiento}/acuse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["misDocumentosLaborales.acuse"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/expediente/servidores/{servidorId}/movimientos": {
         parameters: {
             query?: never;
@@ -9337,6 +9385,12 @@ export interface components {
             contrasena: string;
         };
         /**
+         * MedioNotificacion
+         * @description Cómo se notifica la acción de personal al servidor (Reglamento a la LOSEP, Art. 22; diseño, 6.4; TH 26; fase 6.3a). Por el portal, el documento aparece en «Mis documentos laborales», le llega al correo y él acusa recibo. En persona, Talento Humano registra si la recibió o si se negó, con la razón y un testigo.
+         * @enum {string}
+         */
+        MedioNotificacion: "portal" | "personal";
+        /**
          * MotivoEntregaEpp
          * @enum {string}
          */
@@ -9469,6 +9523,16 @@ export interface components {
             acto_origen_numero: string | null;
             /** Format: date-time */
             acto_origen_fecha: string | null;
+            notificacion_medio: components["schemas"]["MedioNotificacion"] | null;
+            notificacion_resultado: components["schemas"]["ResultadoNotificacion"] | null;
+            notificacion_razon: string | null;
+            notificacion_testigo_nombre: string | null;
+            notificacion_testigo_cedula: string | null;
+            /** Format: date-time */
+            acuse_en: string | null;
+            /** Format: date-time */
+            correo_enviado_en: string | null;
+            correo_destino: string | null;
         };
         /** MovimientoPersonalResource */
         MovimientoPersonalResource: {
@@ -9685,6 +9749,14 @@ export interface components {
             autorizado_por: number | null;
             notificado_por: number | null;
             fecha_notificacion: string | null;
+            notificacion_medio: components["schemas"]["MedioNotificacion"] | null;
+            notificacion_resultado: components["schemas"]["ResultadoNotificacion"] | null;
+            notificacion_razon: string | null;
+            notificacion_testigo_nombre: string | null;
+            notificacion_testigo_cedula: string | null;
+            acuse_en: string;
+            correo_enviado_en: string;
+            correo_destino: string | null;
             motivo_anulacion: string | null;
             /** Format: date-time */
             created_at: string | null;
@@ -10428,6 +10500,12 @@ export interface components {
             /** Format: date-time */
             deleted_at: string | null;
         };
+        /**
+         * ResultadoNotificacion
+         * @description Qué pasó al notificar en persona (diseño, 6.4; fase 6.3a): la recibió y firmó el «Recibí», o se negó a recibirla y queda la razón con un testigo.
+         * @enum {string}
+         */
+        ResultadoNotificacion: "recibida" | "negada";
         /** RiesgoLaboralResource */
         RiesgoLaboralResource: {
             id: number;
@@ -11995,6 +12073,16 @@ export interface components {
             estado: components["schemas"]["EstadoAccionPersonal"];
             dictamen_presupuestario_ref?: string | null;
             notificado_por?: number | null;
+            /**
+             * @description Cómo se notifica (fase 6.3a): por el portal, salvo que diga otra
+             *     cosa; en persona, si la recibió o se negó, y la negativa con su
+             *     razón y un testigo.
+             */
+            notificacion_medio?: components["schemas"]["MedioNotificacion"];
+            notificacion_resultado?: components["schemas"]["ResultadoNotificacion"];
+            notificacion_razon?: string | null;
+            notificacion_testigo_nombre?: string | null;
+            notificacion_testigo_cedula?: string | null;
             /**
              * @description Anular es un acto sobre otro acto: se exige el motivo, que es lo
              *     que queda como justificación en el expediente. La regla vive aquí
@@ -24638,6 +24726,83 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "misDocumentosLaborales.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Mis documentos laborales.";
+                        datos: unknown[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "misDocumentosLaborales.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                movimiento: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "misDocumentosLaborales.acuse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                movimiento: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Acusó recibo del documento.";
+                        datos: unknown[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "movimientoPersonal.index": {
         parameters: {
             query?: never;
@@ -24711,6 +24876,7 @@ export interface operations {
                 servidor_id?: number;
                 lote_id?: number;
                 anio?: number;
+                sin_acuse?: boolean;
                 per_page?: number;
             };
             header?: never;

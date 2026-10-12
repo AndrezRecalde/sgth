@@ -6,7 +6,9 @@ use App\Enums\AptitudMedica;
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\EstadoContrato;
 use App\Enums\InstrumentoActo;
+use App\Enums\MedioNotificacion;
 use App\Enums\PartidaPorModalidad;
+use App\Enums\ResultadoNotificacion;
 use App\Enums\SubtipoMovimientoPersonal;
 use App\Enums\SupuestoProvisional;
 use App\Enums\TipoEventoVinculo;
@@ -1526,10 +1528,49 @@ class MovimientoPersonalStateService
         }
     }
 
+    /**
+     * Notificar (Reglamento a la LOSEP, Art. 22; diseño, 6.4; TH 26; fase
+     * 6.3a). Por el portal —si no dice otra cosa—, el documento aparece en
+     * «Mis documentos laborales» y el correo sale cuando la notificación ya
+     * quedó guardada; el servidor acusa recibo después. En persona, queda si
+     * la recibió —y su «Recibí» es el acuse— o si se negó, con la razón y un
+     * testigo.
+     */
     private function aplicarNotificacion(MovimientoPersonal $movimiento, array $datos): void
     {
         $movimiento->notificado_por     = $datos['notificado_por'] ?? auth()->id();
         $movimiento->fecha_notificacion = now();
+
+        $medio = MedioNotificacion::tryFrom((string) ($datos['notificacion_medio'] ?? '')) ?? MedioNotificacion::PORTAL;
+        $movimiento->notificacion_medio = $medio;
+
+        if ($medio === MedioNotificacion::PORTAL) {
+            DB::afterCommit(fn () => app(AvisoNotificacionService::class)->enviar($movimiento->fresh()));
+
+            return;
+        }
+
+        $resultado = ResultadoNotificacion::tryFrom((string) ($datos['notificacion_resultado'] ?? ''))
+            ?? throw new ReglaNegocioException('Indique si la recibió o si se negó a recibirla.');
+        $movimiento->notificacion_resultado = $resultado;
+
+        if ($resultado === ResultadoNotificacion::RECIBIDA) {
+            $movimiento->acuse_en = now();
+
+            return;
+        }
+
+        foreach ([
+            'notificacion_razon'          => 'la razón',
+            'notificacion_testigo_nombre' => 'el nombre del testigo',
+            'notificacion_testigo_cedula' => 'la cédula del testigo',
+        ] as $campo => $que) {
+            if (blank($datos[$campo] ?? null)) {
+                throw new ReglaNegocioException("Si se negó a recibirla, deje constancia: indique {$que}.");
+            }
+
+            $movimiento->{$campo} = trim((string) $datos[$campo]);
+        }
     }
 
     /**

@@ -7,6 +7,8 @@ use App\Enums\CategoriaEventoVinculo;
 use App\Enums\ClaseAccionPersonal;
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\InstrumentoActo;
+use App\Enums\MedioNotificacion;
+use App\Enums\ResultadoNotificacion;
 use App\Enums\SubtipoMovimientoPersonal;
 use App\Enums\SupuestoProvisional;
 use App\Enums\TipoActoDeOrigen;
@@ -59,6 +61,10 @@ class MovimientoPersonal extends Model
                 'dictamen_presupuestario_ref',
                 'notificado_por',
                 'fecha_notificacion',
+                // Cómo se notificó y el acuse del servidor (fase 6.3a).
+                'notificacion_medio',
+                'notificacion_resultado',
+                'acuse_en',
                 // Por qué se anuló: es la justificación de un acto sobre otro
                 // acto, así que va al registro de auditoría con el resto.
                 'motivo_anulacion',
@@ -167,11 +173,22 @@ class MovimientoPersonal extends Model
                 // El efecto de una acción que rige más tarde se aplica el día
                 // en que rige, una sola vez: de vacío a fecha, nunca al revés.
                 ...($movimiento->getOriginal('efecto_aplicado_en') === null ? ['efecto_aplicado_en'] : []),
-                ...match ($movimiento->estado) {
-                    EstadoAccionPersonal::NOTIFICADA => ['notificado_por', 'fecha_notificacion'],
+                // El acuse del servidor y el correo de la notificación, también
+                // una sola vez: llegan después de notificar (fase 6.3a).
+                ...array_values(array_filter(
+                    ['acuse_en', 'correo_enviado_en', 'correo_destino'],
+                    fn (string $campo) => $movimiento->getOriginal($campo) === null,
+                )),
+                // Los datos del paso, solo en el paso: antes, con la acción ya
+                // notificada, se podía reescribir quién y cuándo la notificó.
+                ...($movimiento->isDirty('estado') ? match ($movimiento->estado) {
+                    EstadoAccionPersonal::NOTIFICADA => [
+                        'notificado_por', 'fecha_notificacion', 'notificacion_medio', 'notificacion_resultado',
+                        'notificacion_razon', 'notificacion_testigo_nombre', 'notificacion_testigo_cedula',
+                    ],
                     EstadoAccionPersonal::ANULADA    => ['motivo_anulacion'],
                     default                          => [],
-                },
+                } : []),
             ];
 
             $cambiados = array_values(array_diff(array_keys($movimiento->getDirty()), $permitidos));
@@ -354,6 +371,10 @@ class MovimientoPersonal extends Model
             'fecha_registro'     => 'date',
             'efecto_aplicado_en' => 'datetime',
             'fecha_suscripcion'  => 'date',
+            'notificacion_medio'     => MedioNotificacion::class,
+            'notificacion_resultado' => ResultadoNotificacion::class,
+            'acuse_en'               => 'datetime',
+            'correo_enviado_en'      => 'datetime',
             'fecha_efectiva'  => 'date',
             'fecha_inicio'    => 'date',
             'fecha_fin'       => 'date',

@@ -908,6 +908,17 @@ export type MovimientoPersonal = {
   autorizado_por?: number | null
   notificado_por?: number | null
   fecha_notificacion?: string | null
+  /** Cómo se notificó (fase 6.3a): por el portal y el correo, o en persona. */
+  notificacion_medio?: 'portal' | 'personal' | null
+  notificacion_resultado?: 'recibida' | 'negada' | null
+  notificacion_razon?: string | null
+  notificacion_testigo_nombre?: string | null
+  notificacion_testigo_cedula?: string | null
+  /** El acuse del servidor; en persona, el «Recibí». */
+  acuse_en?: string | null
+  correo_enviado_en?: string | null
+  /** A dónde salió el correo, o por qué no salió. */
+  correo_destino?: 'institucional' | 'personal' | 'sin_direccion' | 'fallo' | null
   /** Por qué se anuló. Null en lo anulado antes del 2026-09-27, que no lo pedía. */
   motivo_anulacion?: string | null
   observacion?: string | null

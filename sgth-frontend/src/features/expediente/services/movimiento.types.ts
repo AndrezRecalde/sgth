@@ -17,6 +17,8 @@ export type FiltrosBandeja = {
   servidor_id?: number
   /** Los actos de un lote: el incremento de los obreros (fase 4.6). */
   lote_id?: number
+  /** Lo notificado por el portal que espera el acuse del servidor (fase 6.3a). */
+  sin_acuse?: boolean
   anio?: number
   page?: number
   per_page?: number
@@ -30,6 +32,12 @@ export type FiltrosBandeja = {
 export type TransicionarData = {
   estado: string
   dictamen_presupuestario_ref?: string | null
+  /** Cómo se notifica (fase 6.3a): por el portal y el correo, o en persona. */
+  notificacion_medio?: 'portal' | 'personal' | null
+  notificacion_resultado?: 'recibida' | 'negada' | null
+  notificacion_razon?: string | null
+  notificacion_testigo_nombre?: string | null
+  notificacion_testigo_cedula?: string | null
   numero_contrato?: string | null
   remuneracion_propuesta?: number | null
   partida_presupuestaria_id?: number | null

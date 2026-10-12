@@ -3,6 +3,8 @@
 namespace App\Http\Requests\Expediente;
 
 use App\Enums\EstadoAccionPersonal;
+use App\Enums\MedioNotificacion;
+use App\Enums\ResultadoNotificacion;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
 
@@ -32,6 +34,15 @@ class TransicionarMovimientoRequest extends FormRequest
             'estado'                      => ['required', new Enum(EstadoAccionPersonal::class)],
             'dictamen_presupuestario_ref' => ['nullable', 'string', 'max:255'],
             'notificado_por'              => ['nullable', 'integer', 'exists:users,id'],
+
+            // Cómo se notifica (fase 6.3a): por el portal, salvo que diga otra
+            // cosa; en persona, si la recibió o se negó, y la negativa con su
+            // razón y un testigo.
+            'notificacion_medio'          => ['nullable', new Enum(MedioNotificacion::class)],
+            'notificacion_resultado'      => ['nullable', 'required_if:notificacion_medio,personal', new Enum(ResultadoNotificacion::class)],
+            'notificacion_razon'          => ['nullable', 'required_if:notificacion_resultado,negada', 'string', 'min:5', 'max:500'],
+            'notificacion_testigo_nombre' => ['nullable', 'required_if:notificacion_resultado,negada', 'string', 'max:150'],
+            'notificacion_testigo_cedula' => ['nullable', 'required_if:notificacion_resultado,negada', 'string', 'min:6', 'max:13'],
 
             // Anular es un acto sobre otro acto: se exige el motivo, que es lo
             // que queda como justificación en el expediente. La regla vive aquí

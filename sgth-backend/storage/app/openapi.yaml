@@ -26889,6 +26889,146 @@
                 }
             }
         },
+        "/v1/autoservicio/mis-documentos": {
+            "get": {
+                "operationId": "misDocumentosLaborales.index",
+                "tags": [
+                    "MisDocumentosLaborales"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Mis documentos laborales."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {}
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/autoservicio/mis-documentos/{movimiento}/pdf": {
+            "get": {
+                "operationId": "misDocumentosLaborales.pdf",
+                "tags": [
+                    "MisDocumentosLaborales"
+                ],
+                "parameters": [
+                    {
+                        "name": "movimiento",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/autoservicio/mis-documentos/{movimiento}/acuse": {
+            "post": {
+                "operationId": "misDocumentosLaborales.acuse",
+                "tags": [
+                    "MisDocumentosLaborales"
+                ],
+                "parameters": [
+                    {
+                        "name": "movimiento",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Acus\u00f3 recibo del documento."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {}
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/expediente/servidores/{servidorId}/movimientos": {
             "get": {
                 "operationId": "movimientoPersonal.index",
@@ -27075,6 +27215,14 @@
                         "schema": {
                             "type": "integer",
                             "default": 0
+                        }
+                    },
+                    {
+                        "name": "sin_acuse",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
                         }
                     },
                     {
@@ -54281,6 +54429,15 @@
                 ],
                 "title": "LoginRequest"
             },
+            "MedioNotificacion": {
+                "type": "string",
+                "description": "C\u00f3mo se notifica la acci\u00f3n de personal al servidor (Reglamento a la LOSEP, Art. 22; dise\u00f1o, 6.4; TH 26; fase 6.3a). Por el portal, el documento aparece en \u00abMis documentos laborales\u00bb, le llega al correo y \u00e9l acusa recibo. En persona, Talento Humano registra si la recibi\u00f3 o si se neg\u00f3, con la raz\u00f3n y un testigo.\n",
+                "enum": [
+                    "portal",
+                    "personal"
+                ],
+                "title": "MedioNotificacion"
+            },
             "MotivoEntregaEpp": {
                 "type": "string",
                 "enum": [
@@ -54842,6 +54999,64 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "notificacion_medio": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/MedioNotificacion"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "notificacion_resultado": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/ResultadoNotificacion"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "notificacion_razon": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "notificacion_testigo_nombre": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "notificacion_testigo_cedula": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "acuse_en": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "correo_enviado_en": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "correo_destino": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -54925,7 +55140,15 @@
                     "base_legal",
                     "acto_origen_tipo",
                     "acto_origen_numero",
-                    "acto_origen_fecha"
+                    "acto_origen_fecha",
+                    "notificacion_medio",
+                    "notificacion_resultado",
+                    "notificacion_razon",
+                    "notificacion_testigo_nombre",
+                    "notificacion_testigo_cedula",
+                    "acuse_en",
+                    "correo_enviado_en",
+                    "correo_destino"
                 ],
                 "title": "MovimientoPersonal"
             },
@@ -55642,6 +55865,57 @@
                             "null"
                         ]
                     },
+                    "notificacion_medio": {
+                        "anyOf": [
+                            {
+                                "description": "C\u00f3mo se notific\u00f3, el acuse del servidor y el correo (fase 6.3a).",
+                                "$ref": "#/components/schemas/MedioNotificacion"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "notificacion_resultado": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/ResultadoNotificacion"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "notificacion_razon": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "notificacion_testigo_nombre": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "notificacion_testigo_cedula": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "acuse_en": {
+                        "type": "string"
+                    },
+                    "correo_enviado_en": {
+                        "type": "string"
+                    },
+                    "correo_destino": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "motivo_anulacion": {
                         "type": [
                             "string",
@@ -55922,6 +56196,14 @@
                     "autorizado_por",
                     "notificado_por",
                     "fecha_notificacion",
+                    "notificacion_medio",
+                    "notificacion_resultado",
+                    "notificacion_razon",
+                    "notificacion_testigo_nombre",
+                    "notificacion_testigo_cedula",
+                    "acuse_en",
+                    "correo_enviado_en",
+                    "correo_destino",
                     "motivo_anulacion",
                     "created_at",
                     "updated_at"
@@ -58412,6 +58694,15 @@
                     "deleted_at"
                 ],
                 "title": "ResultadoMedico"
+            },
+            "ResultadoNotificacion": {
+                "type": "string",
+                "description": "Qu\u00e9 pas\u00f3 al notificar en persona (dise\u00f1o, 6.4; fase 6.3a): la recibi\u00f3 y firm\u00f3 el \u00abRecib\u00ed\u00bb, o se neg\u00f3 a recibirla y queda la raz\u00f3n con un testigo.\n",
+                "enum": [
+                    "recibida",
+                    "negada"
+                ],
+                "title": "ResultadoNotificacion"
             },
             "RiesgoLaboralResource": {
                 "type": "object",
@@ -64129,6 +64420,36 @@
                             "integer",
                             "null"
                         ]
+                    },
+                    "notificacion_medio": {
+                        "description": "C\u00f3mo se notifica (fase 6.3a): por el portal, salvo que diga otra\ncosa; en persona, si la recibi\u00f3 o se neg\u00f3, y la negativa con su\nraz\u00f3n y un testigo.",
+                        "$ref": "#/components/schemas/MedioNotificacion"
+                    },
+                    "notificacion_resultado": {
+                        "$ref": "#/components/schemas/ResultadoNotificacion"
+                    },
+                    "notificacion_razon": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "minLength": 5,
+                        "maxLength": 500
+                    },
+                    "notificacion_testigo_nombre": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 150
+                    },
+                    "notificacion_testigo_cedula": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "minLength": 6,
+                        "maxLength": 13
                     },
                     "motivo_anulacion": {
                         "type": [

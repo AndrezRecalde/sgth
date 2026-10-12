@@ -13,6 +13,7 @@ import {
 } from '../utils/estadoAccionPersonal'
 import type { MovimientoPersonal } from '@/types/api'
 import { abrirOGuardarArchivo, guardarArchivo } from '@/lib/archivo'
+import { NotificarAccionModal } from './NotificarAccionModal'
 
 interface Props {
   m: MovimientoPersonal
@@ -42,6 +43,7 @@ export function AccionPersonalPie({ m, onClose, onCompletarVinculo, onPedirDicta
   const [descargando, setDescargando] = useState(false)
   const [previsualizando, setPrevisualizando] = useState(false)
   const [anularOpened, { open: abrirAnular, close: cerrarAnular }] = useDisclosure(false)
+  const [notificarOpened, { open: abrirNotificar, close: cerrarNotificar }] = useDisclosure(false)
 
   const estado = m.estado
   const posibles = m.transiciones_permitidas ?? []
@@ -94,6 +96,12 @@ export function AccionPersonalPie({ m, onClose, onCompletarVinculo, onPedirDicta
     // falle.
     if (siguiente === 'suscrita' && m.tiene_efecto_economico) {
       onPedirDictamen()
+      return
+    }
+    // Notificar pide cómo: por el portal y el correo, o en persona con el
+    // «Recibí» o la negativa con un testigo (fase 6.3a).
+    if (siguiente === 'notificada') {
+      abrirNotificar()
       return
     }
     if (siguiente) transicionar.mutate({ id: Number(m.id), estado: siguiente })
@@ -162,6 +170,8 @@ export function AccionPersonalPie({ m, onClose, onCompletarVinculo, onPedirDicta
   return (
     <>
       {pie}
+
+      <NotificarAccionModal opened={notificarOpened} movimiento={m} onClose={cerrarNotificar} />
 
       <MotivoModal
         opened={anularOpened}
