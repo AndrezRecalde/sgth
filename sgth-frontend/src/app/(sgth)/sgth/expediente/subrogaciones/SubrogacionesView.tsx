@@ -185,7 +185,7 @@ export function SubrogacionesView() {
                 <>
                   Se cancelará {TIPO_LABELS[cancelando.tipo].toLowerCase()} de{' '}
                   <b>{cancelando.puesto_subrogado?.cargo?.nombre ?? 'el puesto asignado'}</b>{' '}
-                  ({formatFecha(cancelando.fecha_inicio)} — {formatFecha(cancelando.fecha_fin)}).
+                  ({formatFecha(cancelando.fecha_inicio)} — {cancelando.fecha_fin ? formatFecha(cancelando.fecha_fin) : 'sin fecha de fin'}).
                   Si su Acción de Personal ya estaba registrada, el subrogante deja de
                   poder firmar.
                 </>

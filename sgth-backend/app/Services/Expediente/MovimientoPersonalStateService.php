@@ -10,6 +10,7 @@ use App\Enums\PartidaPorModalidad;
 use App\Enums\SubtipoMovimientoPersonal;
 use App\Enums\SupuestoProvisional;
 use App\Enums\TipoEventoVinculo;
+use App\Enums\TipoAusenciaTitular;
 use App\Enums\TipoMovimientoPersonal;
 use App\Enums\TipoNombramiento;
 use App\Exceptions\ReglaNegocioException;
@@ -572,6 +573,16 @@ class MovimientoPersonalStateService
         // salida de quien lo cubría [TH 18; fase 2.4].
         if ($tipo === TipoMovimientoPersonal::REINTEGRO) {
             $this->reintegros->prepararSalidaDelReemplazo($movimiento);
+            // Y la subrogación del titular termina la víspera (fase 5.2).
+            $this->subrogacionService->acortarPorReintegro($movimiento);
+        }
+
+        // Llega un titular al puesto: el encargo que lo cubría termina la
+        // víspera (LOSEP, Art. 127; fase 5.2).
+        if ($movimiento->puesto_destino_id
+            && ($tipo->creaVinculo() || $movimiento->reubicaAlServidor() || $tipo->asciende())
+        ) {
+            $this->subrogacionService->cerrarEncargosDelPuesto($movimiento);
         }
 
         // La sentencia deja sin efecto la destitución, y con ella la sanción
@@ -793,6 +804,15 @@ class MovimientoPersonalStateService
     {
         if ($movimiento->esAusenciaTemporal()) {
             $this->impedirAnularAusenciaConReintegroOReemplazo($movimiento);
+
+            // La subrogación que esta ausencia motivaba se cancela con ella
+            // (fase 5.2).
+            $this->subrogacionService->cancelarPorAusencia(
+                TipoAusenciaTitular::ACCION_PERSONAL,
+                $movimiento->id,
+                'Se anuló la '.mb_strtolower($movimiento->etiquetaAusencia() ?? $movimiento->etiqueta())
+                    .' '.($movimiento->codigo_registro ?? "#{$movimiento->id}").' del titular.',
+            );
         }
 
         if ($movimiento->tipo_movimiento->asciende()) {

@@ -1,5 +1,5 @@
 import api from '@/lib/axios'
-import type { ApiResponse, Subrogacion, SubrogacionParams } from '@/types/api'
+import type { ApiResponse, AusenciaDelTitular, Subrogacion, SubrogacionParams } from '@/types/api'
 import type { SubrogacionFormData } from '../schemas/subrogacion.schema'
 
 export const subrogacionService = {
@@ -25,6 +25,15 @@ export const subrogacionService = {
   listarPorServidor: (servidorId: number) =>
     api
       .get<ApiResponse<Subrogacion[]>>(`/expediente/subrogaciones/servidor/${servidorId}`)
+      .then((r) => r.data.datos ?? []),
+
+  /** Las ausencias del titular que no han terminado: de una de ellas sale la
+   *  subrogación (fase 5.2). */
+  ausenciasDelTitular: (servidorId: number) =>
+    api
+      .get<ApiResponse<AusenciaDelTitular[]>>('/expediente/subrogaciones/ausencias-del-titular', {
+        params: { servidor_id: servidorId },
+      })
       .then((r) => r.data.datos ?? []),
 
   registrar: (data: SubrogacionFormData) =>

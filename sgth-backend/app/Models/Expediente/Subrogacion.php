@@ -4,6 +4,7 @@ namespace App\Models\Expediente;
 
 use App\Enums\EstadoSubrogacion;
 use App\Enums\MotivoSubrogacion;
+use App\Enums\TipoAusenciaTitular;
 use App\Enums\TipoSubrogacion;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
@@ -25,6 +26,8 @@ class Subrogacion extends Model
         'tipo', 'servidor_subrogante_id', 'servidor_subrogado_id',
         'unidad_administrativa_id', 'puesto_subrogado_id',
         'fecha_inicio', 'fecha_fin', 'motivo',
+        // La ausencia del titular que la motiva (fase 5.2).
+        'ausencia_tipo', 'ausencia_id',
         'resolucion_numero',
         'estado', 'observacion', 'registrado_por', 'movimiento_personal_id',
     ];
@@ -34,6 +37,7 @@ class Subrogacion extends Model
         return [
             'tipo'         => TipoSubrogacion::class,
             'motivo'       => MotivoSubrogacion::class,
+            'ausencia_tipo' => TipoAusenciaTitular::class,
             'estado'       => EstadoSubrogacion::class,
             'fecha_inicio' => 'date',
             'fecha_fin'    => 'date',
@@ -102,8 +106,9 @@ class Subrogacion extends Model
     {
         $dia = $fecha instanceof Carbon ? $fecha->toDateString() : $fecha;
 
+        // El encargo sin fin dura hasta la designación del titular (fase 5.2).
         return $query->where('estado', EstadoSubrogacion::ACTIVA)
                      ->whereDate('fecha_inicio', '<=', $dia)
-                     ->whereDate('fecha_fin', '>=', $dia);
+                     ->where(fn (Builder $q) => $q->whereNull('fecha_fin')->orWhereDate('fecha_fin', '>=', $dia));
     }
 }

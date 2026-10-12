@@ -53,6 +53,7 @@ beforeEach(function () {
         'plazas' => 1, 'es_jefe' => true, 'activo' => true, 'rmu' => 3000,
         'cargo_id' => Cargo::firstOrCreate(['nombre' => 'Prefecto/a Provincial'])->id,
         'partida_presupuestaria_id' => $this->partida->id,
+        'grupo_ocupacional_id' => grupoNjsDePrueba()->id,
     ]);
 
     $this->contador = 0;
@@ -97,6 +98,7 @@ beforeEach(function () {
             'fecha_inicio'             => now()->subDay()->toDateString(),
             'fecha_fin'                => now()->addMonth()->toDateString(),
             'motivo'                   => 'vacaciones',
+            ...ausenciaOtraDePrueba(),
             'observacion'              => 'El titular asiste a un congreso en Quito.',
         ]);
     };
@@ -224,6 +226,7 @@ test('una sin observación previa queda solo con el motivo automático', functio
         'fecha_inicio'             => now()->subDay()->toDateString(),
         'fecha_fin'                => now()->addMonth()->toDateString(),
         'motivo'                   => 'vacaciones',
+        ...ausenciaOtraDePrueba(),
     ]);
 
     $this->service->cancelarPorMovimiento($subrogacion->movimientoPersonal);

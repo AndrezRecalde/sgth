@@ -44,6 +44,7 @@ beforeEach(function () {
         'plazas' => 1, 'es_jefe' => true, 'activo' => true,
         'cargo_id' => Cargo::firstOrCreate(['nombre' => 'Prefecto/a Provincial'])->id,
         'partida_presupuestaria_id' => $this->partida->id,
+        'grupo_ocupacional_id' => grupoNjsDePrueba()->id,
     ]);
 
     $this->contador = 0;
@@ -93,6 +94,7 @@ beforeEach(function () {
             'fecha_inicio'             => now()->addDay()->toDateString(),
             'fecha_fin'                => now()->addMonth()->toDateString(),
             'motivo'                   => 'vacaciones',
+            ...ausenciaOtraDePrueba(),
         ];
     };
 });

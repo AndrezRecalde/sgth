@@ -5,7 +5,7 @@ import { DetailList, SectionHeading, SgthDrawer, StatusBadge } from '@/component
 import { formatFecha } from '@/lib/fecha'
 import type { Subrogacion } from '@/types/api'
 import {
-  ESTADO_LABELS, MOTIVO_LABELS, TIPO_LABELS, TONO_SUBROGACION,
+  AUSENCIA_LABELS, ESTADO_LABELS, MOTIVO_LABELS, TIPO_LABELS, TONO_SUBROGACION,
 } from '../utils/subrogaciones'
 import { ESTADO_LABELS as ESTADO_ACCION_LABELS } from '../utils/estadoAccionPersonal'
 import type { EstadoAccionPersonal } from '@/types/api'
@@ -74,9 +74,16 @@ export function SubrogacionDetalleDrawer({
               { label: 'Puesto', value: subrogacion.puesto_subrogado?.cargo?.nombre },
               {
                 label: 'Período',
-                value: `${formatFecha(subrogacion.fecha_inicio)} — ${formatFecha(subrogacion.fecha_fin)}`,
+                // Un encargo puede no tener fin: dura hasta la designación del
+                // titular, y termina la víspera de su llegada (fase 5.2).
+                value: subrogacion.fecha_fin
+                  ? `${formatFecha(subrogacion.fecha_inicio)} — ${formatFecha(subrogacion.fecha_fin)}`
+                  : `Desde el ${formatFecha(subrogacion.fecha_inicio)}, hasta la designación del titular`,
               },
               { label: 'Motivo', value: MOTIVO_LABELS[subrogacion.motivo] },
+              ...(subrogacion.ausencia_tipo
+                ? [{ label: 'Ausencia del titular', value: AUSENCIA_LABELS[subrogacion.ausencia_tipo] }]
+                : []),
             ]}
           />
 

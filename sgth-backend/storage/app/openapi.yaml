@@ -40143,6 +40143,120 @@
                 }
             }
         },
+        "/v1/expediente/subrogaciones/ausencias-del-titular": {
+            "get": {
+                "operationId": "subrogacion.ausenciasDelTitular",
+                "summary": "Las ausencias del titular que pueden motivar su subrogaci\u00f3n, para el\nformulario (fase 5.2)",
+                "tags": [
+                    "Subrogacion"
+                ],
+                "parameters": [
+                    {
+                        "name": "servidor_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "desde",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "hasta",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date-time"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Ausencias del titular."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "tipo": {
+                                                        "type": "string"
+                                                    },
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "etiqueta": {
+                                                        "type": "string"
+                                                    },
+                                                    "desde": {
+                                                        "type": "string"
+                                                    },
+                                                    "hasta": {
+                                                        "type": "string"
+                                                    },
+                                                    "motivo": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "tipo",
+                                                    "id",
+                                                    "etiqueta",
+                                                    "desde",
+                                                    "hasta",
+                                                    "motivo"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/expediente/subrogaciones": {
             "post": {
                 "operationId": "subrogacion.registrar",
@@ -57190,8 +57304,22 @@
                         "format": "date-time"
                     },
                     "fecha_fin": {
-                        "type": "string",
-                        "format": "date-time"
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "El encargo puede no tener fin: dura hasta la designaci\u00f3n del\ntitular (LOSEP, Art. 127; fase 5.2)."
+                    },
+                    "ausencia_tipo": {
+                        "description": "La subrogaci\u00f3n dice qu\u00e9 ausencia del titular la motiva, y de ella\nsale el motivo; el encargo, que recae sobre un puesto vacante, no.",
+                        "$ref": "#/components/schemas/TipoAusenciaTitular"
+                    },
+                    "ausencia_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     },
                     "motivo": {
                         "$ref": "#/components/schemas/MotivoSubrogacion"
@@ -57216,9 +57344,7 @@
                     "servidor_subrogante_id",
                     "unidad_administrativa_id",
                     "puesto_subrogado_id",
-                    "fecha_inicio",
-                    "fecha_fin",
-                    "motivo"
+                    "fecha_inicio"
                 ],
                 "title": "RegistrarSubrogacionRequest"
             },
@@ -62477,7 +62603,10 @@
                         "format": "date-time"
                     },
                     "fecha_fin": {
-                        "type": "string",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
                         "format": "date-time"
                     },
                     "motivo": {
@@ -62520,6 +62649,22 @@
                             "integer",
                             "null"
                         ]
+                    },
+                    "ausencia_tipo": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/TipoAusenciaTitular"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "ausencia_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -62538,7 +62683,9 @@
                     "registrado_por",
                     "created_at",
                     "updated_at",
-                    "movimiento_personal_id"
+                    "movimiento_personal_id",
+                    "ausencia_tipo",
+                    "ausencia_id"
                 ],
                 "title": "Subrogacion"
             },
@@ -62928,6 +63075,18 @@
                     "otro"
                 ],
                 "title": "TipoAntecedenteFemo"
+            },
+            "TipoAusenciaTitular": {
+                "type": "string",
+                "description": "La ausencia del titular que motiva una subrogaci\u00f3n (LOSEP, Art. 126: el titular \u00abse encuentre legalmente ausente\u00bb; dise\u00f1o, 9.5; fase 5.2). Las cuatro primeras est\u00e1n en el SGTH, y la subrogaci\u00f3n cabe dentro de sus fechas. \u00abOtra\u00bb es la que no est\u00e1 \u2014una delegaci\u00f3n, una ausencia que se resolvi\u00f3 fuera\u2014, y se respalda con el n\u00famero de la resoluci\u00f3n.\n",
+                "enum": [
+                    "vacacion",
+                    "licencia",
+                    "reposo",
+                    "accion_personal",
+                    "otra"
+                ],
+                "title": "TipoAusenciaTitular"
             },
             "TipoConcepto": {
                 "type": "string",

@@ -63,7 +63,9 @@ export const getSubrogacionColumns = ({
     title: 'Período',
     width: 180,
     render: (s) => (
-      <Text size="sm">{formatFecha(s.fecha_inicio)} → {formatFecha(s.fecha_fin)}</Text>
+      <Text size="sm">
+        {formatFecha(s.fecha_inicio)} → {s.fecha_fin ? formatFecha(s.fecha_fin) : 'sin fin'}
+      </Text>
     ),
   },
   {
