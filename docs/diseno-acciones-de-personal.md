@@ -1026,6 +1026,13 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
 
 **Fase 5 — Asistencia y reemplazos**
 1. Licencias fuera de las vacaciones: registro con causa, tope y certificado, sin acción; Sirha7.
+   - Hasta aquí las licencias con remuneración eran 9 de los 11 «motivos» de la solicitud de vacaciones, sin tope, sin respaldo, sin cruce con las acciones de personal y sin llegar nunca a Sirha7. Y el reposo largo del IESS no tenía dónde registrarse.
+   - Pantalla «Licencias» en Asistencia (`licencias`, folio `LIC-AAAA-NNNNN`): la registra Talento Humano (`gestionar-licencias`) con su causa, sus fechas y el PDF del respaldo, sin acción de personal y sin descontar vacaciones. Queda pendiente.
+   - Causas y topes en `CausaLicencia` (4.4), por licencia y en días calendario: enfermedad 3 meses más 3 de rehabilitación; discapacidad, catastrófica o accidente grave, lo que diga el certificado; maternidad 12 semanas (+10 días por parto múltiple); paternidad 15 días (+5 por cesárea o parto múltiple, +8 si es prematuro, +25 con enfermedad degenerativa; Ley Orgánica del Derecho al Cuidado Humano, 2023); fallecimiento de la madre, adopción, hijos hospitalizados; calamidad doméstica 8 o 3 días según el pariente, que se exige; matrimonio 3. Pasado el tope no se registra. A los obreros, el mismo catálogo con el Art. 152 del Código del Trabajo; Servicios Profesionales y las autoridades electas, no. **La tabla conviene revisarla con TH o jurídico.**
+   - Ocupa sus días desde que se registra: no cabe sobre vacaciones, permisos, un reposo del Dispensario, otra licencia o una ausencia de acción de personal, y al revés —las vacaciones, los permisos y los certificados del Dispensario tampoco caben sobre ella—. El reposo largo del IESS es una licencia por enfermedad con su certificado; los reposos del Dispensario siguen su flujo.
+   - Aprobarla la registra en Sirha7 como los certificados médicos: quien aprueba elige el tipo; las de salud y la calamidad las aprueba Trabajo Social, las demás Talento Humano; se aprueba sin Sirha7 con una nota si TH ya la cargó; anularla retira lo escrito. Sirha7 no admite más de 31 días por llamada: la licencia larga va en tramos parejos, cada uno con su referencia («SGTH LIC-…-1», «-2»…), y si un tramo falla se retiran los ya escritos.
+   - La solicitud de vacaciones solo ofrece «Vacaciones anuales» y «Permiso con cargo a vacaciones»; lo ya registrado con los otros motivos queda como histórico, sin migrar.
+   - Fuera: la solicitud desde el portal (fase 6.3), las licencias adicionales del contrato colectivo, la nómina y el SIITH.
 2. Subrogación y encargo separados; nivel jerárquico superior; enlace con la ausencia; Viceprefecto por el bloque 9.14.
 
 **Fase 6 — Documento y notificación**

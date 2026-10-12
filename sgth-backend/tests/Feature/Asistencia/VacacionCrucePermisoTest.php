@@ -54,13 +54,14 @@ beforeEach(function () {
     $uath->assignRole('admin-uath');
     $this->actingAs($uath, 'sanctum');
 
-    // «Matrimonio» no descuenta: el cruce vale para cualquier motivo, y así
-    // estas pruebas no necesitan períodos.
+    // Hasta la fase 5.1 se pedía «matrimonio», que no descuenta, para no
+    // necesitar períodos; ya no se pide, y el cruce vale igual.
+    periodoVacacionesDePrueba($this->servidor);
     $this->lunes = now()->addWeeks(3)->next(Carbon::MONDAY);
 
     $this->pedir = fn () => $this->postJson('/api/v1/asistencia/vacaciones', [
         'servidor_id'      => $this->servidor->id,
-        'motivo'           => 'matrimonio',
+        'motivo'           => 'vacaciones_anuales',
         'fecha_inicio'     => $this->lunes->toDateString(),
         'fecha_fin'        => $this->lunes->copy()->addDays(2)->toDateString(),
         'dias_solicitados' => 3,

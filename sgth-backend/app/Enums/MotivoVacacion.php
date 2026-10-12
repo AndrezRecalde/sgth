@@ -32,6 +32,26 @@ enum MotivoVacacion: string
         };
     }
 
+    /**
+     * Los que se piden hoy. Desde la fase 5.1 la solicitud es solo de
+     * vacaciones: las licencias con remuneración van a su pantalla, la sin
+     * remuneración y la de estudios son acción de personal, y la capacitación
+     * es comisión de servicios. Los demás quedan para el histórico.
+     */
+    public function seSolicita(): bool
+    {
+        return in_array($this, [self::VACACIONES_ANUALES, self::PERMISO_CARGO_VACACIONES], true);
+    }
+
+    /** @return list<string> */
+    public static function queSeSolicitan(): array
+    {
+        return array_values(array_map(
+            fn (self $m) => $m->value,
+            array_filter(self::cases(), fn (self $m) => $m->seSolicita()),
+        ));
+    }
+
     public function descuentaVacaciones(): bool
     {
         return in_array($this, [

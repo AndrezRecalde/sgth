@@ -64,6 +64,13 @@ class CertificadoMedicoService
             HistoriaClinica::lockForUpdate()->find($historia?->id);
             $this->rechazarSiSeSolapa($consulta, $fechaInicio, $fechaFin);
 
+            // Ni sobre una licencia del servidor (fase 5.1): el reposo largo
+            // del IESS se registra como licencia por enfermedad, y dos
+            // ausencias a la vez no existen.
+            if ($esServidor) {
+                $this->rechazarSiHayLicencia((int) $historia->servidor_id, $fechaInicio, $fechaFin);
+            }
+
             $certificado = CertificadoMedico::create([
                 'consulta_medica_id'   => $consulta->id,
                 'servidor_id'          => $esServidor ? $historia->servidor_id : null,
@@ -84,6 +91,21 @@ class CertificadoMedicoService
                 'diagnosticoCie10',
             ]);
         });
+    }
+
+    private function rechazarSiHayLicencia(int $servidorId, Carbon $inicio, Carbon $fin): void
+    {
+        $licencia = \App\Models\Asistencia\Licencia::vigentesDe($servidorId, $inicio->toDateString(), $fin->toDateString())->first();
+
+        if ($licencia) {
+            throw new ReglaNegocioException(sprintf(
+                'El servidor tiene la licencia %s (%s) del %s al %s: el reposo no cabe sobre esos días.',
+                $licencia->folio,
+                $licencia->causa->etiqueta(),
+                $licencia->fecha_inicio->format('d/m/Y'),
+                $licencia->fecha_fin->format('d/m/Y')
+            ));
+        }
     }
 
     /**

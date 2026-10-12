@@ -70,6 +70,10 @@ enum Permiso: string
     // confirmado. Enfermedad y calamidad las registra Trabajo Social al
     // validarlas, con `validar-trabajo-social` (decisión del 2026-10-08).
     case APROBAR_PERMISO_SIRHA7 = 'aprobar-permiso-sirha7';
+    // Registrar y anular las licencias con remuneración, que ya no son motivos
+    // de vacaciones (fase 5.1). Las aprueban `aprobar-permiso-sirha7` y, las
+    // de salud y la calamidad, `validar-trabajo-social`.
+    case GESTIONAR_LICENCIAS = 'gestionar-licencias';
     case GESTIONAR_VACACIONES = 'gestionar-vacaciones';
     case APROBAR_VACACIONES = 'aprobar-vacaciones';
     case VER_VACACIONES_UNIDAD = 'ver-vacaciones-unidad';

@@ -45,6 +45,8 @@ export const ROUTES = {
       `/sgth/asistencia/permisos/${encodeURIComponent(folio)}`,
 
     ASISTENCIA_VACACIONES:  '/sgth/asistencia/vacaciones',
+    // Las licencias con remuneración, fuera de las vacaciones (fase 5.1).
+    ASISTENCIA_LICENCIAS:   '/sgth/asistencia/licencias',
     ASISTENCIA_PERIODOS:    '/sgth/asistencia/periodos',
     ASISTENCIA_CONSOLIDADO: '/sgth/asistencia/consolidado',
     CERTIFICACIONES_MEDICAS: '/sgth/certificaciones-medicas',

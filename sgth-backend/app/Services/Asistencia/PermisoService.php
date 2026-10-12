@@ -78,6 +78,7 @@ class PermisoService implements PermisoServiceInterface
             $this->validarDiaLaborable($tipo, $fecha);
             $this->validarCruceConVacaciones($servidorId, $fecha);
             $this->validarCruceConReposo($servidorId, $fecha);
+            $this->validarCruceConLicencia($servidorId, $fecha);
 
             // A partir de aquí se lee la jornada del servidor en esa fecha, así
             // que se bloquean sus permisos de ese día: dos solicitudes a la vez
@@ -499,6 +500,27 @@ class PermisoService implements PermisoServiceInterface
                 $vacacion->fecha_inicio->format('d/m/Y'),
                 $vacacion->fecha_fin->format('d/m/Y'),
                 $fecha->format('d/m/Y')
+            ));
+        }
+    }
+
+    /**
+     * Ni en un día de licencia con remuneración (fase 5.1): la licencia ocupa
+     * todos sus días desde que se registra.
+     */
+    private function validarCruceConLicencia(int $servidorId, Carbon $fecha): void
+    {
+        $dia = $fecha->toDateString();
+        $licencia = \App\Models\Asistencia\Licencia::vigentesDe($servidorId, $dia, $dia)->first();
+
+        if ($licencia) {
+            throw new ReglaNegocioException(sprintf(
+                'El %s está cubierto por la licencia %s (%s), del %s al %s: ese día ya tiene una ausencia justificada.',
+                $fecha->format('d/m/Y'),
+                $licencia->folio,
+                $licencia->causa->etiqueta(),
+                $licencia->fecha_inicio->format('d/m/Y'),
+                $licencia->fecha_fin->format('d/m/Y')
             ));
         }
     }

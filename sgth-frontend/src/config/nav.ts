@@ -149,6 +149,13 @@ export const NAV_SGTH: NavGroup[] = [
             permiso: 'ver-vacaciones-unidad',
           },
           {
+            // Las registra TH; las aprueban TH y Trabajo Social (fase 5.1).
+            label:    'Licencias',
+            href:     ROUTES.SGTH.ASISTENCIA_LICENCIAS,
+            icon:     'IconReportMedical',
+            permisos: ['gestionar-licencias', 'aprobar-permiso-sirha7', 'validar-trabajo-social'],
+          },
+          {
             // Casi todo en esta pantalla genera o recalcula saldos.
             label: 'Períodos de vacaciones',
             href:  ROUTES.SGTH.ASISTENCIA_PERIODOS,

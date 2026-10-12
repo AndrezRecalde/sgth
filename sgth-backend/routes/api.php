@@ -9,6 +9,7 @@ use App\Http\Controllers\Asistencia\PeriodoVacacionController;
 use App\Http\Controllers\Asistencia\PermisoServidorController;
 use App\Http\Controllers\Asistencia\PermisoSirha7Controller;
 use App\Http\Controllers\Asistencia\CertificadoAprobacionController;
+use App\Http\Controllers\Asistencia\LicenciaController;
 use App\Http\Controllers\Asistencia\VacacionController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\PasswordController;
@@ -688,6 +689,29 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::post('{id}/aprobar-sin-sirha7', [CertificadoAprobacionController::class, 'aprobarSinSirha7'])
                 ->whereNumber('id')
                 ->name('asistencia.certificados.aprobar-sin-sirha7');
+        });
+
+        // Las licencias con remuneración, fuera de las vacaciones (fase 5.1).
+        // Quién puede cada cosa lo dice LicenciaPolicy.
+        Route::prefix('licencias')->group(function () {
+            Route::get('/', [LicenciaController::class, 'index'])->name('asistencia.licencias.index');
+            Route::get('causas', [LicenciaController::class, 'causas'])->name('asistencia.licencias.causas');
+            Route::post('/', [LicenciaController::class, 'store'])->name('asistencia.licencias.store');
+            Route::get('{id}/documento', [LicenciaController::class, 'documento'])
+                ->whereNumber('id')
+                ->name('asistencia.licencias.documento');
+            Route::get('{id}/sirha7', [LicenciaController::class, 'previa'])
+                ->whereNumber('id')
+                ->name('asistencia.licencias.sirha7.previa');
+            Route::post('{id}/aprobar-sirha7', [LicenciaController::class, 'aprobar'])
+                ->whereNumber('id')
+                ->name('asistencia.licencias.sirha7.aprobar');
+            Route::post('{id}/aprobar-sin-sirha7', [LicenciaController::class, 'aprobarSinSirha7'])
+                ->whereNumber('id')
+                ->name('asistencia.licencias.aprobar-sin-sirha7');
+            Route::post('{id}/anular', [LicenciaController::class, 'anular'])
+                ->whereNumber('id')
+                ->name('asistencia.licencias.anular');
         });
 
         // Permisos

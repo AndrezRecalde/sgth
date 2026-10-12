@@ -441,6 +441,20 @@ class VacacionService implements VacacionServiceInterface
                 $reposo->fecha_fin->format('d/m/Y')
             ));
         }
+
+        // Y las licencias con remuneración, que desde la fase 5.1 ya no son
+        // motivos de vacaciones: ocupan sus días desde que se registran.
+        $licencia = \App\Models\Asistencia\Licencia::vigentesDe($servidorId, $inicio->toDateString(), $fin->toDateString())->first();
+
+        if ($licencia) {
+            throw new ReglaNegocioException(sprintf(
+                'Las fechas incluyen la licencia %s (%s), del %s al %s: esos días ya tienen una ausencia. Elija otras fechas.',
+                $licencia->folio,
+                $licencia->causa->etiqueta(),
+                $licencia->fecha_inicio->format('d/m/Y'),
+                $licencia->fecha_fin->format('d/m/Y')
+            ));
+        }
     }
 
     /**

@@ -89,8 +89,9 @@ beforeEach(function () {
     // cruzara con ellas se rechazaría por solapamiento, y el test pasaría o
     // fallaría según el día de la semana en que corriera.
     $lunes = now()->addWeeks(4)->next(Carbon::MONDAY);
+    // Desde la fase 5.1 solo se piden vacaciones: quien pide necesita período.
     $this->solicitud = [
-        'motivo'           => 'matrimonio',
+        'motivo'           => 'vacaciones_anuales',
         'fecha_inicio'     => $lunes->toDateString(),
         'fecha_fin'        => $lunes->copy()->addDay()->toDateString(),
         'dias_solicitados' => 2,
@@ -171,6 +172,7 @@ test('Talento Humano aprueba y genera períodos, pero no resuelve su propia soli
 
 test('un servidor registra la suya y consulta su saldo, pero no la de otros', function () {
     $this->actingAs(($this->usuario)('servidor', $this->servidorA), 'sanctum');
+    periodoVacacionesDePrueba($this->servidorA);
 
     $this->postJson('/api/v1/asistencia/vacaciones', $this->solicitud)->assertCreated();
     $this->postJson('/api/v1/asistencia/vacaciones', $this->solicitud + ['servidor_id' => $this->servidorB->id])
