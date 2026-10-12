@@ -621,6 +621,12 @@ class MovimientoPersonal extends Model
         return $this->hasOne(ActaFiniquito::class, 'movimiento_personal_id');
     }
 
+    /** Su transcripción al portal del Ministerio, el SIITH o el SUT (fase 7.5). */
+    public function transcripcionesReporte(): HasMany
+    {
+        return $this->hasMany(\App\Models\Reporte\TranscripcionReporte::class, 'movimiento_id');
+    }
+
     /** El lote del que nació, si nació con otros (fase 4.6). */
     public function lote(): BelongsTo
     {

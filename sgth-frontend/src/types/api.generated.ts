@@ -1587,38 +1587,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/reportes/siith-sut/configuracion": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["configuracionReporteMovimiento.index"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/reportes/siith-sut/configuracion/{configuracion}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: operations["configuracionReporteMovimiento.update"];
-        trace?: never;
-    };
     "/v1/asistencia/consolidado-permisos": {
         parameters: {
             query?: never;
@@ -6248,14 +6216,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/reportes/siith-sut/movimientos": {
+    "/v1/reportes/siith-sut": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["reporteSiithSut.movimientos"];
+        get: operations["reporteSiithSut.index"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6264,20 +6232,69 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/reportes/siith-sut/mensual": {
+    "/v1/reportes/siith-sut/excel": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["reporteSiithSut.mensual"];
+        get: operations["reporteSiithSut.excel"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/v1/reportes/siith-sut/transcribir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Marca como transcritos los actos, o su anulación */
+        post: operations["reporteSiithSut.transcribir"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/reportes/siith-sut/configuracion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["reporteSiithSut.configuracion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/reportes/siith-sut/configuracion/{clase}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["reporteSiithSut.actualizarConfiguracion"];
         trace?: never;
     };
     "/v1/sso/assist/{codigo}/cuestionario": {
@@ -8663,18 +8680,6 @@ export interface components {
             updated_at: string | null;
             /** Format: date-time */
             deleted_at: string | null;
-        };
-        /** ConfiguracionReporteMovimiento */
-        ConfiguracionReporteMovimiento: {
-            id: number;
-            tipo_movimiento: string;
-            reportable_siith: boolean;
-            reportable_sut: boolean;
-            descripcion: string | null;
-            /** Format: date-time */
-            created_at: string | null;
-            /** Format: date-time */
-            updated_at: string | null;
         };
         /** ConsultaMedica */
         ConsultaMedica: {
@@ -12955,12 +12960,6 @@ export interface components {
             instructor?: string;
             lugar?: string | null;
             estado?: boolean;
-        };
-        /** UpdateConfiguracionReporteMovimientoRequest */
-        UpdateConfiguracionReporteMovimientoRequest: {
-            reportable_siith?: boolean;
-            reportable_sut?: boolean;
-            descripcion?: string | null;
         };
         /** UpdateConsultaMedicaRequest */
         UpdateConsultaMedicaRequest: {
@@ -17761,67 +17760,6 @@ export interface operations {
                     };
                 };
             };
-        };
-    };
-    "configuracionReporteMovimiento.index": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Configuración de reportabilidad SIITH/SUT por tipo de movimiento.";
-                        datos: components["schemas"]["ConfiguracionReporteMovimiento"][];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-        };
-    };
-    "configuracionReporteMovimiento.update": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The configuracion ID */
-                configuracion: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["UpdateConfiguracionReporteMovimientoRequest"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Configuración actualizada.";
-                        datos: components["schemas"]["ConfiguracionReporteMovimiento"] | null;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            404: components["responses"]["ModelNotFoundException"];
-            422: components["responses"]["ValidationException"];
         };
     };
     "asistencia.consolidado": {
@@ -30996,14 +30934,9 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
-    "reporteSiithSut.movimientos": {
+    "reporteSiithSut.index": {
         parameters: {
-            query: {
-                portal: "siith" | "sut";
-                servidor_id?: number | null;
-                desde?: string | null;
-                hasta?: string | null;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -31018,8 +30951,63 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Operación exitosa.";
-                        datos: Record<string, never>;
+                        mensaje: "Reporte SIITH/SUT.";
+                        datos: unknown[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "reporteSiithSut.excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "reporteSiithSut.transcribir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    portal: "siith" | "sut";
+                    movimiento_ids: number[];
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string | "Se marcó 1 acto como transcrito.";
+                        datos: {
+                            transcritos: number;
+                        };
                         meta: null;
                     };
                 };
@@ -31028,13 +31016,9 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
-    "reporteSiithSut.mensual": {
+    "reporteSiithSut.configuracion": {
         parameters: {
-            query: {
-                anio: number;
-                mes: number;
-                portal: "siith" | "sut";
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -31049,20 +31033,48 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Operación exitosa.";
-                        datos: {
-                            periodo: string;
-                            portal: string;
-                            resumen: {
-                                [key: string]: number;
-                            };
-                            detalle: unknown[];
-                        };
+                        mensaje: "Qué clase se reporta a cada portal.";
+                        datos: unknown[];
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "reporteSiithSut.actualizarConfiguracion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clase: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    reportable_siith?: boolean;
+                    reportable_sut?: boolean;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: unknown[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
             422: components["responses"]["ValidationException"];
         };
     };
