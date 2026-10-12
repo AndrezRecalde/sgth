@@ -2,6 +2,7 @@
 
 namespace App\Services\Estructura;
 
+use App\Enums\TipoSubrogacion;
 use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Expediente\Servidor;
 use App\Models\Expediente\Subrogacion;
@@ -26,8 +27,11 @@ class FirmanteOrganigramaService
     }
 
     /**
+     * `encargo` dice si quien firma lo hace por encargo —el puesto no tiene
+     * titular—, que en el papel se marca (E) y no (S).
+     *
      * @param  UnidadAdministrativa|int|null  $unidad
-     * @return array{servidor: ?Servidor, cargo: ?string, subrogado: bool, puesto_id: ?int}
+     * @return array{servidor: ?Servidor, cargo: ?string, subrogado: bool, encargo: bool, puesto_id: ?int}
      */
     public function jefeDeUnidadEn(mixed $unidad, string $fecha, ?string $cargoPorDefecto = null): array
     {
@@ -41,16 +45,18 @@ class FirmanteOrganigramaService
             : null;
 
         if (! $puesto) {
-            return ['servidor' => null, 'cargo' => $cargoPorDefecto, 'subrogado' => false, 'puesto_id' => null];
+            return ['servidor' => null, 'cargo' => $cargoPorDefecto, 'subrogado' => false, 'encargo' => false, 'puesto_id' => null];
         }
 
-        $cargo      = $puesto->cargo?->nombre ?? $cargoPorDefecto;
-        $subrogante = $this->subroganteDe($puesto->id, $fecha);
+        $cargo       = $puesto->cargo?->nombre ?? $cargoPorDefecto;
+        $subrogacion = $this->subrogacionDe($puesto->id, $fecha);
+        $subrogante  = $subrogacion?->subrogante;
 
         return [
             'servidor'  => $subrogante ?? $this->titularDe($puesto->id),
             'cargo'     => $cargo,
             'subrogado' => (bool) $subrogante,
+            'encargo'   => $subrogante !== null && $subrogacion->tipo === TipoSubrogacion::ENCARGO,
             'puesto_id' => $puesto->id,
         ];
     }
@@ -70,17 +76,21 @@ class FirmanteOrganigramaService
 
     public function subroganteDe(int $puestoId, string $fecha): ?Servidor
     {
+        return $this->subrogacionDe($puestoId, $fecha)?->subrogante;
+    }
+
+    /** La subrogación o el encargo que surte efecto ese día sobre el puesto. */
+    public function subrogacionDe(int $puestoId, string $fecha): ?Subrogacion
+    {
         // El predicado «surte efecto ese día» vive en el scope del modelo, que
         // es el único sitio donde se escribe. Aquí estaba copiado con una rama
         // de más —`whereNull('fecha_fin')`— para una columna que es NOT NULL
         // desde la primera migración: no podía ser verdad nunca.
-        $subrogacion = Subrogacion::with('subrogante')
+        return Subrogacion::with('subrogante')
             ->where('puesto_subrogado_id', $puestoId)
             ->activaEnFecha($fecha)
             ->orderByDesc('fecha_inicio')
             ->first();
-
-        return $subrogacion?->subrogante;
     }
 
     public function nombreCompleto(Servidor $servidor): string

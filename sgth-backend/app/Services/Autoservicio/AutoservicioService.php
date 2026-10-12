@@ -121,16 +121,6 @@ final class AutoservicioService implements AutoservicioServiceInterface
         return $servidor->toArray();
     }
 
-    public function obtenerMisActividades(int $servidorId): array
-    {
-        // En el Sprint 11 se implementarán las tablas reales. Aquí preparamos la firma.
-        return DB::table('actividades_laborales')
-            ->where('servidor_id', $servidorId)
-            ->orderBy('fecha', 'desc')
-            ->get()
-            ->toArray();
-    }
-
     /**
      * Lo que el servidor puede ver de sus propias consultas.
      *

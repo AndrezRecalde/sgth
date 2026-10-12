@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Actividades\ActividadLaboralController;
 use App\Http\Controllers\Admin\PermisoController;
 use App\Http\Controllers\Admin\UsuarioController;
 use App\Http\Controllers\Asistencia\ConsolidadoPermisoController;
@@ -14,6 +13,7 @@ use App\Http\Controllers\Asistencia\VacacionController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Autoservicio\AutoservicioController;
+use App\Http\Controllers\Autoservicio\MisActividadesController;
 use App\Http\Controllers\Autoservicio\MisCertificadosMedicosController;
 use App\Http\Controllers\Autoservicio\MisDocumentosLaboralesController;
 use App\Http\Controllers\Autoservicio\MisSolicitudesAccionController;
@@ -957,7 +957,16 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::get('mis-vacaciones', [AutoservicioController::class, 'misVacaciones']);
         Route::get('mis-roles-pago', [AutoservicioController::class, 'misRolesPago']);
         Route::get('mi-expediente', [AutoservicioController::class, 'miExpediente']);
-        Route::get('mis-actividades', [AutoservicioController::class, 'misActividades']);
+        // Las actividades laborales que anota el servidor: las suyas, nadie
+        // más las ve. Se corrigen solo las del mes en curso.
+        Route::middleware('permission:registrar-actividades')->group(function () {
+            Route::get('mis-actividades', [MisActividadesController::class, 'index']);
+            Route::post('mis-actividades', [MisActividadesController::class, 'store']);
+            Route::put('mis-actividades/{actividad}', [MisActividadesController::class, 'update'])->whereNumber('actividad');
+            Route::delete('mis-actividades/{actividad}', [MisActividadesController::class, 'destroy'])->whereNumber('actividad');
+        });
+        Route::get('mis-actividades/pdf', [MisActividadesController::class, 'pdf'])
+            ->middleware('permission:exportar-informe-actividades');
         // «Mis documentos laborales» (fase 6.3a): lo notificado y registrado,
         // su PDF y el acuse de recibo. Siempre los del propio servidor.
         Route::get('mis-documentos', [MisDocumentosLaboralesController::class, 'index']);
@@ -1889,24 +1898,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 ->middleware('role:admin-uath|asistente-uath');
         });
 
-    // Módulo 16 — Actividades Laborales
-    Route::prefix('actividades')
-        ->group(function () {
-            // Los segmentos literales van antes del recurso: su `{actividad}`
-            // se tragaba `por-unidad`, que acababa en `show()` con esa palabra
-            // por id y devolvía un 500 desde que se escribió.
-            Route::get('por-unidad',
-                [ActividadLaboralController::class, 'porUnidad'])
-                ->middleware('role:jefe-unidad|director|admin-uath');
-            Route::post('exportar-informe',
-                [ActividadLaboralController::class, 'exportarInforme']);
-
-            Route::apiResource('/', ActividadLaboralController::class)
-                ->parameters(['' => 'actividad']) // Para que funcionen con /
-                // El comodín solo acepta números, para que el orden deje de ser
-                // lo único que sostiene esto.
-                ->where(['actividad' => '[0-9]+']);
-        });
+    // Módulo 16 — Actividades Laborales: viven en el portal, en
+    // `autoservicio/mis-actividades`. Aquí había un CRUD sin dueño —cualquiera
+    // leía, editaba o borraba las de otro— y un «informe» que devolvía una
+    // ruta a un PDF que nunca se generaba; ninguna pantalla lo usó.
 
     // Módulo 17 — Bienestar y Clima
     Route::prefix('bienestar')

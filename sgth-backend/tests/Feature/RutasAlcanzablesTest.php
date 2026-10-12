@@ -15,6 +15,8 @@ uses(Tests\TestCase::class, RefreshDatabase::class);
  * pasaba a `handoffs`, a `descuentos-recurrentes` y a `actividades/por-unidad`
  * con el `{actividad}` de su `apiResource`. Las cuatro devolvían un 500 desde
  * que se escribieron, y no se había notado porque ninguna pantalla las pide.
+ * Las de actividades se retiraron el 2026-10-12: viven en el portal, en
+ * `autoservicio/mis-actividades`, con su propio literal (`pdf`) que cuidar.
  *
  * Lo que se comprueba aquí no es que devuelvan datos, sino que llegan a su
  * controlador: que la ruta exista es la mitad del asunto, la otra mitad es que
@@ -61,12 +63,12 @@ test('las_rutas_literales_de_nomina_no_las_traga_el_comodin', function () {
         ->toBe('NominaController@show');
 });
 
-test('por_unidad_no_la_traga_el_recurso_de_actividades', function () {
-    expect(destinoDe('GET', '/api/v1/actividades/por-unidad'))
-        ->toBe('ActividadLaboralController@porUnidad');
+test('el_pdf_de_mis_actividades_no_lo_traga_el_comodin', function () {
+    expect(destinoDe('GET', '/api/v1/autoservicio/mis-actividades/pdf'))
+        ->toBe('MisActividadesController@pdf');
 
-    expect(destinoDe('GET', '/api/v1/actividades/7'))
-        ->toBe('ActividadLaboralController@show');
+    expect(destinoDe('PUT', '/api/v1/autoservicio/mis-actividades/7'))
+        ->toBe('MisActividadesController@update');
 });
 
 test('el_comodin_de_nomina_solo_acepta_numeros', function () {
@@ -94,11 +96,4 @@ test('las_rutas_de_nomina_que_estaban_rotas_ya_responden', function () {
             ->getJson($uri)
             ->assertOk();
     }
-});
-
-test('actividades_por_unidad_ya_responde', function () {
-    $this->actingAs($this->usuario, 'sanctum')
-        ->getJson('/api/v1/actividades/por-unidad?unidad_administrativa_id=1')
-        ->assertOk()
-        ->assertJsonPath('datos', []);
 });
