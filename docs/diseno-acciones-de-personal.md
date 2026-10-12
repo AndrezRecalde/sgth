@@ -1204,7 +1204,14 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
      - Arreglos de paso: la cuota de un préstamo se cuenta al cerrar, una vez —cada recálculo del borrador sumaba otra—, y los préstamos se filtran por las fechas del mes; el salario básico sale de `salarios_basicos` (sin él no hay décimo cuarto, y se dice); los permisos de nómina —ver, procesar, cerrar— reemplazan al rol admin-uath, en el backend y en la pantalla.
      - Excel por servidor, con los días, la remuneración y cada concepto, para compararla con la de Financiero.
      - **[Pendiente: Financiero]** Siguen como estaban: las tasas del IESS (el catálogo trae las del sector privado), los décimos de la LOSEP (hoy solo los del Código del Trabajo, mensualizados), el impuesto a la renta y los fondos de reserva. La base del IESS pasa a ser todo lo que se paga salvo los décimos.
-4. Desvinculación.
+4. Desvinculación (9.9). En dos PR: 4a, la desvinculación y los pasos que se leen de otros módulos; 4b, la liquidación de vacaciones y la indemnización, con el tope del Mandato 2, sus novedades para nómina y la prohibición de reingreso.
+   - Hasta aquí el motor cerraba el vínculo y las subrogaciones del cesado, y nada más: los bienes, el usuario, el certificado y la declaración de fin de gestión quedaban a la memoria de cada uno.
+   - **4a.** Se abre sola (`desvinculaciones`) cuando un acto cierra el vínculo y la persona no queda con otro: la renuncia, la destitución, la jubilación, el fin del período, la terminación del obrero, el fin del contrato civil. Quien pasa de un vínculo a otro sin interrupción no se desvincula. Una por cierre. Si el cese se anula, se cancela.
+   - **4a.** Los pasos que otro módulo registra se leen de él y quedan hechos solos: la **devolución de los bienes** (los que siguen asignados en el Inventario TI), la **baja del usuario** (que no le quede uno activo), el **certificado laboral** (uno emitido desde la salida) y la **declaración patrimonial de fin de gestión** (registrada en el expediente). La **liquidación de vacaciones y haberes** y la **indemnización** las marca el Director, con su nota, hasta que tengan cálculo (4b); en el obrero, el acta de finiquito de la terminación deja hecha la liquidación.
+   - **4a.** Todo paso puede no aplicar, con su motivo; lo que no le toca al contrato civil —la liquidación, la indemnización, la declaración— no aplica desde que nace. Se cierra sola cuando cada paso está hecho o no aplica, y se reabre si uno vuelve a pendiente.
+   - **4a.** El Inventario TI asignaba bienes y nada los devolvía: ahora registra la devolución (`devolverBien`). Mientras no tenga pantalla, Talento Humano la registra desde la desvinculación, con el acta de TI.
+   - **4a.** Pestaña «Desvinculaciones» en Acciones de Personal, las abiertas primero, con el detalle de cada paso y su responsable.
+   - **4a.** Fuera: la prohibición de reingreso, que depende del monto de la indemnización (4b); el aviso en la ficha del servidor; las desvinculaciones de los ceses anteriores a esta fase.
 5. Reporte SIITH por clase, con su pantalla.
 
 Total: 6 + 7 + 3 + 6 + 3 + 4 + 5 = **34 PRs**.

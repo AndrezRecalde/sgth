@@ -20,6 +20,9 @@ interface InventarioTiServiceInterface
 
     public function asignarBien(array $datos): AsignacionBien;
 
+    /** La devolución del bien asignado (fase 7.4a). */
+    public function devolverBien(AsignacionBien $asignacion, string $fecha, ?string $observaciones): AsignacionBien;
+
     /** @return array{content: string, filename: string} */
     public function generarActaEntrega(int $id): array;
 

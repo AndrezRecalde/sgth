@@ -4,6 +4,7 @@ namespace App\Http\Controllers\InventarioTi;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Contracts\InventarioTi\InventarioTiServiceInterface;
+use App\Models\InventarioTi\AsignacionBien;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
@@ -31,6 +32,20 @@ final class AsignacionBienController extends Controller
     public function show(int $id): JsonResponse
     {
         return ApiResponse::ok(['id' => $id], 'Detalle de asignación');
+    }
+
+    /** La devolución del bien (fase 7.4a). */
+    public function devolver(Request $request, AsignacionBien $asignacion): JsonResponse
+    {
+        $datos = $request->validate([
+            'fecha_devolucion' => ['required', 'date', 'before_or_equal:today'],
+            'observaciones'    => ['nullable', 'string', 'max:1000'],
+        ], [], ['fecha_devolucion' => 'fecha de devolución', 'observaciones' => 'observaciones']);
+
+        return ApiResponse::ok(
+            $this->service->devolverBien($asignacion, $datos['fecha_devolucion'], $datos['observaciones'] ?? null),
+            'Devolución registrada.',
+        );
     }
 
     /**

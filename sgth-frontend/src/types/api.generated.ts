@@ -485,6 +485,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/inventario/asignaciones/{asignacion}/devolver": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** La devolución del bien (fase 7.4a) */
+        post: operations["asignacionBien.devolver"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/dispensario/atenciones-enfermeria": {
         parameters: {
             query?: never;
@@ -2325,6 +2342,73 @@ export interface paths {
         put: operations["descuentos-recurrentes.update"];
         post?: never;
         delete: operations["descuentos-recurrentes.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/desvinculaciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Las abiertas, por defecto; o las cerradas, las canceladas o todas */
+        get: operations["desvinculacion.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/desvinculaciones/{desvinculacion}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["desvinculacion.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/desvinculaciones/{desvinculacion}/pasos/{paso}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Hecho, no aplica o, para deshacerlo, pendiente; con su nota */
+        post: operations["desvinculacion.marcar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/desvinculaciones/{desvinculacion}/bienes/{asignacion}/devolver": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** La devolución de un bien a su cargo, con el acta de TI */
+        post: operations["desvinculacion.devolverBien"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -14827,6 +14911,45 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
+    "asignacionBien.devolver": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The asignacion ID */
+                asignacion: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: date-time */
+                    fecha_devolucion: string;
+                    observaciones?: string | null;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Devolución registrada.";
+                        datos: components["schemas"]["AsignacionBien"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "dispensario.atenciones-enfermeria.index": {
         parameters: {
             query?: {
@@ -19936,6 +20059,241 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "desvinculacion.index": {
+        parameters: {
+            query?: {
+                estado?: "abierta" | "cerrada" | "cancelada" | "todas" | null;
+                per_page?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Desvinculaciones.";
+                        datos: components["schemas"]["LengthAwarePaginator"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "desvinculacion.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The desvinculacion ID */
+                desvinculacion: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Desvinculación.";
+                        datos: {
+                            id: number;
+                            servidor_id: number;
+                            servidor: string;
+                            cedula: string;
+                            fecha_salida: string;
+                            causal: string;
+                            acto: string;
+                            movimiento_id: string;
+                            tipo_nombramiento: string;
+                            estado: string;
+                            cerrada_en: string;
+                            cancelada_en: string;
+                            pasos_hechos: number;
+                            pasos_total: number;
+                            motivo_cancelacion: string | null;
+                            pasos: {
+                                paso: string;
+                                /** @enum {string} */
+                                etiqueta: "Liquidación de vacaciones no gozadas y de haberes" | "Indemnización o compensación" | "Devolución de los bienes" | "Baja del usuario" | "Certificado laboral" | "Declaración patrimonial de fin de gestión";
+                                /** @enum {string} */
+                                responsable: "Director de Talento Humano y Financiero" | "Tecnologías de la Información" | "Talento Humano" | "El servidor, ante la Contraloría; Talento Humano la registra";
+                                /** @enum {string} */
+                                estado: "no_aplica" | "hecho" | "pendiente";
+                                se_marca: boolean;
+                                lo_marca_el_director: boolean;
+                                detalle: string;
+                                nota: string;
+                                registrado_por: string;
+                                registrado_en: string;
+                                ""?: string;
+                            }[];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "desvinculacion.marcar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The desvinculacion ID */
+                desvinculacion: number;
+                paso: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    estado: "hecho" | "no_aplica" | "pendiente";
+                    nota?: string | null;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: {
+                            id: number;
+                            servidor_id: number;
+                            servidor: string;
+                            cedula: string;
+                            fecha_salida: string;
+                            causal: string;
+                            acto: string;
+                            movimiento_id: string;
+                            tipo_nombramiento: string;
+                            estado: string;
+                            cerrada_en: string;
+                            cancelada_en: string;
+                            pasos_hechos: number;
+                            pasos_total: number;
+                            motivo_cancelacion: string | null;
+                            pasos: {
+                                paso: string;
+                                /** @enum {string} */
+                                etiqueta: "Liquidación de vacaciones no gozadas y de haberes" | "Indemnización o compensación" | "Devolución de los bienes" | "Baja del usuario" | "Certificado laboral" | "Declaración patrimonial de fin de gestión";
+                                /** @enum {string} */
+                                responsable: "Director de Talento Humano y Financiero" | "Tecnologías de la Información" | "Talento Humano" | "El servidor, ante la Contraloría; Talento Humano la registra";
+                                /** @enum {string} */
+                                estado: "no_aplica" | "hecho" | "pendiente";
+                                se_marca: boolean;
+                                lo_marca_el_director: boolean;
+                                detalle: string;
+                                nota: string;
+                                registrado_por: string;
+                                registrado_en: string;
+                                ""?: string;
+                            }[];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "desvinculacion.devolverBien": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The desvinculacion ID */
+                desvinculacion: number;
+                asignacion: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: date-time */
+                    fecha_devolucion: string;
+                    observaciones?: string | null;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Devolución registrada.";
+                        datos: {
+                            id: number;
+                            servidor_id: number;
+                            servidor: string;
+                            cedula: string;
+                            fecha_salida: string;
+                            causal: string;
+                            acto: string;
+                            movimiento_id: string;
+                            tipo_nombramiento: string;
+                            estado: string;
+                            cerrada_en: string;
+                            cancelada_en: string;
+                            pasos_hechos: number;
+                            pasos_total: number;
+                            motivo_cancelacion: string | null;
+                            pasos: {
+                                paso: string;
+                                /** @enum {string} */
+                                etiqueta: "Liquidación de vacaciones no gozadas y de haberes" | "Indemnización o compensación" | "Devolución de los bienes" | "Baja del usuario" | "Certificado laboral" | "Declaración patrimonial de fin de gestión";
+                                /** @enum {string} */
+                                responsable: "Director de Talento Humano y Financiero" | "Tecnologías de la Información" | "Talento Humano" | "El servidor, ante la Contraloría; Talento Humano la registra";
+                                /** @enum {string} */
+                                estado: "no_aplica" | "hecho" | "pendiente";
+                                se_marca: boolean;
+                                lo_marca_el_director: boolean;
+                                detalle: string;
+                                nota: string;
+                                registrado_por: string;
+                                registrado_en: string;
+                                ""?: string;
+                            }[];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "dispensario.cie10.buscar": {
