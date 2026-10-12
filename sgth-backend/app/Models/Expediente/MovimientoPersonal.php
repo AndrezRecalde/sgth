@@ -402,6 +402,12 @@ class MovimientoPersonal extends Model
         return $this->belongsTo(MovimientoPersonal::class, 'movimiento_previo_id');
     }
 
+    /** La solicitud del portal que esta acción atiende, si la hay (fase 6.3b). */
+    public function solicitud(): HasOne
+    {
+        return $this->hasOne(SolicitudAccionPersonal::class, 'movimiento_personal_id');
+    }
+
     /**
      * La ausencia temporal que este ingreso viene a cubrir. Solo lo llevan los
      * reemplazos: un ingreso ordinario lo deja en null.

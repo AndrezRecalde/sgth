@@ -894,6 +894,8 @@ export type MovimientoPersonal = {
   puesto_origen_id?: number | null
   puesto_destino_id?: number | null
   resolucion_numero?: string | null
+  /** La solicitud del portal que atiende (fase 6.3b). */
+  solicitud_folio?: string | null
   /** La base legal que imprime el documento, congelada al suscribir (fase 6.1). */
   base_legal?: string | null
   /** La que pone su clase, para proponerla y para las acciones de antes de la 6.1. */

@@ -133,6 +133,8 @@ export function AccionRespaldos({ m }: { m: MovimientoPersonal }) {
               ? [{ label: 'Acta del concurso', value: `${m.acta_concurso_numero} · ${formatFecha(m.acta_concurso_fecha)}` }]
               : []),
             { label: 'N.º de resolución', value: m.resolucion_numero },
+            // La solicitud del portal que atiende (fase 6.3b).
+            ...(m.solicitud_folio ? [{ label: 'Solicitud del portal', value: m.solicitud_folio }] : []),
             // Lo que imprime el formato del Ministerio (fase 6.1): la base
             // legal —la guardada, o la de su clase—, la casilla y el acto
             // que la origina.

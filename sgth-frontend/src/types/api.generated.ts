@@ -4281,6 +4281,55 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/autoservicio/mis-solicitudes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["misSolicitudesAccion.index"];
+        put?: never;
+        post: operations["misSolicitudesAccion.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/autoservicio/mis-solicitudes/{solicitud}/retirar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["misSolicitudesAccion.retirar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/autoservicio/mis-solicitudes/{solicitud}/documento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** El respaldo que presentó */
+        get: operations["misSolicitudesAccion.documento"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/expediente/servidores/{servidorId}/movimientos": {
         parameters: {
             query?: never;
@@ -6096,6 +6145,71 @@ export interface paths {
         put: operations["slas.update"];
         post?: never;
         delete: operations["slas.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/solicitudes-accion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["solicitudAccionPersonal.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/solicitudes-accion/{solicitud}/preparar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["solicitudAccionPersonal.preparar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/solicitudes-accion/{solicitud}/rechazar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["solicitudAccionPersonal.rechazar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/solicitudes-accion/{solicitud}/documento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** El respaldo que presentó el servidor */
+        get: operations["solicitudAccionPersonal.documento"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -8744,6 +8858,12 @@ export interface components {
          */
         EstadoPostulante: "inscrito" | "en_evaluacion" | "aprobado" | "reprobado" | "descalificado" | "seleccionado" | "ganador_potencial" | "no_seleccionado" | "lista_espera" | "incorporado";
         /**
+         * EstadoSolicitudAccion
+         * @description En qué quedó una solicitud del portal (fase 6.3b): pendiente hasta que Talento Humano prepara su acción —atendida— o la rechaza con el motivo; el servidor la puede retirar mientras está pendiente.
+         * @enum {string}
+         */
+        EstadoSolicitudAccion: "pendiente" | "atendida" | "rechazada" | "retirada";
+        /**
          * EstadoSubrogacion
          * @description | |
          *     |---|
@@ -9681,6 +9801,8 @@ export interface components {
             efecto_aplicado_en: string | null;
             pendiente_de_vigencia: boolean;
             resolucion_numero: string | null;
+            /** @description La solicitud del portal que atiende (fase 6.3b). */
+            solicitud_folio: string;
             acto_origen_tipo: components["schemas"]["TipoActoDeOrigen"] | null;
             acto_origen_numero: string | null;
             acto_origen_fecha: string;
@@ -10116,6 +10238,23 @@ export interface components {
          * @enum {string}
          */
         PresentacionMedicamento: "tableta" | "capsula" | "jarabe" | "gotas" | "inyectable" | "crema" | "supositorio" | "spray" | "parche" | "solucion" | "polvo" | "otro";
+        /**
+         * PresentarSolicitudAccionRequest
+         * @description Una solicitud desde el portal (fase 6.3b): qué pide, desde cuándo y su
+         *     respaldo en PDF. Quién puede pedir qué —y los 15 días de la renuncia— lo
+         *     decide `SolicitudAccionPersonalService`, que conoce su vínculo.
+         */
+        PresentarSolicitudAccionRequest: {
+            tipo: components["schemas"]["TipoSolicitudAccion"];
+            causal?: string | null;
+            /** Format: date-time */
+            fecha_desde: string;
+            /** Format: date-time */
+            fecha_hasta?: string | null;
+            motivo?: string | null;
+            /** Format: binary */
+            archivo: string;
+        };
         /**
          * ProcedimientoDisciplinario
          * @description Por qué procedimiento se sanciona (diseño de Acciones de Personal, 9.15; fase 4.4). Lo decide el régimen del servidor al abrirlo: - el **sumario administrativo** es el de la LOSEP (Arts. 42 a 44), con su   gravedad leve o grave; - el **procedimiento del reglamento interno** es el del obrero: la falta sale   del catálogo de su reglamento interno de trabajo, porque el Código del   Trabajo prohíbe sancionar lo que el reglamento no prevea (Art. 44 a).  Los dos comparten los hitos —apertura, notificación, descargos, informe y resolución— y el debido proceso (Constitución Art. 76).
@@ -12026,6 +12165,12 @@ export interface components {
          * @enum {string}
          */
         TipoSancion: "amonestacion_verbal" | "amonestacion_escrita" | "multa" | "suspension" | "destitucion";
+        /**
+         * TipoSolicitudAccion
+         * @description Lo que el servidor puede pedir desde el portal (diseño, 9.13; fase 6.3b). Cada una se atiende preparando la acción de personal de su clase.
+         * @enum {string}
+         */
+        TipoSolicitudAccion: "renuncia" | "licencia_sin_remuneracion" | "jubilacion";
         /**
          * TipoSubrogacion
          * @enum {string}
@@ -24803,6 +24948,112 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
+    "misSolicitudesAccion.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Mis solicitudes.";
+                        datos: unknown[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "misSolicitudesAccion.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["PresentarSolicitudAccionRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: unknown[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "misSolicitudesAccion.retirar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                solicitud: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Solicitud retirada.";
+                        datos: unknown[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "misSolicitudesAccion.documento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                solicitud: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "movimientoPersonal.index": {
         parameters: {
             query?: never;
@@ -30104,6 +30355,122 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "solicitudAccionPersonal.index": {
+        parameters: {
+            query?: {
+                estado?: components["schemas"]["EstadoSolicitudAccion"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Solicitudes del portal.";
+                        datos: unknown[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "solicitudAccionPersonal.preparar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                solicitud: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Se preparó el borrador de la acción: está en la bandeja.";
+                        datos: unknown[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "solicitudAccionPersonal.rechazar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                solicitud: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    motivo: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Solicitud rechazada.";
+                        datos: unknown[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "solicitudAccionPersonal.documento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The solicitud ID */
+                solicitud: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
         };
     };
     "solicitudCertificacion.pendientesTriaje": {
