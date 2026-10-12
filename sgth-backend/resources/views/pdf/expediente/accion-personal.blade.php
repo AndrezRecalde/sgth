@@ -293,9 +293,14 @@
         }
         table.rejilla td.marcada { background: #e6f1ec; color: #17593f; font-weight: bold; }
         .base-legal { font-size: 9.5px; color: #3d4d46; margin-bottom: 5px; }
+
+@include('pdf.expediente.partials.vista-previa-estilos')
     </style>
 </head>
 <body>
+@if($vistaPrevia ?? false)
+    @include('pdf.expediente.partials.vista-previa-marca')
+@endif
 
 @php
     $apellidosServidor = trim(collect([
@@ -370,11 +375,14 @@
     // Los arma AccionPersonalPdfService; quien renderiza la vista sin él
     // —una prueba— los recibe vacíos.
     $modalidadActual = $modalidadActual ?? null;
+    // La vista previa de lo que todavía no se registra (fase 6.2).
+    $vistaPrevia = $vistaPrevia ?? false;
     $modalidadPropuesta = $modalidadPropuesta ?? null;
     $reemplazo = $reemplazo ?? null;
 
     // La fecha de emisión es la de suscripción, no la de vigencia.
-    $emision = $movimiento->fechaDeEmision() ?? $movimiento->fecha_efectiva;
+    // En la vista previa de un borrador todavía no hay: se fija al suscribir.
+    $emision = $movimiento->fechaDeEmision() ?? ($vistaPrevia ? null : $movimiento->fecha_efectiva);
     $casilla = $movimiento->casilla();
     $textoOtro = $movimiento->textoDeOtro();
     $casillas = \App\Enums\CasillaAccionPersonal::cases();
@@ -414,10 +422,10 @@
 <table class="cintillo">
     <tr>
         <td style="width: 50%;">
-            <span class="codigo">N.º {{ $codigoImpreso ?: 'S/N' }}</span>
+            <span class="codigo">{{ $vistaPrevia ? 'BORRADOR' : 'N.º '.($codigoImpreso ?: 'S/N') }}</span>
         </td>
         <td class="lugar-fecha">
-            Esmeraldas, {{ $emision ? \Carbon\Carbon::parse($emision)->locale('es')->isoFormat('DD [de] MMMM [del] YYYY') : '—' }}
+            Esmeraldas, {{ $emision ? \Carbon\Carbon::parse($emision)->locale('es')->isoFormat('DD [de] MMMM [del] YYYY') : ($vistaPrevia ? 'la fecha de emisión se fija al suscribir' : '—') }}
         </td>
     </tr>
 </table>
@@ -435,6 +443,10 @@
         <td>{!! $dato($fmtFecha($movimiento->acto_origen_fecha)) !!}</td>
     </tr>
 </table>
+
+@if($vistaPrevia)
+    @include('pdf.expediente.partials.vista-previa-sello')
+@endif
 
 @if($anulada ?? false)
     <div class="anulada">
@@ -681,12 +693,18 @@
                 <div class="firma-linea"></div>
                 <p class="firma-nombre">{{ $firmaAutoridad['nombre'] ?? $firmaAutoridad['cargo'] }}</p>
                 <p class="firma-cargo">{{ $firmaAutoridad['cargo'] }}</p>
+                @if(!empty($firmaAutoridad['provisional']))
+                    <p class="firma-provisional">{{ $firmaAutoridad['nombre'] ? 'Provisional: se sella al suscribir' : 'Sin firmante: así no se podría suscribir' }}</p>
+                @endif
             </td>
             <td style="width: 50%;">
                 <div class="firma-rotulo">{{ $firmaTalentoHumano['rotulo'] }}</div>
                 <div class="firma-linea"></div>
                 <p class="firma-nombre">{{ $firmaTalentoHumano['nombre'] ?? $firmaTalentoHumano['cargo'] }}</p>
                 <p class="firma-cargo">{{ $firmaTalentoHumano['cargo'] }}</p>
+                @if(!empty($firmaTalentoHumano['provisional']))
+                    <p class="firma-provisional">{{ $firmaTalentoHumano['nombre'] ? 'Provisional: se sella al suscribir' : 'Sin firmante: así no se podría suscribir' }}</p>
+                @endif
             </td>
         </tr>
     </table>
@@ -708,7 +726,7 @@
 <table class="cintillo">
     <tr>
         <td style="width: 50%;">
-            <span class="codigo">N.º {{ $codigoImpreso ?: 'S/N' }}</span>
+            <span class="codigo">{{ $vistaPrevia ? 'BORRADOR' : 'N.º '.($codigoImpreso ?: 'S/N') }}</span>
         </td>
         <td class="lugar-fecha">
             {{ trim($apellidosServidor.' '.$nombresServidor) }} · CI {{ $servidor->cedula ?? '—' }}

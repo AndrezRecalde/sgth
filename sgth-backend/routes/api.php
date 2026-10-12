@@ -487,6 +487,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // designación paralela.
         Route::get('firmantes-accion-personal/vigentes', [FirmanteAccionPersonalController::class, 'vigentes']);
         Route::get('movimientos/{movimientoId}/accion-personal-pdf', [AccionPersonalPdfController::class, 'generar']);
+        // La vista previa con la marca BORRADOR (fase 6.2): de quien prepara.
+        Route::get('movimientos/{movimientoId}/vista-previa', [AccionPersonalPdfController::class, 'vistaPrevia'])
+            ->middleware('permission:preparar-accion-personal');
         Route::get('movimientos/{movimiento}', [MovimientoPersonalController::class, 'show']);
         // Editar un borrador es prepararlo: lo hace también el asistente, que
         // hasta la fase 1.3 lo creaba y no podía corregirlo.

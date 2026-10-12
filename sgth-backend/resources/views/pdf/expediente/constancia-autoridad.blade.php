@@ -82,10 +82,17 @@
             text-transform: uppercase; margin: 0 0 4px 0;
         }
         .anulada .detalle { font-size: 10px; color: #6b2226; }
+
+@include('pdf.expediente.partials.vista-previa-estilos')
     </style>
 </head>
 <body>
+@if($vistaPrevia ?? false)
+    @include('pdf.expediente.partials.vista-previa-marca')
+@endif
 @php
+    // La vista previa de lo que todavía no se registra (fase 6.2).
+    $vistaPrevia ??= false;
     $fmtFecha = fn ($f) => $f ? \Carbon\Carbon::parse($f)->format('d/m/Y') : '—';
     $nombre = trim(($servidor?->apellido ?? '').' '.($servidor?->segundo_apellido ?? '').' '.($servidor?->nombre ?? '').' '.($servidor?->segundo_nombre ?? ''));
     $dignidad = $movimiento->puestoOrigen?->cargo?->nombre ?? $movimiento->puestoDestino?->cargo?->nombre;
@@ -108,7 +115,7 @@
     </table>
 </div>
 
-<div class="footer">{{ $movimiento->codigo_registro }}</div>
+<div class="footer">{{ $vistaPrevia ? 'BORRADOR' : $movimiento->codigo_registro }}</div>
 
 <div class="titulo">
     <div class="supra">Constancia</div>
@@ -116,6 +123,10 @@
     <div class="acto">{{ $movimiento->etiqueta() }}{{ $causal ? ' — '.$causal->etiqueta() : '' }}</div>
     <div class="regla"></div>
 </div>
+
+@if($vistaPrevia)
+    @include('pdf.expediente.partials.vista-previa-sello')
+@endif
 
 @if($anulada)
     <div class="anulada">
@@ -128,8 +139,8 @@
 
 <table class="cintillo">
     <tr>
-        <td><span class="codigo">N.º {{ $movimiento->codigo_registro }}</span></td>
-        <td class="lugar-fecha">Esmeraldas, {{ $fmtFecha($movimiento->fecha_registro) }}</td>
+        <td><span class="codigo">{{ $vistaPrevia ? 'BORRADOR' : 'N.º '.$movimiento->codigo_registro }}</span></td>
+        <td class="lugar-fecha">Esmeraldas, {{ $vistaPrevia && ! $movimiento->fecha_registro ? 'la fecha se fija al registrar' : $fmtFecha($movimiento->fecha_registro) }}</td>
     </tr>
 </table>
 
@@ -179,6 +190,9 @@
             <div class="firma-linea"></div>
             <p class="firma-nombre">{{ $firmaTalentoHumano['nombre'] ?? '' }}</p>
             <p class="firma-cargo">{{ $firmaTalentoHumano['cargo'] }}</p>
+            @if(!empty($firmaTalentoHumano['provisional']))
+                <p class="firma-provisional">{{ $firmaTalentoHumano['nombre'] ? 'Provisional: se sella al suscribir' : 'Sin firmante: así no se podría suscribir' }}</p>
+            @endif
         </td>
     </tr>
 </table>

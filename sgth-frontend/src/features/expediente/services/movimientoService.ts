@@ -90,4 +90,10 @@ export const movimientoService = {
         responseType: 'blob',
       })
       .then((r) => r.data),
+
+  /** El documento con la marca BORRADOR, de lo que todavía no se registra (fase 6.2). */
+  vistaPrevia: (movimientoId: number) =>
+    api
+      .get<Blob>(`/expediente/movimientos/${movimientoId}/vista-previa`, { responseType: 'blob' })
+      .then((r) => r.data),
 }

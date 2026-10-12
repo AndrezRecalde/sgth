@@ -12,9 +12,9 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class AccionPersonalPdfService
 {
-    public function generarContent(int $movimientoId): array
+    public function generarContent(int $movimientoId, bool $vistaPrevia = false): array
     {
-        ['vista' => $vista, 'datos' => $datos, 'archivo' => $archivo] = $this->documento($movimientoId);
+        ['vista' => $vista, 'datos' => $datos, 'archivo' => $archivo] = $this->documento($movimientoId, $vistaPrevia);
 
         return [
             'content'  => Pdf::loadView($vista, $datos)->setPaper('a4', 'portrait')->output(),
@@ -25,11 +25,15 @@ class AccionPersonalPdfService
     /**
      * El documento de la acción sin pasarlo a PDF: qué plantilla, con qué
      * datos y cómo se llama el archivo. Lo usa la descarga, y lo pueden
-     * renderizar las pruebas y la vista previa (fase 6.2) sin dompdf.
+     * renderizar las pruebas y la vista previa sin dompdf.
+     *
+     * La vista previa (fase 6.2; TH 27) es de lo que todavía no se registra
+     * —borrador o suscrita—: el mismo documento, con la marca BORRADOR, sin
+     * número y, en el borrador, con los firmantes que firmarían hoy.
      *
      * @return array{vista: string, datos: array<string, mixed>, archivo: string}
      */
-    public function documento(int $movimientoId): array
+    public function documento(int $movimientoId, bool $vistaPrevia = false): array
     {
         $movimiento = MovimientoPersonal::with([
             'servidor',
@@ -99,7 +103,15 @@ class AccionPersonalPdfService
             EstadoAccionPersonal::ANULADA,
         ];
 
-        if (!in_array($movimiento->estado, $imprimibles, true)) {
+        // La vista previa va por el otro lado: solo lo que todavía no tiene su
+        // documento, y sin número, que no lo tiene (fase 6.2).
+        if ($vistaPrevia) {
+            if (! in_array($movimiento->estado, [EstadoAccionPersonal::BORRADOR, EstadoAccionPersonal::SUSCRITA], true)) {
+                throw new ReglaNegocioException(
+                    'La vista previa es de lo que todavía no se registra: esta acción ya tiene su documento, descárguelo.'
+                );
+            }
+        } elseif (!in_array($movimiento->estado, $imprimibles, true)) {
             throw new ReglaNegocioException(
                 'Solo se puede generar el PDF de Acción de Personal para movimientos en '
                     .'estado registrada, notificada o anulada.'
@@ -129,7 +141,7 @@ class AccionPersonalPdfService
         | que una novedad de contrato de un servidor LOSEP era bitácora y
         | llevaba 'accion_de_personal' igualmente.
         */
-        if (blank($movimiento->codigo_registro)) {
+        if (! $vistaPrevia && blank($movimiento->codigo_registro)) {
             throw new ReglaNegocioException(
                 'Este movimiento es una constancia del expediente, no un acto administrativo: '
                     .'no pasó por la suscripción ni tiene correlativo, así que no hay documento que emitir.'
@@ -156,11 +168,14 @@ class AccionPersonalPdfService
                     'movimiento'         => $movimiento,
                     'anulada'            => $movimiento->estado === EstadoAccionPersonal::ANULADA,
                     'servidor'           => $movimiento->servidor,
-                    'firmaTalentoHumano' => $this->firma($movimiento, 'firmante_th', RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO),
+                    'firmaTalentoHumano' => $this->firma($movimiento, 'firmante_th', RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO, $vistaPrevia),
                     'logo'               => public_path('images/logo-gadpe.png'),
+                    'vistaPrevia'        => $vistaPrevia,
                 ],
-                'archivo' => 'constancia_'.$movimiento->codigo_registro
-                    .($movimiento->estado === EstadoAccionPersonal::ANULADA ? '_ANULADA' : '').'.pdf',
+                'archivo' => $vistaPrevia
+                    ? "vista_previa_constancia_{$movimiento->id}.pdf"
+                    : 'constancia_'.$movimiento->codigo_registro
+                        .($movimiento->estado === EstadoAccionPersonal::ANULADA ? '_ANULADA' : '').'.pdf',
             ];
         }
 
@@ -177,11 +192,14 @@ class AccionPersonalPdfService
                     'liquidacion'        => app(TerminacionObreroService::class)->liquidacion($movimiento),
                     'anulada'            => $movimiento->estado === EstadoAccionPersonal::ANULADA,
                     'servidor'           => $movimiento->servidor,
-                    'firmaTalentoHumano' => $this->firma($movimiento, 'firmante_th', RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO),
+                    'firmaTalentoHumano' => $this->firma($movimiento, 'firmante_th', RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO, $vistaPrevia),
                     'logo'               => public_path('images/logo-gadpe.png'),
+                    'vistaPrevia'        => $vistaPrevia,
                 ],
-                'archivo' => 'registro_interno_'.$movimiento->codigo_registro
-                    .($movimiento->estado === EstadoAccionPersonal::ANULADA ? '_ANULADA' : '').'.pdf',
+                'archivo' => $vistaPrevia
+                    ? "vista_previa_registro_interno_{$movimiento->id}.pdf"
+                    : 'registro_interno_'.$movimiento->codigo_registro
+                        .($movimiento->estado === EstadoAccionPersonal::ANULADA ? '_ANULADA' : '').'.pdf',
             ];
         }
 
@@ -196,13 +214,14 @@ class AccionPersonalPdfService
                 'reemplazo'    => $this->reemplazoDe($movimiento),
                 'anulada'      => $movimiento->estado === EstadoAccionPersonal::ANULADA,
                 'servidor'     => $movimiento->servidor,
-                'firmaAutoridad' => $this->firma($movimiento, 'firmante_autoridad', RolFirmaAccionPersonal::AUTORIDAD_NOMINADORA),
-                'firmaTalentoHumano' => $this->firma($movimiento, 'firmante_th', RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO),
+                'firmaAutoridad' => $this->firma($movimiento, 'firmante_autoridad', RolFirmaAccionPersonal::AUTORIDAD_NOMINADORA, $vistaPrevia),
+                'firmaTalentoHumano' => $this->firma($movimiento, 'firmante_th', RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO, $vistaPrevia),
                 'logo'         => public_path('images/logo-gadpe.png'),
+                'vistaPrevia'  => $vistaPrevia,
             ],
             // codigo_registro es el que genera el sistema al registrar la
             // acción; 'codigo' es un campo libre que casi nunca se llena.
-            'archivo' => 'accion_personal_'
+            'archivo' => $vistaPrevia ? "vista_previa_accion_personal_{$movimiento->id}.pdf" : 'accion_personal_'
                 .($movimiento->codigo_registro ?: $movimiento->codigo ?: $movimiento->id)
                 // Para que el archivo anulado no se confunda con el vigente en
                 // la carpeta de quien descarga los dos.
@@ -313,13 +332,28 @@ class AccionPersonalPdfService
      * se imprime el rótulo genérico del rol en vez de atribuirle la firma a
      * quien ocupe el cargo hoy.
      *
-     * @return array{rotulo:string, nombre:?string, cargo:string}
+     * En la vista previa de un borrador todavía no hay nadie sellado: va quien
+     * firmaría hoy según el organigrama, marcado como provisional (fase 6.2).
+     *
+     * @return array{rotulo:string, nombre:?string, cargo:string, provisional?: bool}
      */
     private function firma(
         MovimientoPersonal $movimiento,
         string $prefijo,
-        RolFirmaAccionPersonal $rol
+        RolFirmaAccionPersonal $rol,
+        bool $vistaPrevia = false,
     ): array {
+        if ($vistaPrevia && $movimiento->estado === EstadoAccionPersonal::BORRADOR) {
+            $provisional = app(FirmanteAccionPersonalService::class)->provisional($rol);
+
+            return [
+                'rotulo'      => $rol->rotuloDocumento(),
+                'nombre'      => $provisional['nombre'],
+                'cargo'       => $provisional['cargo'] ?: $rol->cargoPorDefecto(),
+                'provisional' => true,
+            ];
+        }
+
         return [
             'rotulo' => $rol->rotuloDocumento(),
             'nombre' => $movimiento->{"{$prefijo}_nombre"},

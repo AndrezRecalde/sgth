@@ -66,6 +66,8 @@ class MovimientoPersonalResource extends JsonResource
             'transiciones_permitidas' => $this->transicionesPermitidas($request),
             'puede_editar'            => $this->puedeEditar($request),
             'puede_anotar'            => $this->puedeAnotar($request),
+            // La vista previa con la marca BORRADOR (fase 6.2).
+            'puede_previsualizar'     => $this->puedePrevisualizar($request),
 
             'categoria'          => $this->categoria,
             'estado'             => $this->estado,
@@ -317,6 +319,23 @@ class MovimientoPersonalResource extends JsonResource
         return $usuario !== null
             && $this->estado !== null
             && $this->estado !== EstadoAccionPersonal::BORRADOR
+            && ! $this->resource->esSobre($usuario)
+            && $usuario->can(Permiso::PREPARAR_ACCION_PERSONAL->value);
+    }
+
+    /**
+     * La vista previa con la marca BORRADOR (fase 6.2; TH 27): de lo que
+     * todavía no se registra y tiene documento, para quien prepara acciones y
+     * nunca sobre sí mismo. El titular no ve sus borradores (diseño, 6.3).
+     */
+    private function puedePrevisualizar(Request $request): bool
+    {
+        $usuario = $request->user();
+
+        return $usuario !== null
+            && in_array($this->estado, [EstadoAccionPersonal::BORRADOR, EstadoAccionPersonal::SUSCRITA], true)
+            && $this->tieneDocumentoImprimible()
+            && ! $this->resource->esRegistroDeContrato()
             && ! $this->resource->esSobre($usuario)
             && $usuario->can(Permiso::PREPARAR_ACCION_PERSONAL->value);
     }

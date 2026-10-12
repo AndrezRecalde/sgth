@@ -52,6 +52,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/expediente/movimientos/{movimientoId}/vista-previa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * La vista previa de lo que todavía no se registra, con la marca BORRADOR
+         *     (fase 6.2; TH 27). La ruta la limita a quien prepara acciones: el
+         *     titular no ve sus borradores (diseño, 6.3), y nadie la pide sobre sí
+         *     mismo
+         */
+        get: operations["accionPersonalPdf.vistaPrevia"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/actividades/por-unidad": {
         parameters: {
             query?: never;
@@ -9494,6 +9516,8 @@ export interface components {
             transiciones_permitidas: components["schemas"]["EstadoAccionPersonal"][];
             puede_editar: boolean;
             puede_anotar: boolean;
+            /** @description La vista previa con la marca BORRADOR (fase 6.2). */
+            puede_previsualizar: boolean;
             categoria: components["schemas"]["CategoriaEventoVinculo"] | null;
             estado: components["schemas"]["EstadoAccionPersonal"];
             descripcion: string;
@@ -12966,6 +12990,29 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "accionPersonalPdf.vistaPrevia": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                movimientoId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
         };
     };
     "actividadLaboral.porUnidad": {
