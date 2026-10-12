@@ -1034,6 +1034,12 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
    - La solicitud de vacaciones solo ofrece «Vacaciones anuales» y «Permiso con cargo a vacaciones»; lo ya registrado con los otros motivos queda como histórico, sin migrar.
    - Fuera: la solicitud desde el portal (fase 6.3), las licencias adicionales del contrato colectivo, la nómina y el SIITH.
 2. Subrogación y encargo separados; nivel jerárquico superior; enlace con la ausencia; Viceprefecto por el bloque 9.14.
+   - Hasta aquí las dos figuras compartían reglas: cualquier puesto se subrogaba, la fecha de fin era obligatoria también en el encargo y el motivo se elegía de una lista, sin comprobar que el titular estuviera ausente.
+   - La subrogación procede solo sobre un puesto del nivel jerárquico superior (LOSEP, Art. 126): el grado del grupo ocupacional empieza por «NJS». El encargo, sobre cualquier puesto vacante.
+   - El encargo puede no tener fecha de fin: dura hasta la designación del titular (Art. 127). Cuando rige el ingreso, traslado o ascenso de alguien a ese puesto, el encargo termina la víspera, con su constancia en la observación y en la bitácora; si ni siquiera empezó, se cancela. También se finaliza a mano, y entonces el fin es hoy. Un encargo sin fin no caduca y se cruza con cualquiera que empiece después.
+   - La subrogación dice qué ausencia del titular la motiva (`ausencia_tipo`, `ausencia_id`; `TipoAusenciaTitular`): unas vacaciones aprobadas o gozadas, una licencia de la 5.1, un reposo del Dispensario o una comisión o licencia por acción de personal. Cabe dentro de sus fechas y el motivo sale de ella. «Otra ausencia», la que no está en el SGTH, exige el número de la resolución. El formulario las lista desde `GET expediente/subrogaciones/ausencias-del-titular` y propone sus fechas.
+   - La sigue: si se anulan las vacaciones, la licencia, el reposo o la acción, la subrogación se cancela con su acción; si un reintegro acorta la ausencia, termina la víspera y su acción, si sigue en borrador, dice el fin nuevo.
+   - Al Prefecto no se le subroga desde el módulo general: lo rechaza y remite a «Subrogación por ley» (bloque 9.14, fase 4.1b), que no pide ni el nivel ni la ausencia de esta pantalla.
 
 **Fase 6 — Documento y notificación**
 1. PDF de la acción de personal con el formato del Ministerio (6.5).

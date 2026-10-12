@@ -988,6 +988,22 @@ export type MotivoSubrogacion =
  *  todavía no surte efecto ni traslada la facultad de firmar. */
 export type EstadoSubrogacion = 'pendiente' | 'activa' | 'finalizada' | 'cancelada'
 
+/** La ausencia del titular que motiva una subrogación (fase 5.2). «Otra» es la
+ *  que no está en el SGTH, y se respalda con el número de la resolución. */
+export type TipoAusenciaTitular = 'vacacion' | 'licencia' | 'reposo' | 'accion_personal' | 'otra'
+
+/** Una ausencia del titular registrada en el SGTH, para elegirla en el
+ *  formulario: la subrogación cabe entre `desde` y `hasta`. */
+export type AusenciaDelTitular = {
+  tipo: Exclude<TipoAusenciaTitular, 'otra'>
+  id: number
+  etiqueta: string
+  desde: string
+  /** Una comisión o licencia por acción de personal puede no tener fin. */
+  hasta: string | null
+  motivo: MotivoSubrogacion
+}
+
 export type Subrogacion = {
   id: number
   tipo: TipoSubrogacion
@@ -996,8 +1012,12 @@ export type Subrogacion = {
   unidad_administrativa_id: number
   puesto_subrogado_id: number
   fecha_inicio: string
-  fecha_fin: string
+  /** Null en un encargo que dura hasta la designación del titular. */
+  fecha_fin: string | null
   motivo: MotivoSubrogacion
+  /** La ausencia del titular que la motiva; null en el encargo. */
+  ausencia_tipo?: TipoAusenciaTitular | null
+  ausencia_id?: number | null
   resolucion_numero?: string | null
   estado: EstadoSubrogacion
   observacion?: string | null

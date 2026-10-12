@@ -45,7 +45,8 @@ beforeEach(function () {
     // que la lee de aquí. Por eso una revisión salarial cambia, de golpe, la
     // cifra de todos los puestos del grado.
     $this->grupoJefe = GrupoOcupacional::create([
-        'grado_codigo' => 'SP7', 'grado_numerico' => 7, 'grupo' => 'Servidor Público 7',
+        // Del nivel jerárquico superior: solo esos se subrogan (fase 5.2).
+        'grado_codigo' => 'NJS-1', 'grado_numerico' => 7, 'grupo' => 'Nivel Jerárquico Superior 1',
         'denominacion_generica' => 'Servidor Público 7', 'rmu' => 1412.00,
         'regimen' => 'losep', 'activo' => true,
     ]);
@@ -119,6 +120,7 @@ beforeEach(function () {
             'fecha_inicio'             => now()->toDateString(),
             'fecha_fin'                => now()->addMonth()->toDateString(),
             'motivo'                   => 'vacaciones',
+            ...ausenciaOtraDePrueba(),
         ]);
     };
 });

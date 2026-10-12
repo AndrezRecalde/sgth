@@ -167,6 +167,14 @@ class LicenciaService
                 'updated_by'       => $userId,
             ])->save();
 
+            // La subrogación que esta licencia motivaba se cancela con ella
+            // (fase 5.2).
+            app(\App\Services\Expediente\SubrogacionService::class)->cancelarPorAusencia(
+                \App\Enums\TipoAusenciaTitular::LICENCIA,
+                $licencia->id,
+                "Se anuló la licencia {$licencia->folio} del titular: {$motivo}",
+            );
+
             return $licencia->fresh();
         });
     }

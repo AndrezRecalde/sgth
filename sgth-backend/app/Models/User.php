@@ -114,9 +114,7 @@ class User extends Authenticatable
                 'servidor_subrogante_id', $miServidor->id
             )
             ->where('unidad_administrativa_id', $mismaUnidad)
-            ->where('estado', \App\Enums\EstadoSubrogacion::ACTIVA)
-            ->where('fecha_inicio', '<=', now())
-            ->where('fecha_fin', '>=', now())
+            ->activaEnFecha(now())
             ->exists();
         }
 

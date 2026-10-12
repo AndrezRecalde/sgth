@@ -1,6 +1,6 @@
 import type { SemanticTone } from '@/config/design.tokens'
 import type {
-  EstadoSubrogacion, MotivoSubrogacion, TipoSubrogacion,
+  EstadoSubrogacion, MotivoSubrogacion, PuestoConRelaciones, TipoAusenciaTitular, TipoSubrogacion,
 } from '@/types/api'
 
 /*
@@ -24,6 +24,15 @@ export const MOTIVO_LABELS: Record<MotivoSubrogacion, string> = {
   licencia:           'Licencia',
   encargo_vacante:    'Encargo por Vacante',
   otro:               'Otro',
+}
+
+/** De qué ausencia del titular sale la subrogación (fase 5.2). */
+export const AUSENCIA_LABELS: Record<TipoAusenciaTitular, string> = {
+  vacacion:        'Vacaciones',
+  licencia:        'Licencia con remuneración',
+  reposo:          'Reposo médico',
+  accion_personal: 'Comisión o licencia por acción de personal',
+  otra:            'Otra ausencia, con su resolución',
 }
 
 export const ESTADO_LABELS: Record<EstadoSubrogacion, string> = {
@@ -52,29 +61,15 @@ export const TONO_SUBROGACION: Record<EstadoSubrogacion, SemanticTone> = {
 export const TIPO_OPTIONS = Object.entries(TIPO_LABELS)
   .map(([value, label]) => ({ value, label }))
 
-export const MOTIVO_OPTIONS = Object.entries(MOTIVO_LABELS)
-  .map(([value, label]) => ({ value, label }))
-
 /**
- * El motivo que corresponde a cada figura.
+ * Si el puesto es del nivel jerárquico superior, el único que se subroga
+ * (LOSEP, Art. 126; fase 5.2). La misma regla que `Puesto::
+ * esNivelJerarquicoSuperior` en el backend: el grado empieza por «NJS».
  *
- * Un encargo recae sobre un puesto vacante, así que su motivo es el encargo por
- * vacante; el formulario arrancaba en «Vacaciones» y se quedaba ahí al cambiar
- * de figura, de modo que un encargo salía motivado por las vacaciones de un
- * titular que no existe.
+ * El motivo ya no se elige: en la subrogación sale de la ausencia del titular,
+ * y en el encargo es la vacante. Elegirlo a mano dejaba subrogar «por
+ * vacaciones» a un titular que no las tenía.
  */
-export const MOTIVO_POR_DEFECTO: Record<TipoSubrogacion, MotivoSubrogacion> = {
-  subrogacion: 'vacaciones',
-  encargo:     'encargo_vacante',
-}
-
-/**
- * Los motivos que tienen sentido en cada figura. «Encargo por vacante» no
- * explica una subrogación —ahí hay titular—, y los motivos de ausencia del
- * titular no explican un encargo.
- */
-export function motivosPara(tipo: TipoSubrogacion) {
-  return tipo === 'encargo'
-    ? MOTIVO_OPTIONS.filter((o) => o.value === 'encargo_vacante' || o.value === 'otro')
-    : MOTIVO_OPTIONS.filter((o) => o.value !== 'encargo_vacante')
+export function esNivelJerarquicoSuperior(puesto?: PuestoConRelaciones | null): boolean {
+  return (puesto?.grupo_ocupacional?.grado_codigo ?? '').toUpperCase().startsWith('NJS')
 }

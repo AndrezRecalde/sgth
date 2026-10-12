@@ -7,6 +7,8 @@ use App\Enums\CategoriaEventoVinculo;
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\EstadoSubrogacion;
 use App\Enums\InstrumentoActo;
+use App\Enums\MotivoSubrogacion;
+use App\Enums\TipoAusenciaTitular;
 use App\Enums\TipoEventoVinculo;
 use App\Enums\TipoMovimientoPersonal;
 use App\Enums\TipoSubrogacion;
@@ -18,6 +20,7 @@ use App\Models\Expediente\EventoVinculo;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
 use App\Models\Expediente\Subrogacion;
+use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -30,18 +33,50 @@ class SubrogacionService implements SubrogacionServiceInterface
         // subrogante.
         TramiteSobreSiMismo::impedir((int) $datos['servidor_subrogante_id']);
 
+        // La del Viceprefecto (COOTAD Art. 51; fase 4.1b) tiene sus propias
+        // reglas: su ausencia es la licencia del Consejo, y el puesto del
+        // Prefecto no es del nivel jerárquico superior de la escala.
+        $porLey = ! empty($datos['por_ley']);
+        $esEncargo = $datos['tipo'] === TipoSubrogacion::ENCARGO->value;
+        $datos['fecha_fin'] = filled($datos['fecha_fin'] ?? null) ? $datos['fecha_fin'] : null;
+
         // 1. Validación condicional de encargo vs subrogación
-        if ($datos['tipo'] === TipoSubrogacion::ENCARGO->value) {
+        if ($esEncargo) {
             $datos['servidor_subrogado_id'] = null;
+            $datos['ausencia_tipo'] = null;
+            $datos['ausencia_id'] = null;
+            $datos['motivo'] ??= MotivoSubrogacion::ENCARGO_VACANTE->value;
         } elseif (empty($datos['servidor_subrogado_id'])) {
             throw new ReglaNegocioException("La subrogación requiere especificar el servidor titular a subrogar.");
         }
 
         $this->validarTitularDelPuesto($datos);
 
-        // 2. Validación de fechas
-        if (strtotime($datos['fecha_fin']) <= strtotime($datos['fecha_inicio'])) {
+        if (! $porLey) {
+            $this->impedirElPuestoDelPrefecto($datos);
+
+            if (! $esEncargo) {
+                $this->exigirNivelJerarquicoSuperior($datos);
+            }
+        }
+
+        // 2. Validación de fechas. El encargo puede no tener fin: dura «hasta
+        // la designación del titular» (LOSEP, Art. 127; fase 5.2).
+        if (! $esEncargo && $datos['fecha_fin'] === null) {
+            throw new ReglaNegocioException('La subrogación tiene fecha de fin: la de la ausencia del titular.');
+        }
+
+        if ($datos['fecha_fin'] !== null && strtotime($datos['fecha_fin']) <= strtotime($datos['fecha_inicio'])) {
             throw new ReglaNegocioException("La fecha de fin debe ser estrictamente mayor a la fecha de inicio.");
+        }
+
+        // 3. La ausencia del titular que la motiva, y las fechas dentro de ella.
+        if (! $esEncargo && ! $porLey) {
+            $datos = $this->conLaAusencia($datos);
+        }
+
+        if (blank($datos['motivo'] ?? null)) {
+            throw new ReglaNegocioException('Indique el motivo de la subrogación.');
         }
 
         // 3. Registro transaccional. Los traslapes se comprueban DENTRO de la
@@ -66,6 +101,8 @@ class SubrogacionService implements SubrogacionServiceInterface
                 'fecha_inicio'             => $datos['fecha_inicio'],
                 'fecha_fin'                => $datos['fecha_fin'],
                 'motivo'                   => $datos['motivo'],
+                'ausencia_tipo'            => $datos['ausencia_tipo'] ?? null,
+                'ausencia_id'              => $datos['ausencia_id'] ?? null,
                 'resolucion_numero'        => $datos['resolucion_numero'] ?? null,
                 'observacion'              => $datos['observacion'] ?? null,
                 'estado'                   => EstadoSubrogacion::PENDIENTE,
@@ -139,19 +176,15 @@ class SubrogacionService implements SubrogacionServiceInterface
      */
     private function validarSinTraslape(array $datos): void
     {
+        // Dos rangos se cruzan si cada uno empieza antes de que termine el
+        // otro. Un encargo sin fin no termina (fase 5.2).
         $enElRango = fn ($query) => $query
             ->whereIn('estado', [
                 EstadoSubrogacion::PENDIENTE->value,
                 EstadoSubrogacion::ACTIVA->value,
             ])
-            ->where(function ($q) use ($datos) {
-                $q->whereBetween('fecha_inicio', [$datos['fecha_inicio'], $datos['fecha_fin']])
-                  ->orWhereBetween('fecha_fin', [$datos['fecha_inicio'], $datos['fecha_fin']])
-                  ->orWhere(function ($interna) use ($datos) {
-                      $interna->where('fecha_inicio', '<=', $datos['fecha_inicio'])
-                              ->where('fecha_fin', '>=', $datos['fecha_fin']);
-                  });
-            });
+            ->when($datos['fecha_fin'], fn ($q, $fin) => $q->whereDate('fecha_inicio', '<=', $fin))
+            ->where(fn ($q) => $q->whereNull('fecha_fin')->orWhereDate('fecha_fin', '>=', $datos['fecha_inicio']));
 
         $delSubrogante = Subrogacion::where('servidor_subrogante_id', $datos['servidor_subrogante_id'])
             ->where($enElRango)
@@ -174,9 +207,9 @@ class SubrogacionService implements SubrogacionServiceInterface
             $nombrePuesto = $puesto?->cargo?->nombre ?? "#{$datos['puesto_subrogado_id']}";
 
             throw new ReglaNegocioException(
-                "El puesto de {$nombrePuesto} ya está cubierto del "
-                .$delPuesto->fecha_inicio->format('d/m/Y').' al '
-                .$delPuesto->fecha_fin->format('d/m/Y')
+                "El puesto de {$nombrePuesto} ya está cubierto desde el "
+                .$delPuesto->fecha_inicio->format('d/m/Y')
+                .($delPuesto->fecha_fin ? ' hasta el '.$delPuesto->fecha_fin->format('d/m/Y') : ', sin fecha de fin')
                 .'. Finalice o cancele esa subrogación/encargo antes de registrar otro.'
             );
         }
@@ -230,6 +263,208 @@ class SubrogacionService implements SubrogacionServiceInterface
     }
 
     /**
+     * La subrogación con diferencia de remuneración es de un puesto del nivel
+     * jerárquico superior (LOSEP, Art. 126; Reglamento, Art. 270; fase 5.2).
+     * Hasta aquí se aceptaba cualquiera. El encargo no: vale para cualquier
+     * puesto vacante (Art. 127).
+     *
+     * @param  array<string, mixed>  $datos
+     */
+    private function exigirNivelJerarquicoSuperior(array $datos): void
+    {
+        $puesto = Puesto::with(['cargo', 'grupoOcupacional'])->find($datos['puesto_subrogado_id']);
+
+        if ($puesto && ! $puesto->esNivelJerarquicoSuperior()) {
+            $nombre = $puesto->cargo?->nombre ?? "#{$puesto->id}";
+
+            throw new ReglaNegocioException(
+                "La subrogación es de los puestos del nivel jerárquico superior (LOSEP, Art. 126), y el de {$nombre} "
+                    .'no lo es: su grupo ocupacional no es NJS.'
+            );
+        }
+    }
+
+    /**
+     * Al Prefecto lo subroga el Viceprefecto por ley (COOTAD Art. 51; fase
+     * 4.1b): se registra desde «Autoridades electas», no aquí. Es su puesto el
+     * que ocupa la autoridad electa en funciones, no cualquier jefatura de la
+     * cima del organigrama.
+     *
+     * @param  array<string, mixed>  $datos
+     */
+    private function impedirElPuestoDelPrefecto(array $datos): void
+    {
+        if (app(AutoridadElectaService::class)->prefecto()?->puesto_id === (int) $datos['puesto_subrogado_id']) {
+            throw new ReglaNegocioException(
+                'Al Prefecto lo subroga el Viceprefecto por ley (COOTAD, Art. 51): regístrelo desde '
+                    .'Acciones de Personal › Autoridades electas, «Subrogación por ley».'
+            );
+        }
+    }
+
+    /**
+     * La ausencia del titular que la motiva, de las que hay en el SGTH, y la
+     * subrogación dentro de sus fechas; el motivo sale de ella. «Otra» es la
+     * que no está en el SGTH, y se respalda con la resolución (fase 5.2).
+     *
+     * @param  array<string, mixed>  $datos
+     * @return array<string, mixed>
+     */
+    private function conLaAusencia(array $datos): array
+    {
+        $tipo = TipoAusenciaTitular::tryFrom((string) ($datos['ausencia_tipo'] ?? ''))
+            ?? throw new ReglaNegocioException('Indique la ausencia del titular que motiva la subrogación.');
+
+        if ($tipo === TipoAusenciaTitular::OTRA) {
+            if (blank($datos['resolucion_numero'] ?? null)) {
+                throw new ReglaNegocioException(
+                    'Una ausencia que no está en el SGTH se respalda con la resolución que la dispone: indique su número.'
+                );
+            }
+
+            return [...$datos, 'ausencia_id' => null, 'motivo' => MotivoSubrogacion::OTRO->value];
+        }
+
+        if (empty($datos['ausencia_id'])) {
+            throw new ReglaNegocioException('Elija la ausencia del titular que motiva la subrogación.');
+        }
+
+        $ausencia = app(AusenciaDelTitularService::class)
+            ->resolver($tipo, (int) $datos['ausencia_id'], (int) $datos['servidor_subrogado_id']);
+
+        $desde = Carbon::parse($datos['fecha_inicio'])->toDateString();
+        $hasta = Carbon::parse($datos['fecha_fin'])->toDateString();
+
+        if ($desde < $ausencia['desde'] || ($ausencia['hasta'] !== null && $hasta > $ausencia['hasta'])) {
+            throw new ReglaNegocioException(
+                "La subrogación cabe dentro de la ausencia del titular: {$ausencia['etiqueta']} va del "
+                    .Carbon::parse($ausencia['desde'])->format('d/m/Y')
+                    .($ausencia['hasta'] ? ' al '.Carbon::parse($ausencia['hasta'])->format('d/m/Y') : ', sin fecha de fin')
+                    .'.'
+            );
+        }
+
+        return [...$datos, 'ausencia_tipo' => $tipo->value, 'motivo' => $ausencia['motivo']->value];
+    }
+
+    /**
+     * Si la ausencia del titular se anula, la subrogación que motivaba se
+     * cancela con ella (fase 5.2).
+     *
+     * @return int Cuántas se cancelaron.
+     */
+    public function cancelarPorAusencia(TipoAusenciaTitular $tipo, int $ausenciaId, string $motivo): int
+    {
+        $afectadas = Subrogacion::where('ausencia_tipo', $tipo->value)
+            ->where('ausencia_id', $ausenciaId)
+            ->whereIn('estado', [EstadoSubrogacion::PENDIENTE->value, EstadoSubrogacion::ACTIVA->value])
+            ->orderBy('id')
+            ->get();
+
+        foreach ($afectadas as $subrogacion) {
+            $this->cancelar($subrogacion->id, $motivo);
+        }
+
+        return $afectadas->count();
+    }
+
+    /**
+     * El reintegro acorta la ausencia del titular: la subrogación termina la
+     * víspera de su regreso (fase 5.2).
+     */
+    public function acortarPorReintegro(MovimientoPersonal $reintegro): int
+    {
+        if (! $reintegro->movimiento_relacionado_id || ! $reintegro->fecha_efectiva) {
+            return 0;
+        }
+
+        $afectadas = Subrogacion::where('ausencia_tipo', TipoAusenciaTitular::ACCION_PERSONAL->value)
+            ->where('ausencia_id', $reintegro->movimiento_relacionado_id)
+            ->whereIn('estado', [EstadoSubrogacion::PENDIENTE->value, EstadoSubrogacion::ACTIVA->value])
+            ->orderBy('id')
+            ->get();
+
+        $vispera = $reintegro->fecha_efectiva->copy()->subDay();
+        $codigo = $reintegro->codigo_registro ?? "#{$reintegro->id}";
+
+        foreach ($afectadas as $subrogacion) {
+            $this->terminarAntes($subrogacion, $vispera, "el titular volvió con el reintegro {$codigo}");
+        }
+
+        return $afectadas->count();
+    }
+
+    /**
+     * El encargo dura hasta la designación del titular (LOSEP, Art. 127): el
+     * día en que rige el ingreso, traslado o ascenso de alguien a ese puesto,
+     * el encargo termina la víspera (fase 5.2).
+     */
+    public function cerrarEncargosDelPuesto(MovimientoPersonal $llegada): int
+    {
+        if (! $llegada->puesto_destino_id || ! $llegada->fecha_efectiva) {
+            return 0;
+        }
+
+        $desde = $llegada->fecha_efectiva->toDateString();
+
+        $afectadas = Subrogacion::where('tipo', TipoSubrogacion::ENCARGO->value)
+            ->where('puesto_subrogado_id', $llegada->puesto_destino_id)
+            ->whereIn('estado', [EstadoSubrogacion::PENDIENTE->value, EstadoSubrogacion::ACTIVA->value])
+            ->where(fn ($q) => $q->whereNull('fecha_fin')->orWhereDate('fecha_fin', '>=', $desde))
+            ->orderBy('id')
+            ->get();
+
+        $codigo = $llegada->codigo_registro ?? "#{$llegada->id}";
+
+        foreach ($afectadas as $subrogacion) {
+            $this->terminarAntes($subrogacion, $llegada->fecha_efectiva->copy()->subDay(), "llegó el titular del puesto ({$codigo})");
+        }
+
+        return $afectadas->count();
+    }
+
+    /**
+     * Termina la subrogación o el encargo en una fecha anterior a la prevista:
+     * si ni siquiera empezó, se cancela; si no, su fin pasa a esa fecha, con su
+     * constancia, y si ya pasó queda finalizada.
+     */
+    private function terminarAntes(Subrogacion $subrogacion, Carbon $fin, string $porQue): void
+    {
+        if ($subrogacion->fecha_fin && $subrogacion->fecha_fin->lte($fin)) {
+            return;
+        }
+
+        if ($fin->lt($subrogacion->fecha_inicio)) {
+            $this->cancelar($subrogacion->id, ucfirst($porQue).' antes de que empezara.');
+
+            return;
+        }
+
+        $subrogacion->update([
+            'fecha_fin'   => $fin->toDateString(),
+            'estado'      => $subrogacion->estado === EstadoSubrogacion::ACTIVA && $fin->lt(now()->startOfDay())
+                ? EstadoSubrogacion::FINALIZADA
+                : $subrogacion->estado,
+            'observacion' => $this->conNota($subrogacion->observacion, "Termina el {$fin->format('d/m/Y')}: {$porQue}."),
+        ]);
+
+        // La acción que todavía es borrador dice el fin nuevo; la emitida no se
+        // reescribe, y el fin queda en la bitácora.
+        $accion = $subrogacion->movimientoPersonal;
+        if ($accion?->estado === EstadoAccionPersonal::BORRADOR) {
+            $accion->update(['fecha_fin' => $fin->toDateString(), 'descripcion' => $this->explicacion($subrogacion->fresh())]);
+        }
+
+        if ($subrogacion->estado === EstadoSubrogacion::ACTIVA || $subrogacion->estado === EstadoSubrogacion::FINALIZADA) {
+            $this->anotarEnLaBitacora(
+                $subrogacion,
+                TipoEventoVinculo::SUBROGACION_FINALIZADA,
+                "Fin de {$subrogacion->tipo->etiqueta()}: termina el {$fin->format('d/m/Y')} porque {$porQue}.",
+            );
+        }
+    }
+
+    /**
      * Texto del bloque "Explicación" del documento impreso.
      *
      * Se arma aquí y no en la plantilla porque queda congelado en la acción:
@@ -256,8 +491,9 @@ class SubrogacionService implements SubrogacionServiceInterface
             $texto .= ", en reemplazo de {$nombre}";
         }
 
-        return $texto.', del '.$subrogacion->fecha_inicio->format('d/m/Y')
-            .' al '.$subrogacion->fecha_fin->format('d/m/Y').'.';
+        return $texto.($subrogacion->fecha_fin
+            ? ', del '.$subrogacion->fecha_inicio->format('d/m/Y').' al '.$subrogacion->fecha_fin->format('d/m/Y').'.'
+            : ', desde el '.$subrogacion->fecha_inicio->format('d/m/Y').' hasta la designación del titular del puesto.');
     }
 
     /**
@@ -390,8 +626,12 @@ class SubrogacionService implements SubrogacionServiceInterface
                 throw new ReglaNegocioException("Solo se pueden finalizar subrogaciones activas.");
             }
 
+            $previsto = $subrogacion->fecha_fin;
+
+            // El encargo sin fin termina hoy: queda dicho cuándo (fase 5.2).
             $subrogacion->update([
-                'estado' => EstadoSubrogacion::FINALIZADA
+                'estado'    => EstadoSubrogacion::FINALIZADA,
+                'fecha_fin' => $previsto ?? now()->toDateString(),
             ]);
 
             // Bitácora del vínculo, no un acto administrativo nuevo: un hecho
@@ -401,8 +641,9 @@ class SubrogacionService implements SubrogacionServiceInterface
             $this->anotarEnLaBitacora(
                 $subrogacion,
                 TipoEventoVinculo::SUBROGACION_FINALIZADA,
-                "Finalización anticipada de {$subrogacion->tipo->etiqueta()}: "
-                    ."terminó antes del {$subrogacion->fecha_fin->format('d/m/Y')} previsto.",
+                $previsto
+                    ? "Finalización anticipada de {$subrogacion->tipo->etiqueta()}: terminó antes del {$previsto->format('d/m/Y')} previsto."
+                    : "Finalización de {$subrogacion->tipo->etiqueta()}: terminó el ".now()->format('d/m/Y').'.',
             );
 
             return $subrogacion;
@@ -433,7 +674,9 @@ class SubrogacionService implements SubrogacionServiceInterface
         // lo que decide quién firma, así que cada cierre deja su línea en
         // activity_log con el estado del que venía. El volumen diario es de unas
         // pocas filas —las que vencieron ayer—, no de un padrón.
+        // El encargo sin fin no vence: lo cierra la llegada del titular.
         $vencidas = Subrogacion::where('estado', EstadoSubrogacion::ACTIVA->value)
+            ->whereNotNull('fecha_fin')
             ->whereDate('fecha_fin', '<', $fecha)
             ->get();
 
@@ -582,8 +825,9 @@ class SubrogacionService implements SubrogacionServiceInterface
         $this->anotarEnLaBitacora(
             $subrogacion,
             TipoEventoVinculo::SUBROGACION_CANCELADA,
-            "Cancelación de {$subrogacion->tipo->etiqueta()}: dejó de surtir "
-                ."efecto antes del {$subrogacion->fecha_fin->format('d/m/Y')} previsto. {$motivo}",
+            "Cancelación de {$subrogacion->tipo->etiqueta()}: dejó de surtir efecto "
+                .($subrogacion->fecha_fin ? "antes del {$subrogacion->fecha_fin->format('d/m/Y')} previsto" : 'el '.now()->format('d/m/Y'))
+                .". {$motivo}",
         );
     }
 
@@ -645,7 +889,7 @@ class SubrogacionService implements SubrogacionServiceInterface
         ])->whereIn('estado', [
             EstadoSubrogacion::PENDIENTE->value,
             EstadoSubrogacion::ACTIVA->value,
-        ])->whereDate('fecha_fin', '>=', $hoy);
+        ])->where(fn ($q) => $q->whereNull('fecha_fin')->orWhereDate('fecha_fin', '>=', $hoy));
 
         if (!empty($filtros['unidad_administrativa_id'])) {
             $query->where('unidad_administrativa_id', $filtros['unidad_administrativa_id']);

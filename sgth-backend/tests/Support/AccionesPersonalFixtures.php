@@ -42,3 +42,34 @@ function escalaComunParaTraslados(float $rmu, \App\Models\Estructura\Puesto ...$
         $puesto->update(['grupo_ocupacional_id' => $grupo->id]);
     }
 }
+
+/**
+ * Un grupo ocupacional del nivel jerárquico superior. Desde la fase 5.2 la
+ * subrogación solo procede sobre esos puestos (LOSEP, Art. 126), y las pruebas
+ * que la usan como vehículo de otra cosa le dan uno a su puesto.
+ */
+function grupoNjsDePrueba(float $rmu = 3000.00): \App\Models\Estructura\GrupoOcupacional
+{
+    return \App\Models\Estructura\GrupoOcupacional::firstOrCreate(
+        ['grado_codigo' => 'NJS-PRUEBA'],
+        [
+            'grado_numerico'        => 5,
+            'grupo'                 => 'Nivel Jerárquico Superior',
+            'denominacion_generica' => 'Directivo',
+            'rmu'                   => $rmu,
+            'regimen'               => 'losep',
+            'activo'                => true,
+        ]
+    );
+}
+
+/**
+ * La ausencia del titular que motiva una subrogación de prueba: una que no
+ * está en el SGTH, respaldada con su resolución (fase 5.2).
+ *
+ * @return array{ausencia_tipo: string, resolucion_numero: string}
+ */
+function ausenciaOtraDePrueba(): array
+{
+    return ['ausencia_tipo' => 'otra', 'resolucion_numero' => 'RES-PRUEBA-001'];
+}

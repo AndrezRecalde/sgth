@@ -607,6 +607,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::get('servidor/{servidorId}', [SubrogacionController::class, 'listarPorServidor']);
 
             Route::middleware('role:admin-uath|asistente-uath|admin-ti')->group(function () {
+                // De qué ausencia del titular sale la subrogación (fase 5.2).
+                Route::get('ausencias-del-titular', [SubrogacionController::class, 'ausenciasDelTitular']);
                 Route::post('/', [SubrogacionController::class, 'registrar']);
                 Route::put('{id}/finalizar', [SubrogacionController::class, 'finalizar']);
                 Route::put('{id}/cancelar', [SubrogacionController::class, 'cancelar']);

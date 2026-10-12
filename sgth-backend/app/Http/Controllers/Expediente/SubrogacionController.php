@@ -10,6 +10,7 @@ use App\Http\Responses\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Models\Expediente\Subrogacion;
+use App\Services\Expediente\AusenciaDelTitularService;
 
 class SubrogacionController extends Controller
 {
@@ -27,6 +28,26 @@ class SubrogacionController extends Controller
         $subrogacion = $this->subrogacionService->registrar($request->validated());
 
         return ApiResponse::created($subrogacion, 'Subrogación/Encargo registrado exitosamente.');
+    }
+
+    /**
+     * Las ausencias del titular que pueden motivar su subrogación, para el
+     * formulario (fase 5.2).
+     */
+    public function ausenciasDelTitular(Request $request, AusenciaDelTitularService $ausencias): JsonResponse
+    {
+        $this->authorize('registrar', Subrogacion::class);
+
+        $datos = $request->validate([
+            'servidor_id' => ['required', 'integer', 'exists:servidores,id'],
+            'desde'       => ['nullable', 'date'],
+            'hasta'       => ['nullable', 'date', 'after_or_equal:desde'],
+        ], [], ['servidor_id' => 'titular']);
+
+        return ApiResponse::ok(
+            $ausencias->listar((int) $datos['servidor_id'], $datos['desde'] ?? null, $datos['hasta'] ?? null),
+            'Ausencias del titular.'
+        );
     }
 
     public function finalizar(int $id): JsonResponse

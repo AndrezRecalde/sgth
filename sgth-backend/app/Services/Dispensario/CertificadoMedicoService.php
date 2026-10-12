@@ -168,6 +168,13 @@ class CertificadoMedicoService
                 'motivo_anulacion' => $motivo,
             ]);
 
+            // La subrogación que este reposo motivaba se cancela con él (fase 5.2).
+            app(\App\Services\Expediente\SubrogacionService::class)->cancelarPorAusencia(
+                \App\Enums\TipoAusenciaTitular::REPOSO,
+                $certificado->id,
+                "Se anuló el reposo médico {$certificado->folio} del titular.",
+            );
+
             return $certificado->load([
                 'consultaMedica', 'emisor', 'anulador', 'diagnosticoCie10',
             ]);

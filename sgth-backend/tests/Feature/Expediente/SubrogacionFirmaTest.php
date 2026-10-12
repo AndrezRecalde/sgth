@@ -55,6 +55,7 @@ beforeEach(function () {
         'codigo' => 'P-PREF', 'unidad_administrativa_id' => $this->unidad->id,
         'plazas' => 1, 'cargo_id' => $cargo->id, 'es_jefe' => true,
         'partida_presupuestaria_id' => $this->partida->id,
+        'grupo_ocupacional_id' => grupoNjsDePrueba()->id,
     ]);
 
     $this->contador = 0;
@@ -97,6 +98,7 @@ beforeEach(function () {
             'fecha_inicio'             => now()->subDay()->toDateString(),
             'fecha_fin'                => now()->addMonth()->toDateString(),
             'motivo'                   => 'vacaciones',
+            ...ausenciaOtraDePrueba(),
         ]);
     };
 });
@@ -422,6 +424,7 @@ test('otro puesto de la misma unidad no se estorba', function () {
         'codigo' => 'P-DIR', 'unidad_administrativa_id' => $this->unidad->id,
         'plazas' => 1, 'cargo_id' => Cargo::firstOrCreate(['nombre' => 'Director/a Financiero'])->id,
         'partida_presupuestaria_id' => $this->partida->id,
+        'grupo_ocupacional_id' => grupoNjsDePrueba()->id,
     ]);
 
     $titularPref = ($this->servidorCon)($this->puesto->id);
@@ -438,6 +441,7 @@ test('otro puesto de la misma unidad no se estorba', function () {
         'fecha_inicio'             => now()->subDay()->toDateString(),
         'fecha_fin'                => now()->addMonth()->toDateString(),
         'motivo'                   => 'vacaciones',
+        ...ausenciaOtraDePrueba(),
     ]);
 
     expect($segunda->puesto_subrogado_id)->toBe($otroPuesto->id);
@@ -456,6 +460,7 @@ test('un plazo posterior sobre el mismo puesto sí se registra', function () {
         'fecha_inicio'             => now()->addMonths(2)->toDateString(),
         'fecha_fin'                => now()->addMonths(3)->toDateString(),
         'motivo'                   => 'vacaciones',
+        ...ausenciaOtraDePrueba(),
     ]);
 
     expect($siguiente->estado)->toBe(EstadoSubrogacion::PENDIENTE);

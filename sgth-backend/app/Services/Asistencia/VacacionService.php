@@ -317,6 +317,14 @@ class VacacionService implements VacacionServiceInterface
             $vacacion->motivo_anulacion = $motivo;
             $vacacion->save();
 
+            // La subrogación que estas vacaciones motivaban se cancela con
+            // ellas (fase 5.2).
+            app(\App\Services\Expediente\SubrogacionService::class)->cancelarPorAusencia(
+                \App\Enums\TipoAusenciaTitular::VACACION,
+                $vacacion->id,
+                'Se anularon las vacaciones '.($vacacion->folio ?? "#{$vacacion->id}")." del titular: {$motivo}",
+            );
+
             return [
                 'vacacion'       => $vacacion->fresh(['servidor', 'jefe', 'creadoPor']),
                 'dias_devueltos' => $devueltos,

@@ -497,6 +497,8 @@ class AutoridadElectaService
             'resolucion_numero'         => $datos['resolucion_numero'] ?? null,
             'observacion'               => $datos['observacion'] ?? 'Subrogación por ley del Viceprefecto (COOTAD Art. 51).',
             'movimiento_relacionado_id' => $ausencia?->id,
+            // Con sus reglas, no las del módulo general (fase 5.2).
+            'por_ley'                   => true,
         ]);
     }
 

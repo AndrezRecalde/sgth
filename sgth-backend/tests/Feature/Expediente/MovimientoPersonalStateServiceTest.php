@@ -341,6 +341,9 @@ test('SubrogacionService::registrar crea el movimiento asociado en borrador, no 
         'estado'                   => 'vigente',
     ]);
 
+    // Solo se subrogan los del nivel jerárquico superior (fase 5.2).
+    $this->puestoConFondos->update(['grupo_ocupacional_id' => grupoNjsDePrueba()->id]);
+
     app(SubrogacionService::class)->registrar([
         'tipo' => 'subrogacion',
         'servidor_subrogante_id' => $this->servidor->id,
@@ -350,6 +353,7 @@ test('SubrogacionService::registrar crea el movimiento asociado en borrador, no 
         'fecha_inicio' => now()->toDateString(),
         'fecha_fin' => now()->addDays(15)->toDateString(),
         'motivo' => 'vacaciones',
+        ...ausenciaOtraDePrueba(),
     ]);
 
     $movimiento = MovimientoPersonal::where('servidor_id', $this->servidor->id)

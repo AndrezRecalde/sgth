@@ -94,10 +94,7 @@ export function SubrogacionFiguraYPuesto({
             searchable
             {...contained}
             value={field.value ? String(field.value) : null}
-            onChange={(v) => {
-              field.onChange(v ? Number(v) : undefined)
-              form.resetField('puesto_subrogado_id')
-            }}
+            onChange={(v) => datos.elegirUnidad(v ? Number(v) : undefined, field.onChange)}
             error={errors.unidad_administrativa_id?.message}
           />
         )}
@@ -136,7 +133,7 @@ export function SubrogacionFiguraYPuesto({
               data={titularOptions}
               {...contained}
               value={field.value ? String(field.value) : null}
-              onChange={(v) => field.onChange(v ? Number(v) : null)}
+              onChange={(v) => datos.elegirTitular(v ? Number(v) : null)}
               error={errors.servidor_subrogado_id?.message}
             />
           )}
@@ -164,6 +161,13 @@ export function SubrogacionFiguraYPuesto({
           >
             Cambiar a {datos.puestoVacante ? 'encargo' : 'subrogación'}
           </Button>
+        </Alert>
+      )}
+
+      {datos.puestoNoSubrogable && (
+        <Alert variant="light" color="amber" icon={<IconAlertTriangle size={16} />}>
+          <strong>{datos.nombrePuesto}</strong> no es del nivel jerárquico
+          superior: solo esos puestos se subrogan (LOSEP, Art. 126).
         </Alert>
       )}
     </Stack>

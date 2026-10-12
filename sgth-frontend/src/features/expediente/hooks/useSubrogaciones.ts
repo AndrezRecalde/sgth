@@ -14,3 +14,16 @@ export function useSubrogacionesVigentes(params?: SubrogacionParams) {
     staleTime: 1000 * 60,
   })
 }
+
+/**
+ * Las ausencias del titular que pueden motivar su subrogación. Sin titular no
+ * se piden: un puesto vacante se encarga, y ahí no hay ausencia que elegir.
+ */
+export function useAusenciasDelTitular(servidorId?: number | null) {
+  return useQuery({
+    queryKey: ['subrogaciones-ausencias-del-titular', servidorId],
+    queryFn:  () => subrogacionService.ausenciasDelTitular(Number(servidorId)),
+    enabled:  Boolean(servidorId),
+    staleTime: 1000 * 60,
+  })
+}

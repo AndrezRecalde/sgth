@@ -23,7 +23,8 @@ const BLANK_VALUES: DefaultValues<SubrogacionFormData> = {
   servidor_subrogado_id:  null,
   fecha_inicio: '',
   fecha_fin:    '',
-  motivo: 'vacaciones',
+  ausencia_tipo: null,
+  ausencia_id:   null,
   resolucion_numero: '',
   observacion: '',
 }
@@ -31,7 +32,7 @@ const BLANK_VALUES: DefaultValues<SubrogacionFormData> = {
 const CAMPOS = [
   'tipo', 'servidor_subrogante_id', 'servidor_subrogado_id',
   'unidad_administrativa_id', 'puesto_subrogado_id',
-  'fecha_inicio', 'fecha_fin', 'motivo', 'resolucion_numero', 'observacion',
+  'fecha_inicio', 'fecha_fin', 'ausencia_tipo', 'ausencia_id', 'resolucion_numero', 'observacion',
 ] as const
 
 const esCampo = (nombre: string): nombre is keyof SubrogacionFormData =>
@@ -66,7 +67,9 @@ export function SubrogacionModal({ opened, onClose }: Props) {
    */
   const guardar = async (valores: SubrogacionFormData) => {
     try {
-      await registrar.mutateAsync(valores)
+      // Un encargo sin fin dura hasta la designación del titular: viaja como
+      // null, no como cadena vacía.
+      await registrar.mutateAsync({ ...valores, fecha_fin: valores.fecha_fin || null })
       cerrar()
     } catch (error) {
       const campos = erroresDeCampo(error)
@@ -92,7 +95,7 @@ export function SubrogacionModal({ opened, onClose }: Props) {
       onSubmit={form.handleSubmit(guardar)}
       submitLabel="Registrar"
       submitting={registrar.isPending}
-      submitDisabled={datos.figuraEquivocada}
+      submitDisabled={datos.figuraEquivocada || datos.puestoNoSubrogable}
     >
       <Stack gap="sm">
         <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
@@ -105,7 +108,7 @@ export function SubrogacionModal({ opened, onClose }: Props) {
 
         <SubrogacionSituacion datos={datos} />
 
-        <SubrogacionPlazoYMotivo form={form} tipo={datos.tipo} />
+        <SubrogacionPlazoYMotivo form={form} datos={datos} />
       </Stack>
     </FormModal>
   )

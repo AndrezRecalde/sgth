@@ -6199,6 +6199,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/expediente/subrogaciones/ausencias-del-titular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Las ausencias del titular que pueden motivar su subrogación, para el
+         *     formulario (fase 5.2)
+         */
+        get: operations["subrogacion.ausenciasDelTitular"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/expediente/subrogaciones": {
         parameters: {
             query?: never;
@@ -10143,9 +10163,19 @@ export interface components {
             puesto_subrogado_id: number;
             /** Format: date-time */
             fecha_inicio: string;
-            /** Format: date-time */
-            fecha_fin: string;
-            motivo: components["schemas"]["MotivoSubrogacion"];
+            /**
+             * Format: date-time
+             * @description El encargo puede no tener fin: dura hasta la designación del
+             *     titular (LOSEP, Art. 127; fase 5.2).
+             */
+            fecha_fin?: string | null;
+            /**
+             * @description La subrogación dice qué ausencia del titular la motiva, y de ella
+             *     sale el motivo; el encargo, que recae sobre un puesto vacante, no.
+             */
+            ausencia_tipo?: components["schemas"]["TipoAusenciaTitular"];
+            ausencia_id?: number | null;
+            motivo?: components["schemas"]["MotivoSubrogacion"];
             resolucion_numero?: string | null;
             observacion?: string | null;
         };
@@ -11572,7 +11602,7 @@ export interface components {
             /** Format: date-time */
             fecha_inicio: string;
             /** Format: date-time */
-            fecha_fin: string;
+            fecha_fin: string | null;
             motivo: components["schemas"]["MotivoSubrogacion"];
             resolucion_numero: string | null;
             estado: components["schemas"]["EstadoSubrogacion"];
@@ -11583,6 +11613,8 @@ export interface components {
             /** Format: date-time */
             updated_at: string | null;
             movimiento_personal_id: number | null;
+            ausencia_tipo: components["schemas"]["TipoAusenciaTitular"] | null;
+            ausencia_id: number | null;
         };
         /**
          * SubtipoMovimientoPersonal
@@ -11685,6 +11717,12 @@ export interface components {
          * @enum {string}
          */
         TipoAntecedenteFemo: "clinico" | "quirurgico" | "familiar" | "ginecologico" | "reproductivo_masculino" | "transfusion" | "tratamiento_hormonal" | "otro";
+        /**
+         * TipoAusenciaTitular
+         * @description La ausencia del titular que motiva una subrogación (LOSEP, Art. 126: el titular «se encuentre legalmente ausente»; diseño, 9.5; fase 5.2). Las cuatro primeras están en el SGTH, y la subrogación cabe dentro de sus fechas. «Otra» es la que no está —una delegación, una ausencia que se resolvió fuera—, y se respalda con el número de la resolución.
+         * @enum {string}
+         */
+        TipoAusenciaTitular: "vacacion" | "licencia" | "reposo" | "accion_personal" | "otra";
         /**
          * TipoConcepto
          * @enum {string}
@@ -30045,6 +30083,45 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "subrogacion.ausenciasDelTitular": {
+        parameters: {
+            query: {
+                servidor_id: number;
+                desde?: string | null;
+                hasta?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Ausencias del titular.";
+                        datos: {
+                            tipo: string;
+                            id: string;
+                            etiqueta: string;
+                            desde: string;
+                            hasta: string;
+                            motivo: string;
+                        }[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "subrogacion.registrar": {

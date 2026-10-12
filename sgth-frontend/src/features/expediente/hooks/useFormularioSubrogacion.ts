@@ -4,9 +4,12 @@ import { useState } from 'react'
 import { useWatch, type UseFormReturn } from 'react-hook-form'
 import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
 import { usePuestos } from '@/features/estructura/hooks/usePuestos'
-import { MOTIVO_POR_DEFECTO } from '../utils/subrogaciones'
+import { useAusenciasDelTitular } from './useSubrogaciones'
+import { esNivelJerarquicoSuperior } from '../utils/subrogaciones'
 import type { SubrogacionFormData } from '../schemas/subrogacion.schema'
-import type { PuestoConRelaciones, ServidorConRelaciones, TipoSubrogacion } from '@/types/api'
+import type {
+  AusenciaDelTitular, PuestoConRelaciones, ServidorConRelaciones, TipoSubrogacion,
+} from '@/types/api'
 
 /**
  * Lo que el formulario de subrogación deriva de lo elegido: el puesto, quién lo
@@ -17,13 +20,15 @@ import type { PuestoConRelaciones, ServidorConRelaciones, TipoSubrogacion } from
  * subrogante— y dentro del modal eran cien líneas entre los campos.
  */
 export function useFormularioSubrogacion(form: UseFormReturn<SubrogacionFormData>) {
-  const { control, setValue } = form
+  const { control, setValue, resetField } = form
 
   const tipo = useWatch({ control, name: 'tipo' })
   const unidadSelId = useWatch({ control, name: 'unidad_administrativa_id' })
   const subroganteId = useWatch({ control, name: 'servidor_subrogante_id' })
   const subrogadoId = useWatch({ control, name: 'servidor_subrogado_id' })
   const puestoSelId = useWatch({ control, name: 'puesto_subrogado_id' })
+  const ausenciaTipo = useWatch({ control, name: 'ausencia_tipo' })
+  const ausenciaId = useWatch({ control, name: 'ausencia_id' })
 
   /**
    * El subrogante llega entero desde el buscador, no de una lista precargada:
@@ -73,7 +78,44 @@ export function useFormularioSubrogacion(form: UseFormReturn<SubrogacionFormData
   }
 
   /**
-   * Cambiar de figura arrastra al titular y al motivo: en encargo no hay a
+   * Las ausencias del titular que pueden motivar la subrogación (fase 5.2). La
+   * subrogación ya no se motiva eligiendo «Vacaciones» de una lista: se enlaza
+   * con la ausencia registrada, cabe dentro de sus fechas y la sigue —si la
+   * ausencia se anula, se cancela—.
+   */
+  const ausencias = useAusenciasDelTitular(tipo === 'subrogacion' ? subrogadoId : null)
+  const ausenciaSel: AusenciaDelTitular | null = (ausencias.data ?? [])
+    .find((a) => a.tipo === ausenciaTipo && a.id === ausenciaId) ?? null
+
+  /** La ausencia es del titular: cambiar de titular la deja sin sentido. */
+  const olvidarAusencia = () => {
+    setValue('ausencia_tipo', null)
+    setValue('ausencia_id', null)
+  }
+
+  /**
+   * Elegir la ausencia propone sus fechas: la subrogación cabe dentro de ella,
+   * y lo habitual es que la cubra entera. Se pueden acortar.
+   */
+  const elegirAusencia = (valor: string | null) => {
+    if (!valor) return olvidarAusencia()
+    if (valor === 'otra') {
+      setValue('ausencia_tipo', 'otra')
+      setValue('ausencia_id', null)
+      return
+    }
+
+    const elegida = (ausencias.data ?? []).find((a) => `${a.tipo}:${a.id}` === valor)
+    if (!elegida) return olvidarAusencia()
+
+    setValue('ausencia_tipo', elegida.tipo)
+    setValue('ausencia_id', elegida.id)
+    setValue('fecha_inicio', elegida.desde)
+    setValue('fecha_fin', elegida.hasta ?? '')
+  }
+
+  /**
+   * Cambiar de figura arrastra al titular y a la ausencia: en encargo no hay a
    * quién reemplazar, y en subrogación el titular vuelve a salir del puesto.
    */
   const elegirTipo = (valor: string) => {
@@ -84,7 +126,19 @@ export function useFormularioSubrogacion(form: UseFormReturn<SubrogacionFormData
       'servidor_subrogado_id',
       figura === 'encargo' ? null : titularPorDefecto(puestoSelId),
     )
-    setValue('motivo', MOTIVO_POR_DEFECTO[figura])
+    olvidarAusencia()
+  }
+
+  /**
+   * Otra unidad, otros puestos: el puesto se vacía y con él el titular y su
+   * ausencia. Antes solo se vaciaba el puesto, y el titular del anterior seguía
+   * elegido —sin puesto a la vista— hasta que se elegía otro.
+   */
+  const elegirUnidad = (unidadId: number | undefined, alCambiar: (id?: number) => void) => {
+    alCambiar(unidadId)
+    resetField('puesto_subrogado_id')
+    setValue('servidor_subrogado_id', null)
+    olvidarAusencia()
   }
 
   /** De aquí sale el titular, así que no puede quedar el del puesto anterior. */
@@ -94,6 +148,12 @@ export function useFormularioSubrogacion(form: UseFormReturn<SubrogacionFormData
       'servidor_subrogado_id',
       tipo === 'encargo' ? null : titularPorDefecto(puestoId),
     )
+    olvidarAusencia()
+  }
+
+  const elegirTitular = (servidorId: number | null) => {
+    setValue('servidor_subrogado_id', servidorId)
+    olvidarAusencia()
   }
 
   const elegirSubrogante = (servidor: ServidorConRelaciones | null) => {
@@ -105,6 +165,14 @@ export function useFormularioSubrogacion(form: UseFormReturn<SubrogacionFormData
   // que el backend lo rechace al guardar.
   const figuraEquivocada =
     puestoSel != null && (tipo === 'subrogacion' ? puestoVacante : !puestoVacante)
+
+  /**
+   * Solo se subroga un puesto del nivel jerárquico superior (LOSEP, Art. 126).
+   * Si el puesto tiene titular y no lo es, no hay figura que corresponda: se
+   * dice aquí en vez de dejar que el backend lo rechace al guardar.
+   */
+  const puestoNoSubrogable =
+    tipo === 'subrogacion' && puestoSel != null && !puestoVacante && !esNivelJerarquicoSuperior(puestoSel)
 
   return {
     tipo,
@@ -120,10 +188,18 @@ export function useFormularioSubrogacion(form: UseFormReturn<SubrogacionFormData
     puestoVacante,
     hayQueElegirTitular,
     figuraEquivocada,
+    puestoNoSubrogable,
+    ausencias: ausencias.data ?? [],
+    cargandoAusencias: ausencias.isFetching,
+    ausenciaSel,
+    ausenciaTipo,
     rmuSubrogante,
     nombrePuesto: puestoSel?.cargo?.nombre ?? 'el puesto',
     elegirTipo,
+    elegirUnidad,
     elegirPuesto,
+    elegirTitular,
+    elegirAusencia,
     elegirSubrogante,
     limpiarSubrogante: () => setSubroganteSel(null),
   }

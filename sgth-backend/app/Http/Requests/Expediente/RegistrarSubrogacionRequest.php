@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Expediente;
 
 use App\Enums\MotivoSubrogacion;
+use App\Enums\TipoAusenciaTitular;
 use App\Enums\TipoSubrogacion;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
@@ -37,8 +38,14 @@ class RegistrarSubrogacionRequest extends FormRequest
             'unidad_administrativa_id' => ['required', 'integer', 'exists:unidades_administrativas,id'],
             'puesto_subrogado_id'      => ['required', 'integer', 'exists:puestos,id'],
             'fecha_inicio'             => ['required', 'date'],
-            'fecha_fin'                => ['required', 'date', 'after:fecha_inicio'],
-            'motivo'                   => ['required', new Enum(MotivoSubrogacion::class)],
+            // El encargo puede no tener fin: dura hasta la designación del
+            // titular (LOSEP, Art. 127; fase 5.2).
+            'fecha_fin'                => ['required_if:tipo,subrogacion', 'nullable', 'date', 'after:fecha_inicio'],
+            // La subrogación dice qué ausencia del titular la motiva, y de ella
+            // sale el motivo; el encargo, que recae sobre un puesto vacante, no.
+            'ausencia_tipo'            => ['required_if:tipo,subrogacion', 'nullable', new Enum(TipoAusenciaTitular::class)],
+            'ausencia_id'              => ['nullable', 'integer'],
+            'motivo'                   => ['nullable', new Enum(MotivoSubrogacion::class)],
             'resolucion_numero'        => ['nullable', 'string', 'max:100'],
             'observacion'              => ['nullable', 'string', 'max:1000'],
         ];
