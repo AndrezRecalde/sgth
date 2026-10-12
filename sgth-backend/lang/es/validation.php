@@ -254,6 +254,11 @@ return [
         'puede_marcar' => 'marcación',
         'resolucion_numero' => 'número de resolución',
         'informe_uath_numero' => 'informe técnico de la UATH',
+        // El formato del Ministerio (fase 6.1).
+        'base_legal' => 'base legal',
+        'acto_origen_tipo' => 'tipo del acto que la origina',
+        'acto_origen_numero' => 'número del acto que la origina',
+        'acto_origen_fecha' => 'fecha del acto que la origina',
         'supuesto_provisional_propuesto' => 'supuesto del nombramiento provisional',
         'acta_concurso_numero' => 'número del acta del concurso',
         'acta_concurso_fecha' => 'fecha del acta del concurso',

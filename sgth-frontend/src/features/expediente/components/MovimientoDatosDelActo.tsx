@@ -17,6 +17,7 @@ import { MovimientoPuestoDelReintegro } from './MovimientoPuestoDelReintegro'
 import { MovimientoActaConcurso } from './MovimientoActaConcurso'
 import { MovimientoDatosDelPeriodo } from './MovimientoDatosDelPeriodo'
 import { MovimientoDatosLicenciaConsejo } from './MovimientoDatosLicenciaConsejo'
+import { MovimientoDocumentoDelMinisterio } from './MovimientoDocumentoDelMinisterio'
 import { fromDateValue, fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 
 /**
@@ -80,6 +81,12 @@ export function MovimientoDatosDelActo({
 
   const muestraFechas = !!clase?.pide_periodo
   const pideInstitucion = !!clase?.pide_institucion_destino
+
+  // El formato del Ministerio es el de la acción de personal (fase 6.1): la
+  // hoja del obrero, la constancia de la autoridad y el contrato civil no lo
+  // usan. La base que propone es la de la causal, si la tiene.
+  const conFormatoDelMinisterio = !esRegistroDeContrato && !actoDeAutoridad && !contratoCivil && !registroInterno
+  const baseDeLaClase = clase?.causales.find((c) => c.codigo === causal)?.base_legal ?? clase?.base_legal ?? null
 
   return (
     <>
@@ -272,6 +279,8 @@ export function MovimientoDatosDelActo({
         {...contained}
         {...register('resolucion_numero')}
       />
+
+      {conFormatoDelMinisterio && <MovimientoDocumentoDelMinisterio form={form} baseDeLaClase={baseDeLaClase} />}
 
       {/* Las autoridades electas no pasan por la ficha médica [TH 5; fase 4.1]. */}
       {!actoDeAutoridad && (

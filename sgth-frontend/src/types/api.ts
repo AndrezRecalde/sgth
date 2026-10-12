@@ -891,6 +891,16 @@ export type MovimientoPersonal = {
   puesto_origen_id?: number | null
   puesto_destino_id?: number | null
   resolucion_numero?: string | null
+  /** La base legal que imprime el documento, congelada al suscribir (fase 6.1). */
+  base_legal?: string | null
+  /** La que pone su clase, para proponerla y para las acciones de antes de la 6.1. */
+  base_legal_de_la_clase?: string | null
+  /** La casilla que marca en la rejilla del formulario del Ministerio. */
+  casilla?: string | null
+  /** El decreto, acuerdo o resolución que la origina (fase 6.1). */
+  acto_origen_tipo?: 'decreto' | 'acuerdo' | 'resolucion' | null
+  acto_origen_numero?: string | null
+  acto_origen_fecha?: string | null
   documento_respaldo?: string | null
   autorizado_por?: number | null
   notificado_por?: number | null

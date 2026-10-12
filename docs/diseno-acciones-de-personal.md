@@ -1053,6 +1053,21 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
 
 **Fase 6 — Documento y notificación**
 1. PDF de la acción de personal con el formato del Ministerio (6.5).
+   - Hasta aquí el documento imprimía la fecha en que rige como fecha de emisión, no marcaba casilla ni tenía base legal propia, y llevaba el acta de posesión también en sanciones y cesaciones.
+   - Encabezado:
+     - la fecha de emisión es la de suscripción, o la de registro en las acciones anteriores;
+     - el acto que la origina va en sus casillas Decreto / Acuerdo / Resolución, con número y fecha (`acto_origen_tipo`, `acto_origen_numero`, `acto_origen_fecha`). Son opcionales; `resolucion_numero` sigue siendo la referencia de la explicación.
+   - «Rige a partir de» y, en las temporales, «Hasta»; en el encargo sin fin, «La designación del titular».
+   - Explicación: arriba, la base legal (`base_legal`). Sale de la clase y, si la tiene, de la causal, que es más precisa (la letra del Art. 47 o del 28). En el borrador se puede dejar vacía o corregir: el formulario la propone y la copia para editarla. Al suscribir queda congelada. Las acciones anteriores imprimen la de su clase.
+   - La rejilla de las 23 casillas (`CasillaAccionPersonal`), con la de la acción marcada. La cesación toma la de su causal (renuncia, destitución, remoción, jubilación); la sanción y las causales sin casilla van en «Otro», con su nombre. **[Pendiente: Talento Humano coteja el listado con un formulario impreso; se armó del formato de 2014 sin copia a la vista.]**
+   - Situación actual y propuesta, con la modalidad del vínculo: la del contrato que regía cuando tomó efecto, y la que el acto fija. En las temporales, «Período» (desde, hasta e institución de destino) en lugar de la propuesta.
+   - El acta final del concurso en su renglón, las firmas selladas y el bloque «Registro y control» con el número y la fecha de registro.
+   - Segunda página:
+     - el reemplazo: a quién reemplaza, en qué puesto, por qué y con qué acción. Sale de la ausencia que cubre un ingreso, del titular de una subrogación o de la cesación de quien ocupaba antes el puesto. Sale siempre en las clases con posesión;
+     - la posesión, solo en ingreso, ascenso, nombramiento definitivo y encargo (6.4);
+     - la notificación: «Recibí» con la fecha, si ya se notificó, y la razón de la negativa con testigo en blanco, para llenarla a mano hasta la 6.3.
+   - `AccionPersonalPdfService::documento()` devuelve la vista, sus datos y el archivo sin pasarlos a PDF: lo usan la descarga, las pruebas y la vista previa de la 6.2.
+   - La hoja de registro interno de los obreros, la constancia de las autoridades y el contrato civil no cambian.
 2. Vista previa con la marca BORRADOR, para todos los instrumentos que imprimen.
 3. Portal «Mis documentos laborales» con acuse de recibo, aviso al correo institucional y razón con testigo; solicitudes de renuncia, licencia y jubilación.
 

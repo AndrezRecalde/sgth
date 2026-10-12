@@ -9,6 +9,9 @@ import { dinero } from '../utils/dinero'
 import type { MovimientoPersonal } from '@/types/api'
 import { formatFecha } from '@/lib/fecha'
 
+/** Cómo se nombra el acto que la origina (fase 6.1). */
+const ACTO_DE_ORIGEN = { decreto: 'Decreto', acuerdo: 'Acuerdo', resolucion: 'Resolución' } as const
+
 /**
  * Con qué se respalda la acción: el instrumento que nace —solo en un ingreso—,
  * la resolución y el dictamen médico, y quiénes firmaron.
@@ -104,6 +107,20 @@ export function AccionRespaldos({ m }: { m: MovimientoPersonal }) {
               ? [{ label: 'Acta del concurso', value: `${m.acta_concurso_numero} · ${formatFecha(m.acta_concurso_fecha)}` }]
               : []),
             { label: 'N.º de resolución', value: m.resolucion_numero },
+            // Lo que imprime el formato del Ministerio (fase 6.1): la base
+            // legal —la guardada, o la de su clase—, la casilla y el acto
+            // que la origina.
+            ...(m.base_legal || m.base_legal_de_la_clase
+              ? [{ label: 'Base legal', value: m.base_legal || m.base_legal_de_la_clase }]
+              : []),
+            ...(m.casilla ? [{ label: 'Casilla del formulario', value: m.casilla }] : []),
+            ...(m.acto_origen_tipo
+              ? [{
+                  label: 'Acto que la origina',
+                  value: `${ACTO_DE_ORIGEN[m.acto_origen_tipo]} N.º ${m.acto_origen_numero ?? '—'}`
+                    + (m.acto_origen_fecha ? ` · ${formatFecha(m.acto_origen_fecha)}` : ''),
+                }]
+              : []),
             {
               label: 'Dictamen médico',
               value: m.requiere_dictamen_medico

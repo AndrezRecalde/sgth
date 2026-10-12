@@ -2,12 +2,14 @@
 
 namespace App\Models\Expediente;
 
+use App\Enums\CasillaAccionPersonal;
 use App\Enums\CategoriaEventoVinculo;
 use App\Enums\ClaseAccionPersonal;
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\InstrumentoActo;
 use App\Enums\SubtipoMovimientoPersonal;
 use App\Enums\SupuestoProvisional;
+use App\Enums\TipoActoDeOrigen;
 use App\Enums\TipoMovimientoPersonal;
 use App\Enums\TipoNombramiento;
 use App\Exceptions\ReglaNegocioException;
@@ -262,6 +264,8 @@ class MovimientoPersonal extends Model
         // reemplazo.
         'movimiento_relacionado_id',
         'descripcion',
+        // La que imprime la explicación; se congela al suscribir (fase 6.1).
+        'base_legal',
         'fecha_efectiva',
         'fecha_inicio',
         'fecha_fin',
@@ -278,6 +282,10 @@ class MovimientoPersonal extends Model
         'partida_origen_id',
         'puesto_destino_id',
         'resolucion_numero',
+        // El decreto, acuerdo o resolución que la origina (fase 6.1).
+        'acto_origen_tipo',
+        'acto_origen_numero',
+        'acto_origen_fecha',
         // El informe técnico de la UATH que pide el traslado (fase 3.1).
         'informe_uath_numero',
         // El acta final del concurso del provisional de prueba (fase 3.2).
@@ -330,6 +338,8 @@ class MovimientoPersonal extends Model
             'tipo_nombramiento_propuesto' => TipoNombramiento::class,
             'supuesto_provisional_propuesto' => SupuestoProvisional::class,
             'acta_concurso_fecha'         => 'date',
+            'acto_origen_tipo'            => TipoActoDeOrigen::class,
+            'acto_origen_fecha'           => 'date',
             'credencial_cne_fecha'        => 'date',
             'remuneracion_propuesta'      => 'decimal:2',
             'remuneracion_origen'         => 'decimal:2',
@@ -636,6 +646,63 @@ class MovimientoPersonal extends Model
         }
 
         return $this->clase?->requiereCausal() ? $subtipo : null;
+    }
+
+    // ── El documento con el formato del Ministerio (fase 6.1) ───────
+
+    /**
+     * La base legal que pone su clase, con la de la causal si la tiene. Es la
+     * que se propone al crearla y la que se congela al suscribir.
+     */
+    public function baseLegalDeLaClase(): ?string
+    {
+        return $this->clase?->baseLegal($this->subtipoEfectivo());
+    }
+
+    /**
+     * La que imprime la explicación: la congelada al suscribir, o la de su
+     * clase en las acciones de antes de la fase 6.1.
+     */
+    public function baseLegalImpresa(): ?string
+    {
+        return filled($this->base_legal) ? $this->base_legal : $this->baseLegalDeLaClase();
+    }
+
+    /** La casilla que marca en la rejilla del formulario. */
+    public function casilla(): CasillaAccionPersonal
+    {
+        return $this->clase?->casilla($this->causal()) ?? CasillaAccionPersonal::OTRO;
+    }
+
+    /**
+     * Lo que se escribe en «Otro: ___»: el nombre de la acción y, si la
+     * tiene, su causal —«Sanción disciplinaria: multa»—. Null si marca otra
+     * casilla.
+     */
+    public function textoDeOtro(): ?string
+    {
+        if ($this->casilla() !== CasillaAccionPersonal::OTRO) {
+            return null;
+        }
+
+        $causal = $this->causal() ?? ($this->clase === ClaseAccionPersonal::SANCION ? $this->subtipoEfectivo() : null);
+
+        return $this->etiqueta().($causal ? ': '.mb_strtolower($causal->etiqueta()) : '');
+    }
+
+    /** ¿Lleva el acta de posesión del cargo? (diseño, 6.4). */
+    public function llevaPosesion(): bool
+    {
+        return (bool) $this->clase?->llevaPosesion();
+    }
+
+    /**
+     * La fecha de emisión: la de suscripción, no la de vigencia (diseño, 6.5).
+     * Las suscritas antes de que se guardara usan la de registro.
+     */
+    public function fechaDeEmision(): ?CarbonInterface
+    {
+        return $this->fecha_suscripcion ?? $this->fecha_registro;
     }
 
     /**

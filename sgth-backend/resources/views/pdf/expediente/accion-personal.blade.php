@@ -54,7 +54,7 @@
         }
 
         /* ── Título del acto ──────────────────────────────────── */
-        .titulo { text-align: center; margin: 0 0 12px 0; }
+        .titulo { text-align: center; margin: 0 0 8px 0; }
         .titulo .supra {
             font-size: 9px;
             letter-spacing: 2px;
@@ -62,7 +62,7 @@
             text-transform: uppercase;
         }
         .titulo h1 {
-            font-size: 17px;
+            font-size: 15px;
             font-weight: bold;
             letter-spacing: 1.2px;
             text-transform: uppercase;
@@ -77,7 +77,7 @@
         .titulo .regla {
             border-bottom: 1.6px solid #17593f;
             width: 56px;
-            margin: 7px auto 0 auto;
+            margin: 5px auto 0 auto;
         }
 
         /* ── Cintillo de código y fecha ────────────────────────── */
@@ -98,7 +98,7 @@
         table.datos {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 14px;
+            margin-bottom: 10px;
         }
         table.datos td {
             border: 0.7px solid #c6d2cc;
@@ -133,7 +133,7 @@
         .explicacion {
             text-align: justify;
             font-size: 10.5px;
-            margin-bottom: 14px;
+            margin-bottom: 10px;
         }
         .respaldo {
             margin-top: 5px;
@@ -161,25 +161,30 @@
         table.situacion td {
             vertical-align: top;
             width: 50%;
-            padding: 8px 10px;
+            padding: 6px 8px;
             border: 0.7px solid #c6d2cc;
         }
-        .campo { margin-bottom: 5px; }
+        /* Etiqueta y valor en la misma línea: con la rejilla de casillas y el
+           acto de origen, apilados ya no cabía la primera página (fase 6.1). */
+        .campo { margin-bottom: 3px; }
         .campo:last-child { margin-bottom: 0; }
         .campo .label {
-            display: block;
-            font-size: 8px;
+            display: inline-block;
+            width: 38%;
+            font-size: 7.5px;
             font-weight: bold;
-            letter-spacing: 0.6px;
+            letter-spacing: 0.4px;
             text-transform: uppercase;
             color: #6b7c74;
+            vertical-align: top;
         }
-        .campo .valor { font-size: 10.5px; }
+        .campo .valor { display: inline-block; width: 60%; font-size: 10px; vertical-align: top; }
+        .campo .valor.entero { width: 100%; }
         .campo .valor.fuerte { font-weight: bold; }
         .vacio { color: #9aa8a1; }
 
         /* ── Firmas ───────────────────────────────────────────── */
-        .firmas { width: 100%; margin-top: 34px; }
+        .firmas { width: 100%; margin-top: 18px; page-break-inside: avoid; }
         .firmas table { width: 100%; border-collapse: collapse; }
         .firmas td {
             text-align: center;
@@ -193,7 +198,7 @@
             letter-spacing: 1px;
             text-transform: uppercase;
             color: #6b7c74;
-            margin-bottom: 46px;
+            margin-bottom: 36px;
         }
         .firma-linea {
             border-top: 0.9px solid #1c2321;
@@ -246,6 +251,48 @@
             margin: 6px 0 0 0;
             text-align: justify;
         }
+
+        /* ── Formato del Ministerio (fase 6.1) ─────────────────── */
+        /* Una casilla de marcar: un cuadro con borde y la X dentro. Los
+           símbolos de casilla de la fuente no salen iguales en todos los
+           visores; un borde, sí. */
+        .caja {
+            display: inline-block;
+            width: 9px;
+            height: 9px;
+            line-height: 9px;
+            border: 0.8px solid #1c2321;
+            text-align: center;
+            font-size: 8px;
+            font-weight: bold;
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+        table.acto-origen { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+        table.acto-origen td {
+            border: 0.7px solid #c6d2cc;
+            padding: 4px 8px;
+            font-size: 9.5px;
+        }
+        table.acto-origen td.label {
+            font-weight: bold;
+            font-size: 8.5px;
+            text-transform: uppercase;
+            color: #3d4d46;
+            background: #f2f6f4;
+        }
+        table.rejilla { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+        table.rejilla td {
+            border: 0.7px solid #c6d2cc;
+            padding: 3px 6px;
+            font-size: 8px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            color: #3d4d46;
+            width: 25%;
+        }
+        table.rejilla td.marcada { background: #e6f1ec; color: #17593f; font-weight: bold; }
+        .base-legal { font-size: 9.5px; color: #3d4d46; margin-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -318,6 +365,27 @@
         : ($movimiento->partidaPresupuestaria->codigo
             ?? $movimiento->puestoDestino->partidaPresupuestaria->codigo
             ?? null);
+
+    // ── El formato del Ministerio (diseño, 6.5; fase 6.1) ──────────
+    // Los arma AccionPersonalPdfService; quien renderiza la vista sin él
+    // —una prueba— los recibe vacíos.
+    $modalidadActual = $modalidadActual ?? null;
+    $modalidadPropuesta = $modalidadPropuesta ?? null;
+    $reemplazo = $reemplazo ?? null;
+
+    // La fecha de emisión es la de suscripción, no la de vigencia.
+    $emision = $movimiento->fechaDeEmision() ?? $movimiento->fecha_efectiva;
+    $casilla = $movimiento->casilla();
+    $textoOtro = $movimiento->textoDeOtro();
+    $casillas = \App\Enums\CasillaAccionPersonal::cases();
+
+    // Las temporales dicen «hasta», y en vez de la situación propuesta, el
+    // período: la comisión y la licencia no mueven al servidor de su puesto.
+    $esTemporal = $movimiento->esAusenciaTemporal();
+    $esSubrogacion = $movimiento->tipo_movimiento === \App\Enums\TipoMovimientoPersonal::SUBROGACION;
+    $hasta = ($esTemporal || $esSubrogacion) ? $movimiento->fecha_fin : null;
+    // El encargo sin fin dura hasta la designación del titular (fase 5.2).
+    $encargoSinFin = $esSubrogacion && ! $movimiento->fecha_fin;
 @endphp
 
 <div class="membrete">
@@ -349,8 +417,22 @@
             <span class="codigo">N.º {{ $codigoImpreso ?: 'S/N' }}</span>
         </td>
         <td class="lugar-fecha">
-            Esmeraldas, {{ \Carbon\Carbon::parse($movimiento->fecha_efectiva)->locale('es')->isoFormat('DD [de] MMMM [del] YYYY') }}
+            Esmeraldas, {{ $emision ? \Carbon\Carbon::parse($emision)->locale('es')->isoFormat('DD [de] MMMM [del] YYYY') : '—' }}
         </td>
+    </tr>
+</table>
+
+{{-- El decreto, acuerdo o resolución que la origina: el encabezado del
+     formulario lo pide con su número y su fecha. --}}
+<table class="acto-origen">
+    <tr>
+        @foreach(\App\Enums\TipoActoDeOrigen::cases() as $tipoActo)
+            <td style="width: 16%;"><span class="caja">{!! $movimiento->acto_origen_tipo === $tipoActo ? 'X' : '&nbsp;' !!}</span>{{ $tipoActo->etiqueta() }}</td>
+        @endforeach
+        <td class="label" style="width: 8%;">N.º</td>
+        <td style="width: 22%;">{!! $dato($movimiento->acto_origen_numero) !!}</td>
+        <td class="label" style="width: 8%;">Fecha</td>
+        <td>{!! $dato($fmtFecha($movimiento->acto_origen_fecha)) !!}</td>
     </tr>
 </table>
 
@@ -391,24 +473,28 @@
     </tr>
     <tr>
         <td class="label">Rige a partir de</td>
-        <td colspan="3"><strong>{!! $dato($fmtFecha($movimiento->fecha_efectiva)) !!}</strong></td>
+        @if($hasta || $encargoSinFin)
+            <td><strong>{!! $dato($fmtFecha($movimiento->fecha_efectiva)) !!}</strong></td>
+            <td class="label">Hasta</td>
+            <td><strong>{{ $hasta ? $fmtFecha($hasta) : 'La designación del titular' }}</strong></td>
+        @else
+            <td colspan="3"><strong>{!! $dato($fmtFecha($movimiento->fecha_efectiva)) !!}</strong></td>
+        @endif
     </tr>
 </table>
 
 <div class="bloque-titulo">Explicación</div>
 <div class="explicacion">
+    {{-- La base legal que pone la clase, congelada al suscribir (fase 6.1). --}}
+    @if($movimiento->baseLegalImpresa())
+        <div class="base-legal"><strong>Base legal:</strong> {{ $movimiento->baseLegalImpresa() }}</div>
+    @endif
     {{ $movimiento->descripcion }}
     {{-- Fase 2.3: a dónde va y cuánto dura. Hasta aquí la institución iba,
          si iba, en la explicación, y el período solo salía en la suspensión. --}}
-    @if($movimiento->institucion_destino)
+    @if($movimiento->institucion_destino && ! $esTemporal)
         <div class="respaldo">
             <strong>Institución de destino:</strong> {{ $movimiento->institucion_destino }}
-        </div>
-    @endif
-    @if($movimiento->esAusenciaTemporal() && $movimiento->fecha_inicio)
-        <div class="respaldo">
-            <strong>Período:</strong> del {{ $fmtFecha($movimiento->fecha_inicio) }}
-            al {{ $fmtFecha($movimiento->fecha_fin) }}
         </div>
     @endif
     @if($ausenciaQueCierra)
@@ -457,12 +543,6 @@
             ({{ $movimiento->supuesto_provisional_propuesto->baseLegal() }}).
         </div>
     @endif
-    @if($movimiento->acta_concurso_numero)
-        <div class="respaldo">
-            <strong>Acta final del concurso:</strong> N.º {{ $movimiento->acta_concurso_numero }}, del
-            {{ $fmtFecha($movimiento->acta_concurso_fecha) }}.
-        </div>
-    @endif
     @if($esAscenso)
         {{-- Fase 3.3: de prueba por seis meses, con el puesto de antes reservado. --}}
         <div class="respaldo">
@@ -494,27 +574,44 @@
     @endif
 </div>
 
+{{-- Las 23 casillas del formulario, con la de la acción marcada. «Otro»
+     lleva el nombre de la acción: una sanción, una cesación sin casilla
+     propia. --}}
+<table class="rejilla">
+    @foreach(array_chunk($casillas, 4) as $fila)
+        <tr>
+            @foreach($fila as $i => $c)
+                <td class="{{ $c === $casilla ? 'marcada' : '' }}"
+                    @if($loop->last && count($fila) < 4) colspan="{{ 5 - count($fila) }}" @endif>
+                    <span class="caja">{!! $c === $casilla ? 'X' : '&nbsp;' !!}</span>{{ $c->etiqueta() }}@if($c === \App\Enums\CasillaAccionPersonal::OTRO && $textoOtro): {{ $textoOtro }}@endif
+                </td>
+            @endforeach
+        </tr>
+    @endforeach
+</table>
+
 <table class="situacion">
     <tr>
         <th>Situación actual</th>
-        <th class="propuesta">{{ !empty($descuento) ? 'Efecto en la remuneración' : 'Situación propuesta' }}</th>
+        <th class="propuesta">{{ !empty($descuento) ? 'Efecto en la remuneración' : ($esTemporal ? 'Período' : 'Situación propuesta') }}</th>
     </tr>
     <tr>
         <td>
             @if($esIngreso)
                 <div class="campo">
-                    <span class="valor vacio">
+                    <span class="valor vacio entero">
                         Sin vínculo laboral previo — este es el primer ingreso del servidor.
                     </span>
                 </div>
             @elseif($esRestitucion)
                 <div class="campo">
-                    <span class="valor vacio">
+                    <span class="valor vacio entero">
                         Sin vínculo desde el {{ $fmtFecha($cesacionSinEfecto?->fecha_efectiva) }}, por la cesación
                         que esta acción deja sin efecto.
                     </span>
                 </div>
             @else
+                <div class="campo"><span class="label">Modalidad</span><span class="valor">{!! $dato($modalidadActual?->etiqueta()) !!}</span></div>
                 <div class="campo"><span class="label">Dirección</span><span class="valor">{!! $dato($movimiento->unidadOrigen->nombre ?? null) !!}</span></div>
                 <div class="campo"><span class="label">Grupo ocupacional</span><span class="valor">{!! $dato($movimiento->puestoOrigen->grupoOcupacional->denominacion_generica ?? null) !!}</span></div>
                 <div class="campo"><span class="label">Puesto</span><span class="valor fuerte">{!! $dato($movimiento->puestoOrigen->cargo->nombre ?? null) !!}</span></div>
@@ -536,11 +633,20 @@
             @endif
             <div class="campo"><span class="label">Base de cálculo (R.M.U.)</span><span class="valor">{!! $dato($fmtRmu($descuento['base'])) !!}</span></div>
             <div class="campo"><span class="label">Descuento referencial</span><span class="valor fuerte">{!! $dato($fmtRmu($descuento['monto'])) !!}</span></div>
-            <div class="campo"><span class="valor vacio">
+            <div class="campo"><span class="valor vacio entero">
                 {{ $descuento['hasta'] ? 'R.M.U. ÷ 30 × días de suspensión.' : 'Porcentaje de la multa sobre la R.M.U.' }}
                 Valor de referencia: el descuento lo aplica Financiero en el rol de pagos.
             </span></div>
+        @elseif($esTemporal)
+            {{-- La comisión y la licencia no mueven al servidor: el documento
+                 dice cuándo y, en la comisión, a dónde va (diseño, 6.5). --}}
+            <div class="campo"><span class="label">Desde</span><span class="valor fuerte">{!! $dato($fmtFecha($movimiento->fecha_inicio ?? $movimiento->fecha_efectiva)) !!}</span></div>
+            <div class="campo"><span class="label">Hasta</span><span class="valor fuerte">{!! $dato($fmtFecha($movimiento->fecha_fin)) !!}</span></div>
+            @if($movimiento->institucion_destino)
+                <div class="campo"><span class="label">Institución de destino</span><span class="valor">{{ $movimiento->institucion_destino }}</span></div>
+            @endif
         @else
+            <div class="campo"><span class="label">Modalidad</span><span class="valor">{!! $dato($modalidadPropuesta?->etiqueta()) !!}</span></div>
             <div class="campo"><span class="label">Dirección</span><span class="valor">{!! $dato($unidadPropuesta->nombre ?? null) !!}</span></div>
             <div class="campo"><span class="label">Grupo ocupacional</span><span class="valor">{!! $dato($puestoPropuesto->grupoOcupacional->denominacion_generica ?? null) !!}</span></div>
             <div class="campo"><span class="label">Puesto</span><span class="valor fuerte">{!! $dato($puestoPropuesto->cargo->nombre ?? null) !!}</span></div>
@@ -552,6 +658,17 @@
         </td>
     </tr>
 </table>
+
+@if($movimiento->acta_concurso_numero)
+    <table class="datos">
+        <tr>
+            <td class="label">Acta final del concurso</td>
+            <td>N.º {{ $movimiento->acta_concurso_numero }}</td>
+            <td class="label">Fecha</td>
+            <td>{!! $dato($fmtFecha($movimiento->acta_concurso_fecha)) !!}</td>
+        </tr>
+    </table>
+@endif
 
 <div class="firmas">
     <table>
@@ -574,6 +691,17 @@
         </tr>
     </table>
 </div>
+
+{{-- Registro y control: el número y la fecha con que se registró. --}}
+<div class="bloque-titulo" style="margin-top: 14px;">Registro y control</div>
+<table class="datos">
+    <tr>
+        <td class="label">Registrada con N.º</td>
+        <td>{!! $dato($movimiento->codigo_registro) !!}</td>
+        <td class="label">Fecha de registro</td>
+        <td>{!! $dato($fmtFecha($movimiento->fecha_registro)) !!}</td>
+    </tr>
+</table>
 
 <div class="page-break"></div>
 
@@ -602,6 +730,31 @@
     </tr>
 </table>
 
+{{-- A quién reemplaza: la ausencia que cubre, el titular que subroga o
+     quien ocupaba antes el puesto (fase 6.1). En las clases que ponen al
+     servidor en un puesto, el bloque sale aunque no haya a quién. --}}
+@if($reemplazo || $movimiento->llevaPosesion())
+    <div class="bloque-titulo">Reemplazo</div>
+    <table class="datos">
+        <tr>
+            <td class="label">Reemplaza a</td>
+            <td>{!! $dato($reemplazo['a'] ?? null) !!}</td>
+            <td class="label">En el puesto de</td>
+            <td>{!! $dato($reemplazo['puesto'] ?? null) !!}</td>
+        </tr>
+        <tr>
+            <td class="label">{{ $reemplazo['rotulo_por'] ?? 'Quien cesó por' }}</td>
+            <td>{!! $dato($reemplazo['por'] ?? null) !!}</td>
+            <td class="label">Acción N.º</td>
+            <td>{!! $dato($reemplazo['accion'] ?? null) !!}</td>
+        </tr>
+    </table>
+@endif
+
+{{-- La posesión, solo en el ingreso, el ascenso, el nombramiento definitivo
+     y el encargo (diseño, 6.4): el documento la imprimía también en las
+     sanciones y las cesaciones. --}}
+@if($movimiento->llevaPosesion())
 <div class="bloque-titulo">Posesión del cargo</div>
 <div class="juramento">
     Yo, <strong>{{ trim($apellidosServidor.' '.$nombresServidor) }}</strong>,
@@ -635,6 +788,40 @@
         </tr>
     </table>
 </div>
+@endif
+
+{{-- La notificación (Reg. 22; diseño, 6.4): el «Recibí» del servidor o, si
+     se niega a recibirla, la razón con un testigo. Se llena a mano; el
+     registro de la negativa en el sistema llega con el portal (fase 6.3). --}}
+<div class="bloque-titulo" style="margin-top: 14px;">Notificación</div>
+<table class="datos">
+    <tr>
+        <td class="label">Recibí</td>
+        <td style="height: 26px;">&nbsp;</td>
+        <td class="label">Fecha</td>
+        <td>{!! $movimiento->fecha_notificacion ? e($fmtFecha($movimiento->fecha_notificacion)) : '&nbsp;' !!}</td>
+    </tr>
+    <tr>
+        <td class="label">Nombre</td>
+        <td colspan="3" class="mayus">{{ trim($apellidosServidor.' '.$nombresServidor) }}</td>
+    </tr>
+</table>
+<table class="datos">
+    <tr>
+        <td class="label">Razón de la negativa</td>
+        <td colspan="3" style="height: 26px;">&nbsp;</td>
+    </tr>
+    <tr>
+        <td class="label">Testigo</td>
+        <td>&nbsp;</td>
+        <td class="label">Cédula</td>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td class="label">Firma del testigo</td>
+        <td colspan="3" style="height: 26px;">&nbsp;</td>
+    </tr>
+</table>
 
 </body>
 </html>

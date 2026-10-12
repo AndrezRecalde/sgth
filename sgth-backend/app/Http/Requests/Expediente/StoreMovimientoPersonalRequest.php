@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Expediente;
 
 use App\Enums\ClaseAccionPersonal;
+use App\Enums\TipoActoDeOrigen;
 use App\Enums\TipoNombramiento;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -117,6 +118,13 @@ class StoreMovimientoPersonalRequest extends FormRequest
             // servicio en validarReemplazo().
             'cubre_movimiento_id' => 'nullable|integer|exists:movimientos_personal,id',
             'resolucion_numero' => 'nullable|string|max:100',
+            // El documento con el formato del Ministerio (fase 6.1): la base
+            // legal que imprime —se congela al suscribir— y el decreto,
+            // acuerdo o resolución que la origina, que van juntos.
+            'base_legal'         => 'nullable|string|max:1000',
+            'acto_origen_tipo'   => ['nullable', 'required_with:acto_origen_numero', new Enum(TipoActoDeOrigen::class)],
+            'acto_origen_numero' => 'nullable|required_with:acto_origen_tipo|string|max:100',
+            'acto_origen_fecha'  => 'nullable|date|before_or_equal:today',
             'observacion'       => 'nullable|string|max:1000',
             'codigo'            => 'nullable|string|max:30',
             'lugar_trabajo'     => 'nullable|string|max:255',

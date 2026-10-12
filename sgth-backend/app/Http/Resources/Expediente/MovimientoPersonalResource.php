@@ -70,6 +70,12 @@ class MovimientoPersonalResource extends JsonResource
             'categoria'          => $this->categoria,
             'estado'             => $this->estado,
             'descripcion'        => $this->descripcion,
+            // La base legal del documento (fase 6.1): la guardada —congelada
+            // al suscribir— y la que pone su clase, para proponerla.
+            'base_legal'             => $this->base_legal,
+            'base_legal_de_la_clase' => $this->baseLegalDeLaClase(),
+            // La casilla que marca en la rejilla del formulario del Ministerio.
+            'casilla'                => $this->casilla()->etiqueta(),
             'observacion'        => $this->observacion,
 
             'fecha_efectiva' => $this->fecha_efectiva,
@@ -135,6 +141,10 @@ class MovimientoPersonalResource extends JsonResource
             'efecto_aplicado_en'          => $this->efecto_aplicado_en,
             'pendiente_de_vigencia'       => $this->pendienteDeVigencia(),
             'resolucion_numero'           => $this->resolucion_numero,
+            // El decreto, acuerdo o resolución que la origina (fase 6.1).
+            'acto_origen_tipo'            => $this->acto_origen_tipo,
+            'acto_origen_numero'          => $this->acto_origen_numero,
+            'acto_origen_fecha'           => $this->acto_origen_fecha?->toDateString(),
             // El informe de la UATH del traslado (fase 3.1).
             'informe_uath_numero'         => $this->informe_uath_numero,
             // La sentencia de una restitución (fase 2.6).

@@ -48933,6 +48933,67 @@
                             "$ref": "#/components/schemas/CausalAccionPersonalResource"
                         }
                     },
+                    "base_legal": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "La que el formulario propone para la explicaci\u00f3n del documento;\ncon causal, manda la de la causal (fase 6.1).",
+                        "enum": [
+                            "LOSEP Arts. 16 a 18; Reglamento a la LOSEP Art. 19",
+                            "LOSEP Art. 17 b.5; Reglamento a la LOSEP Arts. 224 a 227",
+                            "LOSEP Art. 32",
+                            "LOSEP Art. 46",
+                            "LOSEP Art. 68; Reglamento a la LOSEP Arts. 190 y 191",
+                            "LOSEP Arts. 35 y 36",
+                            "LOSEP Arts. 39 y 40",
+                            "LOSEP Art. 30",
+                            "LOSEP Art. 31",
+                            "LOSEP Art. 28",
+                            "LOSEP Art. 126; Reglamento a la LOSEP Art. 270",
+                            "LOSEP Art. 127; Reglamento a la LOSEP Art. 271",
+                            "LOSEP Art. 43; Reglamento a la LOSEP Art. 87",
+                            "LOSEP Art. 47",
+                            "LOSEP Art. 47 a; Reglamento Art. 102",
+                            "LOSEP Art. 47 e; Reglamento Art. 105",
+                            "LOSEP Art. 17 b.5",
+                            "Reglamento a la LOSEP Art. 146 a",
+                            "Reglamento a la LOSEP Art. 146 f",
+                            "Reglamento a la LOSEP Art. 146 b",
+                            "Reglamento a la LOSEP Art. 146 g",
+                            "LOSEP Arts. 47 f y 48",
+                            "LOSEP Art. 47 j",
+                            "LOSEP Art. 47 i y k; Mandato Constituyente 2",
+                            "LOSEP Art. 47 b",
+                            "LOSEP Art. 47 d",
+                            "LOSEP Art. 47 l",
+                            "C\u00f3digo del Trabajo Art. 172",
+                            "Constituci\u00f3n Art. 105",
+                            "COOTAD Arts. 333\u2013336",
+                            "El plazo del contrato",
+                            "C\u00f3digo Civil Art. 1561",
+                            "La cl\u00e1usula de terminaci\u00f3n del contrato",
+                            "C\u00f3digo del Trabajo, Arts. 184 y 185",
+                            "C\u00f3digo del Trabajo, Art. 169 n\u00fam. 2",
+                            "C\u00f3digo del Trabajo, Art. 169 n\u00fam. 3",
+                            "C\u00f3digo del Trabajo, Art. 15",
+                            "C\u00f3digo del Trabajo, Arts. 185 y 188",
+                            "C\u00f3digo del Trabajo, Art. 216; Mandato Constituyente 2",
+                            "Mandato Constituyente 2, art. 8",
+                            "C\u00f3digo del Trabajo, Art. 169 n\u00fam. 5",
+                            "C\u00f3digo del Trabajo, Art. 169 n\u00fam. 6",
+                            "LOSEP Art. 28 a",
+                            "LOSEP Art. 28 b",
+                            "LOSEP Art. 28 c",
+                            "LOSEP Art. 28 d",
+                            "LOSEP Art. 28 e",
+                            "LOSEP Art. 28 f",
+                            "LOSEP Art. 43 b",
+                            "LOSEP Art. 43 c",
+                            "LOSEP Art. 43 d",
+                            null
+                        ]
+                    },
                     "pide_situacion_propuesta": {
                         "type": "boolean"
                     },
@@ -49028,6 +49089,7 @@
                     "requiere_vinculo",
                     "nombramientos_elegibles",
                     "causales",
+                    "base_legal",
                     "pide_situacion_propuesta",
                     "pide_periodo",
                     "pide_institucion_destino",
@@ -54710,6 +54772,35 @@
                             "integer",
                             "null"
                         ]
+                    },
+                    "base_legal": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "acto_origen_tipo": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/TipoActoDeOrigen"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "acto_origen_numero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "acto_origen_fecha": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
                     }
                 },
                 "required": [
@@ -54789,7 +54880,11 @@
                     "fecha_consentimiento",
                     "fecha_presentacion_renuncia",
                     "fecha_providencia",
-                    "lote_id"
+                    "lote_id",
+                    "base_legal",
+                    "acto_origen_tipo",
+                    "acto_origen_numero",
+                    "acto_origen_fecha"
                 ],
                 "title": "MovimientoPersonal"
             },
@@ -54923,6 +55018,48 @@
                     },
                     "descripcion": {
                         "type": "string"
+                    },
+                    "base_legal": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "La base legal del documento (fase 6.1): la guardada \u2014congelada\nal suscribir\u2014 y la que pone su clase, para proponerla."
+                    },
+                    "base_legal_de_la_clase": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "casilla": {
+                        "type": "string",
+                        "description": "La casilla que marca en la rejilla del formulario del Ministerio.",
+                        "enum": [
+                            "Ingreso",
+                            "Nombramiento",
+                            "Ascenso",
+                            "Subrogaci\u00f3n",
+                            "Encargo",
+                            "Vacaciones",
+                            "Traslado",
+                            "Traspaso",
+                            "Cambio administrativo",
+                            "Intercambio",
+                            "Comisi\u00f3n de servicios",
+                            "Licencia",
+                            "Revalorizaci\u00f3n",
+                            "Reclasificaci\u00f3n",
+                            "Ubicaci\u00f3n",
+                            "Reintegro",
+                            "Restituci\u00f3n",
+                            "Renuncia",
+                            "Supresi\u00f3n",
+                            "Destituci\u00f3n",
+                            "Remoci\u00f3n",
+                            "Jubilaci\u00f3n",
+                            "Otro"
+                        ]
                     },
                     "observacion": {
                         "type": [
@@ -55241,6 +55378,26 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "acto_origen_tipo": {
+                        "anyOf": [
+                            {
+                                "description": "El decreto, acuerdo o resoluci\u00f3n que la origina (fase 6.1).",
+                                "$ref": "#/components/schemas/TipoActoDeOrigen"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "acto_origen_numero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "acto_origen_fecha": {
+                        "type": "string"
                     },
                     "informe_uath_numero": {
                         "type": [
@@ -55641,6 +55798,9 @@
                     "categoria",
                     "estado",
                     "descripcion",
+                    "base_legal",
+                    "base_legal_de_la_clase",
+                    "casilla",
                     "observacion",
                     "fecha_efectiva",
                     "fecha_inicio",
@@ -55682,6 +55842,9 @@
                     "efecto_aplicado_en",
                     "pendiente_de_vigencia",
                     "resolucion_numero",
+                    "acto_origen_tipo",
+                    "acto_origen_numero",
+                    "acto_origen_fecha",
                     "informe_uath_numero",
                     "causa_judicial_numero",
                     "unidad_judicial",
@@ -61715,6 +61878,31 @@
                         ],
                         "maxLength": 100
                     },
+                    "base_legal": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "El documento con el formato del Ministerio (fase 6.1): la base\nlegal que imprime \u2014se congela al suscribir\u2014 y el decreto,\nacuerdo o resoluci\u00f3n que la origina, que van juntos.",
+                        "maxLength": 1000
+                    },
+                    "acto_origen_tipo": {
+                        "$ref": "#/components/schemas/TipoActoDeOrigen"
+                    },
+                    "acto_origen_numero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 100
+                    },
+                    "acto_origen_fecha": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
                     "observacion": {
                         "type": [
                             "string",
@@ -63492,6 +63680,16 @@
                     "categoria_id"
                 ],
                 "title": "Ticket"
+            },
+            "TipoActoDeOrigen": {
+                "type": "string",
+                "description": "El acto que origina la acci\u00f3n de personal, como lo pide el encabezado del formulario del Ministerio: decreto, acuerdo o resoluci\u00f3n, con su n\u00famero y su fecha (dise\u00f1o, 6.5; fase 6.1). Sin \u00e9l, las tres casillas salen vac\u00edas.\n",
+                "enum": [
+                    "decreto",
+                    "acuerdo",
+                    "resolucion"
+                ],
+                "title": "TipoActoDeOrigen"
             },
             "TipoAnotacionAccion": {
                 "type": "string",
@@ -65883,6 +66081,31 @@
                             "null"
                         ],
                         "maxLength": 100
+                    },
+                    "base_legal": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "El documento con el formato del Ministerio (fase 6.1): la base\nlegal que imprime \u2014se congela al suscribir\u2014 y el decreto,\nacuerdo o resoluci\u00f3n que la origina, que van juntos.",
+                        "maxLength": 1000
+                    },
+                    "acto_origen_tipo": {
+                        "$ref": "#/components/schemas/TipoActoDeOrigen"
+                    },
+                    "acto_origen_numero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 100
+                    },
+                    "acto_origen_fecha": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
                     },
                     "observacion": {
                         "type": [

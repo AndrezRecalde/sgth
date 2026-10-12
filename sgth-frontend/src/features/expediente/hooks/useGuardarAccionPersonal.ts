@@ -125,6 +125,11 @@ export function useGuardarAccionPersonal({
             }),
         // Solo del formulario: el backend lo deduce de las fechas.
         orden_judicial: undefined,
+        // Vacía, el documento imprime la de la clase (fase 6.1).
+        base_legal: data.base_legal?.trim() || null,
+        acto_origen_tipo: data.acto_origen_tipo || null,
+        acto_origen_numero: data.acto_origen_numero?.trim() || null,
+        acto_origen_fecha: data.acto_origen_fecha || null,
       }
 
       if (edicion) {

@@ -34,6 +34,9 @@ class ClaseAccionPersonalResource extends JsonResource
             /** @var list<TipoNombramiento> */
             'nombramientos_elegibles'     => $clase->nombramientosElegibles(),
             'causales'                    => CausalAccionPersonalResource::collection($clase->causales()),
+            // La que el formulario propone para la explicación del documento;
+            // con causal, manda la de la causal (fase 6.1).
+            'base_legal'                  => $clase->baseLegal(),
             'pide_situacion_propuesta'    => $clase->pideSituacionPropuesta(),
             'pide_periodo'                => $clase->pidePeriodo(),
             'pide_institucion_destino'    => $clase->pideInstitucionDestino(),
