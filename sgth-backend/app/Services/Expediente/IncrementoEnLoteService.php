@@ -2,10 +2,13 @@
 
 namespace App\Services\Expediente;
 
+use App\Enums\CriterioTraspasoPuesto;
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\TipoMovimientoPersonal;
 use App\Enums\TipoNombramiento;
 use App\Exceptions\ReglaNegocioException;
+use App\Models\Estructura\Puesto;
+use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\LoteAccion;
 use App\Models\Expediente\MovimientoPersonal;
@@ -289,12 +292,37 @@ class IncrementoEnLoteService
             'dictamen_presupuestario_ref' => $lote->dictamen_presupuestario_ref,
             'parametros'                  => $lote->parametros,
             'contrato_colectivo_id'       => $lote->contrato_colectivo_id,
+            // El puesto y las unidades del traspaso (fase 7.1a).
+            'traspaso'                    => $lote->tipo === LoteAccion::TRASPASO_PUESTO ? $this->traspaso($lote) : null,
             'creado_por'                  => $lote->creadoPor?->servidor
                 ? trim($lote->creadoPor->servidor->nombre.' '.$lote->creadoPor->servidor->apellido)
                 : $lote->creadoPor?->usuario_ti,
             'created_at'                  => $lote->created_at?->toIso8601String(),
             'total'                       => $porEstado->sum(),
             'por_estado'                  => $porEstado->all(),
+        ];
+    }
+
+    /**
+     * Qué puesto y de qué unidad a cuál, y el criterio, con sus nombres.
+     *
+     * @return array{puesto_id: ?int, puesto: ?string, unidad_origen: ?string, unidad_destino: ?string, criterio: ?string}
+     */
+    private function traspaso(LoteAccion $lote): array
+    {
+        $p = $lote->parametros ?? [];
+        $nombreDe = fn ($id) => $id ? UnidadAdministrativa::find($id)?->nombre : null;
+
+        return [
+            'puesto_id'      => $p['puesto_id'] ?? null,
+            'puesto'         => isset($p['puesto_id'])
+                ? Puesto::withTrashed()->with('cargo:id,nombre')->find($p['puesto_id'])?->cargo?->nombre
+                : null,
+            'unidad_origen'  => $nombreDe($p['unidad_origen_id'] ?? null),
+            'unidad_destino' => $nombreDe($p['unidad_destino_id'] ?? null),
+            'criterio'       => isset($p['criterio'])
+                ? CriterioTraspasoPuesto::tryFrom($p['criterio'])?->etiqueta()
+                : null,
         ];
     }
 

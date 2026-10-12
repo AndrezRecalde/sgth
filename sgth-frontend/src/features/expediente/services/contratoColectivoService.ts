@@ -115,13 +115,24 @@ export type IncrementoEnLoteData = {
 
 export type LoteAccion = {
   id: number
-  tipo: 'incremento_obreros'
+  /** El incremento de los obreros (fase 4.6) o el traspaso de un puesto (7.1a). */
+  tipo: 'incremento_obreros' | 'traspaso_puesto'
   descripcion: string
   fecha_efectiva: string
+  /** El acuerdo o la cláusula; en el traspaso, el informe técnico de la UATH. */
   documento_origen: string
-  dictamen_presupuestario_ref: string
+  /** El traspaso no lo lleva: el puesto se va con su partida. */
+  dictamen_presupuestario_ref: string | null
   parametros: { modo: 'porcentaje' | 'monto'; valor: number; unidad_administrativa_id: number | null }
   contrato_colectivo_id: number | null
+  /** Qué puesto, de qué unidad a cuál y por qué criterio (fase 7.1a). */
+  traspaso?: {
+    puesto_id: number | null
+    puesto: string | null
+    unidad_origen: string | null
+    unidad_destino: string | null
+    criterio: string | null
+  } | null
   creado_por: string | null
   created_at: string | null
   total: number
@@ -214,5 +225,11 @@ export const loteAccionService = {
   descartar: (id: number, motivo: string) =>
     api
       .post<ApiResponse<{ anulados: number; lote: LoteAccionDetalle }>>(`/expediente/lotes-accion/${id}/descartar`, { motivo })
+      .then((r) => r.data),
+
+  /** Deja sin efecto el traspaso registrado, entero (fase 7.1a). */
+  revertir: (id: number, motivo: string) =>
+    api
+      .post<ApiResponse<{ anulados: number; lote: LoteAccionDetalle }>>(`/expediente/lotes-accion/${id}/revertir`, { motivo })
       .then((r) => r.data),
 }

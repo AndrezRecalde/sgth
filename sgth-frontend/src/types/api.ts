@@ -1291,6 +1291,16 @@ export type PuestoConRelaciones = {
     nombre?: string | null
     cedula?: string | null
   }[]
+  /**
+   * Ocupado —un contrato vigente, la reserva de un ascendido o una acción que
+   * espera su fecha—: la unidad cambia con el traspaso, el régimen no cambia y
+   * no se desactiva (fase 7.1a).
+   */
+  ocupado?: boolean
+  /** Ni ocupado ni con historia: se puede borrar. Si no, se desactiva. */
+  puede_eliminar?: boolean
+  /** Ni la autoridad electa, ni la jefatura, ni el de obreros se traspasan. */
+  admite_traspaso?: boolean
 }
 
 // ── Plantilla ────────────────────────────────────

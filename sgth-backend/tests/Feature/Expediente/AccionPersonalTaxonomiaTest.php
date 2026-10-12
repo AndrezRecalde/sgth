@@ -566,6 +566,8 @@ test('tieneDocumentoImprimible() cubre todo acto formal, que es todo lo que qued
         // de un obrero, con su hoja de registro interno (4.3).
         TipoMovimientoPersonal::ADENDA,
         TipoMovimientoPersonal::CAMBIO_LUGAR,
+        // Y el traspaso de puesto, una acción por ocupante (7.1a).
+        TipoMovimientoPersonal::TRASPASO_PUESTO,
     ];
 
     // La bitácora del expediente —novedad de contrato, cambio de puesto,

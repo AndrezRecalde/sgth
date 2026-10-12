@@ -405,6 +405,9 @@ final class EstructuraService implements EstructuraServiceInterface
                 'puestos.unidad_administrativa_id'
             )
             ->select('puestos.*')
+            // Si está ocupado y si tiene historia, para cada fila: la pantalla
+            // dice qué se puede editar y si se puede eliminar (fase 7.1a).
+            ->conOcupacion()
             ->when(
                 isset($filtros['unidad_administrativa_id']),
                 fn($q) => $q->where(
@@ -475,9 +478,17 @@ final class EstructuraService implements EstructuraServiceInterface
         return DB::transaction(function () use ($id, $datos) {
             $puesto = $this->obtenerPuesto($id);
 
-            if (isset($datos['es_jefe']) && $datos['es_jefe'] && !$puesto->es_jefe) {
-                $unidadId = $datos['unidad_administrativa_id'] ?? $puesto->unidad_administrativa_id;
-                
+            // Con un ocupante, la unidad cambia con el traspaso de puesto, y el
+            // régimen, el estado y las plazas tienen su límite (fase 7.1a).
+            ProteccionDePuestoOcupado::validarEdicion($puesto, $datos);
+
+            // Una sola jefatura por unidad, también al llevar una jefatura a
+            // otra unidad: antes solo se miraba al marcarla, y moverla a una
+            // unidad con jefe reventaba el índice único de la base.
+            $esJefe = (bool) ($datos['es_jefe'] ?? $puesto->es_jefe);
+            $unidadId = (int) ($datos['unidad_administrativa_id'] ?? $puesto->unidad_administrativa_id);
+
+            if ($esJefe && (! $puesto->es_jefe || $unidadId !== (int) $puesto->unidad_administrativa_id)) {
                 $existeJefe = Puesto::where('unidad_administrativa_id', $unidadId)
                     ->where('es_jefe', true)
                     ->where('id', '!=', $puesto->id)
@@ -496,6 +507,11 @@ final class EstructuraService implements EstructuraServiceInterface
     public function eliminarPuesto(int $id): void
     {
         $puesto = $this->obtenerPuesto($id);
+
+        // Ni ocupado ni con historia: el ocupante se quedaba sin puesto, la
+        // nómina lo saltaba y sus documentos salían en blanco (fase 7.1a).
+        ProteccionDePuestoOcupado::validarEliminacion($puesto);
+
         $puesto->delete();
     }
 }

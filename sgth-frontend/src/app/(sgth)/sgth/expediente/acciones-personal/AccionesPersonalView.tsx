@@ -14,7 +14,7 @@ import { AusenciasTemporalesPanel } from '@/features/expediente/components/Ausen
 import { PeriodosDePruebaPanel } from '@/features/expediente/components/PeriodosDePruebaPanel'
 import { AutoridadesElectasPanel } from '@/features/expediente/components/AutoridadesElectasPanel'
 import { TerminacionesObrerosPanel } from '@/features/expediente/components/TerminacionesObrerosPanel'
-import { IncrementosEnLotePanel } from '@/features/expediente/components/IncrementosEnLotePanel'
+import { ActosEnLotePanel } from '@/features/expediente/components/ActosEnLotePanel'
 import { ContratoColectivoPanel } from '@/features/expediente/components/ContratoColectivoPanel'
 import { SolicitudesDelPortalPanel } from '@/features/expediente/components/SolicitudesDelPortalPanel'
 import { usePuedePrepararAccion } from '@/features/expediente/hooks/usePuedePrepararAccion'
@@ -81,7 +81,7 @@ export function AccionesPersonalView() {
             Terminaciones de obreros
           </Tabs.Tab>
           <Tabs.Tab value="lotes" leftSection={<IconStack2 size={16} />}>
-            Incrementos en lote
+            Actos en lote
           </Tabs.Tab>
           <Tabs.Tab value="contrato-colectivo" leftSection={<IconFileText size={16} />}>
             Contrato colectivo
@@ -141,7 +141,7 @@ export function AccionesPersonalView() {
 
         {/* Los obreros: el incremento en lote y el contrato colectivo (fase 4.6). */}
         <Tabs.Panel value="lotes">
-          <IncrementosEnLotePanel />
+          <ActosEnLotePanel />
         </Tabs.Panel>
 
         <Tabs.Panel value="contrato-colectivo">

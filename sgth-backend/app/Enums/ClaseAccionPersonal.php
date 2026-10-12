@@ -51,6 +51,7 @@ enum ClaseAccionPersonal: string
     case ASUNCION_DEFINITIVA       = 'asuncion_definitiva';
     case ADENDA                    = 'adenda';
     case CAMBIO_LUGAR              = 'cambio_lugar';
+    case TRASPASO_PUESTO           = 'traspaso_puesto';
 
     public function etiqueta(): string
     {
@@ -76,6 +77,7 @@ enum ClaseAccionPersonal: string
             self::ASUNCION_DEFINITIVA       => 'Asunción Definitiva',
             self::ADENDA                    => 'Adenda al contrato',
             self::CAMBIO_LUGAR              => 'Cambio de Lugar de Trabajo',
+            self::TRASPASO_PUESTO           => 'Traspaso de Puesto',
         };
     }
 
@@ -89,6 +91,7 @@ enum ClaseAccionPersonal: string
             self::INICIO_PERIODO => FamiliaAccionPersonal::INGRESO,
 
             self::TRASLADO,
+            self::TRASPASO_PUESTO,
             self::ASCENSO,
             self::ADENDA,
             self::INTERCAMBIO_VOLUNTARIO,
@@ -133,9 +136,12 @@ enum ClaseAccionPersonal: string
         // en el comando diario o en su pantalla, al cumplirse los tres meses.
         //
         // Ni la asunción definitiva (fase 4.1b): nace del cese del Prefecto.
+        //
+        // Ni el traspaso de puesto (fase 7.1a): nace en Estructura, en un lote
+        // con un acto por ocupante, porque lo que cambia es el puesto.
         return ! in_array($this, [
             self::SUBROGACION, self::ENCARGO, self::REINTEGRO, self::SANCION, self::NOMBRAMIENTO_DEFINITIVO,
-            self::ASUNCION_DEFINITIVA,
+            self::ASUNCION_DEFINITIVA, self::TRASPASO_PUESTO,
         ], true);
     }
 
@@ -301,6 +307,7 @@ enum ClaseAccionPersonal: string
             self::ASUNCION_DEFINITIVA => [TipoMovimientoPersonal::ASUNCION_DEFINITIVA, null],
             self::ADENDA => [TipoMovimientoPersonal::ADENDA, null],
             self::CAMBIO_LUGAR => [TipoMovimientoPersonal::CAMBIO_LUGAR, null],
+            self::TRASPASO_PUESTO => [TipoMovimientoPersonal::TRASPASO_PUESTO, null],
         };
     }
 
@@ -362,6 +369,7 @@ enum ClaseAccionPersonal: string
                 TipoMovimientoPersonal::ASUNCION_DEFINITIVA       => self::ASUNCION_DEFINITIVA,
                 TipoMovimientoPersonal::ADENDA                    => self::ADENDA,
                 TipoMovimientoPersonal::CAMBIO_LUGAR              => self::CAMBIO_LUGAR,
+                TipoMovimientoPersonal::TRASPASO_PUESTO           => self::TRASPASO_PUESTO,
                 default                                           => null,
             },
         };
@@ -443,6 +451,7 @@ enum ClaseAccionPersonal: string
             self::RESTITUCION               => 'LOSEP Art. 46',
             self::ASCENSO                   => 'LOSEP Art. 68; Reglamento a la LOSEP Arts. 190 y 191',
             self::TRASLADO                  => 'LOSEP Arts. 35 y 36',
+            self::TRASPASO_PUESTO           => 'LOSEP Art. 37; Reglamento a la LOSEP Art. 69',
             self::INTERCAMBIO_VOLUNTARIO    => 'LOSEP Arts. 39 y 40',
             self::COMISION_CON_REMUNERACION => 'LOSEP Art. 30',
             self::COMISION_SIN_REMUNERACION => 'LOSEP Art. 31',
@@ -469,6 +478,7 @@ enum ClaseAccionPersonal: string
             self::RESTITUCION               => CasillaAccionPersonal::RESTITUCION,
             self::ASCENSO                   => CasillaAccionPersonal::ASCENSO,
             self::TRASLADO                  => CasillaAccionPersonal::TRASLADO,
+            self::TRASPASO_PUESTO           => CasillaAccionPersonal::TRASPASO,
             self::INTERCAMBIO_VOLUNTARIO    => CasillaAccionPersonal::INTERCAMBIO,
             self::COMISION_CON_REMUNERACION,
             self::COMISION_SIN_REMUNERACION => CasillaAccionPersonal::COMISION_SERVICIOS,

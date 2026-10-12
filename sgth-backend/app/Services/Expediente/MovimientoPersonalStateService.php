@@ -81,6 +81,18 @@ class MovimientoPersonalStateService
 
         $this->assertTransicionPermitida($origen, $destino);
 
+        // El traspaso de un puesto se suscribe, se registra y se anula con su
+        // lote, todos a la vez: un puesto no puede quedar con unos ocupantes en
+        // cada unidad (fase 7.1a). Notificar, sí, a cada uno por su lado.
+        if ($movimiento->esTraspasoDePuesto() && $destino !== EstadoAccionPersonal::NOTIFICADA
+            && ! ($datos['por_el_lote'] ?? false)
+        ) {
+            throw new ReglaNegocioException(
+                "Este acto es parte del traspaso del lote #{$movimiento->lote_id}: se suscribe, se registra y se "
+                    .'anula desde el lote, con los de los demás ocupantes.'
+            );
+        }
+
         if ($destino === EstadoAccionPersonal::NOTIFICADA && ! $this->seNotifica($movimiento)) {
             throw new ReglaNegocioException(
                 'Un registro del contrato no se notifica: el contrato lo firmó la persona.'
@@ -132,7 +144,9 @@ class MovimientoPersonalStateService
             $destinos,
             fn (EstadoAccionPersonal $destino) => (($permiso = $destino->permisoParaLlegar()) === null
                 || $usuario->can($permiso->value))
-                && ($destino !== EstadoAccionPersonal::NOTIFICADA || $this->seNotifica($movimiento)),
+                && ($destino !== EstadoAccionPersonal::NOTIFICADA || $this->seNotifica($movimiento))
+                // El traspaso de puesto se tramita desde su lote (fase 7.1a).
+                && (! $movimiento->esTraspasoDePuesto() || $destino === EstadoAccionPersonal::NOTIFICADA),
         ));
     }
 
@@ -540,6 +554,10 @@ class MovimientoPersonalStateService
                     : ['puede_marcar' => $movimiento->puede_marcar]),
                 'estado'                   => 'vigente',
             ], $movimiento);
+        } elseif ($movimiento->esTraspasoDePuesto()) {
+            // El puesto pasa a la unidad nueva, y el vínculo del ocupante con
+            // él (LOSEP Art. 37; fase 7.1a).
+            $this->contratoServidorService->traspasarConElPuesto($movimiento);
         } elseif ($movimiento->reubicaAlServidor()) {
             // El traspaso y la prestación de servicios reubican dentro del
             // mismo vínculo. Los otros tres subtipos del tipo paraguas no entran
@@ -1121,6 +1139,11 @@ class MovimientoPersonalStateService
 
         if ($movimiento->cambiaElContratoDeTrabajo()) {
             $this->contratoServidorService->deshacerCambioDelObrero($movimiento);
+            return;
+        }
+
+        if ($movimiento->esTraspasoDePuesto()) {
+            $this->contratoServidorService->deshacerTraspasoConElPuesto($movimiento);
             return;
         }
 

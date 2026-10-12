@@ -16,7 +16,9 @@ use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\EventoVinculo;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
+use App\Models\Expediente\LoteAccion;
 use App\Models\User;
+use App\Observers\PuestoObserver;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -852,6 +854,79 @@ class ContratoServidorService
     }
 
     /**
+     * El traspaso de puesto (LOSEP Art. 37; fase 7.1a): el ocupante sigue en
+     * su puesto, que pasa con su partida a la unidad nueva. El primer acto del
+     * lote que surte efecto mueve el puesto; cada uno, el vínculo de su
+     * ocupante, y con él la copia del servidor —de la que salen su jefe, el
+     * distributivo, Permisos y Vacaciones—.
+     */
+    public function traspasarConElPuesto(MovimientoPersonal $traspaso): void
+    {
+        $vigente = Servidor::with('contratoVigente')->findOrFail($traspaso->servidor_id)->contratoVigente;
+
+        if (! $vigente || (int) $vigente->puesto_id !== (int) $traspaso->puesto_destino_id) {
+            throw new ReglaNegocioException(
+                'El servidor ya no ocupa el puesto que se traspasa: revise su vínculo antes de registrar el traspaso.'
+            );
+        }
+
+        $puesto = Puesto::findOrFail($traspaso->puesto_destino_id);
+
+        if ((int) $puesto->unidad_administrativa_id !== (int) $traspaso->unidad_destino_id) {
+            PuestoObserver::conCausa(
+                'Traspaso de puesto '.($traspaso->codigo_registro ?? "#{$traspaso->id}")
+                    .($traspaso->lote_id ? ", lote #{$traspaso->lote_id}" : ''),
+                fn () => $puesto->update(['unidad_administrativa_id' => $traspaso->unidad_destino_id]),
+            );
+        }
+
+        $vigente->update(['unidad_administrativa_id' => $traspaso->unidad_destino_id]);
+
+        $this->sincronizarPuestoDesdeVinculo($traspaso->servidor_id);
+    }
+
+    /**
+     * Anular un acto del traspaso: su ocupante vuelve a la unidad de origen, y
+     * el puesto, cuando ya no queda ningún acto del lote con efecto. Se anula
+     * desde el lote, todos a la vez.
+     */
+    public function deshacerTraspasoConElPuesto(MovimientoPersonal $traspaso): void
+    {
+        $vigente = Servidor::with('contratoVigente')->findOrFail($traspaso->servidor_id)->contratoVigente;
+
+        if ($vigente && (int) $vigente->puesto_id === (int) $traspaso->puesto_destino_id && $traspaso->unidad_origen_id) {
+            $vigente->update(['unidad_administrativa_id' => $traspaso->unidad_origen_id]);
+            $this->sincronizarPuestoDesdeVinculo($traspaso->servidor_id);
+        }
+
+        $quedan = MovimientoPersonal::query()
+            ->where('lote_id', $traspaso->lote_id)
+            ->where('id', '!=', $traspaso->id)
+            ->whereIn('estado', [EstadoAccionPersonal::REGISTRADA->value, EstadoAccionPersonal::NOTIFICADA->value])
+            ->whereNotNull('efecto_aplicado_en')
+            ->exists();
+
+        if ($quedan) {
+            return;
+        }
+
+        // La unidad que tenía el puesto al prepararse el lote.
+        $origen = $traspaso->lote_id
+            ? (LoteAccion::find($traspaso->lote_id)?->parametros['unidad_origen_id'] ?? null)
+            : null;
+        $origen ??= $traspaso->unidad_origen_id;
+        $puesto = Puesto::find($traspaso->puesto_destino_id);
+
+        if ($puesto && $origen && (int) $puesto->unidad_administrativa_id !== (int) $origen) {
+            PuestoObserver::conCausa(
+                'Anulación del traspaso '.($traspaso->codigo_registro ?? "#{$traspaso->id}")
+                    .($traspaso->lote_id ? ", lote #{$traspaso->lote_id}" : ''),
+                fn () => $puesto->update(['unidad_administrativa_id' => $origen]),
+            );
+        }
+    }
+
+    /**
      * El nombramiento definitivo (LOSEP 17 b.5; fase 3.2): el provisional de
      * prueba pasa a permanente en el mismo vínculo, que no se cierra, así que
      * la antigüedad sigue corriendo. El número, la partida y la remuneración se
@@ -969,7 +1044,10 @@ class ContratoServidorService
             'tipo_nombramiento'         => TipoNombramiento::PERMANENTE->value,
             'supuesto_provisional'      => null,
             'puesto_id'                 => $ascenso->puesto_origen_id,
-            'unidad_administrativa_id'  => $ascenso->unidad_origen_id ?? $vigente->unidad_administrativa_id,
+            // La unidad en que está hoy el puesto reservado: pudo traspasarse
+            // mientras duraba la prueba (fase 7.1a).
+            'unidad_administrativa_id'  => Puesto::find($ascenso->puesto_origen_id)?->unidad_administrativa_id
+                ?? $ascenso->unidad_origen_id ?? $vigente->unidad_administrativa_id,
             'partida_presupuestaria_id' => $ascenso->partida_origen_id ?? $vigente->partida_presupuestaria_id,
             'remuneracion'              => $ascenso->remuneracion_origen ?? $vigente->remuneracion,
             'puesto_reservado_id'       => null,

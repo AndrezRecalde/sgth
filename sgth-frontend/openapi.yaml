@@ -25076,7 +25076,10 @@
                                                         "type": "string"
                                                     },
                                                     "dictamen_presupuestario_ref": {
-                                                        "type": "string"
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
                                                     },
                                                     "parametros": {
                                                         "type": "array",
@@ -25086,6 +25089,47 @@
                                                         "type": [
                                                             "integer",
                                                             "null"
+                                                        ]
+                                                    },
+                                                    "traspaso": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "description": "El puesto y las unidades del traspaso (fase 7.1a).",
+                                                        "properties": {
+                                                            "puesto_id": {},
+                                                            "puesto": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "unidad_origen": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "unidad_destino": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "criterio": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "puesto_id",
+                                                            "puesto",
+                                                            "unidad_origen",
+                                                            "unidad_destino",
+                                                            "criterio"
                                                         ]
                                                     },
                                                     "creado_por": {
@@ -25113,6 +25157,7 @@
                                                     "dictamen_presupuestario_ref",
                                                     "parametros",
                                                     "contrato_colectivo_id",
+                                                    "traspaso",
                                                     "creado_por",
                                                     "created_at",
                                                     "total",
@@ -25357,7 +25402,10 @@
                                                     "type": "string"
                                                 },
                                                 "dictamen_presupuestario_ref": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "parametros": {
                                                     "type": "array",
@@ -25367,6 +25415,47 @@
                                                     "type": [
                                                         "integer",
                                                         "null"
+                                                    ]
+                                                },
+                                                "traspaso": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "description": "El puesto y las unidades del traspaso (fase 7.1a).",
+                                                    "properties": {
+                                                        "puesto_id": {},
+                                                        "puesto": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "unidad_origen": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "unidad_destino": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "criterio": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "puesto_id",
+                                                        "puesto",
+                                                        "unidad_origen",
+                                                        "unidad_destino",
+                                                        "criterio"
                                                     ]
                                                 },
                                                 "creado_por": {
@@ -25441,6 +25530,350 @@
                                                 "dictamen_presupuestario_ref",
                                                 "parametros",
                                                 "contrato_colectivo_id",
+                                                "traspaso",
+                                                "creado_por",
+                                                "created_at",
+                                                "total",
+                                                "por_estado",
+                                                "actos"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/lotes-accion/traspaso-puesto/previsualizar": {
+            "post": {
+                "operationId": "loteAccion.previsualizarTraspaso",
+                "summary": "Qui\u00e9nes recibir\u00edan el acto del traspaso, y lo que lo impide (fase 7.1a)",
+                "tags": [
+                    "LoteAccion"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TraspasoDePuestoRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Vista previa del traspaso."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "puesto": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "cargo": {
+                                                            "type": "string"
+                                                        },
+                                                        "unidad": {
+                                                            "type": "string"
+                                                        },
+                                                        "es_jefe": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "cargo",
+                                                        "unidad",
+                                                        "es_jefe"
+                                                    ]
+                                                },
+                                                "ocupantes": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "servidor_id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "nombre": {
+                                                                "type": "string"
+                                                            },
+                                                            "cedula": {
+                                                                "type": "string"
+                                                            },
+                                                            "tipo_nombramiento": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "servidor_id",
+                                                            "nombre",
+                                                            "cedula",
+                                                            "tipo_nombramiento"
+                                                        ]
+                                                    }
+                                                },
+                                                "impedimentos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "anyOf": [
+                                                            {
+                                                                "type": "null"
+                                                            },
+                                                            {
+                                                                "type": "string"
+                                                            }
+                                                        ]
+                                                    }
+                                                },
+                                                "criterios": {
+                                                    "type": "array",
+                                                    "description": "Los del Art. 69, numeral 1, para el selector: as\u00ed la pantalla no\nlos copia.",
+                                                    "items": {}
+                                                }
+                                            },
+                                            "required": [
+                                                "puesto",
+                                                "ocupantes",
+                                                "impedimentos",
+                                                "criterios"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/lotes-accion/traspaso-puesto": {
+            "post": {
+                "operationId": "loteAccion.traspasar",
+                "summary": "Prepara un borrador por ocupante, todos o ninguno (fase 7.1a)",
+                "tags": [
+                    "LoteAccion"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TraspasoDePuestoRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Traspaso de puesto preparado."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "tipo": {
+                                                    "type": "string"
+                                                },
+                                                "descripcion": {
+                                                    "type": "string"
+                                                },
+                                                "fecha_efectiva": {
+                                                    "type": "string"
+                                                },
+                                                "documento_origen": {
+                                                    "type": "string"
+                                                },
+                                                "dictamen_presupuestario_ref": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "parametros": {
+                                                    "type": "array",
+                                                    "items": {}
+                                                },
+                                                "contrato_colectivo_id": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "traspaso": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "description": "El puesto y las unidades del traspaso (fase 7.1a).",
+                                                    "properties": {
+                                                        "puesto_id": {},
+                                                        "puesto": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "unidad_origen": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "unidad_destino": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "criterio": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "puesto_id",
+                                                        "puesto",
+                                                        "unidad_origen",
+                                                        "unidad_destino",
+                                                        "criterio"
+                                                    ]
+                                                },
+                                                "creado_por": {
+                                                    "type": "string"
+                                                },
+                                                "created_at": {
+                                                    "type": "string"
+                                                },
+                                                "total": {
+                                                    "type": "string"
+                                                },
+                                                "por_estado": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "integer"
+                                                    }
+                                                },
+                                                "actos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "movimiento_id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "codigo_registro": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "estado": {
+                                                                "type": "string"
+                                                            },
+                                                            "nombre": {
+                                                                "type": "string"
+                                                            },
+                                                            "cedula": {
+                                                                "type": "string"
+                                                            },
+                                                            "remuneracion_actual": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "remuneracion_nueva": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "movimiento_id",
+                                                            "codigo_registro",
+                                                            "estado",
+                                                            "nombre",
+                                                            "cedula",
+                                                            "remuneracion_actual",
+                                                            "remuneracion_nueva"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "tipo",
+                                                "descripcion",
+                                                "fecha_efectiva",
+                                                "documento_origen",
+                                                "dictamen_presupuestario_ref",
+                                                "parametros",
+                                                "contrato_colectivo_id",
+                                                "traspaso",
                                                 "creado_por",
                                                 "created_at",
                                                 "total",
@@ -25522,7 +25955,10 @@
                                                     "type": "string"
                                                 },
                                                 "dictamen_presupuestario_ref": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "parametros": {
                                                     "type": "array",
@@ -25532,6 +25968,47 @@
                                                     "type": [
                                                         "integer",
                                                         "null"
+                                                    ]
+                                                },
+                                                "traspaso": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "description": "El puesto y las unidades del traspaso (fase 7.1a).",
+                                                    "properties": {
+                                                        "puesto_id": {},
+                                                        "puesto": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "unidad_origen": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "unidad_destino": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "criterio": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "puesto_id",
+                                                        "puesto",
+                                                        "unidad_origen",
+                                                        "unidad_destino",
+                                                        "criterio"
                                                     ]
                                                 },
                                                 "creado_por": {
@@ -25606,6 +26083,7 @@
                                                 "dictamen_presupuestario_ref",
                                                 "parametros",
                                                 "contrato_colectivo_id",
+                                                "traspaso",
                                                 "creado_por",
                                                 "created_at",
                                                 "total",
@@ -25639,7 +26117,7 @@
         "/v1/expediente/lotes-accion/{lote}/registrar": {
             "post": {
                 "operationId": "loteAccion.registrar",
-                "summary": "Suscribe y registra lo que del lote sigue en tr\u00e1mite. Pide los dos\npermisos, como hacerlo acto por acto",
+                "summary": "Suscribe y registra lo que del lote sigue en tr\u00e1mite. Pide los dos\npermisos, como hacerlo acto por acto. El traspaso, todos o ninguno",
                 "tags": [
                     "LoteAccion"
                 ],
@@ -25671,30 +26149,64 @@
                                         "datos": {
                                             "type": "object",
                                             "properties": {
-                                                "registrados": {
-                                                    "type": "integer"
-                                                },
-                                                "fallidos": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "movimiento_id": {
-                                                                "type": "integer"
+                                                "": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "registrados": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "fallidos": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "minItems": 0,
+                                                                    "maxItems": 0,
+                                                                    "additionalItems": false
+                                                                }
                                                             },
-                                                            "nombre": {
-                                                                "type": "string"
-                                                            },
-                                                            "mensaje": {
-                                                                "type": "string"
-                                                            }
+                                                            "required": [
+                                                                "registrados",
+                                                                "fallidos"
+                                                            ]
                                                         },
-                                                        "required": [
-                                                            "movimiento_id",
-                                                            "nombre",
-                                                            "mensaje"
-                                                        ]
-                                                    }
+                                                        {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "registrados": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "fallidos": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "movimiento_id": {
+                                                                                "type": "integer"
+                                                                            },
+                                                                            "nombre": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "mensaje": {
+                                                                                "type": "string"
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "movimiento_id",
+                                                                            "nombre",
+                                                                            "mensaje"
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "registrados",
+                                                                "fallidos"
+                                                            ]
+                                                        }
+                                                    ]
                                                 },
                                                 "lote": {
                                                     "type": "object",
@@ -25715,7 +26227,10 @@
                                                             "type": "string"
                                                         },
                                                         "dictamen_presupuestario_ref": {
-                                                            "type": "string"
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
                                                         },
                                                         "parametros": {
                                                             "type": "array",
@@ -25725,6 +26240,47 @@
                                                             "type": [
                                                                 "integer",
                                                                 "null"
+                                                            ]
+                                                        },
+                                                        "traspaso": {
+                                                            "type": [
+                                                                "object",
+                                                                "null"
+                                                            ],
+                                                            "description": "El puesto y las unidades del traspaso (fase 7.1a).",
+                                                            "properties": {
+                                                                "puesto_id": {},
+                                                                "puesto": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "unidad_origen": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "unidad_destino": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "criterio": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "puesto_id",
+                                                                "puesto",
+                                                                "unidad_origen",
+                                                                "unidad_destino",
+                                                                "criterio"
                                                             ]
                                                         },
                                                         "creado_por": {
@@ -25799,6 +26355,7 @@
                                                         "dictamen_presupuestario_ref",
                                                         "parametros",
                                                         "contrato_colectivo_id",
+                                                        "traspaso",
                                                         "creado_por",
                                                         "created_at",
                                                         "total",
@@ -25808,8 +26365,7 @@
                                                 }
                                             },
                                             "required": [
-                                                "registrados",
-                                                "fallidos",
+                                                null,
                                                 "lote"
                                             ]
                                         },
@@ -25913,7 +26469,10 @@
                                                             "type": "string"
                                                         },
                                                         "dictamen_presupuestario_ref": {
-                                                            "type": "string"
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
                                                         },
                                                         "parametros": {
                                                             "type": "array",
@@ -25923,6 +26482,47 @@
                                                             "type": [
                                                                 "integer",
                                                                 "null"
+                                                            ]
+                                                        },
+                                                        "traspaso": {
+                                                            "type": [
+                                                                "object",
+                                                                "null"
+                                                            ],
+                                                            "description": "El puesto y las unidades del traspaso (fase 7.1a).",
+                                                            "properties": {
+                                                                "puesto_id": {},
+                                                                "puesto": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "unidad_origen": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "unidad_destino": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "criterio": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "puesto_id",
+                                                                "puesto",
+                                                                "unidad_origen",
+                                                                "unidad_destino",
+                                                                "criterio"
                                                             ]
                                                         },
                                                         "creado_por": {
@@ -25997,6 +26597,252 @@
                                                         "dictamen_presupuestario_ref",
                                                         "parametros",
                                                         "contrato_colectivo_id",
+                                                        "traspaso",
+                                                        "creado_por",
+                                                        "created_at",
+                                                        "total",
+                                                        "por_estado",
+                                                        "actos"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "anulados",
+                                                "lote"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/lotes-accion/{lote}/revertir": {
+            "post": {
+                "operationId": "loteAccion.revertir",
+                "summary": "Deja sin efecto el traspaso registrado: anula todos sus actos, y el\npuesto y sus ocupantes vuelven a la unidad de origen (fase 7.1a)",
+                "tags": [
+                    "LoteAccion"
+                ],
+                "parameters": [
+                    {
+                        "name": "lote",
+                        "in": "path",
+                        "required": true,
+                        "description": "The lote ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "motivo": {
+                                        "type": "string",
+                                        "minLength": 5,
+                                        "maxLength": 300
+                                    }
+                                },
+                                "required": [
+                                    "motivo"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string"
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "anulados": {
+                                                    "type": "integer"
+                                                },
+                                                "lote": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "tipo": {
+                                                            "type": "string"
+                                                        },
+                                                        "descripcion": {
+                                                            "type": "string"
+                                                        },
+                                                        "fecha_efectiva": {
+                                                            "type": "string"
+                                                        },
+                                                        "documento_origen": {
+                                                            "type": "string"
+                                                        },
+                                                        "dictamen_presupuestario_ref": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "parametros": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        },
+                                                        "contrato_colectivo_id": {
+                                                            "type": [
+                                                                "integer",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "traspaso": {
+                                                            "type": [
+                                                                "object",
+                                                                "null"
+                                                            ],
+                                                            "description": "El puesto y las unidades del traspaso (fase 7.1a).",
+                                                            "properties": {
+                                                                "puesto_id": {},
+                                                                "puesto": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "unidad_origen": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "unidad_destino": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "criterio": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "puesto_id",
+                                                                "puesto",
+                                                                "unidad_origen",
+                                                                "unidad_destino",
+                                                                "criterio"
+                                                            ]
+                                                        },
+                                                        "creado_por": {
+                                                            "type": "string"
+                                                        },
+                                                        "created_at": {
+                                                            "type": "string"
+                                                        },
+                                                        "total": {
+                                                            "type": "string"
+                                                        },
+                                                        "por_estado": {
+                                                            "type": "object",
+                                                            "additionalProperties": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "actos": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "movimiento_id": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "codigo_registro": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "estado": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "nombre": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "cedula": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "remuneracion_actual": {
+                                                                        "type": [
+                                                                            "number",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "remuneracion_nueva": {
+                                                                        "type": [
+                                                                            "number",
+                                                                            "null"
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "movimiento_id",
+                                                                    "codigo_registro",
+                                                                    "estado",
+                                                                    "nombre",
+                                                                    "cedula",
+                                                                    "remuneracion_actual",
+                                                                    "remuneracion_nueva"
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "tipo",
+                                                        "descripcion",
+                                                        "fecha_efectiva",
+                                                        "documento_origen",
+                                                        "dictamen_presupuestario_ref",
+                                                        "parametros",
+                                                        "contrato_colectivo_id",
+                                                        "traspaso",
                                                         "creado_por",
                                                         "created_at",
                                                         "total",
@@ -49561,7 +50407,8 @@
                     "licencia_consejo",
                     "asuncion_definitiva",
                     "adenda",
-                    "cambio_lugar"
+                    "cambio_lugar",
+                    "traspaso_puesto"
                 ],
                 "title": "ClaseAccionPersonal"
             },
@@ -49594,7 +50441,8 @@
                             "Licencia concedida por el Consejo",
                             "Asunci\u00f3n Definitiva",
                             "Adenda al contrato",
-                            "Cambio de Lugar de Trabajo"
+                            "Cambio de Lugar de Trabajo",
+                            "Traspaso de Puesto"
                         ]
                     },
                     "familia": {
@@ -49631,6 +50479,7 @@
                             "LOSEP Art. 46",
                             "LOSEP Art. 68; Reglamento a la LOSEP Arts. 190 y 191",
                             "LOSEP Arts. 35 y 36",
+                            "LOSEP Art. 37; Reglamento a la LOSEP Art. 69",
                             "LOSEP Arts. 39 y 40",
                             "LOSEP Art. 30",
                             "LOSEP Art. 31",
@@ -50761,6 +51610,22 @@
                     "updated_at"
                 ],
                 "title": "CriterioEvaluacion"
+            },
+            "CriterioTraspasoPuesto": {
+                "type": "string",
+                "description": "Por qu\u00e9 se traspasa un puesto a otra unidad de la misma instituci\u00f3n: los criterios del Reglamento a la LOSEP, Art. 69, numeral 1 (fase 7.1a). El informe t\u00e9cnico de la UATH dice cu\u00e1l aplica.\n",
+                "enum": [
+                    "reorganizacion_interna",
+                    "nuevas_atribuciones",
+                    "nuevas_estructuras",
+                    "reforma_de_estructura",
+                    "desconcentracion",
+                    "simplificacion_de_tramites",
+                    "evitar_duplicacion",
+                    "racionalizacion",
+                    "reglamento_interno"
+                ],
+                "title": "CriterioTraspasoPuesto"
             },
             "CuentaBancariaServidor": {
                 "type": "object",
@@ -58499,6 +59364,17 @@
                     "rmu": {
                         "type": "string"
                     },
+                    "ocupado": {
+                        "type": "boolean",
+                        "description": "Ocupado, la unidad cambia con el traspaso y no se desactiva;\ncon historia, no se elimina (fase 7.1a)."
+                    },
+                    "puede_eliminar": {
+                        "type": "boolean"
+                    },
+                    "admite_traspaso": {
+                        "type": "boolean",
+                        "description": "Ni la autoridad electa, ni la jefatura, ni el de obreros se\ntraspasan: la pantalla no lo ofrece."
+                    },
                     "cargo": {
                         "type": "object",
                         "properties": {
@@ -58632,6 +59508,9 @@
                     "es_jefe",
                     "activo",
                     "rmu",
+                    "ocupado",
+                    "puede_eliminar",
+                    "admite_traspaso",
                     "ocupantes"
                 ],
                 "title": "PuestoResource"
@@ -64870,7 +65749,8 @@
                     "licencia_consejo",
                     "asuncion_definitiva",
                     "adenda",
-                    "cambio_lugar"
+                    "cambio_lugar",
+                    "traspaso_puesto"
                 ],
                 "title": "TipoMovimientoPersonal"
             },
@@ -65283,6 +66163,43 @@
                     "estado"
                 ],
                 "title": "TransicionarVistoBuenoRequest"
+            },
+            "TraspasoDePuestoRequest": {
+                "type": "object",
+                "description": "El traspaso de un puesto a otra unidad (LOSEP Art. 37; Reglamento a la LOSEP\nArt. 69; fase 7.1a). La vista previa pide solo el puesto y, si la hay, la\nunidad; prepararlo pide adem\u00e1s el informe t\u00e9cnico de la UATH, su criterio,\nla explicaci\u00f3n y la fecha en que rige.",
+                "properties": {
+                    "puesto_id": {
+                        "type": "integer"
+                    },
+                    "unidad_destino_id": {
+                        "type": "integer"
+                    },
+                    "criterio": {
+                        "$ref": "#/components/schemas/CriterioTraspasoPuesto"
+                    },
+                    "informe_uath_numero": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "descripcion": {
+                        "type": "string",
+                        "minLength": 10,
+                        "maxLength": 1000
+                    },
+                    "fecha_efectiva": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "puesto_id",
+                    "unidad_destino_id",
+                    "criterio",
+                    "informe_uath_numero",
+                    "descripcion",
+                    "fecha_efectiva"
+                ],
+                "title": "TraspasoDePuestoRequest"
             },
             "Triaje": {
                 "type": "object",

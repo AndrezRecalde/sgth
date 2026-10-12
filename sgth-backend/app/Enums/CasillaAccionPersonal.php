@@ -12,8 +12,9 @@ namespace App\Enums;
  * nombre o de orden, se corrige aquí y en ningún otro sitio.
  *
  * Varias no las usa todavía ninguna clase: las vacaciones no son acción de
- * personal [TH N11], y el traspaso, la revalorización, la reclasificación, la
- * ubicación y la supresión llegan con las operaciones sobre puestos (fase 7).
+ * personal [TH N11], y la revalorización, la reclasificación, la ubicación y la
+ * supresión llegan con las operaciones sobre puestos (fase 7). El traspaso, el
+ * del puesto, llegó en la 7.1a.
  */
 enum CasillaAccionPersonal: string
 {

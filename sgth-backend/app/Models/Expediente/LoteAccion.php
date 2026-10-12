@@ -13,7 +13,8 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * Actos que nacen juntos (diseño de Acciones de Personal, 8.5; fase 4.6). Hoy
  * el incremento de remuneración de los obreros, por la tabla sectorial o el
  * contrato colectivo: un acto por obrero, cada uno con su hoja de registro
- * interno. En la fase 7, la revisión de clasificación y el traspaso de puestos.
+ * interno. Desde la fase 7.1a, el traspaso de un puesto: un acto por ocupante,
+ * que se registran y se anulan juntos. En la 7.1b, la revisión de clasificación.
  *
  * El lote no reemplaza a sus actos: cada uno se tramita y se anula por sí
  * mismo. El lote guarda lo común —el documento de origen, el dictamen, la
@@ -24,6 +25,8 @@ class LoteAccion extends Model
     use LogsActivity;
 
     public const INCREMENTO_OBREROS = 'incremento_obreros';
+
+    public const TRASPASO_PUESTO = 'traspaso_puesto';
 
     protected $table = 'lotes_accion';
 
