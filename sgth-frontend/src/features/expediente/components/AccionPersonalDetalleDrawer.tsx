@@ -12,6 +12,7 @@ import { AccionLiquidacionReferencial } from './AccionLiquidacionReferencial'
 import { EstadoAccionBadge } from './EstadoAccionBadge'
 import { AccionBotonEditar } from './AccionBotonEditar'
 import { AccionPersonalPie } from './AccionPersonalPie'
+import { AccionPosesion } from './AccionPosesion'
 import { AccionRelacionada } from './AccionRelacionada'
 import { AccionRespaldos } from './AccionRespaldos'
 import { AccionSituacionBloques } from './AccionSituacionBloques'
@@ -105,6 +106,9 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
         <AccionLiquidacionReferencial m={m} />
 
         <AccionRespaldos m={m} />
+
+        {/* La posesión y el plazo para presentarse (fase 6.4). */}
+        <AccionPosesion m={m} onAnulada={onClose} />
 
         <AccionAnotaciones m={m} />
 

@@ -780,12 +780,14 @@
     juro lealtad al Estado ecuatoriano.
 </div>
 
+{{-- El lugar y la fecha que registró Talento Humano (fase 6.4); sin
+     registrar, en blanco para llenarlos a mano. --}}
 <table class="datos">
     <tr>
         <td class="label">Lugar</td>
-        <td style="height: 22px;">&nbsp;</td>
+        <td style="height: 22px;">{{ $movimiento->lugar_posesion }}</td>
         <td class="label">Fecha</td>
-        <td>&nbsp;</td>
+        <td>{{ $fmtFecha($movimiento->fecha_posesion) }}</td>
     </tr>
 </table>
 

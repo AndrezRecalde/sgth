@@ -82,6 +82,12 @@ export const getBandejaAccionesColumns = ({
             Sin acuse · {diasDesde(m.fecha_notificacion)}
           </Text>
         )}
+        {/* El ingreso que espera la posesión en su plazo (fase 6.4). */}
+        {m.presentacion_vence_el && !m.fecha_posesion && (m.estado === 'registrada' || m.estado === 'notificada') && (
+          <Text size="xs" c={m.presentacion_vencida ? 'red' : 'dimmed'} mt={2}>
+            Sin posesión · {m.presentacion_vencida ? 'venció' : 'hasta'} el {formatFecha(m.presentacion_vence_el)}
+          </Text>
+        )}
       </div>
     ),
   },

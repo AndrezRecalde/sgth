@@ -1,6 +1,7 @@
 import { z } from 'zod/v4'
 import type { CatalogoAccionesPersonal, ClaseDelCatalogo } from '@/types/api'
 import { buscarClase } from '../utils/catalogoAcciones'
+import { fijaTerminoParaPresentarse } from '../utils/plazoParaPresentarse'
 
 const camposDelFormulario = z.object({
   // La clase legal de la acción y, en la cesación, su causal. Qué valores
@@ -47,6 +48,11 @@ const camposDelFormulario = z.object({
   supuesto_provisional_propuesto: z.string().optional().nullable(),
   acta_concurso_numero: z.string().max(100).optional().nullable(),
   acta_concurso_fecha: z.string().optional().nullable(),
+  // El término para presentarse del ingreso por acción de personal:
+  // 3 días hábiles, o hasta 5 con la razón (Reglamento a la LOSEP, Art. 20;
+  // fase 6.4).
+  dias_para_presentarse: z.number().int().min(3).max(5).optional().nullable(),
+  razon_dias_adicionales: z.string().max(255, 'Máximo 255 caracteres').optional().nullable(),
   // El inicio del período de una autoridad electa (fase 4.1).
   credencial_cne_numero: z.string().max(100).optional().nullable(),
   credencial_cne_fecha: z.string().optional().nullable(),
@@ -113,6 +119,15 @@ export function crearMovimientoSchema(
       ctx.addIssue({
         path: ['informe_uath_numero'], code: 'custom',
         message: 'Indique el número del informe técnico de la UATH',
+      })
+    }
+
+    // Más de 3 días para presentarse, solo con las circunstancias geográficas.
+    if (fijaTerminoParaPresentarse(clase, data.tipo_nombramiento_propuesto)
+      && (data.dias_para_presentarse ?? 3) > 3 && !data.razon_dias_adicionales?.trim()) {
+      ctx.addIssue({
+        path: ['razon_dias_adicionales'], code: 'custom',
+        message: 'Indique las circunstancias geográficas que piden más de 3 días',
       })
     }
 

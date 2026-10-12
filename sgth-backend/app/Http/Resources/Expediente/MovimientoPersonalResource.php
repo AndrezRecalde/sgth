@@ -5,6 +5,7 @@ namespace App\Http\Resources\Expediente;
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\Permiso;
 use App\Services\Expediente\MovimientoPersonalStateService;
+use App\Services\Expediente\PosesionService;
 use App\Services\Expediente\ProteccionMaternidad;
 use App\Services\Expediente\TerminacionObreroService;
 use Illuminate\Http\Request;
@@ -83,6 +84,20 @@ class MovimientoPersonalResource extends JsonResource
             'fecha_efectiva' => $this->fecha_efectiva,
             'fecha_inicio'   => $this->fecha_inicio,
             'fecha_fin'      => $this->fecha_fin,
+
+            // La posesión y el plazo para presentarse (Reglamento a la LOSEP,
+            // Art. 20; fase 6.4): el término del borrador, hasta cuándo puede
+            // presentarse —calculado al registrar— y la posesión registrada.
+            'dias_para_presentarse'    => $this->dias_para_presentarse,
+            'razon_dias_adicionales'   => $this->razon_dias_adicionales,
+            'presentacion_vence_el'    => $this->presentacion_vence_el?->toDateString(),
+            'presentacion_vencida'     => $this->presentacionVencida(),
+            'fecha_posesion'           => $this->fecha_posesion?->toDateString(),
+            'lugar_posesion'           => $this->lugar_posesion,
+            'posesion_registrada_por'  => $this->posesion_registrada_por,
+            'posesion_fuera_de_plazo'  => $this->posesionFueraDePlazo(),
+            'admite_posesion'          => PosesionService::admitePosesion($this->resource),
+            'puede_registrar_posesion' => $this->puedeRegistrarPosesion($request),
 
             'unidad_origen_id'  => $this->unidad_origen_id,
             'unidad_destino_id' => $this->unidad_destino_id,
@@ -349,6 +364,24 @@ class MovimientoPersonalResource extends JsonResource
             && ! $this->resource->esRegistroDeContrato()
             && ! $this->resource->esSobre($usuario)
             && $usuario->can(Permiso::PREPARAR_ACCION_PERSONAL->value);
+    }
+
+    /**
+     * La posesión la registra quien notifica (fase 6.4): una vez, con la acción
+     * registrada y ya vigente, y nunca sobre sí mismo.
+     */
+    private function puedeRegistrarPosesion(Request $request): bool
+    {
+        $usuario = $request->user();
+
+        return $usuario !== null
+            && PosesionService::admitePosesion($this->resource)
+            && in_array($this->estado, [EstadoAccionPersonal::REGISTRADA, EstadoAccionPersonal::NOTIFICADA], true)
+            && $this->fecha_posesion === null
+            && $this->fecha_efectiva !== null
+            && ! $this->fecha_efectiva->isFuture()
+            && ! $this->resource->esSobre($usuario)
+            && $usuario->can(Permiso::NOTIFICAR_ACCION_PERSONAL->value);
     }
 
     /**

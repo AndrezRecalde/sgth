@@ -410,8 +410,12 @@ Reglas añadidas:
   - el documento llega al **portal del servidor** y a su **correo institucional**;
   - el servidor deja un **acuse de recibo**;
   - si se le notifica en persona y se niega a recibirlo, se registra la **razón con un testigo** (nombre y cédula).
-- **Posesión**: solo en ingreso, ascenso, nombramiento definitivo y encargo. Se registra la fecha.
-- **Plazo para presentarse**: si quien es nombrado no se presenta en 3 días desde el registro (5 por distancia), el nombramiento queda sin efecto (Reg. 20). El sistema avisa a TH, que lo anula.
+- **Posesión**: solo en ingreso, ascenso, nombramiento definitivo y encargo. Se registran la fecha y el lugar.
+- **Plazo para presentarse** (Reg. 20; fase 6.4):
+  - el nombramiento queda insubsistente si quien es nombrado no se presenta a trabajar en el **término de 3 días** desde el registro de la acción, o de hasta 5 días laborables si lo piden las circunstancias geográficas;
+  - el contrato ocasional se termina si el contratado no se presenta en **24 horas** desde el registro del contrato;
+  - el sistema avisa a TH, que lo anula. No anula solo.
+  - La LOSEP da 15 días desde la notificación para posesionarse (Art. 16); el término del Reglamento es más corto y lo absorbe.
 
 ### 6.5 El documento de la acción de personal (formato del Ministerio)
 
@@ -1110,6 +1114,22 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
      - **«Rechazar»**, con el motivo. Nadie atiende la suya.
    - **3b.** El servidor tiene «Renuncia, licencia y jubilación» en el portal, dentro de Solicitudes: presenta, retira y ve el estado y el motivo.
    - **3b.** Fuera: el desahucio y la renuncia de Servicios Profesionales, el correo a Talento Humano por cada solicitud y la licencia con remuneración pedida desde el portal.
+4. Posesión y plazo para presentarse (6.4).
+   - Hasta aquí el documento imprimía «Posesión del cargo» con el lugar y la fecha en blanco, y nada vigilaba el plazo para presentarse: un nombramiento insubsistente seguía vigente sin que nadie lo notara.
+   - A quién se aplica:
+     - **el ingreso por acción de personal**: 3 días hábiles, o hasta 5 por las circunstancias geográficas, que se dicen (`dias_para_presentarse`, `razon_dias_adicionales`). Lo fija el borrador, y el CHECK exige la razón con más de 3;
+     - **el ingreso del ocasional por su contrato**: 24 horas, que son el día hábil siguiente;
+     - **el ascenso, el nombramiento definitivo y el encargo**: la posesión, sin plazo, porque quien los recibe ya trabaja en la institución. El obrero, Servicios Profesionales y las autoridades tienen sus propios documentos.
+   - El plazo corre desde el registro o, si es posterior, desde el día en que rige: nadie se presenta a un puesto antes de que su nombramiento rija. Son días hábiles, con los feriados de la institución, porque la ley dice «término». Se calcula al registrar y queda guardado (`presentacion_vence_el`). Lo registrado antes de la fase no lo tiene y no alerta.
+   - La posesión la registra quien notifica (`POST expediente/movimientos/{id}/posesion`):
+     - con la fecha, no anterior al día en que rige ni futura, y el lugar, que imprime el documento. El ocasional, solo el día en que se presentó;
+     - una sola vez, y nunca sobre sí mismo. La guarda de inmutabilidad la deja escribir así, como el acuse;
+     - si se presentó fuera del plazo, se registra igual y la ficha lo marca: decidir si el nombramiento sigue es de Talento Humano.
+   - El aviso no anula solo:
+     - en la bandeja, «Sin posesión» lista los ingresos que esperan, los vencidos primero, con la fecha en que vence;
+     - en la ficha, el plazo vencido sale con «Anular por no presentarse», que propone el motivo con el Art. 20;
+     - el comando diario los lista mientras sigan así.
+   - Fuera: declarar ganador al siguiente del concurso, la primera marcación de Sirha7 como prueba de que se presentó y el correo a Talento Humano.
 
 **Fase 7 — Estructura, nómina y salida**
 1. Operaciones sobre puestos ocupados (traspaso de puesto, revisión de clasificación) y bloqueo de la edición directa y del borrado.
@@ -1118,7 +1138,7 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
 4. Desvinculación.
 5. Reporte SIITH por clase, con su pantalla.
 
-Total: 6 + 7 + 3 + 6 + 3 + 3 + 5 = **33 PRs**.
+Total: 6 + 7 + 3 + 6 + 3 + 4 + 5 = **34 PRs**.
 
 ---
 

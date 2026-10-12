@@ -27413,6 +27413,14 @@
                         }
                     },
                     {
+                        "name": "sin_posesion",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
+                    },
+                    {
                         "name": "per_page",
                         "in": "query",
                         "schema": {
@@ -27637,6 +27645,81 @@
                                         },
                                         "datos": {
                                             "$ref": "#/components/schemas/AnotacionAccionPersonalResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/movimientos/{movimiento}/posesion": {
+            "post": {
+                "operationId": "movimientoPersonal.registrarPosesion",
+                "summary": "La posesi\u00f3n del cargo, o el d\u00eda en que el ocasional se present\u00f3 a\nlaborar (fase 6.4): lo que dice si se cumpli\u00f3 el plazo para presentarse\ny la fecha que imprime el documento",
+                "tags": [
+                    "MovimientoPersonal"
+                ],
+                "parameters": [
+                    {
+                        "name": "movimiento",
+                        "in": "path",
+                        "required": true,
+                        "description": "The movimiento ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RegistrarPosesionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Posesi\u00f3n registrada."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/MovimientoPersonalResource"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -49620,6 +49703,10 @@
                     "pide_contratacion": {
                         "type": "boolean"
                     },
+                    "tiene_plazo_para_presentarse": {
+                        "type": "boolean",
+                        "description": "El t\u00e9rmino para presentarse: el ingreso por acci\u00f3n de personal\nlo fija en el borrador (Reglamento a la LOSEP, Art. 20; fase 6.4)."
+                    },
                     "pide_acta_concurso": {
                         "type": "boolean",
                         "description": "El acta final del concurso: la pide el ascenso (fase 3.3)."
@@ -49699,6 +49786,7 @@
                     "pide_datos_judiciales",
                     "pide_informe_uath_para",
                     "pide_contratacion",
+                    "tiene_plazo_para_presentarse",
                     "pide_acta_concurso",
                     "pide_datos_del_periodo",
                     "pide_datos_de_licencia_del_consejo",
@@ -55481,6 +55569,44 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "dias_para_presentarse": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "razon_dias_adicionales": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "presentacion_vence_el": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "fecha_posesion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "lugar_posesion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "posesion_registrada_por": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -55572,7 +55698,13 @@
                     "notificacion_testigo_cedula",
                     "acuse_en",
                     "correo_enviado_en",
-                    "correo_destino"
+                    "correo_destino",
+                    "dias_para_presentarse",
+                    "razon_dias_adicionales",
+                    "presentacion_vence_el",
+                    "fecha_posesion",
+                    "lugar_posesion",
+                    "posesion_registrada_por"
                 ],
                 "title": "MovimientoPersonal"
             },
@@ -55776,6 +55908,49 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "dias_para_presentarse": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "La posesi\u00f3n y el plazo para presentarse (Reglamento a la LOSEP,\nArt. 20; fase 6.4): el t\u00e9rmino del borrador, hasta cu\u00e1ndo puede\npresentarse \u2014calculado al registrar\u2014 y la posesi\u00f3n registrada."
+                    },
+                    "razon_dias_adicionales": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "presentacion_vence_el": {
+                        "type": "string"
+                    },
+                    "presentacion_vencida": {
+                        "type": "boolean"
+                    },
+                    "fecha_posesion": {
+                        "type": "string"
+                    },
+                    "lugar_posesion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "posesion_registrada_por": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "posesion_fuera_de_plazo": {
+                        "type": "boolean"
+                    },
+                    "admite_posesion": {
+                        "type": "boolean"
+                    },
+                    "puede_registrar_posesion": {
+                        "type": "boolean"
                     },
                     "unidad_origen_id": {
                         "type": [
@@ -56553,6 +56728,16 @@
                     "fecha_efectiva",
                     "fecha_inicio",
                     "fecha_fin",
+                    "dias_para_presentarse",
+                    "razon_dias_adicionales",
+                    "presentacion_vence_el",
+                    "presentacion_vencida",
+                    "fecha_posesion",
+                    "lugar_posesion",
+                    "posesion_registrada_por",
+                    "posesion_fuera_de_plazo",
+                    "admite_posesion",
+                    "puede_registrar_posesion",
                     "unidad_origen_id",
                     "unidad_destino_id",
                     "institucion_destino",
@@ -58597,6 +58782,27 @@
                     "neurologico"
                 ],
                 "title": "RegionExamenFisico"
+            },
+            "RegistrarPosesionRequest": {
+                "type": "object",
+                "description": "La posesi\u00f3n del cargo, o el d\u00eda en que el ocasional se present\u00f3 a laborar\n(fase 6.4). Que no sea anterior al d\u00eda en que rige, y que el lugar haga falta\nsolo cuando el documento lo imprime, lo mira PosesionService.",
+                "properties": {
+                    "fecha_posesion": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "lugar_posesion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 150
+                    }
+                },
+                "required": [
+                    "fecha_posesion"
+                ],
+                "title": "RegistrarPosesionRequest"
             },
             "RegistrarResultadoRequest": {
                 "type": "object",
@@ -62573,6 +62779,22 @@
                             "null"
                         ],
                         "maxLength": 100
+                    },
+                    "dias_para_presentarse": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "El t\u00e9rmino para presentarse del ingreso (Reglamento a la LOSEP,\nArt. 20; fase 6.4): m\u00e1s de 3 d\u00edas pide la raz\u00f3n, y lo mira el servicio.",
+                        "minimum": 3,
+                        "maximum": 5
+                    },
+                    "razon_dias_adicionales": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
                     },
                     "causa_judicial_numero": {
                         "type": [
@@ -66821,6 +67043,22 @@
                             "null"
                         ],
                         "maxLength": 100
+                    },
+                    "dias_para_presentarse": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "El t\u00e9rmino para presentarse del ingreso (Reglamento a la LOSEP,\nArt. 20; fase 6.4): m\u00e1s de 3 d\u00edas pide la raz\u00f3n, y lo mira el servicio.",
+                        "minimum": 3,
+                        "maximum": 5
+                    },
+                    "razon_dias_adicionales": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
                     },
                     "causa_judicial_numero": {
                         "type": [

@@ -8,6 +8,7 @@ use App\Models\Expediente\MovimientoPersonal;
 use App\Services\Expediente\AutoridadElectaService;
 use App\Services\Expediente\MovimientoPersonalStateService;
 use App\Services\Expediente\PeriodoDePruebaService;
+use App\Services\Expediente\PosesionService;
 use App\Services\Expediente\ReintegroService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -25,6 +26,8 @@ use Illuminate\Console\Command;
  * —ausencias y contratos con plazo—, por ahora en esta salida. Desde la fase 4.1
  * cierra también los períodos de las autoridades electas que terminaron, antes
  * de aplicar nada: el de la autoridad reelegida empieza cuando ese se cierra.
+ * Desde la fase 6.4 lista los ingresos cuyo plazo para presentarse venció sin
+ * posesión: el nombramiento queda insubsistente y Talento Humano lo anula.
  */
 class AplicarAccionesVigentesCommand extends Command
 {
@@ -37,6 +40,7 @@ class AplicarAccionesVigentesCommand extends Command
         ReintegroService $reintegros,
         PeriodoDePruebaService $periodos,
         AutoridadElectaService $autoridades,
+        PosesionService $posesiones,
     ): int {
         $fecha = $this->option('fecha') ?: now()->toDateString();
 
@@ -65,6 +69,7 @@ class AplicarAccionesVigentesCommand extends Command
         $this->prepararNombramientosDefinitivos($periodos, $fecha);
         $this->avisarVencimientos($fecha);
         $this->avisarReemplazosSinTitular();
+        $this->avisarPresentacionesVencidas($posesiones, $fecha);
 
         // Lo que no se pudo aplicar no hace fallar el comando: el resto se
         // aplicó, y lo pendiente sigue a la vista en la lista de arriba.
@@ -173,6 +178,28 @@ class AplicarAccionesVigentesCommand extends Command
             trim(($c->servidor?->apellido ?? '').' '.($c->servidor?->nombre ?? '')),
             trim(($c->cubreMovimiento?->servidor?->apellido ?? '').' '.($c->cubreMovimiento?->servidor?->nombre ?? '')),
             $c->fecha_fin?->format('d/m/Y') ?? 'sin plazo',
+        ])->all());
+    }
+
+    /**
+     * Quien ingresó y no se presentó en su plazo (Reglamento a la LOSEP, Art.
+     * 20; fase 6.4). Salen aquí cada día hasta que Talento Humano anule el
+     * nombramiento o registre la posesión que faltaba.
+     */
+    private function avisarPresentacionesVencidas(PosesionService $posesiones, string $fecha): void
+    {
+        $vencidos = $posesiones->vencidos($fecha);
+
+        if ($vencidos->isEmpty()) {
+            return;
+        }
+
+        $this->warn($vencidos->count().' ingreso(s) sin posesión con el plazo para presentarse vencido: '
+            .'el nombramiento queda insubsistente (Reglamento a la LOSEP, Art. 20).');
+        $this->table(['Acción', 'Servidor', 'Venció el'], $vencidos->map(fn (MovimientoPersonal $m) => [
+            $m->codigo_registro,
+            trim(($m->servidor?->apellido ?? '').' '.($m->servidor?->nombre ?? '')),
+            $m->presentacion_vence_el->format('d/m/Y'),
         ])->all());
     }
 

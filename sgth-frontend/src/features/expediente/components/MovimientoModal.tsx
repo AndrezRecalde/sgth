@@ -22,6 +22,7 @@ import { MovimientoSituacionPropuesta } from './MovimientoSituacionPropuesta'
 import { MovimientoDatosDelActo } from './MovimientoDatosDelActo'
 import { MovimientoDatosAdenda } from './MovimientoDatosAdenda'
 import { MovimientoDatosCambioObrero } from './MovimientoDatosCambioObrero'
+import { MovimientoPlazoParaPresentarse } from './MovimientoPlazoParaPresentarse'
 import { valoresDelBorrador, VALORES_EN_BLANCO } from '../utils/movimientoIniciales'
 
 interface Props {
@@ -280,6 +281,9 @@ function FormularioAccion({
                 </Grid.Col>
               </Grid>
             )}
+
+            {/* El término para presentarse del ingreso (fase 6.4). */}
+            {esIngreso && <MovimientoPlazoParaPresentarse form={form} clase={claseElegida} />}
 
             {/* La adenda del contrato civil: lo que cambia, si cambia (fase 4.2). */}
             {claseElegida?.pide_adenda && (

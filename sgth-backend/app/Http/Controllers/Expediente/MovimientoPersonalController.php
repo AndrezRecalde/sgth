@@ -6,6 +6,7 @@ use App\Enums\ClaseAccionPersonal;
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\MedioNotificacion;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Expediente\RegistrarPosesionRequest;
 use App\Http\Requests\Expediente\ReintegrarAusenciaRequest;
 use App\Http\Requests\Expediente\StoreAnotacionAccionRequest;
 use App\Http\Requests\Expediente\StoreMovimientoPersonalRequest;
@@ -21,6 +22,7 @@ use App\Services\Expediente\AvisoLiquidacionObreroService;
 use App\Services\Expediente\AnotacionAccionPersonalService;
 use App\Services\Expediente\MovimientoPersonalService;
 use App\Services\Expediente\MovimientoPersonalStateService;
+use App\Services\Expediente\PosesionService;
 use App\Services\Expediente\ReintegroService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -34,6 +36,7 @@ class MovimientoPersonalController extends Controller
         private AvisoLiquidacionObreroService $avisoLiquidacion,
         private AnotacionAccionPersonalService $anotaciones,
         private ReintegroService $reintegros,
+        private PosesionService $posesiones,
     ) {
     }
 
@@ -98,6 +101,9 @@ class MovimientoPersonalController extends Controller
                 ->where('estado', EstadoAccionPersonal::NOTIFICADA->value)
                 ->where('notificacion_medio', MedioNotificacion::PORTAL->value)
                 ->whereNull('acuse_en'))
+            // Los ingresos que esperan la posesión, los más urgentes primero
+            // (Reglamento a la LOSEP, Art. 20; fase 6.4).
+            ->when($request->boolean('sin_posesion'), fn ($q) => $q->sinPosesion()->orderBy('presentacion_vence_el'))
             // Quien revisa la bandeja no ve lo que se le está preparando a él:
             // no puede tramitarlo, y es justo lo que no debe ver antes de tiempo.
             ->when($request->user()?->servidor_id, fn ($q, $propio) => $q->where(
@@ -213,6 +219,28 @@ class MovimientoPersonalController extends Controller
         return ApiResponse::created(
             new AnotacionAccionPersonalResource($anotacion->load('registradoPor.servidor:id,nombre,apellido')),
             'Anotación registrada.'
+        );
+    }
+
+    /**
+     * La posesión del cargo, o el día en que el ocasional se presentó a
+     * laborar (fase 6.4): lo que dice si se cumplió el plazo para presentarse
+     * y la fecha que imprime el documento.
+     */
+    public function registrarPosesion(RegistrarPosesionRequest $request, MovimientoPersonal $movimiento): JsonResponse
+    {
+        $this->authorize('actualizar', $movimiento->servidor);
+
+        $actualizado = $this->posesiones->registrar(
+            $movimiento,
+            $request->validated('fecha_posesion'),
+            $request->validated('lugar_posesion'),
+            $request->user(),
+        );
+
+        return ApiResponse::ok(
+            new MovimientoPersonalResource($actualizado),
+            'Posesión registrada.'
         );
     }
 

@@ -38,6 +38,9 @@ export const VALORES_EN_BLANCO: DefaultValues<MovimientoFormData> = {
   supuesto_provisional_propuesto: null,
   acta_concurso_numero: '',
   acta_concurso_fecha: null,
+  // El término para presentarse del ingreso (fase 6.4).
+  dias_para_presentarse: 3,
+  razon_dias_adicionales: '',
   credencial_cne_numero: '',
   credencial_cne_fecha: null,
   con_remuneracion: null,
@@ -95,6 +98,8 @@ export function valoresDelBorrador(
     supuesto_provisional_propuesto: movimiento.supuesto_provisional_propuesto ?? null,
     acta_concurso_numero: movimiento.acta_concurso_numero ?? '',
     acta_concurso_fecha: soloFecha(movimiento.acta_concurso_fecha),
+    dias_para_presentarse: movimiento.dias_para_presentarse ?? 3,
+    razon_dias_adicionales: movimiento.razon_dias_adicionales ?? '',
     credencial_cne_numero: movimiento.credencial_cne_numero ?? '',
     credencial_cne_fecha: soloFecha(movimiento.credencial_cne_fecha),
     con_remuneracion: movimiento.con_remuneracion ?? null,

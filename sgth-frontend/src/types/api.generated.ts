@@ -4408,6 +4408,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/expediente/movimientos/{movimiento}/posesion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * La posesión del cargo, o el día en que el ocasional se presentó a
+         *     laborar (fase 6.4): lo que dice si se cumplió el plazo para presentarse
+         *     y la fecha que imprime el documento
+         */
+        post: operations["movimientoPersonal.registrarPosesion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/expediente/movimientos/{movimiento}/reintegro": {
         parameters: {
             query?: never;
@@ -8161,6 +8182,11 @@ export interface components {
             pide_datos_judiciales: boolean;
             pide_informe_uath_para: components["schemas"]["TipoNombramiento"][];
             pide_contratacion: boolean;
+            /**
+             * @description El término para presentarse: el ingreso por acción de personal
+             *     lo fija en el borrador (Reglamento a la LOSEP, Art. 20; fase 6.4).
+             */
+            tiene_plazo_para_presentarse: boolean;
             /** @description El acta final del concurso: la pide el ascenso (fase 3.3). */
             pide_acta_concurso: boolean;
             /** @description La credencial, la posesión y el fin del período (fase 4.1). */
@@ -9653,6 +9679,14 @@ export interface components {
             /** Format: date-time */
             correo_enviado_en: string | null;
             correo_destino: string | null;
+            dias_para_presentarse: number | null;
+            razon_dias_adicionales: string | null;
+            /** Format: date-time */
+            presentacion_vence_el: string | null;
+            /** Format: date-time */
+            fecha_posesion: string | null;
+            lugar_posesion: string | null;
+            posesion_registrada_por: number | null;
         };
         /** MovimientoPersonalResource */
         MovimientoPersonalResource: {
@@ -9723,6 +9757,21 @@ export interface components {
             fecha_inicio: string | null;
             /** Format: date-time */
             fecha_fin: string | null;
+            /**
+             * @description La posesión y el plazo para presentarse (Reglamento a la LOSEP,
+             *     Art. 20; fase 6.4): el término del borrador, hasta cuándo puede
+             *     presentarse —calculado al registrar— y la posesión registrada.
+             */
+            dias_para_presentarse: number | null;
+            razon_dias_adicionales: string | null;
+            presentacion_vence_el: string;
+            presentacion_vencida: boolean;
+            fecha_posesion: string;
+            lugar_posesion: string | null;
+            posesion_registrada_por: number | null;
+            posesion_fuera_de_plazo: boolean;
+            admite_posesion: boolean;
+            puede_registrar_posesion: boolean;
             unidad_origen_id: number | null;
             unidad_destino_id: number | null;
             institucion_destino: string | null;
@@ -10450,6 +10499,17 @@ export interface components {
          * @enum {string}
          */
         RegionExamenFisico: "piel" | "ojos" | "oido" | "orofaringe" | "nariz" | "cuello" | "torax_1" | "torax_2" | "abdomen" | "columna" | "pelvis" | "extremidades" | "neurologico";
+        /**
+         * RegistrarPosesionRequest
+         * @description La posesión del cargo, o el día en que el ocasional se presentó a laborar
+         *     (fase 6.4). Que no sea anterior al día en que rige, y que el lugar haga falta
+         *     solo cuando el documento lo imprime, lo mira PosesionService.
+         */
+        RegistrarPosesionRequest: {
+            /** Format: date-time */
+            fecha_posesion: string;
+            lugar_posesion?: string | null;
+        };
         /** RegistrarResultadoRequest */
         RegistrarResultadoRequest: {
             calificacion_cuantitativa: number;
@@ -11483,6 +11543,12 @@ export interface components {
             /** Format: date-time */
             credencial_cne_fecha?: string | null;
             acta_posesion_numero?: string | null;
+            /**
+             * @description El término para presentarse del ingreso (Reglamento a la LOSEP,
+             *     Art. 20; fase 6.4): más de 3 días pide la razón, y lo mira el servicio.
+             */
+            dias_para_presentarse?: number | null;
+            razon_dias_adicionales?: string | null;
             causa_judicial_numero?: string | null;
             unidad_judicial?: string | null;
             /** Format: date-time */
@@ -12684,6 +12750,12 @@ export interface components {
             /** Format: date-time */
             credencial_cne_fecha?: string | null;
             acta_posesion_numero?: string | null;
+            /**
+             * @description El término para presentarse del ingreso (Reglamento a la LOSEP,
+             *     Art. 20; fase 6.4): más de 3 días pide la razón, y lo mira el servicio.
+             */
+            dias_para_presentarse?: number | null;
+            razon_dias_adicionales?: string | null;
             causa_judicial_numero?: string | null;
             unidad_judicial?: string | null;
             /** Format: date-time */
@@ -25128,6 +25200,7 @@ export interface operations {
                 lote_id?: number;
                 anio?: number;
                 sin_acuse?: boolean;
+                sin_posesion?: boolean;
                 per_page?: number;
             };
             header?: never;
@@ -25252,6 +25325,42 @@ export interface operations {
                         /** @constant */
                         mensaje: "Anotación registrada.";
                         datos: components["schemas"]["AnotacionAccionPersonalResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "movimientoPersonal.registrarPosesion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The movimiento ID */
+                movimiento: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegistrarPosesionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Posesión registrada.";
+                        datos: components["schemas"]["MovimientoPersonalResource"];
                         meta: null;
                     };
                 };
