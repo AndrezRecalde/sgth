@@ -17,6 +17,27 @@ export function guardarArchivo(blob: Blob, nombre: string): void {
   setTimeout(() => URL.revokeObjectURL(url), 60_000)
 }
 
+/**
+ * Abre el archivo en otra pestaña y, si el navegador la bloquea, lo descarga.
+ * Pasa cuando se abre después de esperar al backend, ya fuera del gesto del
+ * clic: con `noopener` no hay forma de saberlo, así que la pestaña se abre sin
+ * él y se suelta el `opener` después. Devuelve si se abrió.
+ */
+export function abrirOGuardarArchivo(blob: Blob, nombre: string): boolean {
+  const url = URL.createObjectURL(blob)
+  const ventana = window.open(url, '_blank')
+
+  if (!ventana) {
+    URL.revokeObjectURL(url)
+    guardarArchivo(blob, nombre)
+    return false
+  }
+
+  ventana.opener = null
+  setTimeout(() => URL.revokeObjectURL(url), 60_000)
+  return true
+}
+
 /** Abre el archivo en otra pestaña (un PDF para leerlo, no para guardarlo). */
 export function abrirArchivo(blob: Blob): void {
   const url = URL.createObjectURL(blob)

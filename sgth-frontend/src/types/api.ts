@@ -780,6 +780,9 @@ export type MovimientoPersonal = {
   puede_editar: boolean
   /** Si quien mira puede anotar en ella: no en borrador ni en las propias. */
   puede_anotar: boolean
+  /** La vista previa con la marca BORRADOR: borrador o suscrita, con documento,
+   *  para quien prepara acciones y no sobre sí mismo (fase 6.2). */
+  puede_previsualizar: boolean
   /**
    * Registrada pero sin efecto todavía, porque rige más tarde (fase 1.6): el
    * vínculo no cambia hasta `fecha_efectiva`.

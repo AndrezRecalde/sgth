@@ -87,6 +87,24 @@ class FirmanteAccionPersonalService
         ];
     }
 
+    /**
+     * Quién firmaría en esa fecha, sin sellarlo: para la vista previa del
+     * borrador (fase 6.2). El nombre y el cargo salen con el mismo formato con
+     * que se sellan al suscribir; sin firmante —el puesto vacante—, el nombre
+     * va vacío.
+     *
+     * @return array{nombre: ?string, cargo: string}
+     */
+    public function provisional(RolFirmaAccionPersonal $rol, ?string $fecha = null): array
+    {
+        $firma = $this->resolver($rol, $fecha ?? now()->toDateString());
+
+        return [
+            'nombre' => $firma['servidor'] ? $this->nombreCompleto($firma['servidor']) : null,
+            'cargo'  => $firma['subrogado'] ? $firma['cargo'].' (S)' : $firma['cargo'],
+        ];
+    }
+
     /** Unidad anclada para el rol, o null si nadie la marcó todavía. */
     public function unidadDe(RolFirmaAccionPersonal $rol): ?UnidadAdministrativa
     {

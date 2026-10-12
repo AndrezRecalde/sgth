@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useDisclosure } from '@mantine/hooks'
 import { Button } from '@mantine/core'
-import { IconBan, IconFileDownload } from '@tabler/icons-react'
+import { IconBan, IconEye, IconFileDownload } from '@tabler/icons-react'
 import { ModalFooter, MotivoModal, notificar } from '@/components/ui'
 import { getApiErrorMessage } from '@/types/api'
 import { movimientoService } from '../services/movimientoService'
@@ -12,7 +12,7 @@ import {
   ESTADO_LABELS, puedeDescargarPdf, requiereCompletarVinculo,
 } from '../utils/estadoAccionPersonal'
 import type { MovimientoPersonal } from '@/types/api'
-import { guardarArchivo } from '@/lib/archivo'
+import { abrirOGuardarArchivo, guardarArchivo } from '@/lib/archivo'
 
 interface Props {
   m: MovimientoPersonal
@@ -40,6 +40,7 @@ interface Props {
 export function AccionPersonalPie({ m, onClose, onCompletarVinculo, onPedirDictamen }: Props) {
   const { transicionar } = useMovimientoMutations()
   const [descargando, setDescargando] = useState(false)
+  const [previsualizando, setPrevisualizando] = useState(false)
   const [anularOpened, { open: abrirAnular, close: cerrarAnular }] = useDisclosure(false)
 
   const estado = m.estado
@@ -59,6 +60,25 @@ export function AccionPersonalPie({ m, onClose, onCompletarVinculo, onPedirDicta
       )
     } finally {
       setDescargando(false)
+    }
+  }
+
+  /**
+   * La vista previa con la marca BORRADOR (fase 6.2; TH 27): para revisar el
+   * documento antes de suscribirlo o registrarlo. Se abre en otra pestaña,
+   * para leerla, no para guardarla.
+   */
+  const verVistaPrevia = async () => {
+    setPrevisualizando(true)
+    try {
+      const blob = await movimientoService.vistaPrevia(Number(m.id))
+      if (!abrirOGuardarArchivo(blob, `vista_previa_${m.id}.pdf`)) {
+        notificar.aviso('El navegador bloqueó la pestaña', 'La vista previa se descargó.')
+      }
+    } catch (error) {
+      notificar.error('No se pudo generar la vista previa', getApiErrorMessage(error, 'Inténtelo de nuevo en unos segundos.'))
+    } finally {
+      setPrevisualizando(false)
     }
   }
 
@@ -89,6 +109,17 @@ export function AccionPersonalPie({ m, onClose, onCompletarVinculo, onPedirDicta
       onSubmit={siguiente ? avanzar : undefined}
       leftSection={
         <>
+          {m.puede_previsualizar && (
+            <Button
+              variant="subtle"
+              leftSection={<IconEye size={14} />}
+              loading={previsualizando}
+              onClick={verVistaPrevia}
+            >
+              Vista previa
+            </Button>
+          )}
+
           {puedeDescargarPdf(m) && (
             <Button
               variant="subtle"

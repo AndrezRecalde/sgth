@@ -1069,6 +1069,17 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
    - `AccionPersonalPdfService::documento()` devuelve la vista, sus datos y el archivo sin pasarlos a PDF: lo usan la descarga, las pruebas y la vista previa de la 6.2.
    - La hoja de registro interno de los obreros, la constancia de las autoridades y el contrato civil no cambian.
 2. Vista previa con la marca BORRADOR, para todos los instrumentos que imprimen.
+   - Hasta aquí el documento solo salía de lo registrado: Talento Humano no podía revisar cómo quedaría antes de suscribir [TH 27].
+   - Ruta `GET expediente/movimientos/{id}/vista-previa`, para las acciones en borrador o suscrita de los tres instrumentos con documento: acción de personal, hoja de registro interno y constancia de autoridad. El registro del contrato y el contrato civil no tienen documento. Lo registrado sale por su PDF.
+   - La pide quien prepara acciones (`preparar-accion-personal`), y nunca sobre sí mismo. El titular no ve sus borradores (6.3). El recurso dice `puede_previsualizar`.
+   - La marca:
+     - una franja de una línea arriba, «Borrador — vista previa sin validez», que dice si está suscrita o todavía no;
+     - un «BORRADOR» grande y gris claro en cada hoja. Va sin rotar, porque dompdf no rota texto de forma fiable, y con `z-index: -1`, porque dompdf pinta los fijos encima del contenido;
+     - en el número, «BORRADOR». «Registro y control» queda vacío y el archivo se llama `vista_previa_…pdf`.
+   - Firmantes: en la suscrita, los sellados. En el borrador, los que firmarían hoy según el organigrama (`FirmanteAccionPersonalService::provisional`), con «Provisional: se sella al suscribir». Si el puesto está vacante, «Sin firmante: así no se podría suscribir».
+   - La fecha de emisión de un borrador dice que se fija al suscribir; la de la hoja RI, que se fija al registrar.
+   - En la pantalla, el botón «Vista previa» en el pie de la acción la abre en otra pestaña. Si el navegador la bloquea, la descarga.
+   - Fuera: los certificados y las resoluciones de otros módulos, que no son actos del expediente.
 3. Portal «Mis documentos laborales» con acuse de recibo, aviso al correo institucional y razón con testigo; solicitudes de renuncia, licencia y jubilación.
 
 **Fase 7 — Estructura, nómina y salida**

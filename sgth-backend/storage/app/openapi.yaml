@@ -429,6 +429,47 @@
                 }
             }
         },
+        "/v1/expediente/movimientos/{movimientoId}/vista-previa": {
+            "get": {
+                "operationId": "accionPersonalPdf.vistaPrevia",
+                "summary": "La vista previa de lo que todav\u00eda no se registra, con la marca BORRADOR\n(fase 6.2; TH 27). La ruta la limita a quien prepara acciones: el\ntitular no ve sus borradores (dise\u00f1o, 6.3), y nadie la pide sobre s\u00ed\nmismo",
+                "tags": [
+                    "AccionPersonalPdf"
+                ],
+                "parameters": [
+                    {
+                        "name": "movimientoId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/actividades/por-unidad": {
             "get": {
                 "operationId": "actividadLaboral.porUnidad",
@@ -55003,6 +55044,10 @@
                     "puede_anotar": {
                         "type": "boolean"
                     },
+                    "puede_previsualizar": {
+                        "type": "boolean",
+                        "description": "La vista previa con la marca BORRADOR (fase 6.2)."
+                    },
                     "categoria": {
                         "anyOf": [
                             {
@@ -55795,6 +55840,7 @@
                     "transiciones_permitidas",
                     "puede_editar",
                     "puede_anotar",
+                    "puede_previsualizar",
                     "categoria",
                     "estado",
                     "descripcion",
