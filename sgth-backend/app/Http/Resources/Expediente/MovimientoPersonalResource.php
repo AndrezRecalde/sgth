@@ -198,6 +198,15 @@ class MovimientoPersonalResource extends JsonResource
             'autorizado_por'     => $this->autorizado_por,
             'notificado_por'     => $this->notificado_por,
             'fecha_notificacion' => $this->fecha_notificacion,
+            // Cómo se notificó, el acuse del servidor y el correo (fase 6.3a).
+            'notificacion_medio'          => $this->notificacion_medio,
+            'notificacion_resultado'      => $this->notificacion_resultado,
+            'notificacion_razon'          => $this->notificacion_razon,
+            'notificacion_testigo_nombre' => $this->notificacion_testigo_nombre,
+            'notificacion_testigo_cedula' => $this->notificacion_testigo_cedula,
+            'acuse_en'                    => $this->acuse_en?->toIso8601String(),
+            'correo_enviado_en'           => $this->correo_enviado_en?->toIso8601String(),
+            'correo_destino'              => $this->correo_destino,
             'motivo_anulacion'   => $this->motivo_anulacion,
 
             'created_at' => $this->created_at,

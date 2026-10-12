@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth'
 import type { UsuarioAuth } from '@/store/auth.store'
 import { PerfilServidorCard } from './PerfilServidorCard'
 import { NoticiasCard } from './NoticiasCard'
+import { DocumentosPorAcusarAviso } from './DocumentosPorAcusarAviso'
 
 export function PortalHomeView() {
   const { usuario, isAuthenticated, setAuth } = useAuth()
@@ -43,6 +44,8 @@ export function PortalHomeView() {
   return (
     <>
       <PageHeader title="Mi portal" description="Tu ficha y las novedades de la institución" />
+      {/* Solo quien es servidor tiene documentos laborales (fase 6.3a). */}
+      {usuarioActual.servidor_id && <DocumentosPorAcusarAviso />}
       <Grid>
         <Grid.Col span={{ base: 12, md: 6 }}>
           <PerfilServidorCard usuario={usuarioActual} />

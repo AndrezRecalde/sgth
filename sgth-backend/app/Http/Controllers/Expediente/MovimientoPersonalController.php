@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Expediente;
 
 use App\Enums\ClaseAccionPersonal;
 use App\Enums\EstadoAccionPersonal;
+use App\Enums\MedioNotificacion;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Expediente\ReintegrarAusenciaRequest;
 use App\Http\Requests\Expediente\StoreAnotacionAccionRequest;
@@ -91,6 +92,12 @@ class MovimientoPersonalController extends Controller
             // Los actos de un lote: el incremento de los obreros (fase 4.6).
             ->when($request->filled('lote_id'), fn ($q) => $q->where('lote_id', $request->integer('lote_id')))
             ->when($request->filled('anio'), fn ($q) => $q->whereYear('fecha_efectiva', $request->integer('anio')))
+            // Lo notificado por el portal que todavía espera el acuse del
+            // servidor (fase 6.3a). Solo informa: no hay un plazo que vencer.
+            ->when($request->boolean('sin_acuse'), fn ($q) => $q
+                ->where('estado', EstadoAccionPersonal::NOTIFICADA->value)
+                ->where('notificacion_medio', MedioNotificacion::PORTAL->value)
+                ->whereNull('acuse_en'))
             // Quien revisa la bandeja no ve lo que se le está preparando a él:
             // no puede tramitarlo, y es justo lo que no debe ver antes de tiempo.
             ->when($request->user()?->servidor_id, fn ($q, $propio) => $q->where(

@@ -15,6 +15,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Autoservicio\AutoservicioController;
 use App\Http\Controllers\Autoservicio\MisCertificadosMedicosController;
+use App\Http\Controllers\Autoservicio\MisDocumentosLaboralesController;
 use App\Http\Controllers\Bienestar\EncuestaClimaController;
 use App\Http\Controllers\Bienestar\PlanBienestarController;
 use App\Http\Controllers\Capacitacion\CertificadoCapacitacionController;
@@ -878,6 +879,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::get('mis-roles-pago', [AutoservicioController::class, 'misRolesPago']);
         Route::get('mi-expediente', [AutoservicioController::class, 'miExpediente']);
         Route::get('mis-actividades', [AutoservicioController::class, 'misActividades']);
+        // «Mis documentos laborales» (fase 6.3a): lo notificado y registrado,
+        // su PDF y el acuse de recibo. Siempre los del propio servidor.
+        Route::get('mis-documentos', [MisDocumentosLaboralesController::class, 'index']);
+        Route::get('mis-documentos/{movimiento}/pdf', [MisDocumentosLaboralesController::class, 'pdf']);
+        Route::post('mis-documentos/{movimiento}/acuse', [MisDocumentosLaboralesController::class, 'acuse']);
 
         // Aquí estaba también `POST solicitar-cita`, retirada el 2026-09-11.
         // Nunca funcionó: escribía en `agendas_medicas` columnas que no existen

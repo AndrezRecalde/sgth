@@ -808,16 +808,36 @@
 </div>
 @endif
 
-{{-- La notificación (Reg. 22; diseño, 6.4): el «Recibí» del servidor o, si
-     se niega a recibirla, la razón con un testigo. Se llena a mano; el
-     registro de la negativa en el sistema llega con el portal (fase 6.3). --}}
+{{-- La notificación (Reg. 22; diseño, 6.4): por el portal, con el acuse del
+     servidor; en persona, el «Recibí» o, si se negó a recibirla, la razón con
+     un testigo (fase 6.3a). Sin notificar todavía, en blanco para llenarlo a
+     mano. --}}
+@php
+    $medioNotificacion = $movimiento->notificacion_medio;
+    $negada = $movimiento->notificacion_resultado === \App\Enums\ResultadoNotificacion::NEGADA;
+    $recibida = $movimiento->notificacion_resultado === \App\Enums\ResultadoNotificacion::RECIBIDA;
+@endphp
 <div class="bloque-titulo" style="margin-top: 14px;">Notificación</div>
+@if($medioNotificacion === \App\Enums\MedioNotificacion::PORTAL)
+<table class="datos">
+    <tr>
+        <td class="label">Medio</td>
+        <td>Portal del servidor y correo</td>
+        <td class="label">Notificada el</td>
+        <td>{!! $dato($fmtFecha($movimiento->fecha_notificacion)) !!}</td>
+    </tr>
+    <tr>
+        <td class="label">Acuse de recibo</td>
+        <td colspan="3">{{ $movimiento->acuse_en ? $movimiento->acuse_en->format('d/m/Y H:i') : 'Pendiente' }}</td>
+    </tr>
+</table>
+@else
 <table class="datos">
     <tr>
         <td class="label">Recibí</td>
         <td style="height: 26px;">&nbsp;</td>
         <td class="label">Fecha</td>
-        <td>{!! $movimiento->fecha_notificacion ? e($fmtFecha($movimiento->fecha_notificacion)) : '&nbsp;' !!}</td>
+        <td>{!! $recibida ? e($fmtFecha($movimiento->fecha_notificacion)) : '&nbsp;' !!}</td>
     </tr>
     <tr>
         <td class="label">Nombre</td>
@@ -827,19 +847,20 @@
 <table class="datos">
     <tr>
         <td class="label">Razón de la negativa</td>
-        <td colspan="3" style="height: 26px;">&nbsp;</td>
+        <td colspan="3" style="height: 26px;">{!! $negada ? e($movimiento->notificacion_razon) : '&nbsp;' !!}</td>
     </tr>
     <tr>
         <td class="label">Testigo</td>
-        <td>&nbsp;</td>
+        <td>{!! $negada ? e($movimiento->notificacion_testigo_nombre) : '&nbsp;' !!}</td>
         <td class="label">Cédula</td>
-        <td>&nbsp;</td>
+        <td>{!! $negada ? e($movimiento->notificacion_testigo_cedula) : '&nbsp;' !!}</td>
     </tr>
     <tr>
         <td class="label">Firma del testigo</td>
         <td colspan="3" style="height: 26px;">&nbsp;</td>
     </tr>
 </table>
+@endif
 
 </body>
 </html>

@@ -10,6 +10,13 @@ type Handlers = {
   onVerDetalle: (movimiento: MovimientoPersonal) => void
 }
 
+/** «hoy», «hace 1 día», «hace 5 días»: lo que lleva esperando el acuse. */
+function diasDesde(fecha: string): string {
+  const dias = Math.floor((Date.now() - new Date(fecha).getTime()) / 86_400_000)
+
+  return dias <= 0 ? 'hoy' : dias === 1 ? 'hace 1 día' : `hace ${dias} días`
+}
+
 export function nombreServidor(s?: MovimientoPersonal['servidor']): string {
   if (!s) return '—'
 
@@ -66,7 +73,17 @@ export const getBandejaAccionesColumns = ({
     accessor: 'estado',
     title: 'Estado',
     width: 150,
-    render: (m) => <EstadoAccionBadge m={m} />,
+    render: (m) => (
+      <div>
+        <EstadoAccionBadge m={m} />
+        {/* Lo notificado por el portal que todavía espera el acuse (6.3a). */}
+        {m.estado === 'notificada' && m.notificacion_medio === 'portal' && !m.acuse_en && m.fecha_notificacion && (
+          <Text size="xs" c="dimmed" mt={2}>
+            Sin acuse · {diasDesde(m.fecha_notificacion)}
+          </Text>
+        )}
+      </div>
+    ),
   },
   {
     accessor: 'acciones',

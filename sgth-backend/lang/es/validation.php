@@ -254,6 +254,12 @@ return [
         'puede_marcar' => 'marcación',
         'resolucion_numero' => 'número de resolución',
         'informe_uath_numero' => 'informe técnico de la UATH',
+        // La notificación al servidor (fase 6.3a).
+        'notificacion_medio' => 'medio de notificación',
+        'notificacion_resultado' => 'resultado de la notificación',
+        'notificacion_razon' => 'razón de la negativa',
+        'notificacion_testigo_nombre' => 'nombre del testigo',
+        'notificacion_testigo_cedula' => 'cédula del testigo',
         // El formato del Ministerio (fase 6.1).
         'base_legal' => 'base legal',
         'acto_origen_tipo' => 'tipo del acto que la origina',
