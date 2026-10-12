@@ -16,6 +16,8 @@ use App\Enums\TipoMovimientoPersonal;
 use App\Enums\TipoNombramiento;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Dispensario\SolicitudCertificacionMedica;
+use App\Models\Estructura\Cargo;
+use App\Models\Estructura\GrupoOcupacional;
 use App\Models\Estructura\PartidaPresupuestaria;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
@@ -308,9 +310,16 @@ class MovimientoPersonal extends Model
         'con_remuneracion',
         'prorroga_causa',
         'puesto_origen_id',
+        // El grupo y la denominación de origen y de destino, congelados en la
+        // acción (fase 7.1b): una revisión de la clasificación posterior no
+        // reescribe lo firmado.
+        'grupo_ocupacional_origen_id',
+        'cargo_origen_id',
         'remuneracion_origen',
         'partida_origen_id',
         'puesto_destino_id',
+        'grupo_ocupacional_destino_id',
+        'cargo_destino_id',
         'resolucion_numero',
         // El decreto, acuerdo o resolución que la origina (fase 6.1).
         'acto_origen_tipo',
@@ -538,6 +547,27 @@ class MovimientoPersonal extends Model
         return $this->belongsTo(Puesto::class, 'puesto_destino_id');
     }
 
+    /** El grupo y la denominación con que se firmó: de origen y de destino (fase 7.1b). */
+    public function grupoOcupacionalOrigen(): BelongsTo
+    {
+        return $this->belongsTo(GrupoOcupacional::class, 'grupo_ocupacional_origen_id');
+    }
+
+    public function cargoOrigen(): BelongsTo
+    {
+        return $this->belongsTo(Cargo::class, 'cargo_origen_id');
+    }
+
+    public function grupoOcupacionalDestino(): BelongsTo
+    {
+        return $this->belongsTo(GrupoOcupacional::class, 'grupo_ocupacional_destino_id');
+    }
+
+    public function cargoDestino(): BelongsTo
+    {
+        return $this->belongsTo(Cargo::class, 'cargo_destino_id');
+    }
+
     /**
      * Partida que respaldará el vínculo propuesto. Puede diferir de la del
      * puesto destino: es la que Talento Humano fija en la acción.
@@ -661,6 +691,8 @@ class MovimientoPersonal extends Model
             || $this->reubicaAlServidor()
             // El traspaso de puesto: la unidad del vínculo (fase 7.1a).
             || $this->esTraspasoDePuesto()
+            // La revisión de la clasificación: su remuneración (fase 7.1b).
+            || $this->esRevisionDeClasificacion()
             || (bool) $this->subtipoEfectivo()?->cierraVinculo();
     }
 
@@ -672,6 +704,25 @@ class MovimientoPersonal extends Model
     public function esTraspasoDePuesto(): bool
     {
         return $this->tipo_movimiento === TipoMovimientoPersonal::TRASPASO_PUESTO;
+    }
+
+    /**
+     * ¿Es uno de los actos de la revisión de la clasificación de un puesto
+     * (LOSEP Arts. 61 y 62; fase 7.1b)? Como el traspaso, va con su lote.
+     */
+    public function esRevisionDeClasificacion(): bool
+    {
+        return $this->tipo_movimiento === TipoMovimientoPersonal::REVISION_CLASIFICACION;
+    }
+
+    /**
+     * Los actos sobre un puesto, con uno por ocupante: se suscriben, se
+     * registran y se anulan desde su lote, todos a la vez. Sueltos, solo se
+     * notifican.
+     */
+    public function seTramitaEnLote(): bool
+    {
+        return $this->esTraspasoDePuesto() || $this->esRevisionDeClasificacion();
     }
 
     /**
@@ -832,7 +883,10 @@ class MovimientoPersonal extends Model
             || $this->tipo_movimiento === TipoMovimientoPersonal::SUBROGACION
             || $this->reubicaAlServidor()
             // El traspaso: el mismo puesto, en la unidad nueva (fase 7.1a).
-            || $this->esTraspasoDePuesto();
+            || $this->esTraspasoDePuesto()
+            // La revisión: el mismo puesto, con su grado o su denominación
+            // nuevos (fase 7.1b).
+            || $this->esRevisionDeClasificacion();
     }
 
     /**

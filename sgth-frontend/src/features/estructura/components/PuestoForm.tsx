@@ -46,6 +46,7 @@ interface Props {
 }
 
 const SOLO_CON_TRASPASO = 'Ocupado: pasa a otra unidad con «Traspasar a otra unidad».'
+const SOLO_CON_REVISION = 'Ocupado: cambia con «Revisar la clasificación».'
 
 export function PuestoForm({ initialValues, ocupado = false, onSubmit }: Props) {
   const contained = useContainedInput()
@@ -111,8 +112,9 @@ export function PuestoForm({ initialValues, ocupado = false, onSubmit }: Props) 
           {ocupado && (
             <Grid.Col span={12}>
               <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
-                El puesto está ocupado. Pasa a otra unidad con «Traspasar a otra unidad», que emite la
-                acción de personal de cada ocupante (LOSEP Art. 37). Mientras lo esté, el régimen no
+                El puesto está ocupado. Pasa a otra unidad con «Traspasar a otra unidad» (LOSEP Art. 37),
+                y cambia de grado o de denominación con «Revisar la clasificación» (Arts. 61 y 62): los
+                dos emiten la acción de personal de cada ocupante. Mientras lo esté, el régimen no
                 cambia, no se desactiva y las plazas no bajan de las ocupadas.
               </Alert>
             </Grid.Col>
@@ -125,8 +127,10 @@ export function PuestoForm({ initialValues, ocupado = false, onSubmit }: Props) 
                 <Select
                   label="Cargo"
                   placeholder="Seleccionar cargo"
+                  description={ocupado ? SOLO_CON_REVISION : undefined}
                   data={cargoOptions}
                   searchable
+                  disabled={ocupado}
                   {...contained}
                   value={field.value ? String(field.value) : ''}
                   onChange={(v) => field.onChange(v ? Number(v) : undefined)}
@@ -186,11 +190,12 @@ export function PuestoForm({ initialValues, ocupado = false, onSubmit }: Props) 
                 render={({ field }) => (
                   <Select
                     label="Grupo ocupacional (LOSEP)"
-                    description="Define el grado y la RMU del puesto."
+                    description={ocupado ? SOLO_CON_REVISION : 'Define el grado y la RMU del puesto.'}
                     placeholder="Seleccionar grupo"
                     data={grupoOptions}
                     searchable
                     clearable
+                    disabled={ocupado}
                     {...contained}
                     value={field.value ? String(field.value) : ''}
                     onChange={(v) => field.onChange(v ? Number(v) : null)}

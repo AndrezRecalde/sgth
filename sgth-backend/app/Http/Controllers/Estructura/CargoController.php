@@ -5,8 +5,11 @@ use App\Enums\Permiso;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\Estructura\Cargo;
+use App\Models\Estructura\Puesto;
+use App\Services\Estructura\ProteccionDePuestoOcupado;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 /**
  * El catálogo de cargos institucionales.
@@ -44,6 +47,18 @@ class CargoController extends Controller
             ->orderBy('nombre')
             ->get();
 
+        // Si alguno de sus puestos está ocupado, el renombrado pide el motivo
+        // (fase 7.1b): la pantalla lo pregunta antes de que el backend lo
+        // rechace.
+        $conOcupados = Puesto::query()
+            ->whereIn('cargo_id', $cargos->pluck('id'))
+            ->conOcupacion()
+            ->get()
+            ->filter(fn (Puesto $p) => (bool) $p->getAttribute('ocupado'))
+            ->pluck('cargo_id')
+            ->flip();
+        $cargos->each(fn (Cargo $c) => $c->setAttribute('con_puestos_ocupados', $conOcupados->has($c->id)));
+
         return ApiResponse::ok($cargos, 'Cargos institucionales.');
     }
 
@@ -77,9 +92,34 @@ class CargoController extends Controller
             'codigo_ciuo'            => ['nullable', 'string', 'max:10', 'regex:/^[0-9]+$/'],
             'mision'                 => ['nullable', 'string'],
             'activo' => ['boolean'],
-        ]);
+            // Corregir cómo está escrito un cargo con puestos ocupados pide el
+            // motivo (fase 7.1b); cambiar la denominación es reclasificar.
+            'motivo_correccion'      => ['nullable', 'string', 'min:5', 'max:300'],
+        ], [], ['motivo_correccion' => 'motivo de la corrección']);
+
+        $renombra = array_key_exists('nombre', $validated) && trim((string) $validated['nombre']) !== $cargo->nombre;
+
+        if ($renombra && ProteccionDePuestoOcupado::cargoConPuestosOcupados($cargo->id) && blank($validated['motivo_correccion'] ?? null)) {
+            throw ValidationException::withMessages([
+                'motivo_correccion' => 'El cargo tiene puestos ocupados: diga por qué se corrige su nombre. Si no es una '
+                    .'corrección sino otra denominación, es una reclasificación: use «Revisar la clasificación».',
+            ]);
+        }
+
+        $antes = $cargo->nombre;
+        $motivo = $validated['motivo_correccion'] ?? null;
+        unset($validated['motivo_correccion']);
 
         $cargo->update($validated);
+
+        if ($renombra) {
+            activity()
+                ->performedOn($cargo)
+                ->event('updated')
+                ->withProperties(['antes' => ['nombre' => $antes], 'despues' => ['nombre' => $cargo->nombre], 'causa' => $motivo ?? 'Edición directa en Estructura'])
+                ->log('Nombre del cargo corregido');
+        }
+
         return ApiResponse::ok($cargo, 'Cargo actualizado.');
     }
 

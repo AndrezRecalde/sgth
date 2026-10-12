@@ -4065,6 +4065,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/expediente/lotes-accion/revision-clasificacion/previsualizar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Lo que recibiría cada ocupante de la revisión, y lo que la impide
+         *     (fase 7.1b)
+         */
+        post: operations["loteAccion.previsualizarRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/lotes-accion/revision-clasificacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Prepara un borrador por ocupante de cada puesto, todos o ninguno (fase 7.1b) */
+        post: operations["loteAccion.revisar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/expediente/lotes-accion/{lote}": {
         parameters: {
             query?: never;
@@ -4128,8 +4165,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Deja sin efecto el traspaso registrado: anula todos sus actos, y el
-         *     puesto y sus ocupantes vuelven a la unidad de origen (fase 7.1a)
+         * Deja sin efecto el traspaso o la revisión registrados: anula todos sus
+         *     actos, y el puesto y sus ocupantes vuelven a como estaban (7.1a, 7.1b)
          */
         post: operations["loteAccion.revertir"];
         delete?: never;
@@ -8113,7 +8150,7 @@ export interface components {
         CausalAccionPersonalResource: {
             codigo: components["schemas"]["SubtipoMovimientoPersonal"];
             /** @enum {string} */
-            etiqueta: "Traslado Administrativo" | "Traspaso" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Amonestación escrita" | "Sanción pecuniaria administrativa" | "Suspensión temporal sin goce de remuneración" | "Sanción Disciplinaria" | "Renuncia" | "Destitución" | "Jubilación" | "Incapacidad absoluta y permanente" | "Contrato Finalizado" | "Visto Bueno" | "Remoción" | "No superar el período de prueba" | "Terminación por cumplimiento del plazo" | "Terminación unilateral" | "Mutuo acuerdo" | "Evaluación regular o insuficiente" | "Retiro voluntario o compra de renuncia" | "Pérdida de los derechos de ciudadanía" | "Fallecimiento" | "Fin del período" | "Revocatoria del mandato" | "Remoción por el Consejo Provincial" | "Terminación por mutuo acuerdo" | "Terminación anticipada según el contrato" | "Renuncia (desahucio)" | "Acuerdo de las partes" | "Conclusión de la obra o del servicio" | "Despido intempestivo" | "Muerte o incapacidad permanente" | "Caso fortuito o fuerza mayor" | "Asuntos particulares" | "Estudios de posgrado" | "Servicio militar" | "Reemplazo de un dignatario electo" | "Candidatura a elección popular" | "Cuidado de hijos" | "Según su régimen (Código del Trabajo)";
+            etiqueta: "Traslado Administrativo" | "Traspaso" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Amonestación escrita" | "Sanción pecuniaria administrativa" | "Suspensión temporal sin goce de remuneración" | "Sanción Disciplinaria" | "Renuncia" | "Destitución" | "Jubilación" | "Incapacidad absoluta y permanente" | "Contrato Finalizado" | "Visto Bueno" | "Remoción" | "No superar el período de prueba" | "Terminación por cumplimiento del plazo" | "Terminación unilateral" | "Mutuo acuerdo" | "Evaluación regular o insuficiente" | "Retiro voluntario o compra de renuncia" | "Pérdida de los derechos de ciudadanía" | "Fallecimiento" | "Fin del período" | "Revocatoria del mandato" | "Remoción por el Consejo Provincial" | "Terminación por mutuo acuerdo" | "Terminación anticipada según el contrato" | "Renuncia (desahucio)" | "Acuerdo de las partes" | "Conclusión de la obra o del servicio" | "Despido intempestivo" | "Muerte o incapacidad permanente" | "Caso fortuito o fuerza mayor" | "Asuntos particulares" | "Estudios de posgrado" | "Servicio militar" | "Reemplazo de un dignatario electo" | "Candidatura a elección popular" | "Cuidado de hijos" | "Según su régimen (Código del Trabajo)" | "Revalorización" | "Reclasificación" | "Ubicación";
             /** @enum {string|null} */
             base_legal: "LOSEP Art. 47 a; Reglamento Art. 102" | "LOSEP Art. 47 e; Reglamento Art. 105" | "LOSEP Art. 17 b.5" | "Reglamento a la LOSEP Art. 146 a" | "Reglamento a la LOSEP Art. 146 f" | "Reglamento a la LOSEP Art. 146 b" | "Reglamento a la LOSEP Art. 146 g" | "LOSEP Arts. 47 f y 48" | "LOSEP Art. 47 j" | "LOSEP Art. 47 i y k; Mandato Constituyente 2" | "LOSEP Art. 47 b" | "LOSEP Art. 47 d" | "LOSEP Art. 47 l" | "Código del Trabajo Art. 172" | "Constitución Art. 105" | "COOTAD Arts. 333–336" | "El plazo del contrato" | "Código Civil Art. 1561" | "La cláusula de terminación del contrato" | "Código del Trabajo, Arts. 184 y 185" | "Código del Trabajo, Art. 169 núm. 2" | "Código del Trabajo, Art. 169 núm. 3" | "Código del Trabajo, Art. 15" | "Código del Trabajo, Arts. 185 y 188" | "Código del Trabajo, Art. 216; Mandato Constituyente 2" | "Mandato Constituyente 2, art. 8" | "Código del Trabajo, Art. 169 núm. 5" | "Código del Trabajo, Art. 169 núm. 6" | "LOSEP Art. 28 a" | "LOSEP Art. 28 b" | "LOSEP Art. 28 c" | "LOSEP Art. 28 d" | "LOSEP Art. 28 e" | "LOSEP Art. 28 f" | "LOSEP Art. 43 b" | "LOSEP Art. 43 c" | "LOSEP Art. 43 d" | null;
             nombramientos_elegibles: [
@@ -8212,12 +8249,12 @@ export interface components {
          * @description La clase legal de una acción de personal: el acto que se registra, con el nombre que le da la LOSEP (diseño de Acciones de Personal, sección 4). Es la identidad pública del catálogo. El frontend elige una clase —y, en la cesación, una causal— y el backend la traduce al par tipo/subtipo con el que todavía se guarda y opera cada acción. Esa traducción vive aquí, en `tipoYSubtipo()`, y su inversa en `desde()`: son las dos únicas puertas entre los dos vocabularios.  Las reglas no se repiten. La elegibilidad por nombramiento se pregunta a `TipoMovimientoPersonal` y `SubtipoMovimientoPersonal`, que siguen siendo su única fuente: esta clase solo las agrupa con el nombre legal. Lo que es solo de formulario —qué bloques pide, el aviso de la comisión— sí vive aquí, y `CatalogoAccionesPersonalTest` comprueba que coincida con lo que el tipo/subtipo traducido hace de verdad.  Nombres que cambian respecto de los que veía Talento Humano, todos aceptados el 2026-10-09 (cuestionario, preguntas N1, 9 y 15):  - el «Traspaso» de los permanentes y la «Prestación de servicios» de los    demás son el mismo acto, el **traslado** del Art. 35;  - el «Traslado administrativo» entre instituciones es el **intercambio    voluntario** del Art. 39;  - el «Cambio de denominación» de los obreros es el **cambio de ocupación**    del Art. 192 del Código del Trabajo.
          * @enum {string}
          */
-        ClaseAccionPersonal: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "subrogacion" | "encargo" | "incremento_remuneracion" | "cambio_ocupacion" | "sancion" | "cesacion" | "reintegro" | "restitucion" | "nombramiento_definitivo" | "ascenso" | "inicio_periodo" | "licencia_consejo" | "asuncion_definitiva" | "adenda" | "cambio_lugar" | "traspaso_puesto";
+        ClaseAccionPersonal: "ingreso" | "traslado" | "intercambio_voluntario" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "subrogacion" | "encargo" | "incremento_remuneracion" | "cambio_ocupacion" | "sancion" | "cesacion" | "reintegro" | "restitucion" | "nombramiento_definitivo" | "ascenso" | "inicio_periodo" | "licencia_consejo" | "asuncion_definitiva" | "adenda" | "cambio_lugar" | "traspaso_puesto" | "revision_clasificacion";
         /** ClaseAccionPersonalResource */
         ClaseAccionPersonalResource: {
             codigo: components["schemas"]["ClaseAccionPersonal"];
             /** @enum {string} */
-            etiqueta: "Ingreso y Vinculación" | "Traslado" | "Intercambio Voluntario" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Licencia sin Remuneración" | "Subrogación" | "Encargo" | "Incremento de Remuneración" | "Cambio de Ocupación" | "Sanción Disciplinaria" | "Cesación de Funciones" | "Reintegro" | "Restitución" | "Nombramiento Definitivo" | "Ascenso" | "Inicio del Período" | "Licencia concedida por el Consejo" | "Asunción Definitiva" | "Adenda al contrato" | "Cambio de Lugar de Trabajo" | "Traspaso de Puesto";
+            etiqueta: "Ingreso y Vinculación" | "Traslado" | "Intercambio Voluntario" | "Comisión de Servicios con Remuneración" | "Comisión de Servicios sin Remuneración" | "Licencia sin Remuneración" | "Subrogación" | "Encargo" | "Incremento de Remuneración" | "Cambio de Ocupación" | "Sanción Disciplinaria" | "Cesación de Funciones" | "Reintegro" | "Restitución" | "Nombramiento Definitivo" | "Ascenso" | "Inicio del Período" | "Licencia concedida por el Consejo" | "Asunción Definitiva" | "Adenda al contrato" | "Cambio de Lugar de Trabajo" | "Traspaso de Puesto" | "Revisión de la Clasificación";
             familia: components["schemas"]["FamiliaAccionPersonal"];
             se_crea_desde_formulario: boolean;
             requiere_vinculo: boolean;
@@ -8228,7 +8265,7 @@ export interface components {
              *     con causal, manda la de la causal (fase 6.1).
              * @enum {string|null}
              */
-            base_legal: "LOSEP Arts. 16 a 18; Reglamento a la LOSEP Art. 19" | "LOSEP Art. 17 b.5; Reglamento a la LOSEP Arts. 224 a 227" | "LOSEP Art. 32" | "LOSEP Art. 46" | "LOSEP Art. 68; Reglamento a la LOSEP Arts. 190 y 191" | "LOSEP Arts. 35 y 36" | "LOSEP Art. 37; Reglamento a la LOSEP Art. 69" | "LOSEP Arts. 39 y 40" | "LOSEP Art. 30" | "LOSEP Art. 31" | "LOSEP Art. 28" | "LOSEP Art. 126; Reglamento a la LOSEP Art. 270" | "LOSEP Art. 127; Reglamento a la LOSEP Art. 271" | "LOSEP Art. 43; Reglamento a la LOSEP Art. 87" | "LOSEP Art. 47" | "LOSEP Art. 47 a; Reglamento Art. 102" | "LOSEP Art. 47 e; Reglamento Art. 105" | "LOSEP Art. 17 b.5" | "Reglamento a la LOSEP Art. 146 a" | "Reglamento a la LOSEP Art. 146 f" | "Reglamento a la LOSEP Art. 146 b" | "Reglamento a la LOSEP Art. 146 g" | "LOSEP Arts. 47 f y 48" | "LOSEP Art. 47 j" | "LOSEP Art. 47 i y k; Mandato Constituyente 2" | "LOSEP Art. 47 b" | "LOSEP Art. 47 d" | "LOSEP Art. 47 l" | "Código del Trabajo Art. 172" | "Constitución Art. 105" | "COOTAD Arts. 333–336" | "El plazo del contrato" | "Código Civil Art. 1561" | "La cláusula de terminación del contrato" | "Código del Trabajo, Arts. 184 y 185" | "Código del Trabajo, Art. 169 núm. 2" | "Código del Trabajo, Art. 169 núm. 3" | "Código del Trabajo, Art. 15" | "Código del Trabajo, Arts. 185 y 188" | "Código del Trabajo, Art. 216; Mandato Constituyente 2" | "Mandato Constituyente 2, art. 8" | "Código del Trabajo, Art. 169 núm. 5" | "Código del Trabajo, Art. 169 núm. 6" | "LOSEP Art. 28 a" | "LOSEP Art. 28 b" | "LOSEP Art. 28 c" | "LOSEP Art. 28 d" | "LOSEP Art. 28 e" | "LOSEP Art. 28 f" | "LOSEP Art. 43 b" | "LOSEP Art. 43 c" | "LOSEP Art. 43 d" | null;
+            base_legal: "LOSEP Arts. 16 a 18; Reglamento a la LOSEP Art. 19" | "LOSEP Art. 17 b.5; Reglamento a la LOSEP Arts. 224 a 227" | "LOSEP Art. 32" | "LOSEP Art. 46" | "LOSEP Art. 68; Reglamento a la LOSEP Arts. 190 y 191" | "LOSEP Arts. 35 y 36" | "LOSEP Art. 37; Reglamento a la LOSEP Art. 69" | "LOSEP Arts. 61 y 62; Reglamento a la LOSEP Arts. 163 y 173" | "LOSEP Arts. 39 y 40" | "LOSEP Art. 30" | "LOSEP Art. 31" | "LOSEP Art. 28" | "LOSEP Art. 126; Reglamento a la LOSEP Art. 270" | "LOSEP Art. 127; Reglamento a la LOSEP Art. 271" | "LOSEP Art. 43; Reglamento a la LOSEP Art. 87" | "LOSEP Art. 47" | "LOSEP Art. 47 a; Reglamento Art. 102" | "LOSEP Art. 47 e; Reglamento Art. 105" | "LOSEP Art. 17 b.5" | "Reglamento a la LOSEP Art. 146 a" | "Reglamento a la LOSEP Art. 146 f" | "Reglamento a la LOSEP Art. 146 b" | "Reglamento a la LOSEP Art. 146 g" | "LOSEP Arts. 47 f y 48" | "LOSEP Art. 47 j" | "LOSEP Art. 47 i y k; Mandato Constituyente 2" | "LOSEP Art. 47 b" | "LOSEP Art. 47 d" | "LOSEP Art. 47 l" | "Código del Trabajo Art. 172" | "Constitución Art. 105" | "COOTAD Arts. 333–336" | "El plazo del contrato" | "Código Civil Art. 1561" | "La cláusula de terminación del contrato" | "Código del Trabajo, Arts. 184 y 185" | "Código del Trabajo, Art. 169 núm. 2" | "Código del Trabajo, Art. 169 núm. 3" | "Código del Trabajo, Art. 15" | "Código del Trabajo, Arts. 185 y 188" | "Código del Trabajo, Art. 216; Mandato Constituyente 2" | "Mandato Constituyente 2, art. 8" | "Código del Trabajo, Art. 169 núm. 5" | "Código del Trabajo, Art. 169 núm. 6" | "LOSEP Art. 28 a" | "LOSEP Art. 28 b" | "LOSEP Art. 28 c" | "LOSEP Art. 28 d" | "LOSEP Art. 28 e" | "LOSEP Art. 28 f" | "LOSEP Art. 43 b" | "LOSEP Art. 43 c" | "LOSEP Art. 43 d" | null;
             pide_situacion_propuesta: boolean;
             pide_periodo: boolean;
             pide_institucion_destino: boolean;
@@ -9747,6 +9784,10 @@ export interface components {
             fecha_posesion: string | null;
             lugar_posesion: string | null;
             posesion_registrada_por: number | null;
+            grupo_ocupacional_origen_id: number | null;
+            cargo_origen_id: number | null;
+            grupo_ocupacional_destino_id: number | null;
+            cargo_destino_id: number | null;
         };
         /** MovimientoPersonalResource */
         MovimientoPersonalResource: {
@@ -9842,6 +9883,14 @@ export interface components {
             prorroga_causa_etiqueta: string;
             puesto_origen_id: number | null;
             puesto_destino_id: number | null;
+            /**
+             * @description El grupo y la denominación con que se firmó (fase 7.1b): una
+             *     revisión de la clasificación posterior no los cambia.
+             */
+            grupo_ocupacional_origen_id: number | null;
+            cargo_origen_id: number | null;
+            grupo_ocupacional_destino_id: number | null;
+            cargo_destino_id: number | null;
             tipo_nombramiento_propuesto: components["schemas"]["TipoNombramiento"] | null;
             supuesto_provisional_propuesto: components["schemas"]["SupuestoProvisional"] | null;
             supuesto_provisional_etiqueta: string;
@@ -10496,6 +10545,8 @@ export interface components {
              *     traspasan: la pantalla no lo ofrece.
              */
             admite_traspaso: boolean;
+            /** @description Ni la autoridad electa ni el de obreros se revisan (fase 7.1b). */
+            admite_revision: boolean;
             cargo?: {
                 id: number;
                 nombre: string;
@@ -10776,6 +10827,28 @@ export interface components {
          * @enum {string}
          */
         ResultadoNotificacion: "recibida" | "negada";
+        /**
+         * RevisionDeClasificacionRequest
+         * @description La revisión de la clasificación de uno o varios puestos ocupados (LOSEP
+         *     Arts. 61 y 62; fase 7.1b). La vista previa pide la causal y los puestos, con
+         *     su grado y su denominación nuevos; prepararla pide además la resolución que
+         *     la aprueba, la explicación y la fecha. El dictamen, si sube la remuneración:
+         *     eso lo mira el servicio, que sabe cuánto.
+         */
+        RevisionDeClasificacionRequest: {
+            /** @enum {string} */
+            causal: "revalorizacion" | "reclasificacion" | "ubicacion";
+            documento_origen: string;
+            dictamen_presupuestario_ref?: string | null;
+            descripcion: string;
+            /** Format: date-time */
+            fecha_efectiva: string;
+            puestos: {
+                puesto_id: number;
+                grupo_ocupacional_id?: number | null;
+                cargo_id?: number | null;
+            }[];
+        };
         /** RiesgoLaboralResource */
         RiesgoLaboralResource: {
             id: number;
@@ -12112,7 +12185,7 @@ export interface components {
          * @description Subtipos de acción de personal. Talento Humano opera con dos niveles: un tipo "paraguas" (Cambio Administrativo, Régimen Disciplinario, Cesación de Funciones) y un subtipo que es el que realmente determina la elegibilidad por tipo de nombramiento y el texto del documento impreso. Confirmado con TH (2026-07-27). Ver TipoMovimientoPersonal::subtiposPermitidos().
          * @enum {string}
          */
-        SubtipoMovimientoPersonal: "traslado_administrativo" | "traspaso" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "amonestacion_escrita" | "sancion_pecuniaria" | "suspension_sin_remuneracion" | "sancion_disciplinaria" | "renuncia" | "destitucion" | "jubilacion" | "incapacidad" | "contrato_finalizado" | "visto_bueno" | "remocion" | "periodo_prueba_no_superado" | "fin_del_plazo" | "terminacion_unilateral" | "mutuo_acuerdo" | "evaluacion_insuficiente" | "retiro_voluntario" | "perdida_derechos_ciudadania" | "fallecimiento" | "fin_del_periodo" | "revocatoria_del_mandato" | "remocion_por_el_consejo" | "terminacion_mutuo_acuerdo" | "terminacion_anticipada" | "desahucio" | "acuerdo_de_partes" | "conclusion_de_obra" | "prueba_no_superada_ct" | "despido_intempestivo" | "jubilacion_ct" | "retiro_voluntario_ct" | "muerte_o_incapacidad" | "caso_fortuito" | "asuntos_particulares" | "estudios_posgrado" | "servicio_militar" | "reemplazo_dignatario" | "candidatura" | "cuidado_hijos" | "segun_su_regimen";
+        SubtipoMovimientoPersonal: "traslado_administrativo" | "traspaso" | "comision_con_remuneracion" | "comision_sin_remuneracion" | "amonestacion_escrita" | "sancion_pecuniaria" | "suspension_sin_remuneracion" | "sancion_disciplinaria" | "renuncia" | "destitucion" | "jubilacion" | "incapacidad" | "contrato_finalizado" | "visto_bueno" | "remocion" | "periodo_prueba_no_superado" | "fin_del_plazo" | "terminacion_unilateral" | "mutuo_acuerdo" | "evaluacion_insuficiente" | "retiro_voluntario" | "perdida_derechos_ciudadania" | "fallecimiento" | "fin_del_periodo" | "revocatoria_del_mandato" | "remocion_por_el_consejo" | "terminacion_mutuo_acuerdo" | "terminacion_anticipada" | "desahucio" | "acuerdo_de_partes" | "conclusion_de_obra" | "prueba_no_superada_ct" | "despido_intempestivo" | "jubilacion_ct" | "retiro_voluntario_ct" | "muerte_o_incapacidad" | "caso_fortuito" | "asuntos_particulares" | "estudios_posgrado" | "servicio_militar" | "reemplazo_dignatario" | "candidatura" | "cuidado_hijos" | "segun_su_regimen" | "revalorizacion" | "reclasificacion" | "ubicacion";
         /** Sumario */
         Sumario: {
             id: number;
@@ -12270,7 +12343,7 @@ export interface components {
          * TipoMovimientoPersonal
          * @enum {string}
          */
-        TipoMovimientoPersonal: "traslado" | "subrogacion" | "comision_servicios" | "ingreso" | "cambio_denominacion" | "prestacion_servicios" | "cambio_administrativo" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "traspaso" | "destitucion" | "cesacion_funciones" | "regimen_disciplinario" | "reintegro" | "restitucion" | "nombramiento_definitivo" | "ascenso" | "inicio_periodo" | "licencia_consejo" | "asuncion_definitiva" | "adenda" | "cambio_lugar" | "traspaso_puesto";
+        TipoMovimientoPersonal: "traslado" | "subrogacion" | "comision_servicios" | "ingreso" | "cambio_denominacion" | "prestacion_servicios" | "cambio_administrativo" | "comision_sin_remuneracion" | "licencia_sin_remuneracion" | "incremento_remuneracion" | "traspaso" | "destitucion" | "cesacion_funciones" | "regimen_disciplinario" | "reintegro" | "restitucion" | "nombramiento_definitivo" | "ascenso" | "inicio_periodo" | "licencia_consejo" | "asuncion_definitiva" | "adenda" | "cambio_lugar" | "traspaso_puesto" | "revision_clasificacion";
         /**
          * TipoNombramiento
          * @enum {string}
@@ -16482,6 +16555,11 @@ export interface operations {
                     codigo_ciuo?: string | null;
                     mision?: string | null;
                     activo?: boolean;
+                    /**
+                     * @description Corregir cómo está escrito un cargo con puestos ocupados pide el
+                     *     motivo (fase 7.1b); cambiar la denominación es reclasificar.
+                     */
+                    motivo_correccion?: string | null;
                 };
             };
         };
@@ -24407,6 +24485,14 @@ export interface operations {
                                 unidad_destino: string | null;
                                 criterio: string | null;
                             } | null;
+                            /**
+                             * @description La causal y los puestos de la revisión, de cómo estaban a cómo
+                             *     quedan (fase 7.1b).
+                             */
+                            revision: {
+                                causal: string | null;
+                                puestos: unknown[];
+                            } | null;
                             creado_por: string;
                             created_at: string;
                             total: string;
@@ -24511,6 +24597,14 @@ export interface operations {
                                 unidad_origen: string | null;
                                 unidad_destino: string | null;
                                 criterio: string | null;
+                            } | null;
+                            /**
+                             * @description La causal y los puestos de la revisión, de cómo estaban a cómo
+                             *     quedan (fase 7.1b).
+                             */
+                            revision: {
+                                causal: string | null;
+                                puestos: unknown[];
                             } | null;
                             creado_por: string;
                             created_at: string;
@@ -24625,6 +24719,120 @@ export interface operations {
                                 unidad_destino: string | null;
                                 criterio: string | null;
                             } | null;
+                            /**
+                             * @description La causal y los puestos de la revisión, de cómo estaban a cómo
+                             *     quedan (fase 7.1b).
+                             */
+                            revision: {
+                                causal: string | null;
+                                puestos: unknown[];
+                            } | null;
+                            creado_por: string;
+                            created_at: string;
+                            total: string;
+                            por_estado: {
+                                [key: string]: number;
+                            };
+                            actos: {
+                                movimiento_id: number;
+                                codigo_registro: string | null;
+                                estado: string;
+                                nombre: string;
+                                cedula: string;
+                                remuneracion_actual: number | null;
+                                remuneracion_nueva: number | null;
+                            }[];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "loteAccion.previsualizarRevision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RevisionDeClasificacionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Vista previa de la revisión de la clasificación.";
+                        datos: {
+                            puestos: unknown[];
+                            sube_la_remuneracion: boolean;
+                            causales: unknown[];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "loteAccion.revisar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RevisionDeClasificacionRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Revisión de la clasificación preparada.";
+                        datos: {
+                            id: number;
+                            tipo: string;
+                            descripcion: string;
+                            fecha_efectiva: string;
+                            documento_origen: string;
+                            dictamen_presupuestario_ref: string | null;
+                            parametros: unknown[];
+                            contrato_colectivo_id: number | null;
+                            /** @description El puesto y las unidades del traspaso (fase 7.1a). */
+                            traspaso: {
+                                puesto_id: unknown;
+                                puesto: string | null;
+                                unidad_origen: string | null;
+                                unidad_destino: string | null;
+                                criterio: string | null;
+                            } | null;
+                            /**
+                             * @description La causal y los puestos de la revisión, de cómo estaban a cómo
+                             *     quedan (fase 7.1b).
+                             */
+                            revision: {
+                                causal: string | null;
+                                puestos: unknown[];
+                            } | null;
                             creado_por: string;
                             created_at: string;
                             total: string;
@@ -24686,6 +24894,14 @@ export interface operations {
                                 unidad_origen: string | null;
                                 unidad_destino: string | null;
                                 criterio: string | null;
+                            } | null;
+                            /**
+                             * @description La causal y los puestos de la revisión, de cómo estaban a cómo
+                             *     quedan (fase 7.1b).
+                             */
+                            revision: {
+                                causal: string | null;
+                                puestos: unknown[];
                             } | null;
                             creado_por: string;
                             created_at: string;
@@ -24760,6 +24976,14 @@ export interface operations {
                                     unidad_destino: string | null;
                                     criterio: string | null;
                                 } | null;
+                                /**
+                                 * @description La causal y los puestos de la revisión, de cómo estaban a cómo
+                                 *     quedan (fase 7.1b).
+                                 */
+                                revision: {
+                                    causal: string | null;
+                                    puestos: unknown[];
+                                } | null;
                                 creado_por: string;
                                 created_at: string;
                                 total: string;
@@ -24829,6 +25053,14 @@ export interface operations {
                                     unidad_origen: string | null;
                                     unidad_destino: string | null;
                                     criterio: string | null;
+                                } | null;
+                                /**
+                                 * @description La causal y los puestos de la revisión, de cómo estaban a cómo
+                                 *     quedan (fase 7.1b).
+                                 */
+                                revision: {
+                                    causal: string | null;
+                                    puestos: unknown[];
                                 } | null;
                                 creado_por: string;
                                 created_at: string;
@@ -24900,6 +25132,14 @@ export interface operations {
                                     unidad_origen: string | null;
                                     unidad_destino: string | null;
                                     criterio: string | null;
+                                } | null;
+                                /**
+                                 * @description La causal y los puestos de la revisión, de cómo estaban a cómo
+                                 *     quedan (fase 7.1b).
+                                 */
+                                revision: {
+                                    causal: string | null;
+                                    puestos: unknown[];
                                 } | null;
                                 creado_por: string;
                                 created_at: string;

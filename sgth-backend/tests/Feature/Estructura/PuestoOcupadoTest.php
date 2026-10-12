@@ -3,6 +3,8 @@
 namespace Tests\Feature\Estructura;
 
 use App\Enums\Permiso;
+use App\Models\Estructura\Cargo;
+use App\Models\Estructura\GrupoOcupacional;
 use App\Models\Estructura\Puesto;
 use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\Servidor;
@@ -130,4 +132,52 @@ test('el listado dice si está ocupado, si se puede eliminar y si admite el tras
         // Ni la jefatura ni el puesto de una autoridad se traspasan.
         ->and($filas[$jefatura->id]['admite_traspaso'])->toBeFalse()
         ->and($filas[$prefecto->id]['admite_traspaso'])->toBeFalse();
+});
+
+// ── El grado y la denominación (fase 7.1b) ──────────────────────
+
+test('ocupado, no cambia de grado ni de denominación a mano: va con la revisión de la clasificación', function () {
+    $otroGrupo = GrupoOcupacional::firstOrCreate(['grado_codigo' => 'SP12'], [
+        'grado_numerico' => 12, 'grupo' => 'Profesional', 'denominacion_generica' => 'Profesional',
+        'rmu' => 1200, 'regimen' => 'losep', 'activo' => true,
+    ]);
+
+    ($this->editar)($this->ocupado, ['grupo_ocupacional_id' => $otroGrupo->id])
+        ->assertStatus(422)
+        ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'su grado cambia con la revisión de la clasificación'));
+
+    ($this->editar)($this->ocupado, ['cargo_id' => Cargo::firstOrCreate(['nombre' => 'Especialista'])->id])
+        ->assertStatus(422)
+        ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'su denominación cambia'));
+
+    // El vacante, sí.
+    $vacante = puestoDePrueba($this->unidad, 'Asistente');
+    ($this->editar)($vacante, ['grupo_ocupacional_id' => $otroGrupo->id])->assertOk();
+});
+
+test('el cargo con puestos ocupados se corrige con el motivo, y queda registrado', function () {
+    $cargo = $this->ocupado->cargo;
+
+    $this->getJson('/api/v1/estructura/cargos')
+        ->assertOk()
+        ->assertJsonPath('datos', fn (array $cargos) => collect($cargos)->firstWhere('id', $cargo->id)['con_puestos_ocupados'] === true);
+
+    $this->putJson("/api/v1/estructura/cargos/{$cargo->id}", ['nombre' => 'Analista de Proyectos y Obras'])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['motivo_correccion'], 'errores');
+
+    $this->putJson("/api/v1/estructura/cargos/{$cargo->id}", [
+        'nombre' => 'Analista de Proyectos y Obras', 'motivo_correccion' => 'Faltaba «y Obras» en el nombre.',
+    ])->assertOk();
+
+    $registro = Activity::query()->where('subject_type', Cargo::class)->where('subject_id', $cargo->id)
+        ->latest('id')->first();
+
+    expect($cargo->fresh()->nombre)->toBe('Analista de Proyectos y Obras')
+        ->and($registro->properties['antes']['nombre'])->toBe('Analista de Proyectos')
+        ->and($registro->properties['causa'])->toBe('Faltaba «y Obras» en el nombre.');
+
+    // El cargo sin puestos ocupados se renombra como siempre.
+    $libre = Cargo::firstOrCreate(['nombre' => 'Sin ocupantes']);
+    $this->putJson("/api/v1/estructura/cargos/{$libre->id}", ['nombre' => 'Sin ocupantes (corregido)'])->assertOk();
 });

@@ -128,11 +128,13 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
 
         <AccionRelacionada m={m} />
 
-        {/* El traspaso de un puesto va con su lote (fase 7.1a). */}
-        {m.clase === 'traspaso_puesto' && (estado === 'borrador' || estado === 'suscrita') && (
+        {/* El traspaso de un puesto y la revisión de su clasificación van con
+            su lote (fases 7.1a y 7.1b). */}
+        {(m.clase === 'traspaso_puesto' || m.clase === 'revision_clasificacion')
+          && (estado === 'borrador' || estado === 'suscrita') && (
           <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
-            Es parte del traspaso del lote #{m.lote_id}: se suscribe, se registra y se anula desde
-            «Actos en lote», con los actos de los demás ocupantes.
+            Es parte del lote #{m.lote_id}: se suscribe, se registra y se anula desde «Actos en lote»,
+            con los actos de los demás ocupantes.
           </Alert>
         )}
 

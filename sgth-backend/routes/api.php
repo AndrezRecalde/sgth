@@ -467,6 +467,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->middleware('permission:preparar-accion-personal');
         Route::post('lotes-accion/traspaso-puesto', [LoteAccionController::class, 'traspasar'])
             ->middleware('permission:preparar-accion-personal');
+        // La revisión de la clasificación de puestos ocupados (fase 7.1b).
+        Route::post('lotes-accion/revision-clasificacion/previsualizar', [LoteAccionController::class, 'previsualizarRevision'])
+            ->middleware('permission:preparar-accion-personal');
+        Route::post('lotes-accion/revision-clasificacion', [LoteAccionController::class, 'revisar'])
+            ->middleware('permission:preparar-accion-personal');
         Route::get('lotes-accion/{lote}', [LoteAccionController::class, 'show'])
             ->middleware('role:admin-uath|asistente-uath');
         Route::post('lotes-accion/{lote}/registrar', [LoteAccionController::class, 'registrar'])

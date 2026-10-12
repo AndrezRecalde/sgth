@@ -87,6 +87,16 @@ enum SubtipoMovimientoPersonal: string
     // licencia del Consejo, y las suyas de antes quedan en el histórico.
     case SEGUN_SU_REGIMEN     = 'segun_su_regimen';
 
+    // Las de la revisión de la clasificación (LOSEP Arts. 61 y 62; fase 7.1b).
+    // Lo que distingue a cada una lo fija la norma técnica del Ministerio del
+    // Trabajo [Pendiente: que TH lo confirme]; aquí, lo mínimo de cada una:
+    // la revalorización sube el grado y conserva la denominación, la
+    // reclasificación cambia la denominación, y la ubicación sitúa el puesto
+    // en el grado y la denominación de un manual nuevo.
+    case REVALORIZACION       = 'revalorizacion';
+    case RECLASIFICACION      = 'reclasificacion';
+    case UBICACION            = 'ubicacion';
+
     public function etiqueta(): string
     {
         return match ($this) {
@@ -134,6 +144,9 @@ enum SubtipoMovimientoPersonal: string
             self::CANDIDATURA                => 'Candidatura a elección popular',
             self::CUIDADO_HIJOS              => 'Cuidado de hijos',
             self::SEGUN_SU_REGIMEN           => 'Según su régimen (Código del Trabajo)',
+            self::REVALORIZACION             => 'Revalorización',
+            self::RECLASIFICACION            => 'Reclasificación',
+            self::UBICACION                  => 'Ubicación',
         };
     }
 
@@ -391,6 +404,13 @@ enum SubtipoMovimientoPersonal: string
             // Exclusivo de obreros: es el procedimiento del Código del
             // Trabajo, no de la LOSEP.
             self::VISTO_BUENO => [TipoNombramiento::CODIGO_TRABAJO],
+
+            // La revisión de la clasificación: quien recibe acción de personal
+            // en un puesto de la escala (fase 7.1b). El obrero sube con el
+            // incremento en lote; la autoridad, por ley.
+            self::REVALORIZACION,
+            self::RECLASIFICACION,
+            self::UBICACION => $conSancionYCesacionLosep,
         };
     }
 

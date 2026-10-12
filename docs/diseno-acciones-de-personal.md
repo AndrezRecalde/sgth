@@ -1150,6 +1150,17 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
    - **1a.** Los actos del traspaso no se suscriben, registran ni anulan sueltos: desde el lote. En trámite se descarta; registrado, se revierte, y el puesto y sus ocupantes vuelven a la unidad de origen. Cada acto se notifica por su lado.
    - **1a.** «Incrementos en lote» pasa a «Actos en lote»: lista los dos tipos, con «Revertir el traspaso». El ascendido que vuelve a su puesto reservado vuelve a la unidad en que esté hoy el puesto.
    - **1a.** Fuera: el traspaso a otra institución (cierra el vínculo, con el dictamen de Finanzas y la aprobación del Ministerio del Trabajo), y el grupo, la denominación y el renombrado de cargos con puestos ocupados, que van en la 1b.
+   - **1b.** Revisión de la clasificación (`revision_clasificacion`; LOSEP Arts. 61 y 62; Reglamento a la LOSEP Arts. 163 y 173): el GAD aplica su propio manual, que expide la autoridad nominadora. Tres causales, cada una con su casilla:
+     - **revalorización**: sube el grado y conserva la denominación;
+     - **reclasificación**: cambia la denominación, y el grado puede quedar o subir;
+     - **ubicación**: sitúa el puesto en el grado y la denominación de un manual nuevo.
+     - Se valida solo lo mínimo de cada una. **[Pendiente: Talento Humano las coteja con la norma técnica del Ministerio.]**
+   - **1b.** En Estructura, «Revisar la clasificación» desde un puesto ocupado: el lote lleva uno o varios puestos, cada uno con su grado y/o su denominación nuevos, la resolución que la aprueba y, si sube la remuneración de alguien, el dictamen presupuestario, uno para el lote. Da una acción por ocupante, que se registra y se revierte entera, como el traspaso (`LoteEnteroService`, que comparten).
+   - **1b.** No se revisan el puesto de una autoridad electa (su remuneración la fija la ley), el de obreros (sube con el incremento en lote de la 4.6), el de ocupantes que no reciben acción de personal, el que tiene acciones en trámite ni el que tiene una subrogación o un encargo vigente: cambiar el grupo puede sacarlo del nivel jerárquico superior. Los vacantes se editan directo.
+   - **1b.** La remuneración nueva es la del grado nuevo, o la que el ocupante ya cobra si es mayor: nunca baja. El grado de un puesto ocupado tampoco baja, mientras la nómina pague la RMU del puesto (7.3). Al surtir efecto, el primer acto de cada puesto le cambia el grupo y/o el cargo, y cada uno escribe la remuneración en el contrato de su ocupante; revertir devuelve las dos cosas.
+   - **1b.** Lo firmado no se reescribe: toda acción nueva guarda el grupo y la denominación de origen al crearse (`grupo_ocupacional_origen_id`, `cargo_origen_id`) y los de destino al registrarse (`…_destino_id`); la revisión trae los suyos desde el lote. El documento imprime lo guardado; lo anterior a la fase sigue leyendo el puesto.
+   - **1b.** Con el puesto ocupado, Estructura ya no cambia a mano el grupo ni el cargo. El cargo se sigue renombrando para corregir cómo está escrito, pero si tiene puestos ocupados pide el motivo y lo deja en el registro de auditoría con el nombre de antes y el de después: cambiar la denominación es reclasificar. La denominación genérica, el CIUO y la misión se editan como siempre.
+   - **1b.** Fuera: bajar el grado de un puesto ocupado conservando el sueldo, que espera a la 7.3, y la pantalla del historial del puesto.
 2. Actos en lote.
 3. Novedades de nómina; la nómina lee el vínculo (con un mes de corrida en paralelo).
 4. Desvinculación.

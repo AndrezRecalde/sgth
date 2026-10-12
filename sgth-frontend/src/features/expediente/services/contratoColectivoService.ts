@@ -115,13 +115,19 @@ export type IncrementoEnLoteData = {
 
 export type LoteAccion = {
   id: number
-  /** El incremento de los obreros (fase 4.6) o el traspaso de un puesto (7.1a). */
-  tipo: 'incremento_obreros' | 'traspaso_puesto'
+  /**
+   * El incremento de los obreros (fase 4.6), el traspaso de un puesto (7.1a) o
+   * la revisión de la clasificación (7.1b).
+   */
+  tipo: 'incremento_obreros' | 'traspaso_puesto' | 'revision_clasificacion'
   descripcion: string
   fecha_efectiva: string
-  /** El acuerdo o la cláusula; en el traspaso, el informe técnico de la UATH. */
+  /**
+   * El acuerdo o la cláusula; en el traspaso, el informe técnico de la UATH; en
+   * la revisión, la resolución que la aprueba.
+   */
   documento_origen: string
-  /** El traspaso no lo lleva: el puesto se va con su partida. */
+  /** El traspaso no lo lleva, ni la revisión que no sube la remuneración. */
   dictamen_presupuestario_ref: string | null
   parametros: { modo: 'porcentaje' | 'monto'; valor: number; unidad_administrativa_id: number | null }
   contrato_colectivo_id: number | null
@@ -132,6 +138,11 @@ export type LoteAccion = {
     unidad_origen: string | null
     unidad_destino: string | null
     criterio: string | null
+  } | null
+  /** La causal y, de cada puesto, cómo estaba y cómo queda (fase 7.1b). */
+  revision?: {
+    causal: string | null
+    puestos: { puesto_id: number; antes: string; despues: string }[]
   } | null
   creado_por: string | null
   created_at: string | null

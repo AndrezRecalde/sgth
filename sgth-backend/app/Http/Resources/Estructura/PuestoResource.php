@@ -2,6 +2,7 @@
 namespace App\Http\Resources\Estructura;
 
 use App\Services\Estructura\ProteccionDePuestoOcupado;
+use App\Services\Expediente\RevisionDeClasificacionService;
 use App\Services\Expediente\TraspasoDePuestoService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -33,6 +34,8 @@ class PuestoResource extends JsonResource
             // Ni la autoridad electa, ni la jefatura, ni el de obreros se
             // traspasan: la pantalla no lo ofrece.
             'admite_traspaso'           => TraspasoDePuestoService::admiteTraspaso($this->resource),
+            // Ni la autoridad electa ni el de obreros se revisan (fase 7.1b).
+            'admite_revision'           => RevisionDeClasificacionService::admiteRevision($this->resource),
 
             'cargo' => $this->whenLoaded('cargo', fn() => [
                 'id'                     => $this->cargo->id,

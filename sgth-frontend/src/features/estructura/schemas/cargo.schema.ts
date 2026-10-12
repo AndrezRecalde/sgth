@@ -14,6 +14,12 @@ export const cargoSchema = z.object({
     .max(10, 'Máximo 10 dígitos')
     .optional(),
   mision: z.string().optional(),
+  /**
+   * Por qué se corrige el nombre de un cargo con puestos ocupados (fase 7.1b):
+   * cambiar la denominación es reclasificar, y lo que se corrige queda
+   * registrado.
+   */
+  motivo_correccion: z.string().max(300, 'Máximo 300 caracteres').optional(),
 })
 
 export type CargoFormData = z.infer<typeof cargoSchema>

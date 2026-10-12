@@ -81,15 +81,16 @@ class MovimientoPersonalStateService
 
         $this->assertTransicionPermitida($origen, $destino);
 
-        // El traspaso de un puesto se suscribe, se registra y se anula con su
+        // El traspaso de un puesto (fase 7.1a) y la revisión de su
+        // clasificación (7.1b) se suscriben, se registran y se anulan con su
         // lote, todos a la vez: un puesto no puede quedar con unos ocupantes en
-        // cada unidad (fase 7.1a). Notificar, sí, a cada uno por su lado.
-        if ($movimiento->esTraspasoDePuesto() && $destino !== EstadoAccionPersonal::NOTIFICADA
+        // cada situación. Notificar, sí, a cada uno por su lado.
+        if ($movimiento->seTramitaEnLote() && $destino !== EstadoAccionPersonal::NOTIFICADA
             && ! ($datos['por_el_lote'] ?? false)
         ) {
             throw new ReglaNegocioException(
-                "Este acto es parte del traspaso del lote #{$movimiento->lote_id}: se suscribe, se registra y se "
-                    .'anula desde el lote, con los de los demás ocupantes.'
+                "Este acto es parte del lote #{$movimiento->lote_id}: se suscribe, se registra y se anula desde el "
+                    .'lote, con los de los demás ocupantes.'
             );
         }
 
@@ -145,8 +146,8 @@ class MovimientoPersonalStateService
             fn (EstadoAccionPersonal $destino) => (($permiso = $destino->permisoParaLlegar()) === null
                 || $usuario->can($permiso->value))
                 && ($destino !== EstadoAccionPersonal::NOTIFICADA || $this->seNotifica($movimiento))
-                // El traspaso de puesto se tramita desde su lote (fase 7.1a).
-                && (! $movimiento->esTraspasoDePuesto() || $destino === EstadoAccionPersonal::NOTIFICADA),
+                // El traspaso y la revisión se tramitan desde su lote (7.1a y 7.1b).
+                && (! $movimiento->seTramitaEnLote() || $destino === EstadoAccionPersonal::NOTIFICADA),
         ));
     }
 
@@ -368,6 +369,14 @@ class MovimientoPersonalStateService
         // Art. 20; fase 6.4): se calcula aquí, una vez, y queda guardado.
         $movimiento->presentacion_vence_el = app(PosesionService::class)->venceEl($movimiento)?->toDateString();
 
+        // El grupo y la denominación del puesto de destino, congelados al
+        // registrar (fase 7.1b): una revisión posterior no reescribe lo
+        // firmado. La revisión trae los suyos desde el lote.
+        if ($movimiento->puesto_destino_id && $movimiento->puestoDestino) {
+            $movimiento->grupo_ocupacional_destino_id ??= $movimiento->puestoDestino->grupo_ocupacional_id;
+            $movimiento->cargo_destino_id ??= $movimiento->puestoDestino->cargo_id;
+        }
+
         /*
         | Registrar no es lo mismo que surtir efecto (diseño, 6.2; fase 1.6).
         | Lo que rige hoy o antes se aplica aquí mismo; lo que rige más tarde
@@ -558,6 +567,10 @@ class MovimientoPersonalStateService
             // El puesto pasa a la unidad nueva, y el vínculo del ocupante con
             // él (LOSEP Art. 37; fase 7.1a).
             $this->contratoServidorService->traspasarConElPuesto($movimiento);
+        } elseif ($movimiento->esRevisionDeClasificacion()) {
+            // El puesto cambia de grado o de denominación, y el vínculo del
+            // ocupante, de remuneración (LOSEP Arts. 61 y 62; fase 7.1b).
+            $this->contratoServidorService->aplicarRevisionDeClasificacion($movimiento);
         } elseif ($movimiento->reubicaAlServidor()) {
             // El traspaso y la prestación de servicios reubican dentro del
             // mismo vínculo. Los otros tres subtipos del tipo paraguas no entran
@@ -1144,6 +1157,11 @@ class MovimientoPersonalStateService
 
         if ($movimiento->esTraspasoDePuesto()) {
             $this->contratoServidorService->deshacerTraspasoConElPuesto($movimiento);
+            return;
+        }
+
+        if ($movimiento->esRevisionDeClasificacion()) {
+            $this->contratoServidorService->deshacerRevisionDeClasificacion($movimiento);
             return;
         }
 

@@ -45,6 +45,11 @@ class AccionPersonalPdfService
             'puestoDestino.cargo',
             'puestoDestino.grupoOcupacional',
             'puestoDestino.partidaPresupuestaria',
+            // El grupo y la denominación con que se firmó (fase 7.1b).
+            'grupoOcupacionalOrigen',
+            'cargoOrigen',
+            'grupoOcupacionalDestino',
+            'cargoDestino',
             'partidaPresupuestaria',
             // Partida congelada al crear la acción: es la que debe imprimirse,
             // no la que el puesto tenga hoy.

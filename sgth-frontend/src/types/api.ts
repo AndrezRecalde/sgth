@@ -1301,6 +1301,8 @@ export type PuestoConRelaciones = {
   puede_eliminar?: boolean
   /** Ni la autoridad electa, ni la jefatura, ni el de obreros se traspasan. */
   admite_traspaso?: boolean
+  /** Ni la autoridad electa ni el de obreros se revisan (fase 7.1b). */
+  admite_revision?: boolean
 }
 
 // ── Plantilla ────────────────────────────────────
@@ -1354,6 +1356,11 @@ export type Cargo = {
   codigo_ciuo?: string | null
   mision?: string | null
   activo: boolean
+  /**
+   * Alguno de sus puestos está ocupado: renombrarlo cambia la denominación de
+   * sus ocupantes, y pide el motivo de la corrección (fase 7.1b).
+   */
+  con_puestos_ocupados?: boolean
 }
 
 export type CargoFormData = {

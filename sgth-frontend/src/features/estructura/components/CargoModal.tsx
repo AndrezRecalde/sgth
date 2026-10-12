@@ -6,7 +6,7 @@ import {
   TextInput, Textarea, Anchor,
 } from '@mantine/core'
 import { FormModal } from '@/components/ui'
-import { useForm, type Resolver } from 'react-hook-form'
+import { useForm, useWatch, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useCargoMutations } from '../hooks/useCargoMutations'
@@ -26,8 +26,10 @@ export function CargoModal({ opened, onClose, cargo }: Props) {
 
   const {
     register,
+    control,
     handleSubmit,
     reset,
+    setError,
     formState: { errors },
   } = useForm<CargoFormData>({
     resolver: zodResolver(cargoSchema) as Resolver<CargoFormData>,
@@ -53,7 +55,18 @@ export function CargoModal({ opened, onClose, cargo }: Props) {
     onClose()
   }
 
+  // Renombrar un cargo con puestos ocupados cambia la denominación de sus
+  // ocupantes: solo se corrige cómo está escrito, y se dice por qué (7.1b).
+  const nombre = useWatch({ control, name: 'nombre' })
+  const pideMotivo = isEditing && !!cargo?.con_puestos_ocupados && (nombre ?? '').trim() !== cargo?.nombre
+
   const onSubmit = (values: CargoFormData) => {
+    if (pideMotivo && (values.motivo_correccion?.trim().length ?? 0) < 5) {
+      setError('motivo_correccion', { type: 'manual', message: 'Diga por qué se corrige el nombre' })
+      return
+    }
+    if (!pideMotivo) delete values.motivo_correccion
+
     const mutation = isEditing
       ? editar.mutateAsync({ id: cargo!.id, data: values })
       : crear.mutateAsync(values)
@@ -80,6 +93,16 @@ export function CargoModal({ opened, onClose, cargo }: Props) {
           {...register('nombre')}
           error={errors.nombre?.message}
         />
+        {pideMotivo && (
+          <TextInput
+            label="Motivo de la corrección"
+            description="El cargo tiene puestos ocupados. Si no corrige cómo está escrito sino que cambia la denominación, es una reclasificación: use «Revisar la clasificación» en el puesto."
+            withAsterisk
+            {...contained}
+            {...register('motivo_correccion')}
+            error={errors.motivo_correccion?.message}
+          />
+        )}
         <TextInput
           label="Denominación genérica"
           placeholder="Ej: Analista"

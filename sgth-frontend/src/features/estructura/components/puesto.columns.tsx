@@ -1,5 +1,5 @@
 import { Group, Text } from '@mantine/core'
-import { IconArrowsExchange, IconEdit, IconTrash, IconList } from '@tabler/icons-react'
+import { IconArrowsExchange, IconEdit, IconScale, IconTrash, IconList } from '@tabler/icons-react'
 import { StatusBadge, TableActions } from '@/components/ui'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { PuestoConRelaciones } from '@/types/api'
@@ -11,9 +11,11 @@ type Handlers = {
   onActividades: (puesto: PuestoConRelaciones) => void
   /** Pasarlo ocupado a otra unidad, con el acto de cada ocupante (fase 7.1a). */
   onTraspasar:   (puesto: PuestoConRelaciones) => void
+  /** Cambiarle ocupado el grado o la denominación (fase 7.1b). */
+  onRevisar:     (puesto: PuestoConRelaciones) => void
   /** `gestionar-puestos`. Sin él, solo se consultan las actividades. */
   puedeGestionar: boolean
-  /** `preparar-accion-personal`: el traspaso es un lote de acciones. */
+  /** `preparar-accion-personal`: el traspaso y la revisión son lotes de acciones. */
   puedeTraspasar: boolean
 }
 
@@ -27,7 +29,7 @@ function ocupantesDe(puesto: PuestoConRelaciones): string {
 }
 
 export const getPuestoColumns = (
-  { onEdit, onDelete, onActividades, onTraspasar, puedeGestionar, puedeTraspasar }: Handlers
+  { onEdit, onDelete, onActividades, onTraspasar, onRevisar, puedeGestionar, puedeTraspasar }: Handlers
 ): DataTableColumn<PuestoConRelaciones>[] => [
   {
     accessor: 'cargo',
@@ -110,6 +112,14 @@ export const getPuestoColumns = (
           icon: <IconArrowsExchange size={14} />,
           hidden: !puedeTraspasar || !puesto.ocupado || puesto.admite_traspaso === false,
           onClick: () => onTraspasar(puesto),
+        },
+        {
+          // Ocupado, el grado y la denominación cambian con el acto de cada
+          // ocupante (fase 7.1b). La autoridad y el obrero, no.
+          label: 'Revisar la clasificación',
+          icon: <IconScale size={14} />,
+          hidden: !puedeTraspasar || !puesto.ocupado || puesto.admite_revision === false,
+          onClick: () => onRevisar(puesto),
         },
         {
           // Ni ocupado ni con historia: si no, se desactiva.

@@ -7003,6 +7003,15 @@
                                     },
                                     "activo": {
                                         "type": "boolean"
+                                    },
+                                    "motivo_correccion": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "description": "Corregir c\u00f3mo est\u00e1 escrito un cargo con puestos ocupados pide el\nmotivo (fase 7.1b); cambiar la denominaci\u00f3n es reclasificar.",
+                                        "minLength": 5,
+                                        "maxLength": 300
                                     }
                                 }
                             }
@@ -25132,6 +25141,29 @@
                                                             "criterio"
                                                         ]
                                                     },
+                                                    "revision": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "description": "La causal y los puestos de la revisi\u00f3n, de c\u00f3mo estaban a c\u00f3mo\nquedan (fase 7.1b).",
+                                                        "properties": {
+                                                            "causal": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "puestos": {
+                                                                "type": "array",
+                                                                "items": {}
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "causal",
+                                                            "puestos"
+                                                        ]
+                                                    },
                                                     "creado_por": {
                                                         "type": "string"
                                                     },
@@ -25158,6 +25190,7 @@
                                                     "parametros",
                                                     "contrato_colectivo_id",
                                                     "traspaso",
+                                                    "revision",
                                                     "creado_por",
                                                     "created_at",
                                                     "total",
@@ -25458,6 +25491,29 @@
                                                         "criterio"
                                                     ]
                                                 },
+                                                "revision": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "description": "La causal y los puestos de la revisi\u00f3n, de c\u00f3mo estaban a c\u00f3mo\nquedan (fase 7.1b).",
+                                                    "properties": {
+                                                        "causal": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "puestos": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "causal",
+                                                        "puestos"
+                                                    ]
+                                                },
                                                 "creado_por": {
                                                     "type": "string"
                                                 },
@@ -25531,6 +25587,7 @@
                                                 "parametros",
                                                 "contrato_colectivo_id",
                                                 "traspaso",
+                                                "revision",
                                                 "creado_por",
                                                 "created_at",
                                                 "total",
@@ -25801,6 +25858,29 @@
                                                         "criterio"
                                                     ]
                                                 },
+                                                "revision": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "description": "La causal y los puestos de la revisi\u00f3n, de c\u00f3mo estaban a c\u00f3mo\nquedan (fase 7.1b).",
+                                                    "properties": {
+                                                        "causal": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "puestos": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "causal",
+                                                        "puestos"
+                                                    ]
+                                                },
                                                 "creado_por": {
                                                     "type": "string"
                                                 },
@@ -25874,6 +25954,317 @@
                                                 "parametros",
                                                 "contrato_colectivo_id",
                                                 "traspaso",
+                                                "revision",
+                                                "creado_por",
+                                                "created_at",
+                                                "total",
+                                                "por_estado",
+                                                "actos"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/lotes-accion/revision-clasificacion/previsualizar": {
+            "post": {
+                "operationId": "loteAccion.previsualizarRevision",
+                "summary": "Lo que recibir\u00eda cada ocupante de la revisi\u00f3n, y lo que la impide\n(fase 7.1b)",
+                "tags": [
+                    "LoteAccion"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RevisionDeClasificacionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Vista previa de la revisi\u00f3n de la clasificaci\u00f3n."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "puestos": {
+                                                    "type": "array",
+                                                    "items": {}
+                                                },
+                                                "sube_la_remuneracion": {
+                                                    "type": "boolean"
+                                                },
+                                                "causales": {
+                                                    "type": "array",
+                                                    "items": {}
+                                                }
+                                            },
+                                            "required": [
+                                                "puestos",
+                                                "sube_la_remuneracion",
+                                                "causales"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/lotes-accion/revision-clasificacion": {
+            "post": {
+                "operationId": "loteAccion.revisar",
+                "summary": "Prepara un borrador por ocupante de cada puesto, todos o ninguno (fase 7.1b)",
+                "tags": [
+                    "LoteAccion"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RevisionDeClasificacionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Revisi\u00f3n de la clasificaci\u00f3n preparada."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "tipo": {
+                                                    "type": "string"
+                                                },
+                                                "descripcion": {
+                                                    "type": "string"
+                                                },
+                                                "fecha_efectiva": {
+                                                    "type": "string"
+                                                },
+                                                "documento_origen": {
+                                                    "type": "string"
+                                                },
+                                                "dictamen_presupuestario_ref": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "parametros": {
+                                                    "type": "array",
+                                                    "items": {}
+                                                },
+                                                "contrato_colectivo_id": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "traspaso": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "description": "El puesto y las unidades del traspaso (fase 7.1a).",
+                                                    "properties": {
+                                                        "puesto_id": {},
+                                                        "puesto": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "unidad_origen": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "unidad_destino": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "criterio": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "puesto_id",
+                                                        "puesto",
+                                                        "unidad_origen",
+                                                        "unidad_destino",
+                                                        "criterio"
+                                                    ]
+                                                },
+                                                "revision": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "description": "La causal y los puestos de la revisi\u00f3n, de c\u00f3mo estaban a c\u00f3mo\nquedan (fase 7.1b).",
+                                                    "properties": {
+                                                        "causal": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "puestos": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "causal",
+                                                        "puestos"
+                                                    ]
+                                                },
+                                                "creado_por": {
+                                                    "type": "string"
+                                                },
+                                                "created_at": {
+                                                    "type": "string"
+                                                },
+                                                "total": {
+                                                    "type": "string"
+                                                },
+                                                "por_estado": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "integer"
+                                                    }
+                                                },
+                                                "actos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "movimiento_id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "codigo_registro": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "estado": {
+                                                                "type": "string"
+                                                            },
+                                                            "nombre": {
+                                                                "type": "string"
+                                                            },
+                                                            "cedula": {
+                                                                "type": "string"
+                                                            },
+                                                            "remuneracion_actual": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "remuneracion_nueva": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "movimiento_id",
+                                                            "codigo_registro",
+                                                            "estado",
+                                                            "nombre",
+                                                            "cedula",
+                                                            "remuneracion_actual",
+                                                            "remuneracion_nueva"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "tipo",
+                                                "descripcion",
+                                                "fecha_efectiva",
+                                                "documento_origen",
+                                                "dictamen_presupuestario_ref",
+                                                "parametros",
+                                                "contrato_colectivo_id",
+                                                "traspaso",
+                                                "revision",
                                                 "creado_por",
                                                 "created_at",
                                                 "total",
@@ -26011,6 +26402,29 @@
                                                         "criterio"
                                                     ]
                                                 },
+                                                "revision": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "description": "La causal y los puestos de la revisi\u00f3n, de c\u00f3mo estaban a c\u00f3mo\nquedan (fase 7.1b).",
+                                                    "properties": {
+                                                        "causal": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "puestos": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "causal",
+                                                        "puestos"
+                                                    ]
+                                                },
                                                 "creado_por": {
                                                     "type": "string"
                                                 },
@@ -26084,6 +26498,7 @@
                                                 "parametros",
                                                 "contrato_colectivo_id",
                                                 "traspaso",
+                                                "revision",
                                                 "creado_por",
                                                 "created_at",
                                                 "total",
@@ -26283,6 +26698,29 @@
                                                                 "criterio"
                                                             ]
                                                         },
+                                                        "revision": {
+                                                            "type": [
+                                                                "object",
+                                                                "null"
+                                                            ],
+                                                            "description": "La causal y los puestos de la revisi\u00f3n, de c\u00f3mo estaban a c\u00f3mo\nquedan (fase 7.1b).",
+                                                            "properties": {
+                                                                "causal": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "puestos": {
+                                                                    "type": "array",
+                                                                    "items": {}
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "causal",
+                                                                "puestos"
+                                                            ]
+                                                        },
                                                         "creado_por": {
                                                             "type": "string"
                                                         },
@@ -26356,6 +26794,7 @@
                                                         "parametros",
                                                         "contrato_colectivo_id",
                                                         "traspaso",
+                                                        "revision",
                                                         "creado_por",
                                                         "created_at",
                                                         "total",
@@ -26525,6 +26964,29 @@
                                                                 "criterio"
                                                             ]
                                                         },
+                                                        "revision": {
+                                                            "type": [
+                                                                "object",
+                                                                "null"
+                                                            ],
+                                                            "description": "La causal y los puestos de la revisi\u00f3n, de c\u00f3mo estaban a c\u00f3mo\nquedan (fase 7.1b).",
+                                                            "properties": {
+                                                                "causal": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "puestos": {
+                                                                    "type": "array",
+                                                                    "items": {}
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "causal",
+                                                                "puestos"
+                                                            ]
+                                                        },
                                                         "creado_por": {
                                                             "type": "string"
                                                         },
@@ -26598,6 +27060,7 @@
                                                         "parametros",
                                                         "contrato_colectivo_id",
                                                         "traspaso",
+                                                        "revision",
                                                         "creado_por",
                                                         "created_at",
                                                         "total",
@@ -26640,7 +27103,7 @@
         "/v1/expediente/lotes-accion/{lote}/revertir": {
             "post": {
                 "operationId": "loteAccion.revertir",
-                "summary": "Deja sin efecto el traspaso registrado: anula todos sus actos, y el\npuesto y sus ocupantes vuelven a la unidad de origen (fase 7.1a)",
+                "summary": "Deja sin efecto el traspaso o la revisi\u00f3n registrados: anula todos sus\nactos, y el puesto y sus ocupantes vuelven a como estaban (7.1a, 7.1b)",
                 "tags": [
                     "LoteAccion"
                 ],
@@ -26770,6 +27233,29 @@
                                                                 "criterio"
                                                             ]
                                                         },
+                                                        "revision": {
+                                                            "type": [
+                                                                "object",
+                                                                "null"
+                                                            ],
+                                                            "description": "La causal y los puestos de la revisi\u00f3n, de c\u00f3mo estaban a c\u00f3mo\nquedan (fase 7.1b).",
+                                                            "properties": {
+                                                                "causal": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "puestos": {
+                                                                    "type": "array",
+                                                                    "items": {}
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "causal",
+                                                                "puestos"
+                                                            ]
+                                                        },
                                                         "creado_por": {
                                                             "type": "string"
                                                         },
@@ -26843,6 +27329,7 @@
                                                         "parametros",
                                                         "contrato_colectivo_id",
                                                         "traspaso",
+                                                        "revision",
                                                         "creado_por",
                                                         "created_at",
                                                         "total",
@@ -49957,7 +50444,10 @@
                             "Reemplazo de un dignatario electo",
                             "Candidatura a elecci\u00f3n popular",
                             "Cuidado de hijos",
-                            "Seg\u00fan su r\u00e9gimen (C\u00f3digo del Trabajo)"
+                            "Seg\u00fan su r\u00e9gimen (C\u00f3digo del Trabajo)",
+                            "Revalorizaci\u00f3n",
+                            "Reclasificaci\u00f3n",
+                            "Ubicaci\u00f3n"
                         ]
                     },
                     "base_legal": {
@@ -50408,7 +50898,8 @@
                     "asuncion_definitiva",
                     "adenda",
                     "cambio_lugar",
-                    "traspaso_puesto"
+                    "traspaso_puesto",
+                    "revision_clasificacion"
                 ],
                 "title": "ClaseAccionPersonal"
             },
@@ -50442,7 +50933,8 @@
                             "Asunci\u00f3n Definitiva",
                             "Adenda al contrato",
                             "Cambio de Lugar de Trabajo",
-                            "Traspaso de Puesto"
+                            "Traspaso de Puesto",
+                            "Revisi\u00f3n de la Clasificaci\u00f3n"
                         ]
                     },
                     "familia": {
@@ -50480,6 +50972,7 @@
                             "LOSEP Art. 68; Reglamento a la LOSEP Arts. 190 y 191",
                             "LOSEP Arts. 35 y 36",
                             "LOSEP Art. 37; Reglamento a la LOSEP Art. 69",
+                            "LOSEP Arts. 61 y 62; Reglamento a la LOSEP Arts. 163 y 173",
                             "LOSEP Arts. 39 y 40",
                             "LOSEP Art. 30",
                             "LOSEP Art. 31",
@@ -56472,6 +56965,30 @@
                             "integer",
                             "null"
                         ]
+                    },
+                    "grupo_ocupacional_origen_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "cargo_origen_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "grupo_ocupacional_destino_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "cargo_destino_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -56569,7 +57086,11 @@
                     "presentacion_vence_el",
                     "fecha_posesion",
                     "lugar_posesion",
-                    "posesion_registrada_por"
+                    "posesion_registrada_por",
+                    "grupo_ocupacional_origen_id",
+                    "cargo_origen_id",
+                    "grupo_ocupacional_destino_id",
+                    "cargo_destino_id"
                 ],
                 "title": "MovimientoPersonal"
             },
@@ -56865,6 +57386,31 @@
                         ]
                     },
                     "puesto_destino_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "grupo_ocupacional_origen_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "El grupo y la denominaci\u00f3n con que se firm\u00f3 (fase 7.1b): una\nrevisi\u00f3n de la clasificaci\u00f3n posterior no los cambia."
+                    },
+                    "cargo_origen_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "grupo_ocupacional_destino_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "cargo_destino_id": {
                         "type": [
                             "integer",
                             "null"
@@ -57612,6 +58158,10 @@
                     "prorroga_causa_etiqueta",
                     "puesto_origen_id",
                     "puesto_destino_id",
+                    "grupo_ocupacional_origen_id",
+                    "cargo_origen_id",
+                    "grupo_ocupacional_destino_id",
+                    "cargo_destino_id",
                     "tipo_nombramiento_propuesto",
                     "supuesto_provisional_propuesto",
                     "supuesto_provisional_etiqueta",
@@ -59375,6 +59925,10 @@
                         "type": "boolean",
                         "description": "Ni la autoridad electa, ni la jefatura, ni el de obreros se\ntraspasan: la pantalla no lo ofrece."
                     },
+                    "admite_revision": {
+                        "type": "boolean",
+                        "description": "Ni la autoridad electa ni el de obreros se revisan (fase 7.1b)."
+                    },
                     "cargo": {
                         "type": "object",
                         "properties": {
@@ -59511,6 +60065,7 @@
                     "ocupado",
                     "puede_eliminar",
                     "admite_traspaso",
+                    "admite_revision",
                     "ocupantes"
                 ],
                 "title": "PuestoResource"
@@ -60263,6 +60818,76 @@
                     "negada"
                 ],
                 "title": "ResultadoNotificacion"
+            },
+            "RevisionDeClasificacionRequest": {
+                "type": "object",
+                "description": "La revisi\u00f3n de la clasificaci\u00f3n de uno o varios puestos ocupados (LOSEP\nArts. 61 y 62; fase 7.1b). La vista previa pide la causal y los puestos, con\nsu grado y su denominaci\u00f3n nuevos; prepararla pide adem\u00e1s la resoluci\u00f3n que\nla aprueba, la explicaci\u00f3n y la fecha. El dictamen, si sube la remuneraci\u00f3n:\neso lo mira el servicio, que sabe cu\u00e1nto.",
+                "properties": {
+                    "causal": {
+                        "type": "string",
+                        "enum": [
+                            "revalorizacion",
+                            "reclasificacion",
+                            "ubicacion"
+                        ]
+                    },
+                    "documento_origen": {
+                        "type": "string",
+                        "maxLength": 150
+                    },
+                    "dictamen_presupuestario_ref": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 100
+                    },
+                    "descripcion": {
+                        "type": "string",
+                        "minLength": 10,
+                        "maxLength": 1000
+                    },
+                    "fecha_efectiva": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "puestos": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "puesto_id": {
+                                    "type": "integer"
+                                },
+                                "grupo_ocupacional_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
+                                },
+                                "cargo_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "puesto_id"
+                            ]
+                        },
+                        "minItems": 1,
+                        "maxItems": 100
+                    }
+                },
+                "required": [
+                    "causal",
+                    "documento_origen",
+                    "descripcion",
+                    "fecha_efectiva",
+                    "puestos"
+                ],
+                "title": "RevisionDeClasificacionRequest"
             },
             "RiesgoLaboralResource": {
                 "type": "object",
@@ -65277,7 +65902,10 @@
                     "reemplazo_dignatario",
                     "candidatura",
                     "cuidado_hijos",
-                    "segun_su_regimen"
+                    "segun_su_regimen",
+                    "revalorizacion",
+                    "reclasificacion",
+                    "ubicacion"
                 ],
                 "title": "SubtipoMovimientoPersonal"
             },
@@ -65750,7 +66378,8 @@
                     "asuncion_definitiva",
                     "adenda",
                     "cambio_lugar",
-                    "traspaso_puesto"
+                    "traspaso_puesto",
+                    "revision_clasificacion"
                 ],
                 "title": "TipoMovimientoPersonal"
             },

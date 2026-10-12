@@ -4,9 +4,12 @@ namespace App\Services\Expediente;
 
 use App\Enums\CriterioTraspasoPuesto;
 use App\Enums\EstadoAccionPersonal;
+use App\Enums\SubtipoMovimientoPersonal;
 use App\Enums\TipoMovimientoPersonal;
 use App\Enums\TipoNombramiento;
 use App\Exceptions\ReglaNegocioException;
+use App\Models\Estructura\Cargo;
+use App\Models\Estructura\GrupoOcupacional;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Expediente\ContratoServidor;
@@ -294,6 +297,9 @@ class IncrementoEnLoteService
             'contrato_colectivo_id'       => $lote->contrato_colectivo_id,
             // El puesto y las unidades del traspaso (fase 7.1a).
             'traspaso'                    => $lote->tipo === LoteAccion::TRASPASO_PUESTO ? $this->traspaso($lote) : null,
+            // La causal y los puestos de la revisión, de cómo estaban a cómo
+            // quedan (fase 7.1b).
+            'revision'                    => $lote->tipo === LoteAccion::REVISION_CLASIFICACION ? $this->revision($lote) : null,
             'creado_por'                  => $lote->creadoPor?->servidor
                 ? trim($lote->creadoPor->servidor->nombre.' '.$lote->creadoPor->servidor->apellido)
                 : $lote->creadoPor?->usuario_ti,
@@ -323,6 +329,32 @@ class IncrementoEnLoteService
             'criterio'       => isset($p['criterio'])
                 ? CriterioTraspasoPuesto::tryFrom($p['criterio'])?->etiqueta()
                 : null,
+        ];
+    }
+
+    /**
+     * La causal y, de cada puesto, la denominación y el grado de antes y de
+     * después, con sus nombres.
+     *
+     * @return array{causal: ?string, puestos: list<array{puesto_id: int, antes: string, despues: string}>}
+     */
+    private function revision(LoteAccion $lote): array
+    {
+        $p = $lote->parametros ?? [];
+        $grado = fn ($id) => $id ? GrupoOcupacional::find($id)?->grado_codigo : null;
+        $cargo = fn ($id) => $id ? Cargo::find($id)?->nombre : null;
+        $describe = fn (?string $denominacion, ?string $grado) => trim(implode(' · ', array_filter([$denominacion, $grado])));
+
+        return [
+            'causal'  => isset($p['causal']) ? SubtipoMovimientoPersonal::tryFrom($p['causal'])?->etiqueta() : null,
+            'puestos' => array_map(fn (array $q) => [
+                'puesto_id' => (int) $q['puesto_id'],
+                'antes'     => $describe($cargo($q['cargo_origen_id'] ?? null), $grado($q['grupo_origen_id'] ?? null)),
+                'despues'   => $describe(
+                    $cargo($q['cargo_destino_id'] ?? null) ?? $cargo($q['cargo_origen_id'] ?? null),
+                    $grado($q['grupo_destino_id'] ?? null) ?? $grado($q['grupo_origen_id'] ?? null),
+                ),
+            ], $p['puestos'] ?? []),
         ];
     }
 
