@@ -65,6 +65,9 @@ class MovimientoPersonal extends Model
                 'notificacion_medio',
                 'notificacion_resultado',
                 'acuse_en',
+                // La posesión y hasta cuándo podía presentarse (fase 6.4).
+                'presentacion_vence_el',
+                'fecha_posesion',
                 // Por qué se anuló: es la justificación de un acto sobre otro
                 // acto, así que va al registro de auditoría con el resto.
                 'motivo_anulacion',
@@ -179,6 +182,11 @@ class MovimientoPersonal extends Model
                     ['acuse_en', 'correo_enviado_en', 'correo_destino'],
                     fn (string $campo) => $movimiento->getOriginal($campo) === null,
                 )),
+                // Y la posesión, una sola vez: llega cuando la persona se
+                // presenta, después de registrar (fase 6.4).
+                ...($movimiento->getOriginal('fecha_posesion') === null
+                    ? ['fecha_posesion', 'lugar_posesion', 'posesion_registrada_por']
+                    : []),
                 // Los datos del paso, solo en el paso: antes, con la acción ya
                 // notificada, se podía reescribir quién y cuándo la notificó.
                 ...($movimiento->isDirty('estado') ? match ($movimiento->estado) {
@@ -286,6 +294,11 @@ class MovimientoPersonal extends Model
         'fecha_efectiva',
         'fecha_inicio',
         'fecha_fin',
+        // El término para presentarse del ingreso: 3 días, o hasta 5 por las
+        // circunstancias geográficas, con la razón (fase 6.4). La fecha en que
+        // vence y la posesión no se llenan: las escribe PosesionService.
+        'dias_para_presentarse',
+        'razon_dias_adicionales',
         'unidad_origen_id',
         'unidad_destino_id',
         // A qué entidad del Estado va, en comisiones e intercambio (fase 2.3).
@@ -378,6 +391,9 @@ class MovimientoPersonal extends Model
             'fecha_efectiva'  => 'date',
             'fecha_inicio'    => 'date',
             'fecha_fin'       => 'date',
+            'dias_para_presentarse' => 'integer',
+            'presentacion_vence_el' => 'date',
+            'fecha_posesion'        => 'date',
             'caucionado'      => 'boolean',
             'caucion_fecha'   => 'date',
             'fecha_sentencia'  => 'date',
@@ -982,6 +998,42 @@ class MovimientoPersonal extends Model
         return in_array($this->estado, [EstadoAccionPersonal::REGISTRADA, EstadoAccionPersonal::NOTIFICADA], true)
             && filled($this->codigo_registro)
             && $this->efecto_aplicado_en === null;
+    }
+
+    /**
+     * Los ingresos que esperan la posesión dentro de su plazo para
+     * presentarse (Reglamento a la LOSEP, Art. 20; fase 6.4). Solo los que
+     * tienen plazo: los registrados antes de la fase no lo tienen y no alertan.
+     */
+    public function scopeSinPosesion(Builder $query): Builder
+    {
+        return $query->whereIn('estado', [
+            EstadoAccionPersonal::REGISTRADA->value,
+            EstadoAccionPersonal::NOTIFICADA->value,
+        ])
+            ->whereNotNull('presentacion_vence_el')
+            ->whereNull('fecha_posesion');
+    }
+
+    /**
+     * ¿Venció el plazo sin posesión? El nombramiento queda insubsistente
+     * (Reglamento a la LOSEP, Art. 20): Talento Humano lo anula. El día del
+     * vencimiento todavía cuenta.
+     */
+    public function presentacionVencida(): bool
+    {
+        return $this->presentacion_vence_el !== null
+            && $this->fecha_posesion === null
+            && in_array($this->estado, [EstadoAccionPersonal::REGISTRADA, EstadoAccionPersonal::NOTIFICADA], true)
+            && $this->presentacion_vence_el->lessThan(today());
+    }
+
+    /** ¿Se posesionó después del día en que vencía su plazo? */
+    public function posesionFueraDePlazo(): bool
+    {
+        return $this->presentacion_vence_el !== null
+            && $this->fecha_posesion !== null
+            && $this->fecha_posesion->greaterThan($this->presentacion_vence_el);
     }
 
     /**

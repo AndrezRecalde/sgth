@@ -921,6 +921,25 @@ export type MovimientoPersonal = {
   correo_enviado_en?: string | null
   /** A dónde salió el correo, o por qué no salió. */
   correo_destino?: 'institucional' | 'personal' | 'sin_direccion' | 'fallo' | null
+  /**
+   * La posesión y el plazo para presentarse (Reglamento a la LOSEP, Art. 20;
+   * fase 6.4). El término lo fija el borrador del ingreso por acción de
+   * personal: 3 días hábiles, o hasta 5 con la razón. Hasta cuándo puede
+   * presentarse se calcula al registrar; lo anterior a la fase no lo tiene.
+   */
+  dias_para_presentarse?: number | null
+  razon_dias_adicionales?: string | null
+  presentacion_vence_el?: string | null
+  /** Venció sin posesión: el nombramiento queda insubsistente y se anula. */
+  presentacion_vencida?: boolean
+  fecha_posesion?: string | null
+  lugar_posesion?: string | null
+  posesion_registrada_por?: number | null
+  posesion_fuera_de_plazo?: boolean
+  /** Si el acto lleva posesión: ingreso, ascenso, definitivo, encargo; o el «se presentó» del ocasional. */
+  admite_posesion?: boolean
+  /** Si quien mira puede registrarla: vigente, sin registrar y no sobre sí mismo. */
+  puede_registrar_posesion?: boolean
   /** Por qué se anuló. Null en lo anulado antes del 2026-09-27, que no lo pedía. */
   motivo_anulacion?: string | null
   observacion?: string | null

@@ -271,6 +271,11 @@ return [
         'credencial_cne_numero' => 'número de la credencial del CNE',
         'credencial_cne_fecha'  => 'fecha de la credencial del CNE',
         'acta_posesion_numero'  => 'número del acta de posesión',
+        // La posesión y el término para presentarse (fase 6.4).
+        'dias_para_presentarse'  => 'término para presentarse',
+        'razon_dias_adicionales' => 'razón de los días adicionales',
+        'fecha_posesion'         => 'fecha de la posesión',
+        'lugar_posesion'         => 'lugar de la posesión',
         'con_remuneracion'      => 'remuneración de la licencia',
         'prorroga_causa'        => 'causa de la prórroga',
         'causa_judicial_numero' => 'número de la causa judicial',

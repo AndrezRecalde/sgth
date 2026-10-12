@@ -19,6 +19,8 @@ export type FiltrosBandeja = {
   lote_id?: number
   /** Lo notificado por el portal que espera el acuse del servidor (fase 6.3a). */
   sin_acuse?: boolean
+  /** Los ingresos que esperan la posesión dentro de su plazo para presentarse (fase 6.4). */
+  sin_posesion?: boolean
   anio?: number
   page?: number
   per_page?: number
@@ -82,4 +84,13 @@ export type ActualizarBorradorData = {
   caucionado?: boolean | null
   caucion_numero?: string | null
   caucion_fecha?: string | null
+  /** El término para presentarse del ingreso (fase 6.4). */
+  dias_para_presentarse?: number | null
+  razon_dias_adicionales?: string | null
+}
+
+/** La posesión del cargo, o el día en que el ocasional se presentó (fase 6.4). */
+export type RegistrarPosesionData = {
+  fecha_posesion: string
+  lugar_posesion?: string | null
 }

@@ -350,6 +350,10 @@ class MovimientoPersonalStateService
         };
         $movimiento->fecha_registro  = now()->toDateString();
 
+        // Hasta cuándo puede presentarse quien ingresa (Reglamento a la LOSEP,
+        // Art. 20; fase 6.4): se calcula aquí, una vez, y queda guardado.
+        $movimiento->presentacion_vence_el = app(PosesionService::class)->venceEl($movimiento)?->toDateString();
+
         /*
         | Registrar no es lo mismo que surtir efecto (diseño, 6.2; fase 1.6).
         | Lo que rige hoy o antes se aplica aquí mismo; lo que rige más tarde

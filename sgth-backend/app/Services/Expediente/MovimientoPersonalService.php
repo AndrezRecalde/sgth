@@ -284,6 +284,15 @@ class MovimientoPersonalService
             $tipoMovimiento, $datos['tipo_nombramiento_propuesto'] ?? null, $servidor->contratoVigente?->tipo_nombramiento,
         );
 
+        // El término para presentarse, solo del ingreso por acción de personal:
+        // 3 días, o hasta 5 con la razón (Reglamento a la LOSEP, Art. 20; fase 6.4).
+        $datos = [...$datos, ...PosesionService::diasDelBorrador(
+            $tipoMovimiento,
+            InstrumentoActo::from($datos['instrumento']),
+            $datos['dias_para_presentarse'] ?? null,
+            $datos['razon_dias_adicionales'] ?? null,
+        )];
+
         // Default de dictamen médico por tipo/subtipo. Si el llamador lo trae
         // explícito (Talento Humano lo editó, o el ingreso de reclutamiento que
         // ya tiene su dictamen en mano), se respeta.
@@ -400,6 +409,17 @@ class MovimientoPersonalService
                 $datos['tipo_nombramiento_propuesto'] ?? $movimiento->tipo_nombramiento_propuesto,
                 Servidor::with('contratoVigente')->find($movimiento->servidor_id)?->contratoVigente?->tipo_nombramiento,
             );
+        }
+
+        // El término para presentarse, con lo corregido: el instrumento pudo
+        // cambiar, y con él si hay término (fase 6.4).
+        if (array_intersect(array_keys($datos), ['dias_para_presentarse', 'razon_dias_adicionales', 'instrumento']) !== []) {
+            $datos = [...$datos, ...PosesionService::diasDelBorrador(
+                $movimiento->tipo_movimiento,
+                isset($datos['instrumento']) ? InstrumentoActo::from($datos['instrumento']) : $movimiento->instrumento,
+                array_key_exists('dias_para_presentarse', $datos) ? $datos['dias_para_presentarse'] : $movimiento->dias_para_presentarse,
+                array_key_exists('razon_dias_adicionales', $datos) ? $datos['razon_dias_adicionales'] : $movimiento->razon_dias_adicionales,
+            )];
         }
 
         $subtipoActual = $movimiento->subtipoEfectivo();

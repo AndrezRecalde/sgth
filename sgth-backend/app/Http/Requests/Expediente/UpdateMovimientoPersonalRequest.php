@@ -47,6 +47,10 @@ class UpdateMovimientoPersonalRequest extends FormRequest
             'credencial_cne_numero' => 'nullable|string|max:100',
             'credencial_cne_fecha'  => 'nullable|date|before_or_equal:today',
             'acta_posesion_numero'  => 'nullable|string|max:100',
+            // El término para presentarse del ingreso (Reglamento a la LOSEP,
+            // Art. 20; fase 6.4): más de 3 días pide la razón, y lo mira el servicio.
+            'dias_para_presentarse'  => 'nullable|integer|between:3,5',
+            'razon_dias_adicionales' => 'nullable|string|max:255',
             'causa_judicial_numero' => 'nullable|string|max:100',
             'unidad_judicial'       => 'nullable|string|max:255',
             'fecha_sentencia'       => 'nullable|date',

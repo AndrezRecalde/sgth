@@ -33,6 +33,10 @@ export function BandejaAccionesPersonal() {
   const [lote, setLote] = useState<string | null>(null)
   // Lo notificado por el portal que espera el acuse (fase 6.3a).
   const [sinAcuse, setSinAcuse] = useState(false)
+  // Los ingresos que esperan la posesión en su plazo para presentarse (6.4).
+  const [sinPosesion, setSinPosesion] = useState(false)
+  // Los dos filtros fijan el estado por su cuenta: el selector no cuenta.
+  const estadoFijo = sinAcuse || sinPosesion
   const [pagina, setPagina] = useState(1)
   // Los actos de un lote: el incremento de los obreros (fase 4.6).
   const lotes = (useLotesAccion().data ?? []).map((l) => ({
@@ -47,12 +51,14 @@ export function BandejaAccionesPersonal() {
   const [detalleOpened, { open: abrirDetalle, close: cerrarDetalle }] = useDisclosure(false)
 
   const { data, isLoading, error, refetch } = useBandejaMovimientos({
-    // «Sin acuse» ya es de las notificadas: con el estado del selector —que
-    // abre en borrador— la consulta no traería nada.
-    ...(estado && !sinAcuse ? { estado } : {}),
+    // «Sin acuse» ya es de las notificadas, y «Sin posesión» de las
+    // registradas y notificadas: con el estado del selector —que abre en
+    // borrador— la consulta no traería nada.
+    ...(estado && !estadoFijo ? { estado } : {}),
     ...(instrumento ? { instrumento } : {}),
     ...(lote ? { lote_id: Number(lote) } : {}),
     ...(sinAcuse ? { sin_acuse: true } : {}),
+    ...(sinPosesion ? { sin_posesion: true } : {}),
     page: pagina,
   })
 
@@ -86,18 +92,21 @@ export function BandejaAccionesPersonal() {
           <Text size="sm" c="dimmed">
             {total} acción(es) {sinAcuse
               ? 'notificadas sin acuse'
-              : estado ? `en ${ESTADO_LABELS[estado].toLowerCase()}` : 'en total'}
+              : sinPosesion
+                ? 'sin posesión'
+                : estado ? `en ${ESTADO_LABELS[estado].toLowerCase()}` : 'en total'}
           </Text>
         }
       >
         <Select
           label="Estado"
-          placeholder="Todos"
+          placeholder={sinPosesion ? 'Registradas y notificadas' : 'Todos'}
           data={ESTADO_OPTIONS}
-          value={sinAcuse ? 'notificada' : estado}
+          value={sinAcuse ? 'notificada' : sinPosesion ? null : estado}
           onChange={cambiarEstado}
-          // Con «Sin acuse», el estado es el de notificada: el selector lo dice.
-          disabled={sinAcuse}
+          // Con «Sin acuse», el estado es el de notificada, y con «Sin
+          // posesión», registradas y notificadas: el selector lo dice.
+          disabled={estadoFijo}
           clearable
           {...contained}
           style={{ minWidth: 260 }}
@@ -116,7 +125,13 @@ export function BandejaAccionesPersonal() {
           label="Sin acuse"
           description="Notificadas por el portal que esperan el acuse"
           checked={sinAcuse}
-          onChange={(e) => { setSinAcuse(e.currentTarget.checked); setPagina(1) }}
+          onChange={(e) => { setSinAcuse(e.currentTarget.checked); setSinPosesion(false); setPagina(1) }}
+        />
+        <Switch
+          label="Sin posesión"
+          description="Ingresos que esperan presentarse, los vencidos primero"
+          checked={sinPosesion}
+          onChange={(e) => { setSinPosesion(e.currentTarget.checked); setSinAcuse(false); setPagina(1) }}
         />
         {lotes.length > 0 && (
           <Select
@@ -143,9 +158,13 @@ export function BandejaAccionesPersonal() {
         emptyProps={{
           icon: IconFileDescription,
           title: 'Sin acciones de personal',
-          description: estado
-            ? 'Ninguna acción se encuentra en ese estado.'
-            : 'No hay acciones de personal registradas.',
+          description: sinPosesion
+            ? 'Ningún ingreso espera la posesión.'
+            : sinAcuse
+              ? 'Nada de lo notificado por el portal espera el acuse.'
+              : estado
+                ? 'Ninguna acción se encuentra en ese estado.'
+                : 'No hay acciones de personal registradas.',
         }}
       >
         <SgthTable

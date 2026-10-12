@@ -45,6 +45,9 @@ class ClaseAccionPersonalResource extends JsonResource
             /** @var list<TipoNombramiento> */
             'pide_informe_uath_para'      => $clase->pideInformeUathPara(),
             'pide_contratacion'           => $clase->pideContratacion(),
+            // El término para presentarse: el ingreso por acción de personal
+            // lo fija en el borrador (Reglamento a la LOSEP, Art. 20; fase 6.4).
+            'tiene_plazo_para_presentarse' => $clase === ClaseAccionPersonal::INGRESO,
             // El acta final del concurso: la pide el ascenso (fase 3.3).
             'pide_acta_concurso'          => $clase->pideActaConcurso(),
             // La credencial, la posesión y el fin del período (fase 4.1).

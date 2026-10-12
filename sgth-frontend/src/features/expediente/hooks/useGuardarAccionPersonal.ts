@@ -5,6 +5,7 @@ import { movimientoService } from '../services/movimientoService'
 import type { MovimientoFormData } from '../schemas/movimiento.schema'
 import { admiteMarcacion } from '../utils/nombramiento'
 import { buscarClase } from '../utils/catalogoAcciones'
+import { fijaTerminoParaPresentarse } from '../utils/plazoParaPresentarse'
 
 /**
  * Los campos de contratación solo viajan en la clase que los pide —el ingreso—.
@@ -125,6 +126,16 @@ export function useGuardarAccionPersonal({
             }),
         // Solo del formulario: el backend lo deduce de las fechas.
         orden_judicial: undefined,
+        // El término para presentarse, solo del ingreso por acción de personal
+        // (fase 6.4); la razón, solo con más de 3 días.
+        ...(fijaTerminoParaPresentarse(clase, data.tipo_nombramiento_propuesto)
+          ? {
+              dias_para_presentarse: data.dias_para_presentarse ?? 3,
+              razon_dias_adicionales: (data.dias_para_presentarse ?? 3) > 3
+                ? (data.razon_dias_adicionales?.trim() || null)
+                : null,
+            }
+          : { dias_para_presentarse: null, razon_dias_adicionales: null }),
         // Vacía, el documento imprime la de la clase (fase 6.1).
         base_legal: data.base_legal?.trim() || null,
         acto_origen_tipo: data.acto_origen_tipo || null,

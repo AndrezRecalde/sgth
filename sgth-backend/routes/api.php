@@ -508,6 +508,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // Anotar en lugar de corregir lo ya emitido (fase 1.4).
         Route::post('movimientos/{movimiento}/anotaciones', [MovimientoPersonalController::class, 'anotar'])
             ->middleware('permission:preparar-accion-personal');
+        // La posesión, o el «se presentó a laborar» del ocasional (fase 6.4):
+        // la registra quien notifica, como el resto de lo que pasa después.
+        Route::post('movimientos/{movimiento}/posesion', [MovimientoPersonalController::class, 'registrarPosesion'])
+            ->middleware('permission:notificar-accion-personal');
         // El reintegro nace de la ausencia que cierra (fase 2.4).
         Route::post('movimientos/{movimiento}/reintegro', [MovimientoPersonalController::class, 'reintegrar'])
             ->middleware('permission:preparar-accion-personal');
