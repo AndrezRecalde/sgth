@@ -1189,6 +1189,14 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
    - **3a.** La subrogación cancelada guarda el día (`cancelada_en`) y paga hasta la víspera; la que cierra una cesación termina ese día, como ya decía la bitácora.
    - **3a.** Permisos `ver-novedades-nomina` (Talento Humano, Financiero y el auditor) y `entregar-novedades-nomina` (el Director). La pestaña «Novedades del mes» en Nómina, con el mes, el resumen por concepto, el acto de cada fila, los ajustes y el Excel. «Nómina» deja de salir en el menú de quien no puede abrirla.
    - **3a.** Fuera: la liquidación de la salida (7.4), horas extras, atrasos de Asistencia y viáticos; y el ingreso y la salida en el mismo mes cuando la cesación todavía no rige.
+   - **3b.** La nueva escala de remuneraciones de la LOSEP (`escalas_remuneracion`). La RMU vivía solo en el catálogo de grados, sin pantalla ni constancia; con la nómina sobre el vínculo (3c), tocar el catálogo ya no cambiaría el sueldo.
+     - Es un acto general: la resolución que fija la RMU nueva de uno o varios grados, dentro de los pisos y techos del Ministerio del Trabajo. **Sin acción de personal por servidor** [Pendiente: lo confirma TH]; cada vínculo que sube deja su constancia en la bitácora (`escala_aplicada`), con la remuneración de antes y la nueva.
+     - Lleva la resolución y su fecha, la fecha en que rige —hoy o antes: las escalas suelen ser retroactivas, y la que rige más adelante se registra ese día—, el dictamen presupuestario y la RMU nueva de cada grado. Ningún grado baja.
+     - Solo grados de la LOSEP: no los de las autoridades electas, cuya remuneración fija la ley, ni el de los obreros, que suben con el incremento en lote (4.6). Sube cada vínculo vigente en un puesto de esos grados, sin Servicios Profesionales, a la mayor entre la que cobra y la RMU nueva: nadie baja.
+     - No se registra con acciones en trámite o por regir sobre los puestos de esos grados o sus ocupantes —se registrarían con la cifra vieja—, ni la registra quien sube con ella.
+     - La prepara quien prepara acciones y la registra el Director, en Estructura, «Grupos ocupacionales», con la vista previa de a quién sube. Se revierte entera si se registró por error, mientras ni el grado ni ningún vínculo hayan cambiado después.
+     - En las novedades de nómina es un cambio de remuneración por vínculo. **Retroactivos**: el cambio que se registra después del mes en que rige —de la escala o de un acto— lleva la diferencia a cada mes hasta el de su registro, y no solo al primero; así cada mes ya entregado recibe su ajuste.
+     - Fuera: los vínculos que terminaron entre la fecha en que rige y el registro (su diferencia la liquida Financiero) y el ingreso registrado en un mes posterior a su inicio, cuya novedad solo cubre el primer mes.
 4. Desvinculación.
 5. Reporte SIITH por clase, con su pantalla.
 

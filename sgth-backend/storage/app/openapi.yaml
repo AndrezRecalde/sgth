@@ -10785,6 +10785,8 @@
                                                                         "Cancelaci\u00f3n de subrogaci\u00f3n o encargo",
                                                                         "El titular al que cubr\u00eda ces\u00f3",
                                                                         "Fin del per\u00edodo fijado",
+                                                                        "Nueva escala de remuneraciones",
+                                                                        "Reversi\u00f3n de la escala de remuneraciones",
                                                                         "Cambio de puesto",
                                                                         "Cambio de r\u00e9gimen",
                                                                         "Egreso"
@@ -18605,6 +18607,448 @@
                 }
             }
         },
+        "/v1/estructura/escalas-remuneracion": {
+            "get": {
+                "operationId": "escalaRemuneracion.index",
+                "summary": "Las escalas registradas, la m\u00e1s reciente primero",
+                "tags": [
+                    "EscalaRemuneracion"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Escalas de remuneraciones."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "instrumento": {
+                                                        "type": "string"
+                                                    },
+                                                    "fecha_instrumento": {
+                                                        "type": "string"
+                                                    },
+                                                    "rige_desde": {
+                                                        "type": "string"
+                                                    },
+                                                    "dictamen_presupuestario_ref": {
+                                                        "type": "string"
+                                                    },
+                                                    "descripcion": {
+                                                        "type": "string"
+                                                    },
+                                                    "registrada_en": {
+                                                        "type": "string"
+                                                    },
+                                                    "registrada_por": {
+                                                        "type": "string"
+                                                    },
+                                                    "revertida_en": {
+                                                        "type": "string"
+                                                    },
+                                                    "motivo_reversion": {
+                                                        "type": "string"
+                                                    },
+                                                    "vinculos": {
+                                                        "type": "string"
+                                                    },
+                                                    "grados": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "grado": {
+                                                                    "type": "string"
+                                                                },
+                                                                "denominacion": {
+                                                                    "type": "string"
+                                                                },
+                                                                "rmu_anterior": {
+                                                                    "type": "number"
+                                                                },
+                                                                "rmu_nueva": {
+                                                                    "type": "number"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "grado",
+                                                                "denominacion",
+                                                                "rmu_anterior",
+                                                                "rmu_nueva"
+                                                            ]
+                                                        }
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "instrumento",
+                                                    "fecha_instrumento",
+                                                    "rige_desde",
+                                                    "dictamen_presupuestario_ref",
+                                                    "descripcion",
+                                                    "registrada_en",
+                                                    "registrada_por",
+                                                    "revertida_en",
+                                                    "motivo_reversion",
+                                                    "vinculos",
+                                                    "grados"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "escalaRemuneracion.store",
+                "tags": [
+                    "EscalaRemuneracion"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EscalaRemuneracionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string"
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "vinculos": {
+                                                    "type": "integer",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "vinculos"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/estructura/escalas-remuneracion/previsualizar": {
+            "post": {
+                "operationId": "estructura.escalas-remuneracion.previsualizar",
+                "summary": "Los grados con su RMU nueva, los v\u00ednculos que suben y lo que lo impide",
+                "tags": [
+                    "EscalaRemuneracion"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EscalaRemuneracionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Vista previa de la escala."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "grados": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "grupo_ocupacional_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "grado": {
+                                                                "type": "string"
+                                                            },
+                                                            "denominacion": {
+                                                                "type": "string"
+                                                            },
+                                                            "rmu_anterior": {
+                                                                "type": "string"
+                                                            },
+                                                            "rmu_nueva": {
+                                                                "type": "string"
+                                                            },
+                                                            "puestos": {
+                                                                "type": "string"
+                                                            },
+                                                            "vinculos": {
+                                                                "type": "integer",
+                                                                "minimum": 0
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "grupo_ocupacional_id",
+                                                            "grado",
+                                                            "denominacion",
+                                                            "rmu_anterior",
+                                                            "rmu_nueva",
+                                                            "puestos",
+                                                            "vinculos"
+                                                        ]
+                                                    }
+                                                },
+                                                "vinculos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "contrato_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "servidor_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "servidor": {
+                                                                "type": "string"
+                                                            },
+                                                            "cedula": {
+                                                                "type": "string"
+                                                            },
+                                                            "puesto": {
+                                                                "type": "string"
+                                                            },
+                                                            "grado": {
+                                                                "type": "string"
+                                                            },
+                                                            "remuneracion_anterior": {
+                                                                "type": "string"
+                                                            },
+                                                            "remuneracion_nueva": {
+                                                                "type": "string"
+                                                            },
+                                                            "sube": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "contrato_id",
+                                                            "servidor_id",
+                                                            "servidor",
+                                                            "cedula",
+                                                            "puesto",
+                                                            "grado",
+                                                            "remuneracion_anterior",
+                                                            "remuneracion_nueva",
+                                                            "sube"
+                                                        ]
+                                                    }
+                                                },
+                                                "impedimentos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "anyOf": [
+                                                            {
+                                                                "type": "null"
+                                                            },
+                                                            {
+                                                                "type": "string"
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "grados",
+                                                "vinculos",
+                                                "impedimentos"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/estructura/escalas-remuneracion/{escala}/revertir": {
+            "post": {
+                "operationId": "escalaRemuneracion.revertir",
+                "summary": "La escala registrada por error, entera: el cat\u00e1logo y cada v\u00ednculo vuelven a lo de antes",
+                "tags": [
+                    "EscalaRemuneracion"
+                ],
+                "parameters": [
+                    {
+                        "name": "escala",
+                        "in": "path",
+                        "required": true,
+                        "description": "The escala ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "motivo": {
+                                        "type": "string",
+                                        "minLength": 5,
+                                        "maxLength": 2000
+                                    }
+                                },
+                                "required": [
+                                    "motivo"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string"
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/evaluacion/evaluaciones/{evaluacionId}/servidor/{servidorId}": {
             "post": {
                 "operationId": "evaluacion.registrarResultado",
@@ -21171,7 +21615,91 @@
                                         "datos": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/GrupoOcupacional"
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "grado_codigo": {
+                                                        "type": "string"
+                                                    },
+                                                    "grado_numerico": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "grupo": {
+                                                        "type": "string"
+                                                    },
+                                                    "denominacion_generica": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "rmu": {
+                                                        "type": "string"
+                                                    },
+                                                    "regimen": {
+                                                        "type": "string"
+                                                    },
+                                                    "nivel_complejidad": {
+                                                        "anyOf": [
+                                                            {
+                                                                "$ref": "#/components/schemas/NivelComplejidadPuesto"
+                                                            },
+                                                            {
+                                                                "type": "null"
+                                                            }
+                                                        ]
+                                                    },
+                                                    "rol_puesto": {
+                                                        "anyOf": [
+                                                            {
+                                                                "$ref": "#/components/schemas/RolPuesto"
+                                                            },
+                                                            {
+                                                                "type": "null"
+                                                            }
+                                                        ]
+                                                    },
+                                                    "activo": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "created_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ],
+                                                        "format": "date-time"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ],
+                                                        "format": "date-time"
+                                                    },
+                                                    "admite_escala": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "grado_codigo",
+                                                    "grado_numerico",
+                                                    "grupo",
+                                                    "denominacion_generica",
+                                                    "rmu",
+                                                    "regimen",
+                                                    "nivel_complejidad",
+                                                    "rol_puesto",
+                                                    "activo",
+                                                    "created_at",
+                                                    "updated_at",
+                                                    "admite_escala"
+                                                ]
                                             }
                                         },
                                         "meta": {
@@ -30052,16 +30580,22 @@
                                                             "type": "string"
                                                         },
                                                         "novedades": {
-                                                            "type": "string"
+                                                            "type": "integer"
                                                         },
                                                         "ajustes": {
-                                                            "type": "string"
+                                                            "type": "integer"
                                                         },
                                                         "destinatario": {
-                                                            "type": "string"
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
                                                         },
                                                         "aviso": {
-                                                            "type": "string"
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
                                                         }
                                                     },
                                                     "required": [
@@ -30081,19 +30615,6 @@
                                                     "additionalProperties": {
                                                         "type": "object",
                                                         "properties": {
-                                                            "": {
-                                                                "anyOf": [
-                                                                    {
-                                                                        "type": "string"
-                                                                    },
-                                                                    {
-                                                                        "type": "object"
-                                                                    },
-                                                                    {
-                                                                        "type": "null"
-                                                                    }
-                                                                ]
-                                                            },
                                                             "concepto": {
                                                                 "type": "string"
                                                             },
@@ -30102,7 +30623,6 @@
                                                             }
                                                         },
                                                         "required": [
-                                                            null,
                                                             "concepto",
                                                             "concepto_etiqueta"
                                                         ]
@@ -30306,16 +30826,22 @@
                                                             "type": "string"
                                                         },
                                                         "novedades": {
-                                                            "type": "string"
+                                                            "type": "integer"
                                                         },
                                                         "ajustes": {
-                                                            "type": "string"
+                                                            "type": "integer"
                                                         },
                                                         "destinatario": {
-                                                            "type": "string"
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
                                                         },
                                                         "aviso": {
-                                                            "type": "string"
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
                                                         }
                                                     },
                                                     "required": [
@@ -30335,19 +30861,6 @@
                                                     "additionalProperties": {
                                                         "type": "object",
                                                         "properties": {
-                                                            "": {
-                                                                "anyOf": [
-                                                                    {
-                                                                        "type": "string"
-                                                                    },
-                                                                    {
-                                                                        "type": "object"
-                                                                    },
-                                                                    {
-                                                                        "type": "null"
-                                                                    }
-                                                                ]
-                                                            },
                                                             "concepto": {
                                                                 "type": "string"
                                                             },
@@ -30356,7 +30869,6 @@
                                                             }
                                                         },
                                                         "required": [
-                                                            null,
                                                             "concepto",
                                                             "concepto_etiqueta"
                                                         ]
@@ -30459,7 +30971,10 @@
                                             "type": "object",
                                             "properties": {
                                                 "aviso_financiero": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 }
                                             },
                                             "required": [
@@ -54335,6 +54850,65 @@
                 ],
                 "title": "EquipoProteccionResource"
             },
+            "EscalaRemuneracionRequest": {
+                "type": "object",
+                "description": "La nueva escala de remuneraciones (fase 7.3b): la resoluci\u00f3n que la fija, la\nfecha en que rige \u2014hoy o antes\u2014, el dictamen presupuestario y la RMU nueva\nde cada grado. La vista previa solo necesita los grados.",
+                "properties": {
+                    "instrumento": {
+                        "type": "string",
+                        "maxLength": 120
+                    },
+                    "fecha_instrumento": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "rige_desde": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "dictamen_presupuestario_ref": {
+                        "type": "string",
+                        "maxLength": 120
+                    },
+                    "descripcion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 2000
+                    },
+                    "grados": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "grupo_ocupacional_id": {
+                                    "type": "integer"
+                                },
+                                "rmu_nueva": {
+                                    "type": "number",
+                                    "minimum": 1,
+                                    "maximum": 99999
+                                }
+                            },
+                            "required": [
+                                "grupo_ocupacional_id",
+                                "rmu_nueva"
+                            ]
+                        },
+                        "minItems": 1,
+                        "maxItems": 100
+                    }
+                },
+                "required": [
+                    "instrumento",
+                    "fecha_instrumento",
+                    "rige_desde",
+                    "dictamen_presupuestario_ref",
+                    "grados"
+                ],
+                "title": "EscalaRemuneracionRequest"
+            },
             "EspecialidadAtencion": {
                 "type": "string",
                 "description": "Las dos especialidades que atiende el dispensario. Los valores son los que ya usaba `agendas_medicas.tipo_atencion`, que hasta ahora era el \u00fanico sitio donde constaba la especialidad \u2014y solo en el turno, no en la consulta que sal\u00eda de \u00e9l.  Ojo con el nombre: en `consultas_medicas`, `tipo_atencion` significa otra cosa (primera vez o subsecuente). Por eso la columna de la consulta se llama `especialidad` y no repite aquel nombre.\n",
@@ -55426,90 +56000,6 @@
                     "mortal"
                 ],
                 "title": "GravedadAccidente"
-            },
-            "GrupoOcupacional": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer"
-                    },
-                    "grado_codigo": {
-                        "type": "string"
-                    },
-                    "grado_numerico": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    },
-                    "grupo": {
-                        "type": "string"
-                    },
-                    "denominacion_generica": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "rmu": {
-                        "type": "string"
-                    },
-                    "regimen": {
-                        "type": "string"
-                    },
-                    "nivel_complejidad": {
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/NivelComplejidadPuesto"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ]
-                    },
-                    "rol_puesto": {
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/RolPuesto"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ]
-                    },
-                    "activo": {
-                        "type": "boolean"
-                    },
-                    "created_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    },
-                    "updated_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    }
-                },
-                "required": [
-                    "id",
-                    "grado_codigo",
-                    "grado_numerico",
-                    "grupo",
-                    "denominacion_generica",
-                    "rmu",
-                    "regimen",
-                    "nivel_complejidad",
-                    "rol_puesto",
-                    "activo",
-                    "created_at",
-                    "updated_at"
-                ],
-                "title": "GrupoOcupacional"
             },
             "GuardarActaFiniquitoRequest": {
                 "type": "object",
@@ -66542,6 +67032,13 @@
                             "integer",
                             "null"
                         ]
+                    },
+                    "cancelada_en": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
                     }
                 },
                 "required": [
@@ -66562,7 +67059,8 @@
                     "updated_at",
                     "movimiento_personal_id",
                     "ausencia_tipo",
-                    "ausencia_id"
+                    "ausencia_id",
+                    "cancelada_en"
                 ],
                 "title": "Subrogacion"
             },

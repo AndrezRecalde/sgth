@@ -40,6 +40,16 @@ enum TipoEventoVinculo: string
      */
     case FIN_DEL_PERIODO_FIJADO = 'fin_del_periodo_fijado';
 
+    /**
+     * La nueva escala de remuneraciones le subió la remuneración (fase 7.3b):
+     * un acto general, sin acción de personal por servidor. `datos` guarda la
+     * escala, la remuneración de antes y la nueva.
+     */
+    case ESCALA_APLICADA = 'escala_aplicada';
+
+    /** La escala se revirtió por error y la remuneración volvió a la de antes. */
+    case ESCALA_REVERTIDA = 'escala_revertida';
+
     // Tipos de bitácora anteriores que el sistema ya no genera. Se conservan
     // solo para que el histórico migrado conserve su nombre.
     case CAMBIO_PUESTO  = 'cambio_puesto';
@@ -54,6 +64,8 @@ enum TipoEventoVinculo: string
             self::SUBROGACION_CANCELADA  => 'Cancelación de subrogación o encargo',
             self::TITULAR_CESADO         => 'El titular al que cubría cesó',
             self::FIN_DEL_PERIODO_FIJADO => 'Fin del período fijado',
+            self::ESCALA_APLICADA        => 'Nueva escala de remuneraciones',
+            self::ESCALA_REVERTIDA       => 'Reversión de la escala de remuneraciones',
             self::CAMBIO_PUESTO          => 'Cambio de puesto',
             self::CAMBIO_REGIMEN         => 'Cambio de régimen',
             self::EGRESO                 => 'Egreso',

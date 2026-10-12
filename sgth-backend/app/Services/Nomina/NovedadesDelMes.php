@@ -12,6 +12,7 @@ use App\Enums\TipoNombramiento;
 use App\Enums\TipoSancion;
 use App\Enums\TipoSubrogacion;
 use App\Models\Disciplinario\SancionDisciplinaria;
+use App\Models\Estructura\EscalaRemuneracionVinculo;
 use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Subrogacion;
@@ -62,6 +63,9 @@ class NovedadesDelMes
     /** @var array<int, Collection<int, MovimientoPersonal>> */
     private array $cambiosPorServidor = [];
 
+    /** @var array<int, Collection<int, EscalaRemuneracionVinculo>> */
+    private array $escalasPorVinculo = [];
+
     public function __construct(
         private readonly TerminacionObreroService $terminaciones,
     ) {
@@ -71,10 +75,12 @@ class NovedadesDelMes
     public function de(MesDeNomina $mes): Collection
     {
         $this->cambiosPorServidor = [];
+        $this->escalasPorVinculo = [];
 
         return collect()
             ->merge($this->ingresosYSalidas($mes))
             ->merge($this->cambiosDeRemuneracion($mes))
+            ->merge($this->escalas($mes))
             ->merge($this->ausenciasSinRemuneracion($mes))
             ->merge($this->suspensiones($mes))
             ->merge($this->subrogaciones($mes))
@@ -259,13 +265,23 @@ class NovedadesDelMes
 
     // ── El cambio de remuneración ───────────────────────────────────
 
-    /** @return list<Novedad> */
+    /**
+     * El cambio de remuneración, en el mes en que rige. Si se registró en un
+     * mes posterior, cada mes hasta el de su registro lleva también la
+     * diferencia: el mes ya entregado recibe así su ajuste, y no solo el
+     * primero (fase 7.3b).
+     *
+     * @return list<Novedad>
+     */
     private function cambiosDeRemuneracion(MesDeNomina $mes): array
     {
+        $inicio = $mes->inicio->toDateString();
+
         $actos = MovimientoPersonal::query()
             ->whereIn('tipo_movimiento', array_map(fn ($t) => $t->value, self::CAMBIAN_LA_REMUNERACION))
             ->whereIn('estado', array_map(fn ($e) => $e->value, self::EMITIDAS))
-            ->whereBetween('fecha_efectiva', [$mes->inicio->toDateString(), $mes->fin->toDateString()])
+            ->whereDate('fecha_efectiva', '<=', $mes->fin->toDateString())
+            ->where(fn (Builder $q) => $q->whereDate('fecha_efectiva', '>=', $inicio)->orWhereDate('fecha_registro', '>=', $inicio))
             ->with(['servidor:id,nombre,segundo_nombre,apellido,segundo_apellido,cedula', 'movimientoRelacionado'])
             ->orderBy('fecha_efectiva')
             ->orderBy('id')
@@ -280,27 +296,138 @@ class NovedadesDelMes
                 continue;
             }
 
-            $dias = $mes->dias($acto->fecha_efectiva, null);
-            $diferencia = $cambio['nueva'] - $cambio['anterior'];
-
-            $novedades[] = $this->novedad(
+            $novedades[] = $this->cambioEnElMes(
                 $mes,
                 clave: "cambio:movimiento:{$acto->id}",
-                concepto: ConceptoNovedadNomina::CAMBIO_REMUNERACION,
                 servidor: $acto->servidor,
-                detalle: "{$acto->etiqueta()}: desde el {$acto->fecha_efectiva->format('d/m/Y')} cobra "
-                    ."{$this->dinero($cambio['nueva'])} (antes {$this->dinero($cambio['anterior'])}); "
-                    ."la diferencia de {$this->diasEnTexto($dias)}.",
+                que: $acto->etiqueta(),
+                rige: $acto->fecha_efectiva,
+                registro: $acto->fecha_registro,
+                anterior: $cambio['anterior'],
+                nueva: $cambio['nueva'],
                 movimiento: $acto,
-                desde: $acto->fecha_efectiva,
-                hasta: $mes->fin,
-                dias: $dias,
-                base: $cambio['nueva'],
-                monto: round($diferencia * $dias / MesDeNomina::DIAS, 2),
             );
         }
 
         return $novedades;
+    }
+
+    /**
+     * La nueva escala de remuneraciones (fase 7.3b): un cambio de remuneración
+     * por vínculo, sin acción de personal. Como el de un acto, si se registró
+     * después del mes en que rige, cada mes hasta el de su registro.
+     *
+     * @return list<Novedad>
+     */
+    private function escalas(MesDeNomina $mes): array
+    {
+        $inicio = $mes->inicio->toDateString();
+
+        $filas = EscalaRemuneracionVinculo::query()
+            ->whereHas('escala', fn (Builder $q) => $q
+                ->whereNull('revertida_en')
+                ->whereDate('rige_desde', '<=', $mes->fin->toDateString())
+                ->where(fn (Builder $r) => $r->whereDate('rige_desde', '>=', $inicio)->orWhereDate('registrada_en', '>=', $inicio)))
+            ->with([
+                'escala.grados',
+                'servidor:id,nombre,segundo_nombre,apellido,segundo_apellido,cedula',
+                'contrato:id,fecha_inicio,fecha_fin',
+            ])
+            ->orderBy('id')
+            ->get();
+
+        $novedades = [];
+
+        foreach ($filas as $fila) {
+            $escala = $fila->escala;
+            // Sin remuneración guardada, el vínculo cobraba la del grado.
+            $anterior = $fila->remuneracion_anterior !== null
+                ? (float) $fila->remuneracion_anterior
+                : (float) $escala->grados->firstWhere('grupo_ocupacional_id', $fila->grupo_ocupacional_id)?->rmu_anterior;
+
+            $novedad = $this->cambioEnElMes(
+                $mes,
+                clave: "escala:{$fila->id}",
+                servidor: $fila->servidor,
+                que: "Nueva escala de remuneraciones ({$escala->instrumento})",
+                rige: $escala->rige_desde,
+                registro: $escala->registrada_en,
+                anterior: $anterior,
+                nueva: (float) $fila->remuneracion_nueva,
+                contratoId: $fila->contrato_id,
+                acto: $escala->instrumento,
+                inicioDelVinculo: $fila->contrato?->fecha_inicio,
+                finDelVinculo: $fila->contrato?->fecha_fin,
+            );
+
+            if ($novedad) {
+                $novedades[] = $novedad;
+            }
+        }
+
+        return $novedades;
+    }
+
+    /**
+     * La diferencia de un cambio de remuneración en el mes: desde el día en
+     * que rige, si es este mes, o el mes entero si es uno posterior que todavía
+     * la debía.
+     *
+     * @return Novedad|null
+     */
+    private function cambioEnElMes(
+        MesDeNomina $mes,
+        string $clave,
+        ?\App\Models\Expediente\Servidor $servidor,
+        string $que,
+        CarbonInterface $rige,
+        ?CarbonInterface $registro,
+        float $anterior,
+        float $nueva,
+        ?MovimientoPersonal $movimiento = null,
+        ?int $contratoId = null,
+        ?string $acto = null,
+        ?CarbonInterface $inicioDelVinculo = null,
+        ?CarbonInterface $finDelVinculo = null,
+    ): ?array {
+        $enEsteMes = $mes->contiene($rige);
+        $desde = $enEsteMes ? $rige : $mes->inicio;
+
+        if ($inicioDelVinculo && $inicioDelVinculo->gt($desde)) {
+            $desde = $inicioDelVinculo;
+        }
+
+        $dias = $mes->dias($desde, $finDelVinculo);
+
+        if ($dias === 0) {
+            return null;
+        }
+
+        $detalle = "{$que}: desde el {$rige->format('d/m/Y')} cobra {$this->dinero($nueva)} (antes {$this->dinero($anterior)})";
+        $detalle .= $enEsteMes
+            ? "; la diferencia de {$this->diasEnTexto($dias)}."
+            : '; se registró el '.($registro?->format('d/m/Y') ?? '—').", y este mes le debe la diferencia de {$this->diasEnTexto($dias)}.";
+
+        $novedad = $this->novedad(
+            $mes,
+            clave: $clave,
+            concepto: ConceptoNovedadNomina::CAMBIO_REMUNERACION,
+            servidor: $servidor,
+            detalle: $detalle,
+            contratoId: $contratoId,
+            movimiento: $movimiento,
+            desde: $desde,
+            hasta: $finDelVinculo && $finDelVinculo->lt($mes->fin) ? $finDelVinculo : $mes->fin,
+            dias: $dias,
+            base: $nueva,
+            monto: round(($nueva - $anterior) * $dias / MesDeNomina::DIAS, 2),
+        );
+
+        if ($acto !== null) {
+            $novedad['acto'] = $acto;
+        }
+
+        return $novedad;
     }
 
     /**
@@ -358,7 +485,27 @@ class NovedadesDelMes
                     && $this->remuneracionesDelCambio($acto) !== null;
             });
 
+        // La nueva escala también la cambia, sin acto (fase 7.3b).
+        $escala = $this->escalasDe($vinculo->id)
+            ->first(fn (EscalaRemuneracionVinculo $fila) => $fila->escala->rige_desde->gt($fecha));
+
+        if ($escala && (! $posterior || $escala->escala->rige_desde->lt($posterior->fecha_efectiva))) {
+            return $escala->remuneracion_anterior !== null ? (float) $escala->remuneracion_anterior : $actual;
+        }
+
         return $posterior ? $this->remuneracionesDelCambio($posterior)['anterior'] : $actual;
+    }
+
+    /** @return Collection<int, EscalaRemuneracionVinculo> */
+    private function escalasDe(int $contratoId): Collection
+    {
+        return $this->escalasPorVinculo[$contratoId] ??= EscalaRemuneracionVinculo::query()
+            ->where('contrato_id', $contratoId)
+            ->whereHas('escala', fn (Builder $q) => $q->whereNull('revertida_en'))
+            ->with('escala')
+            ->get()
+            ->sortBy(fn (EscalaRemuneracionVinculo $fila) => $fila->escala->rige_desde->toDateString())
+            ->values();
     }
 
     /** @return Collection<int, MovimientoPersonal> */

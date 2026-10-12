@@ -2984,6 +2984,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/estructura/escalas-remuneracion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Las escalas registradas, la más reciente primero */
+        get: operations["escalaRemuneracion.index"];
+        put?: never;
+        post: operations["escalaRemuneracion.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/estructura/escalas-remuneracion/previsualizar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Los grados con su RMU nueva, los vínculos que suben y lo que lo impide */
+        post: operations["estructura.escalas-remuneracion.previsualizar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/estructura/escalas-remuneracion/{escala}/revertir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** La escala registrada por error, entera: el catálogo y cada vínculo vuelven a lo de antes */
+        post: operations["escalaRemuneracion.revertir"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/evaluacion/evaluaciones/{evaluacionId}/servidor/{servidorId}": {
         parameters: {
             query?: never;
@@ -9018,6 +9069,25 @@ export interface components {
             deleted_at: string | null;
         };
         /**
+         * EscalaRemuneracionRequest
+         * @description La nueva escala de remuneraciones (fase 7.3b): la resolución que la fija, la
+         *     fecha en que rige —hoy o antes—, el dictamen presupuestario y la RMU nueva
+         *     de cada grado. La vista previa solo necesita los grados.
+         */
+        EscalaRemuneracionRequest: {
+            instrumento: string;
+            /** Format: date-time */
+            fecha_instrumento: string;
+            /** Format: date-time */
+            rige_desde: string;
+            dictamen_presupuestario_ref: string;
+            descripcion?: string | null;
+            grados: {
+                grupo_ocupacional_id: number;
+                rmu_nueva: number;
+            }[];
+        };
+        /**
          * EspecialidadAtencion
          * @description Las dos especialidades que atiende el dispensario. Los valores son los que ya usaba `agendas_medicas.tipo_atencion`, que hasta ahora era el único sitio donde constaba la especialidad —y solo en el turno, no en la consulta que salía de él.  Ojo con el nombre: en `consultas_medicas`, `tipo_atencion` significa otra cosa (primera vez o subsecuente). Por eso la columna de la consulta se llama `especialidad` y no repite aquel nombre.
          * @enum {string}
@@ -9322,23 +9392,6 @@ export interface components {
          * @enum {string}
          */
         GravedadAccidente: "leve" | "moderada" | "grave" | "mortal";
-        /** GrupoOcupacional */
-        GrupoOcupacional: {
-            id: number;
-            grado_codigo: string;
-            grado_numerico: number | null;
-            grupo: string;
-            denominacion_generica: string | null;
-            rmu: string;
-            regimen: string;
-            nivel_complejidad: components["schemas"]["NivelComplejidadPuesto"] | null;
-            rol_puesto: components["schemas"]["RolPuesto"] | null;
-            activo: boolean;
-            /** Format: date-time */
-            created_at: string | null;
-            /** Format: date-time */
-            updated_at: string | null;
-        };
         /**
          * GuardarActaFiniquitoRequest
          * @description El acta de finiquito de un obrero (fase 4.5): su número en el sistema del
@@ -12274,6 +12327,8 @@ export interface components {
             movimiento_personal_id: number | null;
             ausencia_tipo: components["schemas"]["TipoAusenciaTitular"] | null;
             ausencia_id: number | null;
+            /** Format: date-time */
+            cancelada_en: string | null;
         };
         /**
          * SubtipoMovimientoPersonal
@@ -18279,7 +18334,7 @@ export interface operations {
                                 id: number;
                                 tipo: string;
                                 /** @enum {string} */
-                                etiqueta: "Contrato registrado sin acción de personal" | "Fin anticipado de subrogación o encargo" | "Cancelación de subrogación o encargo" | "El titular al que cubría cesó" | "Fin del período fijado" | "Cambio de puesto" | "Cambio de régimen" | "Egreso";
+                                etiqueta: "Contrato registrado sin acción de personal" | "Fin anticipado de subrogación o encargo" | "Cancelación de subrogación o encargo" | "El titular al que cubría cesó" | "Fin del período fijado" | "Nueva escala de remuneraciones" | "Reversión de la escala de remuneraciones" | "Cambio de puesto" | "Cambio de régimen" | "Egreso";
                                 fecha: string;
                                 descripcion: string;
                                 movimiento_personal_id: number | null;
@@ -21717,6 +21772,174 @@ export interface operations {
             403: components["responses"]["AuthorizationException"];
         };
     };
+    "escalaRemuneracion.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Escalas de remuneraciones.";
+                        datos: {
+                            id: string;
+                            instrumento: string;
+                            fecha_instrumento: string;
+                            rige_desde: string;
+                            dictamen_presupuestario_ref: string;
+                            descripcion: string;
+                            registrada_en: string;
+                            registrada_por: string;
+                            revertida_en: string;
+                            motivo_reversion: string;
+                            vinculos: string;
+                            grados: {
+                                grado: string;
+                                denominacion: string;
+                                rmu_anterior: number;
+                                rmu_nueva: number;
+                            }[];
+                        }[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "escalaRemuneracion.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EscalaRemuneracionRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: {
+                            id: string;
+                            vinculos: number;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "estructura.escalas-remuneracion.previsualizar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EscalaRemuneracionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Vista previa de la escala.";
+                        datos: {
+                            grados: {
+                                grupo_ocupacional_id: string;
+                                grado: string;
+                                denominacion: string;
+                                rmu_anterior: string;
+                                rmu_nueva: string;
+                                puestos: string;
+                                vinculos: number;
+                            }[];
+                            vinculos: {
+                                contrato_id: string;
+                                servidor_id: string;
+                                servidor: string;
+                                cedula: string;
+                                puesto: string;
+                                grado: string;
+                                remuneracion_anterior: string;
+                                remuneracion_nueva: string;
+                                sube: string;
+                            }[];
+                            impedimentos: (null | string)[];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "escalaRemuneracion.revertir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The escala ID */
+                escala: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    motivo: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: {
+                            id: string;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "evaluacion.registrarResultado": {
         parameters: {
             query?: never;
@@ -22817,7 +23040,23 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Grupos ocupacionales.";
-                        datos: components["schemas"]["GrupoOcupacional"][];
+                        datos: {
+                            id: number;
+                            grado_codigo: string;
+                            grado_numerico: number | null;
+                            grupo: string;
+                            denominacion_generica: string | null;
+                            rmu: string;
+                            regimen: string;
+                            nivel_complejidad: components["schemas"]["NivelComplejidadPuesto"] | null;
+                            rol_puesto: components["schemas"]["RolPuesto"] | null;
+                            activo: boolean;
+                            /** Format: date-time */
+                            created_at: string | null;
+                            /** Format: date-time */
+                            updated_at: string | null;
+                            admite_escala: boolean;
+                        }[];
                         meta: null;
                     };
                 };
@@ -26450,15 +26689,14 @@ export interface operations {
                             entrega: {
                                 entregada_en: string;
                                 entregada_por: string;
-                                novedades: string;
-                                ajustes: string;
-                                destinatario: string;
-                                aviso: string;
+                                novedades: number;
+                                ajustes: number;
+                                destinatario: string | null;
+                                aviso: string | null;
                             } | null;
                             puede_entregarse: string;
                             novedades: {
                                 [key: string]: {
-                                    ""?: string | Record<string, never> | null;
                                     concepto: string;
                                     concepto_etiqueta: string;
                                 };
@@ -26539,15 +26777,14 @@ export interface operations {
                             entrega: {
                                 entregada_en: string;
                                 entregada_por: string;
-                                novedades: string;
-                                ajustes: string;
-                                destinatario: string;
-                                aviso: string;
+                                novedades: number;
+                                ajustes: number;
+                                destinatario: string | null;
+                                aviso: string | null;
                             } | null;
                             puede_entregarse: string;
                             novedades: {
                                 [key: string]: {
-                                    ""?: string | Record<string, never> | null;
                                     concepto: string;
                                     concepto_etiqueta: string;
                                 };
@@ -26573,7 +26810,7 @@ export interface operations {
                             }[];
                         };
                         meta: {
-                            aviso_financiero: string;
+                            aviso_financiero: string | null;
                         };
                     };
                 };

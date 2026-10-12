@@ -173,6 +173,24 @@ test('la licencia sin remuneración descuenta sus días, y el reintegro la acort
         ->and($despues['monto'])->toEqual(-333.33);
 });
 
+test('el cambio de remuneración registrado tarde lleva la diferencia a cada mes, hasta el de su registro', function () {
+    $servidor = ($this->servidor)(['remuneracion' => 1150]);
+    ($this->acto)($servidor, [
+        'tipo_movimiento' => 'revision_clasificacion', 'fecha_efectiva' => '2026-08-01', 'fecha_registro' => '2026-10-05',
+        'remuneracion_origen' => 1000, 'remuneracion_propuesta' => 1150, 'efecto_aplicado_en' => now(),
+    ]);
+
+    $cambio = fn (string $periodo) => ($this->novedades)($periodo)->where('concepto', 'cambio_remuneracion')->values();
+
+    // Hasta la fase 7.3b solo agosto lo llevaba: si septiembre ya se había
+    // entregado, su diferencia no llegaba nunca.
+    expect($cambio('2026-08')->sole()['monto'])->toEqual(150)
+        ->and($cambio('2026-09')->sole()['monto'])->toEqual(150)
+        ->and($cambio('2026-09')->sole()['detalle'])->toContain('se registró el 05/10/2026')
+        ->and($cambio('2026-10')->sole()['monto'])->toEqual(150)
+        ->and($cambio('2026-11'))->toBeEmpty();
+});
+
 test('la subrogación paga la diferencia que congeló su acción, hasta la víspera de cancelarse', function () {
     $titular = ($this->servidor)();
     $subrogante = ($this->servidor)(['remuneracion' => 800]);
