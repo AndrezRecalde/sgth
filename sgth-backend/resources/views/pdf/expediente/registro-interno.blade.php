@@ -202,7 +202,9 @@
         <tr><td class="label">Contrato de trabajo</td><td>N.º {{ $movimiento->numero_contrato }}</td></tr>
     @endif
     @if($movimiento->resolucion_numero)
-        <tr><td class="label">{{ $cambia ? 'Adenda' : 'Documento de origen' }}</td><td>N.º {{ $movimiento->resolucion_numero }}</td></tr>
+        {{-- El incremento en lote no tiene adenda: su documento es el acuerdo
+             de la tabla sectorial o la cláusula del contrato colectivo (fase 4.6). --}}
+        <tr><td class="label">{{ $cambia && ! $movimiento->lote_id ? 'Adenda' : 'Documento de origen' }}</td><td>N.º {{ $movimiento->resolucion_numero }}</td></tr>
     @endif
     @if($reintegro)
         <tr>

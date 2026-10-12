@@ -296,6 +296,8 @@ class MovimientoPersonal extends Model
         // La providencia que ordena el reintegro inmediato del obrero, como
         // medida cautelar (CT 195.2; fase 4.5b).
         'fecha_providencia',
+        // El lote del que nació: el incremento de los obreros (fase 4.6).
+        'lote_id',
         'documento_respaldo',
         'autorizado_por',
         'observacion',
@@ -534,6 +536,12 @@ class MovimientoPersonal extends Model
     public function actaFiniquito(): HasOne
     {
         return $this->hasOne(ActaFiniquito::class, 'movimiento_personal_id');
+    }
+
+    /** El lote del que nació, si nació con otros (fase 4.6). */
+    public function lote(): BelongsTo
+    {
+        return $this->belongsTo(LoteAccion::class, 'lote_id');
     }
 
     /** Lo que se le anotó después de emitida, en el orden en que pasó. */

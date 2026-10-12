@@ -6,6 +6,7 @@ use App\Contracts\Asistencia\VacacionMotorInterface;
 use App\Enums\RegimenLaboral;
 use App\Models\Expediente\Servidor;
 use App\Services\Asistencia\EscalaVacaciones;
+use App\Services\Expediente\ContratoColectivoService;
 use Carbon\Carbon;
 
 class VacacionCodigoTrabajoService implements VacacionMotorInterface
@@ -19,8 +20,13 @@ class VacacionCodigoTrabajoService implements VacacionMotorInterface
 
         $aniosServicio = (int) floor($fechaIngreso->diffInYears(now()));
 
-        // Art. 69: la misma escala que los períodos, desde un solo sitio.
-        return EscalaVacaciones::diasGenerados(RegimenLaboral::CODIGO_TRABAJO->value, $aniosServicio);
+        // Art. 69: la misma escala que los períodos, desde un solo sitio. Más
+        // los días del contrato colectivo vigente (fase 4.6).
+        return EscalaVacaciones::diasGenerados(
+            RegimenLaboral::CODIGO_TRABAJO->value,
+            $aniosServicio,
+            app(ContratoColectivoService::class)->diasAdicionalesDeVacaciones(),
+        );
     }
 
     public function validarLimitesAcumulacion(float $diasAcumuladosTotales, float $diasGanadosAnuales): array

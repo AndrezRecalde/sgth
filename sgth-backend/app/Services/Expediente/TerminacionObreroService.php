@@ -8,8 +8,10 @@ use App\Enums\SubtipoMovimientoPersonal;
 use App\Enums\TipoMovimientoPersonal;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Expediente\ActaFiniquito;
+use App\Models\Expediente\ContratoColectivo;
 use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\MovimientoPersonal;
+use App\Models\Expediente\SalarioBasico;
 use App\Models\Expediente\Servidor;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
@@ -32,6 +34,10 @@ use Illuminate\Support\Facades\Storage;
  * Desde la fase 4.5b, también lo que se paga por el reintegro del obrero cuyo
  * despido el juez declaró ineficaz (Art. 195.3): las remuneraciones pendientes
  * con el 10 % de recargo, por el mismo aviso a Financiero.
+ *
+ * Y desde la 4.6, la bonificación por jubilación o por retiro voluntario que
+ * pacte el contrato colectivo vigente, en salarios básicos por año de servicio
+ * y con el tope de 210 del Mandato 2.
  */
 class TerminacionObreroService
 {
@@ -46,6 +52,9 @@ class TerminacionObreroService
 
     /** El recargo sobre las remuneraciones pendientes del despido ineficaz (Art. 195.3). */
     private const RECARGO_DEL_DESPIDO_INEFICAZ = 0.10;
+
+    /** El tope de las bonificaciones del Mandato 2, Art. 8, en salarios básicos. */
+    private const TOPE_DEL_MANDATO_2 = 210;
 
     /**
      * Valida la causal del obrero y deja la fecha en que presentó la renuncia
@@ -143,8 +152,23 @@ class TerminacionObreroService
         $causal = $movimiento->subtipoEfectivo();
 
         if ($movimiento->instrumento !== InstrumentoActo::DOCUMENTO_CT
-            || ! $causal?->pagaBonificacionPorDesahucio()
+            || ! ($causal?->pagaBonificacionPorDesahucio() || $causal?->clausulaDelContratoColectivo())
         ) {
+            return null;
+        }
+
+        // La del contrato colectivo, si la pacta (fase 4.6). Sin ella, la
+        // jubilación y el retiro no tienen nada que el sistema calcule.
+        $contrato = $causal->clausulaDelContratoColectivo()
+            ? app(ContratoColectivoService::class)->vigente($movimiento->fecha_efectiva)
+            : null;
+        $salariosPorAnio = match ($causal->clausulaDelContratoColectivo()) {
+            'jubilacion' => $contrato?->bonificacion_jubilacion_sbu,
+            'retiro'     => $contrato?->bonificacion_retiro_sbu,
+            default      => null,
+        };
+
+        if (! $causal->pagaBonificacionPorDesahucio() && $salariosPorAnio === null) {
             return null;
         }
 
@@ -169,14 +193,20 @@ class TerminacionObreroService
             ];
         }
 
-        $rubros[] = [
-            'concepto'   => 'Bonificación por desahucio',
-            'base_legal' => 'Código del Trabajo, Art. 185',
-            'detalle'    => $anios === null
-                ? 'Sin los años de servicio'
-                : '25 % de la última remuneración por '.number_format($anios, 2, ',', '.').' años de servicio',
-            'monto'      => $anios !== null && $remuneracion !== null ? round($remuneracion * 0.25 * $anios, 2) : null,
-        ];
+        if ($causal->pagaBonificacionPorDesahucio()) {
+            $rubros[] = [
+                'concepto'   => 'Bonificación por desahucio',
+                'base_legal' => 'Código del Trabajo, Art. 185',
+                'detalle'    => $anios === null
+                    ? 'Sin los años de servicio'
+                    : '25 % de la última remuneración por '.number_format($anios, 2, ',', '.').' años de servicio',
+                'monto'      => $anios !== null && $remuneracion !== null ? round($remuneracion * 0.25 * $anios, 2) : null,
+            ];
+        }
+
+        if ($salariosPorAnio !== null) {
+            $rubros[] = $this->bonificacionDelContratoColectivo($causal, $contrato, (float) $salariosPorAnio, $anios, $hasta);
+        }
 
         $montos = array_column($rubros, 'monto');
 
@@ -189,8 +219,49 @@ class TerminacionObreroService
             'dias_fuera'     => null,
             'rubros'         => $rubros,
             'total'          => in_array(null, $montos, true) ? null : round(array_sum($montos), 2),
-            'nota'           => 'Referencial. No incluye los décimos, las vacaciones no gozadas ni lo que fije el '
-                .'contrato colectivo: el valor definitivo lo establece Financiero.',
+            // Lo del contrato colectivo que el sistema guarda ya va en los
+            // rubros (fase 4.6).
+            'nota'           => 'Referencial. No incluye los décimos, las vacaciones no gozadas ni las cláusulas del '
+                .'contrato colectivo que el sistema no guarda: el valor definitivo lo establece Financiero.',
+        ];
+    }
+
+    /**
+     * La bonificación por jubilación o por retiro voluntario del contrato
+     * colectivo (fase 4.6): sus salarios básicos por año de servicio, con la
+     * fracción, hasta 210 (Mandato 2, Art. 8), al salario básico del año en
+     * que termina.
+     *
+     * @return array{concepto: string, base_legal: string, detalle: string, monto: ?float}
+     */
+    private function bonificacionDelContratoColectivo(
+        SubtipoMovimientoPersonal $causal,
+        ContratoColectivo $contrato,
+        float $salariosPorAnio,
+        ?float $anios,
+        ?Carbon $hasta,
+    ): array {
+        $salarios = $anios === null ? null : min(round($salariosPorAnio * $anios, 2), (float) self::TOPE_DEL_MANDATO_2);
+        $anio = $hasta?->year;
+        $basico = $anio ? SalarioBasico::delAnio($anio) : null;
+
+        $detalle = match (true) {
+            $salarios === null => 'Sin los años de servicio',
+            default            => number_format($salariosPorAnio, 2, ',', '.').' salarios básicos por '
+                .number_format($anios, 2, ',', '.').' años de servicio: '.number_format($salarios, 2, ',', '.')
+                .($salarios >= self::TOPE_DEL_MANDATO_2 ? ' (el tope)' : '')
+                .($basico === null
+                    ? ", sin el salario básico de {$anio} registrado"
+                    : ' de $'.number_format($basico, 2, ',', '.')),
+        };
+
+        return [
+            'concepto'   => $causal->clausulaDelContratoColectivo() === 'jubilacion'
+                ? 'Bonificación por jubilación'
+                : 'Bonificación por retiro voluntario',
+            'base_legal' => "Contrato colectivo N.º {$contrato->numero}; Mandato Constituyente 2, Art. 8",
+            'detalle'    => $detalle,
+            'monto'      => $salarios !== null && $basico !== null ? round($salarios * $basico, 2) : null,
         ];
     }
 

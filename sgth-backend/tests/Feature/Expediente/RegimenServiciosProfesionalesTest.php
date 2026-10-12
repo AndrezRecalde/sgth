@@ -2,6 +2,7 @@
 
 use App\Enums\RegimenLaboral;
 use App\Enums\TipoNombramiento;
+use App\Services\Asistencia\EscalaVacaciones;
 use App\Services\Asistencia\PeriodoVacacionService;
 
 /**
@@ -35,8 +36,10 @@ test('los otros dos regímenes sí generan vacaciones', function () {
     // LOSEP, art. 29: treinta días desde el primer año, sin escala.
     expect($servicio->calcularDiasGenerados('losep', 20))->toBe(30.0)
         ->and($servicio->calcularDiasGenerados('losep', 0))->toBe(30.0)
-        ->and($servicio->calcularDiasGenerados('codigo_trabajo', 1))->toBe(15.0)
-        ->and($servicio->calcularDiasGenerados('codigo_trabajo', 20))->toBe(30.0);
+        // El del obrero consulta el contrato colectivo, que vive en la base
+        // (fase 4.6; ContratoColectivoTest): aquí, la escala de la ley.
+        ->and(EscalaVacaciones::diasGenerados('codigo_trabajo', 1))->toBe(15.0)
+        ->and(EscalaVacaciones::diasGenerados('codigo_trabajo', 20))->toBe(30.0);
 });
 
 test('servicios profesionales no accede al módulo de permisos', function () {

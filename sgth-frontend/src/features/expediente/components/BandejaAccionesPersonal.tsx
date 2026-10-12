@@ -8,6 +8,8 @@ import { DataState, PAGINACION_ES, SgthTable, Toolbar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { POR_PAGINA_BANDEJA, useBandejaMovimientos } from '../hooks/useMovimientoMutations'
 import { useCatalogoAcciones } from '../hooks/useCatalogoAcciones'
+import { useLotesAccion } from '../hooks/useContratoColectivo'
+import { formatFecha } from '@/lib/fecha'
 import { AccionPersonalDetalleDrawer } from './AccionPersonalDetalleDrawer'
 import { getBandejaAccionesColumns } from './bandejaAcciones.columns'
 import { ESTADO_LABELS } from '../utils/estadoAccionPersonal'
@@ -28,7 +30,13 @@ export function BandejaAccionesPersonal() {
   const contained = useContainedInput('sm')
   const [estado, setEstado] = useState<EstadoAccionPersonal | null>('borrador')
   const [instrumento, setInstrumento] = useState<InstrumentoActo | null>(null)
+  const [lote, setLote] = useState<string | null>(null)
   const [pagina, setPagina] = useState(1)
+  // Los actos de un lote: el incremento de los obreros (fase 4.6).
+  const lotes = (useLotesAccion().data ?? []).map((l) => ({
+    value: String(l.id),
+    label: `Lote #${l.id} · ${l.documento_origen} · ${formatFecha(l.fecha_efectiva)}`,
+  }))
   // Acciones de personal o registros del contrato (fase 2.7): las opciones
   // y sus nombres los da el catálogo.
   const catalogo = useCatalogoAcciones()
@@ -39,6 +47,7 @@ export function BandejaAccionesPersonal() {
   const { data, isLoading, error, refetch } = useBandejaMovimientos({
     ...(estado ? { estado } : {}),
     ...(instrumento ? { instrumento } : {}),
+    ...(lote ? { lote_id: Number(lote) } : {}),
     page: pagina,
   })
 
@@ -53,6 +62,11 @@ export function BandejaAccionesPersonal() {
 
   const cambiarInstrumento = (valor: string | null) => {
     setInstrumento(valor as InstrumentoActo | null)
+    setPagina(1)
+  }
+
+  const cambiarLote = (valor: string | null) => {
+    setLote(valor)
     setPagina(1)
   }
 
@@ -89,6 +103,19 @@ export function BandejaAccionesPersonal() {
           {...contained}
           style={{ minWidth: 240 }}
         />
+        {lotes.length > 0 && (
+          <Select
+            label="Lote"
+            placeholder="Todos"
+            data={lotes}
+            value={lote}
+            onChange={cambiarLote}
+            clearable
+            searchable
+            {...contained}
+            style={{ minWidth: 260 }}
+          />
+        )}
       </Toolbar>
 
       <DataState
