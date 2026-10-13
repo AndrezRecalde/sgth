@@ -138,6 +138,7 @@ enum Permiso: string
     case VER_INVENTARIO_TI = 'ver-inventario-ti';
     case GESTIONAR_INVENTARIO_TI = 'gestionar-inventario-ti';
     case DAR_BAJA_BIEN = 'dar-baja-bien';
+    case REGISTRAR_MANTENIMIENTO = 'registrar-mantenimiento';
 
     // ── MÓDULO 13: Helpdesk ──────────────────────────────────────
     case CREAR_TICKET = 'crear-ticket';

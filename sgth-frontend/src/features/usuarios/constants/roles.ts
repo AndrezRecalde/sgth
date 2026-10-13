@@ -25,6 +25,7 @@ export const ROL_ETIQUETAS: Record<string, string> = {
   'enfermera':         'Enfermera',
   'admin-dispensario': 'Administrativo Dispensario',
   'tecnico-dtic':      'Técnico DTIC',
+  'jefe-tic':          'Jefe de TIC',
   'admin-ti':          'Administrador TI',
   'auditor':           'Auditor',
 }

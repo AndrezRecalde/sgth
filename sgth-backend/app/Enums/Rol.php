@@ -32,6 +32,10 @@ enum Rol: string
 
     // Tecnología
     case TECNICO_DTIC = 'tecnico-dtic';
+    // Quien dirige la Unidad de TIC: asigna tickets, configura la mesa de
+    // ayuda y aprueba las bajas. No es admin-ti, que es el superadministrador
+    // del sistema (docs/diseno-subsistema-tic.md, D5).
+    case JEFE_TIC = 'jefe-tic';
     case ADMIN_TI = 'admin-ti';
 
     // Control y auditoría
@@ -55,6 +59,7 @@ enum Rol: string
             self::ENFERMERA => 'Enfermera',
             self::ADMIN_DISPENSARIO => 'Administrativo Dispensario',
             self::TECNICO_DTIC => 'Técnico DTIC',
+            self::JEFE_TIC => 'Jefe de TIC',
             self::ADMIN_TI => 'Administrador TI',
             self::AUDITOR => 'Auditor',
         };

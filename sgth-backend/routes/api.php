@@ -1061,116 +1061,152 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
     });
 
     // Módulo 12 — Inventario de Bienes Informáticos
+    //
+    // Por permiso y no por rol (docs/diseno-subsistema-tic.md, 4.4): consultar
+    // es `ver-inventario-ti` (técnico, jefe de TIC, auditor); registrar,
+    // editar y entregar es `gestionar-inventario-ti`; el mantenimiento y la
+    // baja tienen su propio permiso. Los recursos van con `only` porque
+    // `apiResource` publicaba métodos que los controladores no tienen.
     Route::prefix('inventario')
         ->group(function () {
-            // Bienes — DTIC gestiona, todos pueden ver el suyo
+            $ver = 'permission:ver-inventario-ti|gestionar-inventario-ti';
+            $gestionar = 'permission:gestionar-inventario-ti';
+
+            // Bienes
             Route::apiResource('bienes', BienInformaticoController::class)
-                ->middleware('role:tecnico-dtic|admin-ti');
+                ->only(['index', 'show'])
+                ->middleware($ver);
+            Route::apiResource('bienes', BienInformaticoController::class)
+                ->only(['store', 'update', 'destroy'])
+                ->middleware($gestionar);
             Route::get('bienes/{bien}/historial',
                 [BienInformaticoController::class, 'historial'])
-                ->middleware('role:tecnico-dtic|admin-ti|auditor');
+                ->middleware($ver);
 
             // Asignaciones
             Route::apiResource('asignaciones', AsignacionBienController::class)
-                ->middleware('role:tecnico-dtic|admin-ti');
+                ->only(['index', 'show'])
+                ->middleware($ver);
+            Route::post('asignaciones',
+                [AsignacionBienController::class, 'store'])
+                ->middleware($gestionar);
             // El acta de entrega-recepción: el papel que se firma al entregar
             // el equipo, y la única salida documental de este registro.
             Route::get('asignaciones/{asignacion}/acta',
                 [AsignacionBienController::class, 'acta'])
-                ->middleware('role:tecnico-dtic|admin-ti');
+                ->middleware($ver);
             // La devolución, que la desvinculación espera (fase 7.4a).
             Route::post('asignaciones/{asignacion}/devolver',
                 [AsignacionBienController::class, 'devolver'])
-                ->middleware('role:tecnico-dtic|admin-ti');
+                ->middleware($gestionar);
 
             // Mantenimientos
             Route::apiResource('mantenimientos', MantenimientoBienController::class)
-                ->middleware('role:tecnico-dtic|admin-ti');
+                ->only(['index', 'show'])
+                ->middleware($ver);
+            Route::post('mantenimientos',
+                [MantenimientoBienController::class, 'store'])
+                ->middleware('permission:registrar-mantenimiento');
 
             // Auditoría física por QR
             Route::post('auditoria/escanear',
                 [AuditoriaInventarioController::class, 'escanear'])
-                ->middleware('role:tecnico-dtic|admin-ti');
+                ->middleware($gestionar);
             Route::post('auditoria/registrar',
                 [AuditoriaInventarioController::class, 'registrarAuditoria'])
-                ->middleware('role:tecnico-dtic|admin-ti');
+                ->middleware($gestionar);
 
-            // Bajas conforme Contraloría
+            // Bajas conforme Contraloría: las aprueba el jefe de TIC.
             Route::get('bajas',
                 [BajaController::class, 'index'])
-                ->middleware('role:tecnico-dtic|admin-ti|auditor');
+                ->middleware($ver);
             Route::post('bajas',
                 [BajaController::class, 'store'])
-                ->middleware('role:admin-ti');
+                ->middleware('permission:dar-baja-bien');
         });
 
     // Módulo 13 — Helpdesk
+    //
+    // Por permiso, y el alcance de cada ticket en `TicketPolicy`: el servidor
+    // ve los suyos, el técnico su cola y los sin asignar, el jefe de TIC todos.
+    // Hasta ahora el listado, el detalle y los comentarios no pedían nada.
     Route::prefix('helpdesk')
         ->group(function () {
-            // Tickets — cualquier servidor autenticado puede crear
+            $verTickets = 'permission:ver-ticket-propio|gestionar-tickets|ver-tickets-todos';
+
             Route::get('tickets',
-                [TicketController::class, 'index']);
+                [TicketController::class, 'index'])
+                ->middleware($verTickets);
             Route::post('tickets',
-                [TicketController::class, 'store']);
+                [TicketController::class, 'store'])
+                ->middleware('permission:crear-ticket');
             Route::get('tickets/{ticket}',
-                [TicketController::class, 'show']);
+                [TicketController::class, 'show'])
+                ->middleware($verTickets);
             Route::patch('tickets/{ticket}/estado',
                 [TicketController::class, 'cambiarEstado'])
-                ->middleware('role:tecnico-dtic|admin-ti');
+                ->middleware('permission:gestionar-tickets');
             Route::post('tickets/{ticket}/asignar',
                 [TicketController::class, 'asignar'])
-                ->middleware('role:tecnico-dtic|admin-ti');
+                ->middleware('permission:asignar-ticket');
             Route::post('tickets/{ticket}/escalar',
                 [TicketController::class, 'escalar'])
-                ->middleware('role:tecnico-dtic|admin-ti');
+                ->middleware('permission:gestionar-tickets');
             Route::post('tickets/{ticket}/cerrar',
                 [TicketController::class, 'cerrar'])
-                ->middleware('role:tecnico-dtic|admin-ti');
+                ->middleware('permission:gestionar-tickets');
             Route::post('tickets/{ticket}/vincular-bien',
                 [TicketController::class, 'vincularBien'])
-                ->middleware('role:tecnico-dtic|admin-ti');
+                ->middleware('permission:gestionar-tickets');
 
             // Comentarios
             Route::post('tickets/{ticket}/comentarios',
-                [ComentarioTicketController::class, 'store']);
+                [ComentarioTicketController::class, 'store'])
+                ->middleware($verTickets);
             Route::get('tickets/{ticket}/comentarios',
-                [ComentarioTicketController::class, 'index']);
+                [ComentarioTicketController::class, 'index'])
+                ->middleware($verTickets);
 
-            // Áreas DTIC
+            // Áreas DTIC. Se retiran en la fase 3: las áreas de atención son
+            // las subunidades de TIC de la estructura (diseño, D6).
             Route::apiResource('areas', AreaDticController::class)
-                ->middleware('role:admin-ti');
+                ->middleware('permission:gestionar-tecnicos');
 
             // Técnicos
             Route::apiResource('tecnicos', TecnicoDticController::class)
-                ->middleware('role:admin-ti');
+                ->middleware('permission:gestionar-tecnicos');
             Route::get('tecnicos/{tecnico}/carga-trabajo',
                 [TecnicoDticController::class, 'cargaTrabajo'])
-                ->middleware('role:tecnico-dtic|admin-ti');
+                ->middleware('permission:asignar-ticket|gestionar-tecnicos');
 
             // SLA
             Route::apiResource('slas', SlaController::class)
-                ->middleware('role:admin-ti');
+                ->middleware('permission:configurar-sla');
 
-            // Base de conocimiento
+            // Base de conocimiento: la lee cualquiera. El controlador solo
+            // tiene `index` y `show`; el resto del recurso daba 500.
             Route::apiResource('base-conocimiento',
-                BaseConocimientoController::class);
+                BaseConocimientoController::class)
+                ->only(['index', 'show']);
 
             // Encuestas de satisfacción
+            $verEncuestas = 'permission:ver-tickets-todos|ver-dashboard-ejecutivo';
+
             Route::get('encuestas-satisfaccion',
                 [EncuestaSatisfaccionController::class, 'index'])
-                ->middleware('role:admin-ti|auditor');
+                ->middleware($verEncuestas);
 
             // «resultados» antes del comodín, o encajaba en `{encuesta}` y
             // acababa en `show()` con esa palabra por id: la ruta era
             // inalcanzable y devolvía un 500.
             Route::get('encuestas-satisfaccion/resultados',
                 [EncuestaSatisfaccionController::class, 'resultados'])
-                ->middleware('role:admin-ti|director|maxima-autoridad');
+                ->middleware($verEncuestas);
 
             Route::get('encuestas-satisfaccion/{encuesta}',
                 [EncuestaSatisfaccionController::class, 'show'])
                 ->whereNumber('encuesta')
-                ->middleware('role:admin-ti');
+                ->middleware($verEncuestas);
         });
 
     // Módulo 08: Evaluación del Desempeño

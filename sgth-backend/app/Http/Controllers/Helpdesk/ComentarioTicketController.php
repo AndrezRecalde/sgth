@@ -19,12 +19,12 @@ use Illuminate\Http\Request;
  */
 class ComentarioTicketController extends Controller
 {
-    /** Quién ve y quién puede escribir notas internas. */
-    private const ROLES_INTERNOS = ['tecnico-dtic', 'admin-ti'];
-
     public function index(Request $request, int $ticketId): JsonResponse
     {
-        Ticket::findOrFail($ticketId);
+        // Antes bastaba con que el ticket existiera: cualquier usuario leía la
+        // conversación de un ticket ajeno.
+        $ticket = Ticket::findOrFail($ticketId);
+        $this->authorize('view', $ticket);
 
         $comentarios = ComentarioTicket::where('ticket_id', $ticketId)
             ->with('user.servidor:id,nombre,apellido')
@@ -32,7 +32,7 @@ class ComentarioTicketController extends Controller
             // ticket; el solicitante no debe leerla. Sin este filtro, el
             // listado la habría entregado a quien abrió el ticket.
             ->when(
-                ! $this->esInterno($request),
+                ! $request->user()->can('verNotasInternas', $ticket),
                 fn ($q) => $q->where('es_interno', false)
             )
             ->oldest()
@@ -43,7 +43,8 @@ class ComentarioTicketController extends Controller
 
     public function store(Request $request, int $ticketId): JsonResponse
     {
-        Ticket::findOrFail($ticketId);
+        $ticket = Ticket::findOrFail($ticketId);
+        $this->authorize('comentar', $ticket);
 
         $datos = $request->validate([
             'comentario'    => ['required', 'string', 'max:2000'],
@@ -58,7 +59,7 @@ class ComentarioTicketController extends Controller
             // Marcar un comentario como interno es cosa de quien atiende: si lo
             // pudiera hacer el solicitante, escondería su propio mensaje del
             // técnico que tiene que leerlo.
-            'es_interno'    => $this->esInterno($request)
+            'es_interno'    => $request->user()->can('verNotasInternas', $ticket)
                 && (bool) ($datos['es_interno'] ?? false),
             'evidencia_url' => $datos['evidencia_url'] ?? null,
         ]);
@@ -67,10 +68,5 @@ class ComentarioTicketController extends Controller
             $comentario->load('user.servidor:id,nombre,apellido'),
             'Comentario agregado.'
         );
-    }
-
-    private function esInterno(Request $request): bool
-    {
-        return $request->user()->hasAnyRole(self::ROLES_INTERNOS);
     }
 }

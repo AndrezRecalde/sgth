@@ -174,6 +174,11 @@ test('el Inventario TI registra la devolución, una vez', function () {
     ]);
     $tecnico = User::factory()->create();
     $tecnico->assignRole('tecnico-dtic');
+    // La devolución pide `gestionar-inventario-ti` desde que el inventario va
+    // por permiso (diseño TIC, 4.4); el rol de este archivo nace vacío.
+    Role::findByName('tecnico-dtic', 'sanctum')->givePermissionTo(
+        \Spatie\Permission\Models\Permission::firstOrCreate(['name' => 'gestionar-inventario-ti', 'guard_name' => 'sanctum'])
+    );
     $this->actingAs($tecnico, 'sanctum');
 
     $this->postJson("/api/v1/inventario/asignaciones/{$asignacion->id}/devolver", ['fecha_devolucion' => '2026-10-19'])->assertOk();
