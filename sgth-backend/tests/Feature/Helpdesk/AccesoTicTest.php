@@ -147,25 +147,26 @@ test('el solicitante abre su ticket sin las notas internas', function () {
 
 test('el tecnico no mueve el ticket que tiene otro tecnico', function () {
     $this->actingAs($this->tecnico, 'sanctum')
-        ->patchJson("/api/v1/helpdesk/tickets/{$this->deLuisDeOtro->id}/estado", ['estado' => 'en_proceso'])
+        ->postJson("/api/v1/helpdesk/tickets/{$this->deLuisDeOtro->id}/tomar")
         ->assertForbidden();
 
     $this->actingAs($this->tecnico, 'sanctum')
-        ->patchJson("/api/v1/helpdesk/tickets/{$this->deLuisDelTecnico->id}/estado", ['estado' => 'en_proceso'])
-        ->assertOk();
+        ->postJson("/api/v1/helpdesk/tickets/{$this->deLuisDelTecnico->id}/tomar")
+        ->assertOk()
+        ->assertJsonPath('datos.estado', 'en_proceso');
 
     $this->actingAs($this->jefe, 'sanctum')
-        ->patchJson("/api/v1/helpdesk/tickets/{$this->deLuisDeOtro->id}/estado", ['estado' => 'en_proceso'])
+        ->postJson("/api/v1/helpdesk/tickets/{$this->deLuisDeOtro->id}/tomar")
         ->assertOk();
 });
 
-test('el servidor no cambia el estado ni el tecnico asigna', function () {
+test('el servidor no atiende tickets ni el tecnico asigna', function () {
     $this->actingAs($this->usuarioAna, 'sanctum')
-        ->patchJson("/api/v1/helpdesk/tickets/{$this->deAna->id}/estado", ['estado' => 'cerrado'])
+        ->postJson("/api/v1/helpdesk/tickets/{$this->deAna->id}/tomar")
         ->assertForbidden();
 
     $this->actingAs($this->tecnico, 'sanctum')
-        ->postJson("/api/v1/helpdesk/tickets/{$this->deLuisSinAsignar->id}/asignar", ['tecnico_dtic_id' => 1])
+        ->postJson("/api/v1/helpdesk/tickets/{$this->deLuisSinAsignar->id}/asignar", ['tecnico_id' => $this->tecnico->id])
         ->assertForbidden();
 });
 

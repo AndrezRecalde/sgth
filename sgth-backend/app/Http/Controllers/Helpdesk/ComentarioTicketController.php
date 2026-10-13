@@ -2,71 +2,64 @@
 
 namespace App\Http\Controllers\Helpdesk;
 
+use App\Contracts\Helpdesk\TicketServiceInterface;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Helpdesk\ComentarTicketRequest;
+use App\Http\Resources\Helpdesk\ComentarioTicketResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Helpdesk\ComentarioTicket;
 use App\Models\Helpdesk\Ticket;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Los comentarios de un ticket.
- *
- * `store` era un muñón: respondía «Comentario agregado» y no guardaba nada, ni
- * siquiera recibía el ticket. Quien comentaba veía la confirmación y el
- * comentario se perdía. El modelo y la tabla estaban completos desde el
- * principio; lo único que faltaba era el controlador.
+ * La conversación de un ticket y sus archivos (fase 3.1). Las notas internas
+ * son entre quienes atienden: el solicitante ni las lee ni puede marcar una.
  */
-class ComentarioTicketController extends Controller
+final class ComentarioTicketController extends Controller
 {
-    public function index(Request $request, int $ticketId): JsonResponse
+    public function __construct(private readonly TicketServiceInterface $tickets) {}
+
+    public function index(Request $request, Ticket $ticket): JsonResponse
     {
-        // Antes bastaba con que el ticket existiera: cualquier usuario leía la
-        // conversación de un ticket ajeno.
-        $ticket = Ticket::findOrFail($ticketId);
         $this->authorize('view', $ticket);
 
-        $comentarios = ComentarioTicket::where('ticket_id', $ticketId)
-            ->with('user.servidor:id,nombre,apellido')
-            // Una nota interna es la conversación entre técnicos sobre el
-            // ticket; el solicitante no debe leerla. Sin este filtro, el
-            // listado la habría entregado a quien abrió el ticket.
-            ->when(
-                ! $request->user()->can('verNotasInternas', $ticket),
-                fn ($q) => $q->where('es_interno', false)
-            )
+        $comentarios = ComentarioTicket::where('ticket_id', $ticket->id)
+            ->with('user:id,usuario_ti,email,servidor_id', 'user.servidor:id,nombre,apellido')
+            ->when(! $request->user()->can('verNotasInternas', $ticket), fn ($q) => $q->where('es_interno', false))
             ->oldest()
+            ->orderBy('id')
             ->get();
 
-        return ApiResponse::ok($comentarios, 'Comentarios del ticket.');
+        return ApiResponse::ok(ComentarioTicketResource::collection($comentarios), 'Conversación del ticket.');
     }
 
-    public function store(Request $request, int $ticketId): JsonResponse
+    public function store(ComentarTicketRequest $request, Ticket $ticket): JsonResponse
     {
-        $ticket = Ticket::findOrFail($ticketId);
         $this->authorize('comentar', $ticket);
+        $interno = $request->boolean('es_interno') && $request->user()->can('verNotasInternas', $ticket);
 
-        $datos = $request->validate([
-            'comentario'    => ['required', 'string', 'max:2000'],
-            'es_interno'    => ['nullable', 'boolean'],
-            'evidencia_url' => ['nullable', 'string', 'max:255'],
-        ]);
+        $comentario = $this->tickets->comentar($ticket, $request->user(), $request->validated('comentario'), $interno, $request->file('archivo'));
 
-        $comentario = ComentarioTicket::create([
-            'ticket_id'     => $ticketId,
-            'user_id'       => $request->user()->id,
-            'comentario'    => $datos['comentario'],
-            // Marcar un comentario como interno es cosa de quien atiende: si lo
-            // pudiera hacer el solicitante, escondería su propio mensaje del
-            // técnico que tiene que leerlo.
-            'es_interno'    => $request->user()->can('verNotasInternas', $ticket)
-                && (bool) ($datos['es_interno'] ?? false),
-            'evidencia_url' => $datos['evidencia_url'] ?? null,
-        ]);
+        return ApiResponse::created(new ComentarioTicketResource($comentario), $interno ? 'Nota interna agregada.' : 'Mensaje enviado.');
+    }
 
-        return ApiResponse::created(
-            $comentario->load('user.servidor:id,nombre,apellido'),
-            'Comentario agregado.'
-        );
+    public function archivo(Request $request, Ticket $ticket, ComentarioTicket $comentario): StreamedResponse|JsonResponse
+    {
+        $this->authorize('view', $ticket);
+
+        if ((int) $comentario->ticket_id !== (int) $ticket->id
+            || ($comentario->es_interno && ! $request->user()->can('verNotasInternas', $ticket))) {
+            return ApiResponse::noEncontrado('Ese archivo no es de este ticket.');
+        }
+
+        $ruta = $this->tickets->rutaArchivo($comentario);
+        if (! $ruta) {
+            return ApiResponse::noEncontrado('El mensaje no tiene archivo, o ya no está.');
+        }
+
+        return Storage::disk('local')->download($ruta, $comentario->archivo_nombre ?? 'archivo');
     }
 }

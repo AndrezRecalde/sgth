@@ -238,6 +238,29 @@ abierto ───────────► asignado ────────�
 - **El folio es `TIC-AAAA-00001`**, con bloqueo consultivo de Postgres, como en Permisos.
 - **Al resolver un ticket de hardware con equipo vinculado**, se registra el mantenimiento correctivo en la ficha. El equipo vuelve a `en_uso`, o pasa a `en_garantia` o a baja.
 
+**Hecho en la fase 3.1** (migración `2026_10_25_000000_mesa_de_ayuda_tickets`):
+
+- **Datos:**
+  - `tickets` gana la prioridad, el canal (Portal o registrado por TIC), la subunidad de TIC que atiende (D6), el nivel, la solución con quién y cuándo, las reaperturas, la anulación y quién lo registró;
+  - `historial_estados_ticket` anota cada cambio;
+  - los comentarios llevan un archivo en el disco privado en lugar de un enlace suelto;
+  - se agrega el estado `anulado`.
+- **Categorías:** `categorias_ticket` gana la subunidad que la atiende por defecto, y la migración siembra las siete de D7 si no hay ninguna. Las subunidades salen de la unidad `GADPE-15` (`config/helpdesk.php`).
+- **El trámite es una acción por paso**, con `TicketEstadoService::TRANSICIONES`:
+  - **asignar** (el jefe, con técnico, subunidad y prioridad);
+  - **tomar** (el técnico: queda en proceso a su nombre);
+  - **pedir información** (la pregunta va a la conversación; la respuesta del solicitante devuelve el ticket a en proceso);
+  - **resolver** (con la solución; si es de hardware y tiene equipo, registra el correctivo en su ficha con el estado en que queda el equipo);
+  - **confirmar** y calificar, o **reabrir** (el solicitante);
+  - **escalar** a nivel 2 o 3, con otro técnico o de vuelta a la cola;
+  - **anular** (el solicitante solo mientras está abierto; el jefe, mientras no esté resuelto).
+- **Al abrir el ticket:**
+  - **desde el Portal**, a nombre de quien lo abre: no elige la prioridad, y el equipo tiene que ser uno que tiene a su cargo o usa;
+  - **desde TIC**, a nombre del servidor que llamó, con su prioridad.
+- **El folio** es `TIC-AAAA-00001`.
+- **El mantenimiento** ya no se registra al abrir un ticket de hardware sino al resolverlo.
+- **El SLA** (sigue opcional), las encuestas agregadas y los técnicos por subunidad quedan para 3.2 y 3.5.
+
 ### 4.4 Roles y permisos
 
 Las rutas van **por permiso**, y el alcance de cada ticket lo decide `TicketPolicy`. El middleware `permission:` de Spatie usa `canAny`, que pasa por `Gate::before`, así que `admin-ti` entraría de todos modos; aun así recibe los permisos de forma explícita, para que la pantalla de Usuarios muestre lo que puede hacer. El que no pasa por `Gate::before` es el middleware `role:`.

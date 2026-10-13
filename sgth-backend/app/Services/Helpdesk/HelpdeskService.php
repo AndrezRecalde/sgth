@@ -2,114 +2,14 @@
 namespace App\Services\Helpdesk;
 
 use App\Contracts\Helpdesk\HelpdeskServiceInterface;
-use App\Models\Helpdesk\CategoriaTicket;
-use App\Models\Helpdesk\Ticket;
-use App\Models\Helpdesk\Sla;
-use App\Models\InventarioTi\BienInformatico;
-use App\Models\InventarioTi\MantenimientoBien;
-use Illuminate\Support\Facades\DB;
 
+/**
+ * Las métricas de la mesa de ayuda, todavía simuladas (fases 3.5 y 4). Crear,
+ * cerrar, escalar y vincular un equipo pasaron a `TicketService` y
+ * `TicketEstadoService` (fase 3.1).
+ */
 class HelpdeskService implements HelpdeskServiceInterface
 {
-    public function crearTicket(array $datos): Ticket
-    {
-        return DB::transaction(function () use ($datos) {
-            $sla = Sla::findOrFail($datos['sla_id']);
-            $datos['fecha_vencimiento_sla'] = now()->addHours($sla->tiempo_resolucion_horas);
-            $datos['codigo_ticket'] = 'TIC-' . strtoupper(uniqid());
-            $ticket = Ticket::create($datos);
-            $categoria = CategoriaTicket::find($datos['categoria_id'] ?? null);
-
-            if (!empty($datos['bien_informatico_id']) && $categoria && $categoria->es_hardware) {
-                MantenimientoBien::create([
-                    'bien_informatico_id' => $datos['bien_informatico_id'],
-                    'ticket_id' => $ticket->id,
-                    'tipo_mantenimiento' => 'correctivo',
-                    'fecha_mantenimiento' => now()->toDateString(),
-                    'descripcion' => $ticket->asunto,
-                    'costo' => 0
-                ]);
-                $bien = BienInformatico::find($datos['bien_informatico_id']);
-                if ($bien) {
-                    $bien->update(['estado_operativo' => 'en_mantenimiento']);
-                }
-            }
-            return $ticket;
-        });
-    }
-
-    public function cerrarTicket(int $id, array $datos): Ticket
-    {
-        return DB::transaction(function () use ($id, $datos) {
-            $ticket = Ticket::findOrFail($id);
-            $ticket->update([
-                'estado' => 'cerrado',
-                'fecha_cierre' => now()
-            ]);
-
-            if ($ticket->bien_informatico_id) {
-                $bien = BienInformatico::find($ticket->bien_informatico_id);
-                // `activo` ya no existe (EstadoBien): el equipo vuelve al estado
-                // que le toca por su custodia, salvo que esté dado de baja.
-                if ($bien && $bien->estado_operativo === \App\Enums\EstadoBien::EN_MANTENIMIENTO) {
-                    $bien->update(['estado_operativo' => $bien->estadoSegunCustodia()]);
-                }
-            }
-            // Disparar encuesta de satisfaccion
-            $encuesta = \App\Models\Helpdesk\EncuestaSatisfaccion::create([
-                'ticket_id' => $ticket->id,
-                'calificacion' => 0, // Pendiente
-                'fecha_respuesta' => null
-            ]);
-            
-            // La relación se llama `usuario`, no `user`: con el nombre
-            // equivocado devolvía null y el `??` mandaba todos los correos de
-            // cierre a una dirección de prueba. Sin destinatario real no se
-            // encola nada — la encuesta de satisfacción no llegaba a nadie.
-            $correo = $ticket->solicitante?->usuario?->email;
-
-            if ($correo) {
-                \Illuminate\Support\Facades\Mail::to($correo)
-                    ->queue(new \App\Mail\Helpdesk\TicketCerradoMail($ticket, $encuesta));
-            }
-
-            return $ticket;
-        });
-    }
-
-    public function escalarTicket(int $id, int $nivel): Ticket
-    {
-        return DB::transaction(function () use ($id, $nivel) {
-            $ticket = Ticket::findOrFail($id);
-            // Lógica de escalación (ej. buscar técnico de ese nivel, etc.)
-            // Por simplicidad en el mock, solo asume que cambia internamente.
-            return $ticket;
-        });
-    }
-
-    public function vincularBienATicket(int $ticketId, int $bienId): Ticket
-    {
-        return DB::transaction(function () use ($ticketId, $bienId) {
-            $ticket = Ticket::findOrFail($ticketId);
-            $ticket->update(['bien_informatico_id' => $bienId]);
-
-            $bien = BienInformatico::find($bienId);
-            if ($bien) {
-                $bien->update(['estado_operativo' => 'en_mantenimiento']);
-                MantenimientoBien::create([
-                    'bien_informatico_id' => $bienId,
-                    'ticket_id' => $ticketId,
-                    'tipo_mantenimiento' => 'correctivo',
-                    'fecha_mantenimiento' => now()->toDateString(),
-                    'descripcion' => $ticket->asunto,
-                    'costo' => 0
-                ]);
-            }
-
-            return $ticket;
-        });
-    }
-
     public function obtenerResultadosEncuestas(array $filtros): array
     {
         // Mock de resultados estadísticos
