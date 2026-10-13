@@ -385,6 +385,8 @@ Portal › Soporte
                         cancelar mientras no se haya entregado
 ```
 
+**Hecho en la fase 2.2:** `/portal/prestamos` («Préstamo de equipos») muestra cada equipo prestable con su estado ahora y su horario, por día (la barra del horario de atención, con las horas) o por semana (una barra chica por día; cinco, o siete si TIC presta en fin de semana). Se marcan varios equipos y se piden juntos, o se hace clic en un horario libre de la barra: el formulario se abre con ese equipo, esa hora (redondeada a la media hora) y una hora de duración. Lo ocupado sale pintado, en rojo si el préstamo en curso está vencido, y al pasar el cursor dice de qué hora a qué hora. Si el horario choca, el aviso cae en el campo «Equipos». `/portal/mis-prestamos` lista las solicitudes y los préstamos con su estado, el horario previsto y el real, el detalle con la línea de tiempo, y cancelar mientras no se haya entregado. Las dos páginas van en el grupo «Soporte» del Portal.
+
 ### 5.3 Flujos principales
 
 **Ticket**

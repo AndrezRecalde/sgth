@@ -1,0 +1,64 @@
+/**
+ * La barra del horario de atención de un día: el fondo es libre, los bloques
+ * ocupados se pintan encima con su posición en porcentaje.
+ */
+
+.barra {
+  position: relative;
+  height: 28px;
+  border-radius: var(--mantine-radius-sm);
+  background-color: var(--sgth-surface-sunken);
+  border: 1px solid var(--sgth-border);
+  overflow: hidden;
+}
+
+.compacta {
+  height: 18px;
+}
+
+.pedible {
+  cursor: pointer;
+}
+
+.pedible:hover {
+  background-color: var(--sgth-accent-light);
+}
+
+.inerte {
+  opacity: 0.5;
+}
+
+.marca {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: var(--sgth-border);
+  pointer-events: none;
+}
+
+.bloque {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  border-radius: 3px;
+  background-color: var(--sgth-accent);
+  opacity: 0.85;
+}
+
+.bloqueVencido {
+  background-color: var(--mantine-color-red-6);
+}
+
+.horas {
+  position: relative;
+  height: 16px;
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+}
+
+.hora {
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
