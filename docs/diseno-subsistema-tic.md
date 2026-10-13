@@ -278,6 +278,20 @@ abierto ───────────► asignado ────────�
 - **El ticket dice cómo va su SLA**: en plazo, por vencer, vencido, pausado, cumplido o incumplido.
 - **El listado** tiene la vista `vencidos`.
 
+**Hecho en la fase 3.3** (Portal):
+
+- **`/portal/mis-tickets`:** los tickets propios en curso, por confirmar y cerrados.
+  - El estado se dice desde quien lo abrió: «Recibido», «En atención», «Esperando su respuesta», «Resuelto: confírmelo».
+  - «Pedir ayuda» pide la categoría (con su descripción), el asunto, qué pasa, uno de sus equipos y una captura.
+- **`/portal/mis-tickets/[id]`:**
+  - la conversación con los archivos, y responder;
+  - el aviso cuando TIC pregunta;
+  - con el ticket resuelto, la solución con «Confirmar la solución» (y calificar de 1 a 5) o «Sigue sin funcionar» (reabre con motivo);
+  - «Ya no lo necesito» mientras nadie lo atiende;
+  - quién lo atiende, el área de TIC, el equipo y el seguimiento, sin los detalles internos.
+- **«Mis equipos»** gana «Reportar un problema», que abre el ticket con el equipo y la categoría de hardware ya elegidos.
+- El enlace «Mis Tickets» del menú del Portal, que no llevaba a ninguna página, ya funciona.
+
 ### 4.4 Roles y permisos
 
 Las rutas van **por permiso**, y el alcance de cada ticket lo decide `TicketPolicy`. El middleware `permission:` de Spatie usa `canAny`, que pasa por `Gate::before`, así que `admin-ti` entraría de todos modos; aun así recibe los permisos de forma explícita, para que la pantalla de Usuarios muestre lo que puede hacer. El que no pasa por `Gate::before` es el middleware `role:`.
