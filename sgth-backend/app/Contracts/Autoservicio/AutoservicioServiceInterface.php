@@ -16,7 +16,5 @@ interface AutoservicioServiceInterface
 
     public function obtenerMiExpediente(int $servidorId): array;
 
-    public function obtenerMisActividades(int $servidorId): array;
-
     public function obtenerMiHistoriaClinicaBasica(int $servidorId): array;
 }

@@ -56,12 +56,6 @@ class AutoservicioController extends Controller
         return ApiResponse::ok($expediente, 'Mi expediente obtenido de forma segura.');
     }
 
-    public function misActividades(Request $request): JsonResponse
-    {
-        $actividades = $this->autoservicioService->obtenerMisActividades($this->getServidorId($request));
-        return ApiResponse::ok($actividades, 'Mis actividades obtenidas.');
-    }
-
     public function miHistoriaClinica(Request $request): JsonResponse
     {
         $historia = $this->autoservicioService->obtenerMiHistoriaClinicaBasica($this->getServidorId($request));

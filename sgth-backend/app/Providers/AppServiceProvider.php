@@ -50,8 +50,6 @@ use App\Contracts\Helpdesk\SlaServiceInterface;
 use App\Services\Helpdesk\SlaService;
 use App\Contracts\Capacitacion\CapacitacionServiceInterface;
 use App\Services\Capacitacion\CapacitacionService;
-use App\Contracts\Actividades\ActividadesServiceInterface;
-use App\Services\Actividades\ActividadesService;
 use App\Contracts\Bienestar\BienestarServiceInterface;
 use App\Services\Bienestar\BienestarService;
 use App\Contracts\Reporteria\ReporteriaServiceInterface;
@@ -165,10 +163,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             CapacitacionServiceInterface::class,
             CapacitacionService::class
-        );
-        $this->app->bind(
-            ActividadesServiceInterface::class,
-            ActividadesService::class
         );
         $this->app->bind(
             BienestarServiceInterface::class,
