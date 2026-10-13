@@ -13,6 +13,12 @@ export const clavesInventario = {
     historial: (id: number) => ['inventario-ti', 'bienes', id, 'historial'] as const,
   },
 
+  mantenimientos: {
+    todos: ['inventario-ti', 'mantenimientos'] as const,
+    lista: (filtros: unknown, page: number) => ['inventario-ti', 'mantenimientos', 'lista', filtros, page] as const,
+    tecnicos: ['inventario-ti', 'mantenimientos', 'tecnicos'] as const,
+  },
+
   catalogos: {
     todos: ['inventario-ti', 'catalogos'] as const,
     formularios: ['inventario-ti', 'catalogos', 'formularios'] as const,

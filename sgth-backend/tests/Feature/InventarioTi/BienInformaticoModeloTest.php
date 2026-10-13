@@ -239,6 +239,9 @@ test('el listado busca por el nombre del custodio y filtra los sin custodio', fu
 
 test('la migracion pasa los estados viejos a los nuevos segun la custodia', function () {
     $migracion = require database_path('migrations/2026_10_18_000000_modelo_de_datos_del_inventario_ti.php');
+    // La de mantenimientos (1.5) cuelga de `contratos_vigencia`: se deshace antes.
+    $mantenimientos = require database_path('migrations/2026_10_21_000000_mantenimientos_de_equipos.php');
+    $mantenimientos->down();
     $migracion->down();
 
     $tipo = DB::table('tipos_bien')->insertGetId(['nombre' => 'Viejo', 'anios_vida_util' => 0]);
@@ -258,6 +261,7 @@ test('la migracion pasa los estados viejos a los nuevos segun la custodia', func
     ]);
 
     $migracion->up();
+    $mantenimientos->up();
 
     $estado = fn (int $id) => DB::table('bienes_informaticos')->where('id', $id)->value('estado_operativo');
     expect($estado($conCustodio))->toBe('en_uso')

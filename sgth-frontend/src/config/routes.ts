@@ -122,6 +122,7 @@ export const ROUTES = {
     EQUIPO_NUEVO:  '/tic/inventario/equipos/nuevo',
     EQUIPO:        (id: number) => `/tic/inventario/equipos/${id}`,
     EQUIPO_EDITAR: (id: number) => `/tic/inventario/equipos/${id}/editar`,
+    MANTENIMIENTOS: '/tic/inventario/mantenimientos',
     /** Catálogos del inventario: tipos, marcas, ubicaciones y contratos. */
     CONFIGURACION: '/tic/configuracion',
   },

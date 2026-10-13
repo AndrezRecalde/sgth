@@ -20,16 +20,23 @@ interface Props {
   excluirId?: number
   onChange: (id: number | null) => void
   error?: string
+  /** Solo equipos principales: para elegir de quién es componente uno. */
+  soloPrincipales?: boolean
+  placeholder?: string
 }
 
 const textoDe = (b: Pick<BienInformatico, 'codigo_institucional' | 'modelo' | 'tipo'>) =>
   [b.codigo_institucional, b.tipo?.nombre, b.modelo].filter(Boolean).join(' · ')
 
 /**
- * Buscar un equipo principal por código, serie o modelo. Solo ofrece equipos
- * principales: un componente cuelga de uno, y solo un nivel.
+ * Buscar un equipo por código, serie o modelo. Para elegir el principal de un
+ * componente ofrece solo equipos principales: un componente cuelga de uno, y
+ * solo un nivel.
  */
-export function BuscarEquipoSelect({ label, value, textoInicial, excluirId, onChange, error }: Props) {
+export function BuscarEquipoSelect({
+  label, value, textoInicial, excluirId, onChange, error, soloPrincipales = true,
+  placeholder = 'Código, serie o modelo del equipo principal',
+}: Props) {
   const contained = useContainedInput()
   const combobox = useCombobox()
   // `null`: no se ha escrito nada y el campo muestra el elegido.
@@ -41,8 +48,8 @@ export function BuscarEquipoSelect({ label, value, textoInicial, excluirId, onCh
   const termino = escrito.length < 2 ? '' : conRetardo
 
   const { data, isFetching } = useQuery({
-    queryKey: [...clavesInventario.bienes.todos, 'buscar-principal', termino],
-    queryFn: () => bienesService.listar({ search: termino, solo_principales: true }, 1),
+    queryKey: [...clavesInventario.bienes.todos, 'buscar', soloPrincipales, termino],
+    queryFn: () => bienesService.listar({ search: termino, solo_principales: soloPrincipales || undefined }, 1),
     enabled: termino.length >= 2,
   })
   const opciones = (data?.data ?? []).filter((b) => b.id !== excluirId)
@@ -66,7 +73,7 @@ export function BuscarEquipoSelect({ label, value, textoInicial, excluirId, onCh
         <InputBase
           label={label}
           error={error}
-          placeholder="Código, serie o modelo del equipo principal"
+          placeholder={placeholder}
           rightSection={buscando ? <Loader size="xs" /> : <Combobox.Chevron />}
           {...contained}
           value={texto}

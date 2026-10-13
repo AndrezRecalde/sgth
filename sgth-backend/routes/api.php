@@ -1150,12 +1150,19 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 [AsignacionBienController::class, 'memorando'])
                 ->middleware($ver);
 
-            // Mantenimientos
+            // Mantenimientos (fase 1.5). «tecnicos» antes del recurso, o
+            // `{mantenimiento}` se lo come.
+            Route::get('mantenimientos/tecnicos',
+                [MantenimientoBienController::class, 'tecnicos'])
+                ->middleware('permission:registrar-mantenimiento');
             Route::apiResource('mantenimientos', MantenimientoBienController::class)
                 ->only(['index', 'show'])
                 ->middleware($ver);
             Route::post('mantenimientos',
                 [MantenimientoBienController::class, 'store'])
+                ->middleware('permission:registrar-mantenimiento');
+            Route::post('mantenimientos/{mantenimiento}/anular',
+                [MantenimientoBienController::class, 'anular'])
                 ->middleware('permission:registrar-mantenimiento');
 
             // Auditoría física por QR

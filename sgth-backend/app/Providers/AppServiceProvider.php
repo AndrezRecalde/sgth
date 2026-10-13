@@ -165,6 +165,10 @@ class AppServiceProvider extends ServiceProvider
             \App\Services\InventarioTi\CustodiaService::class
         );
         $this->app->bind(
+            \App\Contracts\InventarioTi\MantenimientoServiceInterface::class,
+            \App\Services\InventarioTi\MantenimientoService::class
+        );
+        $this->app->bind(
             HelpdeskServiceInterface::class,
             HelpdeskService::class
         );
