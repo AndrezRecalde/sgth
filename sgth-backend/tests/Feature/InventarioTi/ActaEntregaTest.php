@@ -65,7 +65,7 @@ beforeEach(function () {
         ])->id,
         'modelo'               => 'Latitude 5440',
         'numero_serie'         => 'SN-ACTA-77',
-        'estado_operativo'     => 'activo',
+        'estado_operativo'     => 'disponible',
         'condicion_fisica'     => 'bueno',
         'caracteristicas_tecnicas' => ['memoria_ram' => '16 GB', 'disco' => 'SSD 512 GB'],
     ]);
@@ -177,12 +177,29 @@ test('sin_quien_entrego_se_imprime_la_direccion_y_no_un_nombre_inventado', funct
     expect($html)->toContain('Dirección de Tecnologías de la Información');
 });
 
+/**
+ * Un equipo libre del mismo tipo y marca. El de la prueba ya tiene custodio, y
+ * desde la fase 1.1 un equipo no se entrega a dos personas a la vez.
+ */
+function equipoLibreDeActa(): BienInformatico
+{
+    return BienInformatico::create([
+        'codigo_qr'            => 'GADPE-078-QR',
+        'codigo_institucional' => 'GADPE-078',
+        'tipo_bien_id'         => test()->bien->tipo_bien_id,
+        'marca_id'             => test()->bien->marca_id,
+        'modelo'               => 'Latitude 5440',
+        'estado_operativo'     => 'disponible',
+        'condicion_fisica'     => 'bueno',
+    ]);
+}
+
 // ── Lo que ya no miente ────────────────────────────────────────────────────
 
 test('asignar_un_bien_ya_no_anuncia_un_acta_que_no_existe', function () {
     $respuesta = $this->actingAs($this->admin, 'sanctum')
         ->postJson('/api/v1/inventario/asignaciones', [
-            'bien_informatico_id' => $this->bien->id,
+            'bien_informatico_id' => equipoLibreDeActa()->id,
             'servidor_id'         => $this->servidor->id,
             'fecha_asignacion'    => now()->toDateString(),
             'estado'              => 'activa',
@@ -203,7 +220,7 @@ test('quien_entrega_lo_pone_el_sistema_y_no_el_cuerpo_de_la_peticion', function 
     // podría atribuirle la entrega a cualquiera.
     $this->actingAs($this->admin, 'sanctum')
         ->postJson('/api/v1/inventario/asignaciones', [
-            'bien_informatico_id' => $this->bien->id,
+            'bien_informatico_id' => equipoLibreDeActa()->id,
             'servidor_id'         => $this->servidor->id,
             'fecha_asignacion'    => now()->toDateString(),
             'estado'              => 'activa',

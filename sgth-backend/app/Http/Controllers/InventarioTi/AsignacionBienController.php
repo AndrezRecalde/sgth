@@ -22,7 +22,16 @@ final class AsignacionBienController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $asignacion = $this->service->asignarBien($request->all());
+        // Llegaba `$request->all()` sin validar. La custodia se rehace en la
+        // fase 1.3; esto es lo mínimo para que el alta no reviente.
+        $datos = $request->validate([
+            'bien_informatico_id' => ['required', 'integer', 'exists:bienes_informaticos,id'],
+            'servidor_id'         => ['required', 'integer', 'exists:servidores,id'],
+            'fecha_asignacion'    => ['required', 'date'],
+            'observaciones'       => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $asignacion = $this->service->asignarBien($datos);
 
         // Decía «Asignación creada y Acta PDF generada» y no se generaba
         // ninguna. El acta se pide aparte, y aquí se dice dónde.

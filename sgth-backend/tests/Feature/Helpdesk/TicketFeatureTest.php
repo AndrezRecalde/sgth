@@ -156,7 +156,7 @@ test('vincular_bien_cambia_estado_a_en_mantenimiento', function () {
         'origen_bien_id' => $this->origen->id,
         'modelo' => 'Optiplex',
         'numero_serie' => 'SN123456',
-        'estado_operativo' => 'activo',
+        'estado_operativo' => 'disponible',
     ]);
 
     $ticket = Ticket::create([
@@ -176,10 +176,10 @@ test('vincular_bien_cambia_estado_a_en_mantenimiento', function () {
     $bien->refresh();
     
     // El estado del bien debe cambiar a en_mantenimiento
-    expect($bien->estado_operativo)->toBe('en_mantenimiento');
+    expect($bien->estado_operativo)->toBe(\App\Enums\EstadoBien::EN_MANTENIMIENTO);
 });
 
-test('cerrar_ticket_devuelve_bien_a_activo', function () {
+test('cerrar_ticket_devuelve_el_bien_al_estado_de_su_custodia', function () {
     Mail::fake();
 
     $bien = BienInformatico::create([
@@ -210,8 +210,9 @@ test('cerrar_ticket_devuelve_bien_a_activo', function () {
 
     $bien->refresh();
     
-    // Al cerrar el ticket, el bien informático vuelve a estar activo
-    expect($bien->estado_operativo)->toBe('activo');
+    // Al cerrar el ticket el equipo sale de mantenimiento: sin custodio,
+    // vuelve a estar disponible en TIC (`activo` ya no existe).
+    expect($bien->estado_operativo)->toBe(\App\Enums\EstadoBien::DISPONIBLE);
 });
 
 test('encuesta_satisfaccion_se_envia_al_cerrar', function () {

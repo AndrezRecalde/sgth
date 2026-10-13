@@ -261,7 +261,7 @@
             <td class="rotulo">N.º de serie</td>
             <td>{{ $bien?->numero_serie ?? '—' }}</td>
             <td class="rotulo">Condición física</td>
-            <td>{{ ucfirst($bien?->condicion_fisica ?? '—') }}</td>
+            <td>{{ $bien?->condicion_fisica?->etiqueta() ?? '—' }}</td>
         </tr>
     </table>
 </div>

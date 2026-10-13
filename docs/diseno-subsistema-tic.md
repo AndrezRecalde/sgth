@@ -203,6 +203,17 @@ marcas ──────┤                         │
 - **Estado del equipo:** `en_uso`, `disponible` (en bodega de TIC), `en_mantenimiento`, `en_garantia` (con el proveedor), `dado_de_baja`, `extraviado`.
 - **Condición física:** `bueno`, `regular`, `malo`.
 
+**Hecho en la fase 1.1** (migración `2026_10_18_000000_modelo_de_datos_del_inventario_ti`):
+
+- **Estados.** `en_uso` y `disponible` no se eligen: salen de la custodia. Entregar un equipo lo pone en uso y devolverlo lo deja disponible. Al editar, pedir cualquiera de los dos significa «vuelve al servicio». `dado_de_baja` solo lo pone la baja, y un equipo de baja ya no cambia de estado. Los estados viejos se convierten así:
+  - `activo` pasa a `en_uso` si el equipo tiene custodio y a `disponible` si no;
+  - `robado` y `perdido` pasan a `extraviado`.
+- **Custodia.** Un equipo tiene un solo custodio a la vez. No se entrega si está dado de baja, extraviado o en el grupo de préstamo, y un equipo con custodio no se marca como prestable.
+- **Componentes.** Un componente cuelga de un equipo principal, y solo un nivel. Un equipo con componentes no se borra.
+- **Únicos sin distinguir mayúsculas.** El código institucional, la serie y los nombres de catálogo no cuentan las fichas borradas: una ficha registrada por error se puede volver a registrar bien. Se comparan sin mayúsculas, porque «DELL» y «Dell» son la misma marca.
+- **Catálogos de partida.** `InventarioTiCatalogoSeeder` siembra 10 tipos con sus subtipos del Excel y 11 ubicaciones: «Edificio principal» de la PB al piso 6, San Mateo, Dispensario Médico, UNAMYDESC y Quinindé. Las marcas las crea la carga del Excel (1.4).
+- **Pendiente de TIC: los años de vida útil de cada tipo.** Quedan en 0 hasta que TIC los fije desde Configuración. Sin ese dato no se calcula el fin de la vida útil.
+
 **Mesa de ayuda:**
 
 - `tickets` gana `prioridad`, `canal` (portal o registrado por TIC), `unidad_tic_id` (subunidad de TIC que atiende, en lugar de `areas_dtic`), `nivel`, `solucion`, `pausado_desde` y `reabierto_veces`.

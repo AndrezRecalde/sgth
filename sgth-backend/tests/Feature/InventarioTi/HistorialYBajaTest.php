@@ -63,7 +63,7 @@ beforeEach(function () {
         'origen_bien_id'       => $this->origen->id,
         'modelo'               => 'ThinkPad T14',
         'numero_serie'         => 'SN-0001',
-        'estado_operativo'     => 'activo',
+        'estado_operativo'     => 'disponible',
         'condicion_fisica'     => 'bueno',
     ]);
 });
@@ -134,7 +134,7 @@ test('dar_de_baja_un_bien_lo_marca_de_verdad', function () {
         ])
         ->assertCreated();
 
-    expect($this->bien->fresh()->estado_operativo)->toBe('dado_de_baja');
+    expect($this->bien->fresh()->estado_operativo)->toBe(\App\Enums\EstadoBien::DADO_DE_BAJA);
 });
 
 test('el_listado_de_bajas_encuentra_lo_dado_de_baja', function () {

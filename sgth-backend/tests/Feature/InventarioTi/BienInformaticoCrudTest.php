@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\CondicionFisicaBien;
+use App\Enums\EstadoBien;
 use App\Enums\RegimenLaboral;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
@@ -59,7 +61,7 @@ beforeEach(function () {
         'origen_bien_id'       => $this->origen->id,
         'modelo'               => 'ProBook 450',
         'numero_serie'         => 'SN-100',
-        'estado_operativo'     => 'activo',
+        'estado_operativo'     => 'disponible',
         'condicion_fisica'     => 'bueno',
     ]);
 
@@ -80,7 +82,7 @@ function otroBien(array $atributos = []): BienInformatico
         'origen_bien_id'       => test()->origen->id,
         'modelo'               => 'EliteDesk 800',
         'numero_serie'         => "SN-{$n}",
-        'estado_operativo'     => 'activo',
+        'estado_operativo'     => 'disponible',
         'condicion_fisica'     => 'bueno',
     ], $atributos));
 }
@@ -213,7 +215,7 @@ test('actualizar_guarda_de_verdad', function () {
         ->assertOk();
 
     expect($this->bien->fresh())
-        ->condicion_fisica->toBe('regular')
+        ->condicion_fisica->toBe(CondicionFisicaBien::REGULAR)
         ->modelo->toBe('ProBook 450 G9');
 });
 
@@ -238,7 +240,7 @@ test('la_baja_no_puede_colarse_por_una_edicion', function () {
         ])
         ->assertStatus(422);
 
-    expect($this->bien->fresh()->estado_operativo)->toBe('activo');
+    expect($this->bien->fresh()->estado_operativo)->toBe(EstadoBien::DISPONIBLE);
 });
 
 test('actualizar_un_bien_que_no_existe_da_404', function () {

@@ -1,1 +1,21 @@
-<?php namespace App\Models\InventarioTi; use Illuminate\Database\Eloquent\Model; use Illuminate\Database\Eloquent\SoftDeletes; class Marca extends Model { use SoftDeletes; protected $table = 'marcas'; protected $fillable = ['nombre']; }
+<?php
+
+namespace App\Models\InventarioTi;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Marca extends Model
+{
+    use SoftDeletes;
+
+    protected $table = 'marcas';
+
+    protected $fillable = ['nombre'];
+
+    public function bienes(): HasMany
+    {
+        return $this->hasMany(BienInformatico::class);
+    }
+}

@@ -109,6 +109,8 @@ use App\Http\Controllers\InventarioTi\AsignacionBienController;
 use App\Http\Controllers\InventarioTi\AuditoriaInventarioController;
 use App\Http\Controllers\InventarioTi\BajaController;
 use App\Http\Controllers\InventarioTi\BienInformaticoController;
+use App\Http\Controllers\InventarioTi\CatalogoInventarioController;
+use App\Http\Controllers\InventarioTi\ContratoVigenciaController;
 use App\Http\Controllers\InventarioTi\MantenimientoBienController;
 use App\Http\Controllers\Nomina\ConceptoNominaController;
 use App\Http\Controllers\Nomina\DescuentoRecurrenteController;
@@ -1082,6 +1084,38 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::get('bienes/{bien}/historial',
                 [BienInformaticoController::class, 'historial'])
                 ->middleware($ver);
+
+            // Catálogos (fase 1.1). Hasta aquí existían las tablas de tipos y
+            // marcas, pero ninguna ruta las llenaba: registrar un equipo pedía
+            // ids que nadie podía dar de alta. Los nombres de ruta dicen a
+            // `StoreCatalogoInventarioRequest` qué catálogo valida.
+            Route::get('catalogos', [CatalogoInventarioController::class, 'formularios'])
+                ->middleware($ver);
+            Route::middleware($ver)->group(function () {
+                Route::get('tipos', [CatalogoInventarioController::class, 'tipos'])->name('tipos.index');
+                Route::get('marcas', [CatalogoInventarioController::class, 'marcas'])->name('marcas.index');
+                Route::get('ubicaciones', [CatalogoInventarioController::class, 'ubicaciones'])->name('ubicaciones.index');
+                Route::get('contratos-vigencia', [ContratoVigenciaController::class, 'index']);
+                Route::get('contratos-vigencia/{contrato}', [ContratoVigenciaController::class, 'show'])
+                    ->whereNumber('contrato');
+            });
+            Route::middleware($gestionar)->group(function () {
+                Route::post('tipos', [CatalogoInventarioController::class, 'guardarTipo'])->name('tipos.store');
+                Route::put('tipos/{tipo}', [CatalogoInventarioController::class, 'actualizarTipo'])->name('tipos.update');
+                Route::delete('tipos/{tipo}', [CatalogoInventarioController::class, 'eliminarTipo'])->name('tipos.destroy');
+                Route::post('subtipos', [CatalogoInventarioController::class, 'guardarSubtipo'])->name('subtipos.store');
+                Route::put('subtipos/{subtipo}', [CatalogoInventarioController::class, 'actualizarSubtipo'])->name('subtipos.update');
+                Route::delete('subtipos/{subtipo}', [CatalogoInventarioController::class, 'eliminarSubtipo'])->name('subtipos.destroy');
+                Route::post('marcas', [CatalogoInventarioController::class, 'guardarMarca'])->name('marcas.store');
+                Route::put('marcas/{marca}', [CatalogoInventarioController::class, 'actualizarMarca'])->name('marcas.update');
+                Route::delete('marcas/{marca}', [CatalogoInventarioController::class, 'eliminarMarca'])->name('marcas.destroy');
+                Route::post('ubicaciones', [CatalogoInventarioController::class, 'guardarUbicacion'])->name('ubicaciones.store');
+                Route::put('ubicaciones/{ubicacion}', [CatalogoInventarioController::class, 'actualizarUbicacion'])->name('ubicaciones.update');
+                Route::delete('ubicaciones/{ubicacion}', [CatalogoInventarioController::class, 'eliminarUbicacion'])->name('ubicaciones.destroy');
+                Route::post('contratos-vigencia', [ContratoVigenciaController::class, 'store']);
+                Route::put('contratos-vigencia/{contrato}', [ContratoVigenciaController::class, 'update']);
+                Route::delete('contratos-vigencia/{contrato}', [ContratoVigenciaController::class, 'destroy']);
+            });
 
             // Asignaciones
             Route::apiResource('asignaciones', AsignacionBienController::class)
