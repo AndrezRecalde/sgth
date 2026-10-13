@@ -100,7 +100,7 @@ use App\Http\Controllers\Expediente\VerificacionCertificadoController;
 use App\Http\Controllers\Expediente\VinculacionInicialController;
 use App\Http\Controllers\Expediente\ServidorController;
 use App\Http\Controllers\Expediente\SubrogacionController;
-use App\Http\Controllers\Helpdesk\AreaDticController;
+use App\Http\Controllers\Helpdesk\CategoriaTicketController;
 use App\Http\Controllers\Helpdesk\BaseConocimientoController;
 use App\Http\Controllers\Helpdesk\ComentarioTicketController;
 use App\Http\Controllers\Helpdesk\EncuestaSatisfaccionController;
@@ -1289,10 +1289,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 Route::get('tickets/{ticket}/comentarios/{comentario}/archivo', [ComentarioTicketController::class, 'archivo']);
             });
 
-            // Áreas DTIC. Se retiran en la fase 3: las áreas de atención son
-            // las subunidades de TIC de la estructura (diseño, D6).
-            Route::apiResource('areas', AreaDticController::class)
-                ->middleware('permission:gestionar-tecnicos');
+            // Categorías de los tickets (fase 3.5): no se borran, se desactivan.
+            // Las áreas DTIC se retiraron: atienden las subunidades de TIC (D6).
+            Route::get('categorias', [CategoriaTicketController::class, 'index'])->middleware('permission:configurar-sla');
+            Route::post('categorias', [CategoriaTicketController::class, 'store'])->middleware('permission:configurar-sla');
+            Route::put('categorias/{categoria}', [CategoriaTicketController::class, 'update'])->middleware('permission:configurar-sla');
 
             // Técnicos
             Route::apiResource('tecnicos', TecnicoDticController::class)

@@ -8,4 +8,9 @@ export const clavesHelpdesk = {
   uno: (id: number) => ['helpdesk', 'uno', id] as const,
   catalogos: ['helpdesk', 'catalogos'] as const,
   resumen: ['helpdesk', 'resumen'] as const,
+  config: {
+    categorias: ['helpdesk', 'config', 'categorias'] as const,
+    slas: ['helpdesk', 'config', 'slas'] as const,
+    tecnicos: ['helpdesk', 'config', 'tecnicos'] as const,
+  },
 }

@@ -2,78 +2,108 @@
 
 namespace App\Http\Controllers\Helpdesk;
 
+use App\Contracts\Helpdesk\HelpdeskServiceInterface;
+use App\Enums\Permiso;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\Helpdesk\TecnicoDtic;
-use App\Contracts\Helpdesk\HelpdeskServiceInterface;
+use App\Models\User;
+use App\Services\Helpdesk\SubunidadesTic;
+use Closure;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
-class TecnicoDticController extends Controller
+/**
+ * Los técnicos de la mesa de ayuda por subunidad de TIC y nivel (D6; fase
+ * 3.5). Atiende tickets quien tiene `gestionar-tickets`; esto dice dónde y en
+ * qué nivel, para repartir.
+ */
+final class TecnicoDticController extends Controller
 {
-    public function __construct(private readonly HelpdeskServiceInterface $service)
+    public function __construct(
+        private readonly HelpdeskServiceInterface $service,
+        private readonly SubunidadesTic $subunidades,
+    ) {}
+
+    public function index(): JsonResponse
     {
+        $tecnicos = TecnicoDtic::with('user:id,usuario_ti,email,servidor_id,activo', 'user.servidor:id,nombre,apellido', 'unidadTic:id,nombre')
+            ->orderBy('unidad_tic_id')->orderBy('nivel')->orderBy('id')
+            ->get()
+            ->map(fn (TecnicoDtic $t) => $this->fila($t));
+
+        return ApiResponse::ok($tecnicos, 'Técnicos de la mesa de ayuda.');
     }
 
-    public function index()
+    public function show(int $id): JsonResponse
     {
-        // La relación es `user`, no `servidor`: la tabla guarda `user_id`. Con
-        // `servidor` el listado reventaba en cuanto había un técnico, y sobre
-        // base vacía no se notaba porque Eloquent no llega a resolverla.
-        $tecnicos = TecnicoDtic::with('user.servidor')->latest()->get();
-        return ApiResponse::ok($tecnicos, 'Técnicos DTIC listados correctamente.');
+        return ApiResponse::ok($this->fila(TecnicoDtic::with('user.servidor', 'unidadTic')->findOrFail($id)), 'Técnico de la mesa de ayuda.');
     }
 
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            // Era `servidor_id`, columna que esta tabla no tiene: la propia
-            // regla `unique` consultaba por ella y reventaba, así que dar de
-            // alta un técnico era imposible.
-            'user_id' => 'required|exists:users,id|unique:tecnicos_dtic,user_id',
-            'area_dtic_id' => 'required|exists:areas_dtic,id',
-            'nivel' => 'required|integer|min:1|max:3',
-            'estado' => 'nullable|string|max:50'
-        ]);
+        $datos = $this->validar($request);
 
-        $tecnico = TecnicoDtic::create($validated);
-        
-        return ApiResponse::created($tecnico, 'Técnico registrado exitosamente.');
+        return ApiResponse::created($this->fila(TecnicoDtic::create($datos)->load('user.servidor', 'unidadTic')), 'Técnico registrado.');
     }
 
-    /** El `apiResource` declaraba esta ruta y el método no existía: 500 seguro. */
-    public function show(int $id)
-    {
-        $tecnico = TecnicoDtic::with('user.servidor')->findOrFail($id);
-
-        return ApiResponse::ok($tecnico, 'Técnico DTIC obtenido correctamente.');
-    }
-
-    public function update(Request $request, int $id)
+    public function update(Request $request, int $id): JsonResponse
     {
         $tecnico = TecnicoDtic::findOrFail($id);
+        $tecnico->update($this->validar($request, $tecnico));
 
-        $validated = $request->validate([
-            'area_dtic_id' => 'exists:areas_dtic,id',
-            'nivel' => 'integer|min:1|max:3',
-            'estado' => 'string|max:50'
-        ]);
-
-        $tecnico->update($validated);
-        return ApiResponse::ok($tecnico, 'Datos del técnico actualizados.');
+        return ApiResponse::ok($this->fila($tecnico->load('user.servidor', 'unidadTic')), 'Técnico actualizado.');
     }
 
-    public function destroy(int $id)
+    public function destroy(int $id): JsonResponse
     {
-        $tecnico = TecnicoDtic::findOrFail($id);
-        $tecnico->delete();
-        return ApiResponse::ok(null, 'Técnico desactivado exitosamente.');
+        TecnicoDtic::findOrFail($id)->delete();
+
+        return ApiResponse::ok(null, 'El usuario ya no figura como técnico de la mesa de ayuda.');
     }
 
-    public function cargaTrabajo(int $id)
+    public function cargaTrabajo(int $id): JsonResponse
     {
-        // Delegamos al servicio el cálculo de tickets asignados y métricas de rendimiento
-        $metricas = $this->service->obtenerCargaTrabajoYMetricas($id);
+        return ApiResponse::ok($this->service->obtenerCargaTrabajoYMetricas($id), 'Carga de trabajo del técnico.');
+    }
 
-        return ApiResponse::ok($metricas, 'Carga de trabajo y métricas obtenidas correctamente.');
+    /** @return array<string, mixed> */
+    private function validar(Request $request, ?TecnicoDtic $tecnico = null): array
+    {
+        return $request->validate([
+            'user_id'       => [$tecnico ? 'prohibited' : 'required', 'integer', Rule::unique('tecnicos_dtic', 'user_id')->whereNull('deleted_at'), $this->atiendeTickets()],
+            'unidad_tic_id' => [$tecnico ? 'sometimes' : 'required', 'integer', Rule::in($this->subunidades->ids())],
+            'nivel'         => [$tecnico ? 'sometimes' : 'required', 'integer', 'min:1', 'max:3'],
+            'estado'        => ['sometimes', 'boolean'],
+        ], [
+            'unidad_tic_id.in' => 'Elija una de las subunidades de TIC.',
+            'user_id.unique'   => 'Ese usuario ya figura como técnico.',
+        ], ['user_id' => 'usuario', 'unidad_tic_id' => 'subunidad de TIC']);
+    }
+
+    private function atiendeTickets(): Closure
+    {
+        return function (string $atributo, mixed $valor, Closure $fallar) {
+            $usuario = User::find($valor);
+            if (! $usuario || ! $usuario->can(Permiso::GESTIONAR_TICKETS->value)) {
+                $fallar('Ese usuario no atiende tickets: dele un rol de TIC en Usuarios antes.');
+            }
+        };
+    }
+
+    /** @return array<string, mixed> */
+    private function fila(TecnicoDtic $t): array
+    {
+        return [
+            'id'            => $t->id,
+            'user_id'       => $t->user_id,
+            'nombre'        => $t->user?->nombre_completo,
+            'usuario_ti'    => $t->user?->usuario_ti,
+            'unidad_tic_id' => $t->unidad_tic_id,
+            'unidad_tic'    => $t->unidadTic?->nombre,
+            'nivel'         => $t->nivel,
+            'estado'        => $t->estado,
+        ];
     }
 }

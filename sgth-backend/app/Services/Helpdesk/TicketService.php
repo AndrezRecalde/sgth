@@ -9,10 +9,10 @@ use App\Enums\EstadoTicket;
 use App\Enums\Permiso;
 use App\Enums\PrioridadTicket;
 use App\Exceptions\ReglaNegocioException;
-use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Expediente\Servidor;
 use App\Models\Helpdesk\CategoriaTicket;
 use App\Models\Helpdesk\ComentarioTicket;
+use App\Models\Helpdesk\TecnicoDtic;
 use App\Models\Helpdesk\Ticket;
 use App\Models\InventarioTi\AsignacionBien;
 use App\Models\User;
@@ -40,6 +40,7 @@ final class TicketService implements TicketServiceInterface
         private readonly TicketEstadoServiceInterface $estados,
         private readonly TicketCarga $carga,
         private readonly SlaTicket $sla,
+        private readonly SubunidadesTic $subunidades,
     ) {}
 
     public function listar(User $user, array $filtros): LengthAwarePaginator
@@ -171,18 +172,22 @@ final class TicketService implements TicketServiceInterface
 
     public function catalogos(): array
     {
-        $tic = UnidadAdministrativa::where('codigo', config('helpdesk.unidad_tic_codigo'))->first();
+        // La subunidad y el nivel de cada técnico (D6), para repartir. Quien
+        // está pausado en la configuración no se propone.
+        $fichas = TecnicoDtic::get(['user_id', 'unidad_tic_id', 'nivel', 'estado'])->keyBy('user_id');
 
         return [
             'categorias'  => CategoriaTicket::where('activa', true)->orderBy('nombre')
                 ->get(['id', 'nombre', 'es_hardware', 'descripcion', 'unidad_tic_id']),
             'prioridades' => collect(PrioridadTicket::cases())->map(fn ($p) => ['valor' => $p->value, 'etiqueta' => $p->etiqueta()])->all(),
-            'subunidades' => $tic
-                ? UnidadAdministrativa::where('unidad_padre_id', $tic->id)->orderBy('nombre')->get(['id', 'nombre'])
-                : [],
+            'subunidades' => $this->subunidades->todas(),
             'tecnicos'    => User::permission(Permiso::GESTIONAR_TICKETS->value)->where('activo', true)
                 ->with('servidor:id,nombre,apellido')->get()
-                ->map(fn (User $u) => ['id' => $u->id, 'nombre' => $u->nombre_completo])
+                ->reject(fn (User $u) => isset($fichas[$u->id]) && ! $fichas[$u->id]->estado)
+                ->map(fn (User $u) => [
+                    'id' => $u->id, 'nombre' => $u->nombre_completo,
+                    'unidad_tic_id' => $fichas[$u->id]->unidad_tic_id ?? null, 'nivel' => $fichas[$u->id]->nivel ?? null,
+                ])
                 ->sortBy('nombre')->values()->all(),
         ];
     }
