@@ -17,6 +17,7 @@ class RolPermisoSeeder extends Seeder
         Permiso::VER_INVENTARIO_TI,
         Permiso::GESTIONAR_INVENTARIO_TI,
         Permiso::REGISTRAR_MANTENIMIENTO,
+        Permiso::GESTIONAR_PRESTAMOS,
     ];
 
     /** El jefe de TIC: lo del técnico, más asignar, configurar y dar de baja. */

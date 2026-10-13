@@ -227,8 +227,12 @@ test('la migracion crea el jefe de tic y deja los roles como el seeder', functio
     $migracion->up(); // idempotente
     app(PermissionRegistrar::class)->forgetCachedPermissions();
 
+    // Lo que dan las migraciones posteriores (gestionar-prestamos, 2.1) no lo
+    // recrea esta: el jefe de TIC lo recibe al correr la de préstamos.
+    $posteriores = ['gestionar-prestamos'];
     foreach ($delSeeder as $rol => $esperados) {
-        expect($permisos($rol))->toBe($esperados);
+        $tiene = $permisos($rol);
+        expect(array_values(array_diff($tiene, $posteriores)))->toBe(array_values(array_diff($esperados, $posteriores)));
     }
 
     expect(Role::findByName('admin-ti', 'sanctum')->hasAllPermissions(

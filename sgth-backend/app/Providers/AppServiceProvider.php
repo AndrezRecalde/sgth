@@ -173,6 +173,22 @@ class AppServiceProvider extends ServiceProvider
             \App\Services\InventarioTi\BajaService::class
         );
         $this->app->bind(
+            \App\Contracts\InventarioTi\ReglasPrestamoServiceInterface::class,
+            \App\Services\InventarioTi\ReglasPrestamoService::class
+        );
+        $this->app->bind(
+            \App\Contracts\InventarioTi\PrestamoServiceInterface::class,
+            \App\Services\InventarioTi\PrestamoService::class
+        );
+        $this->app->bind(
+            \App\Contracts\InventarioTi\PrestamoEstadoServiceInterface::class,
+            \App\Services\InventarioTi\PrestamoEstadoService::class
+        );
+        $this->app->bind(
+            \App\Contracts\InventarioTi\DisponibilidadPrestamoServiceInterface::class,
+            \App\Services\InventarioTi\DisponibilidadPrestamoService::class
+        );
+        $this->app->bind(
             HelpdeskServiceInterface::class,
             HelpdeskService::class
         );

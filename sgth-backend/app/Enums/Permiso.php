@@ -139,6 +139,9 @@ enum Permiso: string
     case GESTIONAR_INVENTARIO_TI = 'gestionar-inventario-ti';
     case DAR_BAJA_BIEN = 'dar-baja-bien';
     case REGISTRAR_MANTENIMIENTO = 'registrar-mantenimiento';
+    // Préstamo de equipos (fase 2.1): aprobar, entregar, recibir y el préstamo
+    // directo. Pedir uno desde el Portal va con `acceso-autoservicio`.
+    case GESTIONAR_PRESTAMOS = 'gestionar-prestamos';
 
     // ── MÓDULO 13: Helpdesk ──────────────────────────────────────
     case CREAR_TICKET = 'crear-ticket';

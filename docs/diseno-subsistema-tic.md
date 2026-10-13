@@ -257,8 +257,9 @@ Hecho en el PR 0.2: el rol `jefe-tic` [D5], el permiso `registrar-mantenimiento`
 | `registrar-mantenimiento` | | ✓ | ✓ | |
 | Proponer una baja: con `gestionar-inventario-ti` (1.6) | | ✓ | ✓ | |
 | `dar-baja-bien`: aprobar o rechazar la baja, su memorando y la entrega a Activos Fijos | | | ✓ | |
-| `solicitar-prestamo-equipo`, `ver-disponibilidad-prestamo` (fase 2.1) | ✓ | ✓ | ✓ | ✓ |
-| `gestionar-prestamos` (fase 2.1): aprobar, entregar, recibir, préstamo directo | | ✓ | ✓ | |
+| Pedir un préstamo y ver la disponibilidad en el Portal: con `acceso-autoservicio`, que ya tienen todos (2.1; igual que «Mis equipos», sin permiso base nuevo) | ✓ | ✓ | ✓ | ✓ |
+| Consultar la bandeja y la agenda de préstamos: con `ver-inventario-ti` o `gestionar-prestamos` | | ✓ | ✓ | ✓ (solo lectura) |
+| `gestionar-prestamos` (fase 2.1): aprobar, rechazar, cancelar, entregar, recibir, préstamo directo y las reglas | | ✓ | ✓ | |
 
 `admin-ti` tiene todo lo del jefe de TIC. Activos Fijos no tiene rol propio; si necesita consultar el inventario, se le da `ver-inventario-ti` desde Usuarios.
 
@@ -321,6 +322,18 @@ solicitado ──aprobar──► reservado ──entregar──► en_curso ─
 - una **agenda** por día y por semana con los bloques ocupados, para elegir un horario libre al pedir.
 
 El servidor no ve quién tiene el equipo; TIC sí. [D15]
+
+**Hecho en la fase 2.1** (migración `2026_10_23_000000_prestamo_de_equipos`):
+
+- **Tablas:** `prestamos_equipo` (folio `PRE-AAAA-00001`), `prestamo_items` (el horario de cada equipo, sus accesorios y su condición a la entrega y a la devolución), `historial_estados_prestamo` y `reglas_prestamo` (una fila).
+- **Sin solapes:** `EXCLUDE USING gist (bien_informatico_id WITH =, periodo WITH &&) WHERE (bloquea)`. `periodo` es un `tsrange` semiabierto generado desde `inicio` y `fin`, así que un préstamo que termina a las 12:00 no choca con uno que empieza a las 12:00. `bloquea` es verdadero mientras el préstamo está reservado o en curso. La migración crea la extensión `btree_gist`, que desde PostgreSQL 13 es de confianza y no pide superusuario.
+- **La solicitud no ocupa el horario:** dos servidores pueden pedir el mismo proyector a la misma hora. Al aprobar una, la otra ya no se aprueba, y desde el Portal ese horario ya no se puede pedir. El mismo servidor no pide dos veces el mismo equipo para el mismo horario.
+- **Reglas (D16), configurables:** plazo máximo en días hábiles (el día de la entrega cuenta como el primero; se descuentan fines de semana y feriados institucionales), anticipación mínima, horario de atención (por defecto de 08:00 a 17:00), préstamo en fin de semana y feriados, bloqueo con un préstamo vencido y margen para retirar. Los errores de horario salen en su campo.
+- **Lo que se presta:** solo lo prestable que esté en TIC. No sale lo que está en mantenimiento, en garantía, extraviado o dado de baja, ni lo que sigue fuera en un préstamo vencido, aunque su horario previsto ya haya pasado.
+- **Entregar y recibir** piden la fecha y hora reales (no futuras ni anteriores al paso previo) y la condición de cada equipo del préstamo. La condición con que vuelve pasa a la ficha del equipo.
+- **Guardas en el inventario:** un equipo reservado o prestado no sale del grupo de préstamo, no pasa a mantenimiento ni a garantía y no se da de baja hasta que se reciba o cancele ese préstamo.
+- **Disponibilidad:** consulta de hasta 31 días. El Portal ve el estado ahora y los bloques ocupados; TIC ve además el folio y quién tiene el equipo.
+- El paso automático a `no_retirado`, los avisos por correo y el bloqueo en la desvinculación van en la 2.4.
 
 ---
 
