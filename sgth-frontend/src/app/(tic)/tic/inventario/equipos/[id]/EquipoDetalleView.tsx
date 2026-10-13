@@ -62,7 +62,7 @@ export function EquipoDetalleView({ id }: { id: number }) {
         </Tabs.List>
 
         <Tabs.Panel value="datos" pt="lg"><BienDatos bien={bien} /></Tabs.Panel>
-        <Tabs.Panel value="historial" pt="lg"><BienHistorial bienId={bien.id} /></Tabs.Panel>
+        <Tabs.Panel value="historial" pt="lg"><BienHistorial bien={bien} /></Tabs.Panel>
         <Tabs.Panel value="componentes" pt="lg"><BienComponentes bien={bien} /></Tabs.Panel>
       </Tabs>
     </PageShell>

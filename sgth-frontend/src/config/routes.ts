@@ -139,6 +139,8 @@ export const ROUTES = {
     MIS_ACTIVIDADES: '/portal/mis-actividades',
     ACADEMICO:       '/portal/academico',
     MIS_TICKETS:     '/portal/mis-tickets',
+    /** Los equipos de TIC que tiene a su cargo o usa (fase 1.3). */
+    MIS_EQUIPOS:     '/portal/mis-equipos',
     CERTIFICADOS:    '/portal/certificados',
     DOCUMENTOS:      '/portal/documentos',
     REPORTES:        '/portal/reportes',

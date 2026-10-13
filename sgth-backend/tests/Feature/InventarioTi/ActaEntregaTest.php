@@ -1,6 +1,6 @@
 <?php
 
-use App\Contracts\InventarioTi\InventarioTiServiceInterface;
+use App\Contracts\InventarioTi\CustodiaServiceInterface;
 use App\Enums\RegimenLaboral;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
@@ -78,7 +78,7 @@ beforeEach(function () {
         'estado'              => 'activa',
     ]);
 
-    $this->servicio = app(InventarioTiServiceInterface::class);
+    $this->servicio = app(CustodiaServiceInterface::class);
 });
 
 /** El acta, en HTML, tal como entra al PDF. */
@@ -152,14 +152,16 @@ test('quien_entrego_sale_de_la_asignacion_y_no_de_quien_imprime', function () {
     $this->admin->update(['servidor_id' => $tecnico->id]);
 
     $asignacion = AsignacionBien::create([
-        'bien_informatico_id' => $this->bien->id,
+        // Otro equipo: el de la prueba ya tiene custodia vigente, y desde la
+        // fase 1.3 la base no admite dos.
+        'bien_informatico_id' => equipoLibreDeActa()->id,
         'servidor_id'         => $this->servidor->id,
         'fecha_asignacion'    => now(),
         'estado'              => 'activa',
         'created_by'          => $this->admin->id,
     ]);
 
-    $acta = $this->servicio->generarActaEntrega($asignacion->id);
+    $acta = $this->servicio->generarActa($asignacion->id);
 
     expect(substr($acta['content'], 0, 4))->toBe('%PDF');
     expect($acta['filename'])->toContain('acta-entrega-ACT-');
