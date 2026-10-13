@@ -469,6 +469,12 @@ export const NAV_TIC: NavGroup[] = [
         icon:     'IconTool',
         permisos: ['ver-inventario-ti', 'gestionar-inventario-ti'],
       },
+      {
+        label:    'Bajas',
+        href:     ROUTES.TIC.BAJAS,
+        icon:     'IconTrashX',
+        permisos: ['ver-inventario-ti', 'gestionar-inventario-ti'],
+      },
     ],
   },
   {

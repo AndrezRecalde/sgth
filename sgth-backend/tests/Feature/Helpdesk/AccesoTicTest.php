@@ -187,15 +187,12 @@ test('un servidor sin permisos de tic no entra al inventario', function () {
         ->assertForbidden();
 });
 
-test('dar de baja es del jefe de tic y no del tecnico', function () {
+test('la baja la propone el tecnico y la aprueba el jefe de tic', function () {
+    // Proponer: pasa la autorización y lo frena la validación.
     $this->actingAs($this->tecnico, 'sanctum')
         ->postJson('/api/v1/inventario/bajas', [])
-        ->assertForbidden();
-
-    // Pasa la autorización y lo frena la validación.
-    $this->actingAs($this->jefe, 'sanctum')
-        ->postJson('/api/v1/inventario/bajas', [])
         ->assertStatus(422);
+    // Que el técnico no aprueba, sobre una baja que existe, lo prueba BajaTest.
 });
 
 test('la base de conocimiento solo publica lectura', function () {

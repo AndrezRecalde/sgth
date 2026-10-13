@@ -88,6 +88,13 @@ class BienInformaticoResource extends JsonResource
                 'modelo' => $c->modelo, 'tipo' => $c->tipo?->nombre,
                 'estado_operativo' => $c->estado_operativo?->value,
             ])->all()),
+            // La baja en curso o aprobada: la ficha avisa y no ofrece proponer otra.
+            'baja' => $this->whenLoaded('bajaVigente', fn () => $this->bajaVigente ? [
+                'id' => $this->bajaVigente->id, 'numero' => $this->bajaVigente->numero(),
+                'estado' => $this->bajaVigente->estado->value, 'motivo' => $this->bajaVigente->motivo->etiqueta(),
+                'fecha_informe' => $this->bajaVigente->fecha_informe?->toDateString(),
+                'fecha_baja' => $this->bajaVigente->fecha_baja?->toDateString(),
+            ] : null),
 
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

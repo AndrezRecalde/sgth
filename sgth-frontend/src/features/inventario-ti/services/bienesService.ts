@@ -25,4 +25,12 @@ export const bienesService = {
     api.put<ApiResponse<BienInformatico>>(`${URL}/${id}`, data).then((r) => r.data.datos),
 
   retirar: (id: number) => api.delete(`${URL}/${id}`),
+
+  /** La etiqueta con QR de un equipo (fase 1.6). */
+  etiqueta: (id: number) =>
+    api.get<Blob>(`${URL}/${id}/etiqueta`, { responseType: 'blob' }).then((r) => r.data),
+
+  /** Las etiquetas del filtro del listado, en hojas A4. */
+  etiquetas: (filtros: FiltrosBienes) =>
+    api.get<Blob>('/inventario/etiquetas', { params: filtros, responseType: 'blob' }).then((r) => r.data),
 }

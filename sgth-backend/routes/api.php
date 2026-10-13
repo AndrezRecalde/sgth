@@ -111,6 +111,7 @@ use App\Http\Controllers\InventarioTi\AuditoriaInventarioController;
 use App\Http\Controllers\InventarioTi\BajaController;
 use App\Http\Controllers\InventarioTi\BienInformaticoController;
 use App\Http\Controllers\InventarioTi\CatalogoInventarioController;
+use App\Http\Controllers\InventarioTi\EtiquetaBienController;
 use App\Http\Controllers\InventarioTi\ContratoVigenciaController;
 use App\Http\Controllers\InventarioTi\MantenimientoBienController;
 use App\Http\Controllers\Nomina\ConceptoNominaController;
@@ -1173,13 +1174,40 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 [AuditoriaInventarioController::class, 'registrarAuditoria'])
                 ->middleware($gestionar);
 
-            // Bajas conforme Contraloría: las aprueba el jefe de TIC.
+            // Bajas (fase 1.6): el técnico la propone con su informe técnico y
+            // el jefe de TIC la aprueba con el memorando o la rechaza.
             Route::get('bajas',
                 [BajaController::class, 'index'])
                 ->middleware($ver);
+            Route::get('bajas/{id}',
+                [BajaController::class, 'show'])
+                ->whereNumber('id')
+                ->middleware($ver);
+            Route::get('bajas/{id}/informe',
+                [BajaController::class, 'informe'])
+                ->whereNumber('id')
+                ->middleware($ver);
+            Route::get('bajas/{baja}/memorando',
+                [BajaController::class, 'memorando'])
+                ->middleware($ver);
             Route::post('bajas',
                 [BajaController::class, 'store'])
-                ->middleware('permission:dar-baja-bien');
+                ->middleware($gestionar);
+            Route::middleware('permission:dar-baja-bien')->group(function () {
+                Route::post('bajas/{baja}/aprobar', [BajaController::class, 'aprobar']);
+                Route::post('bajas/{baja}/rechazar', [BajaController::class, 'rechazar']);
+                Route::post('bajas/{baja}/memorando', [BajaController::class, 'adjuntarMemorando']);
+                Route::post('bajas/{baja}/entrega-activos', [BajaController::class, 'entregaActivos']);
+            });
+
+            // Etiquetas con QR (fase 1.6): la de un equipo o las del filtro
+            // del listado. El lote no cuelga de «bienes/», o `{bien}` se lo come.
+            Route::get('bienes/{bien}/etiqueta',
+                [EtiquetaBienController::class, 'una'])
+                ->middleware($ver);
+            Route::get('etiquetas',
+                [EtiquetaBienController::class, 'lote'])
+                ->middleware($ver);
         });
 
     // Módulo 13 — Helpdesk

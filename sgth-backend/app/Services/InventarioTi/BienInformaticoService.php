@@ -14,6 +14,7 @@ use App\Models\InventarioTi\TipoBien;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -42,8 +43,34 @@ final class BienInformaticoService implements BienInformaticoServiceInterface
 
     public function listar(array $filtros): LengthAwarePaginator
     {
-        $query = BienInformatico::with(self::RELACIONES)
-            ->withCount('componentes')
+        $porPagina = min(max((int) ($filtros['per_page'] ?? 20), 1), 100);
+
+        return $this->consulta($filtros)->with(self::RELACIONES)->withCount('componentes')->paginate($porPagina);
+    }
+
+    public function paraEtiquetas(array $filtros, int $maximo): Collection
+    {
+        $query = $this->consulta($filtros);
+        if (! empty($filtros['ids'])) {
+            $ids = is_array($filtros['ids']) ? $filtros['ids'] : explode(',', (string) $filtros['ids']);
+            $query->whereKey(array_map('intval', $ids));
+        }
+
+        $total = (clone $query)->count();
+        if ($total === 0) {
+            throw new ReglaNegocioException('Ningún equipo coincide con el filtro: no hay etiquetas que imprimir.');
+        }
+        if ($total > $maximo) {
+            throw new ReglaNegocioException("El filtro deja {$total} equipos y se imprimen hasta {$maximo} etiquetas de una vez: acote la búsqueda.");
+        }
+
+        return $query->with(['tipo:id,nombre', 'marca:id,nombre'])->get();
+    }
+
+    /** El filtro del listado, que también eligen las etiquetas en lote. */
+    private function consulta(array $filtros): Builder
+    {
+        $query = BienInformatico::query()
             ->orderBy('codigo_institucional')
             ->orderBy('id');
 
@@ -101,9 +128,7 @@ final class BienInformaticoService implements BienInformaticoServiceInterface
             $query->whereNull('bien_padre_id');
         }
 
-        $porPagina = min(max((int) ($filtros['per_page'] ?? 20), 1), 100);
-
-        return $query->paginate($porPagina);
+        return $query;
     }
 
     public function obtener(int $id): BienInformatico
@@ -115,6 +140,7 @@ final class BienInformaticoService implements BienInformaticoServiceInterface
             'padre.tipo:id,nombre',
             'componentes:id,bien_padre_id,codigo_institucional,modelo,tipo_bien_id,estado_operativo',
             'componentes.tipo:id,nombre',
+            'bajaVigente',
         ])->withCount('componentes')->findOrFail($id);
     }
 
@@ -198,11 +224,13 @@ final class BienInformaticoService implements BienInformaticoServiceInterface
             $asignaciones = AsignacionBien::where('bien_informatico_id', $bien->id)->count();
             $mantenimientos = MantenimientoBien::where('bien_informatico_id', $bien->id)->count();
             $componentes = $bien->componentes()->count();
+            // Una baja, aunque se rechazara, es historia del equipo.
+            $bajas = $bien->bajas()->count();
 
-            if ($asignaciones > 0 || $mantenimientos > 0 || $componentes > 0) {
+            if ($asignaciones > 0 || $mantenimientos > 0 || $componentes > 0 || $bajas > 0) {
                 throw new ReglaNegocioException(
                     "El equipo «{$bien->codigo_institucional}» tiene historial "
-                    . "({$asignaciones} asignación(es), {$mantenimientos} mantenimiento(s) y {$componentes} componente(s)): "
+                    . "({$asignaciones} asignación(es), {$mantenimientos} mantenimiento(s), {$componentes} componente(s) y {$bajas} baja(s)): "
                     . 'no puede borrarse del inventario. Si salió de servicio, regístrelo como baja.'
                 );
             }

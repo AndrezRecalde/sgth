@@ -114,6 +114,18 @@ class BienInformatico extends Model
         return $this->hasMany(MantenimientoBien::class, 'bien_informatico_id');
     }
 
+    public function bajas(): HasMany
+    {
+        return $this->hasMany(BajaBien::class, 'bien_informatico_id');
+    }
+
+    /** La baja propuesta o aprobada: hay como mucho una (índice parcial). */
+    public function bajaVigente(): HasOne
+    {
+        return $this->hasOne(BajaBien::class, 'bien_informatico_id')
+            ->ofMany(['id' => 'max'], fn ($q) => $q->whereIn('estado', ['propuesta', 'aprobada']));
+    }
+
     /**
      * El estado que le toca por su custodia: en uso si alguien lo tiene,
      * disponible si no. Es a donde vuelve el equipo al salir de mantenimiento
