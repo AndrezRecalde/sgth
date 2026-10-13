@@ -16,6 +16,7 @@ use App\Models\Helpdesk\ComentarioTicket;
 use App\Models\Helpdesk\Ticket;
 use App\Models\InventarioTi\AsignacionBien;
 use App\Models\User;
+use App\Services\Helpdesk\Sla\SlaTicket;
 use App\Services\Helpdesk\Tickets\TicketCarga;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -38,6 +39,7 @@ final class TicketService implements TicketServiceInterface
     public function __construct(
         private readonly TicketEstadoServiceInterface $estados,
         private readonly TicketCarga $carga,
+        private readonly SlaTicket $sla,
     ) {}
 
     public function listar(User $user, array $filtros): LengthAwarePaginator
@@ -51,6 +53,7 @@ final class TicketService implements TicketServiceInterface
             ->when($vista === 'sin_asignar', fn (Builder $q) => $q->whereNull('tecnico_id')->whereIn('estado', EstadoTicket::enCurso()))
             ->when($vista === 'mios', fn (Builder $q) => $q->where('tecnico_id', $user->id)->whereIn('estado', EstadoTicket::enCurso()))
             ->when($vista === 'en_curso', fn (Builder $q) => $q->whereIn('estado', EstadoTicket::enCurso()))
+            ->when($vista === 'vencidos', fn (Builder $q) => $q->vencidos())
             ->when($vista === 'resueltos', fn (Builder $q) => $q->where('estado', EstadoTicket::RESUELTO))
             ->when($vista === 'cerrados', fn (Builder $q) => $q->whereIn('estado', [EstadoTicket::CERRADO, EstadoTicket::ANULADO]))
             ->when($filtros['estado'] ?? null, fn (Builder $q, $e) => $q->where('estado', $e))
@@ -106,6 +109,8 @@ final class TicketService implements TicketServiceInterface
                 'nivel'               => 1,
                 'registrado_por'      => $user->id,
             ]);
+            $this->sla->aplicar($ticket);
+            $ticket->save();
             $this->carga->anotar($ticket, null, $porTic ? 'Registrado por TIC.' : null);
 
             if ($archivo) {
@@ -124,10 +129,18 @@ final class TicketService implements TicketServiceInterface
             throw new ReglaNegocioException("El ticket {$ticket->codigo_ticket} está " . mb_strtolower($ticket->estado->etiqueta()) . ': ya no recibe mensajes.');
         }
 
-        $comentario = DB::transaction(fn () => $this->guardarComentario($ticket, $user, $texto, $interno, $archivo));
+        $esSolicitante = $user->servidor_id && (int) $user->servidor_id === (int) $ticket->solicitante_id;
+        $comentario = DB::transaction(function () use ($ticket, $user, $texto, $interno, $archivo, $esSolicitante) {
+            // Escribirle al usuario cuenta como la primera respuesta de TIC.
+            if (! $interno && ! $esSolicitante) {
+                $this->sla->marcarRespuesta($ticket);
+                $ticket->save();
+            }
+
+            return $this->guardarComentario($ticket, $user, $texto, $interno, $archivo);
+        });
 
         // La respuesta del solicitante devuelve el ticket a quien lo atiende.
-        $esSolicitante = $user->servidor_id && (int) $user->servidor_id === (int) $ticket->solicitante_id;
         if (! $interno && $esSolicitante && $ticket->estado === EstadoTicket::PENDIENTE_USUARIO) {
             $this->estados->reanudar($ticket, $user);
         }

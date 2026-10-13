@@ -270,13 +270,13 @@ test('crear_un_sla_ya_no_exige_una_categoria_que_no_existe', function () {
     // había que inventar una categoría que Eloquent luego descartaba.
     $this->actingAs($this->admin, 'sanctum')
         ->postJson('/api/v1/helpdesk/slas', [
-            'prioridad'               => 'critica',
+            'prioridad'               => 'urgente',
             'tiempo_resolucion_horas' => 4,
             'tiempo_respuesta_horas'  => 1,
         ])
         ->assertCreated();
 
-    expect(Sla::where('prioridad', 'critica')->exists())->toBeTrue();
+    expect(Sla::where('prioridad', 'urgente')->exists())->toBeTrue();
 });
 
 test('no_se_repite_la_prioridad_de_un_sla', function () {
