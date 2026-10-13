@@ -12,10 +12,11 @@ src/app/
 │   └── psicosocial/[codigo]/
 ├── (sgth)/sgth/         subsistema Talento Humano       → acento esmeralda
 ├── (salud)/salud/       subsistema Dispensario Médico   → acento océano
+├── (tic)/tic/           subsistema Tecnologías (TIC)    → acento laguna (cian)
 └── (portal)/portal/     subsistema Portal del Servidor  → acento amatista
 ```
 
-Los tres últimos montan `SGTHAppShell` en su `layout.tsx`. `(auth)` y
+Los cuatro últimos montan `SGTHAppShell` en su `layout.tsx`. `(auth)` y
 `(publico)` no llevan shell: quien los abre no tiene sesión.
 
 **No existe** un route group `(dashboard)`. La versión anterior de estas reglas
@@ -71,7 +72,7 @@ src/
 ├── config/
 │   ├── design.tokens.ts    escalas crudas del sistema de diseño
 │   ├── mantine.theme.ts    el tema, que consume las escalas
-│   ├── subsistemas.ts      los tres subsistemas
+│   ├── subsistemas.ts      los subsistemas
 │   ├── routes.ts           TODAS las rutas, tipadas
 │   ├── nav.ts              el menú y sus derivados
 │   └── env.ts
