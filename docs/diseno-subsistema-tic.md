@@ -337,6 +337,14 @@ El servidor no ve quién tiene el equipo; TIC sí. [D15]
 
 **Hecho en la fase 2.3:** la bandeja `/tic/prestamos` con las pestañas Por aprobar, Reservados (todas las reservas, de la más próxima a la más lejana; la cabecera avisa cuántas se retiran hoy), En curso, Vencidos e Historial, cada una con su contador. Aprobar se confirma; rechazar y cancelar piden motivo; entregar y recibir piden la hora real y la condición de cada equipo, con sus accesorios a la salida y la novedad a la vuelta. El préstamo directo elige al servidor y los equipos que están en TIC ahora. El detalle `/tic/prestamos/[id]` dice quién pidió y quién hizo cada paso, con los botones del paso que toca. La agenda `/tic/prestamos/agenda` es la del Portal con el folio y el nombre en cada bloque. Las reglas se editan en Configuración › Préstamos (`gestionar-prestamos`); el auditor las ve como lista. El acta en PDF (D17) se imprime desde la entrega, para los préstamos que la necesiten.
 
+**Hecho en la fase 2.4:**
+
+- **Correos al servidor** (`PrestamoEquipoMail`, a la dirección institucional o, si no tiene, la personal): cuando TIC aprueba, rechaza o cancela; en la entrega y en la devolución (D17), con las novedades; una hora antes de la devolución prevista; cuando vence, y cuando la reserva no se retiró. Si cancela el propio servidor, no se le escribe. Un correo que no sale no deshace el paso.
+- **A TIC**, a quienes tienen `gestionar-prestamos`: el préstamo vencido, una vez.
+- **`sgth:prestamos:seguimiento`**, cada quince minutos: la reserva cuyo inicio pasó hace más que el margen de la regla, sin entregarse, pasa a `no_retirado` y libera el horario; salen el recordatorio y el aviso de vencido, cada uno una sola vez (`recordatorio_enviado_en`, `aviso_vencido_en`).
+- **Desvinculación:** el paso «Devolución de los bienes» queda pendiente mientras el servidor tenga un préstamo en curso, y los lista; la devolución la registra TIC en Préstamos.
+- **Reporte de uso** (`/tic/prestamos/reporte`, y en Excel): por equipo, los préstamos entregados en el rango, las horas fuera, las devoluciones tarde y las reservas no retiradas.
+
 ---
 
 ## 5. Pantallas y navegación

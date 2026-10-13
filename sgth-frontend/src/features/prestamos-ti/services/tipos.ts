@@ -139,3 +139,26 @@ export type DirectoData = {
   fuera_del_edificio: boolean
   observaciones: string | null
 }
+
+/** `GET inventario/prestamos/reporte-uso` (fase 2.4). */
+export type FilaUsoEquipo = {
+  id: number
+  codigo_institucional: string
+  tipo: string | null
+  marca: string | null
+  modelo: string | null
+  /** Si sigue en el grupo de préstamo; sale también el que se prestó en el rango y ya no. */
+  prestable: boolean
+  prestamos: number
+  horas: number
+  devoluciones_tarde: number
+  no_retirados: number
+  ultimo_prestamo: string | null
+}
+
+export type ReporteUso = {
+  desde: string
+  hasta: string
+  equipos: FilaUsoEquipo[]
+  totales: { prestamos: number; horas: number; devoluciones_tarde: number; no_retirados: number }
+}

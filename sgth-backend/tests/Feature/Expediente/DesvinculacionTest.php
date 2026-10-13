@@ -239,3 +239,31 @@ test('si el cese se anula, la desvinculación se cancela', function () {
 
     $this->postJson("/api/v1/expediente/desvinculaciones/{$desvinculacion->id}/vacaciones/confirmar")->assertStatus(422);
 });
+
+test('un préstamo de TIC sin devolver deja pendiente el paso de los bienes', function () {
+    $servidor = ($this->servidor)();
+    $proyector = \App\Models\InventarioTi\BienInformatico::create([
+        'codigo_institucional' => '002104', 'codigo_qr' => '002104-QR', 'prestable' => true,
+        'tipo_bien_id' => TipoBien::create(['nombre' => 'Proyector'])->id, 'marca_id' => Marca::create(['nombre' => 'EPSON'])->id,
+    ]);
+    $prestamo = \App\Models\InventarioTi\PrestamoEquipo::create([
+        'folio' => 'PRE-2026-00001', 'servidor_id' => $servidor->id, 'estado' => 'en_curso', 'motivo' => 'Taller.',
+        'lugar_uso' => 'Auditorio', 'inicio_previsto' => '2026-10-19 08:00', 'fin_previsto' => '2026-10-19 09:00',
+        'entregado_en' => '2026-10-19 08:00',
+    ]);
+    \App\Models\InventarioTi\PrestamoItem::create([
+        'prestamo_equipo_id' => $prestamo->id, 'bien_informatico_id' => $proyector->id,
+        'inicio' => '2026-10-19 08:00', 'fin' => '2026-10-19 09:00', 'bloquea' => true,
+    ]);
+
+    $desvinculacion = Desvinculacion::where('movimiento_cierre_id', ($this->cesar)($servidor)->id)->sole();
+    $pasos = ($this->pasos)($desvinculacion);
+    expect($pasos['bienes']['estado'])->toBe('pendiente')
+        ->and($pasos['bienes']['detalle'])->toBe('Tiene 1 préstamo de TIC sin devolver.')
+        ->and($pasos['bienes']['prestamos'][0]['folio'])->toBe('PRE-2026-00001')
+        ->and($pasos['bienes']['prestamos'][0]['equipos'])->toBe('002104')
+        ->and($pasos['bienes']['prestamos'][0]['vencido'])->toBeTrue();
+
+    $prestamo->update(['estado' => 'devuelto', 'devuelto_en' => now()]);
+    expect(($this->pasos)($desvinculacion)['bienes']['estado'])->toBe('hecho');
+});

@@ -494,6 +494,12 @@ export const NAV_TIC: NavGroup[] = [
         icon:     'IconCalendarEvent',
         permisos: ['ver-inventario-ti', 'gestionar-inventario-ti', 'gestionar-prestamos'],
       },
+      {
+        label:    'Reporte de uso',
+        href:     ROUTES.TIC.PRESTAMOS_REPORTE,
+        icon:     'IconReportAnalytics',
+        permisos: ['ver-inventario-ti', 'gestionar-inventario-ti', 'gestionar-prestamos'],
+      },
     ],
   },
   {

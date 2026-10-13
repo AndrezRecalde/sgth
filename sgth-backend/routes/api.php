@@ -117,6 +117,7 @@ use App\Http\Controllers\InventarioTi\ContratoVigenciaController;
 use App\Http\Controllers\InventarioTi\MantenimientoBienController;
 use App\Http\Controllers\InventarioTi\PrestamoEquipoController;
 use App\Http\Controllers\InventarioTi\ReglasPrestamoController;
+use App\Http\Controllers\InventarioTi\ReporteUsoPrestamoController;
 use App\Http\Controllers\Nomina\ConceptoNominaController;
 use App\Http\Controllers\Nomina\DescuentoRecurrenteController;
 use App\Http\Controllers\Nomina\HandoffErpController;
@@ -1231,6 +1232,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 Route::get('/', [PrestamoEquipoController::class, 'index'])->middleware($verPrestamos);
                 Route::get('disponibilidad', [PrestamoEquipoController::class, 'disponibilidad'])->middleware($verPrestamos);
                 Route::get('resumen', [PrestamoEquipoController::class, 'resumen'])->middleware($verPrestamos);
+                // El uso de cada equipo (fase 2.4).
+                Route::get('reporte-uso', [ReporteUsoPrestamoController::class, 'index'])->middleware($verPrestamos);
+                Route::get('reporte-uso/excel', [ReporteUsoPrestamoController::class, 'excel'])->middleware($verPrestamos);
                 Route::get('{id}/acta', [PrestamoEquipoController::class, 'acta'])->whereNumber('id')->middleware($verPrestamos);
                 Route::get('reglas', [ReglasPrestamoController::class, 'show'])->middleware($verPrestamos);
                 Route::put('reglas', [ReglasPrestamoController::class, 'update'])->middleware($gestionarPrestamos);

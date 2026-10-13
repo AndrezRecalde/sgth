@@ -53,6 +53,8 @@ export type PasoDeLaDesvinculacion = {
   registrado_en: string | null
   /** Solo en el de los bienes: los que siguen a su cargo. */
   bienes?: { asignacion_id: number; bien: string; codigo: string | null; numero_serie: string | null; fecha_asignacion: string | null }[]
+  /** También en el de los bienes: los préstamos de TIC que no ha devuelto (fase 2.4 de TIC). */
+  prestamos?: { prestamo_id: number; folio: string; equipos: string; fin_previsto: string; vencido: boolean }[]
   /** En el de vacaciones (fase 7.4b). */
   liquidacion?: LiquidacionVacaciones
   confirmada?: boolean

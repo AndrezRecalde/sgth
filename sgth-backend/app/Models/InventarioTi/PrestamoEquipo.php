@@ -25,6 +25,7 @@ class PrestamoEquipo extends Model
         'aprobado_por', 'aprobado_en', 'rechazado_por', 'rechazado_en', 'motivo_rechazo',
         'cancelado_por', 'cancelado_en', 'motivo_cancelacion',
         'entregado_por', 'entregado_en', 'recibido_por', 'devuelto_en', 'observaciones',
+        'recordatorio_enviado_en', 'aviso_vencido_en',
     ];
 
     protected function casts(): array
@@ -40,6 +41,8 @@ class PrestamoEquipo extends Model
             'cancelado_en'       => 'datetime',
             'entregado_en'       => 'datetime',
             'devuelto_en'        => 'datetime',
+            'recordatorio_enviado_en' => 'datetime',
+            'aviso_vencido_en'   => 'datetime',
         ];
     }
 

@@ -4,6 +4,7 @@ namespace App\Services\Expediente;
 
 use App\Contracts\InventarioTi\CustodiaServiceInterface;
 use App\Enums\EstadoContrato;
+use App\Enums\EstadoPrestamo;
 use App\Enums\PasoDesvinculacion;
 use App\Enums\TipoDeclaracion;
 use App\Enums\TipoNombramiento;
@@ -15,6 +16,7 @@ use App\Models\Expediente\DesvinculacionPaso;
 use App\Models\Expediente\EmisionCertificadoLaboral;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\InventarioTi\AsignacionBien;
+use App\Models\InventarioTi\PrestamoEquipo;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -538,7 +540,7 @@ class DesvinculacionService
         return number_format($valor, 2, ',', '.');
     }
 
-    /** @return array{0: string, 1: string, 2: array{bienes: list<array<string, mixed>>}} */
+    /** @return array{0: string, 1: string, 2: array{bienes: list<array<string, mixed>>, prestamos: list<array<string, mixed>>}} */
     private function bienes(int $servidorId): array
     {
         $asignaciones = AsignacionBien::where('servidor_id', $servidorId)
@@ -556,9 +558,29 @@ class DesvinculacionService
             'fecha_asignacion' => $a->fecha_asignacion?->toDateString(),
         ])->values()->all();
 
-        return $asignaciones->isEmpty()
-            ? [DesvinculacionPaso::HECHO, 'No tiene bienes a su cargo en el Inventario TI.', ['bienes' => []]]
-            : [DesvinculacionPaso::PENDIENTE, $asignaciones->count() === 1 ? 'Tiene 1 bien a su cargo.' : "Tiene {$asignaciones->count()} bienes a su cargo.", ['bienes' => $bienes]];
+        // Los equipos de préstamo que se llevó y no han vuelto (TIC, fase 2.4):
+        // no son custodia, pero también tiene que devolverlos antes de salir.
+        $prestamos = PrestamoEquipo::where('servidor_id', $servidorId)
+            ->where('estado', EstadoPrestamo::EN_CURSO)
+            ->with('items.bien:id,codigo_institucional')
+            ->orderBy('fin_previsto')
+            ->get()
+            ->map(fn (PrestamoEquipo $p) => [
+                'prestamo_id'  => $p->id,
+                'folio'        => $p->folio,
+                'equipos'      => $p->items->map(fn ($i) => $i->bien?->codigo_institucional)->filter()->implode(', '),
+                'fin_previsto' => $p->fin_previsto->toIso8601String(),
+                'vencido'      => $p->vencido(),
+            ])->values()->all();
+
+        $pendientes = array_filter([
+            match ($asignaciones->count()) { 0 => null, 1 => 'Tiene 1 bien a su cargo', default => "Tiene {$asignaciones->count()} bienes a su cargo" },
+            match (count($prestamos)) { 0 => null, 1 => 'tiene 1 préstamo de TIC sin devolver', default => 'tiene ' . count($prestamos) . ' préstamos de TIC sin devolver' },
+        ]);
+
+        return $pendientes === []
+            ? [DesvinculacionPaso::HECHO, 'No tiene bienes a su cargo en el Inventario TI ni equipos prestados.', ['bienes' => [], 'prestamos' => []]]
+            : [DesvinculacionPaso::PENDIENTE, ucfirst(implode(' y ', $pendientes)) . '.', ['bienes' => $bienes, 'prestamos' => $prestamos]];
     }
 
     private function resumen(Desvinculacion $desvinculacion): array

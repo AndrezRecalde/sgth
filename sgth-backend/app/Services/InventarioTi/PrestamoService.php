@@ -9,6 +9,7 @@ use App\Exceptions\ReglaNegocioException;
 use App\Models\Expediente\Servidor;
 use App\Models\InventarioTi\PrestamoEquipo;
 use App\Models\InventarioTi\PrestamoItem;
+use App\Services\InventarioTi\Prestamos\AvisoPrestamoService;
 use App\Services\InventarioTi\Prestamos\EquiposDelPrestamo;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -41,6 +42,7 @@ final class PrestamoService implements PrestamoServiceInterface
     public function __construct(
         private readonly ReglasPrestamoServiceInterface $reglas,
         private readonly EquiposDelPrestamo $equipos,
+        private readonly AvisoPrestamoService $avisos,
     ) {}
 
     public function listar(array $filtros): LengthAwarePaginator
@@ -157,7 +159,7 @@ final class PrestamoService implements PrestamoServiceInterface
 
     public function registrarDirecto(array $datos): PrestamoEquipo
     {
-        return DB::transaction(function () use ($datos) {
+        $prestamo = DB::transaction(function () use ($datos) {
             $servidor = Servidor::findOrFail($datos['servidor_id']);
             $inicio = now()->startOfMinute();
             $fin = Carbon::parse($datos['fin_previsto']);
@@ -183,6 +185,9 @@ final class PrestamoService implements PrestamoServiceInterface
 
             return $this->obtener($prestamo->id);
         });
+        $this->avisos->alServidor($prestamo, 'entregado');
+
+        return $prestamo;
     }
 
     /** @return array{0: Carbon, 1: Carbon, 2: list<int>} */

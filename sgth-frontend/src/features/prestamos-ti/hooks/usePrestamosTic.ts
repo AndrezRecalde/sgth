@@ -1,6 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { notificar } from '@/components/ui'
-import { abrirOGuardarArchivo } from '@/lib/archivo'
+import { abrirOGuardarArchivo, guardarArchivo } from '@/lib/archivo'
 import { clavesPrestamos } from '../constants/claves'
 import { prestamosTicService } from '../services/prestamosTicService'
 import type { DirectoData, EntregaData, FiltrosBandeja, RecepcionData, ReglasPrestamo } from '../services/tipos'
@@ -107,5 +107,23 @@ export function useActaPrestamo() {
     mutationFn: async ({ id, folio }: { id: number; folio: string }) =>
       abrirOGuardarArchivo(await prestamosTicService.acta(id), `acta-prestamo-${folio}.pdf`),
     onError: notificar.alFallar('No se pudo abrir el acta del préstamo'),
+  })
+}
+
+/** El uso de cada equipo de préstamo en un rango (fase 2.4). */
+export function useReporteUso(desde: string, hasta: string) {
+  return useQuery({
+    queryKey: clavesPrestamos.tic.uso(desde, hasta),
+    queryFn: () => prestamosTicService.reporteUso(desde, hasta),
+    enabled: desde !== '' && hasta !== '' && hasta >= desde,
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useExcelReporteUso() {
+  return useMutation({
+    mutationFn: async ({ desde, hasta }: { desde: string; hasta: string }) =>
+      guardarArchivo(await prestamosTicService.reporteUsoExcel(desde, hasta), `uso-equipos-prestamo-${desde}-a-${hasta}.xlsx`),
+    onError: notificar.alFallar('No se pudo descargar el reporte de uso'),
   })
 }

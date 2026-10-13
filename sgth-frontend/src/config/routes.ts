@@ -126,6 +126,7 @@ export const ROUTES = {
     /** Préstamo de equipos (fase 2.3): la bandeja, la agenda y cada préstamo. */
     PRESTAMOS:        '/tic/prestamos',
     PRESTAMOS_AGENDA: '/tic/prestamos/agenda',
+    PRESTAMOS_REPORTE: '/tic/prestamos/reporte',
     PRESTAMO:         (id: number) => `/tic/prestamos/${id}`,
     BAJAS:          '/tic/inventario/bajas',
     /** Catálogos del inventario: tipos, marcas, ubicaciones y contratos. */

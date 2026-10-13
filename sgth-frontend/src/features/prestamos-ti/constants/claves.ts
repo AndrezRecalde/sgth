@@ -20,5 +20,6 @@ export const clavesPrestamos = {
     resumen: ['prestamos-ti', 'tic', 'resumen'] as const,
     uno: (id: number) => ['prestamos-ti', 'tic', 'uno', id] as const,
     agenda: (desde: string, hasta: string) => ['prestamos-ti', 'tic', 'agenda', desde, hasta] as const,
+    uso: (desde: string, hasta: string) => ['prestamos-ti', 'tic', 'uso', desde, hasta] as const,
   },
 }
