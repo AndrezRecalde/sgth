@@ -36,6 +36,8 @@ class Ticket extends Model
         'asunto', 'descripcion', 'bien_informatico_id', 'tecnico_id', 'unidad_tic_id', 'nivel', 'registrado_por',
         'solucion', 'resuelto_en', 'resuelto_por', 'reabierto_veces',
         'anulado_en', 'anulado_por', 'motivo_anulacion', 'fecha_vencimiento_sla', 'fecha_cierre',
+        'sla_respuesta_horas', 'sla_resolucion_horas', 'vence_respuesta_en', 'primera_respuesta_en',
+        'pausado_desde', 'minutos_pausados', 'alerta_sla_en', 'sla_vencido_en',
     ];
 
     protected function casts(): array
@@ -50,6 +52,14 @@ class Ticket extends Model
             'anulado_en'            => 'datetime',
             'fecha_vencimiento_sla' => 'datetime',
             'fecha_cierre'          => 'datetime',
+            'sla_respuesta_horas'   => 'float',
+            'sla_resolucion_horas'  => 'float',
+            'vence_respuesta_en'    => 'datetime',
+            'primera_respuesta_en'  => 'datetime',
+            'pausado_desde'         => 'datetime',
+            'minutos_pausados'      => 'integer',
+            'alerta_sla_en'         => 'datetime',
+            'sla_vencido_en'        => 'datetime',
         ];
     }
 
@@ -120,6 +130,40 @@ class Ticket extends Model
     public function encuesta(): HasOne
     {
         return $this->hasOne(EncuestaSatisfaccion::class)->latestOfMany();
+    }
+
+    /**
+     * Cómo va el SLA (fase 3.2). En curso: `en_plazo`, `por_vencer` (salió la
+     * alerta), `vencido` o `pausado` (esperando al usuario). Resuelto o
+     * cerrado: `cumplido` o `incumplido`, según cuándo se resolvió. Anulado o
+     * sin plazo: null.
+     */
+    public function estadoSla(): ?string
+    {
+        if (! $this->fecha_vencimiento_sla || $this->estado === EstadoTicket::ANULADO) {
+            return null;
+        }
+
+        if (in_array($this->estado, [EstadoTicket::RESUELTO, EstadoTicket::CERRADO], true)) {
+            $resuelto = $this->resuelto_en ?? $this->fecha_cierre;
+
+            return $resuelto && $resuelto->lte($this->fecha_vencimiento_sla) ? 'cumplido' : 'incumplido';
+        }
+
+        return match (true) {
+            $this->pausado_desde !== null => 'pausado',
+            $this->sla_vencido_en !== null || $this->fecha_vencimiento_sla->isPast() => 'vencido',
+            $this->alerta_sla_en !== null => 'por_vencer',
+            default => 'en_plazo',
+        };
+    }
+
+    /** En curso, sin pausa y con el plazo de resolución pasado. */
+    public function scopeVencidos(Builder $query): Builder
+    {
+        return $query->whereIn('estado', EstadoTicket::enCurso())
+            ->whereNull('pausado_desde')
+            ->where('fecha_vencimiento_sla', '<', now());
     }
 
     /**

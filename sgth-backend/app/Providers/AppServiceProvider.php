@@ -46,8 +46,6 @@ use App\Contracts\InventarioTi\InventarioTiServiceInterface;
 use App\Services\InventarioTi\InventarioTiService;
 use App\Contracts\Helpdesk\HelpdeskServiceInterface;
 use App\Services\Helpdesk\HelpdeskService;
-use App\Contracts\Helpdesk\SlaServiceInterface;
-use App\Services\Helpdesk\SlaService;
 use App\Contracts\Capacitacion\CapacitacionServiceInterface;
 use App\Services\Capacitacion\CapacitacionService;
 use App\Contracts\Bienestar\BienestarServiceInterface;
@@ -199,10 +197,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             \App\Contracts\Helpdesk\TicketEstadoServiceInterface::class,
             \App\Services\Helpdesk\TicketEstadoService::class
-        );
-        $this->app->bind(
-            SlaServiceInterface::class,
-            SlaService::class
         );
         $this->app->bind(
             CapacitacionServiceInterface::class,

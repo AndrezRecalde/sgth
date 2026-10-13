@@ -3,7 +3,6 @@
 use App\Jobs\Asistencia\VencerPermisosJob;
 use App\Jobs\Dispensario\VerificarAlertasInventarioJob;
 use App\Jobs\GenerarPeriodosAnualesJob;
-use App\Jobs\Helpdesk\EnviarAlertaSlaJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -15,8 +14,13 @@ Artisan::command('inspire', function () {
 // Tarea 8: Alertas Dispensario
 Schedule::job(new VerificarAlertasInventarioJob)->dailyAt('06:00');
 
-// Tarea 4 (Sprint 10): Alertas de SLA Helpdesk cada 15 minutos
-Schedule::job(new EnviarAlertaSlaJob)->everyFifteenMinutes();
+// El SLA de la mesa de ayuda (TIC, fase 3.2): la alerta de por vencer, el
+// escalamiento de los vencidos y el cierre automático de los resueltos sin
+// respuesta. Reemplaza al job que escribía un estado `escalado` inexistente.
+Schedule::command('sgth:helpdesk:seguimiento')
+    ->everyFifteenMinutes()
+    ->onOneServer()
+    ->withoutOverlapping();
 
 // Generación automática de reportes LOTAIP Art. 7 — APAGADA a propósito.
 //

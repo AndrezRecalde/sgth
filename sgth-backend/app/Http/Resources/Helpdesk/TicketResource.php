@@ -37,7 +37,17 @@ class TicketResource extends JsonResource
             'resuelto_en'         => $this->resuelto_en,
             'fecha_cierre'        => $this->fecha_cierre,
             'anulado_en'          => $this->anulado_en,
-            'fecha_vencimiento_sla' => $this->fecha_vencimiento_sla,
+            // El SLA (fase 3.2), en horas hábiles.
+            'sla'                 => [
+                'estado'               => $this->estadoSla(),
+                'respuesta_horas'      => $this->sla_respuesta_horas,
+                'resolucion_horas'     => $this->sla_resolucion_horas,
+                'vence_respuesta_en'   => $this->vence_respuesta_en,
+                'primera_respuesta_en' => $this->primera_respuesta_en,
+                'vence_en'             => $this->fecha_vencimiento_sla,
+                'pausado_desde'        => $this->pausado_desde,
+                'vencido_en'           => $this->sla_vencido_en,
+            ],
             'solicitante_id'      => $this->solicitante_id,
             'tecnico_id'          => $this->tecnico_id,
             'categoria'           => $this->whenLoaded('categoria', fn () => $this->categoria ? [

@@ -261,6 +261,23 @@ abierto ───────────► asignado ────────�
 - **El mantenimiento** ya no se registra al abrir un ticket de hardware sino al resolverlo.
 - **El SLA** (sigue opcional), las encuestas agregadas y los técnicos por subunidad quedan para 3.2 y 3.5.
 
+**Hecho en la fase 3.2** (migración `2026_10_26_000000_sla_de_la_mesa_de_ayuda`):
+
+- **Horas hábiles** (`CalendarioHabil`): de lunes a viernes, de 08:00 a 17:00 (`config('helpdesk.jornada')`), sin los feriados institucionales.
+- **El plazo**:
+  - sale de la tabla `slas` por categoría y prioridad: una fila con categoría afina la general;
+  - si no hay ninguna fila, rige `config('helpdesk.sla')`: urgente 1/4 h, alta 2/9, media 4/18, baja 9/45 (respuesta/resolución), mientras TIC entrega la suya (D7);
+  - cada ticket guarda sus horas al abrirse; cambiar la tabla no mueve los plazos en curso, salvo que cambie la prioridad.
+- **La primera respuesta** se marca al tomarlo, pedir información, resolverlo o escribirle al usuario.
+- **En espera del usuario el reloj se detiene**: lo pausado se acumula y el vencimiento se corre esas horas hábiles.
+- **Reabrir** corre un plazo nuevo desde ese momento.
+- **`sgth:helpdesk:seguimiento`, cada quince minutos** (reemplaza al `SlaService` y su job, que escribían un estado `escalado` inexistente):
+  - **por vencer**: al técnico (o a quien reparte), una vez, cuando queda la cuarta parte del plazo;
+  - **vencido**: sube un nivel (hasta el 3) y avisa al técnico y a quien reparte, una vez, sin cambiar el estado;
+  - **cierre automático** del resuelto sin respuesta a los 3 días hábiles.
+- **El ticket dice cómo va su SLA**: en plazo, por vencer, vencido, pausado, cumplido o incumplido.
+- **El listado** tiene la vista `vencidos`.
+
 ### 4.4 Roles y permisos
 
 Las rutas van **por permiso**, y el alcance de cada ticket lo decide `TicketPolicy`. El middleware `permission:` de Spatie usa `canAny`, que pasa por `Gate::before`, así que `admin-ti` entraría de todos modos; aun así recibe los permisos de forma explícita, para que la pantalla de Usuarios muestre lo que puede hacer. El que no pasa por `Gate::before` es el middleware `role:`.

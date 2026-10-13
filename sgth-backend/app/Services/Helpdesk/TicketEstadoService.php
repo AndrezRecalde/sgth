@@ -12,6 +12,7 @@ use App\Models\Helpdesk\EncuestaSatisfaccion;
 use App\Models\Helpdesk\Ticket;
 use App\Models\InventarioTi\BienInformatico;
 use App\Models\User;
+use App\Services\Helpdesk\Sla\SlaTicket;
 use App\Services\Helpdesk\Tickets\TicketCarga;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -44,6 +45,7 @@ final class TicketEstadoService implements TicketEstadoServiceInterface
     public function __construct(
         private readonly TicketCarga $carga,
         private readonly MantenimientoServiceInterface $mantenimientos,
+        private readonly SlaTicket $sla,
     ) {}
 
     public function asignar(Ticket $ticket, array $datos): Ticket
@@ -59,6 +61,10 @@ final class TicketEstadoService implements TicketEstadoServiceInterface
             if (! $t->tecnico_id) {
                 throw ValidationException::withMessages(['tecnico_id' => 'Elija el técnico que lo atiende.']);
             }
+            // Otra prioridad, otro plazo: se recalcula desde el alta.
+            if ($t->wasChanged('prioridad')) {
+                $this->sla->aplicar($t);
+            }
 
             return 'Asignado a ' . ($tecnico ?? $t->tecnico)->nombre_completo . '.';
         });
@@ -70,7 +76,8 @@ final class TicketEstadoService implements TicketEstadoServiceInterface
             if ($t->tecnico_id && (int) $t->tecnico_id !== (int) $tecnico->id && ! $tecnico->can(Permiso::ASIGNAR_TICKET->value)) {
                 throw new ReglaNegocioException('Este ticket lo tiene otro técnico.');
             }
-            $t->update(['tecnico_id' => $tecnico->id]);
+            $t->forceFill(['tecnico_id' => $tecnico->id]);
+            $this->sla->marcarRespuesta($t);
 
             return null;
         });
@@ -80,8 +87,9 @@ final class TicketEstadoService implements TicketEstadoServiceInterface
     {
         return $this->pasar($ticket, EstadoTicket::PENDIENTE_USUARIO, function (Ticket $t) use ($tecnico, $pregunta) {
             ComentarioTicket::create(['ticket_id' => $t->id, 'user_id' => $tecnico->id, 'comentario' => $pregunta, 'es_interno' => false]);
+            $this->sla->marcarRespuesta($t);
 
-            return 'Se pidió información al usuario.';
+            return 'Se pidió información al usuario; el SLA queda en pausa.';
         });
     }
 
@@ -93,7 +101,8 @@ final class TicketEstadoService implements TicketEstadoServiceInterface
     public function resolver(Ticket $ticket, User $tecnico, array $datos): Ticket
     {
         return $this->pasar($ticket, EstadoTicket::RESUELTO, function (Ticket $t) use ($tecnico, $datos) {
-            $t->update(['solucion' => $datos['solucion'], 'resuelto_en' => now(), 'resuelto_por' => $tecnico->id]);
+            $t->forceFill(['solucion' => $datos['solucion'], 'resuelto_en' => now(), 'resuelto_por' => $tecnico->id]);
+            $this->sla->marcarRespuesta($t);
             $t->loadMissing('categoria');
 
             // El ticket de hardware con equipo deja el correctivo en la ficha (4.3).
@@ -137,7 +146,12 @@ final class TicketEstadoService implements TicketEstadoServiceInterface
         $destino = $ticket->tecnico_id ? EstadoTicket::ASIGNADO : EstadoTicket::ABIERTO;
 
         return $this->pasar($ticket, $destino, function (Ticket $t) use ($user, $motivo) {
-            $t->update(['reabierto_veces' => $t->reabierto_veces + 1, 'resuelto_en' => null, 'resuelto_por' => null]);
+            $t->forceFill([
+                'reabierto_veces' => $t->reabierto_veces + 1, 'resuelto_en' => null, 'resuelto_por' => null,
+                'minutos_pausados' => 0, 'alerta_sla_en' => null, 'sla_vencido_en' => null,
+            ]);
+            // Corre un plazo nuevo desde que se reabre.
+            $this->sla->aplicar($t, now());
             ComentarioTicket::create(['ticket_id' => $t->id, 'user_id' => $user->id, 'comentario' => "No quedó resuelto: {$motivo}", 'es_interno' => false]);
 
             return $motivo;
@@ -204,6 +218,12 @@ final class TicketEstadoService implements TicketEstadoServiceInterface
             }
 
             $detalle = $cambio($t);
+            // Esperando al usuario, el reloj del SLA se detiene (4.3).
+            if ($anterior === EstadoTicket::PENDIENTE_USUARIO && $destino !== EstadoTicket::PENDIENTE_USUARIO) {
+                $this->sla->reanudar($t);
+            } elseif ($destino === EstadoTicket::PENDIENTE_USUARIO) {
+                $this->sla->pausar($t);
+            }
             $t->update(['estado' => $destino]);
             $this->carga->anotar($t, $anterior, $detalle);
         });
