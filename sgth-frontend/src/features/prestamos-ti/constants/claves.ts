@@ -13,4 +13,12 @@ export const clavesPrestamos = {
 
   disponibilidad: (desde: string, hasta: string) => ['prestamos-ti', 'disponibilidad', desde, hasta] as const,
   reglas: ['prestamos-ti', 'reglas'] as const,
+
+  /** Lo de TIC: la bandeja, su resumen, un préstamo y la agenda con nombres. */
+  tic: {
+    lista: (filtros: unknown, page: number) => ['prestamos-ti', 'tic', 'lista', filtros, page] as const,
+    resumen: ['prestamos-ti', 'tic', 'resumen'] as const,
+    uno: (id: number) => ['prestamos-ti', 'tic', 'uno', id] as const,
+    agenda: (desde: string, hasta: string) => ['prestamos-ti', 'tic', 'agenda', desde, hasta] as const,
+  },
 }

@@ -12,10 +12,11 @@ interface Props {
   /** Un día (vista por día) o los de la semana. */
   dias: string[]
   reglas: Pick<ReglasPrestamo, 'hora_apertura' | 'hora_cierre' | 'presta_fines_de_semana'>
-  seleccion: number[]
-  onSeleccionar: (id: number) => void
-  /** Clic en un horario libre de un equipo. */
-  onElegir: (equipo: EquipoPrestable, inicio: string) => void
+  /** Sin `onSeleccionar` no hay casillas: la agenda de TIC solo consulta. */
+  seleccion?: number[]
+  onSeleccionar?: (id: number) => void
+  /** Clic en un horario libre de un equipo. Sin él, las barras no se pueden pedir. */
+  onElegir?: (equipo: EquipoPrestable, inicio: string) => void
 }
 
 const nombreDia = (dia: string) =>
@@ -26,7 +27,7 @@ const nombreDia = (dia: string) =>
  * cinco (o siete) barras chicas en la semana. Se marca para pedir varios de
  * una vez, o se hace clic en un horario libre para pedir ese.
  */
-export function AgendaEquipos({ equipos, dias, reglas, seleccion, onSeleccionar, onElegir }: Props) {
+export function AgendaEquipos({ equipos, dias, reglas, seleccion = [], onSeleccionar, onElegir }: Props) {
   const porDia = dias.length === 1
   const hoy = isoDia(new Date())
   const { hora_apertura: apertura, hora_cierre: cierre } = reglas
@@ -53,13 +54,15 @@ export function AgendaEquipos({ equipos, dias, reglas, seleccion, onSeleccionar,
         return (
           <div key={e.id} className={classes.fila}>
             <Group gap="sm" wrap="nowrap" align="flex-start">
-              <Checkbox
-                mt={4}
-                checked={seleccion.includes(e.id)}
-                disabled={fuera}
-                onChange={() => onSeleccionar(e.id)}
-                aria-label={`Elegir ${e.codigo_institucional}`}
-              />
+              {onSeleccionar && (
+                <Checkbox
+                  mt={4}
+                  checked={seleccion.includes(e.id)}
+                  disabled={fuera}
+                  onChange={() => onSeleccionar(e.id)}
+                  aria-label={`Elegir ${e.codigo_institucional}`}
+                />
+              )}
               <Stack gap={4} style={{ minWidth: 0 }}>
                 <div>
                   <Text size="sm" fw={600}>{e.codigo_institucional} · {e.tipo}</Text>
@@ -70,12 +73,12 @@ export function AgendaEquipos({ equipos, dias, reglas, seleccion, onSeleccionar,
             </Group>
             {porDia ? (
               <BarraHorario dia={dias[0]} bloques={e.bloques} apertura={apertura} cierre={cierre}
-                inerte={fuera || cerrado(dias[0])} vencido={vencido} onElegir={(inicio) => onElegir(e, inicio)} />
+                inerte={fuera || cerrado(dias[0])} vencido={vencido} onElegir={onElegir && ((inicio) => onElegir(e, inicio))} />
             ) : (
               <div className={classes.semana} style={{ '--dias': dias.length } as React.CSSProperties}>
                 {dias.map((d) => (
                   <BarraHorario key={d} dia={d} bloques={e.bloques} apertura={apertura} cierre={cierre} compacta
-                    inerte={fuera || cerrado(d)} vencido={vencido} onElegir={(inicio) => onElegir(e, inicio)} />
+                    inerte={fuera || cerrado(d)} vencido={vencido} onElegir={onElegir && ((inicio) => onElegir(e, inicio))} />
                 ))}
               </div>
             )}

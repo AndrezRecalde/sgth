@@ -123,6 +123,10 @@ export const ROUTES = {
     EQUIPO:        (id: number) => `/tic/inventario/equipos/${id}`,
     EQUIPO_EDITAR: (id: number) => `/tic/inventario/equipos/${id}/editar`,
     MANTENIMIENTOS: '/tic/inventario/mantenimientos',
+    /** Préstamo de equipos (fase 2.3): la bandeja, la agenda y cada préstamo. */
+    PRESTAMOS:        '/tic/prestamos',
+    PRESTAMOS_AGENDA: '/tic/prestamos/agenda',
+    PRESTAMO:         (id: number) => `/tic/prestamos/${id}`,
     BAJAS:          '/tic/inventario/bajas',
     /** Catálogos del inventario: tipos, marcas, ubicaciones y contratos. */
     CONFIGURACION: '/tic/configuracion',

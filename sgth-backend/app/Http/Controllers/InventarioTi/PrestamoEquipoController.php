@@ -14,6 +14,7 @@ use App\Http\Responses\ApiResponse;
 use App\Models\InventarioTi\PrestamoEquipo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 /**
  * El préstamo de equipos visto por TIC (fase 2.1): la bandeja, el trámite, el
@@ -41,6 +42,23 @@ final class PrestamoEquipoController extends Controller
     public function show(int $id): JsonResponse
     {
         return ApiResponse::ok(new PrestamoEquipoResource($this->prestamos->obtener($id)), 'Préstamo de equipos.');
+    }
+
+    /** Los contadores de las pestañas de la bandeja. */
+    public function resumen(): JsonResponse
+    {
+        return ApiResponse::ok($this->prestamos->resumen(), 'Préstamos que piden atención.');
+    }
+
+    /** El acta del préstamo, `inline`: se mira antes de imprimirla para la firma. */
+    public function acta(int $id): Response
+    {
+        $acta = $this->prestamos->generarActa($id);
+
+        return response($acta['content'], 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $acta['filename'] . '"',
+        ]);
     }
 
     public function directo(PrestamoDirectoRequest $request): JsonResponse

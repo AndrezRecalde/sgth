@@ -107,3 +107,35 @@ export type SolicitarPrestamoData = {
   lugar_uso: string
   fuera_del_edificio: boolean
 }
+
+/** Las pestañas de la bandeja de TIC. */
+export type VistaBandeja = 'por_aprobar' | 'reservados' | 'en_curso' | 'vencidos' | 'historial'
+
+export type FiltrosBandeja = {
+  vista?: VistaBandeja
+  search?: string
+}
+
+export type ResumenBandeja = { por_aprobar: number; reservados: number; por_entregar_hoy: number; en_curso: number; vencidos: number }
+
+export type EntregaData = {
+  entregado_en: string
+  items: { id: number; accesorios: string | null; condicion_entrega: CondicionFisica }[]
+  observaciones: string | null
+}
+
+export type RecepcionData = {
+  devuelto_en: string
+  items: { id: number; condicion_devolucion: CondicionFisica; novedad: string | null }[]
+  observaciones: string | null
+}
+
+export type DirectoData = {
+  servidor_id: number
+  items: { bien_informatico_id: number; accesorios: string | null; condicion_entrega: CondicionFisica }[]
+  fin_previsto: string
+  motivo: string
+  lugar_uso: string
+  fuera_del_edificio: boolean
+  observaciones: string | null
+}

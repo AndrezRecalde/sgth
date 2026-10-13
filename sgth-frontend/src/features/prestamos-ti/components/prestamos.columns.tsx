@@ -47,3 +47,23 @@ export const columnasMisPrestamos = (accionesDe: (p: PrestamoEquipo) => TableAct
   { accessor: 'estado', title: 'Estado', width: 170, render: celdaEstadoPrestamo },
   { accessor: 'acciones', title: '', width: 50, render: (p) => <TableActions actions={accionesDe(p)} /> },
 ]
+
+/** La bandeja de TIC: con quién pide y su unidad. */
+export const columnasBandejaPrestamos = (accionesDe: (p: PrestamoEquipo) => TableAction[]): DataTableColumn<PrestamoEquipo>[] => [
+  { accessor: 'folio', title: 'Folio', width: 130, render: (p) => <Text size="sm" fw={600}>{p.folio}</Text> },
+  {
+    accessor: 'servidor',
+    title: 'Quién',
+    width: 210,
+    render: (p) => (
+      <Stack gap={0}>
+        <Text size="sm">{p.servidor?.nombre}</Text>
+        <Text size="xs" c="dimmed">{p.unidad?.acronimo ?? p.unidad?.nombre ?? ''}{p.directo ? ' · directo' : ''}</Text>
+      </Stack>
+    ),
+  },
+  { accessor: 'items', title: 'Equipos', width: 180, render: celdaEquiposPrestamo },
+  { accessor: 'inicio_previsto', title: 'Horario', render: celdaHorarioPrestamo },
+  { accessor: 'estado', title: 'Estado', width: 160, render: celdaEstadoPrestamo },
+  { accessor: 'acciones', title: '', width: 50, render: (p) => <TableActions actions={accionesDe(p)} /> },
+]

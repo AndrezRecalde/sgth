@@ -478,6 +478,25 @@ export const NAV_TIC: NavGroup[] = [
     ],
   },
   {
+    label: 'Préstamos',
+    items: [
+      {
+        // El auditor consulta con `ver-inventario-ti`; el trámite es de quien
+        // gestiona préstamos.
+        label:    'Bandeja',
+        href:     ROUTES.TIC.PRESTAMOS,
+        icon:     'IconPresentation',
+        permisos: ['ver-inventario-ti', 'gestionar-inventario-ti', 'gestionar-prestamos'],
+      },
+      {
+        label:    'Agenda',
+        href:     ROUTES.TIC.PRESTAMOS_AGENDA,
+        icon:     'IconCalendarEvent',
+        permisos: ['ver-inventario-ti', 'gestionar-inventario-ti', 'gestionar-prestamos'],
+      },
+    ],
+  },
+  {
     label: 'Administración',
     items: [
       {
