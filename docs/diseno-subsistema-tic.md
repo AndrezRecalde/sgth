@@ -247,7 +247,7 @@ Hecho en el PR 0.2: el rol `jefe-tic` [D5], el permiso `registrar-mantenimiento`
 | Permiso | Servidor (todos) | Técnico TIC | Jefe de TIC | Auditor |
 |---|---|---|---|---|
 | `crear-ticket`, `ver-ticket-propio` | ✓ | ✓ | ✓ | ✓ |
-| `ver-mis-equipos` (fase 1.3) | ✓ | ✓ | ✓ | ✓ |
+| «Mis equipos» del Portal: con `acceso-autoservicio`, que ya tienen todos (1.3; un permiso base nuevo habría obligado a tocar las migraciones de roles sin agregar control) | ✓ | ✓ | ✓ | ✓ |
 | `gestionar-tickets`: atender la cola propia y los tickets sin asignar | | ✓ | ✓ | |
 | `ver-tickets-todos`, `asignar-ticket` | | | ✓ | |
 | `gestionar-tecnicos`, `configurar-sla` | | | ✓ | |

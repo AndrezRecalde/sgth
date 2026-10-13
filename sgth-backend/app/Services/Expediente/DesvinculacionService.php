@@ -2,7 +2,7 @@
 
 namespace App\Services\Expediente;
 
-use App\Contracts\InventarioTi\InventarioTiServiceInterface;
+use App\Contracts\InventarioTi\CustodiaServiceInterface;
 use App\Enums\EstadoContrato;
 use App\Enums\PasoDesvinculacion;
 use App\Enums\TipoDeclaracion;
@@ -52,7 +52,7 @@ class DesvinculacionService
     ];
 
     public function __construct(
-        private readonly InventarioTiServiceInterface $inventario,
+        private readonly CustodiaServiceInterface $custodia,
         private readonly LiquidacionDeLaSalida $liquidacion,
     ) {
     }
@@ -340,7 +340,7 @@ class DesvinculacionService
             throw new ReglaNegocioException('Ese bien no está a cargo de esta persona.');
         }
 
-        $this->inventario->devolverBien($asignacion, $fecha, $observaciones);
+        $this->custodia->devolver($asignacion, $fecha, $observaciones);
 
         return $this->detalle($desvinculacion->fresh());
     }

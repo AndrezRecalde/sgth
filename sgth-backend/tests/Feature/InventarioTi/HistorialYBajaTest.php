@@ -92,7 +92,7 @@ test('el_historial_del_bien_ya_no_revienta_y_trae_su_vida', function () {
 
     expect($respuesta->json('datos.bien.codigo_institucional'))->toBe('GADPE-001');
     expect($respuesta->json('datos.asignaciones'))->toHaveCount(1);
-    expect($respuesta->json('datos.asignaciones.0.servidor.cedula'))
+    expect($respuesta->json('datos.asignaciones.0.custodio.cedula'))
         ->toBe('0801234588');
     expect($respuesta->json('datos.mantenimientos'))->toHaveCount(1);
 });

@@ -576,6 +576,11 @@ export const NAV_PORTAL: NavGroup[] = [
         icon:  'IconHeadset',
       },
       {
+        label: 'Mis equipos',
+        href:  ROUTES.PORTAL.MIS_EQUIPOS,
+        icon:  'IconDevices',
+      },
+      {
         label: 'Reportar abuso',
         href:  ROUTES.PORTAL.REPORTES,
         icon:  'IconAlertTriangle',

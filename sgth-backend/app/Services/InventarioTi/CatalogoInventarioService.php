@@ -3,6 +3,7 @@
 namespace App\Services\InventarioTi;
 
 use App\Contracts\InventarioTi\CatalogoInventarioServiceInterface;
+use App\Contracts\InventarioTi\CustodiaServiceInterface;
 use App\Enums\CondicionFisicaBien;
 use App\Enums\EstadoBien;
 use App\Exceptions\ReglaNegocioException;
@@ -28,6 +29,8 @@ use Illuminate\Support\Facades\DB;
  */
 final class CatalogoInventarioService implements CatalogoInventarioServiceInterface
 {
+    public function __construct(private readonly CustodiaServiceInterface $custodia) {}
+
     public function paraFormularios(): array
     {
         return [
@@ -37,6 +40,9 @@ final class CatalogoInventarioService implements CatalogoInventarioServiceInterf
             'contratos'   => ContratoVigencia::orderByDesc('fecha_inicio')->orderBy('proceso')->get(['id', 'proceso', 'fecha_inicio', 'fecha_fin']),
             'estados'     => array_map(fn (EstadoBien $e) => ['valor' => $e->value, 'etiqueta' => $e->etiqueta()], EstadoBien::cases()),
             'condiciones' => array_map(fn (CondicionFisicaBien $c) => ['valor' => $c->value, 'etiqueta' => $c->etiqueta()], CondicionFisicaBien::cases()),
+            // Hasta el arranque de la mesa de ayuda se anota el número de
+            // soporte del sistema antiguo (D1).
+            'acepta_soporte_anterior' => $this->custodia->aceptaSoporteAnterior(),
         ];
     }
 

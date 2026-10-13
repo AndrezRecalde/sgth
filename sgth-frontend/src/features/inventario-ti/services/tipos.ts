@@ -100,6 +100,8 @@ export type CatalogosInventario = {
   contratos: { id: number; proceso: string; fecha_inicio: string | null; fecha_fin: string | null }[]
   estados: Opcion<EstadoBien>[]
   condiciones: Opcion<CondicionFisica>[]
+  /** Hasta el arranque de la mesa de ayuda se anota el soporte del sistema antiguo (D1). */
+  acepta_soporte_anterior: boolean
 }
 
 // ── Configuración ──────────────────────────────────────────────
@@ -140,16 +142,59 @@ export type ContratoVigencia = {
   cronograma?: VentanaCronograma[]
 }
 
+type Persona = { id: number; cedula: string; nombre: string }
+
+/** `AsignacionBienResource`: una custodia. */
+export type Asignacion = {
+  id: number
+  bien_informatico_id: number
+  servidor_id: number
+  usuario_servidor_id: number | null
+  fecha_asignacion: string | null
+  fecha_devolucion: string | null
+  vigente: boolean
+  motivo: 'entrega' | 'traspaso'
+  observaciones: string | null
+  memorando_numero: string | null
+  tiene_memorando_pdf: boolean
+  memorando_nombre: string | null
+  soporte_anterior: string | null
+  custodio?: Persona | null
+  unidad?: { id: number; nombre: string; acronimo: string | null } | null
+  usuario?: Persona | null
+  custodio_anterior?: Persona | null
+  registrada_por?: string | null
+  bien?: {
+    id: number
+    codigo_institucional: string
+    tipo: string | null
+    subtipo: string | null
+    marca: string | null
+    modelo: string | null
+    ubicacion: string | null
+  } | null
+}
+
+/** Entregar o traspasar: los mismos datos (el equipo, solo al entregar). */
+export type EntregaData = {
+  bien_informatico_id?: number
+  servidor_id: number
+  usuario_servidor_id: number | null
+  fecha_asignacion: string
+  memorando_numero: string | null
+  soporte_anterior: string | null
+  observaciones: string | null
+}
+
+export type DevolucionData = {
+  fecha_devolucion: string
+  observaciones: string | null
+  soporte_anterior: string | null
+}
+
 /** `GET /inventario/bienes/{id}/historial`. */
 export type HistorialBien = {
-  asignaciones: {
-    id: number
-    fecha_asignacion: string | null
-    fecha_devolucion: string | null
-    estado: string
-    observaciones: string | null
-    servidor: { id: number; nombre: string; apellido: string; cedula: string } | null
-  }[]
+  asignaciones: Asignacion[]
   mantenimientos: {
     id: number
     tipo_mantenimiento: string

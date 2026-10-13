@@ -14,6 +14,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Autoservicio\AutoservicioController;
 use App\Http\Controllers\Autoservicio\MisActividadesController;
+use App\Http\Controllers\Autoservicio\MisEquiposController;
 use App\Http\Controllers\Autoservicio\MisCertificadosMedicosController;
 use App\Http\Controllers\Autoservicio\MisDocumentosLaboralesController;
 use App\Http\Controllers\Autoservicio\MisSolicitudesAccionController;
@@ -971,6 +972,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->middleware('permission:exportar-informe-actividades');
         // «Mis documentos laborales» (fase 6.3a): lo notificado y registrado,
         // su PDF y el acuse de recibo. Siempre los del propio servidor.
+        // «Mis equipos» (TIC, fase 1.3): los que tiene a su cargo o usa.
+        Route::get('mis-equipos', [MisEquiposController::class, 'index'])
+            ->middleware('permission:acceso-autoservicio');
+        Route::get('mis-equipos/{asignacion}/acta', [MisEquiposController::class, 'acta'])
+            ->middleware('permission:acceso-autoservicio');
         Route::get('mis-documentos', [MisDocumentosLaboralesController::class, 'index']);
         Route::get('mis-documentos/{movimiento}/pdf', [MisDocumentosLaboralesController::class, 'pdf']);
         Route::post('mis-documentos/{movimiento}/acuse', [MisDocumentosLaboralesController::class, 'acuse']);
@@ -1133,6 +1139,16 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::post('asignaciones/{asignacion}/devolver',
                 [AsignacionBienController::class, 'devolver'])
                 ->middleware($gestionar);
+            // Traspaso y memorando de Quipux (fase 1.3).
+            Route::post('asignaciones/{asignacion}/traspasar',
+                [AsignacionBienController::class, 'traspasar'])
+                ->middleware($gestionar);
+            Route::post('asignaciones/{asignacion}/memorando',
+                [AsignacionBienController::class, 'adjuntarMemorando'])
+                ->middleware($gestionar);
+            Route::get('asignaciones/{asignacion}/memorando',
+                [AsignacionBienController::class, 'memorando'])
+                ->middleware($ver);
 
             // Mantenimientos
             Route::apiResource('mantenimientos', MantenimientoBienController::class)

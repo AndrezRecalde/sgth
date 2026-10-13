@@ -7,6 +7,7 @@ use App\Contracts\InventarioTi\InventarioTiServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\InventarioTi\StoreBienInformaticoRequest;
 use App\Http\Requests\InventarioTi\UpdateBienInformaticoRequest;
+use App\Http\Resources\InventarioTi\AsignacionBienResource;
 use App\Http\Resources\InventarioTi\BienInformaticoResource;
 use App\Http\Responses\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -67,6 +68,7 @@ final class BienInformaticoController extends Controller
         $ficha = $this->inventario->obtenerFichaTecnicaCompleta([
             'bien_informatico_id' => $id,
         ]);
+        $ficha['asignaciones'] = AsignacionBienResource::collection($ficha['asignaciones']);
 
         return ApiResponse::ok($ficha, 'Historial del bien informático.');
     }

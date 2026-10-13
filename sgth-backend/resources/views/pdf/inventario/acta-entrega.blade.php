@@ -239,6 +239,26 @@
             <td class="rotulo">Unidad</td>
             <td>{{ $unidad ?? '—' }}</td>
         </tr>
+        {{-- Quien usa el equipo cuando no es el custodio (D3): el acta la
+             firma el custodio, que responde por el bien. --}}
+        @if($asignacion->usuario)
+            <tr>
+                <td class="rotulo">Usuario del equipo</td>
+                <td colspan="3">{{ trim($asignacion->usuario->apellido . ' ' . $asignacion->usuario->nombre) }} (C.C. {{ $asignacion->usuario->cedula }})</td>
+            </tr>
+        @endif
+        @if($asignacion->motivo === 'traspaso' && $asignacion->anterior?->servidor)
+            <tr>
+                <td class="rotulo">Traspaso desde</td>
+                <td colspan="3">{{ trim($asignacion->anterior->servidor->apellido . ' ' . $asignacion->anterior->servidor->nombre) }}</td>
+            </tr>
+        @endif
+        @if($asignacion->memorando_numero)
+            <tr>
+                <td class="rotulo">Memorando</td>
+                <td colspan="3">{{ $asignacion->memorando_numero }}</td>
+            </tr>
+        @endif
     </table>
 </div>
 
