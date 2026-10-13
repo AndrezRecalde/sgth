@@ -36,6 +36,10 @@ class DatabaseSeeder extends Seeder
             CatalogoTransporteSeeder::class,
             CategoriaFacturaSeeder::class,
 
+            // Inventario de TIC: tipos, subtipos y ubicaciones de partida. Se
+            // puede volver a correr sin duplicar.
+            InventarioTiCatalogoSeeder::class,
+
             // Catálogo CIE-10 (ejecutar manualmente: php artisan db:seed --class=Cie10Seeder)
             // Cie10Seeder::class,
         ]);

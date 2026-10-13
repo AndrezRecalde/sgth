@@ -49,8 +49,10 @@ class HelpdeskService implements HelpdeskServiceInterface
 
             if ($ticket->bien_informatico_id) {
                 $bien = BienInformatico::find($ticket->bien_informatico_id);
-                if ($bien) {
-                    $bien->update(['estado_operativo' => 'activo']);
+                // `activo` ya no existe (EstadoBien): el equipo vuelve al estado
+                // que le toca por su custodia, salvo que esté dado de baja.
+                if ($bien && $bien->estado_operativo === \App\Enums\EstadoBien::EN_MANTENIMIENTO) {
+                    $bien->update(['estado_operativo' => $bien->estadoSegunCustodia()]);
                 }
             }
             // Disparar encuesta de satisfaccion

@@ -1,73 +1,70 @@
 <?php
+
 namespace App\Http\Controllers\InventarioTi;
 
-use App\Http\Controllers\Controller;
-use App\Http\Responses\ApiResponse;
+use App\Contracts\InventarioTi\BienInformaticoServiceInterface;
 use App\Contracts\InventarioTi\InventarioTiServiceInterface;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\InventarioTi\StoreBienInformaticoRequest;
 use App\Http\Requests\InventarioTi\UpdateBienInformaticoRequest;
-use Illuminate\Http\Request;
+use App\Http\Resources\InventarioTi\BienInformaticoResource;
+use App\Http\Responses\ApiResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 final class BienInformaticoController extends Controller
 {
     public function __construct(
-        private readonly InventarioTiServiceInterface $service
+        private readonly BienInformaticoServiceInterface $bienes,
+        private readonly InventarioTiServiceInterface $inventario,
     ) {}
 
     public function index(Request $request): JsonResponse
     {
-        $bienes = $this->service->listarBienes($request->all());
+        $bienes = $this->bienes->listar($request->query());
 
-        return ApiResponse::paginado($bienes, 'Bienes listados');
+        return ApiResponse::paginadoDe(
+            $bienes,
+            BienInformaticoResource::collection($bienes->getCollection())->resolve($request),
+            'Equipos del inventario.'
+        );
     }
 
     public function store(StoreBienInformaticoRequest $request): JsonResponse
     {
-        $bien = $this->service->registrarBien($request->validated());
+        $bien = $this->bienes->registrar($request->validated());
 
-        // Decía «Bien registrado y QR generado». Lo que se genera es el código
-        // con el que la auditoría busca el bien al escanear; la etiqueta física
-        // no la produce el sistema.
-        return ApiResponse::created($bien, 'Bien registrado');
+        return ApiResponse::created(new BienInformaticoResource($bien), 'Equipo registrado.');
     }
 
     public function show(int $id): JsonResponse
     {
-        return ApiResponse::ok($this->service->obtenerBien($id), 'Detalle de bien');
+        return ApiResponse::ok(new BienInformaticoResource($this->bienes->obtener($id)), 'Ficha del equipo.');
     }
 
     public function update(UpdateBienInformaticoRequest $request, int $id): JsonResponse
     {
-        $bien = $this->service->actualizarBien($id, $request->validated());
+        $bien = $this->bienes->actualizar($id, $request->validated());
 
-        return ApiResponse::ok($bien, 'Bien actualizado');
+        return ApiResponse::ok(new BienInformaticoResource($bien), 'Equipo actualizado.');
     }
 
     /**
-     * Borra la ficha de un bien registrado por error.
-     *
-     * Respondía «Bien dado de baja» sin borrar nada, y encima nombraba otra
-     * cosa: la baja retira el bien del servicio, exige motivo y va por
-     * «bajas»; el bien sigue en el inventario. Esto borra la ficha, y solo
-     * mientras no tenga historial.
+     * Borra la ficha de un equipo registrado por error, y solo mientras no
+     * tenga historial. La baja —el equipo que sale del servicio— va por
+     * «bajas».
      */
     public function destroy(int $id): JsonResponse
     {
-        $this->service->retirarBien($id);
+        $this->bienes->retirar($id);
 
-        return ApiResponse::ok(null, 'Bien retirado del inventario');
+        return ApiResponse::ok(null, 'Equipo retirado del inventario.');
     }
 
-    /**
-     * La vida del bien: quién lo ha tenido y qué se le ha hecho.
-     *
-     * La ruta declaraba este método y el controlador no lo tenía, así que
-     * `bienes/{id}/historial` devolvía un 500 desde que se escribió.
-     */
+    /** La vida del equipo: quién lo ha tenido y qué se le ha hecho. */
     public function historial(int $id): JsonResponse
     {
-        $ficha = $this->service->obtenerFichaTecnicaCompleta([
+        $ficha = $this->inventario->obtenerFichaTecnicaCompleta([
             'bien_informatico_id' => $id,
         ]);
 
