@@ -181,7 +181,7 @@ marcas ──────┤                         │
         bienes_informaticos  ◄── bien_padre_id (componentes: monitor, teclado…)
              │ 1─n asignaciones_bien    (servidor, desde, hasta, motivo, memorando, acta)
              │ 1─n mantenimientos_bien  (tipo, ticket_id, técnico, fecha, detalle, contrato_vigencia_id)
-             │ 1─1 bajas_bien           (informe técnico, memorando, entrega a Activos Fijos, componentes que quedan)
+             │ 1─n bajas_bien           (informe técnico, aprobación o rechazo, memorando, entrega a Activos Fijos)
              │ 1─n verificaciones_bien  (campaña de constatación física, resultado)
              ▼
           tickets ──► servidores (solicitante), users (técnico), unidades (área de TIC)
@@ -255,7 +255,8 @@ Hecho en el PR 0.2: el rol `jefe-tic` [D5], el permiso `registrar-mantenimiento`
 | `ver-inventario-ti` | | ✓ | ✓ | ✓ (solo lectura) |
 | `gestionar-inventario-ti`: registrar, editar, custodia | | ✓ | ✓ | |
 | `registrar-mantenimiento` | | ✓ | ✓ | |
-| `dar-baja-bien` | | | ✓ | |
+| Proponer una baja: con `gestionar-inventario-ti` (1.6) | | ✓ | ✓ | |
+| `dar-baja-bien`: aprobar o rechazar la baja, su memorando y la entrega a Activos Fijos | | | ✓ | |
 | `solicitar-prestamo-equipo`, `ver-disponibilidad-prestamo` (fase 2.1) | ✓ | ✓ | ✓ | ✓ |
 | `gestionar-prestamos` (fase 2.1): aprobar, entregar, recibir, préstamo directo | | ✓ | ✓ | |
 
@@ -391,10 +392,13 @@ Portal › Soporte
 
 **Baja**
 
-1. El técnico emite el **informe técnico** desde un ticket o desde la ficha.
-2. El jefe de TIC aprueba.
-3. El equipo queda `dado_de_baja`, con el memorando y la entrega a Activos Fijos y Bodega.
-4. Los componentes que siguen sirviendo se desenlazan y quedan disponibles.
+1. El técnico propone la baja desde la ficha (desde un ticket, en la fase 3) con su **informe técnico**: motivo, diagnóstico de al menos 20 caracteres y recomendación. El informe (`IB-000001`) sale en PDF para la firma. Un equipo tiene como mucho una baja propuesta o aprobada (índice parcial).
+2. El jefe de TIC (`dar-baja-bien`) la aprueba con la fecha y el número del memorando de Quipux, o la rechaza con su motivo. Una baja rechazada queda en el historial y se puede volver a proponer.
+3. Al aprobarla, si alguien tiene el equipo en custodia se registra la devolución; el equipo queda `dado_de_baja` y sale del grupo de préstamo. Después se adjunta el PDF del memorando y se anota la entrega a Activos Fijos y Bodega.
+4. El jefe marca qué componentes salen con el equipo: cada uno lleva su propia baja, enlazada a la del principal. Los demás se desenlazan y siguen en servicio.
+5. Una ficha con una baja, aunque rechazada, ya no se puede borrar como «registrada por error».
+
+**Etiqueta QR (1.6).** El QR lleva la dirección de la ficha del equipo en el SGTH, y el código va escrito al lado para quien no tenga lector. Sale una etiqueta de 70 × 40 mm desde la ficha, o las del filtro del listado en hojas A4 de 3 × 8, hasta 240 de una vez.
 
 **Préstamo**
 

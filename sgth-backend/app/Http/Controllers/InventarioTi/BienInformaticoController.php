@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\InventarioTi\StoreBienInformaticoRequest;
 use App\Http\Requests\InventarioTi\UpdateBienInformaticoRequest;
 use App\Http\Resources\InventarioTi\AsignacionBienResource;
+use App\Http\Resources\InventarioTi\BajaBienResource;
 use App\Http\Resources\InventarioTi\BienInformaticoResource;
 use App\Http\Resources\InventarioTi\MantenimientoBienResource;
 use App\Http\Responses\ApiResponse;
@@ -71,6 +72,7 @@ final class BienInformaticoController extends Controller
         ]);
         $ficha['asignaciones'] = AsignacionBienResource::collection($ficha['asignaciones']);
         $ficha['mantenimientos'] = MantenimientoBienResource::collection($ficha['mantenimientos']);
+        $ficha['bajas'] = BajaBienResource::collection($ficha['bajas']);
 
         return ApiResponse::ok($ficha, 'Historial del bien informático.');
     }

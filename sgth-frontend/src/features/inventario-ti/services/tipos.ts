@@ -2,7 +2,10 @@
  * Los tipos del inventario de TIC, escritos a partir de los recursos del
  * backend (`app/Http/Resources/InventarioTi`). Scramble no infiere bien las
  * llaves ni los booleanos (ver `types/api.ts`), así que se declaran aquí.
+ * Los de la baja van en `tiposBaja.ts`.
  */
+
+import type { BajaBien, BajaVigente } from './tiposBaja'
 
 export type EstadoBien =
   | 'en_uso' | 'disponible' | 'en_mantenimiento' | 'en_garantia' | 'dado_de_baja' | 'extraviado'
@@ -50,6 +53,8 @@ export type BienInformatico = {
   unidad: { id: number; nombre: string; acronimo: string | null } | null
   padre?: { id: number; codigo_institucional: string; modelo: string | null; tipo: string | null } | null
   componentes?: { id: number; codigo_institucional: string; modelo: string | null; tipo: string | null; estado_operativo: EstadoBien }[]
+  /** La baja propuesta o aprobada (fase 1.6); solo en la ficha. */
+  baja?: BajaVigente | null
 }
 
 /** Lo que se envía al registrar o corregir un equipo. */
@@ -196,6 +201,7 @@ export type DevolucionData = {
 export type HistorialBien = {
   asignaciones: Asignacion[]
   mantenimientos: Mantenimiento[]
+  bajas: BajaBien[]
 }
 
 export type TipoMantenimiento = 'preventivo' | 'correctivo' | 'repotenciacion'

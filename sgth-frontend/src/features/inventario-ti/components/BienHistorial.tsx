@@ -9,6 +9,7 @@ import { useHistorialBien } from '../hooks/useBienes'
 import { useDocumentoCustodia } from '../hooks/useCustodia'
 import { useMantenimientoMutations } from '../hooks/useMantenimientos'
 import type { Asignacion, BienInformatico, Mantenimiento } from '../services/tipos'
+import { BienBajas } from './BienBajas'
 import { CustodiaVigente } from './CustodiaVigente'
 import { DevolucionModal } from './DevolucionModal'
 import { EntregaModal } from './EntregaModal'
@@ -17,8 +18,8 @@ import { MemorandoModal } from './MemorandoModal'
 import { columnasCustodia, columnasMantenimiento } from './historial.columns'
 
 /**
- * La custodia del equipo —la vigente, con sus acciones, y las anteriores— y
- * sus mantenimientos, del más reciente al más antiguo.
+ * La custodia del equipo —la vigente, con sus acciones, y las anteriores—,
+ * sus mantenimientos, del más reciente al más antiguo, y sus bajas.
  */
 export function BienHistorial({ bien }: { bien: BienInformatico }) {
   const { hasPermiso } = useAuth()
@@ -81,6 +82,7 @@ export function BienHistorial({ bien }: { bien: BienInformatico }) {
             noRecordsText="El equipo no tiene mantenimientos registrados."
           />
         </SectionCard>
+        <BienBajas bajas={data?.bajas ?? []} />
       </Stack>
 
       <EntregaModal

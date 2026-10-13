@@ -3,16 +3,14 @@ namespace App\Services\InventarioTi;
 use App\Contracts\InventarioTi\InventarioTiServiceInterface;
 use App\Models\InventarioTi\BienInformatico;
 use App\Models\InventarioTi\AsignacionBien;
+use App\Models\InventarioTi\BajaBien;
 use App\Models\InventarioTi\MantenimientoBien;
-use App\Enums\EstadoBien;
-use App\Exceptions\ReglaNegocioException;
-use Illuminate\Support\Facades\DB;
 final class InventarioTiService implements InventarioTiServiceInterface
 {
     /**
-     * Lo que queda aquí es el historial, la auditoría física y la baja: se
-     * rehacen en sus fases (1.5, 1.6). La ficha del equipo se mudó a
-     * `BienInformaticoService` (1.1) y la custodia a `CustodiaService` (1.3).
+     * Lo que queda aquí es el historial y la auditoría física. La ficha del
+     * equipo se mudó a `BienInformaticoService` (1.1), la custodia a
+     * `CustodiaService` (1.3) y la baja a `BajaService` (1.6).
      */
 
     /**
@@ -23,7 +21,7 @@ final class InventarioTiService implements InventarioTiServiceInterface
      * `bienes/{id}/historial` respondía con un 500. Los modelos y sus tablas
      * estaban completos desde el principio.
      *
-     * @return array{bien: BienInformatico, asignaciones: mixed, mantenimientos: mixed}
+     * @return array{bien: BienInformatico, asignaciones: mixed, mantenimientos: mixed, bajas: mixed}
      */
     public function obtenerFichaTecnicaCompleta(array $filtros): array
     {
@@ -55,6 +53,18 @@ final class InventarioTiService implements InventarioTiServiceInterface
                 ->orderByRaw('fecha_mantenimiento DESC NULLS LAST')
                 ->orderByDesc('id')
                 ->get(),
+            // Las bajas, también las rechazadas: un informe que no prosperó
+            // dice que el equipo ya dio problemas.
+            'bajas' => BajaBien::with([
+                'informadoPor:id,usuario_ti,email,servidor_id', 'informadoPor.servidor:id,nombre,apellido',
+                'aprobadoPor:id,usuario_ti,email,servidor_id', 'aprobadoPor.servidor:id,nombre,apellido',
+                'rechazadoPor:id,usuario_ti,email,servidor_id', 'rechazadoPor.servidor:id,nombre,apellido',
+                'principal.bien:id,codigo_institucional',
+            ])
+                ->where('bien_informatico_id', $bien->id)
+                ->orderByDesc('fecha_informe')
+                ->orderByDesc('id')
+                ->get(),
         ];
     }
 
@@ -62,28 +72,5 @@ final class InventarioTiService implements InventarioTiServiceInterface
     {
         // Retorna mock de registro de auditoria
         return ['estado' => 'Auditoría registrada'];
-    }
-
-    public function procesarBaja(array $datos)
-    {
-        return DB::transaction(function () use ($datos) {
-            $bien = BienInformatico::findOrFail($datos['bien_informatico_id']);
-
-            // La columna es `estado_operativo`. Escribía `estado`, que no
-            // existe en la tabla ni en el `fillable`, así que Eloquent lo
-            // descartaba en silencio: la baja respondía que sí y el bien se
-            // quedaba activo.
-            $bien->update(['estado_operativo' => EstadoBien::DADO_DE_BAJA]);
-
-            return [
-                'bien_informatico_id' => $bien->id,
-                'estado_operativo'    => $bien->estado_operativo->value,
-                'motivo'              => $datos['motivo'],
-                // El acta en PDF y su archivo en el SGD no están construidos.
-                // Antes se devolvía una ruta y una referencia inventadas, que
-                // no llevaban a ningún sitio; es preferible decir que faltan.
-                'acta_pendiente'      => true,
-            ];
-        });
     }
 }

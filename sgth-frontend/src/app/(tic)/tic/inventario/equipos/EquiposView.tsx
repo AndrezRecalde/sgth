@@ -2,14 +2,15 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button } from '@mantine/core'
+import { Button, Group } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
-import { IconDevices, IconEdit, IconEye, IconPlus, IconTrash } from '@tabler/icons-react'
+import { IconDevices, IconEdit, IconEye, IconPlus, IconQrcode, IconTrash } from '@tabler/icons-react'
 import { DataState, PAGINACION_ES, PageHeader, PageShell, SgthTable, confirmar, type TableAction } from '@/components/ui'
 import { ROUTES } from '@/config/routes'
 import { useAuth } from '@/hooks/useAuth'
 import { BienesFiltros } from '@/features/inventario-ti/components/BienesFiltros'
 import { columnasBienes } from '@/features/inventario-ti/components/bienes.columns'
+import { useEtiquetas } from '@/features/inventario-ti/hooks/useBajas'
 import { useBienes, useRetirarBien } from '@/features/inventario-ti/hooks/useBienes'
 import type { BienInformatico, FiltrosBienes } from '@/features/inventario-ti/services/tipos'
 
@@ -29,6 +30,7 @@ export function EquiposView() {
   const consulta = { ...filtros, ...(search.length >= 2 ? { search } : {}) }
   const { data, isLoading, error } = useBienes(consulta, page)
   const retirar = useRetirarBien()
+  const etiquetas = useEtiquetas()
 
   const hayFiltros = busqueda.trim() !== '' || Object.values(filtros).some((v) => v !== undefined)
 
@@ -70,11 +72,20 @@ export function EquiposView() {
       <PageHeader
         title="Equipos"
         description="Inventario de equipos informáticos: quién los tiene, dónde están y en qué estado"
-        actions={puedeGestionar ? (
-          <Button variant="light" leftSection={<IconPlus size={16} />} onClick={() => router.push(ROUTES.TIC.EQUIPO_NUEVO)}>
-            Registrar equipo
-          </Button>
-        ) : undefined}
+        actions={(
+          <Group gap="xs">
+            {/* Las etiquetas de lo que muestra el filtro, hasta 240 (10 hojas A4). */}
+            <Button variant="subtle" leftSection={<IconQrcode size={16} />} loading={etiquetas.isPending}
+              disabled={!data?.total} onClick={() => etiquetas.mutate({ filtros: consulta })}>
+              Imprimir etiquetas{data?.total ? ` (${data.total})` : ''}
+            </Button>
+            {puedeGestionar && (
+              <Button variant="light" leftSection={<IconPlus size={16} />} onClick={() => router.push(ROUTES.TIC.EQUIPO_NUEVO)}>
+                Registrar equipo
+              </Button>
+            )}
+          </Group>
+        )}
       />
 
       <BienesFiltros
