@@ -26,6 +26,10 @@ beforeEach(function () {
     AreaDtic::unguard();
     TecnicoDtic::unguard();
 
+    // Los roles con sus permisos reales: las rutas de tickets van por permiso
+    // y la policy decide sobre cada ticket.
+    $this->seed(\Database\Seeders\RolPermisoSeeder::class);
+
     $unidad = unidadDePrueba(['nombre' => 'Direccion Helpdesk']);
     $puesto = puestoDePrueba($unidad);
 
@@ -42,6 +46,7 @@ beforeEach(function () {
         'password' => bcrypt('123456'), 'primer_login' => false,
         'servidor_id' => $this->servidor->id,
     ]);
+    $this->solicitante->assignRole('servidor');
 
     $this->tecnico = User::create([
         'email' => 'tecnico@example.com', 'usuario_ti' => 'tecnico',

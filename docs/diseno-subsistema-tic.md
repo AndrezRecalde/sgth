@@ -229,23 +229,29 @@ abierto ───────────► asignado ────────�
 
 ### 4.4 Roles y permisos
 
-Las rutas pasan a ir **por permiso**, con policy para el alcance de cada registro. Como `Gate::before` le da todo a `admin-ti` pero el middleware `permission:` no pasa por ahí, `admin-ti` recibe los permisos de forma explícita, igual que en los demás módulos.
+Las rutas van **por permiso**, y el alcance de cada ticket lo decide `TicketPolicy`. El middleware `permission:` de Spatie usa `canAny`, que pasa por `Gate::before`, así que `admin-ti` entraría de todos modos; aun así recibe los permisos de forma explícita, para que la pantalla de Usuarios muestre lo que puede hacer. El que no pasa por `Gate::before` es el middleware `role:`.
 
-| Permiso | Servidor (todos) | Técnico TIC | Jefe de TIC | Auditor / Activos Fijos |
+Hecho en el PR 0.2: el rol `jefe-tic` [D5], el permiso `registrar-mantenimiento` y las rutas por permiso. Se conservan los nombres que ya existían en el enum: `gestionar-tickets` es «atender tickets», y la configuración de la mesa de ayuda se reparte entre `gestionar-tecnicos` y `configurar-sla`. Los permisos de las filas marcadas «(fase N)» se crean con su PR, no antes.
+
+| Permiso | Servidor (todos) | Técnico TIC | Jefe de TIC | Auditor |
 |---|---|---|---|---|
-| `crear-ticket`, `ver-ticket-propio`, `ver-mis-equipos` | ✓ | ✓ | ✓ | ✓ |
-| `atender-tickets` (cola propia y sin asignar) | | ✓ | ✓ | |
+| `crear-ticket`, `ver-ticket-propio` | ✓ | ✓ | ✓ | ✓ |
+| `ver-mis-equipos` (fase 1.3) | ✓ | ✓ | ✓ | ✓ |
+| `gestionar-tickets`: atender la cola propia y los tickets sin asignar | | ✓ | ✓ | |
 | `ver-tickets-todos`, `asignar-ticket` | | | ✓ | |
-| `configurar-mesa-ayuda` (categorías, SLA, técnicos) | | | ✓ | |
+| `gestionar-tecnicos`, `configurar-sla` | | | ✓ | |
+| `gestionar-base-conocimiento` | | ✓ | ✓ | |
 | `ver-inventario-ti` | | ✓ | ✓ | ✓ (solo lectura) |
-| `gestionar-inventario-ti` (registrar, editar, custodia) | | ✓ | ✓ | |
+| `gestionar-inventario-ti`: registrar, editar, custodia | | ✓ | ✓ | |
 | `registrar-mantenimiento` | | ✓ | ✓ | |
 | `dar-baja-bien` | | | ✓ | |
-| `importar-inventario-ti` | | | ✓ | |
-| `solicitar-prestamo-equipo`, `ver-disponibilidad-prestamo` | ✓ | ✓ | ✓ | ✓ |
-| `gestionar-prestamos` (aprobar, entregar, recibir, préstamo directo) | | ✓ | ✓ | |
+| `importar-inventario-ti` (fase 1.4) | | | ✓ | |
+| `solicitar-prestamo-equipo`, `ver-disponibilidad-prestamo` (fase 2.1) | ✓ | ✓ | ✓ | ✓ |
+| `gestionar-prestamos` (fase 2.1): aprobar, entregar, recibir, préstamo directo | | ✓ | ✓ | |
 
-Cada permiso nuevo va en el enum, en `RolPermisoSeeder` y en una **migración** con `Permission::firstOrCreate`, como `2026_10_06_120000_crear_permiso_marcar_en_linea.php`. [D5]
+`admin-ti` tiene todo lo del jefe de TIC. Activos Fijos no tiene rol propio; si necesita consultar el inventario, se le da `ver-inventario-ti` desde Usuarios.
+
+Cada permiso nuevo va en el enum, en `RolPermisoSeeder` y en una **migración** con `Permission::firstOrCreate`, como `2026_10_17_000000_crear_rol_jefe_tic_y_permisos_tic.php`.
 
 ### 4.5 Frontend
 

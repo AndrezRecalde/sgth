@@ -164,6 +164,7 @@ class PermisoController extends Controller
             str_contains($permiso, 'tecnico') ||
             str_contains($permiso, 'sla') ||
             str_contains($permiso, 'bien') ||
+            str_contains($permiso, 'mantenimiento') ||
             str_contains($permiso, 'base-conocimiento')
                 => 'TI y Helpdesk',
 

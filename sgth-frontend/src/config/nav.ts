@@ -625,14 +625,11 @@ export const ROLES_PORTAL = [
   'admin-uath', 'asistente-uath',
   'admin-ti', 'maxima-autoridad', 'auditor',
   'recepcion', 'trabajo-social', 'financiero',
-  'admin-dispensario', 'tecnico-dtic',
+  'admin-dispensario', 'tecnico-dtic', 'jefe-tic',
 ]
 
-/**
- * Quienes trabajan en la Unidad de TIC. El jefe de TIC (`jefe-tic`) se suma
- * cuando exista el rol, con los permisos del PR 0.2.
- */
-export const ROLES_TIC = ['admin-ti', 'tecnico-dtic']
+/** Quienes trabajan en la Unidad de TIC. */
+export const ROLES_TIC = ['admin-ti', 'jefe-tic', 'tecnico-dtic']
 
 // ── Helper: qué subsistemas puede ver ─
 export function getSubsistemasDisponibles(roles: string[]): Subsistema[] {

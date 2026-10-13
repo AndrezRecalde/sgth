@@ -10,6 +10,25 @@ use Spatie\Permission\Models\Role;
 
 class RolPermisoSeeder extends Seeder
 {
+    /** Lo que hace el técnico de TIC (docs/diseno-subsistema-tic.md, 4.4). */
+    public const PERMISOS_TECNICO_TIC = [
+        Permiso::GESTIONAR_TICKETS,
+        Permiso::GESTIONAR_BASE_CONOCIMIENTO,
+        Permiso::VER_INVENTARIO_TI,
+        Permiso::GESTIONAR_INVENTARIO_TI,
+        Permiso::REGISTRAR_MANTENIMIENTO,
+    ];
+
+    /** El jefe de TIC: lo del técnico, más asignar, configurar y dar de baja. */
+    public const PERMISOS_JEFE_TIC = [
+        ...self::PERMISOS_TECNICO_TIC,
+        Permiso::VER_TICKETS_TODOS,
+        Permiso::ASIGNAR_TICKET,
+        Permiso::GESTIONAR_TECNICOS,
+        Permiso::CONFIGURAR_SLA,
+        Permiso::DAR_BAJA_BIEN,
+    ];
+
     public function run(): void
     {
         // 1. Crear todos los permisos del Enum
@@ -50,12 +69,11 @@ class RolPermisoSeeder extends Seeder
             Permiso::GESTIONAR_ROLES,
             Permiso::RESTABLECER_CONTRASENA,
             Permiso::VER_AUDITORIA,
-            Permiso::GESTIONAR_INVENTARIO_TI,
-            Permiso::GESTIONAR_TECNICOS,
             Permiso::CONFIGURAR_SISTEMA,
-            Permiso::CONFIGURAR_SLA,
-            Permiso::VER_TICKETS_TODOS,
-            Permiso::GESTIONAR_TICKETS,
+            // Todo lo de TIC, como el jefe. Las rutas lo piden por permiso y
+            // la pantalla de Usuarios debe mostrar lo que el rol puede hacer
+            // (docs/diseno-subsistema-tic.md, 4.4).
+            ...self::PERMISOS_JEFE_TIC,
             // Carga inicial de servidores. Se deja en TI y no en UATH porque
             // es una vía excepcional que se revoca al terminar la migración:
             // durante ese lapso se le concede también a quien la ejecute.
@@ -286,15 +304,12 @@ class RolPermisoSeeder extends Seeder
             Permiso::EVALUAR_PERSONAL_MEDICO,
         ]));
 
-        // TECNICO_DTIC
-        $this->crearRol(Rol::TECNICO_DTIC, array_merge($permisosBase, [
-            Permiso::GESTIONAR_TICKETS,
-            Permiso::ASIGNAR_TICKET,
-            Permiso::VER_TICKETS_TODOS,
-            Permiso::GESTIONAR_BASE_CONOCIMIENTO,
-            Permiso::VER_INVENTARIO_TI,
-            Permiso::GESTIONAR_INVENTARIO_TI,
-        ]));
+        // TECNICO_DTIC: atiende su cola y la de nadie, y lleva el inventario.
+        // Asignar tickets y ver los de todos es del jefe (diseño TIC, 4.4).
+        $this->crearRol(Rol::TECNICO_DTIC, array_merge($permisosBase, self::PERMISOS_TECNICO_TIC));
+
+        // JEFE_TIC
+        $this->crearRol(Rol::JEFE_TIC, array_merge($permisosBase, self::PERMISOS_JEFE_TIC));
 
         // AUDITOR
         $this->crearRol(Rol::AUDITOR, array_merge($permisosBase, [
@@ -313,6 +328,8 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_DASHBOARD_EJECUTIVO,
             Permiso::GENERAR_REPORTES,
             Permiso::VER_REPORTES_SSO,
+            // El inventario de equipos, solo para consultarlo.
+            Permiso::VER_INVENTARIO_TI,
         ]));
     }
 
