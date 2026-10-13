@@ -1,6 +1,8 @@
 import api from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
-import type { CatalogosHelpdesk, ComentarioTicket, FiltrosTickets, NuevoTicketData, Ticket } from './tipos'
+import type {
+  AsignarTicketData, CatalogosHelpdesk, ComentarioTicket, FiltrosTickets, NuevoTicketData, ResolverTicketData, ResumenTickets, Ticket,
+} from './tipos'
 
 type MetaPaginada = { total: number; pagina_actual: number }
 
@@ -45,4 +47,26 @@ export const ticketsService = {
 
   anular: (id: number, motivo: string) =>
     api.post<ApiResponse<Ticket>>(`${URL}/${id}/anular`, { motivo }).then((r) => r.data.datos),
+
+  // ── TIC (fase 3.4) ──
+  resumen: () =>
+    api.get<ApiResponse<ResumenTickets>>(`${URL}/resumen`).then((r) => r.data.datos),
+
+  asignar: (id: number, data: AsignarTicketData) =>
+    api.post<ApiResponse<Ticket>>(`${URL}/${id}/asignar`, data).then((r) => r.data.datos),
+
+  tomar: (id: number) =>
+    api.post<ApiResponse<Ticket>>(`${URL}/${id}/tomar`).then((r) => r.data.datos),
+
+  pedirInformacion: (id: number, pregunta: string) =>
+    api.post<ApiResponse<Ticket>>(`${URL}/${id}/pedir-informacion`, { pregunta }).then((r) => r.data.datos),
+
+  resolver: (id: number, data: ResolverTicketData) =>
+    api.post<ApiResponse<Ticket>>(`${URL}/${id}/resolver`, data).then((r) => r.data.datos),
+
+  escalar: (id: number, nivel: number, motivo: string, tecnico_id: number | null) =>
+    api.post<ApiResponse<Ticket>>(`${URL}/${id}/escalar`, { nivel, motivo, tecnico_id }).then((r) => r.data.datos),
+
+  vincularBien: (id: number, bien_informatico_id: number | null) =>
+    api.post<ApiResponse<Ticket>>(`${URL}/${id}/vincular-bien`, { bien_informatico_id }).then((r) => r.data.datos),
 }

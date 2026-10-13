@@ -123,6 +123,9 @@ export const ROUTES = {
     EQUIPO:        (id: number) => `/tic/inventario/equipos/${id}`,
     EQUIPO_EDITAR: (id: number) => `/tic/inventario/equipos/${id}/editar`,
     MANTENIMIENTOS: '/tic/inventario/mantenimientos',
+    /** La mesa de ayuda (fase 3.4): la bandeja y cada ticket. */
+    TICKETS:          '/tic/tickets',
+    TICKET:           (id: number) => `/tic/tickets/${id}`,
     /** Préstamo de equipos (fase 2.3): la bandeja, la agenda y cada préstamo. */
     PRESTAMOS:        '/tic/prestamos',
     PRESTAMOS_AGENDA: '/tic/prestamos/agenda',

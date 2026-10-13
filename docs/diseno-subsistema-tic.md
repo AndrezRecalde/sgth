@@ -292,6 +292,20 @@ abierto ───────────► asignado ────────�
 - **«Mis equipos»** gana «Reportar un problema», que abre el ticket con el equipo y la categoría de hardware ya elegidos.
 - El enlace «Mis Tickets» del menú del Portal, que no llevaba a ninguna página, ya funciona.
 
+**Hecho en la fase 3.4** (TIC):
+
+- **`/tic/tickets` (Mesa de ayuda › Bandeja):**
+  - pestañas Sin asignar, Mis tickets, En curso, Vencidos, Por confirmar y Cerrados, con sus contadores (`GET helpdesk/tickets/resumen`);
+  - filtros por área de TIC, categoría, prioridad y técnico (este, para quien ve todos), y búsqueda por folio, asunto o servidor;
+  - cada fila con el solicitante y su unidad, la prioridad, quién lo atiende con el área y el nivel, el SLA con su vencimiento y el estado.
+- **«Registrar ticket»:** a nombre de quien llamó o vino, con la prioridad y cualquier equipo del inventario.
+- **`/tic/tickets/[id]`:**
+  - **el paso principal** como botón (Tomar o Resolver), y en «Más»: asignar o reasignar, pedir información, escalar, vincular o cambiar el equipo y anular, según el estado y el permiso;
+  - **la conversación con notas internas**;
+  - **los datos y el SLA**: la primera respuesta, la resolución y la pausa;
+  - **el historial completo**, con sus detalles;
+  - **resolver**: si el ticket tiene equipo, permite registrar el correctivo y en qué estado queda el equipo.
+
 ### 4.4 Roles y permisos
 
 Las rutas van **por permiso**, y el alcance de cada ticket lo decide `TicketPolicy`. El middleware `permission:` de Spatie usa `canAny`, que pasa por `Gate::before`, así que `admin-ti` entraría de todos modos; aun así recibe los permisos de forma explícita, para que la pantalla de Usuarios muestre lo que puede hacer. El que no pasa por `Gate::before` es el middleware `role:`.
