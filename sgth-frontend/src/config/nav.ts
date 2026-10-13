@@ -439,8 +439,8 @@ export const NAV_SALUD: NavGroup[] = [
 ]
 
 // ── TECNOLOGÍAS (Unidad de TIC) ───────
-// Por ahora solo el inicio. Inventario, préstamos y mesa de ayuda se suman en
-// sus fases (docs/diseno-subsistema-tic.md, sección 8).
+// Préstamos y mesa de ayuda se suman en sus fases
+// (docs/diseno-subsistema-tic.md, sección 8).
 export const NAV_TIC: NavGroup[] = [
   {
     label: 'Principal',
@@ -449,6 +449,30 @@ export const NAV_TIC: NavGroup[] = [
         label: 'Inicio',
         href:  ROUTES.TIC.HOME,
         icon:  'IconHome',
+      },
+    ],
+  },
+  {
+    label: 'Inventario',
+    items: [
+      {
+        // El auditor consulta con `ver-inventario-ti`; el técnico y el jefe
+        // también lo llevan.
+        label:    'Equipos',
+        href:     ROUTES.TIC.EQUIPOS,
+        icon:     'IconDevices',
+        permisos: ['ver-inventario-ti', 'gestionar-inventario-ti'],
+      },
+    ],
+  },
+  {
+    label: 'Administración',
+    items: [
+      {
+        label:   'Configuración',
+        href:    ROUTES.TIC.CONFIGURACION,
+        icon:    'IconSettings',
+        permiso: 'gestionar-inventario-ti',
       },
     ],
   },
@@ -628,8 +652,11 @@ export const ROLES_PORTAL = [
   'admin-dispensario', 'tecnico-dtic', 'jefe-tic',
 ]
 
-/** Quienes trabajan en la Unidad de TIC. */
-export const ROLES_TIC = ['admin-ti', 'jefe-tic', 'tecnico-dtic']
+/**
+ * Quienes trabajan en la Unidad de TIC, y el auditor, que consulta el
+ * inventario (`ver-inventario-ti`).
+ */
+export const ROLES_TIC = ['admin-ti', 'jefe-tic', 'tecnico-dtic', 'auditor']
 
 // ── Helper: qué subsistemas puede ver ─
 export function getSubsistemasDisponibles(roles: string[]): Subsistema[] {
