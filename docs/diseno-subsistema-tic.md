@@ -163,7 +163,7 @@ app/
   Policies/InventarioTi/, Policies/Helpdesk/
   Http/Requests/…, Http/Resources/…   un Store y un Update por recurso
   Enums/  EstadoBien, CondicionFisica, TipoMantenimiento, EstadoTicket (corregido), PrioridadTicket, CanalTicket
-  Console/Commands/ImportarInventarioTic.php   (tic:importar-inventario --simular)
+  Console/Commands/CargarInventarioExcelCommand.php   (inventario:cargar-excel --simular)
 ```
 
 Las reglas son las de siempre: controlador delgado, `ApiResponse`, `ReglaNegocioException`, enums comparados por `->value`, `America/Guayaquil`.
@@ -256,7 +256,6 @@ Hecho en el PR 0.2: el rol `jefe-tic` [D5], el permiso `registrar-mantenimiento`
 | `gestionar-inventario-ti`: registrar, editar, custodia | | ✓ | ✓ | |
 | `registrar-mantenimiento` | | ✓ | ✓ | |
 | `dar-baja-bien` | | | ✓ | |
-| `importar-inventario-ti` (fase 1.4) | | | ✓ | |
 | `solicitar-prestamo-equipo`, `ver-disponibilidad-prestamo` (fase 2.1) | ✓ | ✓ | ✓ | ✓ |
 | `gestionar-prestamos` (fase 2.1): aprobar, entregar, recibir, préstamo directo | | ✓ | ✓ | |
 
@@ -419,18 +418,31 @@ Portal › Soporte
 
 ## 7. Carga inicial desde el Excel
 
-Se hace con el comando `php artisan tic:importar-inventario archivo.xlsx --simular`, que se corre **en producción**, donde están los servidores reales (en local hay 13 servidores de prueba).
+**Hecho en la fase 1.4.** El comando es `php artisan inventario:cargar-excel "archivo.xlsm" --simular`. Se corre **en producción**, donde están los servidores reales (en local hay 13 servidores de prueba). Funciona así:
 
-1. **Lee la tabla `Computadoras`.** Cada fila es un equipo cuya llave es `ACTUAL`. Las filas con un código no numérico se informan y no se cargan.
-2. **Empareja el funcionario con un servidor** por nombre normalizado: sin tildes, en mayúsculas y probando el orden apellidos-nombres. Lo que no tenga una coincidencia única queda **sin asignar y anotado en el informe**.
-3. **Mapea el área a una unidad** con una tabla de equivalencias que revisa TIC (por ejemplo TTHH → Talento Humano, DASIP → Acción Social, CRD → Cuencas, Riego y Drenaje), y el piso a una ubicación.
-4. **Crea los catálogos** que falten: marcas (normalizadas: «DELL » y «DELL» son la misma), modelos y subtipos.
-5. **Convierte las columnas de eventos en historial:**
-   - el mantenimiento de software de 2025 → mantenimiento preventivo, con su técnico y número de soporte;
-   - el cambio a SSD → repotenciación;
-   - el traspaso → una asignación anterior cerrada para el usuario anterior, con su memorando;
-   - las bajas parciales y el terremoto → anotaciones.
-   - Los números de soporte se guardan en `soporte_anterior` (ver abajo), porque no son tickets del sistema nuevo.
+- **Con `--simular`** hace la carga entera, la deshace y deja el informe en `storage/app/private/inventario/cargas/`.
+- **Sin `--simular`** pide `--responsable`, que queda en la bitácora.
+- **Se puede repetir:** los códigos que ya están en el inventario se omiten.
+- **No hace falta un permiso** `importar-inventario-ti`: es un comando de consola y no una pantalla.
+
+1. **Lee la pestaña «Equipos».**
+   - Las columnas se leen por posición, porque hay dos «SOPORTE» y dos «Memorando Nº 0xx». Antes de leer comprueba que PISO, ACTUAL, ASIGNADO, Serie y Fecha de Compra sigan en su sitio; si alguien movió una, se detiene.
+   - La llave es `ACTUAL` **completado a seis dígitos** (1774 → `001774`), como escribe Activos Fijos; Excel guardó los códigos como números y perdió los ceros.
+   - Las filas con un código que no es un número («OJO», «revisado con el Inventario») se informan y no se cargan.
+2. **Empareja el funcionario con un servidor.** Coinciden si todas las palabras del Excel, sin tildes ni mayúsculas, están en su nombre completo e incluyen su primer apellido.
+   - Si encajan varios, no se elige ninguno: el Excel suele omitir el segundo nombre.
+   - Un servidor inactivo tampoco se asigna.
+   - Todo eso queda **sin custodio y en el informe**.
+   - Si hay «CUSTODIA ADMINISTRATIVO», ese es el custodio y el «ASIGNADO» es quien usa el equipo (D3).
+3. **Mapea el área a una unidad** con la tabla de `config/inventario.php` (`carga.areas`), que TIC revisa. Solo se usa para los equipos sin custodio. «SAN MATEO» no tiene equivalencia: es una sede, y sale en el informe.
+4. **Mapea el piso a una ubicación:** 1ER…6TO y PB son pisos del «Edificio principal»; SM, DM y UNAMY son otras sedes.
+5. **Crea los catálogos** que falten, sin distinguir mayúsculas: tipos, subtipos y marcas («DELL » y «DELL» son la misma).
+6. **Convierte las columnas de eventos en historial, sin inventar fechas.** El Excel no dice cuándo:
+   - el mantenimiento de software de 2025 y los números de la columna de vigencia → mantenimiento preventivo **sin fecha**, con su técnico y su número de soporte;
+   - el cambio a SSD → repotenciación sin fecha;
+   - el traspaso → la custodia actual lleva su memorando y su soporte, y anota quién la tuvo antes. No se crea una custodia anterior: no hay fechas para ella;
+   - la custodia queda con la fecha de la carga y la nota «la fecha real de entrega no consta»;
+   - las bajas parciales, el terremoto, las novedades del dominio y los textos sueltos → observaciones del equipo.
 
 **Los números del sistema antiguo [D1, resuelta el 12-10-2026].** El sistema antiguo no se puede exportar, y la Mesa de Ayuda nueva empieza en 2027 con su propia numeración (`TIC-2027-00001`). Por eso:
 
@@ -438,8 +450,9 @@ Se hace con el comando `php artisan tic:importar-inventario archivo.xlsx --simul
 - **Viven en el evento del equipo que respaldan**, en una columna de texto `soporte_anterior` en `mantenimientos_bien`, `asignaciones_bien` y `bajas_bien`. Esas mismas tablas tienen `ticket_id`, que apunta a la Mesa de Ayuda nueva. Un evento tiene uno de los dos, o ninguno (por ejemplo, un preventivo de campaña).
 - **En la ficha del equipo** se muestran en la línea de tiempo como «Soporte N.º 45062 (sistema anterior)», sin enlace, y el buscador de equipos también busca por ese número. Sirven para cruzar con los memorandos y con lo que pida Control de Bienes o Contraloría.
 - **El período de transición:** el inventario estará en uso antes que la Mesa de Ayuda, así que hasta el arranque de 2027 los técnicos siguen atendiendo con el sistema antiguo. Mientras tanto, al registrar un mantenimiento, traspaso o baja a mano se puede escribir el número viejo. **Cuando la Mesa de Ayuda arranca, ese campo deja de pedirse** y queda de solo lectura (con una fecha de corte configurable); desde entonces lo que va es el ticket.
-6. **Agrupa la vigencia tecnológica en contratos** a partir del texto. Son unos 5 distintos, que se revisan a mano en el informe.
-7. **El informe de la simulación** es un Excel con lo que se crearía, lo que no se pudo emparejar y por qué. Con el informe revisado, se corre sin `--simular`.
+**La vigencia tecnológica pasa a contratos** a partir del texto: el proceso (`SIE-GADPE-018-2021`), el administrador y las ventanas de mantenimiento («1.- JULIO - 2024…», «Entre el 15 y 30 de octubre del 2022 / 2023 / 2024»). Con el Excel actual salen 6 contratos; los que no traen proceso se llaman «Por revisar N: …» y TIC los corrige desde Configuración.
+
+**El informe** es un Excel con cuatro pestañas: el resumen, cada equipo con su resultado y sus avisos, los nombres que no se emparejaron y por qué, y los contratos creados. Con el informe revisado, se corre sin `--simular`.
 
 ---
 

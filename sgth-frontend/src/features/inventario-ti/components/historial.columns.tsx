@@ -52,7 +52,16 @@ export const columnasCustodia = (accionesDe: (a: Asignacion) => TableAction[]): 
 export const columnasMantenimiento: DataTableColumn<Mantenimiento>[] = [
   { accessor: 'fecha_mantenimiento', title: 'Fecha', width: 120, render: (m) => fecha(m.fecha_mantenimiento) },
   { accessor: 'tipo_mantenimiento', title: 'Tipo', width: 140, render: (m) => <StatusBadge>{m.tipo_mantenimiento}</StatusBadge> },
-  { accessor: 'descripcion', title: 'Qué se hizo' },
+  {
+    accessor: 'descripcion',
+    title: 'Qué se hizo',
+    render: (m) => (
+      <Stack gap={0}>
+        <Text size="sm">{m.descripcion}</Text>
+        {m.soporte_anterior ? <Text size="xs" c="dimmed">Soporte N.º {m.soporte_anterior} (sistema anterior)</Text> : null}
+      </Stack>
+    ),
+  },
   { accessor: 'tecnico', title: 'Técnico', width: 140, render: (m) => m.tecnico?.usuario_ti ?? '—' },
 ]
 

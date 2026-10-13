@@ -200,6 +200,8 @@ export type HistorialBien = {
     tipo_mantenimiento: string
     fecha_mantenimiento: string | null
     descripcion: string
+    /** El número de soporte del sistema antiguo (D1). */
+    soporte_anterior: string | null
     tecnico: { id: number; usuario_ti: string } | null
   }[]
 }

@@ -10,4 +10,46 @@ return [
     | solo como historia.
     */
     'corte_soporte_anterior' => env('INVENTARIO_CORTE_SOPORTE_ANTERIOR', '2027-01-01'),
+
+    /*
+    | La carga del Excel de TIC (fase 1.4): de las siglas de la columna
+    | «AREA» a la unidad administrativa, por su nombre en la estructura. TIC
+    | revisa esta tabla antes de la carga real; lo que no esté aquí, o no
+    | exista con ese nombre, sale en el informe.
+    */
+    'carga' => [
+        'areas' => [
+            'ADMINISTRATIVO'            => 'Gestión Administrativa',
+            'AMBIENTAL'                 => 'Gestión Ambiental',
+            'ASESORIA LEGAL'            => 'Asesoría Legal',
+            'AUDITORIA INTERNA'         => 'Unidad de Gestión de Auditoría Interna',
+            'CALIDAD'                   => 'Unidad de Gestión de Calidad',
+            'COMPRAS PUBLICAS'          => 'Unidad de Gestión de Contratación Pública',
+            'COMUNICACION'              => 'Gestión de Comunicación Social',
+            'COORDINACION INSTITUCIONAL' => 'Gestión de Coordinación Institucional',
+            'CRD'                       => 'Gestión de Cuencas, Riego y Drenaje',
+            'DASIP'                     => 'Gestión de Acción Social, Inclusión y Participación',
+            'DISPENSARIO MEDICO'        => 'Dispensario Médico',
+            'EN TIC'                    => 'Gestión de Tecnologías de la Información y Comunicación',
+            'FINANCIERO'                => 'Gestión Financiera',
+            'FISCALIZACION'             => 'Gestión de Fiscalización',
+            'FODEPRO'                   => 'Gestión de Fomento y Desarrollo Productivo',
+            'GACIT'                     => 'Gestión de Relaciones Internacionales y Cooperación',
+            'INFRAESTRUCTURA'           => 'Gestión de Infraestructura Vial',
+            'PLANIFICACION'             => 'Gestión de Planificación',
+            'PREFECTURA'                => 'Prefectura Provincial',
+            'SECRETARIA GENERAL'        => 'Gestión de Secretaría General',
+            'TIC'                       => 'Gestión de Tecnologías de la Información y Comunicación',
+            'TTHH'                      => 'Gestión de Talento Humano y Riesgos Laborales',
+            'VICEPREFECTURA'            => 'Viceprefectura Provincial',
+        ],
+
+        // La columna «PISO»: lo que no es un piso del edificio es otra sede.
+        'sede_principal' => 'Edificio principal',
+        'sedes' => [
+            'SM'    => 'San Mateo',
+            'DM'    => 'Dispensario Médico',
+            'UNAMY' => 'UNAMYDESC',
+        ],
+    ],
 ];

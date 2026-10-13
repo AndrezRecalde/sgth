@@ -15,6 +15,8 @@ class MantenimientoBien extends Model
     protected $fillable = [
         'bien_informatico_id', 'ticket_id', 'tipo_mantenimiento',
         'fecha_mantenimiento', 'tecnico_id', 'descripcion', 'costo',
+        // El número de soporte del sistema antiguo (D1), como en la custodia.
+        'soporte_anterior',
         'created_by', 'updated_by'
     ];
 

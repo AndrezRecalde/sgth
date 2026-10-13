@@ -56,6 +56,10 @@ final class BienInformaticoService implements BienInformaticoServiceInterface
                 foreach (['codigo_institucional', 'codigo_anterior', 'numero_serie', 'modelo', 'nombre_red', 'usuario_dominio'] as $columna) {
                     $q->orWhere($columna, 'ilike', $termino);
                 }
+                // El número de soporte del sistema antiguo (D1), en la custodia
+                // o en un mantenimiento: con él se cruza un memorando viejo.
+                $q->orWhereHas('asignaciones', fn (Builder $a) => $a->where('soporte_anterior', 'ilike', $termino))
+                    ->orWhereHas('mantenimientos', fn (Builder $m) => $m->where('soporte_anterior', 'ilike', $termino));
                 $q->orWhereHas('asignacionVigente.servidor', fn (Builder $s) => $s
                     ->where('nombre', 'ilike', $termino)
                     ->orWhere('apellido', 'ilike', $termino)

@@ -204,3 +204,10 @@ test('mis equipos muestra los que el servidor tiene a su cargo o usa, y el acta 
     $this->actingAs($deTic, 'sanctum');
     expect($this->getJson('/api/v1/autoservicio/mis-equipos')->assertOk()->json('datos'))->toBe([]);
 });
+
+test('el buscador de equipos encuentra por el numero de soporte del sistema anterior', function () {
+    entregarDeCustodia(['soporte_anterior' => '48618'])->assertCreated();
+
+    expect($this->getJson('/api/v1/inventario/bienes?search=48618')->json('datos.0.codigo_institucional'))->toBe('1774')
+        ->and($this->getJson('/api/v1/inventario/bienes?search=99999')->json('datos'))->toBe([]);
+});
