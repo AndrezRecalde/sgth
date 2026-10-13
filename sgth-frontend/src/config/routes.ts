@@ -143,6 +143,9 @@ export const ROUTES = {
     MIS_TICKETS:     '/portal/mis-tickets',
     /** Los equipos de TIC que tiene a su cargo o usa (fase 1.3). */
     MIS_EQUIPOS:     '/portal/mis-equipos',
+    /** Préstamo de equipos de TIC (fase 2.2): la disponibilidad y la solicitud. */
+    PRESTAMOS:       '/portal/prestamos',
+    MIS_PRESTAMOS:   '/portal/mis-prestamos',
     CERTIFICADOS:    '/portal/certificados',
     DOCUMENTOS:      '/portal/documentos',
     REPORTES:        '/portal/reportes',

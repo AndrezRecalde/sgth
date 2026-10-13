@@ -593,6 +593,16 @@ export const NAV_PORTAL: NavGroup[] = [
         icon:  'IconDevices',
       },
       {
+        label: 'Préstamo de equipos',
+        href:  ROUTES.PORTAL.PRESTAMOS,
+        icon:  'IconPresentation',
+      },
+      {
+        label: 'Mis préstamos',
+        href:  ROUTES.PORTAL.MIS_PRESTAMOS,
+        icon:  'IconListDetails',
+      },
+      {
         label: 'Reportar abuso',
         href:  ROUTES.PORTAL.REPORTES,
         icon:  'IconAlertTriangle',
