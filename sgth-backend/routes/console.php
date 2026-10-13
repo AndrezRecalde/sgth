@@ -142,3 +142,11 @@ Schedule::call(function () {
   // permisos ya lo lleva.
   ->onOneServer();
 
+
+// Préstamo de equipos de TIC (fase 2.4): la reserva que no se retiró dentro del
+// margen libera su horario, y salen el recordatorio de devolución y el aviso de
+// vencido. Cada quince minutos, porque los préstamos son por horas.
+Schedule::command('sgth:prestamos:seguimiento')
+    ->everyFifteenMinutes()
+    ->onOneServer()
+    ->withoutOverlapping();

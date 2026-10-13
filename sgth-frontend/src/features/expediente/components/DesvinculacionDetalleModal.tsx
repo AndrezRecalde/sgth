@@ -10,6 +10,7 @@ import { formatFecha, formatFechaHora, fromDateValueOrNull, hoyIso, toDateValue 
 import { useDesvinculacion, useDevolverBien, useMarcarPaso } from '../hooks/useDesvinculaciones'
 import type { EstadoPasoDesvinculacion, PasoDeLaDesvinculacion } from '../services/desvinculacionService'
 import { PagoDeLaSalida } from './DesvinculacionPagos'
+import { PrestamosSinDevolver } from './PrestamosSinDevolver'
 
 const ESTADO_PASO: Record<EstadoPasoDesvinculacion, { etiqueta: string; tono: 'success' | 'neutral' | 'warning' }> = {
   hecho: { etiqueta: 'Hecho', tono: 'success' },
@@ -120,6 +121,8 @@ export function DesvinculacionDetalleModal({ desvinculacionId, onClose }: Props)
                         )}
                       </Group>
                     ))}
+
+                    <PrestamosSinDevolver prestamos={p.prestamos ?? []} />
 
                     {!cancelada && (
                       <Group gap="xs">

@@ -9,6 +9,7 @@ use App\Exceptions\ReglaNegocioException;
 use App\Models\InventarioTi\BienInformatico;
 use App\Models\InventarioTi\PrestamoEquipo;
 use App\Models\InventarioTi\PrestamoItem;
+use App\Services\InventarioTi\Prestamos\AvisoPrestamoService;
 use App\Services\InventarioTi\Prestamos\EquiposDelPrestamo;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -25,13 +26,15 @@ use Illuminate\Validation\ValidationException;
  * - **Rechazar** es de TIC y **cancelar**, de TIC o del servidor, mientras no
  *   se haya entregado.
  *
- * Cada cambio queda en `historial_estados_prestamo`.
+ * Cada cambio queda en `historial_estados_prestamo`, y el servidor recibe un
+ * correo de cada paso que no dio él (fase 2.4).
  */
 final class PrestamoEstadoService implements PrestamoEstadoServiceInterface
 {
     public function __construct(
         private readonly PrestamoServiceInterface $prestamos,
         private readonly EquiposDelPrestamo $equipos,
+        private readonly AvisoPrestamoService $avisos,
     ) {}
 
     public function aprobar(PrestamoEquipo $prestamo): PrestamoEquipo
@@ -47,7 +50,7 @@ final class PrestamoEstadoService implements PrestamoEstadoServiceInterface
 
             $p->update(['estado' => EstadoPrestamo::RESERVADO, 'aprobado_por' => auth()->id(), 'aprobado_en' => now()]);
             $this->equipos->sincronizarBloqueo($p);
-        });
+        }, aviso: 'aprobado');
     }
 
     public function rechazar(PrestamoEquipo $prestamo, string $motivo): PrestamoEquipo
@@ -57,11 +60,14 @@ final class PrestamoEstadoService implements PrestamoEstadoServiceInterface
             'rechazado_por'  => auth()->id(),
             'rechazado_en'   => now(),
             'motivo_rechazo' => $motivo,
-        ]), $motivo);
+        ]), $motivo, 'rechazado');
     }
 
     public function cancelar(PrestamoEquipo $prestamo, string $motivo): PrestamoEquipo
     {
+        // Si cancela el propio servidor, no hace falta avisarle.
+        $porElServidor = (int) auth()->user()?->servidor_id === (int) $prestamo->servidor_id;
+
         return $this->cambiar($prestamo, [EstadoPrestamo::SOLICITADO, EstadoPrestamo::RESERVADO], function (PrestamoEquipo $p) use ($motivo) {
             $p->update([
                 'estado'             => EstadoPrestamo::CANCELADO,
@@ -70,7 +76,7 @@ final class PrestamoEstadoService implements PrestamoEstadoServiceInterface
                 'motivo_cancelacion' => $motivo,
             ]);
             $this->equipos->sincronizarBloqueo($p);
-        }, $motivo);
+        }, $motivo, $porElServidor ? null : 'cancelado');
     }
 
     public function entregar(PrestamoEquipo $prestamo, array $datos): PrestamoEquipo
@@ -89,7 +95,7 @@ final class PrestamoEstadoService implements PrestamoEstadoServiceInterface
                 'observaciones' => $datos['observaciones'] ?? $p->observaciones,
             ]);
             $this->equipos->sincronizarBloqueo($p);
-        });
+        }, aviso: 'entregado');
     }
 
     public function recibir(PrestamoEquipo $prestamo, array $datos): PrestamoEquipo
@@ -110,7 +116,7 @@ final class PrestamoEstadoService implements PrestamoEstadoServiceInterface
                 'observaciones' => $datos['observaciones'] ?? $p->observaciones,
             ]);
             $this->equipos->sincronizarBloqueo($p);
-        });
+        }, aviso: 'devuelto');
     }
 
     /**
@@ -119,7 +125,7 @@ final class PrestamoEstadoService implements PrestamoEstadoServiceInterface
      *
      * @param  list<EstadoPrestamo>  $desde
      */
-    private function cambiar(PrestamoEquipo $prestamo, array $desde, callable $cambio, ?string $detalle = null): PrestamoEquipo
+    private function cambiar(PrestamoEquipo $prestamo, array $desde, callable $cambio, ?string $detalle = null, ?string $aviso = null): PrestamoEquipo
     {
         DB::transaction(function () use ($prestamo, $desde, $cambio, $detalle) {
             $p = PrestamoEquipo::with('items')->lockForUpdate()->findOrFail($prestamo->id);
@@ -133,7 +139,13 @@ final class PrestamoEstadoService implements PrestamoEstadoServiceInterface
             $this->equipos->anotar($p, $anterior, $detalle);
         });
 
-        return $this->prestamos->obtener($prestamo->id);
+        $resultado = $this->prestamos->obtener($prestamo->id);
+        // Después de confirmar: un correo no sale de un cambio que se deshizo.
+        if ($aviso) {
+            $this->avisos->alServidor($resultado, $aviso);
+        }
+
+        return $resultado;
     }
 
     /** La fecha y hora real de la entrega o la devolución: no futura ni anterior al paso previo. */

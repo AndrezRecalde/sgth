@@ -1,7 +1,7 @@
 import api from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
 import type {
-  DirectoData, EntregaData, EquipoPrestable, FiltrosBandeja, PrestamoEquipo, RecepcionData, ReglasPrestamo, ResumenBandeja,
+  DirectoData, EntregaData, EquipoPrestable, FiltrosBandeja, PrestamoEquipo, RecepcionData, ReglasPrestamo, ReporteUso, ResumenBandeja,
 } from './tipos'
 
 type MetaPaginada = { total: number; pagina_actual: number }
@@ -47,6 +47,12 @@ export const prestamosTicService = {
 
   reglas: () =>
     api.get<ApiResponse<ReglasPrestamo>>(`${URL}/reglas`).then((r) => r.data.datos),
+
+  reporteUso: (desde: string, hasta: string) =>
+    api.get<ApiResponse<ReporteUso>>(`${URL}/reporte-uso`, { params: { desde, hasta } }).then((r) => r.data.datos),
+
+  reporteUsoExcel: (desde: string, hasta: string) =>
+    api.get<Blob>(`${URL}/reporte-uso/excel`, { params: { desde, hasta }, responseType: 'blob' }).then((r) => r.data),
 
   guardarReglas: (data: Omit<ReglasPrestamo, 'actualizado_por' | 'updated_at'>) =>
     api.put<ApiResponse<ReglasPrestamo>>(`${URL}/reglas`, data).then((r) => r.data.datos),
