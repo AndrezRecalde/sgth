@@ -337,3 +337,25 @@ test('un equipo reservado no sale del grupo de préstamo ni se da de baja', func
         'fecha_baja' => '2026-10-14', 'memorando_numero' => 'M-1',
     ])->assertStatus(422);
 });
+
+test('el resumen cuenta lo que pide atención en cada pestaña', function () {
+    pedirPrestamo($this->usuarioPaola)->assertCreated();
+    $otro = pedirPrestamo($this->usuarioDiego, ['bienes' => [$this->parlante->id]])->json('datos.id');
+    pasoPrestamo($otro, 'aprobar')->assertOk();
+
+    expect($this->actingAs($this->tecnico, 'sanctum')->getJson('/api/v1/inventario/prestamos/resumen')->assertOk()->json('datos'))
+        ->toBe(['por_aprobar' => 1, 'reservados' => 1, 'por_entregar_hoy' => 1, 'en_curso' => 0, 'vencidos' => 0]);
+});
+
+test('el acta del préstamo sale desde la entrega', function () {
+    $id = pedirPrestamo($this->usuarioPaola)->json('datos.id');
+    pasoPrestamo($id, 'aprobar')->assertOk();
+
+    $this->actingAs($this->tecnico, 'sanctum')->getJson("/api/v1/inventario/prestamos/{$id}/acta")->assertStatus(422);
+
+    entregaPrestamo($id)->assertOk();
+    $this->actingAs($this->tecnico, 'sanctum')->get("/api/v1/inventario/prestamos/{$id}/acta")
+        ->assertOk()
+        ->assertHeader('Content-Type', 'application/pdf')
+        ->assertHeader('Content-Disposition', 'inline; filename="acta-prestamo-PRE-2026-00001.pdf"');
+});

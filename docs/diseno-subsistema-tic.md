@@ -335,6 +335,8 @@ El servidor no ve quién tiene el equipo; TIC sí. [D15]
 - **Disponibilidad:** consulta de hasta 31 días. El Portal ve el estado ahora y los bloques ocupados; TIC ve además el folio y quién tiene el equipo.
 - El paso automático a `no_retirado`, los avisos por correo y el bloqueo en la desvinculación van en la 2.4.
 
+**Hecho en la fase 2.3:** la bandeja `/tic/prestamos` con las pestañas Por aprobar, Reservados (todas las reservas, de la más próxima a la más lejana; la cabecera avisa cuántas se retiran hoy), En curso, Vencidos e Historial, cada una con su contador. Aprobar se confirma; rechazar y cancelar piden motivo; entregar y recibir piden la hora real y la condición de cada equipo, con sus accesorios a la salida y la novedad a la vuelta. El préstamo directo elige al servidor y los equipos que están en TIC ahora. El detalle `/tic/prestamos/[id]` dice quién pidió y quién hizo cada paso, con los botones del paso que toca. La agenda `/tic/prestamos/agenda` es la del Portal con el folio y el nombre en cada bloque. Las reglas se editan en Configuración › Préstamos (`gestionar-prestamos`); el auditor las ve como lista. El acta en PDF (D17) se imprime desde la entrega, para los préstamos que la necesiten.
+
 ---
 
 ## 5. Pantallas y navegación

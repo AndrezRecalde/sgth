@@ -1230,6 +1230,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
 
                 Route::get('/', [PrestamoEquipoController::class, 'index'])->middleware($verPrestamos);
                 Route::get('disponibilidad', [PrestamoEquipoController::class, 'disponibilidad'])->middleware($verPrestamos);
+                Route::get('resumen', [PrestamoEquipoController::class, 'resumen'])->middleware($verPrestamos);
+                Route::get('{id}/acta', [PrestamoEquipoController::class, 'acta'])->whereNumber('id')->middleware($verPrestamos);
                 Route::get('reglas', [ReglasPrestamoController::class, 'show'])->middleware($verPrestamos);
                 Route::put('reglas', [ReglasPrestamoController::class, 'update'])->middleware($gestionarPrestamos);
                 Route::post('directo', [PrestamoEquipoController::class, 'directo'])->middleware($gestionarPrestamos);

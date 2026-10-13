@@ -10,6 +10,7 @@ use App\Models\Expediente\Servidor;
 use App\Models\InventarioTi\PrestamoEquipo;
 use App\Models\InventarioTi\PrestamoItem;
 use App\Services\InventarioTi\Prestamos\EquiposDelPrestamo;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -50,6 +51,7 @@ final class PrestamoService implements PrestamoServiceInterface
             ->when($vista === 'por_aprobar', fn (Builder $q) => $q->where('estado', EstadoPrestamo::SOLICITADO))
             ->when($vista === 'por_entregar_hoy', fn (Builder $q) => $q->where('estado', EstadoPrestamo::RESERVADO)
                 ->where('inicio_previsto', '<', now()->endOfDay()))
+            ->when($vista === 'reservados', fn (Builder $q) => $q->where('estado', EstadoPrestamo::RESERVADO))
             ->when($vista === 'en_curso', fn (Builder $q) => $q->where('estado', EstadoPrestamo::EN_CURSO))
             ->when($vista === 'vencidos', fn (Builder $q) => $q->vencidos())
             ->when($vista === 'historial', fn (Builder $q) => $q->whereNotIn('estado', [
@@ -97,6 +99,40 @@ final class PrestamoService implements PrestamoServiceInterface
             ...collect(self::RESPONSABLES)->flatMap($usuario)->all(),
             'historial', ...$usuario('historial.usuario'),
         ])->findOrFail($id);
+    }
+
+    public function resumen(): array
+    {
+        return [
+            'por_aprobar'      => PrestamoEquipo::where('estado', EstadoPrestamo::SOLICITADO)->count(),
+            'reservados'       => PrestamoEquipo::where('estado', EstadoPrestamo::RESERVADO)->count(),
+            'por_entregar_hoy' => PrestamoEquipo::where('estado', EstadoPrestamo::RESERVADO)->where('inicio_previsto', '<', now()->endOfDay())->count(),
+            'en_curso'         => PrestamoEquipo::where('estado', EstadoPrestamo::EN_CURSO)->count(),
+            'vencidos'         => PrestamoEquipo::vencidos()->count(),
+        ];
+    }
+
+    /**
+     * D17: el registro basta, y el acta se imprime cuando hace falta —préstamos
+     * de varios días o fuera del edificio—. Solo existe desde la entrega.
+     */
+    public function generarActa(int $id): array
+    {
+        $prestamo = PrestamoEquipo::with([
+            'servidor', 'unidadAdministrativa', 'items.bien.tipo', 'items.bien.marca',
+            'entregadoPor.servidor', 'recibidoPor.servidor',
+        ])->findOrFail($id);
+
+        if (! $prestamo->entregado_en) {
+            throw new ReglaNegocioException('El acta se imprime desde la entrega: este préstamo todavía no se entrega.');
+        }
+
+        $pdf = Pdf::loadView('pdf.inventario.acta-prestamo', [
+            'prestamo' => $prestamo,
+            'logo'     => public_path('images/logo-gadpe.png'),
+        ])->setPaper('a4', 'portrait');
+
+        return ['content' => $pdf->output(), 'filename' => "acta-prestamo-{$prestamo->folio}.pdf"];
     }
 
     public function solicitar(int $servidorId, array $datos): PrestamoEquipo
