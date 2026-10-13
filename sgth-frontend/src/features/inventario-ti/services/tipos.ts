@@ -1,0 +1,160 @@
+/**
+ * Los tipos del inventario de TIC, escritos a partir de los recursos del
+ * backend (`app/Http/Resources/InventarioTi`). Scramble no infiere bien las
+ * llaves ni los booleanos (ver `types/api.ts`), así que se declaran aquí.
+ */
+
+export type EstadoBien =
+  | 'en_uso' | 'disponible' | 'en_mantenimiento' | 'en_garantia' | 'dado_de_baja' | 'extraviado'
+
+export type CondicionFisica = 'bueno' | 'regular' | 'malo'
+
+type Ref = { id: number; nombre: string }
+
+/** `BienInformaticoResource`. */
+export type BienInformatico = {
+  id: number
+  codigo_institucional: string
+  codigo_anterior: string | null
+  codigo_qr: string | null
+  numero_serie: string | null
+  modelo: string | null
+  tipo_bien_id: number
+  subtipo_bien_id: number | null
+  marca_id: number
+  origen_bien_id: number | null
+  ubicacion_id: number | null
+  unidad_administrativa_id: number | null
+  contrato_vigencia_id: number | null
+  bien_padre_id: number | null
+  estado_operativo: EstadoBien
+  estado_etiqueta: string
+  condicion_fisica: CondicionFisica
+  fecha_compra: string | null
+  fecha_fin_vida_util: string | null
+  vida_util_cumplida: boolean
+  nombre_red: string | null
+  usuario_dominio: string | null
+  direccion_ip: string | null
+  prestable: boolean
+  caracteristicas_tecnicas: Record<string, string> | null
+  observaciones: string | null
+  componentes_count: number
+  tipo?: Ref
+  subtipo?: Ref | null
+  marca?: Ref
+  ubicacion?: { id: number; sede: string; piso: string | null; nombre: string } | null
+  contrato_vigencia?: { id: number; proceso: string; fecha_fin: string | null } | null
+  origen?: { id: number; tipo_origen: string; entidad_origen: string; identificador_documento: string | null } | null
+  custodio: { asignacion_id: number; desde: string | null; servidor_id: number; cedula: string; nombre: string } | null
+  unidad: { id: number; nombre: string; acronimo: string | null } | null
+  padre?: { id: number; codigo_institucional: string; modelo: string | null; tipo: string | null } | null
+  componentes?: { id: number; codigo_institucional: string; modelo: string | null; tipo: string | null; estado_operativo: EstadoBien }[]
+}
+
+/** Lo que se envía al registrar o corregir un equipo. */
+export type GuardarBienData = {
+  codigo_institucional: string
+  codigo_anterior: string | null
+  numero_serie: string | null
+  tipo_bien_id: number
+  subtipo_bien_id: number | null
+  marca_id: number
+  modelo: string | null
+  fecha_compra: string | null
+  ubicacion_id: number | null
+  unidad_administrativa_id: number | null
+  nombre_red: string | null
+  usuario_dominio: string | null
+  direccion_ip: string | null
+  bien_padre_id: number | null
+  contrato_vigencia_id: number | null
+  prestable: boolean
+  condicion_fisica: CondicionFisica
+  estado_operativo?: EstadoBien
+  caracteristicas_tecnicas: Record<string, string> | null
+  observaciones: string | null
+}
+
+export type FiltrosBienes = {
+  search?: string
+  tipo_bien_id?: number
+  marca_id?: number
+  ubicacion_id?: number
+  unidad_administrativa_id?: number
+  contrato_vigencia_id?: number
+  estado_operativo?: EstadoBien
+  condicion_fisica?: CondicionFisica
+  prestable?: boolean
+  sin_custodio?: boolean
+  solo_principales?: boolean
+}
+
+export type Opcion<T extends string = string> = { valor: T; etiqueta: string }
+
+/** `GET /inventario/catalogos`: lo que necesita el formulario de un equipo. */
+export type CatalogosInventario = {
+  tipos: { id: number; nombre: string; anios_vida_util: number; subtipos: { id: number; tipo_bien_id: number; nombre: string }[] }[]
+  marcas: Ref[]
+  ubicaciones: { id: number; sede: string; piso: string | null }[]
+  contratos: { id: number; proceso: string; fecha_inicio: string | null; fecha_fin: string | null }[]
+  estados: Opcion<EstadoBien>[]
+  condiciones: Opcion<CondicionFisica>[]
+}
+
+// ── Configuración ──────────────────────────────────────────────
+
+export type TipoBien = {
+  id: number
+  nombre: string
+  anios_vida_util: number
+  bienes_count: number | null
+  subtipos?: { id: number; tipo_bien_id: number; nombre: string }[]
+}
+
+export type Marca = { id: number; nombre: string; bienes_count: number | null }
+
+export type Ubicacion = {
+  id: number
+  sede: string
+  piso: string | null
+  nombre: string
+  descripcion: string | null
+  bienes_count: number | null
+}
+
+export type VentanaCronograma = { id?: number; fecha_desde: string; fecha_hasta: string; descripcion: string | null }
+
+export type ContratoVigencia = {
+  id: number
+  proceso: string
+  proveedor: string | null
+  objeto: string | null
+  administrador_id: number | null
+  fecha_inicio: string | null
+  fecha_fin: string | null
+  vigente: boolean
+  observaciones: string | null
+  bienes_count: number | null
+  administrador?: { id: number; cedula: string; nombre: string } | null
+  cronograma?: VentanaCronograma[]
+}
+
+/** `GET /inventario/bienes/{id}/historial`. */
+export type HistorialBien = {
+  asignaciones: {
+    id: number
+    fecha_asignacion: string | null
+    fecha_devolucion: string | null
+    estado: string
+    observaciones: string | null
+    servidor: { id: number; nombre: string; apellido: string; cedula: string } | null
+  }[]
+  mantenimientos: {
+    id: number
+    tipo_mantenimiento: string
+    fecha_mantenimiento: string | null
+    descripcion: string
+    tecnico: { id: number; usuario_ti: string } | null
+  }[]
+}

@@ -118,6 +118,12 @@ export const ROUTES = {
   // (docs/diseno-subsistema-tic.md). Las pantallas llegan por fases.
   TIC: {
     HOME: '/tic',
+    EQUIPOS:       '/tic/inventario/equipos',
+    EQUIPO_NUEVO:  '/tic/inventario/equipos/nuevo',
+    EQUIPO:        (id: number) => `/tic/inventario/equipos/${id}`,
+    EQUIPO_EDITAR: (id: number) => `/tic/inventario/equipos/${id}/editar`,
+    /** Catálogos del inventario: tipos, marcas, ubicaciones y contratos. */
+    CONFIGURACION: '/tic/configuracion',
   },
 
   // ── PORTAL SERVIDOR ───────────────────
