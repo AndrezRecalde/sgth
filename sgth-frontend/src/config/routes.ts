@@ -146,6 +146,8 @@ export const ROUTES = {
     MIS_ACTIVIDADES: '/portal/mis-actividades',
     ACADEMICO:       '/portal/academico',
     MIS_TICKETS:     '/portal/mis-tickets',
+    /** Un ticket de la mesa de ayuda, desde quien lo abrió (fase 3.3). */
+    MI_TICKET:       (id: number) => `/portal/mis-tickets/${id}`,
     /** Los equipos de TIC que tiene a su cargo o usa (fase 1.3). */
     MIS_EQUIPOS:     '/portal/mis-equipos',
     /** Préstamo de equipos de TIC (fase 2.2): la disponibilidad y la solicitud. */
