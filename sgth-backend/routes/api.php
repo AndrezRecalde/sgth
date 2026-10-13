@@ -1257,38 +1257,35 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         ->group(function () {
             $verTickets = 'permission:ver-ticket-propio|gestionar-tickets|ver-tickets-todos';
 
-            Route::get('tickets',
-                [TicketController::class, 'index'])
-                ->middleware($verTickets);
-            Route::post('tickets',
-                [TicketController::class, 'store'])
-                ->middleware('permission:crear-ticket');
-            Route::get('tickets/{ticket}',
-                [TicketController::class, 'show'])
-                ->middleware($verTickets);
-            Route::patch('tickets/{ticket}/estado',
-                [TicketController::class, 'cambiarEstado'])
-                ->middleware('permission:gestionar-tickets');
-            Route::post('tickets/{ticket}/asignar',
-                [TicketController::class, 'asignar'])
-                ->middleware('permission:asignar-ticket');
-            Route::post('tickets/{ticket}/escalar',
-                [TicketController::class, 'escalar'])
-                ->middleware('permission:gestionar-tickets');
-            Route::post('tickets/{ticket}/cerrar',
-                [TicketController::class, 'cerrar'])
-                ->middleware('permission:gestionar-tickets');
-            Route::post('tickets/{ticket}/vincular-bien',
-                [TicketController::class, 'vincularBien'])
-                ->middleware('permission:gestionar-tickets');
+            // Tickets (fase 3.1): el alcance en `TicketPolicy`; el trámite, una
+            // acción por paso en `TicketEstadoService`. «catalogos» antes del
+            // comodín.
+            Route::get('tickets/catalogos', [TicketController::class, 'catalogos'])
+                ->middleware($verTickets . '|crear-ticket');
+            Route::get('tickets', [TicketController::class, 'index'])->middleware($verTickets);
+            Route::post('tickets', [TicketController::class, 'store'])->middleware('permission:crear-ticket|gestionar-tickets');
+            Route::get('tickets/{id}', [TicketController::class, 'show'])->whereNumber('id')->middleware($verTickets);
+            Route::post('tickets/{ticket}/asignar', [TicketController::class, 'asignar'])->middleware('permission:asignar-ticket');
+            Route::middleware('permission:gestionar-tickets')->group(function () {
+                foreach (['tomar' => 'tomar', 'pedir-informacion' => 'pedirInformacion', 'resolver' => 'resolver',
+                    'escalar' => 'escalar', 'vincular-bien' => 'vincularBien'] as $paso => $metodo) {
+                    Route::post("tickets/{ticket}/{$paso}", [TicketController::class, $metodo]);
+                }
+            });
+            // Del solicitante; la policy mira que el ticket sea suyo. Anular,
+            // también quien reparte el trabajo.
+            Route::middleware($verTickets)->group(function () {
+                Route::post('tickets/{ticket}/confirmar', [TicketController::class, 'confirmar']);
+                Route::post('tickets/{ticket}/reabrir', [TicketController::class, 'reabrir']);
+                Route::post('tickets/{ticket}/anular', [TicketController::class, 'anular']);
+            });
 
-            // Comentarios
-            Route::post('tickets/{ticket}/comentarios',
-                [ComentarioTicketController::class, 'store'])
-                ->middleware($verTickets);
-            Route::get('tickets/{ticket}/comentarios',
-                [ComentarioTicketController::class, 'index'])
-                ->middleware($verTickets);
+            // La conversación y sus archivos.
+            Route::middleware($verTickets)->group(function () {
+                Route::get('tickets/{ticket}/comentarios', [ComentarioTicketController::class, 'index']);
+                Route::post('tickets/{ticket}/comentarios', [ComentarioTicketController::class, 'store']);
+                Route::get('tickets/{ticket}/comentarios/{comentario}/archivo', [ComentarioTicketController::class, 'archivo']);
+            });
 
             // Áreas DTIC. Se retiran en la fase 3: las áreas de atención son
             // las subunidades de TIC de la estructura (diseño, D6).

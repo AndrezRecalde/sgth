@@ -2,129 +2,162 @@
 
 namespace App\Http\Controllers\Helpdesk;
 
+use App\Contracts\Helpdesk\TicketEstadoServiceInterface;
+use App\Contracts\Helpdesk\TicketServiceInterface;
+use App\Enums\EstadoBien;
+use App\Enums\PrioridadTicket;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Helpdesk\CrearTicketRequest;
+use App\Http\Resources\Helpdesk\TicketResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Helpdesk\Ticket;
-use App\Contracts\Helpdesk\HelpdeskServiceInterface;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
-class TicketController extends Controller
+/**
+ * Los tickets de la mesa de ayuda (fase 3.1). El alcance lo pone
+ * `TicketPolicy` (y `Ticket::scopeVisiblesPara` en el listado) y el trámite,
+ * `TicketEstadoService`: cada paso es una acción con su nombre y no un
+ * «cambiar estado» que aceptaba cualquier texto.
+ */
+final class TicketController extends Controller
 {
-    public function __construct(private readonly HelpdeskServiceInterface $service)
-    {
-    }
+    public function __construct(
+        private readonly TicketServiceInterface $tickets,
+        private readonly TicketEstadoServiceInterface $estados,
+    ) {}
 
-    /**
-     * Los tickets que el usuario puede ver (`Ticket::scopeVisiblesPara`).
-     *
-     * Antes devolvía los de toda la institución a cualquier usuario, y
-     * precargaba `bien_informatico`, que no es una relación: en cuanto hubiera
-     * un ticket, el listado reventaba.
-     */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Ticket::class);
+        $pagina = $this->tickets->listar($request->user(), $request->query());
 
-        $tickets = Ticket::visiblesPara($request->user())
-            ->with(['categoria', 'sla', 'tecnico.servidor', 'bien'])
-            ->latest()
-            ->orderByDesc('id')
-            ->get();
-
-        return ApiResponse::ok($tickets, 'Tickets listados exitosamente.');
+        return ApiResponse::paginadoDe($pagina, TicketResource::collection($pagina->getCollection())->resolve($request), 'Tickets.');
     }
 
-    public function store(Request $request)
+    public function show(Request $request, int $id): JsonResponse
     {
-        $this->authorize('create', Ticket::class);
-
-        $validated = $request->validate([
-            'categoria_id' => 'required|exists:categorias_ticket,id',
-            'sla_id' => 'required|exists:slas,id',
-            'asunto' => 'required|string|max:200',
-            'descripcion' => 'required|string',
-            'prioridad' => 'required|string|max:50',
-            'bien_informatico_id' => 'nullable|exists:bienes_informaticos,id'
-        ]);
-
-        $ticket = $this->service->crearTicket($validated);
-
-        return ApiResponse::created($ticket, 'Ticket creado exitosamente.');
-    }
-
-    public function show(Request $request, int $id)
-    {
-        // `bien_informatico` no es una relación: la del modelo se llama `bien`.
-        // Con eso y la de comentarios, que faltaba, el detalle de un ticket
-        // reventaba en cuanto existía el ticket.
-        $ticket = Ticket::with([
-            'categoria', 'sla', 'tecnico.servidor', 'bien',
-            'comentarios.user.servidor',
-        ])->findOrFail($id);
+        $ticket = $this->tickets->obtener($id);
         $this->authorize('view', $ticket);
 
-        // Las notas internas son la conversación entre quienes atienden: el
-        // detalle las cargaba para cualquiera que pudiera abrir el ticket.
-        if (! $request->user()->can('verNotasInternas', $ticket)) {
-            $ticket->setRelation(
-                'comentarios',
-                $ticket->comentarios->where('es_interno', false)->values()
-            );
+        return ApiResponse::ok($this->paraQuienMira($request, $ticket), 'Detalle del ticket.');
+    }
+
+    public function store(CrearTicketRequest $request): JsonResponse
+    {
+        $this->authorize('create', Ticket::class);
+        $ticket = $this->tickets->crear($request->user(), $request->safe()->except('archivo'), $request->file('archivo'));
+
+        return ApiResponse::created(new TicketResource($ticket), "Ticket {$ticket->codigo_ticket} registrado.");
+    }
+
+    /** Las categorías, prioridades, subunidades de TIC y técnicos para los formularios. */
+    public function catalogos(): JsonResponse
+    {
+        return ApiResponse::ok($this->tickets->catalogos(), 'Catálogos de la mesa de ayuda.');
+    }
+
+    public function asignar(Request $request, Ticket $ticket): JsonResponse
+    {
+        $this->authorize('asignar', $ticket);
+        $datos = $request->validate([
+            'tecnico_id'    => ['nullable', 'integer'],
+            'unidad_tic_id' => ['nullable', 'integer', Rule::exists('unidades_administrativas', 'id')],
+            'prioridad'     => ['nullable', Rule::enum(PrioridadTicket::class)],
+        ], [], ['tecnico_id' => 'técnico', 'unidad_tic_id' => 'subunidad de TIC']);
+
+        return $this->respuesta($request, $this->estados->asignar($ticket, $datos), 'Ticket asignado.');
+    }
+
+    public function tomar(Request $request, Ticket $ticket): JsonResponse
+    {
+        $this->authorize('atender', $ticket);
+
+        return $this->respuesta($request, $this->estados->tomar($ticket, $request->user()), 'Ticket en proceso.');
+    }
+
+    public function pedirInformacion(Request $request, Ticket $ticket): JsonResponse
+    {
+        $this->authorize('atender', $ticket);
+        $datos = $request->validate(['pregunta' => ['required', 'string', 'min:5', 'max:2000']], [], ['pregunta' => 'pregunta']);
+
+        return $this->respuesta($request, $this->estados->pedirInformacion($ticket, $request->user(), $datos['pregunta']), 'Se pidió información al usuario.');
+    }
+
+    public function resolver(Request $request, Ticket $ticket): JsonResponse
+    {
+        $this->authorize('atender', $ticket);
+        $datos = $request->validate([
+            'solucion'                => ['required', 'string', 'min:10', 'max:5000'],
+            'registrar_mantenimiento' => ['nullable', 'boolean'],
+            'estado_equipo'           => ['nullable', Rule::enum(EstadoBien::class)->only([
+                EstadoBien::DISPONIBLE, EstadoBien::EN_USO, EstadoBien::EN_MANTENIMIENTO, EstadoBien::EN_GARANTIA,
+            ])],
+        ], [], ['solucion' => 'solución', 'estado_equipo' => 'estado en que queda el equipo']);
+
+        return $this->respuesta($request, $this->estados->resolver($ticket, $request->user(), $datos), 'Ticket resuelto.');
+    }
+
+    public function confirmar(Request $request, Ticket $ticket): JsonResponse
+    {
+        $this->authorize('responderComoSolicitante', $ticket);
+        $datos = $request->validate([
+            'calificacion' => ['nullable', 'integer', 'min:1', 'max:5'],
+            'comentario'   => ['nullable', 'string', 'max:1000'],
+        ], [], ['calificacion' => 'calificación']);
+
+        return $this->respuesta($request, $this->estados->confirmar($ticket, $datos['calificacion'] ?? null, $datos['comentario'] ?? null), 'Gracias: el ticket quedó cerrado.');
+    }
+
+    public function reabrir(Request $request, Ticket $ticket): JsonResponse
+    {
+        $this->authorize('responderComoSolicitante', $ticket);
+        $datos = $request->validate(['motivo' => ['required', 'string', 'min:5', 'max:1000']], [], ['motivo' => 'qué sigue fallando']);
+
+        return $this->respuesta($request, $this->estados->reabrir($ticket, $request->user(), $datos['motivo']), 'Ticket reabierto.');
+    }
+
+    public function escalar(Request $request, Ticket $ticket): JsonResponse
+    {
+        $this->authorize('atender', $ticket);
+        $datos = $request->validate([
+            'nivel'      => ['required', 'integer', 'in:2,3'],
+            'motivo'     => ['required', 'string', 'min:5', 'max:1000'],
+            'tecnico_id' => ['nullable', 'integer'],
+        ], [], ['tecnico_id' => 'técnico']);
+
+        return $this->respuesta($request, $this->estados->escalar($ticket, (int) $datos['nivel'], $datos['motivo'], $datos['tecnico_id'] ?? null), 'Ticket escalado.');
+    }
+
+    public function anular(Request $request, Ticket $ticket): JsonResponse
+    {
+        $this->authorize('anular', $ticket);
+        $datos = $request->validate(['motivo' => ['required', 'string', 'min:5', 'max:500']], [], ['motivo' => 'motivo de la anulación']);
+
+        return $this->respuesta($request, $this->estados->anular($ticket, $request->user(), $datos['motivo']), 'Ticket anulado.');
+    }
+
+    public function vincularBien(Request $request, Ticket $ticket): JsonResponse
+    {
+        $this->authorize('atender', $ticket);
+        $datos = $request->validate(['bien_informatico_id' => ['nullable', 'integer']], [], ['bien_informatico_id' => 'equipo']);
+
+        return $this->respuesta($request, $this->estados->vincularBien($ticket, $datos['bien_informatico_id'] ?? null), 'Equipo vinculado al ticket.');
+    }
+
+    private function respuesta(Request $request, Ticket $ticket, string $mensaje): JsonResponse
+    {
+        return ApiResponse::ok($this->paraQuienMira($request, $ticket), $mensaje);
+    }
+
+    /** Las notas internas son la conversación entre quienes atienden: el solicitante no las recibe. */
+    private function paraQuienMira(Request $request, Ticket $ticket): TicketResource
+    {
+        if ($ticket->relationLoaded('comentarios') && ! $request->user()->can('verNotasInternas', $ticket)) {
+            $ticket->setRelation('comentarios', $ticket->comentarios->where('es_interno', false)->values());
         }
 
-        return ApiResponse::ok($ticket, 'Detalle del ticket.');
-    }
-
-    public function update(Request $request, int $id)
-    {
-        $ticket = Ticket::findOrFail($id);
-        $this->authorize('atender', $ticket);
-        $ticket->update($request->only(['asunto', 'descripcion']));
-        return ApiResponse::ok($ticket, 'Ticket actualizado correctamente.');
-    }
-
-    public function cambiarEstado(Request $request, int $id)
-    {
-        $ticket = Ticket::findOrFail($id);
-        $this->authorize('atender', $ticket);
-        $validated = $request->validate(['estado' => 'required|string|max:50']);
-        $ticket->update(['estado' => $validated['estado']]);
-        return ApiResponse::ok($ticket, 'Estado del ticket cambiado.');
-    }
-
-    public function asignar(Request $request, int $id)
-    {
-        $ticket = Ticket::findOrFail($id);
-        $this->authorize('asignar', $ticket);
-        $validated = $request->validate(['tecnico_dtic_id' => 'required|exists:tecnicos_dtic,id']);
-        $ticket->update(['tecnico_dtic_id' => $validated['tecnico_dtic_id'], 'estado' => 'asignado']);
-        return ApiResponse::ok($ticket, 'Ticket asignado exitosamente.');
-    }
-
-    public function escalar(Request $request, int $id)
-    {
-        $this->authorize('atender', Ticket::findOrFail($id));
-        $validated = $request->validate(['nivel' => 'required|integer|min:2|max:3']);
-        $ticket = $this->service->escalarTicket($id, $validated['nivel']);
-        return ApiResponse::ok($ticket, 'Ticket escalado exitosamente.');
-    }
-
-    public function vincularBien(Request $request, int $id)
-    {
-        $this->authorize('atender', Ticket::findOrFail($id));
-        $validated = $request->validate([
-            'bien_informatico_id' => 'required|exists:bienes_informaticos,id'
-        ]);
-        
-        $ticket = $this->service->vincularBienATicket($id, $validated['bien_informatico_id']);
-        
-        return ApiResponse::ok($ticket, 'Bien informático vinculado al ticket exitosamente.');
-    }
-
-    public function cerrar(Request $request, int $id)
-    {
-        $this->authorize('atender', Ticket::findOrFail($id));
-        $ticket = $this->service->cerrarTicket($id, $request->all());
-        return ApiResponse::ok($ticket, 'Ticket cerrado exitosamente.');
+        return new TicketResource($ticket);
     }
 }

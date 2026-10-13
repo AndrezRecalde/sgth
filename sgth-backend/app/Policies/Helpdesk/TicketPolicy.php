@@ -52,7 +52,29 @@ class TicketPolicy
         return $user->can(Permiso::CREAR_TICKET->value);
     }
 
-    /** Cambiar el estado, escalarlo, cerrarlo o vincularle un equipo. */
+    /** Registrar un ticket a nombre de un servidor que llamó o vino (canal TIC). */
+    public function registrarANombre(User $user): bool
+    {
+        return $user->can(Permiso::GESTIONAR_TICKETS->value);
+    }
+
+    /** Confirmar la solución, calificar o reabrir: solo quien lo abrió. */
+    public function responderComoSolicitante(User $user, Ticket $ticket): bool
+    {
+        return $this->esSolicitante($user, $ticket);
+    }
+
+    /**
+     * Anularlo por duplicado o mal registrado: quien reparte el trabajo, o el
+     * propio solicitante mientras nadie lo atiende (el estado lo mira el
+     * servicio).
+     */
+    public function anular(User $user, Ticket $ticket): bool
+    {
+        return $user->can(Permiso::ASIGNAR_TICKET->value) || $this->esSolicitante($user, $ticket);
+    }
+
+    /** Tomarlo, pedir información, resolverlo, escalarlo o vincularle un equipo. */
     public function atender(User $user, Ticket $ticket): bool
     {
         if (! $user->can(Permiso::GESTIONAR_TICKETS->value)) {

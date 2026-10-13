@@ -108,10 +108,10 @@ class ReporteriaService implements ReporteriaServiceInterface
     {
         return [
             'tickets_abiertos' => DB::table('tickets')
-                ->whereNotIn('estado', ['cerrado', 'cancelado'])
+                ->whereNotIn('estado', ['resuelto', 'cerrado', 'anulado'])
                 ->count(),
             'tickets_vencidos_sla' => DB::table('tickets')
-                ->whereNotIn('estado', ['cerrado', 'cancelado'])
+                ->whereNotIn('estado', ['resuelto', 'cerrado', 'anulado'])
                 ->where('fecha_vencimiento_sla', '<', now())
                 ->count(),
             'tiempo_promedio_resolucion' => 3.5, // Horas

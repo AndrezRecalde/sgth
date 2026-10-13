@@ -2,18 +2,13 @@
 
 namespace App\Contracts\Helpdesk;
 
-use App\Models\Helpdesk\Ticket;
-
+/**
+ * Las métricas de la mesa de ayuda. Los tickets están en
+ * `TicketServiceInterface` y `TicketEstadoServiceInterface` (fase 3.1); estas
+ * dos siguen simuladas hasta las encuestas y la carga de trabajo (3.5 y 4).
+ */
 interface HelpdeskServiceInterface
 {
-    public function crearTicket(array $datos): Ticket;
-
-    public function cerrarTicket(int $id, array $datos): Ticket;
-
-    public function escalarTicket(int $id, int $nivel): Ticket;
-
-    public function vincularBienATicket(int $ticketId, int $bienId): Ticket;
-
     public function obtenerResultadosEncuestas(array $filtros): array;
 
     public function obtenerCargaTrabajoYMetricas(int $tecnicoId): array;

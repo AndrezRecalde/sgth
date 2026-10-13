@@ -193,6 +193,14 @@ class AppServiceProvider extends ServiceProvider
             HelpdeskService::class
         );
         $this->app->bind(
+            \App\Contracts\Helpdesk\TicketServiceInterface::class,
+            \App\Services\Helpdesk\TicketService::class
+        );
+        $this->app->bind(
+            \App\Contracts\Helpdesk\TicketEstadoServiceInterface::class,
+            \App\Services\Helpdesk\TicketEstadoService::class
+        );
+        $this->app->bind(
             SlaServiceInterface::class,
             SlaService::class
         );
