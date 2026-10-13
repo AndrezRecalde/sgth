@@ -4,11 +4,13 @@ namespace App\Services\InventarioTi;
 
 use App\Contracts\InventarioTi\BienInformaticoServiceInterface;
 use App\Enums\EstadoBien;
+use App\Enums\EstadoPrestamo;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\InventarioTi\AsignacionBien;
 use App\Models\InventarioTi\BienInformatico;
 use App\Models\InventarioTi\MantenimientoBien;
 use App\Models\InventarioTi\OrigenBien;
+use App\Models\InventarioTi\PrestamoItem;
 use App\Models\InventarioTi\SubtipoBien;
 use App\Models\InventarioTi\TipoBien;
 use Carbon\Carbon;
@@ -191,6 +193,13 @@ final class BienInformaticoService implements BienInformaticoServiceInterface
             if (! empty($datos['prestable']) && ! $bien->prestable) {
                 $this->validarPrestable($bien);
             }
+            // Salir del grupo de préstamo, o a mantenimiento, deja sin equipo a
+            // quien ya lo tiene reservado o prestado.
+            if ((array_key_exists('prestable', $datos) && ! $datos['prestable'] && $bien->prestable)
+                || (isset($datos['estado_operativo']) && $datos['estado_operativo'] !== $bien->estado_operativo
+                    && in_array($datos['estado_operativo'], [EstadoBien::EN_MANTENIMIENTO, EstadoBien::EN_GARANTIA, EstadoBien::EXTRAVIADO], true))) {
+                $this->exigirSinPrestamosActivos($bien);
+            }
 
             if (isset($datos['codigo_institucional']) && $datos['codigo_institucional'] !== $bien->codigo_institucional) {
                 $datos['codigo_qr'] = $this->codigoQr($datos['codigo_institucional']);
@@ -237,6 +246,23 @@ final class BienInformaticoService implements BienInformaticoServiceInterface
 
             $bien->delete();
         });
+    }
+
+    /** Que nadie lo tenga reservado ni prestado. */
+    private function exigirSinPrestamosActivos(BienInformatico $bien): void
+    {
+        $folios = PrestamoItem::where('bien_informatico_id', $bien->id)
+            ->whereHas('prestamo', fn (Builder $q) => $q->whereIn('estado', EstadoPrestamo::queBloquean()))
+            ->with('prestamo:id,folio')
+            ->get()
+            ->pluck('prestamo.folio');
+
+        if ($folios->isNotEmpty()) {
+            throw new ReglaNegocioException(
+                "El equipo «{$bien->codigo_institucional}» está reservado o prestado ({$folios->implode(', ')}): "
+                . 'reciba o cancele esos préstamos antes.'
+            );
+        }
     }
 
     /**

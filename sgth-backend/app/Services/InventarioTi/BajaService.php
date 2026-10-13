@@ -6,9 +6,11 @@ use App\Contracts\InventarioTi\BajaServiceInterface;
 use App\Contracts\InventarioTi\CustodiaServiceInterface;
 use App\Enums\EstadoBaja;
 use App\Enums\EstadoBien;
+use App\Enums\EstadoPrestamo;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\InventarioTi\BajaBien;
 use App\Models\InventarioTi\BienInformatico;
+use App\Models\InventarioTi\PrestamoItem;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -98,6 +100,12 @@ final class BajaService implements BajaServiceInterface
             $baja = BajaBien::lockForUpdate()->findOrFail($baja->id);
             $this->exigirPropuesta($baja);
             $bien = BienInformatico::with('componentes', 'asignacionVigente')->lockForUpdate()->findOrFail($baja->bien_informatico_id);
+            $prestado = PrestamoItem::where('bien_informatico_id', $bien->id)
+                ->whereHas('prestamo', fn (Builder $q) => $q->whereIn('estado', EstadoPrestamo::queBloquean()))
+                ->with('prestamo:id,folio')->first();
+            if ($prestado) {
+                throw new ReglaNegocioException("El equipo está reservado o prestado ({$prestado->prestamo->folio}): reciba o cancele ese préstamo antes de darlo de baja.");
+            }
             $fecha = $datos['fecha_baja'];
 
             $aprobacion = [

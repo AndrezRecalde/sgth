@@ -15,6 +15,7 @@ use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Autoservicio\AutoservicioController;
 use App\Http\Controllers\Autoservicio\MisActividadesController;
 use App\Http\Controllers\Autoservicio\MisEquiposController;
+use App\Http\Controllers\Autoservicio\MisPrestamosController;
 use App\Http\Controllers\Autoservicio\MisCertificadosMedicosController;
 use App\Http\Controllers\Autoservicio\MisDocumentosLaboralesController;
 use App\Http\Controllers\Autoservicio\MisSolicitudesAccionController;
@@ -114,6 +115,8 @@ use App\Http\Controllers\InventarioTi\CatalogoInventarioController;
 use App\Http\Controllers\InventarioTi\EtiquetaBienController;
 use App\Http\Controllers\InventarioTi\ContratoVigenciaController;
 use App\Http\Controllers\InventarioTi\MantenimientoBienController;
+use App\Http\Controllers\InventarioTi\PrestamoEquipoController;
+use App\Http\Controllers\InventarioTi\ReglasPrestamoController;
 use App\Http\Controllers\Nomina\ConceptoNominaController;
 use App\Http\Controllers\Nomina\DescuentoRecurrenteController;
 use App\Http\Controllers\Nomina\HandoffErpController;
@@ -978,6 +981,16 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->middleware('permission:acceso-autoservicio');
         Route::get('mis-equipos/{asignacion}/acta', [MisEquiposController::class, 'acta'])
             ->middleware('permission:acceso-autoservicio');
+        // Préstamo de equipos de TIC (fase 2.1): la disponibilidad sin decir
+        // quién tiene cada equipo, pedir, los propios y cancelarlos.
+        Route::prefix('mis-prestamos')->middleware('permission:acceso-autoservicio')->group(function () {
+            Route::get('/', [MisPrestamosController::class, 'index']);
+            Route::post('/', [MisPrestamosController::class, 'store']);
+            Route::get('disponibilidad', [MisPrestamosController::class, 'disponibilidad']);
+            Route::get('reglas', [ReglasPrestamoController::class, 'show']);
+            Route::get('{prestamo}', [MisPrestamosController::class, 'show'])->whereNumber('prestamo');
+            Route::post('{prestamo}/cancelar', [MisPrestamosController::class, 'cancelar'])->whereNumber('prestamo');
+        });
         Route::get('mis-documentos', [MisDocumentosLaboralesController::class, 'index']);
         Route::get('mis-documentos/{movimiento}/pdf', [MisDocumentosLaboralesController::class, 'pdf']);
         Route::post('mis-documentos/{movimiento}/acuse', [MisDocumentosLaboralesController::class, 'acuse']);
@@ -1208,6 +1221,25 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::get('etiquetas',
                 [EtiquetaBienController::class, 'lote'])
                 ->middleware($ver);
+
+            // Préstamo de equipos (fase 2.1). Consultar, también el auditor;
+            // el trámite y las reglas, `gestionar-prestamos`.
+            Route::prefix('prestamos')->group(function () use ($ver) {
+                $verPrestamos = $ver . '|gestionar-prestamos';
+                $gestionarPrestamos = 'permission:gestionar-prestamos';
+
+                Route::get('/', [PrestamoEquipoController::class, 'index'])->middleware($verPrestamos);
+                Route::get('disponibilidad', [PrestamoEquipoController::class, 'disponibilidad'])->middleware($verPrestamos);
+                Route::get('reglas', [ReglasPrestamoController::class, 'show'])->middleware($verPrestamos);
+                Route::put('reglas', [ReglasPrestamoController::class, 'update'])->middleware($gestionarPrestamos);
+                Route::post('directo', [PrestamoEquipoController::class, 'directo'])->middleware($gestionarPrestamos);
+                Route::get('{id}', [PrestamoEquipoController::class, 'show'])->whereNumber('id')->middleware($verPrestamos);
+                Route::middleware($gestionarPrestamos)->group(function () {
+                    foreach (['aprobar', 'rechazar', 'cancelar', 'entregar', 'recibir'] as $paso) {
+                        Route::post("{prestamo}/{$paso}", [PrestamoEquipoController::class, $paso])->whereNumber('prestamo');
+                    }
+                });
+            });
         });
 
     // Módulo 13 — Helpdesk
