@@ -42,7 +42,7 @@ export function useKardexMedicina(id: number | null, page = 1) {
 }
 
 /**
- * `enabled` lo usa el menú lateral, que vive en los tres subsistemas: solo
+ * `enabled` lo usa el menú lateral, que vive en todos los subsistemas: solo
  * tiene sentido pedir el conteo a quien puede entrar al inventario.
  */
 export function useStockBajoCount({ enabled = true }: { enabled?: boolean } = {}) {

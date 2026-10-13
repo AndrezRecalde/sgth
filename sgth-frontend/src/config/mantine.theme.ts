@@ -1,7 +1,7 @@
 import { createTheme, rem } from '@mantine/core'
 import { Poppins, Inter } from 'next/font/google'
 import {
-  EMERALD, OCEAN, AMETHYST, AMBER, SLATE, NIGHT,
+  EMERALD, OCEAN, AMETHYST, LAGOON, AMBER, SLATE, NIGHT,
   FONT_SIZES, LINE_HEIGHTS, HEADING_SIZES,
   SPACING, RADIUS, SHADOWS,
 } from './design.tokens'
@@ -59,6 +59,7 @@ export const theme = createTheme({
     emerald: [...EMERALD],
     ocean: [...OCEAN],
     amethyst: [...AMETHYST],
+    lagoon: [...LAGOON],
     amber: [...AMBER],
     slate: [...SLATE],
     // Sustituye la escala `dark` de Mantine para dar tres superficies

@@ -438,6 +438,22 @@ export const NAV_SALUD: NavGroup[] = [
   },
 ]
 
+// ── TECNOLOGÍAS (Unidad de TIC) ───────
+// Por ahora solo el inicio. Inventario, préstamos y mesa de ayuda se suman en
+// sus fases (docs/diseno-subsistema-tic.md, sección 8).
+export const NAV_TIC: NavGroup[] = [
+  {
+    label: 'Principal',
+    items: [
+      {
+        label: 'Inicio',
+        href:  ROUTES.TIC.HOME,
+        icon:  'IconHome',
+      },
+    ],
+  },
+]
+
 // ── PORTAL SERVIDOR ───────────────────
 export const NAV_PORTAL: NavGroup[] = [
   {
@@ -583,15 +599,21 @@ export function inicioDelSubsistema(subsistema: Subsistema, roles: string[]): st
   return SUBSISTEMAS[subsistema].home
 }
 
+/**
+ * `tecnico-dtic` estuvo aquí hasta que existió Tecnologías: el backend no le
+ * abre ninguna ruta del Dispensario, así que entraba a un subsistema donde
+ * todo le respondía 403.
+ */
 export const ROLES_SALUD = [
   'medico', 'odontologo', 'enfermera',
-  'admin-dispensario', 'tecnico-dtic',
+  'admin-dispensario',
 ]
 
 /**
- * Quiénes pueden consultar el inventario de medicinas. Es más estrecho que
- * `ROLES_SALUD`, que incluye a `tecnico-dtic`: el backend no lo deja entrar al
- * inventario, así que pedírselo solo produce un 403 en cada carga.
+ * Quiénes pueden consultar el inventario de medicinas. Hoy coincide con
+ * `ROLES_SALUD`, pero es otra pregunta: el contador de stock del sidebar se
+ * pide con esta lista, y un rol nuevo del Dispensario no tiene por qué ver el
+ * inventario.
  */
 export const ROLES_INVENTARIO_MED = [
   'medico', 'odontologo', 'enfermera', 'admin-dispensario',
@@ -606,15 +628,20 @@ export const ROLES_PORTAL = [
   'admin-dispensario', 'tecnico-dtic',
 ]
 
+/**
+ * Quienes trabajan en la Unidad de TIC. El jefe de TIC (`jefe-tic`) se suma
+ * cuando exista el rol, con los permisos del PR 0.2.
+ */
+export const ROLES_TIC = ['admin-ti', 'tecnico-dtic']
+
 // ── Helper: qué subsistemas puede ver ─
-export function getSubsistemasDisponibles(
-  roles: string[]
-): ('sgth' | 'salud' | 'portal')[] {
-  const disponibles: ('sgth' | 'salud' | 'portal')[] = []
+export function getSubsistemasDisponibles(roles: string[]): Subsistema[] {
+  const disponibles: Subsistema[] = []
   if (roles.some(r => ROLES_SGTH.includes(r)) || soloPermisosEnSgth(roles)) {
     disponibles.push('sgth')
   }
   if (roles.some(r => ROLES_SALUD.includes(r)))  disponibles.push('salud')
+  if (roles.some(r => ROLES_TIC.includes(r)))    disponibles.push('tic')
   if (roles.some(r => ROLES_PORTAL.includes(r))) disponibles.push('portal')
   return disponibles
 }
@@ -630,13 +657,14 @@ export function getSubsistemasDisponibles(
  * un destino permitido.
  */
 export function buildNav(
-  subsistema: 'sgth' | 'salud' | 'portal',
+  subsistema: Subsistema,
   permisos: string[],
   roles: string[] = [],
 ): NavGroup[] {
-  const navMap = {
+  const navMap: Record<Subsistema, NavGroup[]> = {
     sgth:   NAV_SGTH,
     salud:  NAV_SALUD,
+    tic:    NAV_TIC,
     portal: NAV_PORTAL,
   }
 
@@ -686,7 +714,7 @@ export interface NavLeaf {
 
 /** Aplana el menú de un subsistema a una lista de destinos navegables. */
 export function flattenNav(
-  subsistema: 'sgth' | 'salud' | 'portal',
+  subsistema: Subsistema,
   permisos: string[],
   roles: string[] = [],
 ): NavLeaf[] {
@@ -730,7 +758,7 @@ export function flattenNav(
  * mismo.
  */
 export function findNavTrail(
-  subsistema: 'sgth' | 'salud' | 'portal',
+  subsistema: Subsistema,
   permisos: string[],
   roles: string[],
   pathname: string,

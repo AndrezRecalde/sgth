@@ -30,6 +30,18 @@ export const AMETHYST = [
   '#8B5CF6', '#7C3AED', '#6D28D9', '#5B21B6', '#4C1D95',
 ] as const
 
+/**
+ * Acento del subsistema Tecnologías (Unidad de TIC).
+ *
+ * Cian: se distingue del azul del Dispensario y del verde de SGTH, y no
+ * carga ningún significado (el ámbar avisa, el rojo es error). Como el verde,
+ * el blanco sobre el tono 6 no llega al AA; en claro rellena con el 7.
+ */
+export const LAGOON = [
+  '#ECFEFF', '#CFFAFE', '#A5F3FC', '#67E8F9', '#22D3EE',
+  '#06B6D4', '#0891B2', '#0E7490', '#155E75', '#164E63',
+] as const
+
 /** Advertencia — el único ámbar del sistema. */
 export const AMBER = [
   '#FFFBEB', '#FEF3C7', '#FDE68A', '#FCD34D', '#FBBF24',

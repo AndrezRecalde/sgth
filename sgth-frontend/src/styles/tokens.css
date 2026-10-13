@@ -71,7 +71,7 @@
  * Tabs, Stepper, Loader, Anchor, ThemeIcon, Avatar…) con
  * `--mantine-color-primario-*`, así que basta con reapuntar esas variables
  * a la escala del subsistema: verde en SGTH, azul en el Dispensario, violeta
- * en el Portal.
+ * en el Portal y cian en Tecnologías.
  *
  * El AppShell escribe `data-subsistema` en su raíz y en `<html>`; en
  * `<html>` compite con los bloques `:root[data-mantine-color-scheme]` que
@@ -80,7 +80,7 @@
  * oscuro, así que estos bloques no se duplican para modo oscuro.
  *
  * Solo cambian los controles. Los significados no: éxito sigue en emerald,
- * advertencia en amber y error en red en los tres subsistemas.
+ * advertencia en amber y error en red en todos los subsistemas.
  *
  * Agregar un subsistema = un bloque aquí + una entrada en
  * `config/subsistemas.ts`.
@@ -152,9 +152,32 @@
   --mantine-color-primario-text: var(--mantine-color-amethyst-text);
 }
 
+[data-subsistema='tic'],
+:root[data-subsistema='tic'][data-mantine-color-scheme] {
+  --mantine-color-primario-0: var(--mantine-color-lagoon-0);
+  --mantine-color-primario-1: var(--mantine-color-lagoon-1);
+  --mantine-color-primario-2: var(--mantine-color-lagoon-2);
+  --mantine-color-primario-3: var(--mantine-color-lagoon-3);
+  --mantine-color-primario-4: var(--mantine-color-lagoon-4);
+  --mantine-color-primario-5: var(--mantine-color-lagoon-5);
+  --mantine-color-primario-6: var(--mantine-color-lagoon-6);
+  --mantine-color-primario-7: var(--mantine-color-lagoon-7);
+  --mantine-color-primario-8: var(--mantine-color-lagoon-8);
+  --mantine-color-primario-9: var(--mantine-color-lagoon-9);
+  --mantine-color-primario-filled: var(--mantine-color-lagoon-filled);
+  --mantine-color-primario-filled-hover: var(--mantine-color-lagoon-filled-hover);
+  --mantine-color-primario-light: var(--mantine-color-lagoon-light);
+  --mantine-color-primario-light-hover: var(--mantine-color-lagoon-light-hover);
+  --mantine-color-primario-light-color: var(--mantine-color-lagoon-light-color);
+  --mantine-color-primario-outline: var(--mantine-color-lagoon-outline);
+  --mantine-color-primario-outline-hover: var(--mantine-color-lagoon-outline-hover);
+  --mantine-color-primario-text: var(--mantine-color-lagoon-text);
+}
+
 /* El verde institucional (login, páginas públicas y SGTH) va un tono más
    oscuro en claro: el blanco sobre emerald-6 da 3.77:1 y no llega al AA
-   (4.5:1). Sobre emerald-7, 5.48:1. Azul (5.17) y violeta (5.70) ya llegan. */
+   (4.5:1). Sobre emerald-7, 5.48:1. Azul (5.17) y violeta (5.70) ya llegan.
+   El cian de Tecnologías tampoco (3.68 sobre lagoon-6): va al bloque de abajo. */
 :root[data-mantine-color-scheme='light']:not([data-subsistema]),
 :root[data-mantine-color-scheme='light'][data-subsistema='sgth'],
 :root[data-mantine-color-scheme='light'] [data-subsistema='sgth'] {
@@ -162,6 +185,15 @@
   --mantine-color-primario-filled-hover: var(--mantine-color-emerald-8);
   --mantine-color-primario-outline: var(--mantine-color-emerald-7);
   --mantine-color-primario-text: var(--mantine-color-emerald-7);
+}
+
+/* Blanco sobre lagoon-7: 5.36:1. */
+:root[data-mantine-color-scheme='light'][data-subsistema='tic'],
+:root[data-mantine-color-scheme='light'] [data-subsistema='tic'] {
+  --mantine-color-primario-filled: var(--mantine-color-lagoon-7);
+  --mantine-color-primario-filled-hover: var(--mantine-color-lagoon-8);
+  --mantine-color-primario-outline: var(--mantine-color-lagoon-7);
+  --mantine-color-primario-text: var(--mantine-color-lagoon-7);
 }
 
 /**

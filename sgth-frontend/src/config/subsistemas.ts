@@ -2,16 +2,17 @@ import type { Icon } from '@tabler/icons-react'
 import {
   IconUsers,
   IconBuildingHospital,
+  IconDevices,
   IconUserCircle,
 } from '@tabler/icons-react'
 import { ROUTES, type Subsistema } from './routes'
 
 /**
- * Configuración única de los tres subsistemas del SGTH.
+ * Configuración única de los subsistemas del SGTH.
  *
  * El acento visual del shell (sidebar, estado activo, foco, breadcrumb) se
  * deriva de `color`: el AppShell publica `--sgth-accent-*` a partir de esta
- * tabla, de modo que un solo CSS sirve para los tres subsistemas.
+ * tabla, de modo que un solo CSS sirve para todos los subsistemas.
  *
  * Antes esta información vivía duplicada en `Sidebar.tsx` (sin usarse) y en
  * `AppGridSelector.tsx`. Cualquier subsistema nuevo se agrega SOLO aquí.
@@ -25,7 +26,7 @@ export interface SubsistemaConfig {
   descripcion: string
   icon: Icon
   /** Nombre de color registrado en el tema de Mantine. */
-  color: 'emerald' | 'ocean' | 'amethyst'
+  color: 'emerald' | 'ocean' | 'lagoon' | 'amethyst'
   home: string
   /** Prefijo de ruta que identifica al subsistema. */
   prefix: string
@@ -50,6 +51,15 @@ export const SUBSISTEMAS: Record<Subsistema, SubsistemaConfig> = {
     home: ROUTES.SALUD.HOME,
     prefix: '/salud',
   },
+  tic: {
+    label: 'Tecnologías',
+    nombre: 'Tecnologías',
+    descripcion: 'Soporte, equipos y préstamos',
+    icon: IconDevices,
+    color: 'lagoon',
+    home: ROUTES.TIC.HOME,
+    prefix: '/tic',
+  },
   portal: {
     label: 'Portal',
     nombre: 'Portal del Servidor',
@@ -61,7 +71,7 @@ export const SUBSISTEMAS: Record<Subsistema, SubsistemaConfig> = {
   },
 }
 
-export const SUBSISTEMAS_ORDEN: Subsistema[] = ['sgth', 'salud', 'portal']
+export const SUBSISTEMAS_ORDEN: Subsistema[] = ['sgth', 'salud', 'tic', 'portal']
 
 /** Deduce el subsistema activo a partir del pathname. `sgth` es el fallback. */
 export function getSubsistema(pathname: string): Subsistema {

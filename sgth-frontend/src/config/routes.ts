@@ -113,6 +113,13 @@ export const ROUTES = {
     REPORTES:     '/salud/reportes',
   },
 
+  // ── TECNOLOGÍAS (Unidad de TIC) ───────
+  // Mesa de ayuda, inventario de equipos informáticos y préstamos
+  // (docs/diseno-subsistema-tic.md). Las pantallas llegan por fases.
+  TIC: {
+    HOME: '/tic',
+  },
+
   // ── PORTAL SERVIDOR ───────────────────
   PORTAL: {
     HOME:            '/portal',
@@ -137,4 +144,4 @@ export const ROUTES = {
   },
 } as const
 
-export type Subsistema = 'sgth' | 'salud' | 'portal'
+export type Subsistema = 'sgth' | 'salud' | 'tic' | 'portal'
