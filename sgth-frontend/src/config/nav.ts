@@ -463,6 +463,12 @@ export const NAV_TIC: NavGroup[] = [
         icon:     'IconDevices',
         permisos: ['ver-inventario-ti', 'gestionar-inventario-ti'],
       },
+      {
+        label:    'Mantenimientos',
+        href:     ROUTES.TIC.MANTENIMIENTOS,
+        icon:     'IconTool',
+        permisos: ['ver-inventario-ti', 'gestionar-inventario-ti'],
+      },
     ],
   },
   {

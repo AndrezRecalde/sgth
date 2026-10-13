@@ -3,9 +3,12 @@ import { Stack, Text } from '@mantine/core'
 import { StatusBadge, TableActions, type TableAction } from '@/components/ui'
 import { formatFecha } from '@/lib/fecha'
 import { ESTADO_BIEN_LABELS, TONO_ESTADO_BIEN } from '../constants/estados'
-import type { Asignacion, BienInformatico, HistorialBien } from '../services/tipos'
+import type { Asignacion, BienInformatico } from '../services/tipos'
+import type { Mantenimiento } from '../services/tipos'
+import {
+  celdaDescripcionMantenimiento, celdaFechaMantenimiento, celdaQuienMantenimiento, celdaTipoMantenimiento,
+} from './mantenimientoCeldas'
 
-type Mantenimiento = HistorialBien['mantenimientos'][number]
 type Componente = NonNullable<BienInformatico['componentes']>[number]
 
 /** Las fechas del historial llegan con hora; se muestra el día. */
@@ -49,20 +52,13 @@ export const columnasCustodia = (accionesDe: (a: Asignacion) => TableAction[]): 
   { accessor: 'acciones', title: '', width: 50, render: (a) => <TableActions actions={accionesDe(a)} /> },
 ]
 
-export const columnasMantenimiento: DataTableColumn<Mantenimiento>[] = [
-  { accessor: 'fecha_mantenimiento', title: 'Fecha', width: 120, render: (m) => fecha(m.fecha_mantenimiento) },
-  { accessor: 'tipo_mantenimiento', title: 'Tipo', width: 140, render: (m) => <StatusBadge>{m.tipo_mantenimiento}</StatusBadge> },
-  {
-    accessor: 'descripcion',
-    title: 'Qué se hizo',
-    render: (m) => (
-      <Stack gap={0}>
-        <Text size="sm">{m.descripcion}</Text>
-        {m.soporte_anterior ? <Text size="xs" c="dimmed">Soporte N.º {m.soporte_anterior} (sistema anterior)</Text> : null}
-      </Stack>
-    ),
-  },
-  { accessor: 'tecnico', title: 'Técnico', width: 140, render: (m) => m.tecnico?.usuario_ti ?? '—' },
+/** Los mantenimientos en la ficha del equipo; los de la lista general están en `mantenimientos.columns`. */
+export const columnasMantenimiento = (accionesDe: (m: Mantenimiento) => TableAction[]): DataTableColumn<Mantenimiento>[] => [
+  { accessor: 'fecha_mantenimiento', title: 'Fecha', width: 110, render: (m) => celdaFechaMantenimiento(m) },
+  { accessor: 'tipo_mantenimiento', title: 'Tipo', width: 140, render: (m) => celdaTipoMantenimiento(m) },
+  { accessor: 'descripcion', title: 'Qué se hizo', render: (m) => celdaDescripcionMantenimiento(m) },
+  { accessor: 'tecnico', title: 'Quién', width: 170, render: (m) => celdaQuienMantenimiento(m) },
+  { accessor: 'acciones', title: '', width: 50, render: (m) => <TableActions actions={accionesDe(m)} /> },
 ]
 
 export const columnasComponentes: DataTableColumn<Componente>[] = [

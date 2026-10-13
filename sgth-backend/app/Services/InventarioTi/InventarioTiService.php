@@ -43,9 +43,17 @@ final class InventarioTiService implements InventarioTiServiceInterface
                 ->orderByDesc('fecha_asignacion')
                 ->orderByDesc('id')
                 ->get(),
-            'mantenimientos' => MantenimientoBien::with('tecnico:id,usuario_ti,servidor_id')
+            // Con los anulados: el historial no esconde lo que se corrigió. Los
+            // sin fecha (del Excel de TIC) van al final.
+            'mantenimientos' => MantenimientoBien::with([
+                'tecnico:id,usuario_ti,email,servidor_id', 'tecnico.servidor:id,nombre,apellido',
+                'contratoVigencia:id,proceso,proveedor',
+                'registradoPor:id,usuario_ti,email,servidor_id', 'registradoPor.servidor:id,nombre,apellido',
+                'anuladoPor:id,usuario_ti,email,servidor_id', 'anuladoPor.servidor:id,nombre,apellido',
+            ])
                 ->where('bien_informatico_id', $bien->id)
-                ->orderByDesc('fecha_mantenimiento')
+                ->orderByRaw('fecha_mantenimiento DESC NULLS LAST')
+                ->orderByDesc('id')
                 ->get(),
         ];
     }

@@ -1,16 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { Stack } from '@mantine/core'
-import { IconFileText, IconFileDownload } from '@tabler/icons-react'
-import { DataState, SectionCard, SgthTable, type TableAction } from '@/components/ui'
+import { Button, Stack } from '@mantine/core'
+import { IconBan, IconFileDownload, IconFileText, IconTool } from '@tabler/icons-react'
+import { DataState, MotivoModal, SectionCard, SgthTable, type TableAction } from '@/components/ui'
 import { useAuth } from '@/hooks/useAuth'
 import { useHistorialBien } from '../hooks/useBienes'
 import { useDocumentoCustodia } from '../hooks/useCustodia'
-import type { Asignacion, BienInformatico } from '../services/tipos'
+import { useMantenimientoMutations } from '../hooks/useMantenimientos'
+import type { Asignacion, BienInformatico, Mantenimiento } from '../services/tipos'
 import { CustodiaVigente } from './CustodiaVigente'
 import { DevolucionModal } from './DevolucionModal'
 import { EntregaModal } from './EntregaModal'
+import { MantenimientoModal } from './MantenimientoModal'
 import { MemorandoModal } from './MemorandoModal'
 import { columnasCustodia, columnasMantenimiento } from './historial.columns'
 
@@ -21,6 +23,10 @@ import { columnasCustodia, columnasMantenimiento } from './historial.columns'
 export function BienHistorial({ bien }: { bien: BienInformatico }) {
   const { hasPermiso } = useAuth()
   const puedeGestionar = hasPermiso('gestionar-inventario-ti')
+  const puedeMantener = hasPermiso('registrar-mantenimiento') && bien.estado_operativo !== 'dado_de_baja'
+  const { anular } = useMantenimientoMutations()
+  const [mantenimiento, setMantenimiento] = useState(false)
+  const [anularMant, setAnularMant] = useState<Mantenimiento | null>(null)
   const { data, isLoading, error } = useHistorialBien(bien.id)
   const documento = useDocumentoCustodia()
 
@@ -57,10 +63,20 @@ export function BienHistorial({ bien }: { bien: BienInformatico }) {
             noRecordsText="Nadie ha tenido este equipo en custodia."
           />
         </SectionCard>
-        <SectionCard title="Mantenimientos">
+        <SectionCard
+          title="Mantenimientos"
+          actions={puedeMantener
+            ? <Button variant="light" leftSection={<IconTool size={16} />} onClick={() => setMantenimiento(true)}>Registrar mantenimiento</Button>
+            : undefined}
+        >
           <SgthTable
             records={data?.mantenimientos ?? []}
-            columns={columnasMantenimiento}
+            columns={columnasMantenimiento((m) => [
+              {
+                label: 'Anular', icon: <IconBan size={14} />, color: 'red',
+                hidden: !hasPermiso('registrar-mantenimiento'), disabled: m.anulado, onClick: () => setAnularMant(m),
+              },
+            ])}
             minHeight={120}
             noRecordsText="El equipo no tiene mantenimientos registrados."
           />
@@ -75,6 +91,17 @@ export function BienHistorial({ bien }: { bien: BienInformatico }) {
       />
       <DevolucionModal asignacion={devolver} onClose={() => setDevolver(null)} />
       <MemorandoModal asignacion={memorando} onClose={() => setMemorando(null)} />
+      <MantenimientoModal opened={mantenimiento} onClose={() => setMantenimiento(false)} bien={bien} />
+      <MotivoModal
+        opened={anularMant !== null}
+        onClose={() => setAnularMant(null)}
+        title="Anular mantenimiento"
+        descripcion={<>Se anulará el mantenimiento «{anularMant?.descripcion}». Queda en el historial con su motivo.</>}
+        confirmLabel="Anular"
+        destructiva
+        cargando={anular.isPending}
+        onConfirm={(motivo) => anularMant && anular.mutate({ id: anularMant.id, motivo }, { onSuccess: () => setAnularMant(null) })}
+      />
     </DataState>
   )
 }

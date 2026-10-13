@@ -9,6 +9,7 @@ use App\Http\Requests\InventarioTi\StoreBienInformaticoRequest;
 use App\Http\Requests\InventarioTi\UpdateBienInformaticoRequest;
 use App\Http\Resources\InventarioTi\AsignacionBienResource;
 use App\Http\Resources\InventarioTi\BienInformaticoResource;
+use App\Http\Resources\InventarioTi\MantenimientoBienResource;
 use App\Http\Responses\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -69,6 +70,7 @@ final class BienInformaticoController extends Controller
             'bien_informatico_id' => $id,
         ]);
         $ficha['asignaciones'] = AsignacionBienResource::collection($ficha['asignaciones']);
+        $ficha['mantenimientos'] = MantenimientoBienResource::collection($ficha['mantenimientos']);
 
         return ApiResponse::ok($ficha, 'Historial del bien informático.');
     }

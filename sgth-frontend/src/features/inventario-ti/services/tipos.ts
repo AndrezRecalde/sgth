@@ -195,13 +195,51 @@ export type DevolucionData = {
 /** `GET /inventario/bienes/{id}/historial`. */
 export type HistorialBien = {
   asignaciones: Asignacion[]
-  mantenimientos: {
-    id: number
-    tipo_mantenimiento: string
-    fecha_mantenimiento: string | null
-    descripcion: string
-    /** El número de soporte del sistema antiguo (D1). */
-    soporte_anterior: string | null
-    tecnico: { id: number; usuario_ti: string } | null
-  }[]
+  mantenimientos: Mantenimiento[]
+}
+
+export type TipoMantenimiento = 'preventivo' | 'correctivo' | 'repotenciacion'
+
+/** `MantenimientoBienResource`. Los del Excel de TIC no tienen fecha. */
+export type Mantenimiento = {
+  id: number
+  bien_informatico_id: number
+  ticket_id: number | null
+  tipo_mantenimiento: TipoMantenimiento
+  tipo_etiqueta: string
+  realizado_por: 'tic' | 'proveedor'
+  fecha_mantenimiento: string | null
+  descripcion: string
+  costo: number
+  /** El número de soporte del sistema antiguo (D1). */
+  soporte_anterior: string | null
+  anulado: boolean
+  anulado_en: string | null
+  motivo_anulacion: string | null
+  tecnico?: { id: number; nombre: string } | null
+  contrato_vigencia?: { id: number; proceso: string; proveedor: string | null } | null
+  registrado_por?: string | null
+  anulado_por?: string | null
+  bien?: { id: number; codigo_institucional: string; tipo: string | null; marca: string | null; modelo: string | null } | null
+}
+
+export type RegistrarMantenimientoData = {
+  bien_informatico_id: number
+  tipo_mantenimiento: TipoMantenimiento
+  realizado_por: 'tic' | 'proveedor'
+  contrato_vigencia_id: number | null
+  fecha_mantenimiento: string
+  tecnico_id: number | null
+  descripcion: string
+  costo: number
+  soporte_anterior: string | null
+  /** En qué estado queda el equipo; «disponible» es «vuelve al servicio». */
+  estado_equipo: EstadoBien | null
+}
+
+export type FiltrosMantenimientos = {
+  search?: string
+  tipo_mantenimiento?: TipoMantenimiento
+  realizado_por?: 'tic' | 'proveedor'
+  incluir_anulados?: boolean
 }
