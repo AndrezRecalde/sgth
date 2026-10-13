@@ -76,13 +76,26 @@ export type CatalogosHelpdesk = {
   tecnicos: { id: number; nombre: string }[]
 }
 
+export type VistaBandejaTickets = 'sin_asignar' | 'mios' | 'en_curso' | 'vencidos' | 'resueltos' | 'cerrados'
+
 export type FiltrosTickets = {
   /** «Mis tickets»: los que abrió, aunque además atienda. */
   propios?: boolean
-  vista?: 'sin_asignar' | 'mios' | 'en_curso' | 'vencidos' | 'resueltos' | 'cerrados'
+  vista?: VistaBandejaTickets
   estado?: EstadoTicket
   search?: string
+  categoria_id?: number
+  prioridad?: PrioridadTicket
+  unidad_tic_id?: number
+  tecnico_id?: number
 }
+
+/** `GET helpdesk/tickets/resumen`: los contadores de la bandeja de TIC. */
+export type ResumenTickets = { sin_asignar: number; mios: number; en_curso: number; vencidos: number; resueltos: number }
+
+export type AsignarTicketData = { tecnico_id: number | null; unidad_tic_id: number | null; prioridad: PrioridadTicket | null }
+
+export type ResolverTicketData = { solucion: string; registrar_mantenimiento: boolean; estado_equipo: string | null }
 
 export type NuevoTicketData = {
   categoria_id: number
@@ -90,4 +103,7 @@ export type NuevoTicketData = {
   descripcion: string
   bien_informatico_id: number | null
   archivo: File | null
+  /** Solo TIC: a nombre de quién y con qué prioridad. */
+  servidor_id?: number
+  prioridad?: PrioridadTicket
 }

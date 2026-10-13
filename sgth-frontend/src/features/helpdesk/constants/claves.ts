@@ -7,4 +7,5 @@ export const clavesHelpdesk = {
   lista: (filtros: unknown, page: number) => ['helpdesk', 'lista', filtros, page] as const,
   uno: (id: number) => ['helpdesk', 'uno', id] as const,
   catalogos: ['helpdesk', 'catalogos'] as const,
+  resumen: ['helpdesk', 'resumen'] as const,
 }

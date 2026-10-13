@@ -61,6 +61,7 @@ final class TicketService implements TicketServiceInterface
             ->when($filtros['prioridad'] ?? null, fn (Builder $q, $p) => $q->where('prioridad', $p))
             ->when($filtros['unidad_tic_id'] ?? null, fn (Builder $q, $u) => $q->where('unidad_tic_id', $u))
             ->when($filtros['tecnico_id'] ?? null, fn (Builder $q, $t) => $q->where('tecnico_id', $t))
+            ->when($filtros['bien_informatico_id'] ?? null, fn (Builder $q, $b) => $q->where('bien_informatico_id', $b))
             ->when(trim((string) ($filtros['search'] ?? '')), function (Builder $q, string $s) {
                 $t = "%{$s}%";
                 $q->where(fn (Builder $w) => $w->where('codigo_ticket', 'ilike', $t)->orWhere('asunto', 'ilike', $t)
@@ -76,6 +77,19 @@ final class TicketService implements TicketServiceInterface
     public function obtener(int $id): Ticket
     {
         return $this->carga->cargar($id);
+    }
+
+    public function resumen(User $user): array
+    {
+        $base = fn () => Ticket::visiblesPara($user);
+
+        return [
+            'sin_asignar' => $base()->whereNull('tecnico_id')->whereIn('estado', EstadoTicket::enCurso())->count(),
+            'mios'        => $base()->where('tecnico_id', $user->id)->whereIn('estado', EstadoTicket::enCurso())->count(),
+            'en_curso'    => $base()->whereIn('estado', EstadoTicket::enCurso())->count(),
+            'vencidos'    => $base()->vencidos()->count(),
+            'resueltos'   => $base()->where('estado', EstadoTicket::RESUELTO)->count(),
+        ];
     }
 
     public function crear(User $user, array $datos, ?UploadedFile $archivo = null): Ticket

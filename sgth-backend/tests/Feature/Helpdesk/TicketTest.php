@@ -233,3 +233,13 @@ test('los catálogos traen las categorías sembradas, las prioridades y los téc
         ->and(collect($datos['prioridades'])->pluck('valor')->all())->toBe(['baja', 'media', 'alta', 'urgente'])
         ->and(collect($datos['tecnicos'])->pluck('id'))->toContain($this->tecnico->id, $this->jefe->id);
 });
+
+test('el resumen de la bandeja cuenta lo que ve cada uno', function () {
+    abrirTicket($this->usuarioPaola)->assertCreated();
+    $mio = abrirTicket($this->usuarioDiego)->json('datos.id');
+    pasoTicket($this->tecnico, $mio, 'tomar')->assertOk();
+
+    expect($this->actingAs($this->tecnico, 'sanctum')->getJson('/api/v1/helpdesk/tickets/resumen')->assertOk()->json('datos'))
+        ->toMatchArray(['sin_asignar' => 1, 'mios' => 1, 'en_curso' => 2, 'vencidos' => 0, 'resueltos' => 0]);
+    $this->actingAs($this->usuarioPaola, 'sanctum')->getJson('/api/v1/helpdesk/tickets/resumen')->assertForbidden();
+});

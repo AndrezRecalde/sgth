@@ -1262,6 +1262,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             // comodín.
             Route::get('tickets/catalogos', [TicketController::class, 'catalogos'])
                 ->middleware($verTickets . '|crear-ticket');
+            Route::get('tickets/resumen', [TicketController::class, 'resumen'])
+                ->middleware('permission:gestionar-tickets|ver-tickets-todos');
             Route::get('tickets', [TicketController::class, 'index'])->middleware($verTickets);
             Route::post('tickets', [TicketController::class, 'store'])->middleware('permission:crear-ticket|gestionar-tickets');
             Route::get('tickets/{id}', [TicketController::class, 'show'])->whereNumber('id')->middleware($verTickets);

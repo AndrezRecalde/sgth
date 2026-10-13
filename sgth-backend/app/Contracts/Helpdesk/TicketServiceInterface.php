@@ -17,6 +17,13 @@ interface TicketServiceInterface
     public function obtener(int $id): Ticket;
 
     /**
+     * Cuántos hay en cada pestaña de la bandeja de TIC, con lo que el usuario ve.
+     *
+     * @return array{sin_asignar: int, mios: int, en_curso: int, vencidos: int, resueltos: int}
+     */
+    public function resumen(User $user): array;
+
+    /**
      * Desde el Portal, a nombre de quien lo abre; desde TIC (`servidor_id`), a
      * nombre del servidor que llamó o vino.
      *

@@ -52,6 +52,12 @@ final class TicketController extends Controller
         return ApiResponse::created(new TicketResource($ticket), "Ticket {$ticket->codigo_ticket} registrado.");
     }
 
+    /** Los contadores de las pestañas de la bandeja de TIC. */
+    public function resumen(Request $request): JsonResponse
+    {
+        return ApiResponse::ok($this->tickets->resumen($request->user()), 'Tickets por pestaña.');
+    }
+
     /** Las categorías, prioridades, subunidades de TIC y técnicos para los formularios. */
     public function catalogos(): JsonResponse
     {

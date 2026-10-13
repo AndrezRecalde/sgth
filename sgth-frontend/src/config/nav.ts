@@ -453,6 +453,18 @@ export const NAV_TIC: NavGroup[] = [
     ],
   },
   {
+    label: 'Mesa de ayuda',
+    items: [
+      {
+        // El técnico ve su cola y lo sin asignar; el jefe, todo.
+        label:    'Bandeja',
+        href:     ROUTES.TIC.TICKETS,
+        icon:     'IconHeadset',
+        permisos: ['gestionar-tickets', 'ver-tickets-todos'],
+      },
+    ],
+  },
+  {
     label: 'Inventario',
     items: [
       {
