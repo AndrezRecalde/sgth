@@ -132,6 +132,8 @@ export const ROUTES = {
     PRESTAMOS_REPORTE: '/tic/prestamos/reporte',
     PRESTAMO:         (id: number) => `/tic/prestamos/${id}`,
     BAJAS:          '/tic/inventario/bajas',
+    /** Reportes del inventario y de la mesa de ayuda (fase 4.2). */
+    REPORTES:       '/tic/reportes',
     /** Catálogos del inventario: tipos, marcas, ubicaciones y contratos. */
     CONFIGURACION: '/tic/configuracion',
   },
