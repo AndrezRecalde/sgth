@@ -376,6 +376,23 @@ abierto ───────────► asignado ────────�
   - «Registrar otro igual», en la ficha de un equipo, abre el formulario con lo suyo.
 - Monitores y escáneres van como equipos propios, no como componentes (respuesta de TIC).
 
+**Hecho en la fase 5.2** (constatación física por QR) [D11]
+
+- **La constatación** (`constataciones`, `constatacion_items`, migración `2026_10_30`). TIC la abre para una ubicación —un piso, una sede— y, si quiere, para una unidad. Lo esperado son los equipos principales en servicio que el sistema tiene en esa ubicación; con unidad, solo los de esa unidad, contando la de quien tiene el equipo o, sin custodio, la del equipo.
+- **Escanear**, desde `/tic/inventario/constataciones/{id}`:
+  - con la cámara del celular (`qr-scanner`, que usa el lector nativo del navegador cuando lo hay; la cámara exige HTTPS) o escribiendo el código institucional;
+  - la etiqueta trae la URL de la ficha, y el sistema la reconoce;
+  - cada equipo queda en uno de cuatro resultados:
+    - **en su lugar**;
+    - **registrado en otra ubicación**: «Moverlo aquí» lo pasa a esta ubicación con sus componentes y deja el movimiento en el historial, con el motivo «Constatación física»;
+    - **registrado en sitio**: dado de alta durante la constatación;
+    - **estaba dado de baja**.
+  - un código que no está en el inventario se registra ahí mismo, con el código y la ubicación ya puestos; al guardar vuelve a la constatación, ya escaneado.
+- **Cerrar.** Lo esperado que no se escaneó queda como **no encontrado** y la constatación ya no cambia. El estado de esos equipos no se toca: decidir si están extraviados es de TIC, desde la ficha.
+- **Acta de constatación física en PDF**, agrupada por resultado y con las firmas de quien constató y del jefe de TIC.
+- Solo TIC escanea, mueve y cierra (`gestionar-inventario-ti`); el auditor consulta y descarga el acta.
+- Se retiran las rutas `inventario/auditoria/*` y su controlador, que eran simulados.
+
 ### 4.4 Roles y permisos
 
 Las rutas van **por permiso**, y el alcance de cada ticket lo decide `TicketPolicy`. El middleware `permission:` de Spatie usa `canAny`, que pasa por `Gate::before`, así que `admin-ti` entraría de todos modos; aun así recibe los permisos de forma explícita, para que la pantalla de Usuarios muestre lo que puede hacer. El que no pasa por `Gate::before` es el middleware `role:`.

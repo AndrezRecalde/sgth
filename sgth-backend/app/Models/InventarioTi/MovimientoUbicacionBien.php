@@ -14,6 +14,7 @@ class MovimientoUbicacionBien extends Model
         'entrega'  => 'Entrega en custodia',
         'traspaso' => 'Traspaso de custodia',
         'mudanza'  => 'Mudanza de la unidad',
+        'constatacion' => 'Constatación física',
     ];
 
     public const UPDATED_AT = null;
