@@ -38,7 +38,7 @@ final class BienInformaticoService implements BienInformaticoServiceInterface
 
     /** Lo que el listado y la ficha muestran de cada equipo. */
     private const RELACIONES = [
-        'tipo:id,nombre,anios_vida_util', 'subtipo:id,tipo_bien_id,nombre', 'marca:id,nombre',
+        'tipo:id,nombre,anios_vida_util,ficha', 'subtipo:id,tipo_bien_id,nombre', 'marca:id,nombre',
         'ubicacion:id,sede,piso', 'unidadAdministrativa:id,nombre,acronimo',
         'contratoVigencia:id,proceso,fecha_fin',
         'asignacionVigente.servidor:id,nombre,apellido,cedula,unidad_administrativa_id',

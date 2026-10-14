@@ -76,4 +76,7 @@ test('una impresora guarda su conexión, su consumible y si es a color', functio
 
     expect(BienInformatico::find($id)->caracteristicas_tecnicas)
         ->toBe(['conexion' => 'red', 'consumible' => 'HP 85A', 'color' => 'monocromatica']);
+
+    // La ficha del equipo dice la de su tipo: la pantalla muestra los campos de esa ficha.
+    $this->getJson("/api/v1/inventario/bienes/{$id}")->assertOk()->assertJsonPath('datos.tipo.ficha', 'impresora');
 });
