@@ -10,6 +10,7 @@ import { useCatalogosHelpdesk } from '../hooks/useTickets'
 import { useTicketTicMutations } from '../hooks/useTicketsTic'
 import { escalarSchema, type EscalarFormData } from '../schemas/tramite.schema'
 import type { Ticket } from '../services/tipos'
+import { tecnicosPorSubunidad } from '../utils/tecnicos'
 
 /**
  * Escalar a especialista (nivel 2) o al proveedor (nivel 3, el contrato de
@@ -49,7 +50,7 @@ export function EscalarTicketModal({ ticket, onClose }: { ticket: Ticket; onClos
           {...register('motivo')} />
         <Controller name="tecnico_id" control={control} render={({ field }) => (
           <Select label="A quién" placeholder="De vuelta a la cola" clearable searchable {...contained} error={errors.tecnico_id?.message}
-            data={(catalogos?.tecnicos ?? []).map((t) => ({ value: String(t.id), label: t.nombre }))}
+            data={tecnicosPorSubunidad(catalogos)}
             value={field.value ? String(field.value) : null} onChange={(v) => field.onChange(v ? Number(v) : null)} />
         )} />
       </Stack>

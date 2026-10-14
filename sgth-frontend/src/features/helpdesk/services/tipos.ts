@@ -73,8 +73,66 @@ export type CatalogosHelpdesk = {
   categorias: { id: number; nombre: string; es_hardware: boolean; descripcion: string | null; unidad_tic_id: number | null }[]
   prioridades: { valor: PrioridadTicket; etiqueta: string }[]
   subunidades: { id: number; nombre: string }[]
-  tecnicos: { id: number; nombre: string }[]
+  /** Los usuarios que atienden tickets, con su ficha de técnico si la tienen (D6). */
+  tecnicos: { id: number; nombre: string; unidad_tic_id: number | null; nivel: number | null }[]
 }
+
+/** `GET helpdesk/categorias` (fase 3.5): también las desactivadas. */
+export type CategoriaTicketConfig = {
+  id: number
+  nombre: string
+  descripcion: string | null
+  es_hardware: boolean
+  activa: boolean
+  unidad_tic_id: number | null
+  unidad_tic: string | null
+  tickets_count: number
+}
+
+export type GuardarCategoriaData = Partial<{
+  nombre: string
+  descripcion: string | null
+  es_hardware: boolean
+  unidad_tic_id: number | null
+  activa: boolean
+}>
+
+/** Una fila de `slas`: sin categoría es la regla general de la prioridad (D7). */
+export type SlaRegla = {
+  id: number
+  prioridad: PrioridadTicket
+  categoria_id: number | null
+  categoria?: { id: number; nombre: string } | null
+  tiempo_respuesta_horas: number
+  tiempo_resolucion_horas: number
+}
+
+/** `GET helpdesk/slas`: las filas y lo que rige cuando una prioridad no tiene fila general. */
+export type TablaSla = {
+  reglas: SlaRegla[]
+  por_defecto: Record<PrioridadTicket, { respuesta: number; resolucion: number }>
+}
+
+export type GuardarSlaData = {
+  prioridad: PrioridadTicket
+  categoria_id: number | null
+  tiempo_respuesta_horas: number
+  tiempo_resolucion_horas: number
+}
+
+/** `GET helpdesk/tecnicos`: la subunidad de TIC y el nivel de quien atiende. */
+export type TecnicoHelpdesk = {
+  id: number
+  user_id: number
+  nombre: string | null
+  usuario_ti: string | null
+  unidad_tic_id: number | null
+  unidad_tic: string | null
+  nivel: number
+  estado: boolean
+}
+
+export type GuardarTecnicoData = Partial<{ user_id: number; unidad_tic_id: number; nivel: number; estado: boolean }>
 
 export type VistaBandejaTickets = 'sin_asignar' | 'mios' | 'en_curso' | 'vencidos' | 'resueltos' | 'cerrados'
 

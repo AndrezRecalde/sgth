@@ -10,6 +10,7 @@ import { useCatalogosHelpdesk } from '../hooks/useTickets'
 import { useTicketTicMutations } from '../hooks/useTicketsTic'
 import { asignarSchema, type AsignarFormData } from '../schemas/tramite.schema'
 import type { PrioridadTicket, Ticket } from '../services/tipos'
+import { tecnicosPorSubunidad, type Opcion } from '../utils/tecnicos'
 
 /**
  * Repartir el ticket: el técnico, el área de TIC y la prioridad. Cambiar la
@@ -31,10 +32,10 @@ export function AsignarTicketModal({ ticket, onClose }: { ticket: Ticket; onClos
     asignar.mutateAsync({ id: ticket.id, data: v }).then(onClose)
       .catch((e) => erroresAlFormulario(e, setError, ['tecnico_id', 'unidad_tic_id', 'prioridad'], 'No se pudo asignar el ticket'))
 
-  const numero = (name: 'tecnico_id' | 'unidad_tic_id', label: string, data: { id: number; nombre: string }[]) => (
+  const numero = (name: 'tecnico_id' | 'unidad_tic_id', label: string, data: Opcion[] | { group: string; items: Opcion[] }[]) => (
     <Controller name={name} control={control} render={({ field }) => (
       <Select label={label} withAsterisk={name === 'tecnico_id'} searchable {...contained} error={errors[name]?.message}
-        data={data.map((x) => ({ value: String(x.id), label: x.nombre }))}
+        data={data}
         value={field.value ? String(field.value) : null} onChange={(v) => field.onChange(v ? Number(v) : name === 'tecnico_id' ? undefined : null)} />
     )} />
   )
@@ -44,8 +45,8 @@ export function AsignarTicketModal({ ticket, onClose }: { ticket: Ticket; onClos
       submitLabel="Asignar" submitting={asignar.isPending}>
       <Grid>
         <Grid.Col span={12}><Text size="sm">{ticket.asunto}</Text></Grid.Col>
-        <Grid.Col span={12}>{numero('tecnico_id', 'Técnico', catalogos?.tecnicos ?? [])}</Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 7 }}>{numero('unidad_tic_id', 'Área de TIC', catalogos?.subunidades ?? [])}</Grid.Col>
+        <Grid.Col span={12}>{numero('tecnico_id', 'Técnico', tecnicosPorSubunidad(catalogos))}</Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 7 }}>{numero('unidad_tic_id', 'Área de TIC', (catalogos?.subunidades ?? []).map((u) => ({ value: String(u.id), label: u.nombre })))}</Grid.Col>
         <Grid.Col span={{ base: 12, sm: 5 }}>
           <Controller name="prioridad" control={control} render={({ field }) => (
             <Select label="Prioridad" allowDeselect={false} {...contained}

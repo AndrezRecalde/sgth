@@ -5,6 +5,7 @@ namespace App\Models\Helpdesk;
 use App\Models\Estructura\UnidadAdministrativa;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -28,5 +29,10 @@ class CategoriaTicket extends Model
     public function unidadTic(): BelongsTo
     {
         return $this->belongsTo(UnidadAdministrativa::class, 'unidad_tic_id');
+    }
+
+    public function tickets(): HasMany
+    {
+        return $this->hasMany(Ticket::class, 'categoria_id');
     }
 }

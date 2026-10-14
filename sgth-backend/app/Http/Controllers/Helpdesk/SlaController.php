@@ -23,7 +23,8 @@ final class SlaController extends Controller
     {
         $slas = Sla::with('categoria:id,nombre')->orderByRaw('categoria_id IS NOT NULL')->orderBy('categoria_id')->orderBy('prioridad')->get();
 
-        return ApiResponse::ok($slas, 'Tabla de SLA.');
+        // Lo que rige para una prioridad sin fila general (config/helpdesk.php).
+        return ApiResponse::ok(['reglas' => $slas, 'por_defecto' => config('helpdesk.sla')], 'Tabla de SLA.');
     }
 
     public function store(Request $request): JsonResponse

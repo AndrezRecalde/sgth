@@ -5,7 +5,6 @@ use App\Enums\RegimenLaboral;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Expediente\Servidor;
-use App\Models\Helpdesk\AreaDtic;
 use App\Models\Helpdesk\ComentarioTicket;
 use App\Models\Helpdesk\Sla;
 use App\Models\Helpdesk\TecnicoDtic;
@@ -23,7 +22,6 @@ beforeEach(function () {
     Servidor::unguard();
     Sla::unguard();
     Ticket::unguard();
-    AreaDtic::unguard();
     TecnicoDtic::unguard();
 
     // Los roles con sus permisos reales: las rutas de tickets van por permiso
@@ -184,19 +182,12 @@ test('el_detalle_del_ticket_carga_sus_comentarios', function () {
 // ── Catálogos: el `show` que el apiResource prometía ───────────────────────
 
 test('los_catalogos_del_helpdesk_devuelven_un_registro', function () {
-    $area = AreaDtic::create([
-        'nombre' => 'Redes', 'descripcion' => 'Infraestructura de red',
-    ]);
     $sla = $this->sla;
-    $tecnicoDtic = TecnicoDtic::create([
-        'user_id' => $this->tecnico->id, 'area_dtic_id' => $area->id,
-        'nivel' => 1,
-    ]);
+    $tecnicoDtic = TecnicoDtic::create(['user_id' => $this->tecnico->id, 'nivel' => 1]);
 
     // Las tres rutas las declaraba el `apiResource` y el método no existía en
     // el controlador: devolvían un 500 desde siempre.
     foreach ([
-        "/api/v1/helpdesk/areas/{$area->id}"        => $area->id,
         "/api/v1/helpdesk/slas/{$sla->id}"          => $sla->id,
         "/api/v1/helpdesk/tecnicos/{$tecnicoDtic->id}" => $tecnicoDtic->id,
     ] as $uri => $id) {
@@ -208,7 +199,7 @@ test('los_catalogos_del_helpdesk_devuelven_un_registro', function () {
 });
 
 test('un_catalogo_que_no_existe_da_404', function () {
-    foreach (['areas', 'slas', 'tecnicos'] as $recurso) {
+    foreach (['slas', 'tecnicos'] as $recurso) {
         $this->actingAs($this->admin, 'sanctum')
             ->getJson("/api/v1/helpdesk/{$recurso}/999999")
             ->assertNotFound();
@@ -226,7 +217,9 @@ test('los_resultados_de_la_encuesta_no_los_traga_el_comodin', function () {
 // ── Técnicos y SLA: código escrito contra un esquema que no existe ─────────
 
 test('dar_de_alta_un_tecnico_ya_es_posible', function () {
-    $area = AreaDtic::create(['nombre' => 'Redes', 'descripcion' => null]);
+    // Las áreas son las subunidades de TIC de la estructura (D6).
+    $tic = unidadDePrueba(['codigo' => config('helpdesk.unidad_tic_codigo'), 'nombre' => 'Gestión de TIC']);
+    $area = unidadDePrueba(['nombre' => 'Infraestructura y Redes', 'unidad_padre_id' => $tic->id, 'nivel' => 2]);
 
     // El alta validaba `servidor_id`, columna que `tecnicos_dtic` no tiene: la
     // propia regla `unique` consultaba por ella y reventaba, así que registrar
@@ -234,7 +227,7 @@ test('dar_de_alta_un_tecnico_ya_es_posible', function () {
     $this->actingAs($this->admin, 'sanctum')
         ->postJson('/api/v1/helpdesk/tecnicos', [
             'user_id'      => $this->tecnico->id,
-            'area_dtic_id' => $area->id,
+            'unidad_tic_id' => $area->id,
             'nivel'        => 2,
         ])
         ->assertCreated();
@@ -245,18 +238,14 @@ test('dar_de_alta_un_tecnico_ya_es_posible', function () {
     $this->actingAs($this->admin, 'sanctum')
         ->postJson('/api/v1/helpdesk/tecnicos', [
             'user_id'      => $this->tecnico->id,
-            'area_dtic_id' => $area->id,
+            'unidad_tic_id' => $area->id,
             'nivel'        => 2,
         ])
         ->assertStatus(422);
 });
 
 test('el_listado_de_tecnicos_no_revienta_cuando_hay_alguno', function () {
-    $area = AreaDtic::create(['nombre' => 'Soporte', 'descripcion' => null]);
-    TecnicoDtic::create([
-        'user_id' => $this->tecnico->id, 'area_dtic_id' => $area->id,
-        'nivel' => 1,
-    ]);
+    TecnicoDtic::create(['user_id' => $this->tecnico->id, 'nivel' => 1]);
 
     // Cargaba la relación `servidor`, que no existe en este modelo.
     $this->actingAs($this->admin, 'sanctum')

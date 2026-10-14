@@ -518,10 +518,11 @@ export const NAV_TIC: NavGroup[] = [
     label: 'Administración',
     items: [
       {
-        label:   'Configuración',
-        href:    ROUTES.TIC.CONFIGURACION,
-        icon:    'IconSettings',
-        permiso: 'gestionar-inventario-ti',
+        // Cada pestaña lleva su permiso: inventario, SLA y categorías, técnicos.
+        label:    'Configuración',
+        href:     ROUTES.TIC.CONFIGURACION,
+        icon:     'IconSettings',
+        permisos: ['gestionar-inventario-ti', 'configurar-sla', 'gestionar-tecnicos'],
       },
     ],
   },

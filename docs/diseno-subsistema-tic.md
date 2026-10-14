@@ -306,6 +306,20 @@ abierto ───────────► asignado ────────�
   - **el historial completo**, con sus detalles;
   - **resolver**: si el ticket tiene equipo, permite registrar el correctivo y en qué estado queda el equipo.
 
+**Hecho en la fase 3.5** (correos y configuración):
+
+- **`areas_dtic` se retira [D6].** `tecnicos_dtic.unidad_tic_id` apunta a una subunidad de la unidad de TIC (`HELPDESK_UNIDAD_TIC_CODIGO`, por defecto `GADPE-15`). La migración no traslada filas: las dos tablas estaban vacías.
+- **Los correos del trámite** (`TicketAvisoMail`), que se envían después de confirmar el paso:
+  - al técnico: cuando se le asigna, se le escala y cuando el usuario reabre;
+  - al solicitante, a su correo de usuario o al personal: cuando TIC le pregunta (con la pregunta) y cuando se resuelve (con la solución).
+  - Si un correo no sale, queda en el log y el paso sigue en pie.
+  - Los del SLA (alerta y vencido) ya salían desde 3.2.
+- **En `/tic/configuracion`, tres pestañas nuevas**, cada una visible con su permiso:
+  - **Categorías de tickets** (`configurar-sla`): nombre, descripción, si lleva equipo y la subunidad que la atiende por defecto. Una categoría no se elimina, se desactiva, y desde entonces no se ofrece al abrir un ticket.
+  - **SLA** (`configurar-sla`): el plazo general de cada prioridad, el que fijó TIC o el de `config/helpdesk.php` («Por defecto»), y debajo los plazos que afinan una categoría.
+  - **Técnicos** (`gestionar-tecnicos`): la subunidad, el nivel y si atiende ahora. Solo se ofrecen usuarios con `gestionar-tickets`, que da el rol en Usuarios. Un técnico pausado no se ofrece al asignar.
+- **Al asignar y al escalar**, los técnicos se ven agrupados por subunidad y con su nivel.
+
 ### 4.4 Roles y permisos
 
 Las rutas van **por permiso**, y el alcance de cada ticket lo decide `TicketPolicy`. El middleware `permission:` de Spatie usa `canAny`, que pasa por `Gate::before`, así que `admin-ti` entraría de todos modos; aun así recibe los permisos de forma explícita, para que la pantalla de Usuarios muestre lo que puede hacer. El que no pasa por `Gate::before` es el middleware `role:`.

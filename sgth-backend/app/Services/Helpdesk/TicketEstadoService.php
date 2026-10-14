@@ -13,6 +13,7 @@ use App\Models\Helpdesk\Ticket;
 use App\Models\InventarioTi\BienInformatico;
 use App\Models\User;
 use App\Services\Helpdesk\Sla\SlaTicket;
+use App\Services\Helpdesk\Tickets\AvisoTicketService;
 use App\Services\Helpdesk\Tickets\TicketCarga;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -27,7 +28,9 @@ use Illuminate\Validation\ValidationException;
  *   y anulado, por duplicado o mal registrado, mientras no esté resuelto.
  *
  * Antes `cambiarEstado` aceptaba cualquier texto y el SLA escribía estados que
- * no existían. Cada cambio deja su historial: quién, cuándo y por qué.
+ * no existían. Cada cambio deja su historial: quién, cuándo y por qué. Desde
+ * la fase 3.5 avisa por correo al técnico (asignado, reabierto) y al
+ * solicitante (le preguntan, se resolvió).
  */
 final class TicketEstadoService implements TicketEstadoServiceInterface
 {
@@ -46,6 +49,7 @@ final class TicketEstadoService implements TicketEstadoServiceInterface
         private readonly TicketCarga $carga,
         private readonly MantenimientoServiceInterface $mantenimientos,
         private readonly SlaTicket $sla,
+        private readonly AvisoTicketService $avisos,
     ) {}
 
     public function asignar(Ticket $ticket, array $datos): Ticket
@@ -67,7 +71,7 @@ final class TicketEstadoService implements TicketEstadoServiceInterface
             }
 
             return 'Asignado a ' . ($tecnico ?? $t->tecnico)->nombre_completo . '.';
-        });
+        }, 'asignado');
     }
 
     public function tomar(Ticket $ticket, User $tecnico): Ticket
@@ -90,7 +94,7 @@ final class TicketEstadoService implements TicketEstadoServiceInterface
             $this->sla->marcarRespuesta($t);
 
             return 'Se pidió información al usuario; el SLA queda en pausa.';
-        });
+        }, 'pendiente');
     }
 
     public function reanudar(Ticket $ticket, User $user): Ticket
@@ -123,7 +127,7 @@ final class TicketEstadoService implements TicketEstadoServiceInterface
             }
 
             return null;
-        });
+        }, 'resuelto');
     }
 
     public function confirmar(Ticket $ticket, ?int $calificacion, ?string $comentario): Ticket
@@ -155,7 +159,7 @@ final class TicketEstadoService implements TicketEstadoServiceInterface
             ComentarioTicket::create(['ticket_id' => $t->id, 'user_id' => $user->id, 'comentario' => "No quedó resuelto: {$motivo}", 'es_interno' => false]);
 
             return $motivo;
-        });
+        }, $ticket->tecnico_id ? 'reabierto' : null);
     }
 
     public function escalar(Ticket $ticket, int $nivel, string $motivo, ?int $tecnicoId): Ticket
@@ -170,7 +174,7 @@ final class TicketEstadoService implements TicketEstadoServiceInterface
             $t->update(['nivel' => $nivel, 'tecnico_id' => $tecnico?->id]);
 
             return "Escalado al nivel {$nivel}" . ($tecnico ? " con {$tecnico->nombre_completo}" : ', de vuelta a la cola') . ": {$motivo}";
-        });
+        }, $tecnicoId ? 'asignado' : null);
     }
 
     public function anular(Ticket $ticket, User $user, string $motivo): Ticket
@@ -205,7 +209,7 @@ final class TicketEstadoService implements TicketEstadoServiceInterface
      * Bloquea el ticket, comprueba que la transición exista, aplica el cambio
      * y lo anota. `$cambio` devuelve el detalle del historial.
      */
-    private function pasar(Ticket $ticket, EstadoTicket $destino, callable $cambio): Ticket
+    private function pasar(Ticket $ticket, EstadoTicket $destino, callable $cambio, ?string $aviso = null): Ticket
     {
         DB::transaction(function () use ($ticket, $destino, $cambio) {
             $t = Ticket::lockForUpdate()->findOrFail($ticket->id);
@@ -228,7 +232,13 @@ final class TicketEstadoService implements TicketEstadoServiceInterface
             $this->carga->anotar($t, $anterior, $detalle);
         });
 
-        return $this->carga->cargar($ticket->id);
+        $resultado = $this->carga->cargar($ticket->id);
+        // Después de confirmar: un correo no sale de un cambio que se deshizo.
+        if ($aviso) {
+            $this->avisos->enviar($resultado, $aviso);
+        }
+
+        return $resultado;
     }
 
     /** Solo atiende quien gestiona tickets. */

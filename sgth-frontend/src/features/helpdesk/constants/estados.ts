@@ -27,6 +27,13 @@ export const ESTADO_PARA_EL_SOLICITANTE: Record<EstadoTicket, string> = {
   anulado:           'Anulado',
 }
 
+export const ETIQUETA_PRIORIDAD: Record<PrioridadTicket, string> = {
+  urgente: 'Urgente', alta: 'Alta', media: 'Media', baja: 'Baja',
+}
+
+/** De la más a la menos urgente, como se leen las tablas del SLA. */
+export const PRIORIDADES: PrioridadTicket[] = ['urgente', 'alta', 'media', 'baja']
+
 export const TONO_PRIORIDAD: Record<PrioridadTicket, SemanticTone> = {
   baja: 'neutral', media: 'info', alta: 'warning', urgente: 'danger',
 }

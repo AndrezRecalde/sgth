@@ -32,7 +32,7 @@ class EncuestaSatisfaccionController extends Controller
             'fecha_inicio' => 'nullable|date',
             'fecha_fin' => 'nullable|date|after_or_equal:fecha_inicio',
             'tecnico_dtic_id' => 'nullable|integer',
-            'area_dtic_id' => 'nullable|integer'
+            'unidad_tic_id' => 'nullable|integer'
         ]);
 
         // Delegar al servicio el cálculo estadístico y la agrupación
