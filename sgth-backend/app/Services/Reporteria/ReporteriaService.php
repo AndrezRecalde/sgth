@@ -3,10 +3,13 @@
 namespace App\Services\Reporteria;
 
 use App\Contracts\Reporteria\ReporteriaServiceInterface;
+use App\Enums\EstadoTicket;
 use App\Enums\RegimenLaboral;
 use App\Exceptions\ReporteNoDisponibleException;
 use App\Models\Dispensario\InventarioMedicina;
 use App\Models\Dispensario\LoteMedicina;
+use App\Models\Helpdesk\Ticket;
+use App\Services\Helpdesk\Tickets\MetricasTickets;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -104,21 +107,20 @@ class ReporteriaService implements ReporteriaServiceInterface
         ];
     }
 
+    /**
+     * El tiempo de resolución era un 3.5 fijo, y los vencidos contaban los
+     * tickets en pausa esperando al usuario (fase 4.1). Ahora salen de las
+     * mismas cifras que el tablero de TIC: el mes en curso, en horas hábiles.
+     */
     private function calcularKpisHelpdesk(): array
     {
+        $mes = app(MetricasTickets::class)->delPeriodo(Ticket::query(), now()->startOfMonth(), now());
+
         return [
-            'tickets_abiertos' => DB::table('tickets')
-                ->whereNotIn('estado', ['resuelto', 'cerrado', 'anulado'])
-                ->count(),
-            'tickets_vencidos_sla' => DB::table('tickets')
-                ->whereNotIn('estado', ['resuelto', 'cerrado', 'anulado'])
-                ->where('fecha_vencimiento_sla', '<', now())
-                ->count(),
-            'tiempo_promedio_resolucion' => 3.5, // Horas
-            'satisfaccion_promedio' => DB::table('encuestas_satisfaccion')
-                ->whereMonth('created_at', now()->month)
-                ->whereYear('created_at', now()->year)
-                ->avg('calificacion') ?? 0
+            'tickets_abiertos' => Ticket::whereIn('estado', EstadoTicket::enCurso())->count(),
+            'tickets_vencidos_sla' => Ticket::vencidos()->count(),
+            'tiempo_promedio_resolucion' => $mes['horas_resolucion'] ?? 0,
+            'satisfaccion_promedio' => $mes['satisfaccion'] ?? 0,
         ];
     }
 
