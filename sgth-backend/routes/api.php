@@ -110,7 +110,7 @@ use App\Http\Controllers\Tic\ReporteTicController;
 use App\Http\Controllers\Tic\TableroTicController;
 use App\Http\Controllers\Helpdesk\TicketController;
 use App\Http\Controllers\InventarioTi\AsignacionBienController;
-use App\Http\Controllers\InventarioTi\AuditoriaInventarioController;
+use App\Http\Controllers\InventarioTi\ConstatacionController;
 use App\Http\Controllers\InventarioTi\BajaController;
 use App\Http\Controllers\InventarioTi\BienInformaticoController;
 use App\Http\Controllers\InventarioTi\CatalogoInventarioController;
@@ -1207,13 +1207,16 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 [MantenimientoBienController::class, 'anular'])
                 ->middleware('permission:registrar-mantenimiento');
 
-            // Auditoría física por QR
-            Route::post('auditoria/escanear',
-                [AuditoriaInventarioController::class, 'escanear'])
-                ->middleware($gestionar);
-            Route::post('auditoria/registrar',
-                [AuditoriaInventarioController::class, 'registrarAuditoria'])
-                ->middleware($gestionar);
+            // Constatación física por QR (fase 5.2). Reemplaza `auditoria/*`,
+            // que era simulada. La hace solo TIC; el auditor la consulta.
+            Route::get('constataciones', [ConstatacionController::class, 'index'])->middleware($ver);
+            Route::post('constataciones', [ConstatacionController::class, 'store'])->middleware($gestionar);
+            Route::get('constataciones/{constatacion}', [ConstatacionController::class, 'show'])->whereNumber('constatacion')->middleware($ver);
+            Route::get('constataciones/{constatacion}/acta', [ConstatacionController::class, 'acta'])->whereNumber('constatacion')->middleware($ver);
+            Route::post('constataciones/{constatacion}/escanear', [ConstatacionController::class, 'escanear'])->whereNumber('constatacion')->middleware($gestionar);
+            Route::post('constataciones/{constatacion}/items/{item}/mover', [ConstatacionController::class, 'mover'])
+                ->whereNumber(['constatacion', 'item'])->middleware($gestionar);
+            Route::post('constataciones/{constatacion}/cerrar', [ConstatacionController::class, 'cerrar'])->whereNumber('constatacion')->middleware($gestionar);
 
             // Bajas (fase 1.6): el técnico la propone con su informe técnico y
             // el jefe de TIC la aprueba con el memorando o la rechaza.

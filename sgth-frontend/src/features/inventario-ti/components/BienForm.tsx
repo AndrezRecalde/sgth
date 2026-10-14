@@ -21,6 +21,8 @@ interface Props {
   bien: BienInformatico | null
   /** Al registrar: el equipo del que se copian tipo, marca, modelo, ubicación y características. */
   plantilla?: BienInformatico | null
+  /** Al registrar: valores puestos de antemano (el alta en sitio trae el código y la ubicación). */
+  iniciales?: Partial<BienFormData>
   onGuardado: (bien: BienInformatico) => void
   /**
    * Al registrar en serie: el que se acaba de guardar. El formulario se queda
@@ -35,7 +37,7 @@ interface Props {
  * características son las de la ficha de su tipo (5.3). Los catálogos llegan
  * en una sola consulta (`/inventario/catalogos`).
  */
-export function BienForm({ bien, plantilla = null, onGuardado, onGuardadoYOtro, onCancelar }: Props) {
+export function BienForm({ bien, plantilla = null, iniciales, onGuardado, onGuardadoYOtro, onCancelar }: Props) {
   const catalogos = useCatalogosFormulario()
   const unidades = useTodasUnidades()
   const guardar = useGuardarBien()
@@ -46,7 +48,7 @@ export function BienForm({ bien, plantilla = null, onGuardado, onGuardadoYOtro, 
 
   const form = useForm<BienFormData>({
     resolver: zodResolver(bienSchema),
-    defaultValues: bien ? valoresDeBien(bien) : plantilla ? valoresDeCopia(plantilla) : valoresDeBien(null),
+    defaultValues: bien ? valoresDeBien(bien) : { ...(plantilla ? valoresDeCopia(plantilla) : valoresDeBien(null)), ...iniciales },
   })
   const tipoId = useWatch({ control: form.control, name: 'tipo_bien_id' })
   const ficha = catalogos.data?.tipos.find((t) => t.id === tipoId)?.ficha ?? 'general'

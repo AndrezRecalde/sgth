@@ -122,6 +122,12 @@ export const ROUTES = {
     EQUIPO_NUEVO:  '/tic/inventario/equipos/nuevo',
     /** Registrar otro igual: el formulario arranca con lo de este equipo. */
     EQUIPO_COPIAR: (id: number) => `/tic/inventario/equipos/nuevo?copiar=${id}`,
+    /** Alta en sitio desde una constatación: el código y la ubicación ya puestos. */
+    EQUIPO_EN_SITIO: (constatacion: number, codigo: string, ubicacion: number) =>
+      `/tic/inventario/equipos/nuevo?constatacion=${constatacion}&codigo=${encodeURIComponent(codigo)}&ubicacion=${ubicacion}`,
+    /** Constatación física por QR (fase 5.2). */
+    CONSTATACIONES: '/tic/inventario/constataciones',
+    CONSTATACION:   (id: number) => `/tic/inventario/constataciones/${id}`,
     EQUIPO:        (id: number) => `/tic/inventario/equipos/${id}`,
     EQUIPO_EDITAR: (id: number) => `/tic/inventario/equipos/${id}/editar`,
     MANTENIMIENTOS: '/tic/inventario/mantenimientos',

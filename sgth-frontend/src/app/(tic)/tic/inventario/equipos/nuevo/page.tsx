@@ -7,13 +7,28 @@ export const metadata: Metadata = {
 }
 
 interface Props {
-  /** `copiar`: el equipo del que se toman tipo, marca, modelo y características. */
-  searchParams: Promise<{ copiar?: string }>
+  /**
+   * `copiar`: el equipo del que se toman tipo, marca, modelo y características.
+   * `constatacion`, `codigo` y `ubicacion`: el alta en sitio desde una
+   * constatación física (5.2).
+   */
+  searchParams: Promise<{ copiar?: string; constatacion?: string; codigo?: string; ubicacion?: string }>
+}
+
+const idValido = (v?: string) => {
+  const n = Number(v)
+  return Number.isInteger(n) && n > 0 ? n : null
 }
 
 export default async function NuevoEquipoPage({ searchParams }: Props) {
-  const { copiar } = await searchParams
-  const copiarId = Number(copiar)
+  const p = await searchParams
+  const constatacion = idValido(p.constatacion)
+  const ubicacion = idValido(p.ubicacion)
 
-  return <NuevoEquipoView copiarId={Number.isInteger(copiarId) && copiarId > 0 ? copiarId : null} />
+  return (
+    <NuevoEquipoView
+      copiarId={idValido(p.copiar)}
+      enSitio={constatacion && ubicacion ? { constatacionId: constatacion, ubicacionId: ubicacion, codigo: (p.codigo ?? '').slice(0, 50) } : null}
+    />
+  )
 }

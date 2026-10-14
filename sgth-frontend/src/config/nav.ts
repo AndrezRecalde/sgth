@@ -487,6 +487,13 @@ export const NAV_TIC: NavGroup[] = [
         icon:     'IconTrashX',
         permisos: ['ver-inventario-ti', 'gestionar-inventario-ti'],
       },
+      {
+        // La hace TIC con el celular; el auditor la consulta.
+        label:    'Constatación',
+        href:     ROUTES.TIC.CONSTATACIONES,
+        icon:     'IconScan',
+        permisos: ['ver-inventario-ti', 'gestionar-inventario-ti'],
+      },
     ],
   },
   {

@@ -9,9 +9,10 @@ use App\Models\InventarioTi\MovimientoUbicacionBien;
 final class InventarioTiService implements InventarioTiServiceInterface
 {
     /**
-     * Lo que queda aquí es el historial y la auditoría física. La ficha del
-     * equipo se mudó a `BienInformaticoService` (1.1), la custodia a
-     * `CustodiaService` (1.3) y la baja a `BajaService` (1.6).
+     * Lo que queda aquí es el historial. La ficha del equipo se mudó a
+     * `BienInformaticoService` (1.1), la custodia a `CustodiaService` (1.3), la
+     * baja a `BajaService` (1.6) y la auditoría física, que era simulada, a
+     * `ConstatacionService` (5.2).
      */
 
     /**
@@ -85,11 +86,5 @@ final class InventarioTiService implements InventarioTiServiceInterface
                     'registrado_por' => $m->registradoPor?->nombre_completo,
                 ]),
         ];
-    }
-
-    public function registrarAuditoriaFisica(array $datos)
-    {
-        // Retorna mock de registro de auditoria
-        return ['estado' => 'Auditoría registrada'];
     }
 }
