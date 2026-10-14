@@ -60,7 +60,7 @@ export function MiTicketView({ id }: { id: number }) {
           <Stack gap="xs">
             <Text size="sm" style={{ whiteSpace: 'pre-line' }}>{t.solucion}</Text>
             <Group gap="xs">
-              <Button size="xs" leftSection={<IconCircleCheck size={14} />} onClick={() => setConfirmando(true)}>Confirmar la solución</Button>
+              <Button size="xs" variant="light" leftSection={<IconCircleCheck size={14} />} onClick={() => setConfirmando(true)}>Confirmar la solución</Button>
               <Button size="xs" variant="subtle" leftSection={<IconRotate size={14} />} onClick={() => setMotivo('reabrir')}>Sigue sin funcionar</Button>
             </Group>
             <Text size="xs" c="dimmed">Si no responde, se cerrará solo en unos días.</Text>

@@ -77,7 +77,7 @@ export function BandejaPrestamosView() {
               Agenda
             </Button>
             {puedeGestionar && (
-              <Button leftSection={<IconHandGrab size={16} />} onClick={() => setDirecto(true)}>Préstamo directo</Button>
+              <Button variant="light" leftSection={<IconHandGrab size={16} />} onClick={() => setDirecto(true)}>Préstamo directo</Button>
             )}
           </Group>
         )}

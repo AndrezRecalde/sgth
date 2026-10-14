@@ -30,7 +30,7 @@ export function MisTicketsView() {
   const [nuevo, setNuevo] = useState<PropuestaTicket | null>(null)
   const { data, isLoading, error } = useTickets({ propios: true, vista }, page)
 
-  const pedir = <Button leftSection={<IconPlus size={16} />} onClick={() => setNuevo({})}>Pedir ayuda</Button>
+  const pedir = <Button variant="light" leftSection={<IconPlus size={16} />} onClick={() => setNuevo({})}>Pedir ayuda</Button>
 
   return (
     <PageShell>

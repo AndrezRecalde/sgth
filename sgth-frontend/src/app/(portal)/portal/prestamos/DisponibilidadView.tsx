@@ -73,7 +73,7 @@ export function DisponibilidadView() {
             <Button variant="subtle" leftSection={<IconListDetails size={16} />} onClick={() => router.push(ROUTES.PORTAL.MIS_PRESTAMOS)}>
               Mis préstamos
             </Button>
-            <Button leftSection={<IconPresentation size={16} />} disabled={seleccion.length === 0}
+            <Button variant="light" leftSection={<IconPresentation size={16} />} disabled={seleccion.length === 0}
               onClick={() => setPropuesta({ bienes: seleccion })}>
               Pedir {seleccion.length > 0 ? `los ${seleccion.length} elegidos` : 'equipos'}
             </Button>
