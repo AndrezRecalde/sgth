@@ -33,6 +33,12 @@ export const bienSchema = z.object({
   tipo_disco: z.string(),
   capacidad_disco: z.string().trim().max(50),
   sistema_operativo: z.string().trim().max(100),
+  conexion: z.string(),
+  consumible: z.string().trim().max(100, 'Máximo 100 caracteres'),
+  color: z.string(),
+  pulgadas: z.string().trim().max(10, 'Máximo 10 caracteres'),
+  entradas_video: z.string().trim().max(100, 'Máximo 100 caracteres'),
+  alimentacion: z.string(),
   observaciones: z.string().trim().max(2000, 'Máximo 2000 caracteres'),
 })
 

@@ -4,19 +4,21 @@ import { Stack } from '@mantine/core'
 import { DetailList, SectionCard, StatusBadge } from '@/components/ui'
 import { formatFecha } from '@/lib/fecha'
 import { CONDICION_LABELS, TONO_CONDICION } from '../constants/estados'
+import { CAMPOS_CARACTERISTICA, CAMPOS_POR_FICHA, valorCaracteristica, type CampoRed, type ClaveCaracteristica } from '../constants/fichas'
 import type { BienInformatico } from '../services/tipos'
 
-const CARACTERISTICAS: Record<string, string> = {
-  procesador: 'Procesador',
-  memoria_ram: 'Memoria RAM',
-  tipo_disco: 'Tipo de disco',
-  capacidad_disco: 'Capacidad del disco',
-  sistema_operativo: 'Sistema operativo',
+const RED: Record<CampoRed, string> = {
+  nombre_red: 'Nombre en la red',
+  usuario_dominio: 'Usuario del dominio',
+  direccion_ip: 'Dirección IP',
 }
 
 /** La ficha del equipo en tres bloques, como el formulario. */
 export function BienDatos({ bien }: { bien: BienInformatico }) {
   const c = bien.caracteristicas_tecnicas ?? {}
+  const campos = CAMPOS_POR_FICHA[bien.tipo?.ficha ?? 'general']
+  // Las de su ficha, y cualquier otra que tenga guardada (de cuando era de otro tipo).
+  const claves = [...new Set([...campos.caracteristicas, ...Object.keys(c)])]
 
   return (
     <Stack gap="lg">
@@ -55,10 +57,11 @@ export function BienDatos({ bien }: { bien: BienInformatico }) {
 
       <SectionCard title="Red y características">
         <DetailList columnas={3} items={[
-          { label: 'Nombre en la red', value: bien.nombre_red },
-          { label: 'Usuario del dominio', value: bien.usuario_dominio },
-          { label: 'Dirección IP', value: bien.direccion_ip },
-          ...Object.entries(CARACTERISTICAS).map(([clave, label]) => ({ label, value: c[clave] })),
+          ...(Object.keys(RED) as CampoRed[]).filter((k) => campos.red.includes(k) || bien[k]).map((k) => ({ label: RED[k], value: bien[k] })),
+          ...claves.map((clave) => ({
+            label: CAMPOS_CARACTERISTICA[clave as ClaveCaracteristica]?.etiqueta ?? clave,
+            value: c[clave] ? valorCaracteristica(clave, c[clave]) : null,
+          })),
           { label: 'Observaciones', value: bien.observaciones, ancho: true },
         ]} />
       </SectionCard>

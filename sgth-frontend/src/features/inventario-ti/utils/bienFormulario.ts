@@ -1,8 +1,9 @@
-import type { BienInformatico, GuardarBienData } from '../services/tipos'
+import { CAMPOS_CARACTERISTICA, CAMPOS_POR_FICHA, type ClaveCaracteristica } from '../constants/fichas'
+import type { BienInformatico, FichaTipo, GuardarBienData } from '../services/tipos'
 import type { BienFormData } from '../schemas/bien.schema'
 
-/** Las características que el Excel de TIC trae sueltas, guardadas juntas. */
-const CARACTERISTICAS = ['procesador', 'memoria_ram', 'tipo_disco', 'capacidad_disco', 'sistema_operativo'] as const
+/** Todas las características que conoce el formulario; cada ficha usa las suyas. */
+const CARACTERISTICAS = Object.keys(CAMPOS_CARACTERISTICA) as ClaveCaracteristica[]
 
 export function valoresDeBien(bien: BienInformatico | null): BienFormData {
   const c = bien?.caracteristicas_tecnicas ?? {}
@@ -26,21 +27,37 @@ export function valoresDeBien(bien: BienInformatico | null): BienFormData {
     nombre_red: bien?.nombre_red ?? '',
     usuario_dominio: bien?.usuario_dominio ?? '',
     direccion_ip: bien?.direccion_ip ?? '',
-    procesador: c.procesador ?? '',
-    memoria_ram: c.memoria_ram ?? '',
-    tipo_disco: c.tipo_disco ?? '',
-    capacidad_disco: c.capacidad_disco ?? '',
-    sistema_operativo: c.sistema_operativo ?? '',
+    ...(Object.fromEntries(CARACTERISTICAS.map((k) => [k, c[k] ?? ''])) as Record<ClaveCaracteristica, string>),
     observaciones: bien?.observaciones ?? '',
   }
 }
 
+/**
+ * Para registrar otro igual: lo que comparten los equipos de un mismo lote
+ * —tipo, marca, modelo, compra, ubicación, unidad, contrato, características—
+ * y en blanco lo que es de cada uno: códigos, serie, red y observaciones.
+ */
+export function valoresParaOtro(v: BienFormData): BienFormData {
+  return {
+    ...v,
+    codigo_institucional: '', codigo_anterior: '', numero_serie: '',
+    nombre_red: '', usuario_dominio: '', direccion_ip: '',
+    observaciones: '', bien_padre_id: null, estado_operativo: 'disponible',
+  }
+}
+
+/** El formulario de un equipo nuevo a partir de otro ya registrado. */
+export const valoresDeCopia = (bien: BienInformatico): BienFormData => valoresParaOtro(valoresDeBien(bien))
+
 const oNull = (v: string) => (v.trim() === '' ? null : v.trim())
 
-/** Lo que viaja al backend: vacíos como null y las características juntas. */
-export function aDatosDeBien(v: BienFormData, editando: boolean): GuardarBienData {
+/**
+ * Lo que viaja al backend: vacíos como null y, de las características, solo
+ * las de la ficha del tipo. Si el tipo cambió, las de la ficha anterior se van.
+ */
+export function aDatosDeBien(v: BienFormData, editando: boolean, ficha: FichaTipo): GuardarBienData {
   const caracteristicas = Object.fromEntries(
-    CARACTERISTICAS.map((k) => [k, v[k].trim()]).filter(([, valor]) => valor !== ''),
+    CAMPOS_POR_FICHA[ficha].caracteristicas.map((k) => [k, v[k].trim()]).filter(([, valor]) => valor !== ''),
   )
 
   return {

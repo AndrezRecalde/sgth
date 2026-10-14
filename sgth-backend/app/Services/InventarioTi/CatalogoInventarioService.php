@@ -34,7 +34,7 @@ final class CatalogoInventarioService implements CatalogoInventarioServiceInterf
     public function paraFormularios(): array
     {
         return [
-            'tipos'       => TipoBien::with('subtipos:id,tipo_bien_id,nombre')->orderBy('nombre')->get(['id', 'nombre', 'anios_vida_util']),
+            'tipos'       => TipoBien::with('subtipos:id,tipo_bien_id,nombre')->orderBy('nombre')->get(['id', 'nombre', 'anios_vida_util', 'ficha']),
             'marcas'      => Marca::orderBy('nombre')->get(['id', 'nombre']),
             'ubicaciones' => Ubicacion::ordenadas()->get(['id', 'sede', 'piso']),
             'contratos'   => ContratoVigencia::orderByDesc('fecha_inicio')->orderBy('proceso')->get(['id', 'proceso', 'fecha_inicio', 'fecha_fin']),

@@ -21,24 +21,24 @@ use Illuminate\Database\Seeder;
  */
 class InventarioTiCatalogoSeeder extends Seeder
 {
-    /** Tipo => subtipos. */
+    /** Tipo => [ficha de características (5.3), subtipos]. */
     private const TIPOS = [
-        'Computador'  => ['Todo en uno', 'Completo', 'CPU', 'MAC'],
-        'Portátil'    => [],
-        'Monitor'     => [],
-        'Impresora'   => ['Láser', 'Multifunción', 'Matricial', 'Tinta continua'],
-        'Escáner'     => [],
-        'Proyector'   => [],
-        'Parlante'    => [],
-        'Auricular'   => [],
-        'Teclado'     => [],
-        'Mouse'       => [],
+        'Computador'  => ['computador', ['Todo en uno', 'Completo', 'CPU', 'MAC']],
+        'Portátil'    => ['computador', []],
+        'Monitor'     => ['monitor', []],
+        'Impresora'   => ['impresora', ['Láser', 'Multifunción', 'Matricial', 'Tinta continua']],
+        'Escáner'     => ['escaner', []],
+        'Proyector'   => ['general', []],
+        'Parlante'    => ['general', []],
+        'Auricular'   => ['general', []],
+        'Teclado'     => ['general', []],
+        'Mouse'       => ['general', []],
     ];
 
     public function run(): void
     {
-        foreach (self::TIPOS as $nombre => $subtipos) {
-            $tipo = TipoBien::firstOrCreate(['nombre' => $nombre], ['anios_vida_util' => 0]);
+        foreach (self::TIPOS as $nombre => [$ficha, $subtipos]) {
+            $tipo = TipoBien::firstOrCreate(['nombre' => $nombre], ['anios_vida_util' => 0, 'ficha' => $ficha]);
 
             foreach ($subtipos as $subtipo) {
                 SubtipoBien::firstOrCreate(['tipo_bien_id' => $tipo->id, 'nombre' => $subtipo]);

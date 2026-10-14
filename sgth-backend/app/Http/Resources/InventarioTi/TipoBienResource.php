@@ -14,6 +14,7 @@ class TipoBienResource extends JsonResource
             'id'              => $this->id,
             'nombre'          => $this->nombre,
             'anios_vida_util' => (int) $this->anios_vida_util,
+            'ficha'           => $this->ficha?->value ?? 'general',
             'bienes_count'    => $this->bienes_count ?? null,
             'subtipos'        => $this->whenLoaded('subtipos', fn () => $this->subtipos->map(fn ($s) => [
                 'id' => $s->id, 'tipo_bien_id' => $s->tipo_bien_id, 'nombre' => $s->nombre,
