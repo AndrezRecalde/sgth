@@ -128,6 +128,9 @@ export const ROUTES = {
     /** Constatación física por QR (fase 5.2). */
     CONSTATACIONES: '/tic/inventario/constataciones',
     CONSTATACION:   (id: number) => `/tic/inventario/constataciones/${id}`,
+    /** Plan de mantenimiento preventivo por campaña (fase 5.1). */
+    CAMPANIAS:      '/tic/inventario/preventivo',
+    CAMPANIA:       (id: number) => `/tic/inventario/preventivo/${id}`,
     EQUIPO:        (id: number) => `/tic/inventario/equipos/${id}`,
     EQUIPO_EDITAR: (id: number) => `/tic/inventario/equipos/${id}/editar`,
     MANTENIMIENTOS: '/tic/inventario/mantenimientos',

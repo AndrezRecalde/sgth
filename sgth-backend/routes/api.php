@@ -110,6 +110,7 @@ use App\Http\Controllers\Tic\ReporteTicController;
 use App\Http\Controllers\Tic\TableroTicController;
 use App\Http\Controllers\Helpdesk\TicketController;
 use App\Http\Controllers\InventarioTi\AsignacionBienController;
+use App\Http\Controllers\InventarioTi\CampaniaMantenimientoController;
 use App\Http\Controllers\InventarioTi\ConstatacionController;
 use App\Http\Controllers\InventarioTi\BajaController;
 use App\Http\Controllers\InventarioTi\BienInformaticoController;
@@ -1217,6 +1218,21 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::post('constataciones/{constatacion}/items/{item}/mover', [ConstatacionController::class, 'mover'])
                 ->whereNumber(['constatacion', 'item'])->middleware($gestionar);
             Route::post('constataciones/{constatacion}/cerrar', [ConstatacionController::class, 'cerrar'])->whereNumber('constatacion')->middleware($gestionar);
+
+            // Plan de mantenimiento preventivo por campaña (fase 5.1). Planificar
+            // es de quien gestiona el inventario; marcar lo hecho u omitido, de
+            // quien registra mantenimientos.
+            $registrar = 'permission:registrar-mantenimiento';
+            Route::get('campanias', [CampaniaMantenimientoController::class, 'index'])->middleware($ver);
+            Route::post('campanias', [CampaniaMantenimientoController::class, 'store'])->middleware($gestionar);
+            Route::get('campanias/{campania}', [CampaniaMantenimientoController::class, 'show'])->whereNumber('campania')->middleware($ver);
+            Route::put('campanias/{campania}', [CampaniaMantenimientoController::class, 'update'])->whereNumber('campania')->middleware($gestionar);
+            Route::post('campanias/{campania}/equipos', [CampaniaMantenimientoController::class, 'agregar'])->whereNumber('campania')->middleware($gestionar);
+            Route::delete('campanias/{campania}/equipos/{equipo}', [CampaniaMantenimientoController::class, 'quitar'])
+                ->whereNumber(['campania', 'equipo'])->middleware($gestionar);
+            Route::post('campanias/{campania}/realizar', [CampaniaMantenimientoController::class, 'realizar'])->whereNumber('campania')->middleware($registrar);
+            Route::post('campanias/{campania}/omitir', [CampaniaMantenimientoController::class, 'omitir'])->whereNumber('campania')->middleware($registrar);
+            Route::post('campanias/{campania}/cerrar', [CampaniaMantenimientoController::class, 'cerrar'])->whereNumber('campania')->middleware($gestionar);
 
             // Bajas (fase 1.6): el técnico la propone con su informe técnico y
             // el jefe de TIC la aprueba con el memorando o la rechaza.

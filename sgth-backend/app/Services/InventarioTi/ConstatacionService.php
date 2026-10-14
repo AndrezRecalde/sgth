@@ -167,24 +167,10 @@ final class ConstatacionService
         return ['content' => $pdf->output(), 'filename' => "constatacion-{$c->id}.pdf"];
     }
 
-    /**
-     * Lo que se espera encontrar: los equipos principales en servicio que el
-     * sistema tiene en la ubicación y, si la constatación la acota, de la unidad
-     * (la de quien lo tiene o, sin custodio, la del equipo).
-     *
-     * @return Builder<BienInformatico>
-     */
+    /** Lo que se espera encontrar: los equipos principales en servicio del lugar (y la unidad, si la acota). */
     private function esperados(Constatacion $c): Builder
     {
-        $unidad = $c->unidad_administrativa_id;
-
-        return BienInformatico::whereNull('bien_padre_id')
-            ->where('estado_operativo', '<>', EstadoBien::DADO_DE_BAJA->value)
-            ->where('ubicacion_id', $c->ubicacion_id)
-            ->when($unidad, fn (Builder $q) => $q->where(fn (Builder $w) => $w
-                ->whereHas('asignacionVigente.servidor', fn (Builder $s) => $s->where('unidad_administrativa_id', $unidad))
-                ->orWhere(fn (Builder $sin) => $sin->whereDoesntHave('asignacionVigente')->where('unidad_administrativa_id', $unidad))))
-            ->orderBy('codigo_institucional');
+        return $this->ubicaciones->principalesEn($c->ubicacion_id, $c->unidad_administrativa_id);
     }
 
     private function resultado(Constatacion $c, BienInformatico $bien): string

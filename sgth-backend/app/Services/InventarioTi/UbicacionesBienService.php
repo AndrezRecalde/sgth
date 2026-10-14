@@ -48,6 +48,25 @@ final class UbicacionesBienService
         }
     }
 
+    /**
+     * Los equipos principales en servicio que el sistema tiene en una ubicación
+     * y, si se acota, de una unidad: la de quien lo tiene o, sin custodio, la
+     * del equipo. Es lo que se espera encontrar en una constatación (5.2) y lo
+     * que entra en una campaña de preventivo (5.1).
+     *
+     * @return Builder<BienInformatico>
+     */
+    public function principalesEn(int $ubicacionId, ?int $unidadId = null): Builder
+    {
+        return BienInformatico::whereNull('bien_padre_id')
+            ->where('estado_operativo', '<>', EstadoBien::DADO_DE_BAJA->value)
+            ->where('ubicacion_id', $ubicacionId)
+            ->when($unidadId, fn (Builder $q) => $q->where(fn (Builder $w) => $w
+                ->whereHas('asignacionVigente.servidor', fn (Builder $s) => $s->where('unidad_administrativa_id', $unidadId))
+                ->orWhere(fn (Builder $sin) => $sin->whereDoesntHave('asignacionVigente')->where('unidad_administrativa_id', $unidadId))))
+            ->orderBy('codigo_institucional');
+    }
+
     /** @return list<array{unidad_id: int, unidad: string, ubicacion_id: ?int, ubicacion: ?string}> */
     public function porUnidad(): array
     {

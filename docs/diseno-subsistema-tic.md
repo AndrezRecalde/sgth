@@ -393,6 +393,21 @@ abierto ───────────► asignado ────────�
 - Solo TIC escanea, mueve y cierra (`gestionar-inventario-ti`); el auditor consulta y descarga el acta.
 - Se retiran las rutas `inventario/auditoria/*` y su controlador, que eran simulados.
 
+**Hecho en la fase 5.1** (plan de mantenimiento preventivo por campaña) [D11]
+
+- **La campaña** (`campanias_mantenimiento`, `campania_equipos`, migración `2026_10_31`), como el «Planificador de proyectos» del Excel de TIC. Lleva nombre, qué se hace en cada equipo, ubicación (y unidad, si se quiere), técnico responsable (alguien con `registrar-mantenimiento`) y período.
+- **Los equipos.** Al crearla entran los principales en servicio del lugar, con la misma regla que lo esperado en la constatación (`UbicacionesBienService::principalesEn`). Después se agregan equipos de cualquier lugar (no componentes, que van con su equipo, ni dados de baja) o se quitan los no atendidos.
+- **Marcar como hechos**, uno o varios a la vez:
+  - a cada equipo se le registra un mantenimiento preventivo hecho por TIC en su ficha;
+  - la fecha va desde el inicio de la campaña hasta hoy;
+  - el técnico es el de la campaña, salvo que se elija otro;
+  - la descripción es la de la campaña, con la observación si la hay.
+  - Si ese mantenimiento se anula desde la ficha, el equipo vuelve a pendiente y la campaña lo avisa.
+- **Omitir** con su motivo (no estaba, estaba prestado…). Un omitido se puede marcar como hecho después.
+- **Situación**, deducida de las fechas: programada, en curso, atrasada (pasó el fin y sigue abierta) o cerrada. Al cerrarla, lo pendiente se ve como **no realizado** y ya no cambia.
+- **Permisos.** Planificar, ajustar los equipos y cerrar es de `gestionar-inventario-ti`. Marcar lo hecho u omitido es de `registrar-mantenimiento`. El auditor consulta.
+- **Pantallas:** `/tic/inventario/preventivo`, con la lista de campañas y su avance, y el detalle de cada una con la selección de equipos (Inventario › Plan preventivo).
+
 ### 4.4 Roles y permisos
 
 Las rutas van **por permiso**, y el alcance de cada ticket lo decide `TicketPolicy`. El middleware `permission:` de Spatie usa `canAny`, que pasa por `Gate::before`, así que `admin-ti` entraría de todos modos; aun así recibe los permisos de forma explícita, para que la pantalla de Usuarios muestre lo que puede hacer. El que no pasa por `Gate::before` es el middleware `role:`.
