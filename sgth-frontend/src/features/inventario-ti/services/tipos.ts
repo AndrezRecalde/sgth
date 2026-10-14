@@ -43,7 +43,7 @@ export type BienInformatico = {
   caracteristicas_tecnicas: Record<string, string> | null
   observaciones: string | null
   componentes_count: number
-  tipo?: Ref
+  tipo?: Ref & { ficha?: FichaTipo }
   subtipo?: Ref | null
   marca?: Ref
   ubicacion?: { id: number; sede: string; piso: string | null; nombre: string } | null
@@ -99,7 +99,7 @@ export type Opcion<T extends string = string> = { valor: T; etiqueta: string }
 
 /** `GET /inventario/catalogos`: lo que necesita el formulario de un equipo. */
 export type CatalogosInventario = {
-  tipos: { id: number; nombre: string; anios_vida_util: number; subtipos: { id: number; tipo_bien_id: number; nombre: string }[] }[]
+  tipos: { id: number; nombre: string; anios_vida_util: number; ficha: FichaTipo; subtipos: { id: number; tipo_bien_id: number; nombre: string }[] }[]
   marcas: Ref[]
   ubicaciones: { id: number; sede: string; piso: string | null }[]
   contratos: { id: number; proceso: string; fecha_inicio: string | null; fecha_fin: string | null }[]
@@ -111,10 +111,14 @@ export type CatalogosInventario = {
 
 // ── Configuración ──────────────────────────────────────────────
 
+/** Qué características pide un tipo en su ficha (`FichaTipoBien`, 5.3). */
+export type FichaTipo = 'computador' | 'impresora' | 'monitor' | 'escaner' | 'general'
+
 export type TipoBien = {
   id: number
   nombre: string
   anios_vida_util: number
+  ficha: FichaTipo
   bienes_count: number | null
   subtipos?: { id: number; tipo_bien_id: number; nombre: string }[]
 }

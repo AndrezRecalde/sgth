@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\InventarioTi;
 
+use App\Enums\FichaTipoBien;
 use App\Models\InventarioTi\Ubicacion;
 use App\Rules\UnicoSinMayusculas;
 use Illuminate\Foundation\Http\FormRequest;
@@ -61,6 +62,7 @@ class StoreCatalogoInventarioRequest extends FormRequest
             'tipos' => [
                 'nombre'          => [$presencia, 'string', 'max:100', new UnicoSinMayusculas('tipos_bien', 'nombre', $ignorar)],
                 'anios_vida_util' => ['sometimes', 'integer', 'min:0', 'max:30'],
+                'ficha'           => ['sometimes', Rule::enum(FichaTipoBien::class)],
             ],
             'subtipos' => [
                 'tipo_bien_id' => [$presencia, 'integer', Rule::exists('tipos_bien', 'id')->whereNull('deleted_at')],

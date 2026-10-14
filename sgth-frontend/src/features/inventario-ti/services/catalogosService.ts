@@ -1,6 +1,6 @@
 import api from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
-import type { CatalogosInventario, ContratoVigencia, Marca, TipoBien, Ubicacion, VentanaCronograma } from './tipos'
+import type { CatalogosInventario, ContratoVigencia, FichaTipo, Marca, TipoBien, Ubicacion, VentanaCronograma } from './tipos'
 
 const URL = '/inventario'
 
@@ -11,7 +11,7 @@ const crud = <T, D>(recurso: string) => ({
   eliminar: (id: number) => api.delete(`${URL}/${recurso}/${id}`),
 })
 
-export type GuardarTipoData = { nombre: string; anios_vida_util: number }
+export type GuardarTipoData = { nombre: string; anios_vida_util: number; ficha: FichaTipo }
 export type GuardarSubtipoData = { tipo_bien_id: number; nombre: string }
 export type GuardarMarcaData = { nombre: string }
 export type GuardarUbicacionData = { sede: string; piso: string | null; descripcion: string | null }

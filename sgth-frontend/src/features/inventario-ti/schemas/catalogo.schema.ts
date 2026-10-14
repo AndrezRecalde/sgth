@@ -8,6 +8,7 @@ import { z } from 'zod/v4'
 export const tipoSchema = z.object({
   nombre: z.string().trim().min(2, 'Mínimo 2 caracteres').max(100, 'Máximo 100 caracteres'),
   anios_vida_util: z.number({ message: 'Indique los años (0 si aún no se sabe)' }).int().min(0, 'No puede ser negativo').max(30, 'Máximo 30 años'),
+  ficha: z.enum(['computador', 'impresora', 'monitor', 'escaner', 'general']),
 })
 export type TipoFormData = z.infer<typeof tipoSchema>
 

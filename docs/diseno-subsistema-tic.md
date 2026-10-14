@@ -362,6 +362,20 @@ abierto ───────────► asignado ────────�
 - **Mudanza en lote.** Para cuando una unidad cambia de piso. Primero se ven los equipos que se moverían: los principales en servicio de la unidad que están en la ubicación de origen, contando la unidad de quien tiene el equipo o, si nadie lo tiene, la del equipo. Después se mueven con sus componentes, y la unidad queda con la nueva ubicación habitual. Los que estaban en otra parte (prestados, en la bodega) no se tocan.
 - **Historial.** Cada cambio de ubicación queda en `movimientos_ubicacion_bien` y en la ficha del equipo, sea al editarla, al entregar o traspasar la custodia o en una mudanza. Los componentes que estaban con su equipo lo acompañan.
 
+**Hecho en la fase 5.3** (equipos por tipo y registro en serie) [D11]
+
+- **Ficha de cada tipo.** Cada tipo de equipo dice qué características pide: computador, impresora, monitor, escáner o general (`tipos_bien.ficha`, migración `2026_10_29`). Se elige al crear o editar el tipo en Configuración. La migración la deduce del nombre de los tipos que ya existen (Computador y Portátil, Impresora, Monitor, Escáner); los demás quedan en general.
+- **El formulario del equipo muestra los campos de su ficha.** Se siguen guardando en `caracteristicas_tecnicas`, sin columnas nuevas.
+  - **computador:** nombre en la red, usuario del dominio, IP, procesador, memoria, sistema operativo y disco;
+  - **impresora:** nombre en la red, IP, conexión (red, Wi-Fi, USB o compartida), consumible (texto libre, por ejemplo «Tóner HP 85A», hasta la 5.4) y si imprime a color;
+  - **monitor:** pulgadas y entradas de video;
+  - **escáner:** IP, alimentación de hojas y conexión.
+- Si se cambia el tipo de un equipo, al guardar se quedan solo las características de la ficha nueva.
+- **Registro en serie:**
+  - «Registrar y agregar otro» guarda el equipo y deja el formulario con lo común del lote (tipo, marca, modelo, compra, ubicación, unidad, contrato y características), con los códigos, la serie y la red en blanco. La página lleva la cuenta de los registrados en la tanda.
+  - «Registrar otro igual», en la ficha de un equipo, abre el formulario con lo suyo.
+- Monitores y escáneres van como equipos propios, no como componentes (respuesta de TIC).
+
 ### 4.4 Roles y permisos
 
 Las rutas van **por permiso**, y el alcance de cada ticket lo decide `TicketPolicy`. El middleware `permission:` de Spatie usa `canAny`, que pasa por `Gate::before`, así que `admin-ti` entraría de todos modos; aun así recibe los permisos de forma explícita, para que la pantalla de Usuarios muestre lo que puede hacer. El que no pasa por `Gate::before` es el middleware `role:`.
@@ -659,15 +673,17 @@ Depende solo de la fase 1 (1.1 y 1.2). No necesita la Mesa de Ayuda, así que pu
 | 4.1 | Tablero de Inicio (tickets, SLA, equipos por estado, unidad y antigüedad, vigencias por vencer, préstamos en curso y vencidos) |
 | 4.2 | Reportes en Excel y PDF: inventario por unidad o ubicación, obsolescencia, tickets por técnico y categoría, satisfacción |
 
-### Fase 5: Ampliaciones (opcional, por decidir)
+### Fase 5: Ampliaciones
 
-| PR | Contenido |
-|---|---|
-| 5.1 | Plan de mantenimiento preventivo por campaña (piso, técnico, avance), como el «Planificador» |
-| 5.2 | Constatación física por QR desde el celular |
-| 5.3 | Carga de impresoras, monitores y escáneres |
-| 5.4 | Consumibles (tóner y tinta): ingresos, entregas y saldo por impresora |
-| 5.5 | Base de conocimiento |
+En el orden acordado [D11]. TIC llenará el inventario a mano: la carga del Excel queda disponible, pero ya no se planifica.
+
+| Orden | PR | Contenido |
+|---|---|---|
+| 1 | 5.3 | Impresoras, monitores y escáneres a mano: la ficha de características por tipo y el registro en serie |
+| 2 | 5.2 | Constatación física por QR desde el celular, con alta en sitio de lo que no esté registrado; la hace solo TIC |
+| 3 | 5.1 | Plan de mantenimiento preventivo por campaña (piso, técnico, avance), como el «Planificador» |
+| 4 | 5.4 | Consumibles (tóner y tinta), que administra TIC: ingresos, entregas y saldo por impresora |
+| 5 | 5.5 | Base de conocimiento, a mediados de 2027, con tickets reales |
 
 ---
 
@@ -685,7 +701,7 @@ Depende solo de la fase 1 (1.1 y 1.2). No necesita la Mesa de Ayuda, así que pu
 | D8 | ~~¿Los equipos en sedes fuera del edificio (San Mateo, Quinindé, UNAMYDESC) se manejan igual?~~ | 1.1 | **Aceptada (13-10-2026):** Sí, como ubicaciones con su sede |
 | D9 | ~~El terremoto de abril de 2025: ¿se registra como un evento masivo con los equipos afectados o basta una anotación por equipo?~~ | 1.4 | **Aceptada (13-10-2026):** Anotación por equipo, con su número de soporte |
 | D10 | ~~Orden: ¿inventario, préstamos y después mesa de ayuda (como se propone), o mesa de ayuda antes?~~ | todo | **Aceptada (13-10-2026):** Inventario primero: tiene los datos listos, y el ticket de hardware y el préstamo necesitan el equipo. Préstamos después, porque no depende de la mesa de ayuda y la mesa arranca en 2027 |
-| D11 | ~~¿Entra la fase 5 (consumibles, impresoras, plan preventivo, QR, base de conocimiento) y en qué orden?~~ | fase 5 | **Aceptada (13-10-2026):** se decide al cerrar la fase 3 |
+| D11 | ~~¿Entra la fase 5 (consumibles, impresoras, plan preventivo, QR, base de conocimiento) y en qué orden?~~ | fase 5 | **Aceptada (13-10-2026):** entra en el orden 5.3, 5.2, 5.1, 5.4, 5.5. TIC llena el inventario a mano; monitores y escáneres van como equipos propios; la constatación la hace solo TIC; el tóner lo administra TIC |
 | D12 | ~~Los accesorios que se prestan sin código institucional: ¿se registran? ¿Con qué código?~~ | — | **Resuelta (13-10-2026):** no existen. Todo lo prestable sale del inventario y tiene su código institucional, porque todo entra por Activos Fijos |
 | D13 | ~~¿El servidor pide un equipo concreto o un tipo?~~ | — | **Resuelta (13-10-2026):** el servidor elige uno o varios equipos concretos entre los disponibles |
 | D14 | ~~¿Quién aprueba el préstamo: solo TIC, o también el jefe inmediato del servidor?~~ | 2.1 | **Aceptada (13-10-2026):** Solo TIC; el jefe no interviene en un préstamo de horas |

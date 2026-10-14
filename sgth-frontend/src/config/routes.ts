@@ -120,6 +120,8 @@ export const ROUTES = {
     HOME: '/tic',
     EQUIPOS:       '/tic/inventario/equipos',
     EQUIPO_NUEVO:  '/tic/inventario/equipos/nuevo',
+    /** Registrar otro igual: el formulario arranca con lo de este equipo. */
+    EQUIPO_COPIAR: (id: number) => `/tic/inventario/equipos/nuevo?copiar=${id}`,
     EQUIPO:        (id: number) => `/tic/inventario/equipos/${id}`,
     EQUIPO_EDITAR: (id: number) => `/tic/inventario/equipos/${id}/editar`,
     MANTENIMIENTOS: '/tic/inventario/mantenimientos',

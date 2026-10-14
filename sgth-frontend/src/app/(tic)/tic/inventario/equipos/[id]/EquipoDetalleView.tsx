@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Alert, Button, Group, Skeleton, Tabs } from '@mantine/core'
-import { IconDevices, IconEdit, IconHistory, IconId, IconPuzzle, IconQrcode, IconTrashX } from '@tabler/icons-react'
+import { IconCopy, IconDevices, IconEdit, IconHistory, IconId, IconPuzzle, IconQrcode, IconTrashX } from '@tabler/icons-react'
 import { EmptyState, PageHeader, PageShell, StatusBadge } from '@/components/ui'
 import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import { ROUTES } from '@/config/routes'
@@ -64,6 +64,11 @@ export function EquipoDetalleView({ id }: { id: number }) {
             {puedeProponer && (
               <Button variant="subtle" color="red" leftSection={<IconTrashX size={16} />} onClick={() => setProponer(true)}>
                 Proponer baja
+              </Button>
+            )}
+            {gestiona && (
+              <Button variant="subtle" leftSection={<IconCopy size={16} />} onClick={() => router.push(ROUTES.TIC.EQUIPO_COPIAR(bien.id))}>
+                Registrar otro igual
               </Button>
             )}
             {gestiona && (

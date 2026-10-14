@@ -2,6 +2,7 @@ import { Group, Text } from '@mantine/core'
 import type { DataTableColumn } from 'mantine-datatable'
 import { CountBadge, StatusBadge, TableActions, type TableAction } from '@/components/ui'
 import { formatFecha } from '@/lib/fecha'
+import { ETIQUETA_FICHA } from '../constants/fichas'
 import type { ContratoVigencia, Marca, TipoBien, Ubicacion } from '../services/tipos'
 
 type Acciones<T> = (registro: T) => TableAction[]
@@ -23,6 +24,7 @@ const equiposCol = <T extends { bienes_count: number | null }>(): DataTableColum
 
 export const columnasTipos = (accionesDe: Acciones<TipoBien>): DataTableColumn<TipoBien>[] => [
   { accessor: 'nombre', title: 'Tipo', width: 180 },
+  { accessor: 'ficha', title: 'Ficha', width: 130, render: (t) => ETIQUETA_FICHA[t.ficha] ?? '—' },
   {
     accessor: 'subtipos',
     title: 'Subtipos',

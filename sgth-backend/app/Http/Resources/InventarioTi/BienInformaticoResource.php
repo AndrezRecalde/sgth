@@ -53,7 +53,7 @@ class BienInformaticoResource extends JsonResource
             'observaciones'        => $this->observaciones,
             'componentes_count'    => $this->componentes_count ?? 0,
 
-            'tipo'      => $this->whenLoaded('tipo', fn () => ['id' => $this->tipo->id, 'nombre' => $this->tipo->nombre]),
+            'tipo'      => $this->whenLoaded('tipo', fn () => ['id' => $this->tipo->id, 'nombre' => $this->tipo->nombre, 'ficha' => $this->tipo->ficha?->value ?? 'general']),
             'subtipo'   => $this->whenLoaded('subtipo', fn () => $this->subtipo ? ['id' => $this->subtipo->id, 'nombre' => $this->subtipo->nombre] : null),
             'marca'     => $this->whenLoaded('marca', fn () => ['id' => $this->marca->id, 'nombre' => $this->marca->nombre]),
             'ubicacion' => $this->whenLoaded('ubicacion', fn () => $this->ubicacion ? [

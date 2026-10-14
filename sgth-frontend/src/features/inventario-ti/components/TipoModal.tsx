@@ -1,12 +1,13 @@
 'use client'
 
-import { Grid, NumberInput, TextInput } from '@mantine/core'
+import { Grid, NumberInput, Select, TextInput } from '@mantine/core'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormModal } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { erroresAlFormulario } from '@/lib/erroresAlFormulario'
 import { useCatalogoMutations } from '../hooks/useCatalogosInventario'
+import { FICHAS } from '../constants/fichas'
 import { tipoSchema, type TipoFormData } from '../schemas/catalogo.schema'
 import { catalogosService, type GuardarTipoData } from '../services/catalogosService'
 import type { TipoBien } from '../services/tipos'
@@ -27,7 +28,7 @@ function Formulario({ onClose, tipo }: Omit<Props, 'opened'>) {
   const { guardar } = useCatalogoMutations<GuardarTipoData>('tipo', catalogosService.tipo)
   const { register, control, handleSubmit, setError, formState: { errors } } = useForm<TipoFormData>({
     resolver: zodResolver(tipoSchema),
-    defaultValues: { nombre: tipo?.nombre ?? '', anios_vida_util: tipo?.anios_vida_util ?? 0 },
+    defaultValues: { nombre: tipo?.nombre ?? '', anios_vida_util: tipo?.anios_vida_util ?? 0, ficha: tipo?.ficha ?? 'general' },
   })
 
   const enviar = (v: TipoFormData) =>
@@ -54,6 +55,15 @@ function Formulario({ onClose, tipo }: Omit<Props, 'opened'>) {
             <NumberInput label="Vida útil (años)" min={0} max={30} hideControls
               error={errors.anios_vida_util?.message} {...contained}
               value={field.value} onChange={(v) => field.onChange(typeof v === 'number' ? v : Number.NaN)} />
+          )} />
+        </Grid.Col>
+        <Grid.Col span={12}>
+          <Controller name="ficha" control={control} render={({ field }) => (
+            <Select label="Ficha de características" allowDeselect={false} {...contained}
+              description="Qué datos pide el formulario del equipo según su tipo."
+              error={errors.ficha?.message}
+              data={FICHAS.map((f) => ({ value: f.value, label: `${f.label} · ${f.descripcion}` }))}
+              value={field.value} onChange={(v) => field.onChange(FICHAS.find((f) => f.value === v)?.value ?? field.value)} />
           )} />
         </Grid.Col>
       </Grid>
