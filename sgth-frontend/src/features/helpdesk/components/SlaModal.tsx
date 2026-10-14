@@ -1,6 +1,6 @@
 'use client'
 
-import { Grid, NumberInput, Select, Text } from '@mantine/core'
+import { Grid, NumberInput, Select } from '@mantine/core'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormModal } from '@/components/ui'
@@ -51,9 +51,9 @@ function Formulario({ onClose, id, valores }: Omit<Props, 'opened'>) {
       .catch((e) => erroresAlFormulario(e, setError, CAMPOS, 'No se pudo guardar el plazo'))
   }
 
-  const horas = (name: 'tiempo_respuesta_horas' | 'tiempo_resolucion_horas', label: string) => (
+  const horas = (name: 'tiempo_respuesta_horas' | 'tiempo_resolucion_horas', label: string, description: string) => (
     <Controller name={name} control={control} render={({ field }) => (
-      <NumberInput label={label} withAsterisk min={0.1} max={2000} decimalScale={1} hideControls placeholder="Horas hábiles"
+      <NumberInput label={label} description={description} withAsterisk min={0.1} max={2000} decimalScale={1} hideControls placeholder="Horas hábiles"
         decimalSeparator="," suffix=" h" error={errors[name]?.message} {...contained}
         value={field.value ?? ''} onChange={(v) => field.onChange(typeof v === 'number' ? v : Number.NaN)} />
     )} />
@@ -67,7 +67,7 @@ function Formulario({ onClose, id, valores }: Omit<Props, 'opened'>) {
       <Grid>
         <Grid.Col span={{ base: 12, sm: 5 }}>
           <Controller name="prioridad" control={control} render={({ field }) => (
-            <Select label="Prioridad" withAsterisk allowDeselect={false} disabled={!porCategoria} {...contained}
+            <Select label="Prioridad" placeholder="Elija la prioridad" withAsterisk allowDeselect={false} disabled={!porCategoria} {...contained}
               error={errors.prioridad?.message}
               data={PRIORIDADES.map((p) => ({ value: p, label: ETIQUETA_PRIORIDAD[p] }))}
               value={field.value} onChange={(v) => field.onChange((v as PrioridadTicket | null) ?? field.value)} />
@@ -83,15 +83,10 @@ function Formulario({ onClose, id, valores }: Omit<Props, 'opened'>) {
           )} />
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6 }}>
-          {horas('tiempo_respuesta_horas', 'Primera respuesta')}
+          {horas('tiempo_respuesta_horas', 'Primera respuesta', 'Hasta que TIC toma o responde el ticket.')}
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6 }}>
-          {horas('tiempo_resolucion_horas', 'Resolución')}
-        </Grid.Col>
-        <Grid.Col span={12}>
-          <Text size="xs" c="dimmed">
-            En horas hábiles. La primera respuesta corre hasta que TIC toma o responde el ticket; la resolución, hasta darlo por resuelto.
-          </Text>
+          {horas('tiempo_resolucion_horas', 'Resolución', 'Hasta darlo por resuelto.')}
         </Grid.Col>
       </Grid>
     </FormModal>

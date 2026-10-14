@@ -14,6 +14,13 @@ export const nuevoTicketSchema = z.object({
 })
 export type NuevoTicketFormData = z.infer<typeof nuevoTicketSchema>
 
+/** El que registra TIC: el de «Pedir ayuda», más a nombre de quién y la prioridad. */
+export const registroTicketSchema = nuevoTicketSchema.extend({
+  servidor_id: z.number({ message: 'Elija quién pide la ayuda' }),
+  prioridad: z.enum(['baja', 'media', 'alta', 'urgente']),
+})
+export type RegistroTicketFormData = z.infer<typeof registroTicketSchema>
+
 export const mensajeSchema = z.object({
   comentario: z.string().trim().min(1, 'Escriba el mensaje').max(2000, 'Máximo 2000 caracteres'),
   archivo: z.instanceof(File).nullable(),

@@ -35,6 +35,7 @@ export function AsignarTicketModal({ ticket, onClose }: { ticket: Ticket; onClos
   const numero = (name: 'tecnico_id' | 'unidad_tic_id', label: string, data: Opcion[] | { group: string; items: Opcion[] }[]) => (
     <Controller name={name} control={control} render={({ field }) => (
       <Select label={label} withAsterisk={name === 'tecnico_id'} searchable {...contained} error={errors[name]?.message}
+        placeholder={name === 'tecnico_id' ? 'Elija el técnico' : 'Sin área definida'} clearable={name !== 'tecnico_id'}
         data={data}
         value={field.value ? String(field.value) : null} onChange={(v) => field.onChange(v ? Number(v) : name === 'tecnico_id' ? undefined : null)} />
     )} />
@@ -49,7 +50,7 @@ export function AsignarTicketModal({ ticket, onClose }: { ticket: Ticket; onClos
         <Grid.Col span={{ base: 12, sm: 7 }}>{numero('unidad_tic_id', 'Área de TIC', (catalogos?.subunidades ?? []).map((u) => ({ value: String(u.id), label: u.nombre })))}</Grid.Col>
         <Grid.Col span={{ base: 12, sm: 5 }}>
           <Controller name="prioridad" control={control} render={({ field }) => (
-            <Select label="Prioridad" allowDeselect={false} {...contained}
+            <Select label="Prioridad" placeholder="Elija la prioridad" allowDeselect={false} {...contained}
               data={(catalogos?.prioridades ?? []).map((p) => ({ value: p.valor, label: p.etiqueta }))}
               value={field.value} onChange={(v) => field.onChange((v as PrioridadTicket | null) ?? field.value)} />
           )} />

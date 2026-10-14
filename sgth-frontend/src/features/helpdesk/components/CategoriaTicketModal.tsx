@@ -1,6 +1,6 @@
 'use client'
 
-import { Grid, Select, Switch, Text, TextInput, Textarea } from '@mantine/core'
+import { Grid, Select, Switch, TextInput, Textarea } from '@mantine/core'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormModal } from '@/components/ui'
@@ -66,11 +66,11 @@ function Formulario({ onClose, categoria }: Omit<Props, 'opened'>) {
         <Grid.Col span={12}>
           <Controller name="unidad_tic_id" control={control} render={({ field }) => (
             <Select label="Subunidad que la atiende" placeholder="Sin definir: la reparte la jefatura" clearable {...contained}
+              description="Se propone al asignar; se puede cambiar en cada ticket."
               error={errors.unidad_tic_id?.message}
               data={(catalogos?.subunidades ?? []).map((u) => ({ value: String(u.id), label: u.nombre }))}
               value={field.value ? String(field.value) : null} onChange={(v) => field.onChange(v ? Number(v) : null)} />
           )} />
-          <Text size="xs" c="dimmed" mt={4}>Se propone al asignar; se puede cambiar en cada ticket.</Text>
         </Grid.Col>
         <Grid.Col span={12}>
           <Controller name="es_hardware" control={control} render={({ field }) => (

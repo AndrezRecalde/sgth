@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { DataState, DetailList, SectionCard } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { erroresAlFormulario } from '@/lib/erroresAlFormulario'
+import { plural } from '@/lib/plural'
 import { useGuardarReglasPrestamo, useReglasPrestamoTic } from '../hooks/usePrestamosTic'
 import { reglasSchema, type ReglasFormData } from '../schemas/reglas.schema'
 import type { ReglasPrestamo } from '../services/tipos'
@@ -28,7 +29,7 @@ function Resumen({ reglas: r }: { reglas: ReglasPrestamo }) {
   return (
     <SectionCard title="Reglas del préstamo de equipos">
       <DetailList columnas={2} items={[
-        { label: 'Plazo máximo', value: `${r.plazo_maximo_dias_habiles} día(s) hábil(es)` },
+        { label: 'Plazo máximo', value: plural(r.plazo_maximo_dias_habiles, 'día hábil', 'días hábiles') },
         { label: 'Atención', value: `De ${r.hora_apertura} a ${r.hora_cierre}` },
         { label: 'Anticipación mínima', value: r.anticipacion_minima_minutos > 0 ? `${r.anticipacion_minima_minutos} minutos` : 'Ninguna' },
         { label: 'Margen para retirar', value: `${r.margen_retiro_minutos} minutos` },

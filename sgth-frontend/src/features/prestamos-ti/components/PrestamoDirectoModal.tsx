@@ -70,20 +70,23 @@ function Formulario({ onClose }: { onClose: () => void }) {
             </Grid.Col>
             <Grid.Col span={{ base: 12, sm: 5 }}>
               <Controller name={`items.${n}.condicion_entrega`} control={control} render={({ field }) => (
-                <CondicionEquipo value={field.value} onChange={field.onChange} />
+                <CondicionEquipo label="Condición al salir" value={field.value} onChange={field.onChange} />
               )} />
             </Grid.Col>
           </Grid>
         ))}
         <Controller name="fin_previsto" control={control} render={({ field }) => (
-          <DateTimePicker label="Lo devuelve" valueFormat="DD/MM/YYYY HH:mm" withAsterisk timePickerProps={SELECTOR_HORA}
+          <DateTimePicker label="Lo devuelve" placeholder="Fecha y hora" valueFormat="DD/MM/YYYY HH:mm" withAsterisk timePickerProps={SELECTOR_HORA}
             minDate={new Date()} error={errors.fin_previsto?.message} {...contained}
             value={field.value ? new Date(field.value) : null} onChange={(d) => field.onChange(fromDateTimeValue(d))} />
         )} />
-        <Textarea label="Para qué" withAsterisk autosize minRows={2} error={errors.motivo?.message} {...contained} {...register('motivo')} />
-        <TextInput label="Dónde se usa" withAsterisk error={errors.lugar_uso?.message} {...contained} {...register('lugar_uso')} />
-        <Checkbox label="Se usa fuera del edificio" {...register('fuera_del_edificio')} />
-        <Textarea label="Observaciones" autosize minRows={2} error={errors.observaciones?.message} {...contained} {...register('observaciones')} />
+        <Textarea label="Para qué lo necesita" placeholder="Ej.: Presentación del plan operativo a los directores." withAsterisk autosize minRows={2}
+          error={errors.motivo?.message} {...contained} {...register('motivo')} />
+        <TextInput label="Dónde lo va a usar" placeholder="Ej.: Sala de sesiones, piso 3" withAsterisk
+          error={errors.lugar_uso?.message} {...contained} {...register('lugar_uso')} />
+        <Checkbox label="Lo va a usar fuera del edificio" {...register('fuera_del_edificio')} />
+        <Textarea label="Observaciones" placeholder="Opcional" autosize minRows={2}
+          error={errors.observaciones?.message} {...contained} {...register('observaciones')} />
       </Stack>
     </FormModal>
   )

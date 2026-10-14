@@ -2,6 +2,7 @@
 
 import { SegmentedControl, Stack, Text } from '@mantine/core'
 import { DateTimePicker } from '@mantine/dates'
+import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { fromDateTimeValue } from '@/lib/fecha'
 import type { CondicionFisica } from '../services/tipos'
@@ -12,13 +13,22 @@ const CONDICIONES: { value: CondicionFisica; label: string }[] = [
   { value: 'malo', label: 'Malo' },
 ]
 
+interface PropsCondicion {
+  /** «Condición al salir», «Condición al volver»: sin ella no se sabía qué se elegía. */
+  label: string
+  value: CondicionFisica
+  onChange: (v: CondicionFisica) => void
+  error?: string
+}
+
 /** En qué condición sale o vuelve un equipo. */
-export function CondicionEquipo({ value, onChange, error }: { value: CondicionFisica; onChange: (v: CondicionFisica) => void; error?: string }) {
+export function CondicionEquipo({ label, value, onChange, error }: PropsCondicion) {
   return (
-    <Stack gap={2}>
-      <SegmentedControl size="xs" data={CONDICIONES} value={value}
+    <Stack gap={4}>
+      <Text size="xs" fw={600} c="dimmed">{label}</Text>
+      <SegmentedControl fullWidth data={CONDICIONES} value={value} aria-label={label}
         onChange={(v) => onChange(CONDICIONES.find((c) => c.value === v)?.value ?? 'bueno')} />
-      {error && <Text size="xs" c="red">{error}</Text>}
+      {error && <Text size="xs" c={SEMANTIC_COLOR.danger}>{error}</Text>}
     </Stack>
   )
 }
@@ -30,7 +40,7 @@ export function MomentoReal({ label, value, onChange, error }: { label: string; 
   const contained = useContainedInput()
 
   return (
-    <DateTimePicker label={label} valueFormat="DD/MM/YYYY HH:mm" withAsterisk timePickerProps={SELECTOR_HORA}
+    <DateTimePicker label={label} placeholder="Fecha y hora" valueFormat="DD/MM/YYYY HH:mm" withAsterisk timePickerProps={SELECTOR_HORA}
       maxDate={new Date()} error={error} {...contained}
       value={value ? new Date(value) : null} onChange={(d) => onChange(fromDateTimeValue(d))} />
   )

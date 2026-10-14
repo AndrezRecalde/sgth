@@ -9,6 +9,7 @@ import { DataState, PageHeader, PageShell, SectionCard, Toolbar } from '@/compon
 import { ROUTES } from '@/config/routes'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
+import { plural } from '@/lib/plural'
 import { AgendaEquipos } from '@/features/prestamos-ti/components/AgendaEquipos'
 import { SolicitarPrestamoModal, type PropuestaSolicitud } from '@/features/prestamos-ti/components/SolicitarPrestamoModal'
 import { useDisponibilidadPortal, useReglasPrestamoPortal } from '@/features/prestamos-ti/hooks/useMisPrestamos'
@@ -65,7 +66,7 @@ export function DisponibilidadView() {
       <PageHeader
         title="Préstamo de equipos"
         description={reglas
-          ? `Proyectores, parlantes y otros equipos de TIC. Se prestan de ${reglas.hora_apertura} a ${reglas.hora_cierre}, hasta ${reglas.plazo_maximo_dias_habiles} día(s) hábil(es).`
+          ? `Proyectores, parlantes y otros equipos de TIC. Se prestan de ${reglas.hora_apertura} a ${reglas.hora_cierre}, hasta ${plural(reglas.plazo_maximo_dias_habiles, 'día hábil', 'días hábiles')}.`
           : 'Proyectores, parlantes y otros equipos de TIC.'}
         actions={(
           <Group gap="xs">
@@ -85,12 +86,12 @@ export function DisponibilidadView() {
           data={[{ value: 'dia', label: 'Día' }, { value: 'semana', label: 'Semana' }]} />
         <Group gap={4} wrap="nowrap">
           <ActionIcon variant="subtle" onClick={() => mover(-1)} aria-label="Anterior"><IconChevronLeft size={16} /></ActionIcon>
-          <DatePickerInput aria-label="Día" valueFormat="DD/MM/YYYY" {...compacto}
+          <DatePickerInput label={vista === 'dia' ? 'Día' : 'Semana de'} valueFormat="DD/MM/YYYY" {...compacto}
             value={toDateValue(dia)} onChange={(d) => setDia(fromDateValueOrNull(d) ?? dia)} />
           <ActionIcon variant="subtle" onClick={() => mover(1)} aria-label="Siguiente"><IconChevronRight size={16} /></ActionIcon>
         </Group>
         {tipos.length > 1 && (
-          <Select aria-label="Tipo de equipo" placeholder="Todos los tipos" data={tipos} clearable {...compacto}
+          <Select label="Tipo de equipo" placeholder="Todos los tipos" data={tipos} clearable {...compacto}
             value={tipo} onChange={setTipo} />
         )}
       </Toolbar>

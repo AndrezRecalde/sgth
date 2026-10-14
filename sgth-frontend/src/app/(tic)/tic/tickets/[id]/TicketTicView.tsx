@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Anchor, Grid, Group, Skeleton, Stack, Text, Timeline } from '@mantine/core'
 import { IconHeadset } from '@tabler/icons-react'
@@ -7,6 +8,7 @@ import { DetailList, EmptyState, PageHeader, PageShell, SectionCard, StatusBadge
 import { ROUTES } from '@/config/routes'
 import { useAuth } from '@/hooks/useAuth'
 import { formatFechaHora } from '@/lib/fecha'
+import { plural } from '@/lib/plural'
 import { AccionesTicketTic } from '@/features/helpdesk/components/AccionesTicketTic'
 import { ConversacionTicket } from '@/features/helpdesk/components/ConversacionTicket'
 import { SlaBadge } from '@/features/helpdesk/components/SlaBadge'
@@ -83,11 +85,11 @@ export function TicketTicView({ id }: { id: number }) {
                 {
                   label: 'Equipo',
                   value: t.bien
-                    ? <Anchor size="sm" onClick={() => router.push(ROUTES.TIC.EQUIPO(t.bien?.id ?? 0))}>{t.bien.codigo_institucional} · {[t.bien.tipo, t.bien.modelo].filter(Boolean).join(' ')}</Anchor>
+                    ? <Anchor size="sm" component={Link} href={ROUTES.TIC.EQUIPO(t.bien.id)}>{t.bien.codigo_institucional} · {[t.bien.tipo, t.bien.modelo].filter(Boolean).join(' ')}</Anchor>
                     : '—',
                 },
                 { label: 'Canal', value: t.canal === 'tic' ? `Registrado por TIC (${t.registrado_por ?? ''})` : 'Portal' },
-                ...(t.reabierto_veces > 0 ? [{ label: 'Reabierto', value: `${t.reabierto_veces} vez/veces` }] : []),
+                ...(t.reabierto_veces > 0 ? [{ label: 'Reabierto', value: plural(t.reabierto_veces, 'vez', 'veces') }] : []),
                 ...(t.encuesta ? [{ label: 'Calificación', value: `${t.encuesta.calificacion} de 5${t.encuesta.comentarios ? ` · ${t.encuesta.comentarios}` : ''}` }] : []),
                 ...(t.motivo_anulacion ? [{ label: 'Anulado', value: `${t.motivo_anulacion} (${t.anulado_por ?? ''})` }] : []),
               ]} />

@@ -1,6 +1,7 @@
 import { Stack, Text } from '@mantine/core'
 import type { DataTableColumn } from 'mantine-datatable'
 import { StatusBadge } from '@/components/ui'
+import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import type { FilaUsoEquipo } from '../services/tipos'
 import { momentoCorto } from '../utils/agenda'
 
@@ -23,7 +24,7 @@ export const columnasReporteUso: DataTableColumn<FilaUsoEquipo>[] = [
   { accessor: 'horas', title: 'Horas fuera', width: 120, textAlign: 'right', render: (e) => numero(e.horas) },
   {
     accessor: 'devoluciones_tarde', title: 'Devueltos tarde', width: 140, textAlign: 'right',
-    render: (e) => (e.devoluciones_tarde > 0 ? <Text size="sm" c="red">{e.devoluciones_tarde}</Text> : '—'),
+    render: (e) => (e.devoluciones_tarde > 0 ? <Text size="sm" c={SEMANTIC_COLOR.danger}>{e.devoluciones_tarde}</Text> : '—'),
   },
   { accessor: 'no_retirados', title: 'No retirados', width: 120, textAlign: 'right', render: (e) => numero(e.no_retirados) },
   { accessor: 'ultimo_prestamo', title: 'Último préstamo', width: 160, render: (e) => momentoCorto(e.ultimo_prestamo) },

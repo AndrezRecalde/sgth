@@ -9,6 +9,7 @@ import { CountBadge, DataState, PAGINACION_ES, PageHeader, PageShell, SgthTable,
 import { ROUTES } from '@/config/routes'
 import { useAuth } from '@/hooks/useAuth'
 import { useContainedInput } from '@/hooks/useContainedInput'
+import { plural } from '@/lib/plural'
 import { PrestamoDirectoModal } from '@/features/prestamos-ti/components/PrestamoDirectoModal'
 import { PrestamoModalesTic, accionesPrestamo, useAprobarConConfirmacion, type AccionPrestamo } from '@/features/prestamos-ti/components/PrestamoModalesTic'
 import { columnasBandejaPrestamos } from '@/features/prestamos-ti/components/prestamos.columns'
@@ -68,7 +69,7 @@ export function BandejaPrestamosView() {
       <PageHeader
         title="Préstamos"
         description={resumen && resumen.por_entregar_hoy > 0
-          ? `Hoy se retiran ${resumen.por_entregar_hoy} préstamo(s): están en «Reservados».`
+          ? `Hoy se ${resumen.por_entregar_hoy === 1 ? 'retira' : 'retiran'} ${plural(resumen.por_entregar_hoy, 'préstamo', 'préstamos')}: están en «Reservados».`
           : 'Proyectores, parlantes y demás equipos que TIC presta: aprobar, entregar y recibir'}
         actions={(
           <Group gap="xs">
