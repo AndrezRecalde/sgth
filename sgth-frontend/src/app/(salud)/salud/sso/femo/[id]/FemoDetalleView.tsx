@@ -82,6 +82,7 @@ export function FemoDetalleView({ id }: Props) {
             </Button>
             {solicitudEnCurso && (
               <Button
+                variant="light"
                 leftSection={<IconEdit size={14} />}
                 onClick={() => router.push(ROUTES.SALUD.FEMO_NUEVA(solicitudEnCurso.id))}
               >
