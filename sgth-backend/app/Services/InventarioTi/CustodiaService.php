@@ -32,6 +32,8 @@ use Illuminate\Support\Facades\Storage;
  */
 final class CustodiaService implements CustodiaServiceInterface
 {
+    public function __construct(private readonly UbicacionesBienService $ubicaciones) {}
+
     private const RELACIONES = [
         'bien:id,codigo_institucional,modelo,tipo_bien_id,subtipo_bien_id,marca_id,ubicacion_id,estado_operativo',
         'bien.tipo:id,nombre', 'bien.marca:id,nombre',
@@ -69,6 +71,7 @@ final class CustodiaService implements CustodiaServiceInterface
             }
 
             $asignacion = $this->crear($bien, $datos, AsignacionBien::MOTIVO_ENTREGA, null);
+            $this->ubicar($bien, $datos, 'entrega');
 
             if ($bien->estado_operativo === EstadoBien::DISPONIBLE) {
                 $bien->update(['estado_operativo' => EstadoBien::EN_USO]);
@@ -99,7 +102,10 @@ final class CustodiaService implements CustodiaServiceInterface
                 'updated_by'       => auth()->id(),
             ]);
 
-            return $this->obtener($this->crear($bien, $datos, AsignacionBien::MOTIVO_TRASPASO, $actual->id)->id);
+            $nueva = $this->crear($bien, $datos, AsignacionBien::MOTIVO_TRASPASO, $actual->id);
+            $this->ubicar($bien, $datos, 'traspaso');
+
+            return $this->obtener($nueva->id);
         });
     }
 
@@ -220,6 +226,14 @@ final class CustodiaService implements CustodiaServiceInterface
             // Quién entrega lo pone el sistema: es el dato que firma el acta.
             'created_by'             => auth()->id(),
         ]);
+    }
+
+    /** Si la entrega o el traspaso dice dónde queda el equipo, se mueve (con sus componentes). */
+    private function ubicar(BienInformatico $bien, array $datos, string $motivo): void
+    {
+        if (array_key_exists('ubicacion_id', $datos)) {
+            $this->ubicaciones->mover($bien, $datos['ubicacion_id'], $motivo);
+        }
     }
 
     /** Uno dado de baja, extraviado o del grupo de préstamo no se entrega en custodia. */

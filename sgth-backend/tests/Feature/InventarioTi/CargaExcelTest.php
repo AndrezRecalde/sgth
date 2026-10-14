@@ -104,7 +104,7 @@ test('una fila completa del Excel queda como equipo, custodia, mantenimientos y 
         ->and($bien->tipo->nombre)->toBe('Computador')
         ->and($bien->subtipo->nombre)->toBe('Todo en uno')
         ->and($bien->marca->nombre)->toBe('DELL')
-        ->and($bien->ubicacion->nombre)->toBe('Edificio principal · 6')
+        ->and($bien->ubicacion->nombre)->toBe('Edificio Central · Piso 6')
         ->and($bien->fecha_compra->toDateString())->toBe('2021-10-04')
         ->and($bien->condicion_fisica)->toBe(CondicionFisicaBien::REGULAR)
         ->and($bien->caracteristicas_tecnicas)->toBe(['tipo_disco' => 'SSD'])

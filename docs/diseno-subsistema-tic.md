@@ -211,7 +211,7 @@ marcas ──────┤                         │
 - **Custodia.** Un equipo tiene un solo custodio a la vez. No se entrega si está dado de baja, extraviado o en el grupo de préstamo, y un equipo con custodio no se marca como prestable.
 - **Componentes.** Un componente cuelga de un equipo principal, y solo un nivel. Un equipo con componentes no se borra.
 - **Únicos sin distinguir mayúsculas.** El código institucional, la serie y los nombres de catálogo no cuentan las fichas borradas: una ficha registrada por error se puede volver a registrar bien. Se comparan sin mayúsculas, porque «DELL» y «Dell» son la misma marca.
-- **Catálogos de partida.** `InventarioTiCatalogoSeeder` siembra 10 tipos con sus subtipos del Excel y 11 ubicaciones: «Edificio principal» de la PB al piso 6, San Mateo, Dispensario Médico, UNAMYDESC y Quinindé. Las marcas las crea la carga del Excel (1.4).
+- **Catálogos de partida.** `InventarioTiCatalogoSeeder` siembra 10 tipos con sus subtipos del Excel. Las ubicaciones las siembra desde D18 la migración `2026_10_28`, y las marcas las crea la carga del Excel (1.4).
 - **Pendiente de TIC: los años de vida útil de cada tipo.** Quedan en 0 hasta que TIC los fije desde Configuración. Sin ese dato no se calcula el fin de la vida útil.
 
 **Mesa de ayuda:**
@@ -354,6 +354,13 @@ abierto ───────────► asignado ────────�
   - **Satisfacción** (`ver-tickets-todos`): el promedio, cuántas encuestas hubo de cada nota, el promedio por técnico y por categoría, y los comentarios.
 - `encuestas-satisfaccion/resultados` deja de devolver un 4.5 fijo: es el reporte de satisfacción, por defecto del mes en curso.
 - El uso de los equipos de préstamo (2.4) conserva su pantalla propia.
+
+**Hecho después de la fase 4: las ubicaciones** [D18]
+
+- **Catálogo.** La migración `2026_10_28` siembra las sedes que fijó TIC: Edificio Central (sin piso, planta baja y pisos 1 a 6), Dispensario Médico y San Mateo. También renombra lo que dejaba la carga del Excel («Edificio principal · PB» pasa a «Edificio Central · Planta baja», y «· 3» a «· Piso 3») y retira UNAMYDESC si ningún equipo está allí. TIC puede agregar sedes y pisos desde Configuración; Quinindé se conserva (D8).
+- **Ubicación habitual de cada unidad** (Configuración › Ubicaciones). Solo se propone: al registrar un equipo, cuando se elige su unidad y todavía no tiene ubicación; al entregarlo o traspasarlo, la de la unidad del custodio. Cambiarla no mueve ningún equipo.
+- **Mudanza en lote.** Para cuando una unidad cambia de piso. Primero se ven los equipos que se moverían: los principales en servicio de la unidad que están en la ubicación de origen, contando la unidad de quien tiene el equipo o, si nadie lo tiene, la del equipo. Después se mueven con sus componentes, y la unidad queda con la nueva ubicación habitual. Los que estaban en otra parte (prestados, en la bodega) no se tocan.
+- **Historial.** Cada cambio de ubicación queda en `movimientos_ubicacion_bien` y en la ficha del equipo, sea al editarla, al entregar o traspasar la custodia o en una mudanza. Los componentes que estaban con su equipo lo acompañan.
 
 ### 4.4 Roles y permisos
 
@@ -685,3 +692,4 @@ Depende solo de la fase 1 (1.1 y 1.2). No necesita la Mesa de Ayuda, así que pu
 | D15 | ~~En la disponibilidad del Portal, ¿el servidor ve quién tiene el equipo o solo que está ocupado y hasta cuándo?~~ | 2.2 | **Aceptada (13-10-2026):** Solo «ocupado hasta las 15:00»; el nombre lo ve TIC |
 | D16 | ~~Reglas del préstamo: plazo máximo, anticipación mínima, si se presta fuera del edificio, fuera del horario o en fin de semana, y si quien tiene un préstamo vencido puede pedir otro~~ | 2.1 | **Aceptada (13-10-2026):** Configurables en `/tic`; por defecto hasta 5 días hábiles, sin préstamo nuevo mientras tenga uno vencido, y margen de 1 hora para retirar |
 | D17 | ~~Constancia: ¿basta el registro con la fecha y la hora reales, o se imprime un acta de préstamo para firmar?~~ | 2.3 | **Aceptada (13-10-2026):** Registro en el sistema y correo al servidor en la entrega y la devolución; acta en PDF opcional para préstamos de varios días o fuera del edificio |
+| D18 | ~~¿La ubicación de un equipo se deriva de su unidad, o es un dato propio del equipo?~~ | 4 | **Aceptada (13-10-2026):** Propio del equipo, porque una nueva administración puede cambiar de piso a las unidades. Cada unidad tiene una ubicación habitual que solo se propone, y la mudanza en lote mueve los equipos cuando una unidad se cambia de piso. Sedes: Edificio Central, Dispensario Médico y San Mateo; UNAMY ya no existe |

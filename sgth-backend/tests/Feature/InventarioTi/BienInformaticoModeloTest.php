@@ -241,6 +241,9 @@ test('la migracion pasa los estados viejos a los nuevos segun la custodia', func
     $migracion = require database_path('migrations/2026_10_18_000000_modelo_de_datos_del_inventario_ti.php');
     // La de mantenimientos (1.5) cuelga de `contratos_vigencia`: se deshace antes.
     $mantenimientos = require database_path('migrations/2026_10_21_000000_mantenimientos_de_equipos.php');
+    // Y la de ubicaciones (2026-10-28) cuelga de `ubicaciones`.
+    $ubicaciones = require database_path('migrations/2026_10_28_000000_ubicaciones_de_tic.php');
+    $ubicaciones->down();
     $mantenimientos->down();
     $migracion->down();
 
@@ -262,6 +265,7 @@ test('la migracion pasa los estados viejos a los nuevos segun la custodia', func
 
     $migracion->up();
     $mantenimientos->up();
+    $ubicaciones->up();
 
     $estado = fn (int $id) => DB::table('bienes_informaticos')->where('id', $id)->value('estado_operativo');
     expect($estado($conCustodio))->toBe('en_uso')

@@ -5,6 +5,7 @@ namespace App\Http\Requests\InventarioTi;
 use App\Contracts\InventarioTi\CustodiaServiceInterface;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /**
  * Entregar un equipo en custodia (fase 1.3). Hasta la 1.1 llegaba
@@ -50,6 +51,8 @@ class StoreAsignacionBienRequest extends FormRequest
             'memorando_numero'    => ['nullable', 'string', 'max:100'],
             'soporte_anterior'    => ['nullable', 'string', 'max:30', $this->soporteAnteriorVigente()],
             'observaciones'       => ['nullable', 'string', 'max:2000'],
+            // Dónde queda el equipo; si no se manda, sigue donde estaba.
+            'ubicacion_id'        => ['sometimes', 'nullable', 'integer', Rule::exists('ubicaciones', 'id')->whereNull('deleted_at')],
         ];
     }
 
@@ -71,6 +74,7 @@ class StoreAsignacionBienRequest extends FormRequest
             'fecha_asignacion'    => 'fecha',
             'memorando_numero'    => 'número de memorando',
             'soporte_anterior'    => 'número de soporte anterior',
+            'ubicacion_id'        => 'ubicación',
         ];
     }
 }

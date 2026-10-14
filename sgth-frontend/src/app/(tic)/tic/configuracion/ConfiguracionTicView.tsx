@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Tabs } from '@mantine/core'
+import { Stack, Tabs } from '@mantine/core'
 import {
   IconBuilding, IconCategory, IconClockHour4, IconFileCertificate, IconLifebuoy, IconPresentation, IconTag, IconUsersGroup,
 } from '@tabler/icons-react'
@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { ContratosPanel } from '@/features/inventario-ti/components/ContratosPanel'
 import { MarcasPanel, UbicacionesPanel } from '@/features/inventario-ti/components/MarcasUbicacionesPanel'
 import { TiposPanel } from '@/features/inventario-ti/components/TiposPanel'
+import { UbicacionesPorUnidadPanel } from '@/features/inventario-ti/components/UbicacionesPorUnidadPanel'
 import { ReglasPrestamoPanel } from '@/features/prestamos-ti/components/ReglasPrestamoPanel'
 import { CategoriasTicketPanel } from '@/features/helpdesk/components/CategoriasTicketPanel'
 import { SlaPanel } from '@/features/helpdesk/components/SlaPanel'
@@ -56,7 +57,12 @@ export function ConfiguracionTicView() {
           <>
             <Tabs.Panel value="tipos" pt="lg"><TiposPanel /></Tabs.Panel>
             <Tabs.Panel value="marcas" pt="lg"><MarcasPanel /></Tabs.Panel>
-            <Tabs.Panel value="ubicaciones" pt="lg"><UbicacionesPanel /></Tabs.Panel>
+            <Tabs.Panel value="ubicaciones" pt="lg">
+              <Stack gap="lg">
+                <UbicacionesPanel />
+                <UbicacionesPorUnidadPanel puedeEditar={inventario} />
+              </Stack>
+            </Tabs.Panel>
             <Tabs.Panel value="contratos" pt="lg"><ContratosPanel /></Tabs.Panel>
             <Tabs.Panel value="prestamos" pt="lg"><ReglasPrestamoPanel puedeEditar={hasPermiso('gestionar-prestamos')} /></Tabs.Panel>
           </>

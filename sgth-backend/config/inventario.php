@@ -44,12 +44,13 @@ return [
             'VICEPREFECTURA'            => 'Viceprefectura Provincial',
         ],
 
-        // La columna «PISO»: lo que no es un piso del edificio es otra sede.
-        'sede_principal' => 'Edificio principal',
+        // La columna «PISO»: «PB» y «1ER»…«6TO» son del Edificio Central; lo
+        // demás es otra sede. UNAMY ya no existe: sus filas quedan sin
+        // ubicación y salen en el informe.
+        'sede_principal' => 'Edificio Central',
         'sedes' => [
-            'SM'    => 'San Mateo',
-            'DM'    => 'Dispensario Médico',
-            'UNAMY' => 'UNAMYDESC',
+            'SM' => 'San Mateo',
+            'DM' => 'Dispensario Médico',
         ],
     ],
 ];

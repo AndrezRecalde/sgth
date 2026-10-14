@@ -189,6 +189,8 @@ export type EntregaData = {
   memorando_numero: string | null
   soporte_anterior: string | null
   observaciones: string | null
+  /** Dónde queda el equipo; sin cambio, sigue donde estaba. */
+  ubicacion_id?: number | null
 }
 
 export type DevolucionData = {
@@ -202,6 +204,18 @@ export type HistorialBien = {
   asignaciones: Asignacion[]
   mantenimientos: Mantenimiento[]
   bajas: BajaBien[]
+  /** Cada cambio de ubicación, el último primero. */
+  ubicaciones: MovimientoUbicacion[]
+}
+
+export type MovimientoUbicacion = {
+  id: number
+  fecha: string
+  anterior: string | null
+  nueva: string | null
+  motivo: string
+  detalle: string | null
+  registrado_por: string | null
 }
 
 export type TipoMantenimiento = 'preventivo' | 'correctivo' | 'repotenciacion'

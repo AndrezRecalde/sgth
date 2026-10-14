@@ -32,4 +32,9 @@ export const clavesInventario = {
     ubicaciones: ['inventario-ti', 'catalogos', 'ubicaciones'] as const,
     contratos: ['inventario-ti', 'catalogos', 'contratos'] as const,
   },
+
+  ubicaciones: {
+    porUnidad: ['inventario-ti', 'ubicaciones', 'por-unidad'] as const,
+    sugerida: (unidadId: number | null, servidorId: number | null) => ['inventario-ti', 'ubicaciones', 'sugerida', unidadId, servidorId] as const,
+  },
 }

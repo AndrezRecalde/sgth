@@ -34,6 +34,8 @@ use Illuminate\Support\Facades\DB;
  */
 final class BienInformaticoService implements BienInformaticoServiceInterface
 {
+    public function __construct(private readonly UbicacionesBienService $ubicaciones) {}
+
     /** Lo que el listado y la ficha muestran de cada equipo. */
     private const RELACIONES = [
         'tipo:id,nombre,anios_vida_util', 'subtipo:id,tipo_bien_id,nombre', 'marca:id,nombre',
@@ -212,7 +214,13 @@ final class BienInformaticoService implements BienInformaticoServiceInterface
             ]);
             $datos['updated_by'] = auth()->id();
 
+            // La ubicación se cambia aparte: lleva a los componentes y queda
+            // en el historial.
+            $ubicacion = array_key_exists('ubicacion_id', $datos) ? $datos['ubicacion_id'] : $bien->ubicacion_id;
+            unset($datos['ubicacion_id']);
+
             $bien->update($datos);
+            $this->ubicaciones->mover($bien, $ubicacion, 'edicion');
 
             return $this->obtener($bien->id);
         });

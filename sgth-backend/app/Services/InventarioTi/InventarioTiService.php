@@ -5,6 +5,7 @@ use App\Models\InventarioTi\BienInformatico;
 use App\Models\InventarioTi\AsignacionBien;
 use App\Models\InventarioTi\BajaBien;
 use App\Models\InventarioTi\MantenimientoBien;
+use App\Models\InventarioTi\MovimientoUbicacionBien;
 final class InventarioTiService implements InventarioTiServiceInterface
 {
     /**
@@ -21,7 +22,7 @@ final class InventarioTiService implements InventarioTiServiceInterface
      * `bienes/{id}/historial` respondía con un 500. Los modelos y sus tablas
      * estaban completos desde el principio.
      *
-     * @return array{bien: BienInformatico, asignaciones: mixed, mantenimientos: mixed, bajas: mixed}
+     * @return array{bien: BienInformatico, asignaciones: mixed, mantenimientos: mixed, bajas: mixed, ubicaciones: mixed}
      */
     public function obtenerFichaTecnicaCompleta(array $filtros): array
     {
@@ -65,6 +66,24 @@ final class InventarioTiService implements InventarioTiServiceInterface
                 ->orderByDesc('fecha_informe')
                 ->orderByDesc('id')
                 ->get(),
+            // Por dónde ha estado: cada cambio de ubicación, el último primero.
+            'ubicaciones' => MovimientoUbicacionBien::with([
+                'anterior:id,sede,piso', 'nueva:id,sede,piso',
+                'registradoPor:id,usuario_ti,email,servidor_id', 'registradoPor.servidor:id,nombre,apellido',
+            ])
+                ->where('bien_informatico_id', $bien->id)
+                ->orderByDesc('created_at')
+                ->orderByDesc('id')
+                ->get()
+                ->map(fn (MovimientoUbicacionBien $m) => [
+                    'id'             => $m->id,
+                    'fecha'          => $m->created_at->toIso8601String(),
+                    'anterior'       => $m->anterior?->nombre,
+                    'nueva'          => $m->nueva?->nombre,
+                    'motivo'         => MovimientoUbicacionBien::MOTIVOS[$m->motivo] ?? $m->motivo,
+                    'detalle'        => $m->detalle,
+                    'registrado_por' => $m->registradoPor?->nombre_completo,
+                ]),
         ];
     }
 

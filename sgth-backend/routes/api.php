@@ -120,6 +120,7 @@ use App\Http\Controllers\InventarioTi\MantenimientoBienController;
 use App\Http\Controllers\InventarioTi\PrestamoEquipoController;
 use App\Http\Controllers\InventarioTi\ReglasPrestamoController;
 use App\Http\Controllers\InventarioTi\ReporteUsoPrestamoController;
+use App\Http\Controllers\InventarioTi\UbicacionesBienController;
 use App\Http\Controllers\Nomina\ConceptoNominaController;
 use App\Http\Controllers\Nomina\DescuentoRecurrenteController;
 use App\Http\Controllers\Nomina\HandoffErpController;
@@ -1156,6 +1157,13 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 Route::put('contratos-vigencia/{contrato}', [ContratoVigenciaController::class, 'update']);
                 Route::delete('contratos-vigencia/{contrato}', [ContratoVigenciaController::class, 'destroy']);
             });
+
+            // La ubicación habitual de cada unidad y la mudanza en lote: la
+            // ubicación es del equipo, esto solo la propone o la cambia en bloque.
+            Route::get('ubicaciones-por-unidad', [UbicacionesBienController::class, 'index'])->middleware($ver);
+            Route::get('ubicaciones-por-unidad/sugerida', [UbicacionesBienController::class, 'sugerida'])->middleware($ver);
+            Route::put('ubicaciones-por-unidad/{unidad}', [UbicacionesBienController::class, 'fijar'])->whereNumber('unidad')->middleware($gestionar);
+            Route::post('ubicaciones-por-unidad/mudanza', [UbicacionesBienController::class, 'mudanza'])->middleware($gestionar);
 
             // Asignaciones
             Route::apiResource('asignaciones', AsignacionBienController::class)

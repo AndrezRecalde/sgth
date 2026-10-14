@@ -15,11 +15,12 @@ import { DevolucionModal } from './DevolucionModal'
 import { EntregaModal } from './EntregaModal'
 import { MantenimientoModal } from './MantenimientoModal'
 import { MemorandoModal } from './MemorandoModal'
-import { columnasCustodia, columnasMantenimiento } from './historial.columns'
+import { columnasCustodia, columnasMantenimiento, columnasUbicaciones } from './historial.columns'
 
 /**
  * La custodia del equipo —la vigente, con sus acciones, y las anteriores—,
- * sus mantenimientos, del más reciente al más antiguo, y sus bajas.
+ * sus mantenimientos, del más reciente al más antiguo, sus bajas y sus
+ * cambios de ubicación.
  */
 export function BienHistorial({ bien }: { bien: BienInformatico }) {
   const { hasPermiso } = useAuth()
@@ -83,6 +84,14 @@ export function BienHistorial({ bien }: { bien: BienInformatico }) {
           />
         </SectionCard>
         <BienBajas bajas={data?.bajas ?? []} />
+        <SectionCard title="Cambios de ubicación" description="Al editar la ficha, al entregar o traspasar la custodia y en las mudanzas.">
+          <SgthTable
+            records={data?.ubicaciones ?? []}
+            columns={columnasUbicaciones}
+            minHeight={100}
+            noRecordsText="El equipo sigue donde se registró."
+          />
+        </SectionCard>
       </Stack>
 
       <EntregaModal

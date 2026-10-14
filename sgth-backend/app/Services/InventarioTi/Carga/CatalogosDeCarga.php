@@ -56,7 +56,11 @@ final class CatalogosDeCarga
         return $this->recordar("marca:{$nombre}", fn () => $this->buscarOCrear(Marca::class, ['nombre' => $nombre]));
     }
 
-    /** «1ER»…«6TO» y «PB» son pisos del edificio; «SM», «DM» y «UNAMY», otras sedes. */
+    /**
+     * «PB» y «1ER»…«6TO» son la planta baja y los pisos del Edificio Central;
+     * «SM» y «DM», San Mateo y el Dispensario Médico. Los nombres son los del
+     * catálogo que siembra la migración de ubicaciones.
+     */
     public function ubicacion(?string $piso): ?Ubicacion
     {
         $clave = Normaliza::texto($piso);
@@ -66,8 +70,8 @@ final class CatalogosDeCarga
         [$sede, $nivel] = match (true) {
             $clave === '' => [null, null],
             isset($sedes[$clave]) => [$sedes[$clave], null],
-            $clave === 'PB' => [$principal, 'PB'],
-            (bool) preg_match('/^(\d+)/', $clave, $m) => [$principal, $m[1]],
+            $clave === 'PB' => [$principal, 'Planta baja'],
+            (bool) preg_match('/^(\d+)/', $clave, $m) => [$principal, "Piso {$m[1]}"],
             default => [null, null],
         };
 

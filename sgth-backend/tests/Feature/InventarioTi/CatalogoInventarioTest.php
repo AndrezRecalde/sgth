@@ -80,8 +80,10 @@ test('sede y piso juntos no se repiten', function () {
         ->assertStatus(422)
         ->assertJsonStructure(['errores' => ['sede']]);
 
-    $this->postJson('/api/v1/inventario/ubicaciones', ['sede' => 'San Mateo'])->assertCreated();
-    $this->postJson('/api/v1/inventario/ubicaciones', ['sede' => 'San Mateo'])->assertStatus(422);
+    $this->postJson('/api/v1/inventario/ubicaciones', ['sede' => 'Bodega de Tachina'])->assertCreated();
+    $this->postJson('/api/v1/inventario/ubicaciones', ['sede' => 'Bodega de Tachina'])->assertStatus(422);
+    // San Mateo ya la trae el catálogo.
+    $this->postJson('/api/v1/inventario/ubicaciones', ['sede' => 'san mateo'])->assertStatus(422);
 });
 
 test('el contrato de vigencia guarda su cronograma y lo reemplaza al editar', function () {
@@ -137,7 +139,8 @@ test('el formulario recibe los catalogos y los estados en una consulta', functio
     $computador = collect($datos['tipos'])->firstWhere('nombre', 'Computador');
     expect(collect($computador['subtipos'])->pluck('nombre')->all())->toContain('Todo en uno', 'CPU')
         ->and(collect($datos['estados'])->pluck('valor')->all())->toContain('en_uso', 'disponible', 'dado_de_baja')
-        ->and(collect($datos['ubicaciones'])->where('sede', 'Edificio principal'))->toHaveCount(7);
+        // Las siembra la migración de ubicaciones: el edificio sin piso, la planta baja y seis pisos.
+        ->and(collect($datos['ubicaciones'])->where('sede', 'Edificio Central'))->toHaveCount(8);
 });
 
 test('el auditor consulta los catalogos pero no los cambia', function () {
