@@ -106,6 +106,7 @@ use App\Http\Controllers\Helpdesk\ComentarioTicketController;
 use App\Http\Controllers\Helpdesk\EncuestaSatisfaccionController;
 use App\Http\Controllers\Helpdesk\SlaController;
 use App\Http\Controllers\Helpdesk\TecnicoDticController;
+use App\Http\Controllers\Tic\TableroTicController;
 use App\Http\Controllers\Helpdesk\TicketController;
 use App\Http\Controllers\InventarioTi\AsignacionBienController;
 use App\Http\Controllers\InventarioTi\AuditoriaInventarioController;
@@ -1082,6 +1083,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::patch('onboardings/{id}', [OnboardingController::class, 'update'])
             ->middleware('permission:gestionar-onboarding');
     });
+
+    // Tablero de Inicio de Tecnologías (fase 4.1): entra quien atiende la mesa
+    // de ayuda, consulta el inventario o gestiona préstamos; cada bloque sale
+    // con su permiso.
+    Route::get('tic/tablero', TableroTicController::class)
+        ->middleware('permission:gestionar-tickets|ver-tickets-todos|ver-inventario-ti|gestionar-inventario-ti|gestionar-prestamos');
 
     // Módulo 12 — Inventario de Bienes Informáticos
     //

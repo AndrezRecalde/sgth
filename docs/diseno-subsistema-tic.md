@@ -320,6 +320,24 @@ abierto ───────────► asignado ────────�
   - **Técnicos** (`gestionar-tecnicos`): la subunidad, el nivel y si atiende ahora. Solo se ofrecen usuarios con `gestionar-tickets`, que da el rol en Usuarios. Un técnico pausado no se ofrece al asignar.
 - **Al asignar y al escalar**, los técnicos se ven agrupados por subunidad y con su nivel.
 
+**Hecho en la fase 4.1** (tablero de Inicio):
+
+- **`GET tic/tablero`** entrega tres bloques, cada uno con su permiso; un bloque sin permiso llega en `null`:
+  - **mesa de ayuda** (`gestionar-tickets` o `ver-tickets-todos`):
+    - lo que espera: sin asignar, en la cola de quien mira, por vencer y vencidos;
+    - lo que hay en curso, por estado y por categoría;
+    - la cola propia, primero lo que vence antes;
+    - las cifras del mes: abiertos, resueltos, porcentaje dentro del plazo, tiempo promedio de resolución y satisfacción. Son de toda la mesa para el jefe y de su cola para el técnico.
+  - **inventario** (`ver-inventario-ti` o `gestionar-inventario-ti`):
+    - los equipos principales por estado;
+    - por unidad, la de quien lo tiene o, si nadie lo tiene, la del equipo;
+    - por antigüedad, en años desde la compra;
+    - la vida útil cumplida y las bajas por resolver (estas, solo para quien las resuelve);
+    - los contratos de vigencia que terminan en 90 días y las ventanas de mantenimiento del proveedor de los próximos 30.
+  - **préstamos** (los del inventario o `gestionar-prestamos`): por aprobar, por entregar hoy, en curso y vencidos, con la lista de los que no se devolvieron y la de las entregas de hoy.
+- **`MetricasTickets`** calcula las cifras de un período: el tiempo de resolución en horas hábiles y sin la espera del usuario, como el SLA. Lo usan el tablero, los indicadores del tablero general (que tenían el tiempo de resolución fijo en 3.5 h y contaban como vencidos los tickets en pausa) y la carga de trabajo del técnico (`helpdesk/tecnicos/{id}/carga-trabajo`, que devolvía 5, 20 y 2.5 para cualquiera).
+- **`/tic`** deja de ser una pantalla vacía y pinta los bloques que llegan.
+
 ### 4.4 Roles y permisos
 
 Las rutas van **por permiso**, y el alcance de cada ticket lo decide `TicketPolicy`. El middleware `permission:` de Spatie usa `canAny`, que pasa por `Gate::before`, así que `admin-ti` entraría de todos modos; aun así recibe los permisos de forma explícita, para que la pantalla de Usuarios muestre lo que puede hacer. El que no pasa por `Gate::before` es el middleware `role:`.
