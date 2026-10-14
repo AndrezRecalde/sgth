@@ -48,7 +48,7 @@ export function ConvocatoriasView() {
         title="Convocatorias"
         description="Concursos de méritos y oposición"
         actions={gestiona && (
-          <Button leftSection={<IconPlus size={14} />} onClick={() => router.push(ROUTES.SGTH.CONVOCATORIA_NUEVA)}>
+          <Button variant="light" leftSection={<IconPlus size={14} />} onClick={() => router.push(ROUTES.SGTH.CONVOCATORIA_NUEVA)}>
             Nueva convocatoria
           </Button>
         )}

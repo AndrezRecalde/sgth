@@ -24,7 +24,7 @@ export function PlantillasView() {
       <PageHeader
         title="Plantillas de evaluación"
         description="Criterios reutilizables para las convocatorias"
-        actions={<Button leftSection={<IconPlus size={14} />} onClick={modal.open}>Nueva plantilla</Button>}
+        actions={<Button variant="light" leftSection={<IconPlus size={14} />} onClick={modal.open}>Nueva plantilla</Button>}
       />
 
       <DataState
