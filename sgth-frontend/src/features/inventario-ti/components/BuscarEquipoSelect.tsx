@@ -18,7 +18,8 @@ interface Props {
   textoInicial?: string
   /** El propio equipo, que no puede ser su principal. */
   excluirId?: number
-  onChange: (id: number | null) => void
+  /** Con el texto del elegido, para pintarlo fuera (p. ej. en una lista de elegidos). */
+  onChange: (id: number | null, texto?: string) => void
   error?: string
   /** Solo equipos principales: para elegir de quién es componente uno. */
   soloPrincipales?: boolean
@@ -60,7 +61,7 @@ export function BuscarEquipoSelect({
   const elegir = (b: BienInformatico) => {
     setElegido(textoDe(b))
     setSearch(null)
-    onChange(b.id)
+    onChange(b.id, textoDe(b))
     combobox.closeDropdown()
   }
 

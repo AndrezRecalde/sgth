@@ -482,6 +482,14 @@ export const NAV_TIC: NavGroup[] = [
         permisos: ['ver-inventario-ti', 'gestionar-inventario-ti'],
       },
       {
+        // Lo planifica quien gestiona el inventario; lo marca quien registra
+        // mantenimientos. El auditor lo consulta.
+        label:    'Plan preventivo',
+        href:     ROUTES.TIC.CAMPANIAS,
+        icon:     'IconCalendarCheck',
+        permisos: ['ver-inventario-ti', 'gestionar-inventario-ti'],
+      },
+      {
         label:    'Bajas',
         href:     ROUTES.TIC.BAJAS,
         icon:     'IconTrashX',
