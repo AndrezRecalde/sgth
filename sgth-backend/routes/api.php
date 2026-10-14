@@ -106,6 +106,7 @@ use App\Http\Controllers\Helpdesk\ComentarioTicketController;
 use App\Http\Controllers\Helpdesk\EncuestaSatisfaccionController;
 use App\Http\Controllers\Helpdesk\SlaController;
 use App\Http\Controllers\Helpdesk\TecnicoDticController;
+use App\Http\Controllers\Tic\ReporteTicController;
 use App\Http\Controllers\Tic\TableroTicController;
 use App\Http\Controllers\Helpdesk\TicketController;
 use App\Http\Controllers\InventarioTi\AsignacionBienController;
@@ -1089,6 +1090,17 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
     // con su permiso.
     Route::get('tic/tablero', TableroTicController::class)
         ->middleware('permission:gestionar-tickets|ver-tickets-todos|ver-inventario-ti|gestionar-inventario-ti|gestionar-prestamos');
+
+    // Reportes de Tecnologías (fase 4.2), en pantalla, Excel o PDF con
+    // `formato`. Los del inventario, a quien lo consulta; los de la mesa de
+    // ayuda —el trabajo de cada técnico—, a quien la ve entera.
+    Route::prefix('tic/reportes')->group(function () {
+        $inventario = 'permission:ver-inventario-ti|gestionar-inventario-ti';
+        Route::get('inventario', [ReporteTicController::class, 'inventario'])->middleware($inventario);
+        Route::get('obsolescencia', [ReporteTicController::class, 'obsolescencia'])->middleware($inventario);
+        Route::get('tickets', [ReporteTicController::class, 'tickets'])->middleware('permission:ver-tickets-todos');
+        Route::get('satisfaccion', [ReporteTicController::class, 'satisfaccion'])->middleware('permission:ver-tickets-todos');
+    });
 
     // Módulo 12 — Inventario de Bienes Informáticos
     //

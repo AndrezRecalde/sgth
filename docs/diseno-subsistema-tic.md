@@ -338,6 +338,23 @@ abierto ───────────► asignado ────────�
 - **`MetricasTickets`** calcula las cifras de un período: el tiempo de resolución en horas hábiles y sin la espera del usuario, como el SLA. Lo usan el tablero, los indicadores del tablero general (que tenían el tiempo de resolución fijo en 3.5 h y contaban como vencidos los tickets en pausa) y la carga de trabajo del técnico (`helpdesk/tecnicos/{id}/carga-trabajo`, que devolvía 5, 20 y 2.5 para cualquiera).
 - **`/tic`** deja de ser una pantalla vacía y pinta los bloques que llegan.
 
+**Hecho en la fase 4.2** (reportes):
+
+- **`/tic/reportes`** (Administración › Reportes): cuatro reportes, cada uno en pantalla, en Excel y en PDF (A4 horizontal, con el membrete del inventario). Los tres formatos salen de la misma consulta: `GET tic/reportes/{reporte}` con `formato=excel|pdf`.
+  - **Inventario por unidad o por ubicación** (`ver-inventario-ti` o `gestionar-inventario-ti`):
+    - los equipos principales en servicio, agrupados como la tabla dinámica «Dashboar» del Excel;
+    - la unidad es la de quien tiene el equipo y, si nadie lo tiene, la del propio equipo;
+    - se filtra por tipo.
+  - **Obsolescencia** (mismos permisos):
+    - por tipo: cuántos equipos ya cumplieron la vida útil, cuántos la cumplen en 12 meses y cuántos no tienen fin de vida útil calculable (sin fecha de compra o con su tipo todavía en 0 años);
+    - la lista de los que hay que reemplazar, con su edad y los correctivos del último año.
+  - **Mesa de ayuda por técnico y categoría** (`ver-tickets-todos`), en un rango de hasta un año:
+    - para cada técnico y cada categoría: recibidos, resueltos, porcentaje dentro del plazo, tiempo de resolución, reabiertos y satisfacción;
+    - los técnicos registrados que no tuvieron tickets aparecen con cero.
+  - **Satisfacción** (`ver-tickets-todos`): el promedio, cuántas encuestas hubo de cada nota, el promedio por técnico y por categoría, y los comentarios.
+- `encuestas-satisfaccion/resultados` deja de devolver un 4.5 fijo: es el reporte de satisfacción, por defecto del mes en curso.
+- El uso de los equipos de préstamo (2.4) conserva su pantalla propia.
+
 ### 4.4 Roles y permisos
 
 Las rutas van **por permiso**, y el alcance de cada ticket lo decide `TicketPolicy`. El middleware `permission:` de Spatie usa `canAny`, que pasa por `Gate::before`, así que `admin-ti` entraría de todos modos; aun así recibe los permisos de forma explícita, para que la pantalla de Usuarios muestre lo que puede hacer. El que no pasa por `Gate::before` es el middleware `role:`.
