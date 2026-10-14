@@ -47,8 +47,8 @@ export function AccionesTicketTic({ ticket: t }: { ticket: Ticket }) {
   return (
     <>
       <Group gap="xs">
-        {puedeTomar && <Button leftSection={<IconHandGrab size={16} />} loading={tomar.isPending} onClick={() => tomar.mutate(t.id)}>Tomar</Button>}
-        {trabajando && <Button leftSection={<IconCircleCheck size={16} />} onClick={() => setAccion('resolver')}>Resolver</Button>}
+        {puedeTomar && <Button variant="light" leftSection={<IconHandGrab size={16} />} loading={tomar.isPending} onClick={() => tomar.mutate(t.id)}>Tomar</Button>}
+        {trabajando && <Button variant="light" leftSection={<IconCircleCheck size={16} />} onClick={() => setAccion('resolver')}>Resolver</Button>}
         {secundarias.length > 0 && (
           <Menu position="bottom-end">
             <Menu.Target>

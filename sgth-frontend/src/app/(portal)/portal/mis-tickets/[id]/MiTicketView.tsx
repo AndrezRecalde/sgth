@@ -60,7 +60,7 @@ export function MiTicketView({ id }: { id: number }) {
           <Stack gap="xs">
             <Text size="sm" style={{ whiteSpace: 'pre-line' }}>{t.solucion}</Text>
             <Group gap="xs">
-              <Button size="xs" leftSection={<IconCircleCheck size={14} />} onClick={() => setConfirmando(true)}>Confirmar la solución</Button>
+              <Button size="xs" variant="light" leftSection={<IconCircleCheck size={14} />} onClick={() => setConfirmando(true)}>Confirmar la solución</Button>
               <Button size="xs" variant="subtle" leftSection={<IconRotate size={14} />} onClick={() => setMotivo('reabrir')}>Sigue sin funcionar</Button>
             </Group>
             <Text size="xs" c="dimmed">Si no responde, se cerrará solo en unos días.</Text>
@@ -113,6 +113,8 @@ export function MiTicketView({ id }: { id: number }) {
           ? 'Cuéntele a TIC qué sigue fallando: el ticket vuelve a quien lo atendió.'
           : 'Si ya se arregló o lo abrió por error, TIC no lo atenderá.'}
         confirmLabel={motivo === 'reabrir' ? 'Reabrir' : 'Anular'}
+        etiqueta={motivo === 'reabrir' ? 'Qué sigue fallando' : 'Por qué ya no lo necesita'}
+        placeholder={motivo === 'reabrir' ? 'Ej.: Volvió a salir el mismo error esta mañana.' : 'Ej.: Ya se arregló solo, o lo abrí por error.'}
         destructiva={motivo === 'anular'}
         cargando={mutacion.isPending}
         onConfirm={(m) => mutacion.mutate({ id: t.id, motivo: m }, { onSuccess: () => setMotivo(null) })}

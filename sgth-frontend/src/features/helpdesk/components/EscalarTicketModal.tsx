@@ -4,6 +4,7 @@ import { SegmentedControl, Select, Stack, Text, Textarea } from '@mantine/core'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormModal } from '@/components/ui'
+import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { erroresAlFormulario } from '@/lib/erroresAlFormulario'
 import { useCatalogosHelpdesk } from '../hooks/useTickets'
@@ -42,7 +43,7 @@ export function EscalarTicketModal({ ticket, onClose }: { ticket: Ticket; onClos
                 { value: '2', label: '2 · Especialista', disabled: ticket.nivel >= 2 },
                 { value: '3', label: '3 · Proveedor' },
               ]} />
-            {errors.nivel && <Text size="xs" c="red">{errors.nivel.message}</Text>}
+            {errors.nivel && <Text size="xs" c={SEMANTIC_COLOR.danger}>{errors.nivel.message}</Text>}
           </Stack>
         )} />
         <Textarea label="Por qué" withAsterisk autosize minRows={2} placeholder="Ej.: Parece falla del switch del piso; requiere a Infraestructura."

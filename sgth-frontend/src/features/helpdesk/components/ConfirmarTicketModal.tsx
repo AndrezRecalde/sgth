@@ -5,6 +5,7 @@ import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormModal } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
+import { erroresAlFormulario } from '@/lib/erroresAlFormulario'
 import { useTicketSolicitanteMutations } from '../hooks/useTickets'
 import { confirmarSchema, type ConfirmarFormData } from '../schemas/ticket.schema'
 import type { Ticket } from '../services/tipos'
@@ -17,13 +18,14 @@ export function ConfirmarTicketModal({ ticket, onClose }: { ticket: Ticket | nul
 function Formulario({ ticket, onClose }: { ticket: Ticket; onClose: () => void }) {
   const contained = useContainedInput()
   const { confirmar } = useTicketSolicitanteMutations()
-  const { register, control, handleSubmit, formState: { errors } } = useForm<ConfirmarFormData>({
+  const { register, control, handleSubmit, setError, formState: { errors } } = useForm<ConfirmarFormData>({
     resolver: zodResolver(confirmarSchema),
     defaultValues: { calificacion: null, comentario: '' },
   })
 
   const enviar = (v: ConfirmarFormData) =>
-    confirmar.mutateAsync({ id: ticket.id, calificacion: v.calificacion, comentario: v.comentario || null }).then(onClose).catch(() => undefined)
+    confirmar.mutateAsync({ id: ticket.id, calificacion: v.calificacion, comentario: v.comentario || null }).then(onClose)
+      .catch((e) => erroresAlFormulario(e, setError, ['calificacion', 'comentario'], null))
 
   return (
     <FormModal opened onClose={onClose} title={`Confirmar ${ticket.folio}`} onSubmit={handleSubmit(enviar)}
@@ -41,7 +43,8 @@ function Formulario({ ticket, onClose }: { ticket: Ticket; onClose: () => void }
             <Rating size="lg" value={field.value ?? 0} onChange={(v) => field.onChange(v || null)} />
           </Stack>
         )} />
-        <Textarea label="Comentario (opcional)" autosize minRows={2} error={errors.comentario?.message}
+        <Textarea label="Comentario (opcional)" placeholder="Ej.: Me atendieron rápido y quedó funcionando." autosize minRows={2}
+          error={errors.comentario?.message}
           {...contained} {...register('comentario')} />
       </Stack>
     </FormModal>

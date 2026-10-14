@@ -58,13 +58,13 @@ function Formulario({ onClose, tecnico, registrados }: Omit<Props, 'opened'>) {
           ) : (
             <Controller name="user_id" control={control} render={({ field }) => (
               <Select label="Usuario" withAsterisk searchable {...contained}
+                description="Solo los usuarios con un rol que atiende tickets."
                 placeholder={candidatos.length ? 'Elija quién atiende' : 'Nadie más con un rol de TIC'}
                 nothingFoundMessage="Sin coincidencias" error={errors.user_id?.message}
                 data={candidatos.map((u) => ({ value: String(u.id), label: u.nombre }))}
                 value={field.value ? String(field.value) : null} onChange={(v) => field.onChange(v ? Number(v) : undefined)} />
             )} />
           )}
-          {!tecnico && <Text size="xs" c="dimmed" mt={4}>Solo los usuarios con un rol que atiende tickets.</Text>}
         </Grid.Col>
         <Grid.Col span={12}>
           <Controller name="unidad_tic_id" control={control} render={({ field }) => (

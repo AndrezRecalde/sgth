@@ -42,7 +42,7 @@ export function MisPrestamosView() {
     },
   ]
 
-  const pedir = <Button leftSection={<IconPresentation size={16} />} onClick={() => router.push(ROUTES.PORTAL.PRESTAMOS)}>Pedir equipos</Button>
+  const pedir = <Button variant="light" leftSection={<IconPresentation size={16} />} onClick={() => router.push(ROUTES.PORTAL.PRESTAMOS)}>Pedir equipos</Button>
 
   return (
     <PageShell>

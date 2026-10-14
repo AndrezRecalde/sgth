@@ -8,6 +8,7 @@ import { FormModal } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { erroresAlFormulario } from '@/lib/erroresAlFormulario'
 import { fromDateTimeValue } from '@/lib/fecha'
+import { plural } from '@/lib/plural'
 import { useMisPrestamoMutations } from '../hooks/useMisPrestamos'
 import { solicitudSchema, type SolicitudFormData } from '../schemas/solicitud.schema'
 import type { EquipoPrestable, ReglasPrestamo } from '../services/tipos'
@@ -55,7 +56,7 @@ function Formulario({ propuesta, equipos, reglas, onClose, onEnviada }: Props & 
 
   const fecha = (name: 'inicio_previsto' | 'fin_previsto', label: string) => (
     <Controller name={name} control={control} render={({ field }) => (
-      <DateTimePicker label={label} valueFormat="DD/MM/YYYY HH:mm" withAsterisk timePickerProps={SELECTOR_HORA}
+      <DateTimePicker label={label} placeholder="Fecha y hora" valueFormat="DD/MM/YYYY HH:mm" withAsterisk timePickerProps={SELECTOR_HORA}
         minDate={new Date()} error={errors[name]?.message} {...contained}
         value={field.value ? new Date(field.value) : null} onChange={(d) => field.onChange(fromDateTimeValue(d))} />
     )} />
@@ -68,7 +69,7 @@ function Formulario({ propuesta, equipos, reglas, onClose, onEnviada }: Props & 
         {reglas && (
           <Text size="sm" c="dimmed">
             TIC presta de {reglas.hora_apertura} a {reglas.hora_cierre}
-            {reglas.presta_fines_de_semana ? '' : ', de lunes a viernes'}, hasta {reglas.plazo_maximo_dias_habiles} día(s) hábil(es).
+            {reglas.presta_fines_de_semana ? '' : ', de lunes a viernes'}, hasta {plural(reglas.plazo_maximo_dias_habiles, 'día hábil', 'días hábiles')}.
             La solicitud no aparta el horario: queda reservado cuando TIC la aprueba.
           </Text>
         )}

@@ -34,7 +34,7 @@ export function AgendaPrestamosView() {
           data={[{ value: 'dia', label: 'Día' }, { value: 'semana', label: 'Semana' }]} />
         <Group gap={4} wrap="nowrap">
           <ActionIcon variant="subtle" onClick={() => mover(-1)} aria-label="Anterior"><IconChevronLeft size={16} /></ActionIcon>
-          <DatePickerInput aria-label="Día" valueFormat="DD/MM/YYYY" {...compacto}
+          <DatePickerInput label={vista === 'dia' ? 'Día' : 'Semana de'} valueFormat="DD/MM/YYYY" {...compacto}
             value={toDateValue(dia)} onChange={(d) => setDia(fromDateValueOrNull(d) ?? dia)} />
           <ActionIcon variant="subtle" onClick={() => mover(1)} aria-label="Siguiente"><IconChevronRight size={16} /></ActionIcon>
         </Group>

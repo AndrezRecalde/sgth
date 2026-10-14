@@ -53,7 +53,7 @@ export function BandejaTicketsView() {
         title="Mesa de ayuda"
         description="Los pedidos de ayuda de los servidores: repartir, atender y resolver dentro del SLA"
         actions={hasPermiso('gestionar-tickets') ? (
-          <Button leftSection={<IconPlus size={16} />} onClick={() => setRegistrar(true)}>Registrar ticket</Button>
+          <Button variant="light" leftSection={<IconPlus size={16} />} onClick={() => setRegistrar(true)}>Registrar ticket</Button>
         ) : undefined}
       />
       <Tabs value={vista} onChange={(v) => { setVista(PESTANAS.find((p) => p.value === v)?.value ?? 'sin_asignar'); setPage(1) }}>

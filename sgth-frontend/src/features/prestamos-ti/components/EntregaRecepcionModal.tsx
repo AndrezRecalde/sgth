@@ -61,12 +61,13 @@ export function EntregarPrestamoModal({ prestamo, onClose }: Props) {
             </Grid.Col>
             <Grid.Col span={{ base: 12, sm: 5 }}>
               <Controller name={`items.${n}.condicion_entrega`} control={control} render={({ field }) => (
-                <CondicionEquipo value={field.value} onChange={field.onChange} error={errors.items?.[n]?.condicion_entrega?.message} />
+                <CondicionEquipo label="Condición al salir" value={field.value} onChange={field.onChange} error={errors.items?.[n]?.condicion_entrega?.message} />
               )} />
             </Grid.Col>
           </Grid>
         ))}
-        <Textarea label="Observaciones" autosize minRows={2} error={errors.observaciones?.message} {...contained} {...register('observaciones')} />
+        <Textarea label="Observaciones" placeholder="Opcional. Ej.: Se entregó en la sala de sesiones." autosize minRows={2}
+          error={errors.observaciones?.message} {...contained} {...register('observaciones')} />
       </Stack>
     </FormModal>
   )
@@ -112,7 +113,7 @@ export function RecibirPrestamoModal({ prestamo, onClose }: Props) {
             </Grid.Col>
             <Grid.Col span={{ base: 12, sm: 5 }}>
               <Controller name={`items.${n}.condicion_devolucion`} control={control} render={({ field }) => (
-                <CondicionEquipo value={field.value} onChange={field.onChange} error={errors.items?.[n]?.condicion_devolucion?.message} />
+                <CondicionEquipo label="Condición al volver" value={field.value} onChange={field.onChange} error={errors.items?.[n]?.condicion_devolucion?.message} />
               )} />
             </Grid.Col>
             <Grid.Col span={{ base: 12, sm: 7 }}>
@@ -121,7 +122,8 @@ export function RecibirPrestamoModal({ prestamo, onClose }: Props) {
             </Grid.Col>
           </Grid>
         ))}
-        <Textarea label="Observaciones" autosize minRows={2} error={errors.observaciones?.message} {...contained} {...register('observaciones')} />
+        <Textarea label="Observaciones" placeholder="Opcional. Ej.: Lo devolvió otra persona de la unidad." autosize minRows={2}
+          error={errors.observaciones?.message} {...contained} {...register('observaciones')} />
       </Stack>
     </FormModal>
   )
