@@ -36,7 +36,7 @@ final class CatalogoInventarioService implements CatalogoInventarioServiceInterf
         return [
             'tipos'       => TipoBien::with('subtipos:id,tipo_bien_id,nombre')->orderBy('nombre')->get(['id', 'nombre', 'anios_vida_util']),
             'marcas'      => Marca::orderBy('nombre')->get(['id', 'nombre']),
-            'ubicaciones' => Ubicacion::orderBy('sede')->orderBy('piso')->get(['id', 'sede', 'piso']),
+            'ubicaciones' => Ubicacion::ordenadas()->get(['id', 'sede', 'piso']),
             'contratos'   => ContratoVigencia::orderByDesc('fecha_inicio')->orderBy('proceso')->get(['id', 'proceso', 'fecha_inicio', 'fecha_fin']),
             'estados'     => array_map(fn (EstadoBien $e) => ['valor' => $e->value, 'etiqueta' => $e->etiqueta()], EstadoBien::cases()),
             'condiciones' => array_map(fn (CondicionFisicaBien $c) => ['valor' => $c->value, 'etiqueta' => $c->etiqueta()], CondicionFisicaBien::cases()),
@@ -58,7 +58,7 @@ final class CatalogoInventarioService implements CatalogoInventarioServiceInterf
 
     public function listarUbicaciones(): Collection
     {
-        return Ubicacion::withCount('bienes')->orderBy('sede')->orderBy('piso')->get();
+        return Ubicacion::withCount('bienes')->ordenadas()->get();
     }
 
     public function listarContratos(): Collection

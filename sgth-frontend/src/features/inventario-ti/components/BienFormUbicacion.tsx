@@ -7,6 +7,7 @@ import { useContainedInput } from '@/hooks/useContainedInput'
 import { CONDICION_LABELS, ESTADOS_MANUALES } from '../constants/estados'
 import type { BienFormData } from '../schemas/bien.schema'
 import type { BienInformatico, CatalogosInventario, CondicionFisica } from '../services/tipos'
+import { ubicacionesService } from '../services/ubicacionesService'
 import { BuscarEquipoSelect } from './BuscarEquipoSelect'
 
 interface Props {
@@ -25,7 +26,16 @@ const CONDICIONES = (Object.keys(CONDICION_LABELS) as CondicionFisica[]).map((c)
  */
 export function BienFormUbicacion({ form, catalogos, unidades, bien }: Props) {
   const contained = useContainedInput()
-  const { control, formState: { errors } } = form
+  const { control, getValues, setValue, formState: { errors } } = form
+
+  // Al elegir la unidad, si el equipo todavía no tiene ubicación, se propone
+  // la habitual de la unidad. Una ubicación ya puesta no se toca.
+  const proponerUbicacion = (unidadId: number | null) => {
+    if (!unidadId || getValues('ubicacion_id')) return
+    ubicacionesService.sugerida({ unidad_administrativa_id: unidadId })
+      .then((u) => { if (u && !getValues('ubicacion_id')) setValue('ubicacion_id', u.id, { shouldDirty: true }) })
+      .catch(() => undefined)
+  }
   const deBaja = bien?.estado_operativo === 'dado_de_baja'
   const conCustodio = !!bien?.custodio
 
@@ -91,7 +101,7 @@ export function BienFormUbicacion({ form, catalogos, unidades, bien }: Props) {
               error={errors.unidad_administrativa_id?.message}
               {...contained}
               value={field.value ? String(field.value) : null}
-              onChange={(v) => field.onChange(aNumero(v))}
+              onChange={(v) => { field.onChange(aNumero(v)); proponerUbicacion(aNumero(v)) }}
             />
           )} />
         </Grid.Col>

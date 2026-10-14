@@ -1,8 +1,9 @@
 'use client'
 
-import { Grid, TextInput, Textarea } from '@mantine/core'
+import { useState } from 'react'
+import { Grid, Select, Text, TextInput, Textarea } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormModal } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -11,6 +12,7 @@ import { fromDateValueOrNull, hoyIso, toDateValue } from '@/lib/fecha'
 import { BuscarServidorSelect } from '@/features/expediente/components/BuscarServidorSelect'
 import { useCatalogosFormulario } from '../hooks/useCatalogosInventario'
 import { useCustodiaMutations } from '../hooks/useCustodia'
+import { useUbicacionSugerida } from '../hooks/useUbicaciones'
 import { entregaSchema, type EntregaFormData } from '../schemas/custodia.schema'
 import type { Asignacion, BienInformatico } from '../services/tipos'
 
@@ -27,6 +29,8 @@ interface Props {
 /**
  * Entregar el equipo en custodia, o traspasar la vigente a otra persona. El
  * memorando se hace en Quipux: aquí va su número y el PDF se adjunta después.
+ * Mientras no se elija otra, se propone como ubicación la habitual de la
+ * unidad del custodio.
  */
 export function EntregaModal({ opened, ...props }: Props) {
   return opened ? <Formulario {...props} /> : null
@@ -42,15 +46,21 @@ function Formulario({ onClose, bien, traspasarDe }: Omit<Props, 'opened'>) {
     resolver: zodResolver(entregaSchema),
     defaultValues: {
       servidor_id: Number.NaN, usuario_servidor_id: null, fecha_asignacion: hoyIso(),
-      memorando_numero: '', soporte_anterior: '', observaciones: '',
+      memorando_numero: '', soporte_anterior: '', observaciones: '', ubicacion_id: bien.ubicacion?.id ?? null,
     },
   })
+  const servidorId = useWatch({ control, name: 'servidor_id' })
+  const { data: sugerida } = useUbicacionSugerida({ servidorId: Number.isNaN(servidorId) ? null : servidorId })
+  // Hasta que se elige a mano, manda la sugerida (si la unidad tiene una).
+  const [elegida, setElegida] = useState(false)
+  const ubicacionDe = (actual: number | null) => (elegida ? actual : sugerida?.id ?? actual)
 
   const nulo = (v: string) => (v.trim() === '' ? null : v.trim())
   const enviar = (v: EntregaFormData) => {
     const data = {
       servidor_id: v.servidor_id, usuario_servidor_id: v.usuario_servidor_id, fecha_asignacion: v.fecha_asignacion,
       memorando_numero: nulo(v.memorando_numero), soporte_anterior: nulo(v.soporte_anterior), observaciones: nulo(v.observaciones),
+      ubicacion_id: ubicacionDe(v.ubicacion_id),
     }
     const peticion = traspasarDe
       ? traspasar.mutateAsync({ id: traspasarDe.id, data })
@@ -89,6 +99,21 @@ function Formulario({ onClose, bien, traspasarDe }: Omit<Props, 'opened'>) {
             <BuscarServidorSelect label="Usuario del equipo, si no es el custodio" value={field.value}
               onChange={field.onChange} error={errors.usuario_servidor_id?.message} />
           )} />
+        </Grid.Col>
+        <Grid.Col span={12}>
+          <Controller name="ubicacion_id" control={control} render={({ field }) => {
+            const valor = ubicacionDe(field.value)
+            return (
+              <Select label="Dónde queda el equipo" placeholder="Sede y piso" searchable clearable {...contained}
+                error={errors.ubicacion_id?.message}
+                data={(catalogos?.ubicaciones ?? []).map((u) => ({ value: String(u.id), label: u.piso ? `${u.sede} · ${u.piso}` : u.sede }))}
+                value={valor ? String(valor) : null}
+                onChange={(v) => { setElegida(true); field.onChange(v ? Number(v) : null) }} />
+            )
+          }} />
+          {!elegida && sugerida && (
+            <Text size="xs" c="dimmed" mt={4}>Propuesta: la ubicación habitual de la unidad del custodio.</Text>
+          )}
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: catalogos?.acepta_soporte_anterior ? 8 : 12 }}>
           <TextInput label="Número de memorando" placeholder="Ej.: Memorando Nº 066 GADPE-HAP-GTIC-2026"

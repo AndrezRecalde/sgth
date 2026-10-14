@@ -12,6 +12,8 @@ export const entregaSchema = z.object({
   memorando_numero: z.string().trim().max(100, 'Máximo 100 caracteres'),
   soporte_anterior: z.string().trim().max(30, 'Máximo 30 caracteres'),
   observaciones: z.string().trim().max(2000, 'Máximo 2000 caracteres'),
+  /** Dónde queda el equipo; se propone la ubicación habitual de la unidad del custodio. */
+  ubicacion_id: z.number().nullable(),
 })
 export type EntregaFormData = z.infer<typeof entregaSchema>
 
