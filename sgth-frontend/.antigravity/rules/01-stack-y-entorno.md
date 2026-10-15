@@ -27,6 +27,7 @@ zustand                5.x
 zod                    4.x         se importa desde 'zod/v4'
 axios                  1.x
 echarts + echarts-for-react         estándar de gráficas
+react-easy-crop        6.2.3       recorte 3:4 de la foto del servidor (versión fija)
 ```
 
 `@mantine/form` sigue instalado pero **ya no se usa en ninguna pantalla**. No

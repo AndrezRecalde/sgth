@@ -1,0 +1,7 @@
+.marco {
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid var(--sgth-border);
+  border-radius: var(--mantine-radius-md);
+  background: var(--sgth-surface-sunken);
+}

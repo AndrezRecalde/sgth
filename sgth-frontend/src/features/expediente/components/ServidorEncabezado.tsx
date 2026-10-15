@@ -1,7 +1,8 @@
 'use client'
 
-import { Avatar, Group, Stack, Text } from '@mantine/core'
+import { Group, Stack, Text } from '@mantine/core'
 import { StatusBadge } from '@/components/ui'
+import { FotoServidor } from '@/features/comunicacion/components/FotoServidor'
 import { REGIMEN_LABELS } from '@/lib/regimen'
 import { etiquetaNombramiento } from '../utils/tipoNombramientoOptions'
 import type { ServidorConRelaciones } from '@/types/api'
@@ -48,7 +49,14 @@ export function ServidorEncabezado({ servidor }: Props) {
 
   return (
     <Group p="md" className={classes.encabezado} wrap="nowrap">
-      <Avatar size={52} radius="xl" fw={700}>{iniciales(servidor)}</Avatar>
+      <FotoServidor
+        fotografiaId={servidor.fotografia?.id}
+        nombre={nombreCompletoDe(servidor)}
+        iniciales={iniciales(servidor)}
+        size={52}
+        radius="xl"
+        fw={700}
+      />
 
       <Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
         <Text fw={600}>

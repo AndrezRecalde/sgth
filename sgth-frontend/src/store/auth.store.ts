@@ -28,6 +28,11 @@ export interface UsuarioAuth {
       nombre?: string
       es_jefe?: boolean
     } | null
+    /** La foto vigente, para el avatar del menú (Comunicación Social, 1.1). */
+    fotografia?: {
+      id:          number
+      activada_en: string | null
+    } | null
   } | null
   roles:    string[]
   permisos: string[]
