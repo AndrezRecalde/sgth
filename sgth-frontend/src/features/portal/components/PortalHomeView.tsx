@@ -32,7 +32,7 @@ export function PortalHomeView() {
   if (isLoading || !usuarioActual) {
     return (
       <>
-        <PageHeader title="Mi portal" description="Tu ficha y las novedades de la institución" />
+        <PageHeader title="Mi portal" description="Su ficha y las novedades de la institución" />
         <Grid>
           <Grid.Col span={{ base: 12, md: 6 }}><Skeleton height={320} radius="lg" /></Grid.Col>
           <Grid.Col span={{ base: 12, md: 6 }}><Skeleton height={320} radius="lg" /></Grid.Col>
@@ -43,7 +43,7 @@ export function PortalHomeView() {
 
   return (
     <>
-      <PageHeader title="Mi portal" description="Tu ficha y las novedades de la institución" />
+      <PageHeader title="Mi portal" description="Su ficha y las novedades de la institución" />
       {/* Solo quien es servidor tiene documentos laborales (fase 6.3a). */}
       {usuarioActual.servidor_id && <DocumentosPorAcusarAviso />}
       <Grid>

@@ -43,7 +43,7 @@ export function PerfilServidorCard({ usuario }: Props) {
       <Stack gap="lg">
         {/* El nombre oficial de Identidad institucional; antes iba escrito
             aquí, partido a mano en dos líneas. */}
-        <Text size="xs" fw={600} c="dimmed" tt="uppercase" ta="center" maw={420} mx="auto">
+        <Text size="xs" fw={600} c="dimmed" tt="uppercase" ta="center" maw={420} mx="auto" style={{ textWrap: "balance" }}>
           {identidad?.datos.nombre_oficial || NOMBRE_INSTITUCION}
         </Text>
 
