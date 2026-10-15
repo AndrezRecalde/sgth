@@ -2,16 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { clavesComunicacion } from '../constants/claves'
 import { fotografiasService } from '../services/fotografiasService'
 import type { TamanoFotografia } from '../services/tipos'
-
-/** El blob como `data:` URL: se guarda en la caché y no hay que revocarla. */
-function aDataUrl(blob: Blob): Promise<string> {
-  return new Promise((resolver, rechazar) => {
-    const lector = new FileReader()
-    lector.onload = () => resolver(String(lector.result))
-    lector.onerror = () => rechazar(lector.error)
-    lector.readAsDataURL(blob)
-  })
-}
+import { aDataUrl } from '../utils/dataUrl'
 
 /**
  * La imagen de una foto, lista para un `src`.

@@ -10,6 +10,7 @@ import { NavItemNested } from './NavItemNested'
 import { SubsistemaSwitcher } from './SubsistemaSwitcher'
 import { useAuth } from '@/hooks/useAuth'
 import { useStockBajoCount } from '@/features/dispensario/hooks/useInventarioMedicina'
+import { useIdentidadPublica, useUrlVariante } from '@/features/comunicacion/hooks/useIdentidadPublica'
 import { buildNav, inicioDelSubsistema, ROLES_INVENTARIO_MED } from '@/config/nav'
 import { ROUTES, type Subsistema } from '@/config/routes'
 import classes from './Sidebar.module.css'
@@ -23,6 +24,10 @@ interface Props {
 export function Sidebar({ subsistema, collapsed, onNavigate }: Props) {
   const { usuario } = useAuth()
   const pathname = usePathname()
+  // El isotipo y las siglas de Identidad institucional (fase 2.3). Si el
+  // backend no responde, el de siempre, que sigue en public/.
+  const isotipo = useUrlVariante('isotipo') ?? '/logo.png'
+  const { data: identidad } = useIdentidadPublica()
   const permisos = usuario?.permisos ?? []
   const permisosKey = permisos.join(',')
   const roles = usuario?.roles ?? []
@@ -95,18 +100,20 @@ export function Sidebar({ subsistema, collapsed, onNavigate }: Props) {
         href={inicioDelSubsistema(subsistema, roles)}
         className={`${classes.brand} ${collapsed ? classes.brandCollapsed : ''}`}
       >
+        {/* Sin optimizar: la URL lleva su versión y el navegador ya la guarda. */}
         <Image
-          src="/logo.png"
-          alt="GAD Provincial de Esmeraldas"
+          src={isotipo}
+          alt={identidad?.datos.nombre_oficial ?? 'GAD Provincial de Esmeraldas'}
           width={32}
           height={32}
           className={classes.brandMark}
+          unoptimized
           priority
         />
         {!collapsed && (
           <span className={classes.brandText}>
-            <span className={classes.brandName}>GADPE</span>
-            <span className={classes.brandSub}>Esmeraldas</span>
+            <span className={classes.brandName}>{identidad?.datos.siglas ?? 'GADPE'}</span>
+            <span className={classes.brandSub}>{identidad?.datos.nombre_corto ?? 'Esmeraldas'}</span>
           </span>
         )}
       </Link>

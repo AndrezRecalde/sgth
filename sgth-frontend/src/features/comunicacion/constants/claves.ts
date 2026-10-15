@@ -1,4 +1,5 @@
 import type { TamanoFotografia } from '../services/tipos'
+import type { VarianteIdentidad } from '../services/tiposIdentidad'
 
 /**
  * Claves de consulta de Comunicación Social, del recurso a lo particular
@@ -11,5 +12,17 @@ export const clavesComunicacion = {
     lista: (filtros: unknown, page: number) => ['comunicacion', 'fotografias', 'lista', filtros, page] as const,
     historial: (servidorId: number) => ['comunicacion', 'fotografias', 'historial', servidorId] as const,
     imagen: (id: number, tamano: TamanoFotografia) => ['comunicacion', 'fotografias', 'imagen', id, tamano] as const,
+  },
+
+  /**
+   * La identidad institucional. La pública va en su propia raíz porque la
+   * piden el sidebar y el login fuera de Comunicación; un cambio invalida las dos.
+   */
+  identidad: {
+    todas: ['comunicacion', 'identidad'] as const,
+    estado: ['comunicacion', 'identidad', 'estado'] as const,
+    versiones: (variante: VarianteIdentidad) => ['comunicacion', 'identidad', 'versiones', variante] as const,
+    archivo: (versionId: number) => ['comunicacion', 'identidad', 'archivo', versionId] as const,
+    publica: ['identidad-publica'] as const,
   },
 }

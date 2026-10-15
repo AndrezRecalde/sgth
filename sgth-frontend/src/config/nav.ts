@@ -576,6 +576,18 @@ export const NAV_COMUNICACION: NavGroup[] = [
       },
     ],
   },
+  {
+    label: 'Institución',
+    items: [
+      {
+        // Solo la persona designada para los logos (D2).
+        label:   'Identidad institucional',
+        href:    ROUTES.COMUNICACION.IDENTIDAD,
+        icon:    'IconPalette',
+        permiso: 'gestionar-identidad-institucional',
+      },
+    ],
+  },
 ]
 
 // ── PORTAL SERVIDOR ───────────────────
