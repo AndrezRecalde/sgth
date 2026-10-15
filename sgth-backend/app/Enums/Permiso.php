@@ -179,6 +179,15 @@ enum Permiso: string
     case GENERAR_REPORTES = 'generar-reportes';
     case EXPORTAR_REPORTES = 'exportar-reportes';
 
+    // ── Comunicación Social ──────────────────────────────────────
+    // docs/diseno-comunicacion-social.md, 7.3. «Mi credencial» del Portal va
+    // con `acceso-autoservicio`, que ya tienen todos.
+    case GESTIONAR_FOTOGRAFIAS = 'gestionar-fotografias';
+    case GESTIONAR_CREDENCIALES = 'gestionar-credenciales';
+    case VER_CREDENCIALES = 'ver-credenciales';
+    // Los logos salen en todos los documentos: solo la persona designada (D2).
+    case GESTIONAR_IDENTIDAD_INSTITUCIONAL = 'gestionar-identidad-institucional';
+
     // ── ADMIN SISTEMA ────────────────────────────────────────────
     case GESTIONAR_USUARIOS = 'gestionar-usuarios';
     case ACTIVAR_USUARIO = 'activar-usuario';

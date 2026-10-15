@@ -551,6 +551,22 @@ export const NAV_TIC: NavGroup[] = [
   },
 ]
 
+// ── COMUNICACIÓN SOCIAL ───────────────
+// Fotografías, credenciales e identidad institucional se suman en sus fases
+// (docs/diseno-comunicacion-social.md, sección 9).
+export const NAV_COMUNICACION: NavGroup[] = [
+  {
+    label: 'Principal',
+    items: [
+      {
+        label: 'Inicio',
+        href:  ROUTES.COMUNICACION.HOME,
+        icon:  'IconHome',
+      },
+    ],
+  },
+]
+
 // ── PORTAL SERVIDOR ───────────────────
 export const NAV_PORTAL: NavGroup[] = [
   {
@@ -738,6 +754,7 @@ export const ROLES_PORTAL = [
   'admin-ti', 'maxima-autoridad', 'auditor',
   'recepcion', 'trabajo-social', 'financiero',
   'admin-dispensario', 'tecnico-dtic', 'jefe-tic',
+  'comunicacion-social', 'responsable-identidad',
 ]
 
 /**
@@ -745,6 +762,15 @@ export const ROLES_PORTAL = [
  * inventario (`ver-inventario-ti`).
  */
 export const ROLES_TIC = ['admin-ti', 'jefe-tic', 'tecnico-dtic', 'auditor']
+
+/**
+ * El equipo de Comunicación Social, la persona designada para los logos, y
+ * quienes consultan las credenciales (`ver-credenciales`): Talento Humano y el
+ * auditor.
+ */
+export const ROLES_COMUNICACION = [
+  'admin-ti', 'comunicacion-social', 'responsable-identidad', 'admin-uath', 'auditor',
+]
 
 // ── Helper: qué subsistemas puede ver ─
 export function getSubsistemasDisponibles(roles: string[]): Subsistema[] {
@@ -754,6 +780,7 @@ export function getSubsistemasDisponibles(roles: string[]): Subsistema[] {
   }
   if (roles.some(r => ROLES_SALUD.includes(r)))  disponibles.push('salud')
   if (roles.some(r => ROLES_TIC.includes(r)))    disponibles.push('tic')
+  if (roles.some(r => ROLES_COMUNICACION.includes(r))) disponibles.push('comunicacion')
   if (roles.some(r => ROLES_PORTAL.includes(r))) disponibles.push('portal')
   return disponibles
 }
@@ -777,6 +804,7 @@ export function buildNav(
     sgth:   NAV_SGTH,
     salud:  NAV_SALUD,
     tic:    NAV_TIC,
+    comunicacion: NAV_COMUNICACION,
     portal: NAV_PORTAL,
   }
 

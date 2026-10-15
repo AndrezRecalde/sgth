@@ -1,0 +1,365 @@
+# Diseño de los módulos de Comunicación Social: Fotografías, Credencial e Identidad institucional
+
+**SGTH — GAD Provincial de Esmeraldas** · Versión 2, 14 de octubre de 2026 · Base: `d287834a`
+
+Estado: **diseño decidido**. Todas las decisiones de la sección 10 están tomadas: D2 y D6 con respuestas propias y las demás aceptando la propuesta (14-10-2026).
+
+Marcas que usa el documento:
+
+- **[Hoy]**: lo que existe en el código.
+- **[Propuesta]**: lo que se plantea construir.
+- **[Dn]**: decisión de Comunicación Social o de Talento Humano (sección 10).
+
+---
+
+## 1. Resumen
+
+1. **Lo que se pide.** Dos módulos para la Gestión de Comunicación Social: el primero, para subir la fotografía de cada servidor y emitir con ella una **credencial digital**; el segundo, para administrar los **logos** que usan las pantallas (sidebar, login) y los documentos que exporta el sistema.
+2. **Se propone un quinto subsistema, pequeño: «Comunicación» (`/comunicacion`)** [D1]. La razón no es el tamaño, porque son cuatro pantallas, sino que Comunicación Social es un equipo propio que no tiene nada que hacer en Talento Humano. La alternativa, que entre al SGTH con el menú recortado, repetiría la excepción que ya existe para Recepción y Trabajo Social y que el propio código describe como un parche (sección 2).
+3. **Hoy no existe nada de fotografías ni de credenciales.** La tabla `servidores` no tiene foto y el menú de usuario muestra iniciales. Sí existe la pieza que la credencial necesita: la verificación pública del certificado laboral por código aleatorio, que se reutiliza para el QR.
+4. **El logo está escrito a mano en 21 lugares** (20 usos en 16 archivos de PDF, más la hoja membretada del informe de actividades). Cambiarlo hoy exige un despliegue. Además conviven **dos lemas distintos**: los documentos dicen «¡Los buenos somos más!» y la hoja membretada dice «¡Juntos haremos historia!» [D4].
+5. **Variantes del logo: seis casillas, de las cuales solo dos son obligatorias** (isotipo e imagotipo horizontal). Las otras cuatro son opcionales y cada una tiene un respaldo, así que el sistema funciona completo con dos archivos (sección 4.2).
+6. **Los logos tienen fecha de vigencia.** Los PDF no se guardan, se generan en cada descarga, así que sin vigencia un acto de 2026 reimpreso en 2028 saldría con el logo de 2028. Con vigencia, cada documento toma el logo de su fecha [D3].
+7. **Plan:** 4 fases y 9 PRs (sección 9). Primero las fotografías, para que Comunicación pueda empezar la sesión de fotos, que es lo que más tarda; después la identidad; al final la credencial, que necesita las dos [D12].
+
+---
+
+## 2. ¿Hace falta un subsistema?
+
+### 2.1 Qué es un subsistema en el SGTH [Hoy]
+
+Hay cuatro: Talento Humano (`/sgth`), Dispensario (`/salud`), Tecnologías (`/tic`) y Portal (`/portal`). Cada uno tiene su propio shell, con color, menú e inicio. Se entra por **listas de roles** (`ROLES_SGTH`, `ROLES_SALUD`, `ROLES_TIC` y `ROLES_PORTAL` en `sgth-frontend/src/config/nav.ts`), y dentro el menú se filtra por permiso. Pero muchas entradas del SGTH no declaran restricción y se muestran a cualquiera que entre.
+
+### 2.2 Las tres salidas
+
+| Opción | Cómo queda | Problema |
+|---|---|---|
+| **A.** Dentro de Talento Humano | El rol de Comunicación entra al SGTH y ve un grupo «Comunicación» | Hay que repetir la excepción de `ROLES_SGTH_SOLO_PERMISOS`: el comentario de `nav.ts` explica que esos roles no van en `ROLES_SGTH` porque «muchas entradas no declaran restricción y les responderían 403». Comunicación vería además el Dashboard de TH y una cabecera que dice «Talento Humano» |
+| **B.** En el Portal | — | El Portal es el espacio de cada uno: lo propio. Subir las fotos de toda la institución no es autoservicio. Lo que sí va al Portal es «Mi credencial» |
+| **C.** Subsistema propio «Comunicación» | `/comunicacion`, color propio, cuatro entradas de menú e inicio con el avance | Un PR de cimientos con la lista de archivos que ya tocó TIC en su 0.1 (sección 7.4). Es un costo conocido |
+
+**Propuesta: C** [D1], por cuatro razones:
+
+- **Es una unidad propia del orgánico.** `UnidadAdministrativaSeeder` tiene «Gestión de Comunicación Social» con sus subprocesos, igual que TIC tiene la suya.
+- **El costo es fijo y conocido**, mientras que la opción A suma una segunda excepción a un menú que ya tiene una.
+- **El inicio tiene contenido real:** cuántos servidores tienen foto por unidad, qué credenciales faltan por imprimir y cuáles quedaron desactualizadas.
+- **Separa bien lo que no es de Comunicación.** La credencial del propio servidor va al Portal, la foto se ve en el expediente (TH, solo lectura) y los logos se ven en todo el sistema. En `/comunicacion` queda solo la administración.
+
+Si lo único pedido fueran los logos (que cambian una vez por administración), bastaría una pantalla en «Administración» del SGTH. Con fotos y credenciales, que son trabajo continuo de un equipo, no.
+
+---
+
+## 3. Lo que hay hoy [Hoy]
+
+### 3.1 Fotografías y credenciales
+
+- `servidores` no tiene columna de foto ni hay tabla de fotografías. El avatar del menú de usuario usa iniciales (`UserMenu.tsx:43`).
+- **No hay credencial.** Las coincidencias de «carnet» en el código son el carné de discapacidad.
+- **Sí hay, y se reutiliza:**
+  - la verificación pública del certificado laboral: `GET /api/v1/certificados/verificar/{codigo}` (código aleatorio, `throttle:10,1`, sin sesión) y la página `/verificar/[codigo]`;
+  - `simplesoftwareio/simple-qrcode` para el QR;
+  - `@mantine/dropzone` para subir archivos y la extensión `gd` de PHP para redimensionar;
+  - el disco `local` (privado), donde ya viven los documentos del expediente;
+  - `PasoDesvinculacion`, que ya tiene pasos con responsable (bienes, usuario, certificado…).
+- **Falta:** una librería de recorte en el frontend; Mantine no la trae.
+
+### 3.2 Logos
+
+| Archivo | Qué es | Dónde se usa |
+|---|---|---|
+| `sgth-frontend/public/logo.png` (554×581) | Isotipo | Sidebar (32 px) y login (80 px) |
+| `sgth-backend/public/images/logo-gadpe.png` (2199×625) | Imagotipo horizontal con el lema «¡Los buenos somos más!» | 20 usos en 16 archivos: acción de personal, registro interno, constancia de autoridad, certificado laboral, nómina, receta, FEMO, certificado de aptitud, organigrama, viáticos, permisos, vacaciones, consolidado, actas de TIC (custodia, préstamo, baja, constatación) y reportes de TIC |
+| `sgth-backend/public/images/membrete-gadpe.jpg` (1240×1754) | Hoja membretada A4 a 150 ppp, con el lema «¡Juntos haremos historia!», marca de agua y dirección al pie | Solo el informe de actividades |
+| `LogoCompleto.png` | Copia exacta de `logo-gadpe.png` (mismo MD5) | Ninguno |
+| `recepcion.png`, `servidor.png` (300×300) | — | Ninguno |
+
+Lo que está mal:
+
+1. **La ruta está fija en 21 lugares.** Cambiar el logo es un despliegue.
+2. **Dos lemas conviven.** Uno de los dos está desactualizado [D4].
+3. **El login muestra el isotipo**, no el logo.
+4. **El frontend no tiene favicon:** la pestaña del navegador muestra el ícono por defecto. En `public/` siguen los archivos de la plantilla de Next (`next.svg`, `vercel.svg`, `file.svg`, `globe.svg`, `window.svg`).
+5. **Los datos institucionales están en el código:** el nombre y el RUC en `PdfRecetaService::INSTITUCION`, «GADPE / Esmeraldas» en el sidebar, y la dirección y el teléfono dentro de la imagen de la hoja membretada.
+6. **Los PDF no se guardan:** se generan en cada descarga (`->output()`). Si se cambia el archivo, todo documento reimpreso sale con el logo nuevo, aunque sea de otra administración.
+
+---
+
+## 4. Identidad institucional
+
+### 4.1 Términos
+
+- **Isotipo:** el símbolo solo (el círculo).
+- **Imagotipo horizontal:** el símbolo junto a «Esmeraldas Prefectura» y el lema, en una línea.
+- **Hoja membretada:** la página A4 completa, con el logo arriba, la marca de agua y la dirección al pie.
+
+### 4.2 Variantes [Propuesta, D4]
+
+| # | Variante | Obligatoria | Dónde se usa | Formato y tamaño mínimo | Si falta |
+|---|---|---|---|---|---|
+| V1 | **Isotipo** | Sí | Sidebar abierto y cerrado, favicon e íconos de la app, marca de agua de la credencial | PNG transparente, cuadrado, desde 512×512 | — |
+| V2 | **Imagotipo horizontal** | Sí | Login, cabecera de los correos, anverso de la credencial, página de verificación | PNG transparente, desde 1200 px de ancho | — |
+| V3 | Imagotipo horizontal en negativo (blanco) | No | Login y verificación en modo oscuro; credencial sobre una franja de color | PNG transparente, desde 1200 px de ancho | V2 |
+| V4 | **Logo para documentos** | No | Cabecera de todos los PDF | PNG, fondo blanco o transparente, desde 1200 px de ancho | V2 |
+| V5 | Logo secundario de documentos | No | Lado derecho de la cabecera de los PDF (escudo provincial, marca de una campaña) | PNG transparente | No se muestra |
+| V6 | Hoja membretada A4 | No | Fondo de los documentos tipo memorando (hoy, el informe de actividades) | JPG o PNG, A4 vertical: 1240×1754 (150 ppp) o 2480×3508 (300 ppp) | V4 arriba, y la dirección y el teléfono al pie escritos por el sistema |
+
+Los **íconos de la app** (favicon de 32 px, ícono de Apple de 180 px y los de 192 y 512 px) **se generan solos a partir de V1**; nadie los sube.
+
+**Respuesta corta: el mínimo son 2 (V1 y V2). Con ellas funciona todo el sistema.** V4 existe porque se pidió que los documentos puedan llevar «el logo institucional u otro que deseen»; si no se sube, los documentos usan V2.
+
+Lo que **no** se pide, y por qué:
+
+- **Versión vertical o apilada:** ninguna pantalla la necesita. La credencial vertical tiene 54 mm de ancho y el imagotipo horizontal cabe arriba.
+- **Monocromo para blanco y negro:** un logo a color se imprime bien en escala de grises. Si algún documento sale mal, se agrega después.
+- **SVG:** dompdf dibuja mal muchos SVG, y un SVG puede llevar código ejecutable. Se aceptan PNG (y JPG para V6).
+- **Isotipo en negativo:** el isotipo a color se ve bien sobre el sidebar oscuro.
+
+### 4.3 Vigencia e historial
+
+- Cada archivo subido es una **versión con `vigente_desde`**: por defecto hoy, pero puede ser una fecha futura (por ejemplo, el día de posesión de la próxima administración).
+- **Nada se borra.** El historial se ve en la pantalla, y «volver a esta versión» crea una versión nueva con el archivo anterior.
+- **Cada documento toma la versión vigente a su fecha** [D3]:
+  - acción de personal y registro interno: la fecha de suscripción (hoy, si es borrador);
+  - certificados: la fecha de emisión;
+  - actas y recetas: la fecha del acta o de la receta;
+  - reportes y listados: hoy.
+- Las pantallas (sidebar, login, correos) usan siempre la versión vigente hoy.
+
+### 4.4 Validaciones al subir
+
+- Tipo y tamaño mínimo según la tabla de 4.2; hasta 5 MB.
+- V1 debe ser cuadrado (con un 5 % de tolerancia) y V6 debe tener la proporción del A4.
+- **Vista previa en contexto antes de confirmar:** el sidebar en claro y en oscuro, el login, una cabecera de PDF de muestra y la credencial.
+
+### 4.5 Datos institucionales
+
+Un formulario único con el nombre oficial, las siglas (GADPE), el nombre corto del sidebar, el RUC, la dirección, el teléfono y el sitio web. Lo usan la cabecera de los PDF, el pie que escribe el sistema cuando no hay V6, la receta (que hoy tiene la constante) y el sidebar.
+
+### 4.6 Cómo se sirven
+
+- **Los logos son públicos**, porque van en cualquier documento: se sirven por `GET /api/v1/identidad/{variante}` sin sesión. Lo necesitan el login y los correos, que no tienen sesión. La URL lleva el número de versión, así que el navegador puede guardarla en caché y el cambio se ve al momento.
+- Los PDF leen el archivo del disco, porque dompdf necesita una ruta local.
+- **El despliegue no rompe nada:** la migración siembra como primera versión los archivos que se usan hoy.
+
+---
+
+## 5. Fotografías
+
+### 5.1 Reglas [Propuesta]
+
+- **Las sube Comunicación** [D5], para que todas tengan el mismo fondo y el mismo encuadre.
+- **Una foto vigente por servidor.** La anterior queda en el historial, con quién y cuándo la subió, y se puede restaurar.
+- **Recorte 3:4 en el navegador antes de subir**, con la cara centrada. El servidor guarda una versión de 600×800 en JPEG y una miniatura cuadrada de 160×160 para los avatares.
+- **No se guarda el original de la cámara.** Puede pesar 10 MB y trae metadatos, entre ellos la ubicación; al volver a codificar la imagen se eliminan.
+- Formatos: JPG, PNG y WebP, hasta 10 MB.
+- **Carga masiva:** varios archivos (o un ZIP) con la cédula como nombre (`0801234567.jpg`). Primero se simula y se entrega un informe: emparejadas, cédula inexistente, servidor inactivo, servidor que ya tenía foto (se reemplaza o no) y archivo ilegible. Es el mismo patrón que `inventario:cargar-excel --simular`. En la carga masiva el recorte es automático (centrado), así que las fotos deben tomarse ya encuadradas; cada una se puede ajustar después.
+- **Privacidad (LOPDP):** la foto es un dato personal. Va al disco privado y se entrega solo con sesión, a quien puede ver al servidor, o mediante la verificación de la credencial. Nunca se muestra en el organigrama público.
+
+### 5.2 Dónde se ve [D10]
+
+- En el avatar del menú de usuario. Sin foto, siguen las iniciales.
+- En la cabecera del expediente (TH, solo lectura).
+- En la credencial y en su verificación.
+- El directorio telefónico, que ven todos los que tienen sesión, queda fuera por ahora.
+
+---
+
+## 6. Credencial
+
+### 6.1 Qué es
+
+Una por servidor activo, con dos caras de lo mismo:
+
+- **Digital:** en el Portal, «Mi credencial», a pantalla completa en el celular, siempre con los datos actuales del expediente, y descargable en PDF.
+- **Impresa:** Comunicación la imprime de una en una o por lotes de una unidad. Cada impresión guarda los datos impresos (nombre, cargo, unidad, tipo de sangre y contacto de emergencia), para saber cuándo una tarjeta quedó desactualizada: por un traslado o un ascenso, pero también porque el servidor cambió el teléfono de su contacto de emergencia.
+
+La credencial **se crea sola** cuando un servidor activo tiene foto. Comunicación no la «emite»: la imprime, la revoca y la repone.
+
+### 6.2 Contenido [D6, D7, D11]
+
+Formato CR80 (85,6 × 54 mm, el de una tarjeta bancaria), vertical, con dos salidas de impresión [D7]: un PDF de una tarjeta por página para impresora de PVC, y hojas A4 con 9 credenciales por cara para recortar y plastificar.
+
+- **Anverso:** V2 arriba, la foto, los nombres y apellidos, el cargo (denominación del puesto), la unidad y la cédula.
+- **Reverso:** el QR de verificación; «Válida hasta», solo si el vínculo tiene fecha de fin; el texto «Esta credencial es personal e intransferible. Si la encuentra, devuélvala a…» con la dirección y el teléfono de 4.5, y V1 como marca de agua.
+- **Tipo de sangre y contacto de emergencia** (nombre, parentesco y teléfono), en el reverso [D6]. TH y Jurídico aprobaron mostrarlos. Salen del expediente (`tipo_sangre` y `contacto_emergencia_*`); si el servidor no los tiene registrados, la línea no se imprime, en lugar de quedar en blanco. El tipo de sangre es un dato de salud, que la LOPDP trata como sensible: va en la tarjeta que lleva el propio servidor y en su credencial digital, **nunca en la verificación pública**.
+- **Sin firma:** la credencial la valida el QR [D11].
+
+### 6.3 Ciclo de vida
+
+| Estado | Cuándo | Qué pasa con el QR |
+|---|---|---|
+| Vigente | El servidor está activo y tiene foto | Valida |
+| Revocada | Pérdida, robo o datos erróneos (motivo obligatorio) | Deja de validar. **Reponer** crea una credencial nueva con otro código |
+| Vencida | Llega la fecha de fin del contrato del vínculo | Dice «no vigente» |
+| Anulada | El vínculo termina (desvinculación o cesación) | Dice «no vigente» |
+
+Vigencia [D8]: los nombramientos y los contratos indefinidos, sin fecha; los ocasionales y los contratos a plazo, hasta el fin del contrato.
+
+### 6.4 Verificación pública
+
+`/verificar/credencial/[codigo]`, con el mismo diseño que la del certificado: código aleatorio de al menos 32 caracteres, sin sesión y limitada por IP.
+
+- **Vigente:** muestra «Credencial vigente», la foto, el nombre, el cargo y la unidad **actuales** [D9]. No muestra la cédula, el tipo de sangre ni el contacto de emergencia.
+- **No vigente:** muestra solo «Esta credencial no está vigente», sin ningún dato.
+
+### 6.5 Desvinculación
+
+La credencial digital se anula sola. Se propone además un paso nuevo en `PasoDesvinculacion`, **«Devolución de la credencial»**, a cargo de Comunicación Social [D13].
+
+---
+
+## 7. Arquitectura propuesta
+
+### 7.1 Backend
+
+```
+app/
+  Http/Controllers/Comunicacion/   FotografiaServidorController, CargaFotografiasController,
+                                   CredencialController, IdentidadInstitucionalController
+                                   (prefijo /api/v1/comunicacion)
+  Http/Controllers/Autoservicio/   MiCredencialController
+  Http/Controllers/Expediente/     VerificacionCredencialController   (junto a VerificacionCertificadoController)
+  Http/Controllers/                IdentidadPublicaController         (GET /api/v1/identidad/{variante}, sin sesión)
+  Services/Comunicacion/           FotografiaService, CargaFotografiasService, CredencialService,
+                                   PdfCredencialService, IdentidadInstitucionalService
+  Contracts/…                      una interfaz por servicio, enlazada en AppServiceProvider
+  Policies/Comunicacion/
+  Enums/                           VarianteIdentidad, EstadoCredencial, MotivoRevocacionCredencial
+```
+
+`IdentidadInstitucionalService::archivo(VarianteIdentidad $variante, ?CarbonInterface $fecha = null)` resuelve la versión vigente con sus respaldos. Los 16 archivos que hoy llaman a `public_path('images/logo-gadpe.png')` pasan a pedirle el logo con la fecha del documento, y las cabeceras repetidas se juntan en una sola vista parcial.
+
+Las reglas son las de siempre: controlador delgado, `ApiResponse`, `ReglaNegocioException`, enums comparados por `->value` y `America/Guayaquil`.
+
+### 7.2 Modelo de datos
+
+```
+fotografias_servidor
+  id, servidor_id, archivo, miniatura, vigente (bool), origen (individual | carga_masiva),
+  subida_por, timestamps
+  -- una sola vigente por servidor: índice único parcial WHERE vigente
+
+credenciales
+  id, servidor_id, codigo (aleatorio, único), estado, valida_hasta (null = sin fin),
+  revocada_en, revocada_por, motivo_revocacion, timestamps
+  -- una sola vigente por servidor: índice único parcial
+
+impresiones_credencial
+  id, credencial_id, impresa_por, lote (nullable),
+  datos_impresos (json: nombre, cargo, unidad, tipo de sangre, contacto de emergencia), created_at
+
+recursos_identidad
+  id, variante, archivo, mime, ancho, alto, vigente_desde (date), subido_por, created_at
+  -- la versión vigente a una fecha: la de mayor vigente_desde <= fecha
+
+datos_institucionales   (una sola fila)
+  nombre_oficial, siglas, nombre_corto, ruc, direccion, telefono, sitio_web, actualizado_por, timestamps
+```
+
+### 7.3 Roles y permisos
+
+Dos roles nuevos [D2]:
+
+- **`comunicacion-social`** («Comunicación Social»): el equipo que toma las fotos e imprime las credenciales.
+- **`responsable-identidad`** («Responsable de Identidad Institucional»): la persona que designe el director de Comunicación, o la designada de Comunicación Social, para cambiar los logos y los datos institucionales. **No es el director por su cargo:** el rol se asigna a una persona desde Usuarios, y se le quita del mismo modo cuando cambia la designación.
+
+Los dos roles se suman: si la persona designada también toma fotos, tiene los dos. Si es alguien de otra unidad, con `responsable-identidad` solo entra a Identidad institucional.
+
+Cada permiso va en el enum, en `RolPermisoSeeder` y en una migración con `Permission::firstOrCreate`, como se hizo con TIC.
+
+| Permiso | `comunicacion-social` | `responsable-identidad` | TH (`admin-uath`) | Servidor (todos) | Auditor |
+|---|---|---|---|---|---|
+| `gestionar-fotografias`: subir, reemplazar, restaurar y cargar en lote | ✓ | | | | |
+| `gestionar-credenciales`: imprimir, revocar y reponer | ✓ | | | | |
+| `ver-credenciales`: consultar el estado y el historial de impresiones | ✓ | | ✓ | | ✓ |
+| `gestionar-identidad-institucional`: logos, vigencias y datos institucionales | | ✓ | | | |
+| Ver la foto de un servidor: quien puede ver su expediente | | | ✓ | | |
+| «Mi credencial» en el Portal: con `acceso-autoservicio`, que ya tienen todos | ✓ | ✓ | ✓ | ✓ | ✓ |
+
+`admin-ti` lo tiene todo por `Gate::before`, pero recibe los permisos de forma explícita para que la pantalla de Usuarios lo muestre [D2].
+
+### 7.4 Frontend
+
+- **Nuevo subsistema `comunicacion`** en `src/app/(comunicacion)/comunicacion/`, con un color propio: **fucsia (`orchid`)**. El naranja del logo no puede ser: la regla 03 rechaza `orange` porque el ámbar significa «advertencia» y el rojo «error». El fucsia es el único tono libre que no choca con un significado: queda a 31° del violeta del Portal y a 67° del rojo (el rosa quedaba a 27° del rojo), y el blanco sobre `orchid-6` da 4.71:1, así que llega al AA sin oscurecer el relleno. Toca los mismos archivos que tocó TIC: el tipo `Subsistema` (`routes.ts` y las uniones de `nav.ts`), `subsistemas.ts`, `NAV_COMUNICACION` y `ROLES_COMUNICACION` (`comunicacion-social`, `responsable-identidad` y `admin-ti`, más `admin-uath` y `auditor`, que consultan las credenciales), `tokens.css`, `design.tokens.ts`, `mantine.theme.ts`, la lista de colores de `eslint.config.mjs` y el glob de la regla `pagina-con-pageshell`.
+- El código va en `features/comunicacion/` (fotografías, credenciales e identidad), con el patrón componente → hook → servicio y esquemas Zod `zod/v4`.
+- **Recorte de la foto:** hace falta una dependencia nueva (por ejemplo, `react-easy-crop`), que se aprueba en su PR.
+- **La identidad en todo el sistema:** un hook `useIdentidad()` con las URLs vigentes, que usan el `Sidebar`, el login y `metadata.icons`.
+- **Portal:** «Mi credencial» en «Mi Espacio».
+- **Público:** `/verificar/credencial/[codigo]`.
+- **Limpieza:** se retiran `LogoCompleto.png`, `recepcion.png`, `servidor.png` y los SVG de la plantilla de Next.
+
+---
+
+## 8. Pantallas y navegación
+
+```
+Comunicación (/comunicacion)
+├─ Inicio                       avance: servidores activos con y sin foto por unidad,
+│                               credenciales por imprimir, impresas desactualizadas,
+│                               próximas a vencer
+├─ Fotografías                  filtros: unidad, con o sin foto, antigüedad de la foto;
+│                               subir con recorte, historial y restaurar; carga masiva con simulación
+├─ Credenciales                 estado por servidor; imprimir una o por unidad (lote);
+│                               revocar y reponer; historial de impresiones
+└─ Identidad institucional      las seis variantes con vista previa en contexto,
+                                historial y vigencia; datos institucionales
+
+Portal › Mi Espacio › Mi credencial      digital a pantalla completa y descarga en PDF
+TH › Expediente                           la foto en la cabecera (solo lectura)
+Público › /verificar/credencial/[codigo]
+```
+
+---
+
+## 9. Plan de trabajo
+
+Cada punto es un PR con sus pruebas Pest y, si hay pantalla, revisión en el navegador. Cada fase deja algo usable.
+
+### Fase 0: Cimientos
+
+| PR | Contenido |
+|---|---|
+| 0.1 | Subsistema `comunicacion` (shell, color, navegación, inicio vacío), roles `comunicacion-social` y `responsable-identidad` y permisos (enum, seeder, migración). Las policies llegan con sus modelos, en 1.1, 2.1 y 3.1 |
+
+### Fase 1: Fotografías
+
+| PR | Contenido |
+|---|---|
+| 1.1 | Backend: tabla e historial, disco privado, versión de 600×800 y miniatura con GD, endpoints, carga masiva por cédula con simulación e informe |
+| 1.2 | Pantalla Fotografías con recorte 3:4 y carga masiva; la foto en el avatar y en la cabecera del expediente |
+
+### Fase 2: Identidad institucional
+
+| PR | Contenido |
+|---|---|
+| 2.1 | Backend: `recursos_identidad` con vigencia y respaldos, datos institucionales, endpoint público y siembra con los archivos actuales |
+| 2.2 | Los 16 archivos de PDF dejan la ruta fija: una cabecera común, el logo según la fecha del documento, V5 y V6 |
+| 2.3 | Pantalla Identidad institucional con vista previa en contexto; sidebar, login, favicon e íconos, modo oscuro y correos con el logo; limpieza de imágenes sin uso |
+
+### Fase 3: Credencial
+
+| PR | Contenido |
+|---|---|
+| 3.1 | Backend: credenciales e impresiones, estados, vencimiento y anulación automáticos, verificación pública, PDF CR80 y hoja A4 (una y por lote) y el paso de la desvinculación |
+| 3.2 | Pantalla Credenciales en `/comunicacion`, «Mi credencial» en el Portal y la página de verificación |
+| 3.3 | Inicio de Comunicación con el avance |
+
+---
+
+## 10. Decisiones
+
+| # | Pregunta | PR que afecta | Decisión |
+|---|---|---|---|
+| D1 | ~~¿Subsistema propio «Comunicación» o un grupo dentro de Talento Humano?~~ | 0.1 | **Aceptada (14-10-2026):** subsistema propio (sección 2) |
+| D2 | ~~¿Quién cambia los logos: todo el equipo de Comunicación o solo su director?~~ | 0.1 | **Resuelta (14-10-2026):** ninguno de los dos. Un **rol propio, `responsable-identidad`**, para la persona que designe el director de Comunicación o la designada de Comunicación Social; se asigna y se retira desde Usuarios. `admin-ti` también puede (sección 7.3) |
+| D3 | ~~Un documento reimpreso, ¿lleva el logo vigente a su fecha o el de hoy?~~ | 2.2 | **Aceptada (14-10-2026):** el de su fecha en actos, certificados, actas y recetas; el de hoy en reportes y listados |
+| D4 | ~~¿Confirman las seis variantes (dos obligatorias)? ¿Hay un escudo u otra marca que deba ir en los documentos (V5)? ¿Cuál es el lema vigente?~~ | 2.1 | **Aceptada (14-10-2026):** las seis, con V1 y V2 obligatorias. Comunicación sube los archivos vigentes, y con ellos queda resuelto el lema |
+| D5 | ~~¿Quién sube la foto: solo Comunicación, o también el servidor desde el Portal con aprobación?~~ | 1.1 | **Aceptada (14-10-2026):** solo Comunicación, por uniformidad |
+| D6 | ~~¿La credencial lleva tipo de sangre y contacto de emergencia?~~ | 3.1 | **Resuelta (14-10-2026):** sí. TH y Jurídico aprobaron mostrarlos en el reverso y en la credencial digital; nunca en la verificación pública (sección 6.2) |
+| D7 | ~~¿Vertical u horizontal? ¿Hay impresora de tarjetas PVC?~~ | 3.1 | **Aceptada (14-10-2026):** vertical, con los dos formatos de impresión: un PDF CR80 por tarjeta para impresora de PVC, y hojas A4 con 9 credenciales por cara para recortar y plastificar |
+| D8 | ~~¿La credencial vence?~~ | 3.1 | **Aceptada (14-10-2026):** solo con la fecha de fin del contrato; sin renovación periódica |
+| D9 | ~~¿La verificación pública muestra la foto?~~ | 3.2 | **Aceptada (14-10-2026):** sí: foto, nombre, cargo, unidad y estado; nunca la cédula |
+| D10 | ~~¿Dónde más se ve la foto?~~ | 1.2 | **Aceptada (14-10-2026):** avatar, expediente, credencial y verificación. El directorio telefónico queda fuera por ahora. Nunca el organigrama público |
+| D11 | ~~¿La credencial lleva firma?~~ | 3.1 | **Aceptada (14-10-2026):** no; la valida el QR |
+| D12 | ~~¿En qué orden?~~ | todo | **Aceptada (14-10-2026):** fotografías, identidad y credencial |
+| D13 | ~~¿Se recoge la credencial impresa al desvincularse?~~ | 3.1 | **Aceptada (14-10-2026):** sí, como paso de la desvinculación a cargo de Comunicación Social |

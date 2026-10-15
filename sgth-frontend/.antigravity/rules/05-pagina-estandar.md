@@ -43,7 +43,7 @@ if (!convocatoria) {
 ```
 
 ESLint lo comprueba (`sgth/pagina-con-pageshell`, en `eslint-rules/`): sigue
-el componente que devuelve cada `page.tsx` de `(sgth)`, `(salud)`, `(tic)` y `(portal)`
+el componente que devuelve cada `page.tsx` de `(sgth)`, `(salud)`, `(tic)`, `(comunicacion)` y `(portal)`
 hasta su archivo y revisa cada `return`. Un componente intermedio —un
 esqueleto local— se sigue a su vez. Una página que solo llama a `redirect()`
 no pinta nada y pasa.

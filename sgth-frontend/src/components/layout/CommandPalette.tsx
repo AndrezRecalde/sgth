@@ -33,7 +33,7 @@ function normalizar(texto: string): string {
 /**
  * Buscador de pantallas (Ctrl+K / ⌘K).
  *
- * El SGTH tiene más de cincuenta pantallas repartidas en cuatro subsistemas;
+ * El SGTH tiene más de cincuenta pantallas repartidas en cinco subsistemas;
  * llegar a "Entregas de EPP" son tres clics y saber de antemano que vive bajo
  * Riesgos laborales. Este buscador recorre el MISMO `config/nav.ts` que pinta
  * el menú, así que ninguna pantalla nueva hay que registrarla aquí.

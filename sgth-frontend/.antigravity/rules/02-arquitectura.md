@@ -13,10 +13,11 @@ src/app/
 ├── (sgth)/sgth/         subsistema Talento Humano       → acento esmeralda
 ├── (salud)/salud/       subsistema Dispensario Médico   → acento océano
 ├── (tic)/tic/           subsistema Tecnologías (TIC)    → acento laguna (cian)
+├── (comunicacion)/comunicacion/  subsistema Comunicación Social → acento orquídea (fucsia)
 └── (portal)/portal/     subsistema Portal del Servidor  → acento amatista
 ```
 
-Los cuatro últimos montan `SGTHAppShell` en su `layout.tsx`. `(auth)` y
+Los cinco últimos montan `SGTHAppShell` en su `layout.tsx`. `(auth)` y
 `(publico)` no llevan shell: quien los abre no tiene sesión.
 
 **No existe** un route group `(dashboard)`. La versión anterior de estas reglas
