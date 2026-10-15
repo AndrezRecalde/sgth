@@ -565,6 +565,17 @@ export const NAV_COMUNICACION: NavGroup[] = [
       },
     ],
   },
+  {
+    label: 'Servidores',
+    items: [
+      {
+        label:   'Fotografías',
+        href:    ROUTES.COMUNICACION.FOTOGRAFIAS,
+        icon:    'IconCamera',
+        permiso: 'gestionar-fotografias',
+      },
+    ],
+  },
 ]
 
 // ── PORTAL SERVIDOR ───────────────────

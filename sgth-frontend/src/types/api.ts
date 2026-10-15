@@ -572,6 +572,8 @@ export type ServidorConRelaciones = Servidor & {
   contacto_emergencia_nombre?: string | null
   contacto_emergencia_parentesco?: string | null
   contacto_emergencia_telefono?: string | null
+  /** La foto vigente, para la cabecera (Comunicación Social, 1.1). */
+  fotografia?: { id: number; activada_en: string | null } | null
   tiene_discapacidad?: boolean
   tiene_enfermedad_catastrofica?: boolean
   contrato_vigente?: ContratoConRelaciones

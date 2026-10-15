@@ -154,6 +154,7 @@ export const ROUTES = {
   // (docs/diseno-comunicacion-social.md). Las pantallas llegan por fases.
   COMUNICACION: {
     HOME: '/comunicacion',
+    FOTOGRAFIAS: '/comunicacion/fotografias',
   },
 
   // ── PORTAL SERVIDOR ───────────────────

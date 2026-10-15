@@ -1,7 +1,7 @@
 'use client'
 
 import {
-  Avatar, Divider, Group, Menu, Stack, Switch, Text,
+  Divider, Group, Menu, Stack, Switch, Text,
   UnstyledButton, useMantineColorScheme,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
@@ -9,17 +9,7 @@ import { IconKey, IconLogout, IconMoon, IconSun } from '@tabler/icons-react'
 import { useAuth } from '@/hooks/useAuth'
 import { CambiarContrasenaModal } from '@/features/auth/components/CambiarContrasenaModal'
 import { useCerrarSesion } from '@/features/auth/hooks/useCerrarSesion'
-
-/** Iniciales para el avatar: primer nombre + primer apellido. */
-function iniciales(nombre: string): string {
-  const partes = nombre.trim().split(' ').filter(Boolean)
-  if (partes.length === 0) return 'US'
-  // Los nombres ecuatorianos suelen ser "Nombre1 Nombre2 Apellido1 Apellido2":
-  // la tercera palabra es el primer apellido, no la segunda.
-  if (partes.length >= 3) return (partes[0][0] + partes[2][0]).toUpperCase()
-  if (partes.length === 2) return (partes[0][0] + partes[1][0]).toUpperCase()
-  return partes[0].slice(0, 2).toUpperCase()
-}
+import { FotoServidor } from '@/features/comunicacion/components/FotoServidor'
 
 /**
  * Menú de cuenta. Agrupa TODAS las preferencias del usuario, incluido el modo
@@ -32,25 +22,24 @@ export function UserMenu() {
   const [cambiandoClave, cambioDeClave] = useDisclosure(false)
 
   const nombre = usuario?.nombre_completo || usuario?.usuario_ti || 'Usuario'
-  const iniciada = iniciales(nombre)
   const primerNombre = nombre.split(' ')[0]
+  // Con foto, la foto; sin ella, las iniciales, como antes (fase 1.2).
+  const fotografiaId = usuario?.servidor?.fotografia?.id
 
   return (
     <>
       <Menu width={280} position="bottom-end" transitionProps={{ transition: 'pop' }}>
         <Menu.Target>
           <UnstyledButton aria-label="Menú de usuario">
-            <Avatar variant="filled" color="var(--sgth-accent)" size={34} radius="xl" fw={600}>
-              {iniciada}
-            </Avatar>
+            <FotoServidor fotografiaId={fotografiaId} nombre={nombre}
+              variant="filled" color="var(--sgth-accent)" size={34} radius="xl" fw={600} />
           </UnstyledButton>
         </Menu.Target>
 
         <Menu.Dropdown p="xs">
           <Group gap="sm" wrap="nowrap" px="xs" py="sm">
-            <Avatar variant="filled" color="var(--sgth-accent)" size={42} radius="xl" fw={600}>
-              {iniciada}
-            </Avatar>
+            <FotoServidor fotografiaId={fotografiaId} nombre={nombre}
+              variant="filled" color="var(--sgth-accent)" size={42} radius="xl" fw={600} />
             <Stack gap={0} style={{ minWidth: 0 }}>
               <Text size="sm" fw={600} truncate>
                 {primerNombre}
