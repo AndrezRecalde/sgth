@@ -200,7 +200,8 @@ final class CustodiaService implements CustodiaServiceInterface
             'asignacion' => $asignacion,
             'numero'     => $numero,
             'entrega'    => $this->firmaDeQuienEntrega($asignacion),
-            'logo'       => public_path('images/logo-gadpe.png'),
+            // El logo vigente el día de la entrega (D3).
+            ...app(\App\Contracts\Comunicacion\IdentidadInstitucionalServiceInterface::class)->paraDocumento($asignacion->fecha_asignacion),
         ])->setPaper('a4', 'portrait');
 
         return ['content' => $pdf->output(), 'filename' => 'acta-entrega-' . $numero . '.pdf'];

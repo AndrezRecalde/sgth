@@ -31,7 +31,7 @@ class PdfInformeViaticoService
             [
                 'viatico'        => $viatico,
                 'firmas'         => $this->firmantes->paraDocumento($viatico, FirmanteViaticoService::SOLICITUD),
-                'logo'           => public_path('images/logo-gadpe.png'),
+                ...$this->membrete($viatico),
                 'zonaLabel'      => $zonaLabel,
                 'modalidadLabel' => $modalidadLabel,
                 'modalidadValue' => $modalidadValue,
@@ -74,7 +74,7 @@ class PdfInformeViaticoService
             [
                 'viatico'        => $viatico,
                 'firmas'         => $this->firmantes->paraDocumento($viatico, FirmanteViaticoService::INFORME),
-                'logo'           => public_path('images/logo-gadpe.png'),
+                ...$this->membrete($viatico),
                 'zonaLabel'      => $zonaLabel,
                 'modalidadLabel' => $modalidadLabel,
                 'calculo'        => $this->calculo->resumen($viatico),
@@ -174,7 +174,7 @@ class PdfInformeViaticoService
             [
                 'viatico'             => $viatico,
                 'firmas'              => $this->firmantes->paraDocumento($viatico, FirmanteViaticoService::COMPROBANTE),
-                'logo'                => public_path('images/logo-gadpe.png'),
+                ...$this->membrete($viatico),
                 'totalLetras'         => $totalLetras,
                 'calculo'             => $calculo,
                 'facturasPorCategoria'=> $facturasPorCategoria,
@@ -223,5 +223,16 @@ class PdfInformeViaticoService
         }
 
         return $categorias;
+    }
+
+    /**
+     * El logo y los datos vigentes el día de la solicitud (D3): los tres
+     * papeles del trámite —solicitud, informe y comprobante— salen iguales.
+     */
+    private function membrete(\App\Models\Viatico\Viatico $viatico): array
+    {
+        return app(\App\Contracts\Comunicacion\IdentidadInstitucionalServiceInterface::class)->paraDocumento(
+            $viatico->fecha_solicitud ? \Illuminate\Support\Carbon::parse($viatico->fecha_solicitud) : null,
+        );
     }
 }

@@ -161,7 +161,8 @@ final class ConstatacionService
             'filas'        => collect($detalle['filas'])->groupBy('resultado'),
             'resumen'      => $detalle['resumen'],
             'resultados'   => ConstatacionItem::RESULTADOS + ['pendiente' => 'Pendiente'],
-            'logo'         => public_path('images/logo-gadpe.png'),
+            // El de cuando se cerró, o el de cuando empezó si sigue abierta (D3).
+            ...app(\App\Contracts\Comunicacion\IdentidadInstitucionalServiceInterface::class)->paraDocumento($c->cerrada_en ?? $c->created_at),
         ])->setPaper('a4', 'portrait');
 
         return ['content' => $pdf->output(), 'filename' => "constatacion-{$c->id}.pdf"];

@@ -16,7 +16,7 @@ class NominaServidoresPdfService
 
         $pdf = Pdf::loadView('pdf.expediente.nomina-servidores', [
             'servidores' => $servidores,
-            'logo'       => public_path('images/logo-gadpe.png'),
+            ...app(\App\Contracts\Comunicacion\IdentidadInstitucionalServiceInterface::class)->paraDocumento(),
             'fecha'      => now(),
         ])->setPaper('a4', 'landscape');
 

@@ -84,7 +84,8 @@ final class CertificadoAptitudService
 
         return [
             'datos' => [
-                'logo' => public_path('images/logo-gadpe.png'),
+                // El logo vigente el día del acto médico (D3).
+                ...app(\App\Contracts\Comunicacion\IdentidadInstitucionalServiceInterface::class)->paraDocumento($ficha->fecha_evaluacion),
                 'paciente' => $this->paciente($solicitud),
                 // Un candidato en proceso de selección todavía no es servidor,
                 // y llamarlo así en un documento firmado sería falso.

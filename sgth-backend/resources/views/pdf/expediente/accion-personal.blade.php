@@ -408,28 +408,9 @@
     $encargoSinFin = $esSubrogacion && ! $movimiento->fecha_fin;
 @endphp
 
-<div class="membrete">
-    <table>
-        <tr>
-            {{-- El logo cede ancho: el nombre institucional en mayúscula
-                 ocupa bastante más y no debe partirse en tres líneas. --}}
-            <td style="width: 26%;">
-                @if(file_exists($logo))
-                    <img src="{{ $logo }}" alt="Logo GADPE">
-                @endif
-            </td>
-            <td class="institucion">
-                <strong>Gobierno Autónomo Descentralizado Provincial de Esmeraldas</strong>
-                Dirección de Gestión de Talento Humano
-            </td>
-        </tr>
-    </table>
-</div>
+@include('pdf._membrete-institucional', ['dependencia' => 'Dirección de Gestión de Talento Humano'])
 
-<div class="footer">
-    Dirección: 10 de Agosto entre Bolívar y Pedro Vicente Maldonado.<br>
-    Telefono: 062721433
-</div>
+@include('pdf._pie-institucional')
 
 <table class="cintillo">
     <tr>

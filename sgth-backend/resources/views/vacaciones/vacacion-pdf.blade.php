@@ -1,6 +1,7 @@
 @php
-    $logoPath = public_path('images/logo-gadpe.png');
-    $logoSrc = file_exists($logoPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath)) : null;
+    // El logo lo manda el controlador, vigente a la fecha de la solicitud (fase 2.2).
+    $logoPath = $logo ?? '';
+    $logoSrc = $logoPath !== '' && file_exists($logoPath) ? 'data:'.(mime_content_type($logoPath) ?: 'image/png').';base64,'.base64_encode(file_get_contents($logoPath)) : null;
 
     // Grid de motivos 3 columnas
     $motivosGrid = [

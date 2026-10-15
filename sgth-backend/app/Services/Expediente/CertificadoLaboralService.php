@@ -142,7 +142,8 @@ class CertificadoLaboralService
             'emision' => $emision,
             'datos'   => $emision->datos,
             'tipo'    => $emision->tipo,
-            'logo'    => public_path('images/logo-gadpe.png'),
+            // El logo de cuando se emitió: reimprimirlo da el mismo papel (D3).
+            ...app(\App\Contracts\Comunicacion\IdentidadInstitucionalServiceInterface::class)->paraDocumento($emision->emitido_en),
             'qrSrc'   => $this->qrDeVerificacion($emision),
         ])->setPaper('a4', 'portrait')->output();
     }
