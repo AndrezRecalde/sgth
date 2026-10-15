@@ -27,11 +27,12 @@ const imprimible = (s: ServidorConCredencial) => !!s.credencial?.vigente && !!s.
  * y reponer, y el historial con la devolución de la tarjeta. Talento Humano y
  * Auditoría la consultan; solo Comunicación imprime, revoca y recibe.
  */
-export function CredencialesView() {
+export function CredencialesView({ filtrosIniciales = {} }: { filtrosIniciales?: FiltrosCredenciales }) {
   const puedeGestionar = usePuedeGestionarCredenciales()
 
   const [page, setPage] = useState(1)
-  const [filtros, setFiltros] = useState<FiltrosCredenciales>({})
+  // Desde el Inicio llega ya filtrada: «Por reimprimir» abre las desactualizadas.
+  const [filtros, setFiltros] = useState<FiltrosCredenciales>(filtrosIniciales)
   const [busqueda, setBusqueda] = useState('')
   const [buscar] = useDebouncedValue(busqueda.trim(), RETARDO_BUSQUEDA_MS)
   const [seleccion, setSeleccion] = useState<ServidorConCredencial[]>([])

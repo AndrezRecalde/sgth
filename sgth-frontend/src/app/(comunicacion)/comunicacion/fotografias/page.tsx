@@ -6,6 +6,21 @@ export const metadata: Metadata = {
   description: 'Las fotografías de los servidores, para su credencial',
 }
 
-export default function FotografiasPage() {
-  return <FotografiasView />
+interface Props {
+  searchParams: Promise<{ foto?: string | string[]; unidad?: string | string[] }>
+}
+
+/** `?foto=sin&unidad=` la abre filtrada: es a donde lleva el Inicio. */
+export default async function FotografiasPage({ searchParams }: Props) {
+  const { foto, unidad } = await searchParams
+  const unidadId = typeof unidad === 'string' && /^\d+$/.test(unidad) ? Number(unidad) : undefined
+
+  return (
+    <FotografiasView
+      filtrosIniciales={{
+        ...(foto === 'sin' || foto === 'con' ? { foto } : {}),
+        ...(unidadId ? { unidad_administrativa_id: unidadId } : {}),
+      }}
+    />
+  )
 }

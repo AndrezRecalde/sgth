@@ -169,7 +169,7 @@ final class CredencialService implements CredencialServiceInterface
             'sin_foto'     => $query->whereDoesntHave('credencialViva')->whereDoesntHave('fotografiaVigente'),
             'sin_imprimir' => $query->whereHas('credencialViva', fn ($q) => $q->whereDoesntHave('impresiones')),
             'vencida'      => $query->whereHas('credencialViva', fn ($q) => $q->where('estado', EstadoCredencial::VENCIDA->value)),
-            'por_recibir'  => $query->whereHas('credenciales', fn ($q) => $this->tarjetaPorRecibir($q)),
+            'por_recibir'  => $query->whereHas('credenciales', fn ($q) => $q->tarjetaPorRecibir()),
             // Comparar lo impreso con el expediente no cabe en SQL: se
             // calcula sobre los que tienen tarjeta, y se pagina sobre esos ids.
             'desactualizada', 'al_dia' => $query->whereKey($this->segunLaImpresion(clone $query, $situacion === 'desactualizada')),
@@ -452,23 +452,6 @@ final class CredencialService implements CredencialServiceInterface
             })
             ->pluck('id')
             ->all();
-    }
-
-    /**
-     * La tarjeta que quien salió todavía tiene: la de su última credencial,
-     * ya sin validez, impresa y sin devolver, salvo que se perdiera o la
-     * robaran. Es lo mismo que deja pendiente el paso «Devolución de la
-     * credencial» de la desvinculación (DesvinculacionService::credencial).
-     */
-    private function tarjetaPorRecibir($query)
-    {
-        return $query
-            ->whereRaw('credenciales.id = (select max(c2.id) from credenciales c2 where c2.servidor_id = credenciales.servidor_id)')
-            ->whereNotIn('estado', EstadoCredencial::vivas())
-            ->whereNull('devuelta_en')
-            ->whereHas('impresiones')
-            ->where(fn ($q) => $q->whereNull('motivo_revocacion')
-                ->orWhereNotIn('motivo_revocacion', [MotivoRevocacionCredencial::PERDIDA->value, MotivoRevocacionCredencial::ROBO->value]));
     }
 
     /**

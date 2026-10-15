@@ -159,7 +159,12 @@ export const ROUTES = {
   COMUNICACION: {
     HOME: '/comunicacion',
     FOTOGRAFIAS: '/comunicacion/fotografias',
+    /** Las que faltan de una unidad, desde el Inicio (fase 3.3). */
+    FOTOGRAFIAS_SIN_FOTO: (unidadId?: number) =>
+      `/comunicacion/fotografias?foto=sin${unidadId ? `&unidad=${unidadId}` : ''}`,
     CREDENCIALES: '/comunicacion/credenciales',
+    /** El listado ya filtrado por situación, desde el Inicio (fase 3.3). */
+    CREDENCIALES_EN: (situacion: string) => `/comunicacion/credenciales?situacion=${situacion}`,
     IDENTIDAD:   '/comunicacion/identidad',
   },
 

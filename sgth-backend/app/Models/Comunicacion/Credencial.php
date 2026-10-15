@@ -87,6 +87,24 @@ class Credencial extends Model
     }
 
     /**
+     * La tarjeta que quien salió todavía tiene: la de su última credencial,
+     * ya sin validez, impresa y sin devolver, salvo que se perdiera o la
+     * robaran. Es lo que deja pendiente el paso «Devolución de la credencial»
+     * de la desvinculación (DesvinculacionService::credencial), y cada fila es
+     * un servidor: es su última credencial.
+     */
+    public function scopeTarjetaPorRecibir(Builder $query): Builder
+    {
+        return $query
+            ->whereRaw('credenciales.id = (select max(c2.id) from credenciales c2 where c2.servidor_id = credenciales.servidor_id)')
+            ->whereNotIn('estado', EstadoCredencial::vivas())
+            ->whereNull('devuelta_en')
+            ->whereHas('impresiones')
+            ->where(fn ($q) => $q->whereNull('motivo_revocacion')
+                ->orWhereNotIn('motivo_revocacion', [MotivoRevocacionCredencial::PERDIDA->value, MotivoRevocacionCredencial::ROBO->value]));
+    }
+
+    /**
      * ¿Valida hoy? Además del estado mira la fecha: si la tarea de la noche no
      * corrió, una tarjeta cuyo contrato ya terminó no pasa por vigente.
      */

@@ -115,6 +115,7 @@ use App\Http\Controllers\InventarioTi\AsignacionBienController;
 use App\Http\Controllers\InventarioTi\CampaniaMantenimientoController;
 use App\Http\Controllers\Comunicacion\CargaFotografiasController;
 use App\Http\Controllers\Comunicacion\CredencialController;
+use App\Http\Controllers\Comunicacion\TableroComunicacionController;
 use App\Http\Controllers\Comunicacion\FotografiaServidorController;
 use App\Http\Controllers\Comunicacion\IdentidadInstitucionalController;
 use App\Http\Controllers\Comunicacion\IdentidadPublicaController;
@@ -2159,6 +2160,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
     // Comunicación Social: las fotografías de los servidores
     // (docs/diseno-comunicacion-social.md, fase 1.1).
     Route::prefix('comunicacion')->group(function () {
+        // El Inicio (fase 3.3): entra quien toma las fotos, consulta las
+        // credenciales o cambia los logos; cada bloque sale con su permiso.
+        Route::get('tablero', TableroComunicacionController::class)
+            ->middleware('permission:gestionar-fotografias|ver-credenciales|gestionar-identidad-institucional');
+
         Route::middleware('permission:gestionar-fotografias')->group(function () {
             Route::get('fotografias', [FotografiaServidorController::class, 'index']);
             Route::post('fotografias/carga/simular', [CargaFotografiasController::class, 'simular']);

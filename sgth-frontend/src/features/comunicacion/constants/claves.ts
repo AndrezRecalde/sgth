@@ -7,6 +7,9 @@ import type { VarianteIdentidad } from '../services/tiposIdentidad'
  * nueva tiene otro id, así que la caché no se invalida al reemplazarla.
  */
 export const clavesComunicacion = {
+  /** El Inicio: las cifras cambian con cada foto, impresión o revocación. */
+  tablero: ['comunicacion', 'tablero'] as const,
+
   fotografias: {
     todas: ['comunicacion', 'fotografias'] as const,
     lista: (filtros: unknown, page: number) => ['comunicacion', 'fotografias', 'lista', filtros, page] as const,
