@@ -352,7 +352,7 @@ test('sin foto, «Mi credencial» dice por qué no la tiene', function () {
         ->getJson('/api/v1/autoservicio/mi-credencial')
         ->assertOk()
         ->assertJsonPath('datos', null)
-        ->assertJsonPath('mensaje', 'Aún no tiene credencial: se crea cuando Comunicación Social registre su foto.');
+        ->assertJsonPath('mensaje', 'Se crea cuando Comunicación Social registre su foto.');
 
     $this->get('/api/v1/autoservicio/mi-credencial/pdf')->assertStatus(422);
 });
@@ -405,4 +405,29 @@ test('la tarjeta se recibe cuando la credencial ya no vale y solo si se imprimi�
         ->assertJsonPath('datos.devolucion_registrada_por.id', $this->comunicacion->id);
 
     $recibir()->assertStatus(422)->assertJsonPath('mensaje', 'La tarjeta ya se recibió el 19/10/2026.');
+});
+
+test('quien salió con la tarjeta impresa aparece por recibir hasta que la entrega', function () {
+    fotoDePruebaCredencial($this, $this->ana);
+    $credencial = Credencial::where('servidor_id', $this->ana->id)->sole();
+    ImpresionCredencial::create([
+        'credencial_id' => $credencial->id, 'impresa_por' => $this->comunicacion->id, 'formato' => 'cr80', 'datos_impresos' => [],
+    ]);
+    $porRecibir = fn () => $this->actingAs($this->comunicacion, 'sanctum')
+        ->getJson('/api/v1/comunicacion/credenciales?situacion=por_recibir')->assertOk();
+
+    expect($porRecibir()->json('datos'))->toBe([]);
+
+    ContratoServidor::where('servidor_id', $this->ana->id)->update(['estado' => 'terminado', 'fecha_fin' => '2026-10-19']);
+    app(ContratoServidorService::class)->sincronizarPuestoDesdeVinculo($this->ana->id);
+
+    $porRecibir()->assertJsonCount(1, 'datos')
+        ->assertJsonPath('datos.0.id', $this->ana->id)
+        ->assertJsonPath('datos.0.situacion', 'por_recibir');
+    // En el listado de siempre ya no está: no trabaja aquí.
+    $this->getJson('/api/v1/comunicacion/credenciales')->assertJsonCount(0, 'datos');
+
+    $this->servicio->registrarDevolucion($credencial->fresh(), '2026-10-19', null, $this->comunicacion);
+
+    expect($porRecibir()->json('datos'))->toBe([]);
 });

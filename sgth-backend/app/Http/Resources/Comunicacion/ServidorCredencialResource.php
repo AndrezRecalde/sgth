@@ -16,6 +16,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  *   tarea de la noche, o subir o restaurar la foto.
  * - `sin_imprimir`, `desactualizada`, `al_dia`: según su última impresión.
  * - `vencida`: pasó la fecha de fin del contrato.
+ * - `por_recibir`: ya no trabaja aquí y su tarjeta impresa no ha vuelto; solo
+ *   sale con ese filtro.
  *
  * @mixin \App\Models\Expediente\Servidor
  */
@@ -37,8 +39,9 @@ class ServidorCredencialResource extends JsonResource
             ] : null,
             'cargo'           => $this->puesto?->cargo?->nombre,
             'fotografia'      => $this->fotografiaVigente ? ['id' => $this->fotografiaVigente->id] : null,
-            /** @var 'sin_foto'|'pendiente'|'vencida'|'sin_imprimir'|'desactualizada'|'al_dia' */
+            /** @var 'sin_foto'|'pendiente'|'vencida'|'sin_imprimir'|'desactualizada'|'al_dia'|'por_recibir' */
             'situacion'       => match (true) {
+                ! $this->estado                                             => 'por_recibir',
                 $credencial === null && $this->fotografiaVigente === null => 'sin_foto',
                 $credencial === null                                       => 'pendiente',
                 ! $credencial->estaVigente()                               => 'vencida',

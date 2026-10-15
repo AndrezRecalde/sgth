@@ -574,6 +574,13 @@ export const NAV_COMUNICACION: NavGroup[] = [
         icon:    'IconCamera',
         permiso: 'gestionar-fotografias',
       },
+      {
+        // Talento Humano y Auditoría la consultan; Comunicación imprime.
+        label:   'Credenciales',
+        href:    ROUTES.COMUNICACION.CREDENCIALES,
+        icon:    'IconId',
+        permiso: 'ver-credenciales',
+      },
     ],
   },
   {
@@ -604,6 +611,12 @@ export const NAV_PORTAL: NavGroup[] = [
         label: 'Mi CV',
         href:  ROUTES.PORTAL.MI_CV,
         icon:  'IconFileText',
+      },
+      {
+        // La credencial digital, con su QR (Comunicación Social, 6.1).
+        label: 'Mi credencial',
+        href:  ROUTES.PORTAL.MI_CREDENCIAL,
+        icon:  'IconId',
       },
       {
         // Las acciones notificadas y su acuse de recibo (fase 6.3a).

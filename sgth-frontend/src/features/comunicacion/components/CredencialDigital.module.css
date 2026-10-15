@@ -1,0 +1,49 @@
+/* La credencial digital del Portal: la misma tarjeta CR80 vertical que se
+   imprime (54 × 85,6 mm), a lo ancho del teléfono y con tope en escritorio. */
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 340px;
+  aspect-ratio: 54 / 85.6;
+  margin-inline: auto;
+  overflow: hidden;
+  border: 1px solid var(--sgth-border);
+  border-radius: var(--mantine-radius-lg);
+  background: var(--sgth-surface-raised);
+}
+
+.cuerpo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  padding: var(--mantine-spacing-md) var(--mantine-spacing-md) var(--mantine-spacing-sm);
+  text-align: center;
+}
+
+/* La banda de abajo, como en la tarjeta impresa. */
+.banda {
+  padding: 6px var(--mantine-spacing-sm);
+  background: var(--mantine-color-slate-7);
+  color: var(--mantine-color-white);
+  font-size: var(--mantine-font-size-xs);
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+/* El QR va siempre sobre blanco: sin contraste, la cámara no lo lee. */
+.qr {
+  width: 62%;
+  aspect-ratio: 1;
+  padding: 8px;
+  border-radius: var(--mantine-radius-sm);
+  background: var(--mantine-color-white);
+}
+
+.qr img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
