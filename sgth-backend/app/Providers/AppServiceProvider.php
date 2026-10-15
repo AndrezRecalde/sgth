@@ -196,6 +196,10 @@ class AppServiceProvider extends ServiceProvider
             \App\Services\Comunicacion\CargaFotografiasService::class
         );
         $this->app->bind(
+            \App\Contracts\Comunicacion\IdentidadInstitucionalServiceInterface::class,
+            \App\Services\Comunicacion\IdentidadInstitucionalService::class
+        );
+        $this->app->bind(
             HelpdeskServiceInterface::class,
             HelpdeskService::class
         );

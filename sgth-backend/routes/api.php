@@ -113,6 +113,8 @@ use App\Http\Controllers\InventarioTi\AsignacionBienController;
 use App\Http\Controllers\InventarioTi\CampaniaMantenimientoController;
 use App\Http\Controllers\Comunicacion\CargaFotografiasController;
 use App\Http\Controllers\Comunicacion\FotografiaServidorController;
+use App\Http\Controllers\Comunicacion\IdentidadInstitucionalController;
+use App\Http\Controllers\Comunicacion\IdentidadPublicaController;
 use App\Http\Controllers\InventarioTi\ConstatacionController;
 use App\Http\Controllers\InventarioTi\BajaController;
 use App\Http\Controllers\InventarioTi\BienInformaticoController;
@@ -226,6 +228,17 @@ Route::prefix('v1')->group(function () {
     Route::get('certificados/verificar/{codigo}', VerificacionCertificadoController::class)
         ->middleware('throttle:10,1')
         ->name('certificados.verificar');
+
+    // Los logos vigentes y los datos de la institución, sin sesión: los piden
+    // el login, la verificación pública y los correos (Comunicación Social,
+    // fase 2.1). No son reservados: salen en cualquier documento. Una versión
+    // programada no se sirve hasta que rige.
+    Route::prefix('identidad')->middleware('throttle:120,1')->group(function () {
+        Route::get('/', [IdentidadPublicaController::class, 'manifiesto']);
+        Route::get('icono/{lado}', [IdentidadPublicaController::class, 'icono'])
+            ->whereIn('lado', ['32', '180', '192', '512']);
+        Route::get('{variante}', [IdentidadPublicaController::class, 'variante']);
+    });
 
     // SSO: descarga de documentos adjuntos (Fase 9) protegida por firma temporal de URL,
     // igual que sgd.documentos.descargar.
@@ -2148,6 +2161,21 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // credenciales: lo decide FotografiaServidorPolicy, no un permiso.
         Route::get('fotografias/{fotografia}/imagen', [FotografiaServidorController::class, 'imagen'])
             ->whereNumber('fotografia');
+
+        // La identidad institucional (fase 2.1): solo la persona designada
+        // para eso, con el rol `responsable-identidad` (D2).
+        Route::prefix('identidad')->middleware('permission:gestionar-identidad-institucional')->group(function () {
+            Route::get('/', [IdentidadInstitucionalController::class, 'index']);
+            Route::put('datos', [IdentidadInstitucionalController::class, 'actualizarDatos']);
+            Route::get('versiones/{recurso}/archivo', [IdentidadInstitucionalController::class, 'archivo'])
+                ->whereNumber('recurso');
+            Route::post('versiones/{recurso}/reutilizar', [IdentidadInstitucionalController::class, 'reutilizar'])
+                ->whereNumber('recurso');
+            Route::delete('versiones/{recurso}', [IdentidadInstitucionalController::class, 'anular'])
+                ->whereNumber('recurso');
+            Route::get('{variante}/versiones', [IdentidadInstitucionalController::class, 'versiones']);
+            Route::post('{variante}', [IdentidadInstitucionalController::class, 'store']);
+        });
     });
 
     // Módulo 18 — Reportería e Inteligencia Institucional
