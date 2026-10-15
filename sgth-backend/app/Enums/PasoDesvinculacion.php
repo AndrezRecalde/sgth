@@ -13,6 +13,8 @@ enum PasoDesvinculacion: string
     case VACACIONES   = 'vacaciones';
     case INDEMNIZACION = 'indemnizacion';
     case BIENES       = 'bienes';
+    /** La tarjeta impresa vuelve a Comunicación Social (Comunicación, 6.5; D13). */
+    case CREDENCIAL   = 'credencial';
     case USUARIO      = 'usuario';
     case CERTIFICADO  = 'certificado';
     case DECLARACION  = 'declaracion';
@@ -25,6 +27,7 @@ enum PasoDesvinculacion: string
             self::VACACIONES    => 'Liquidación de vacaciones no gozadas y de haberes',
             self::INDEMNIZACION => 'Indemnización o compensación',
             self::BIENES        => 'Devolución de los bienes',
+            self::CREDENCIAL    => 'Devolución de la credencial',
             self::USUARIO       => 'Baja del usuario',
             self::CERTIFICADO   => 'Certificado laboral',
             self::DECLARACION   => 'Declaración patrimonial de fin de gestión',
@@ -38,6 +41,7 @@ enum PasoDesvinculacion: string
         return match ($this) {
             self::VACACIONES, self::INDEMNIZACION => 'Director de Talento Humano y Financiero',
             self::BIENES, self::USUARIO           => 'Tecnologías de la Información',
+            self::CREDENCIAL                      => 'Comunicación Social',
             self::CERTIFICADO                     => 'Talento Humano',
             self::DECLARACION                     => 'El servidor, ante la Contraloría; Talento Humano la registra',
             self::REINGRESO                       => 'Talento Humano',

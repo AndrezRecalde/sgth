@@ -200,6 +200,10 @@ class AppServiceProvider extends ServiceProvider
             \App\Services\Comunicacion\IdentidadInstitucionalService::class
         );
         $this->app->bind(
+            \App\Contracts\Comunicacion\CredencialServiceInterface::class,
+            \App\Services\Comunicacion\CredencialService::class
+        );
+        $this->app->bind(
             HelpdeskServiceInterface::class,
             HelpdeskService::class
         );

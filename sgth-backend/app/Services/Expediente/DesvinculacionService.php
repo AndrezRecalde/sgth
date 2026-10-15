@@ -4,11 +4,13 @@ namespace App\Services\Expediente;
 
 use App\Contracts\InventarioTi\CustodiaServiceInterface;
 use App\Enums\EstadoContrato;
+use App\Enums\EstadoCredencial;
 use App\Enums\EstadoPrestamo;
 use App\Enums\PasoDesvinculacion;
 use App\Enums\TipoDeclaracion;
 use App\Enums\TipoNombramiento;
 use App\Exceptions\ReglaNegocioException;
+use App\Models\Comunicacion\Credencial;
 use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\DeclaracionJuramentada;
 use App\Models\Expediente\Desvinculacion;
@@ -416,6 +418,8 @@ class DesvinculacionService
         return match ($paso) {
             PasoDesvinculacion::BIENES => $this->bienes($servidorId),
 
+            PasoDesvinculacion::CREDENCIAL => $this->credencial($servidorId),
+
             PasoDesvinculacion::USUARIO => ($usuario = User::where('servidor_id', $servidorId)->where('activo', true)->first())
                 ? [$pendiente, "El usuario {$usuario->usuario_ti} sigue activo: lo da de baja Tecnologías de la Información, en Usuarios.", []]
                 : [$hecho, 'Ya no tiene un usuario activo.', []],
@@ -581,6 +585,35 @@ class DesvinculacionService
         return $pendientes === []
             ? [DesvinculacionPaso::HECHO, 'No tiene bienes a su cargo en el Inventario TI ni equipos prestados.', ['bienes' => [], 'prestamos' => []]]
             : [DesvinculacionPaso::PENDIENTE, ucfirst(implode(' y ', $pendientes)) . '.', ['bienes' => $bienes, 'prestamos' => $prestamos]];
+    }
+
+    /**
+     * La tarjeta de la última credencial, la que se anuló al salir. Las
+     * anteriores ya no validan y se reemplazaron en su momento: lo que importa
+     * es la que el servidor llevaba. Si nunca se imprimió, o se perdió, no hay
+     * nada que recoger.
+     *
+     * @return array{0: string, 1: string, 2: array{credencial_id: ?int}}
+     */
+    private function credencial(int $servidorId): array
+    {
+        $ultima = Credencial::where('servidor_id', $servidorId)
+            ->with('ultimaImpresion')
+            ->orderByDesc('id')
+            ->first();
+        $impresion = $ultima?->ultimaImpresion;
+        $extra = ['credencial_id' => $ultima?->id];
+
+        return match (true) {
+            $impresion === null => [DesvinculacionPaso::HECHO, 'No se le imprimió una credencial: no hay tarjeta que devolver.', $extra],
+
+            $ultima->devuelta_en !== null => [DesvinculacionPaso::HECHO, "Entregó la tarjeta el {$ultima->devuelta_en->format('d/m/Y')}.", $extra],
+
+            $ultima->estado === EstadoCredencial::REVOCADA && ! $ultima->motivo_revocacion?->tarjetaRecuperable()
+                => [DesvinculacionPaso::HECHO, 'La tarjeta se reportó por '.mb_strtolower($ultima->motivo_revocacion->etiqueta()).' y su código ya no valida: no hay nada que recoger.', $extra],
+
+            default => [DesvinculacionPaso::PENDIENTE, "Tiene la tarjeta impresa el {$impresion->created_at->format('d/m/Y')}: la recibe Comunicación Social, en Credenciales.", $extra],
+        };
     }
 
     private function resumen(Desvinculacion $desvinculacion): array

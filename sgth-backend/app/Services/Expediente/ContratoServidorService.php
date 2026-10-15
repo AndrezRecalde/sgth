@@ -2,6 +2,7 @@
 
 namespace App\Services\Expediente;
 
+use App\Contracts\Comunicacion\CredencialServiceInterface;
 use App\Enums\CategoriaEventoVinculo;
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\EstadoContrato;
@@ -27,6 +28,8 @@ use Spatie\Activitylog\Models\Activity;
 
 class ContratoServidorService
 {
+    public function __construct(private readonly CredencialServiceInterface $credenciales) {}
+
     /**
      * Actividad laboral del servidor: cada contrato con las acciones de
      * personal que ocurrieron sobre él.
@@ -488,6 +491,9 @@ class ContratoServidorService
 
         $contrato->update(['fecha_fin' => $nuevaFechaFin]);
 
+        // La credencial vence con el contrato: se prorroga con él.
+        $this->credenciales->sincronizar($contrato->servidor_id);
+
         activity()
             ->performedOn($contrato)
             ->withProperties([
@@ -794,6 +800,10 @@ class ContratoServidorService
             'unidad_administrativa_id' => $vigente?->unidad_administrativa_id,
             'estado'                   => $vigente !== null,
         ]);
+
+        // La credencial sigue al vínculo (Comunicación Social, 6.3): se anula
+        // cuando termina y toma la fecha de fin del que quede vigente.
+        $this->credenciales->sincronizar($servidorId);
     }
 
     /**

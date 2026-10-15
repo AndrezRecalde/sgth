@@ -71,6 +71,13 @@ Schedule::command('sgth:acciones:aplicar-vigentes')
     ->dailyAt('00:30')
     ->onOneServer();
 
+// Las credenciales (Comunicación Social, fase 3.1): vencen con la fecha de fin
+// del contrato. Después del motor de efectos, para que lea el vínculo de hoy;
+// lo demás —la foto, el cese— ya las puso al día en el momento.
+Schedule::command('sgth:credenciales:conciliar')
+    ->dailyAt('00:45')
+    ->onOneServer();
+
 // Vencimiento de contratos de Servicios Profesionales y, desde la fase 2.1, de
 // servicios ocasionales: genera la cesación en borrador para que Talento Humano
 // la revise. Nada se da de baja sin aprobación.
