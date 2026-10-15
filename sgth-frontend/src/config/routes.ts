@@ -149,6 +149,13 @@ export const ROUTES = {
     CONFIGURACION: '/tic/configuracion',
   },
 
+  // ── COMUNICACIÓN SOCIAL ───────────────
+  // Fotografías de los servidores, credenciales e identidad institucional
+  // (docs/diseno-comunicacion-social.md). Las pantallas llegan por fases.
+  COMUNICACION: {
+    HOME: '/comunicacion',
+  },
+
   // ── PORTAL SERVIDOR ───────────────────
   PORTAL: {
     HOME:            '/portal',
@@ -180,4 +187,4 @@ export const ROUTES = {
   },
 } as const
 
-export type Subsistema = 'sgth' | 'salud' | 'tic' | 'portal'
+export type Subsistema = 'sgth' | 'salud' | 'tic' | 'comunicacion' | 'portal'

@@ -32,7 +32,7 @@ const REGLAS = [
   },
   {
     patron: /--mantine-color-(gray|blue|orange|teal|yellow|violet|grape|cyan|green|indigo|pink|lime)-/,
-    motivo: 'escala fuera de la paleta: use primario, emerald, ocean, lagoon, amethyst, amber, red o slate, o un token --sgth-*',
+    motivo: 'escala fuera de la paleta: use primario, emerald, ocean, lagoon, orchid, amethyst, amber, red o slate, o un token --sgth-*',
   },
 ]
 

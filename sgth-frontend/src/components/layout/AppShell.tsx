@@ -16,7 +16,7 @@ import { LAYOUT } from '@/config/design.tokens'
 
 /**
  * Shell de la aplicación autenticada. Lo montan los layouts de los route
- * groups protegidos: (sgth), (salud), (tic) y (portal).
+ * groups protegidos: (sgth), (salud), (tic), (comunicacion) y (portal).
  *
  * Responsabilidades — y solo estas tres:
  *  1. Guardar la ruta: sin sesión rehidratada, a /login.

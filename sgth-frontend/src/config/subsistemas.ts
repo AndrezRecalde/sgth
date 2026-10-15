@@ -3,6 +3,7 @@ import {
   IconUsers,
   IconBuildingHospital,
   IconDevices,
+  IconSpeakerphone,
   IconUserCircle,
 } from '@tabler/icons-react'
 import { ROUTES, type Subsistema } from './routes'
@@ -26,7 +27,7 @@ export interface SubsistemaConfig {
   descripcion: string
   icon: Icon
   /** Nombre de color registrado en el tema de Mantine. */
-  color: 'emerald' | 'ocean' | 'lagoon' | 'amethyst'
+  color: 'emerald' | 'ocean' | 'lagoon' | 'orchid' | 'amethyst'
   home: string
   /** Prefijo de ruta que identifica al subsistema. */
   prefix: string
@@ -60,6 +61,15 @@ export const SUBSISTEMAS: Record<Subsistema, SubsistemaConfig> = {
     home: ROUTES.TIC.HOME,
     prefix: '/tic',
   },
+  comunicacion: {
+    label: 'Comunicación',
+    nombre: 'Comunicación Social',
+    descripcion: 'Fotografías, credenciales y logos',
+    icon: IconSpeakerphone,
+    color: 'orchid',
+    home: ROUTES.COMUNICACION.HOME,
+    prefix: '/comunicacion',
+  },
   portal: {
     label: 'Portal',
     nombre: 'Portal del Servidor',
@@ -71,7 +81,7 @@ export const SUBSISTEMAS: Record<Subsistema, SubsistemaConfig> = {
   },
 }
 
-export const SUBSISTEMAS_ORDEN: Subsistema[] = ['sgth', 'salud', 'tic', 'portal']
+export const SUBSISTEMAS_ORDEN: Subsistema[] = ['sgth', 'salud', 'tic', 'comunicacion', 'portal']
 
 /** Deduce el subsistema activo a partir del pathname. `sgth` es el fallback. */
 export function getSubsistema(pathname: string): Subsistema {

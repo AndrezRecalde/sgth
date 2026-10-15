@@ -174,10 +174,33 @@
   --mantine-color-primario-text: var(--mantine-color-lagoon-text);
 }
 
+[data-subsistema='comunicacion'],
+:root[data-subsistema='comunicacion'][data-mantine-color-scheme] {
+  --mantine-color-primario-0: var(--mantine-color-orchid-0);
+  --mantine-color-primario-1: var(--mantine-color-orchid-1);
+  --mantine-color-primario-2: var(--mantine-color-orchid-2);
+  --mantine-color-primario-3: var(--mantine-color-orchid-3);
+  --mantine-color-primario-4: var(--mantine-color-orchid-4);
+  --mantine-color-primario-5: var(--mantine-color-orchid-5);
+  --mantine-color-primario-6: var(--mantine-color-orchid-6);
+  --mantine-color-primario-7: var(--mantine-color-orchid-7);
+  --mantine-color-primario-8: var(--mantine-color-orchid-8);
+  --mantine-color-primario-9: var(--mantine-color-orchid-9);
+  --mantine-color-primario-filled: var(--mantine-color-orchid-filled);
+  --mantine-color-primario-filled-hover: var(--mantine-color-orchid-filled-hover);
+  --mantine-color-primario-light: var(--mantine-color-orchid-light);
+  --mantine-color-primario-light-hover: var(--mantine-color-orchid-light-hover);
+  --mantine-color-primario-light-color: var(--mantine-color-orchid-light-color);
+  --mantine-color-primario-outline: var(--mantine-color-orchid-outline);
+  --mantine-color-primario-outline-hover: var(--mantine-color-orchid-outline-hover);
+  --mantine-color-primario-text: var(--mantine-color-orchid-text);
+}
+
 /* El verde institucional (login, páginas públicas y SGTH) va un tono más
    oscuro en claro: el blanco sobre emerald-6 da 3.77:1 y no llega al AA
    (4.5:1). Sobre emerald-7, 5.48:1. Azul (5.17) y violeta (5.70) ya llegan.
-   El cian de Tecnologías tampoco (3.68 sobre lagoon-6): va al bloque de abajo. */
+   El cian de Tecnologías tampoco (3.68 sobre lagoon-6): va al bloque de abajo.
+   El fucsia de Comunicación sí llega (4.71 sobre orchid-6). */
 :root[data-mantine-color-scheme='light']:not([data-subsistema]),
 :root[data-mantine-color-scheme='light'][data-subsistema='sgth'],
 :root[data-mantine-color-scheme='light'] [data-subsistema='sgth'] {

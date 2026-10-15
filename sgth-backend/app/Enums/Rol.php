@@ -38,6 +38,12 @@ enum Rol: string
     case JEFE_TIC = 'jefe-tic';
     case ADMIN_TI = 'admin-ti';
 
+    // Comunicación Social (docs/diseno-comunicacion-social.md, 7.3): el equipo
+    // toma las fotos e imprime las credenciales. Los logos los cambia solo la
+    // persona designada para eso, no el director por su cargo (D2).
+    case COMUNICACION_SOCIAL = 'comunicacion-social';
+    case RESPONSABLE_IDENTIDAD = 'responsable-identidad';
+
     // Control y auditoría
     case AUDITOR = 'auditor';
 
@@ -61,6 +67,8 @@ enum Rol: string
             self::TECNICO_DTIC => 'Técnico DTIC',
             self::JEFE_TIC => 'Jefe de TIC',
             self::ADMIN_TI => 'Administrador TI',
+            self::COMUNICACION_SOCIAL => 'Comunicación Social',
+            self::RESPONSABLE_IDENTIDAD => 'Responsable de Identidad Institucional',
             self::AUDITOR => 'Auditor',
         };
     }

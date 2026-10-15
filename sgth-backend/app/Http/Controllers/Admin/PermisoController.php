@@ -101,6 +101,11 @@ class PermisoController extends Controller
             $permiso === 'cambiar-contrasena'           => 'Autoservicio',
             str_contains($permiso, 'bienestar')         => 'Actividades y Bienestar',
 
+            str_contains($permiso, 'fotografia') ||
+            str_contains($permiso, 'credencial') ||
+            str_contains($permiso, 'identidad-institucional')
+                => 'Comunicación',
+
             str_contains($permiso, 'usuario') ||
             str_contains($permiso, 'rol') ||
             str_contains($permiso, 'contrasena') ||

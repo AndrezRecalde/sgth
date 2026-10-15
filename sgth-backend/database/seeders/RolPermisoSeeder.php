@@ -30,6 +30,25 @@ class RolPermisoSeeder extends Seeder
         Permiso::DAR_BAJA_BIEN,
     ];
 
+    /**
+     * El equipo de Comunicación Social: toma las fotos e imprime las
+     * credenciales (docs/diseno-comunicacion-social.md, 7.3).
+     */
+    public const PERMISOS_COMUNICACION_SOCIAL = [
+        Permiso::GESTIONAR_FOTOGRAFIAS,
+        Permiso::GESTIONAR_CREDENCIALES,
+        Permiso::VER_CREDENCIALES,
+    ];
+
+    /**
+     * La persona designada para los logos y los datos institucionales. Es un
+     * rol aparte y no un permiso del equipo, porque un logo equivocado sale en
+     * todos los documentos (D2). Si también toma fotos, tiene los dos roles.
+     */
+    public const PERMISOS_RESPONSABLE_IDENTIDAD = [
+        Permiso::GESTIONAR_IDENTIDAD_INSTITUCIONAL,
+    ];
+
     public function run(): void
     {
         // 1. Crear todos los permisos del Enum
@@ -75,6 +94,9 @@ class RolPermisoSeeder extends Seeder
             // la pantalla de Usuarios debe mostrar lo que el rol puede hacer
             // (docs/diseno-subsistema-tic.md, 4.4).
             ...self::PERMISOS_JEFE_TIC,
+            // Todo lo de Comunicación, por la misma razón (D2).
+            ...self::PERMISOS_COMUNICACION_SOCIAL,
+            ...self::PERMISOS_RESPONSABLE_IDENTIDAD,
             // Carga inicial de servidores. Se deja en TI y no en UATH porque
             // es una vía excepcional que se revoca al terminar la migración:
             // durante ese lapso se le concede también a quien la ejecute.
@@ -149,6 +171,8 @@ class RolPermisoSeeder extends Seeder
             // hacía por su rol en la ruta, ahora con los permisos.
             Permiso::CONFIRMAR_RECEPCION,
             Permiso::VALIDAR_TRABAJO_SOCIAL,
+            // Consulta las credenciales; las imprime Comunicación Social.
+            Permiso::VER_CREDENCIALES,
         ]));
 
         // ASISTENTE_UATH
@@ -312,6 +336,12 @@ class RolPermisoSeeder extends Seeder
         // JEFE_TIC
         $this->crearRol(Rol::JEFE_TIC, array_merge($permisosBase, self::PERMISOS_JEFE_TIC));
 
+        // COMUNICACION_SOCIAL
+        $this->crearRol(Rol::COMUNICACION_SOCIAL, array_merge($permisosBase, self::PERMISOS_COMUNICACION_SOCIAL));
+
+        // RESPONSABLE_IDENTIDAD
+        $this->crearRol(Rol::RESPONSABLE_IDENTIDAD, array_merge($permisosBase, self::PERMISOS_RESPONSABLE_IDENTIDAD));
+
         // AUDITOR
         $this->crearRol(Rol::AUDITOR, array_merge($permisosBase, [
             Permiso::VER_ESTRUCTURA,
@@ -331,6 +361,8 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_REPORTES_SSO,
             // El inventario de equipos, solo para consultarlo.
             Permiso::VER_INVENTARIO_TI,
+            // Las credenciales, solo para consultarlas.
+            Permiso::VER_CREDENCIALES,
         ]));
     }
 

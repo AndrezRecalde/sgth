@@ -42,8 +42,8 @@ del código. Al reescribirlo se verificó regla por regla contra el repositorio.
 
 **Corregido — la regla decía algo que el código no hacía:**
 
-- Las rutas protegidas no viven en `src/app/(dashboard)/`, sino en cuatro
-  route groups por subsistema: `(sgth)`, `(salud)`, `(tic)`, `(portal)` y `(publico)`.
+- Las rutas protegidas no viven en `src/app/(dashboard)/`, sino en los
+  route groups por subsistema: `(sgth)`, `(salud)`, `(tic)`, `(comunicacion)`, `(portal)` y `(publico)`.
 - El middleware `src/proxy.ts` sí existe y está activo. Su lista de rutas
   había quedado desactualizada —cubría casi nada— y se corrigió el 2026-08-29:
   ahora el `matcher` excluye lo estático en vez de enumerar módulos. Ver

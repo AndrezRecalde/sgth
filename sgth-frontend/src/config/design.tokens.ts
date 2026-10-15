@@ -42,6 +42,19 @@ export const LAGOON = [
   '#06B6D4', '#0891B2', '#0E7490', '#155E75', '#164E63',
 ] as const
 
+/**
+ * Acento del subsistema Comunicación Social.
+ *
+ * Fucsia: el naranja del logo queda descartado porque el ámbar avisa y el rojo
+ * es error. Es el único tono libre que no carga significado: 31° del violeta
+ * del Portal y 67° del rojo (el rosa quedaba a 27°). El blanco sobre el tono
+ * 6 da 4.71:1 y llega al AA, así que no necesita rellenar con el 7.
+ */
+export const ORCHID = [
+  '#FDF4FF', '#FAE8FF', '#F5D0FE', '#F0ABFC', '#E879F9',
+  '#D946EF', '#C026D3', '#A21CAF', '#86198F', '#701A75',
+] as const
+
 /** Advertencia — el único ámbar del sistema. */
 export const AMBER = [
   '#FFFBEB', '#FEF3C7', '#FDE68A', '#FCD34D', '#FBBF24',

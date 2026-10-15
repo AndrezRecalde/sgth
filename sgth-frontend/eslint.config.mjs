@@ -71,7 +71,7 @@ const COLOR_HEX = {
 
 /*
 | Un color escrito a mano solo puede ser de la paleta del sistema
-| (design.tokens.ts): primario (el del subsistema), emerald, ocean, lagoon,
+| (design.tokens.ts): primario (el del subsistema), emerald, ocean, lagoon, orchid,
 | amethyst, amber, red, slate y dark, con o sin tono (`amber.7`), además de dimmed,
 | inherit, white, currentColor y los tokens --sgth-* o --mantine-color-* de
 | esas mismas escalas. `blue`, `orange`, `gray`, `teal`, `violet`… quedan
@@ -79,9 +79,9 @@ const COLOR_HEX = {
 | pantalla (regla 03).
 */
 const VALOR_DE_PALETA =
-  "/^(primario|emerald|ocean|lagoon|amethyst|amber|red|slate|dark)(\\.[0-9])?$|^(dimmed|inherit|white|currentColor)$|^var\\(--(sgth-|mantine-color-(primario|emerald|ocean|lagoon|amethyst|amber|red|slate|dark|dimmed|text|body|white|default))/";
+  "/^(primario|emerald|ocean|lagoon|orchid|amethyst|amber|red|slate|dark)(\\.[0-9])?$|^(dimmed|inherit|white|currentColor)$|^var\\(--(sgth-|mantine-color-(primario|emerald|ocean|lagoon|orchid|amethyst|amber|red|slate|dark|dimmed|text|body|white|default))/";
 const MENSAJE_PALETA =
-  "Color fuera de la paleta: use primario (el del subsistema), emerald, ocean, lagoon, amethyst, amber, red o slate (o dimmed), mejor aún un tono de SEMANTIC_COLOR. Un ThemeIcon o Avatar decorativo va sin color: toma el acento del subsistema (regla 03).";
+  "Color fuera de la paleta: use primario (el del subsistema), emerald, ocean, lagoon, orchid, amethyst, amber, red o slate (o dimmed), mejor aún un tono de SEMANTIC_COLOR. Un ThemeIcon o Avatar decorativo va sin color: toma el acento del subsistema (regla 03).";
 const PROP_COLOR = "JSXAttribute[name.name=/^(color|c|bg)$/]";
 const COLORES_FUERA_DE_PALETA = [
   `${PROP_COLOR} > Literal:not([value=${VALOR_DE_PALETA}])`,
@@ -266,7 +266,7 @@ const eslintConfig = defineConfig([
   {
     // Solo el área autenticada: login, cambiar contraseña y los cuestionarios
     // públicos tienen su propio lienzo, sin shell.
-    files: ["src/app/(sgth)/**/page.tsx", "src/app/(salud)/**/page.tsx", "src/app/(tic)/**/page.tsx", "src/app/(portal)/**/page.tsx"],
+    files: ["src/app/(sgth)/**/page.tsx", "src/app/(salud)/**/page.tsx", "src/app/(tic)/**/page.tsx", "src/app/(comunicacion)/**/page.tsx", "src/app/(portal)/**/page.tsx"],
     plugins: { sgth: { rules: { "pagina-con-pageshell": paginaConPageShell } } },
     rules: {
       "sgth/pagina-con-pageshell": "error",

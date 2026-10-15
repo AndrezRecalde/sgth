@@ -18,10 +18,11 @@ Un componente **nunca** importa `design.tokens.ts`. Consume variables CSS.
 
 | Escala | Uso |
 |---|---|
-| `primario` | El principal **del subsistema**: verde, azul, cian o violeta según dónde se pinte |
+| `primario` | El principal **del subsistema**: verde, azul, cian, fucsia o violeta según dónde se pinte |
 | `emerald` | Verde institucional, principal de SGTH y color del éxito |
 | `ocean` | Principal del Dispensario Médico y color de lo informativo |
 | `lagoon` | Principal de Tecnologías (Unidad de TIC) |
+| `orchid` | Principal de Comunicación Social |
 | `amethyst` | Principal del Portal del Servidor |
 | `slate` | Neutro: superficies, bordes y texto en modo claro |
 | `dark` | Neutro de modo oscuro (escala NIGHT, sustituye a la de Mantine) |
@@ -49,7 +50,7 @@ Se consumen a través de `StatusBadge`, `notificar` o el mapa `SEMANTIC_COLOR`.
 `var(--mantine-color-*)` dentro de estilos:
 
 ```
-permitido   primario emerald ocean lagoon amethyst amber red slate dark  (con tono: amber.7)
+permitido   primario emerald ocean lagoon orchid amethyst amber red slate dark  (con tono: amber.7)
             dimmed inherit white currentColor
             var(--sgth-*)  var(--mantine-color-{esas escalas}-*)
 rechazado   blue orange gray teal violet grape cyan yellow green …
@@ -82,8 +83,8 @@ también lo hereden—.
 El tema declara `primaryColor: 'primario'`, una escala con los valores de
 emerald. `tokens.css` reapunta sus variables (`--mantine-color-primario-*`) a
 la escala de cada subsistema. Todo control sin `color` sale verde en SGTH,
-azul en el Dispensario, cian en Tecnologías y violeta en el Portal, sin que la
-pantalla lo diga.
+azul en el Dispensario, cian en Tecnologías, fucsia en Comunicación y violeta
+en el Portal, sin que la pantalla lo diga.
 Fuera del shell (login, páginas públicas) queda el verde institucional.
 
 **Cambian los controles, no los significados.** Un «Aprobado» es emerald y
@@ -95,7 +96,8 @@ decir «el color de la pantalla».
 Contraste: el blanco sobre emerald-6 da 3.77:1 y no llega al AA (4.5:1); el
 verde institucional usa emerald-7 (5.48:1) para el relleno en modo claro.
 Azul (5.17:1) y violeta (5.70:1) llegan con el tono 6. El cian de Tecnologías
-tampoco llega (3.68:1) y rellena con lagoon-7 (5.36:1).
+tampoco llega (3.68:1) y rellena con lagoon-7 (5.36:1). El fucsia de
+Comunicación llega con el tono 6 (4.71:1).
 
 Del principal cuelgan seis tokens para el CSS propio. Todo lo que signifique
 "el color de este subsistema" los usa:
