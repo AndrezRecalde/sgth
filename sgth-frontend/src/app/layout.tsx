@@ -17,6 +17,7 @@ import '@/styles/globals.css'
 
 import { ColorSchemeScript, mantineHtmlProps } from '@mantine/core'
 import type { Metadata, Viewport } from 'next'
+import { ENV } from '@/config/env'
 import { fontVariables } from '@/config/mantine.theme'
 import { Providers } from './Providers'
 
@@ -29,6 +30,15 @@ export const metadata: Metadata = {
   description:
     'Sistema Integral de Gestión de Talento Humano — GAD Provincial de Esmeraldas',
   applicationName: 'SGTH',
+  // Sacados del isotipo de Identidad institucional por el backend (fase 2.3):
+  // cambiar el isotipo cambia el favicon sin desplegar nada.
+  icons: {
+    icon: [
+      { url: `${ENV.API_URL}/identidad/icono/32`, sizes: '32x32', type: 'image/png' },
+      { url: `${ENV.API_URL}/identidad/icono/192`, sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [{ url: `${ENV.API_URL}/identidad/icono/180`, sizes: '180x180', type: 'image/png' }],
+  },
   robots: { index: false, follow: false },
 }
 

@@ -1,5 +1,4 @@
 import { Metadata } from "next";
-import Image from "next/image";
 import {
   Box,
   Text,
@@ -11,6 +10,7 @@ import {
 } from "@mantine/core";
 import { IconMail } from "@tabler/icons-react";
 import { LoginForm } from "@/features/auth/components/LoginForm";
+import { LogoInstitucional } from "@/features/comunicacion/components/LogoInstitucional";
 import classes from "./login.module.css";
 
 export const metadata: Metadata = {
@@ -30,15 +30,9 @@ export default function LoginPage() {
         wrap="wrap"
       >
         <Container size={400} px={0} w="100%">
-          {/* Logo or Icon */}
+          {/* El logo de Identidad institucional (Comunicación Social, 2.3). */}
           <Box mb="md">
-            <Image
-              src="/logo.png"
-              alt="Logo Institucional"
-              width={80}
-              height={80}
-              priority
-            />
+            <LogoInstitucional />
           </Box>
 
           <Title order={1} size="h2" fw={800} mb="xs">

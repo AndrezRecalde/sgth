@@ -155,6 +155,7 @@ export const ROUTES = {
   COMUNICACION: {
     HOME: '/comunicacion',
     FOTOGRAFIAS: '/comunicacion/fotografias',
+    IDENTIDAD:   '/comunicacion/identidad',
   },
 
   // ── PORTAL SERVIDOR ───────────────────

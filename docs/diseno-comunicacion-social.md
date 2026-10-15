@@ -350,6 +350,8 @@ Cada punto es un PR con sus pruebas Pest y, si hay pantalla, revisión en el nav
 | 2.2 | Los 16 archivos de PDF dejan la ruta fija: una cabecera común, el logo según la fecha del documento, V5 y V6 |
 | 2.3 | Pantalla Identidad institucional con vista previa en contexto; sidebar, login, favicon e íconos, modo oscuro y correos con el logo; limpieza de imágenes sin uso |
 
+**Lo que quedó en la 2.3:** la pantalla `/comunicacion/identidad` (seis tarjetas con la versión vigente o el respaldo atenuado, «Subir versión» con aviso temprano de tamaño y proporción y una imitación del sitio donde se usa —sidebar claro y oscuro, inicio de sesión, cabecera de documento, hoja A4—, historial con «Volver a esta versión» y «Anular» para las programadas, y el formulario de los datos); el sidebar toma el isotipo, las siglas y el nombre corto del manifiesto público, con `/logo.png` de respaldo si el backend no responde; el login, el imagotipo horizontal (el negativo en modo oscuro); el favicon y los íconos salen de `GET /api/v1/identidad/icono/{lado}`; los correos llevan el imagotipo por su URL pública (`FRONTEND_URL`), con el nombre de la app si no hay logo. Se retiraron las imágenes sin uso (`LogoCompleto.png`, `recepcion.png`, `servidor.png` y los SVG de la plantilla de Next). Queda escrito a mano el nombre de la institución en la cabecera de «Mi portal».
+
 ### Fase 3: Credencial
 
 | PR | Contenido |
