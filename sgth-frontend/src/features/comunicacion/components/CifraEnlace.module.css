@@ -1,0 +1,15 @@
+/* Una cifra del Inicio que lleva a su listado ya filtrado. */
+.enlace {
+  display: block;
+  height: 100%;
+  border-radius: var(--mantine-radius-lg);
+  color: inherit;
+  text-decoration: none;
+  transition: box-shadow var(--sgth-motion-fast) var(--sgth-easing);
+}
+
+.enlace:hover,
+.enlace:focus-visible {
+  box-shadow: 0 0 0 2px var(--sgth-accent-border);
+  outline: none;
+}

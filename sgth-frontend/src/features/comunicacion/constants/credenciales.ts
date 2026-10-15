@@ -1,5 +1,7 @@
 import type { SemanticTone } from '@/config/design.tokens'
-import type { EstadoCredencial, FormatoImpresion, MotivoRevocacion, SituacionCredencial } from '../services/tiposCredencial'
+import type {
+  EstadoCredencial, FiltrosCredenciales, FormatoImpresion, MotivoRevocacion, SituacionCredencial,
+} from '../services/tiposCredencial'
 
 /**
  * La situación de cada servidor en la pantalla Credenciales, con el tono de
@@ -26,6 +28,10 @@ export const OPCIONES_SITUACION = [
   // Quienes salieron con la tarjeta: el paso de su desvinculación espera aquí.
   { value: 'por_recibir', label: 'Tarjetas por recibir (salieron)' },
 ] as const
+
+/** ¿Es una situación por la que se puede filtrar? Para el selector y para `?situacion=`. */
+export const esSituacionFiltrable = (v: unknown): v is NonNullable<FiltrosCredenciales['situacion']> =>
+  OPCIONES_SITUACION.some((o) => o.value === v)
 
 export const ESTADO_CREDENCIAL: Record<EstadoCredencial, SemanticTone> = {
   vigente:  'success',

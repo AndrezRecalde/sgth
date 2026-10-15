@@ -393,6 +393,27 @@ Cada punto es un PR con sus pruebas Pest y, si hay pantalla, revisión en el nav
 - **La verificación** (`/verificar/credencial/[codigo]`, sin sesión): vigente, no vigente y no encontrada. Un 429 del límite por IP, o un fallo de red, no se presentan como «no encontrada»: eso acusaría de falsa a una tarjeta auténtica.
 - En la desvinculación, el tipo del paso suma `credencial`; la pantalla ya pintaba los pasos que le llegan.
 
+**Lo que quedó en la 3.3:**
+
+- **El Inicio** (`/comunicacion`) sale de `GET comunicacion/tablero` (`TableroComunicacionService`), con un bloque por permiso, como el tablero de Tecnologías:
+  - Fotografías, con `gestionar-fotografias` o `ver-credenciales`;
+  - Credenciales, con `ver-credenciales`;
+  - Identidad, con `gestionar-identidad-institucional`.
+
+  Talento Humano y Auditoría ven fotos y credenciales; la persona designada para los logos ve solo los logos.
+- **Credenciales:** vigentes, por imprimir, por reimprimir, por vencer en 30 días con su lista, vencidas y tarjetas por recibir.
+  - «Por reimprimir» se cuenta con `DatosCredencial`, igual que el listado.
+  - «Por recibir» usa el scope `Credencial::tarjetaPorRecibir`, la misma regla del paso de la desvinculación.
+
+  Así las cifras del Inicio y las del listado no se contradicen.
+- **Fotografías:** activos con y sin foto, y por unidad, empezando por la que más debe. Se nombran ocho unidades; las demás se suman en «Otras».
+- **Identidad:** las variantes obligatorias sin versión propia, las que se ven con su respaldo y los cambios programados.
+- **Cada cifra abre su listado ya filtrado:**
+  - `?situacion=` en Credenciales;
+  - `?foto=sin&unidad=` en Fotografías.
+
+  Las páginas leen `searchParams` en el servidor y se los pasan a la vista como filtro inicial, sin `useSearchParams`. El Inicio se pide de nuevo cada vez que se vuelve a él, porque imprimir y subir fotos ocurren en otras pantallas.
+
 ---
 
 ## 10. Decisiones

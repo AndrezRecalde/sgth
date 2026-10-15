@@ -4,7 +4,7 @@ import { Button, Select, TextInput } from '@mantine/core'
 import { Toolbar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
-import { OPCIONES_SITUACION } from '../constants/credenciales'
+import { OPCIONES_SITUACION, esSituacionFiltrable } from '../constants/credenciales'
 import type { FiltrosCredenciales } from '../services/tiposCredencial'
 
 interface Props {
@@ -15,9 +15,6 @@ interface Props {
   onLimpiar: () => void
   hayFiltros: boolean
 }
-
-const esSituacion = (v: string | null): v is NonNullable<FiltrosCredenciales['situacion']> =>
-  OPCIONES_SITUACION.some((o) => o.value === v)
 
 export function CredencialesFiltros({ filtros, busqueda, onBusqueda, onCambiar, onLimpiar, hayFiltros }: Props) {
   const compacto = useContainedInput('sm')
@@ -50,7 +47,7 @@ export function CredencialesFiltros({ filtros, busqueda, onBusqueda, onCambiar, 
         clearable
         {...compacto}
         value={filtros.situacion ?? null}
-        onChange={(v) => onCambiar({ situacion: esSituacion(v) ? v : undefined })}
+        onChange={(v) => onCambiar({ situacion: esSituacionFiltrable(v) ? v : undefined })}
         style={{ minWidth: 250 }}
       />
     </Toolbar>

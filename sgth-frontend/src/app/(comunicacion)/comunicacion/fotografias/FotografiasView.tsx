@@ -20,9 +20,10 @@ const RETARDO_BUSQUEDA_MS = 300
  * fase 1.2): quién tiene foto, subirla de una en una con su recorte, el
  * historial y la carga masiva por cédula.
  */
-export function FotografiasView() {
+export function FotografiasView({ filtrosIniciales = {} }: { filtrosIniciales?: FiltrosFotografias }) {
   const [page, setPage] = useState(1)
-  const [filtros, setFiltros] = useState<FiltrosFotografias>({})
+  // Desde el Inicio llega ya filtrada: los que no tienen foto, de una unidad.
+  const [filtros, setFiltros] = useState<FiltrosFotografias>(filtrosIniciales)
   const [busqueda, setBusqueda] = useState('')
   const [buscar] = useDebouncedValue(busqueda.trim(), RETARDO_BUSQUEDA_MS)
 
