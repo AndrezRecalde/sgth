@@ -15,7 +15,9 @@ import { destinoSeguro } from '@/lib/destino'
  * `/verificar` es la comprobación de un certificado laboral. La abre quien
  * recibió el papel —un banco, el IESS— siguiendo la dirección impresa en el
  * pie, y no tiene ni va a tener cuenta aquí. A diferencia del QR del permiso,
- * este caso sí existe: el documento sale de la institución hacia fuera.
+ * este caso sí existe: el documento sale de la institución hacia fuera. Lo
+ * mismo `/verificar/credencial`, que abre el QR del reverso de la credencial
+ * de un servidor (Comunicación Social, 6.4).
  *
  * El QR del permiso llegó a estar aquí, cuando se pensaba para que un guardia
  * comprobara la autenticidad del papel. No es ese su uso: lo escanea Talento

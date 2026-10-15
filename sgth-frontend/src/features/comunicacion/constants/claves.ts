@@ -15,6 +15,18 @@ export const clavesComunicacion = {
   },
 
   /**
+   * Las credenciales. «Mi credencial» va aparte: la pide el Portal de
+   * cualquier servidor, y una revocación o una foto nueva la cambian.
+   */
+  credenciales: {
+    todas: ['comunicacion', 'credenciales'] as const,
+    lista: (filtros: unknown, page: number) => ['comunicacion', 'credenciales', 'lista', filtros, page] as const,
+    historial: (servidorId: number) => ['comunicacion', 'credenciales', 'historial', servidorId] as const,
+    mia: ['mi-credencial'] as const,
+    verificada: (codigo: string) => ['credencial-verificada', codigo] as const,
+  },
+
+  /**
    * La identidad institucional. La pública va en su propia raíz porque la
    * piden el sidebar y el login fuera de Comunicación; un cambio invalida las dos.
    */

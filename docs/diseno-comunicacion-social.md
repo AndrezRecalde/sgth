@@ -385,6 +385,14 @@ Cada punto es un PR con sus pruebas Pest y, si hay pantalla, revisión en el nav
 - **El paso de la desvinculación** lee la última credencial del servidor, la que se anuló al salir: está hecho si nunca se imprimió, si la tarjeta se devolvió o si se revocó por pérdida o robo; si no, queda pendiente para Comunicación, que registra la devolución desde Credenciales (`devuelta_en`). Talento Humano puede marcarlo como que no aplica, con su motivo, como los demás.
 - **Endpoints:** `comunicacion/credenciales` (listado con `situacion`: sin foto, pendiente, sin imprimir, desactualizada, al día, vencida), `comunicacion/servidores/{id}/credenciales` (historial), `comunicacion/credenciales/imprimir`, `…/{id}/revocar` y `…/{id}/devolucion`; `autoservicio/mi-credencial` y su `/pdf`.
 
+**Lo que quedó en la 3.2:**
+
+- **Credenciales** (`/comunicacion/credenciales`, con `ver-credenciales`): cada servidor activo con su foto y su situación —sin foto, sin imprimir, por reimprimir con lo que cambió, impresa, vencida—; imprimir una, las elegidas en la tabla o las de una unidad, en CR80 o A4; revocar y reponer; el historial con las impresiones. Talento Humano y Auditoría entran a consultar: imprimir, revocar y recibir solo se ofrecen con `gestionar-credenciales`.
+- **Tarjetas por recibir:** el listado de activos no enseñaba a quien ya se fue, y el paso de su desvinculación dice que la tarjeta la recibe Comunicación «en Credenciales». Se añadió al backend la situación `por_recibir`: quienes salieron con su última tarjeta impresa sin devolver (salvo perdida o robada), la misma regla del paso. Desde el historial se registra la devolución. El filtro de unidad no los encuentra: al salir, el servidor queda sin unidad.
+- **Mi credencial** (`/portal/mi-credencial`): las dos caras de la tarjeta con los datos de hoy, el QR sobre blanco también en modo oscuro, y «Descargar en PDF». Sin credencial, dice por qué (sin foto, sin vínculo o se crea esta noche).
+- **La verificación** (`/verificar/credencial/[codigo]`, sin sesión): vigente, no vigente y no encontrada. Un 429 del límite por IP, o un fallo de red, no se presentan como «no encontrada»: eso acusaría de falsa a una tarjeta auténtica.
+- En la desvinculación, el tipo del paso suma `credencial`; la pantalla ya pintaba los pasos que le llegan.
+
 ---
 
 ## 10. Decisiones

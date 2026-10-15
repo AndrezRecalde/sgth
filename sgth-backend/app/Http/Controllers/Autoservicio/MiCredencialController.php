@@ -31,10 +31,13 @@ final class MiCredencialController extends Controller
 
         $credencial = $this->credencial($servidor);
 
+        // El porqué, sin repetir que no la tiene: eso lo dice la pantalla.
         if (! $credencial) {
-            return ApiResponse::ok(null, $servidor->estado && ! $servidor->fotografiaVigente
-                ? 'Aún no tiene credencial: se crea cuando Comunicación Social registre su foto.'
-                : 'No tiene una credencial vigente.');
+            return ApiResponse::ok(null, match (true) {
+                ! $servidor->estado                => 'No tiene un vínculo vigente con la institución.',
+                ! $servidor->fotografiaVigente     => 'Se crea cuando Comunicación Social registre su foto.',
+                default                            => 'Ya tiene foto: su credencial se crea esta noche.',
+            });
         }
 
         return ApiResponse::ok(new MiCredencialResource($credencial), 'Su credencial.');

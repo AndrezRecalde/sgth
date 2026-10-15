@@ -18,7 +18,7 @@ class ListarCredencialesRequest extends FormRequest
         return [
             'buscar'                   => ['nullable', 'string', 'max:100'],
             'unidad_administrativa_id' => ['nullable', 'integer', 'exists:unidades_administrativas,id'],
-            'situacion'                => ['nullable', 'in:sin_foto,sin_imprimir,desactualizada,al_dia,vencida'],
+            'situacion'                => ['nullable', 'in:sin_foto,sin_imprimir,desactualizada,al_dia,vencida,por_recibir'],
             'per_page'                 => ['nullable', 'integer', 'min:1', 'max:100'],
             'page'                     => ['nullable', 'integer', 'min:1'],
         ];

@@ -4,7 +4,7 @@ import type { ApiResponse, PaginatedResponse } from '@/types/api'
 export type EstadoDesvinculacion = 'abierta' | 'cerrada' | 'cancelada'
 export type EstadoPasoDesvinculacion = 'pendiente' | 'hecho' | 'no_aplica'
 export type PasoDesvinculacion =
-  | 'vacaciones' | 'indemnizacion' | 'bienes' | 'usuario' | 'certificado' | 'declaracion' | 'reingreso'
+  | 'vacaciones' | 'indemnizacion' | 'bienes' | 'credencial' | 'usuario' | 'certificado' | 'declaracion' | 'reingreso'
 
 /** La liquidación de vacaciones, calculada o como se confirmó (fase 7.4b). */
 export type LiquidacionVacaciones = {

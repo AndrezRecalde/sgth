@@ -15,6 +15,10 @@ export const ROUTES = {
     // campañas: si la ruta cambia, no había un solo sitio donde cambiarla.
     PSICOSOCIAL: (codigo: string) => `/psicosocial/${codigo}`,
     ASSIST:      (codigo: string) => `/assist/${codigo}`,
+
+    // La que abre el QR del reverso de la credencial (Comunicación, 6.4). La
+    // escribe el backend en el QR; aquí queda para enlazarla desde el Portal.
+    VERIFICAR_CREDENCIAL: (codigo: string) => `/verificar/credencial/${codigo}`,
   },
 
   // ── SGTH (Talento Humano) ─────────────
@@ -155,6 +159,7 @@ export const ROUTES = {
   COMUNICACION: {
     HOME: '/comunicacion',
     FOTOGRAFIAS: '/comunicacion/fotografias',
+    CREDENCIALES: '/comunicacion/credenciales',
     IDENTIDAD:   '/comunicacion/identidad',
   },
 
@@ -182,6 +187,8 @@ export const ROUTES = {
     DOCUMENTOS:      '/portal/documentos',
     REPORTES:        '/portal/reportes',
     MI_CV:           '/portal/mi-cv',
+    /** La credencial digital del servidor (Comunicación Social, fase 3.2). */
+    MI_CREDENCIAL:   '/portal/mi-credencial',
     VIATICOS:        '/portal/viaticos',
     VIATICOS_BANDEJA: '/portal/viaticos/bandeja',
     VIATICO_DETALLE: (codigo: string | number) =>
