@@ -87,6 +87,17 @@ class Servidor extends Model
         return $this->hasOne(\App\Models\User::class, 'servidor_id');
     }
 
+    /** Todas sus fotos, la vigente y el historial (Comunicación Social, 1.1). */
+    public function fotografias(): HasMany
+    {
+        return $this->hasMany(\App\Models\Comunicacion\FotografiaServidor::class);
+    }
+
+    public function fotografiaVigente(): HasOne
+    {
+        return $this->hasOne(\App\Models\Comunicacion\FotografiaServidor::class)->where('vigente', true);
+    }
+
     public function unidadAdministrativa(): BelongsTo
     {
         return $this->belongsTo(UnidadAdministrativa::class);

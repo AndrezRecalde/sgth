@@ -111,6 +111,12 @@ class ServidorResource extends JsonResource
             ),
             'documentos'  => DocumentoServidorResource::collection($this->whenLoaded('documentos')),
             'movimientos' => $this->whenLoaded('movimientos'),
+            // La foto vigente, para la cabecera del expediente. La imagen se
+            // pide aparte por su id (Comunicación Social, fase 1.1).
+            'fotografia'  => $this->whenLoaded('fotografiaVigente', fn () => $this->resource->fotografiaVigente ? [
+                'id'          => $this->resource->fotografiaVigente->id,
+                'activada_en' => $this->resource->fotografiaVigente->activada_en?->toIso8601String(),
+            ] : null),
         ];
     }
 }

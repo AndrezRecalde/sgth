@@ -115,6 +115,8 @@ class ExpedienteService implements ExpedienteServiceInterface
             // Sin 'documentos' ni 'movimientos': nadie los lee de aquí —las
             // pestañas del expediente y la bandeja tienen sus propios
             // endpoints— y este detalle se pide cada vez que se abre la ficha.
+            // La foto vigente, para la cabecera (Comunicación Social, 1.1).
+            'fotografiaVigente',
         ])->findOrFail($servidorId);
     }
 

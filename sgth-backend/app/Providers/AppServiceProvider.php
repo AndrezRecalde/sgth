@@ -186,6 +186,15 @@ class AppServiceProvider extends ServiceProvider
             \App\Contracts\InventarioTi\DisponibilidadPrestamoServiceInterface::class,
             \App\Services\InventarioTi\DisponibilidadPrestamoService::class
         );
+        // Comunicación Social (docs/diseno-comunicacion-social.md, 1.1).
+        $this->app->bind(
+            \App\Contracts\Comunicacion\FotografiaServiceInterface::class,
+            \App\Services\Comunicacion\FotografiaService::class
+        );
+        $this->app->bind(
+            \App\Contracts\Comunicacion\CargaFotografiasServiceInterface::class,
+            \App\Services\Comunicacion\CargaFotografiasService::class
+        );
         $this->app->bind(
             HelpdeskServiceInterface::class,
             HelpdeskService::class
