@@ -75,6 +75,8 @@ class MisActividadesController extends Controller
                 ? CategoriaActividadEnum::from($filtros['categoria'])->etiqueta()
                 : null,
             'buscar'    => $filtros['buscar'] ?? null,
+            // La hoja membretada y los datos vigentes hoy (fase 2.2).
+            ...app(\App\Contracts\Comunicacion\IdentidadInstitucionalServiceInterface::class)->paraDocumento(),
         ])
             ->setPaper('a4');
 

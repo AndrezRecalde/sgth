@@ -163,6 +163,12 @@ class AccionPersonalPdfService
                 $movimiento->remuneracion_origen !== null ? (float) $movimiento->remuneracion_origen : null
             );
 
+        // El logo y los datos vigentes el día que se suscribió (D3): reimprimir
+        // un acto de una administración no le pone el logo de la siguiente.
+        // Un borrador, el de hoy.
+        $membrete = app(\App\Contracts\Comunicacion\IdentidadInstitucionalServiceInterface::class)
+            ->paraDocumento($movimiento->fecha_suscripcion ?? $movimiento->fecha_registro);
+
         // A una autoridad electa no se le emite acción de personal: su acto
         // tiene una constancia, con su número AU, que firma Talento Humano [TH 6;
         // fase 4.1b].
@@ -174,7 +180,7 @@ class AccionPersonalPdfService
                     'anulada'            => $movimiento->estado === EstadoAccionPersonal::ANULADA,
                     'servidor'           => $movimiento->servidor,
                     'firmaTalentoHumano' => $this->firma($movimiento, 'firmante_th', RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO, $vistaPrevia),
-                    'logo'               => public_path('images/logo-gadpe.png'),
+                    ...$membrete,
                     'vistaPrevia'        => $vistaPrevia,
                 ],
                 'archivo' => $vistaPrevia
@@ -198,7 +204,7 @@ class AccionPersonalPdfService
                     'anulada'            => $movimiento->estado === EstadoAccionPersonal::ANULADA,
                     'servidor'           => $movimiento->servidor,
                     'firmaTalentoHumano' => $this->firma($movimiento, 'firmante_th', RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO, $vistaPrevia),
-                    'logo'               => public_path('images/logo-gadpe.png'),
+                    ...$membrete,
                     'vistaPrevia'        => $vistaPrevia,
                 ],
                 'archivo' => $vistaPrevia
@@ -221,7 +227,7 @@ class AccionPersonalPdfService
                 'servidor'     => $movimiento->servidor,
                 'firmaAutoridad' => $this->firma($movimiento, 'firmante_autoridad', RolFirmaAccionPersonal::AUTORIDAD_NOMINADORA, $vistaPrevia),
                 'firmaTalentoHumano' => $this->firma($movimiento, 'firmante_th', RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO, $vistaPrevia),
-                'logo'         => public_path('images/logo-gadpe.png'),
+                ...$membrete,
                 'vistaPrevia'  => $vistaPrevia,
             ],
             // codigo_registro es el que genera el sistema al registrar la

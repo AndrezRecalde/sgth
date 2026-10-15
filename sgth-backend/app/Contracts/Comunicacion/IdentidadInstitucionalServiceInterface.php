@@ -55,4 +55,14 @@ interface IdentidadInstitucionalServiceInterface
 
     /** Lo que ven las pantallas sin sesión (login, verificación): rutas y datos. */
     public function manifiesto(): array;
+
+    /**
+     * Lo que lleva un PDF fechado (fase 2.2): el logo de documentos (V4, o el
+     * horizontal), el secundario (V5), la hoja membretada (V6) y los datos de
+     * la institución, todo vigente a esa fecha. Las rutas vienen vacías cuando
+     * no hay archivo, para que las vistas sigan con `file_exists($logo)`.
+     *
+     * @return array{logo: string, logoSecundario: string, hojaMembretada: string, identidad: array<string, string|null>}
+     */
+    public function paraDocumento(?CarbonInterface $fecha = null): array;
 }

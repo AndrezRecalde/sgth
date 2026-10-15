@@ -36,27 +36,40 @@ final class IdentidadInstitucionalService implements IdentidadInstitucionalServi
 
     public function version(VarianteIdentidad $variante, ?CarbonInterface $fecha = null): ?RecursoIdentidad
     {
-        $hoy = Carbon::today()->toDateString();
-        $dia = ($fecha ?? Carbon::today())->toDateString();
-        $validas = fn () => RecursoIdentidad::query()->validas()->where('variante', $variante->value);
-
-        return $validas()->where('vigente_desde', '<=', $dia)
-            ->orderByDesc('vigente_desde')->orderByDesc('id')->first()
-            // Antes de la primera: la más antigua que ya rige, nunca una programada.
-            ?? $validas()->where('vigente_desde', '<=', $hoy)
-                ->orderBy('vigente_desde')->orderBy('id')->first();
+        return $this->vigenteA($variante, $fecha) ?? $this->primera($variante);
     }
 
+    /**
+     * Con respaldo, un documento anterior a la primera versión propia toma el
+     * respaldo de su fecha, no esa primera versión: un acto de 2026 no lleva el
+     * logo de documentos que se cargó en 2027, sino el horizontal que había.
+     */
     public function resolver(VarianteIdentidad $variante, ?CarbonInterface $fecha = null): ?RecursoIdentidad
     {
-        $propia = $this->version($variante, $fecha);
-        if ($propia !== null) {
-            return $propia;
+        $respaldo = $variante->respaldo();
+        if ($respaldo === null) {
+            return $this->version($variante, $fecha);
         }
 
-        $respaldo = $variante->respaldo();
+        return $this->vigenteA($variante, $fecha)
+            ?? $this->version($respaldo, $fecha)
+            ?? $this->primera($variante);
+    }
 
-        return $respaldo ? $this->version($respaldo, $fecha) : null;
+    /** La que rige a esa fecha (hoy, sin fecha), sin anuladas. */
+    private function vigenteA(VarianteIdentidad $variante, ?CarbonInterface $fecha): ?RecursoIdentidad
+    {
+        return RecursoIdentidad::query()->validas()->where('variante', $variante->value)
+            ->where('vigente_desde', '<=', ($fecha ?? Carbon::today())->toDateString())
+            ->orderByDesc('vigente_desde')->orderByDesc('id')->first();
+    }
+
+    /** Para lo anterior a la primera: la más antigua que ya rige, nunca una programada. */
+    private function primera(VarianteIdentidad $variante): ?RecursoIdentidad
+    {
+        return RecursoIdentidad::query()->validas()->where('variante', $variante->value)
+            ->where('vigente_desde', '<=', Carbon::today()->toDateString())
+            ->orderBy('vigente_desde')->orderBy('id')->first();
     }
 
     public function archivo(VarianteIdentidad $variante, ?CarbonInterface $fecha = null): ?string
@@ -224,6 +237,24 @@ final class IdentidadInstitucionalService implements IdentidadInstitucionalServi
                 fn (int $lado) => [(string) $lado => "identidad/icono/{$lado}?v={$isotipo->id}"]
             )->all() : null,
             'datos'     => $datos->only(['nombre_oficial', 'siglas', 'nombre_corto', 'ruc', 'direccion', 'telefono', 'sitio_web']),
+        ];
+    }
+
+    public function paraDocumento(?CarbonInterface $fecha = null): array
+    {
+        $ruta = function (VarianteIdentidad $variante) use ($fecha): string {
+            $archivo = $this->archivo($variante, $fecha);
+
+            return $archivo !== null && is_file($archivo) ? $archivo : '';
+        };
+
+        return [
+            'logo'           => $ruta(VarianteIdentidad::LOGO_DOCUMENTOS),
+            'logoSecundario' => $ruta(VarianteIdentidad::LOGO_SECUNDARIO_DOCUMENTOS),
+            'hojaMembretada' => $ruta(VarianteIdentidad::HOJA_MEMBRETADA),
+            'identidad'      => $this->datos()->only([
+                'nombre_oficial', 'siglas', 'nombre_corto', 'ruc', 'direccion', 'telefono', 'sitio_web',
+            ]),
         ];
     }
 

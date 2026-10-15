@@ -253,7 +253,7 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
     @endif
   </div>
   <div class="hdr-body">
-    <div class="hdr-inst">Gobierno Autónomo Descentralizado de la Provincia de Esmeraldas</div>
+    <div class="hdr-inst">{{ $identidad['nombre_oficial'] ?? '' }}</div>
     <div class="hdr-title">Informe de Licencia con Remuneración</div>
     <div class="hdr-sub">Comisión de Servicios — Liquidación de Viático</div>
   </div>

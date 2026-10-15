@@ -1,10 +1,15 @@
 @php
   // El membrete institucional: logo arriba, marca de agua y dirección al pie.
   // Va de fondo en todas las hojas; los márgenes de la página dejan libres el
-  // logo y la dirección.
-  $fondoPath = public_path('images/membrete-gadpe.jpg');
-  $fondoSrc  = file_exists($fondoPath)
-    ? 'data:image/jpeg;base64,' . base64_encode(file_get_contents($fondoPath))
+  // logo y la dirección. Es la hoja membretada de Identidad institucional
+  // (V6, fase 2.2); si no hay, el sistema pone el logo arriba y la dirección
+  // al pie en los mismos márgenes.
+  $fondoPath = $hojaMembretada ?? '';
+  $fondoSrc  = $fondoPath !== '' && file_exists($fondoPath)
+    ? 'data:'.(mime_content_type($fondoPath) ?: 'image/jpeg').';base64,'.base64_encode(file_get_contents($fondoPath))
+    : null;
+  $logoSrc = ! $fondoSrc && ($logo ?? '') !== '' && file_exists($logo)
+    ? 'data:'.(mime_content_type($logo) ?: 'image/png').';base64,'.base64_encode(file_get_contents($logo))
     : null;
   $mayus  = fn (?string $t) => mb_strtoupper(trim((string) $t), 'UTF-8');
   $nombre = $mayus(implode(' ', array_filter([
@@ -34,6 +39,14 @@
      la página entera, márgenes incluidos, y se repite en cada hoja. */
   .fondo { position: fixed; top: -42mm; left: -20mm; width: 210mm; height: 297mm; z-index: -1; }
   .fondo img { width: 210mm; height: 297mm; }
+
+  /* Sin hoja membretada: el logo y la dirección en los mismos márgenes. */
+  .cabecera { position: fixed; top: -34mm; left: 0; right: 0; text-align: center; }
+  .cabecera img { max-height: 24mm; max-width: 120mm; }
+  .pie {
+    position: fixed; bottom: -16mm; left: 0; right: 0; text-align: center;
+    border-top: 1px solid #8a8a8a; padding-top: 4px; font-size: 8.5px; color: #444;
+  }
 
   .titulo { text-align: center; margin: 0 0 14px; }
   .titulo .inst { font-size: 11px; font-weight: bold; letter-spacing: 0.3px; }
@@ -74,10 +87,17 @@
 
 @if ($fondoSrc)
   <div class="fondo"><img src="{{ $fondoSrc }}" alt=""></div>
+@else
+  @if ($logoSrc)
+    <div class="cabecera"><img src="{{ $logoSrc }}" alt=""></div>
+  @endif
+  <div class="pie">
+    Dirección: {{ $identidad['direccion'] ?? '' }}@if (! empty($identidad['telefono'])) · Teléfono: {{ $identidad['telefono'] }}@endif
+  </div>
 @endif
 
 <div class="titulo">
-  <div class="inst">GOBIERNO AUTÓNOMO DESCENTRALIZADO PROVINCIAL DE ESMERALDAS</div>
+  <div class="inst">{{ $mayus($identidad['nombre_oficial'] ?? '') }}</div>
   <div class="doc">INFORME DE ACTIVIDADES LABORALES</div>
 </div>
 

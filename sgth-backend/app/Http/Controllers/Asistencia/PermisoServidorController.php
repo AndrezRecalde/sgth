@@ -275,6 +275,8 @@ class PermisoServidorController extends Controller
             ->loadView('permisos.permiso-pdf', [
                 'permiso' => $permiso,
                 'mostrarObservacion' => $request->user()->can('verObservacion', $permiso),
+                // El logo vigente el día del permiso (D3).
+                ...app(\App\Contracts\Comunicacion\IdentidadInstitucionalServiceInterface::class)->paraDocumento($permiso->fecha),
             ]);
 
         $nombreArchivo = "permiso_{$permiso->folio}.pdf";

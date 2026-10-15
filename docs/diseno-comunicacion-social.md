@@ -127,7 +127,16 @@ Lo que **no** se pide, y por qué:
 - **Reglas que fijó la 2.1:**
   - una versión nueva **no puede empezar antes que la última** de su variante: reescribiría los documentos que ya se emitieron con ella. Sí puede empezar en el pasado si no hay otra después (el logo de una administración que se sube unos días tarde);
   - solo una versión **programada**, que todavía no rige, se puede **anular**. Una que ya rigió salió en documentos; para volver atrás está «volver a esta versión», que comparte el archivo (ninguno se modifica ni se borra);
-  - un documento **anterior a la primera versión** usa la más antigua que ya rige, nunca una programada: así un documento viejo siempre tiene logo.
+  - un documento **anterior a la primera versión** usa la más antigua que ya rige, nunca una programada: así un documento viejo siempre tiene logo. **Corregido en la 2.2:** en una variante con respaldo (V3, V4) primero va el respaldo de esa fecha: un acto de 2026 no lleva el logo de documentos que se cargó en 2027, sino el horizontal que había.
+- **Lo que quedó en la 2.2:** `paraDocumento($fecha)` entrega a cada PDF el logo (V4 o V2), el secundario (V5), la hoja membretada (V6) y los datos institucionales vigentes a la fecha del documento:
+  - acción de personal, registro interno y constancia: la fecha de suscripción, o la de registro; un borrador, hoy;
+  - certificado laboral: `emitido_en`; certificado de aptitud y FEMO: `fecha_evaluacion`; receta: `fecha_emision`;
+  - actas de TIC: la entrega (`fecha_asignacion`), el préstamo (`entregado_en`), el informe de baja (`fecha_informe`) y la constatación (`cerrada_en`, o su inicio si sigue abierta);
+  - viáticos (solicitud, informe y comprobante): la fecha de la solicitud, para que los tres papeles salgan iguales;
+  - permiso: su `fecha`; vacaciones: `fecha_emision`;
+  - nómina, organigrama, consolidado de permisos, reportes de TIC e informe de actividades: hoy.
+- **Cabecera común** (`pdf/_membrete-institucional` y `pdf/_pie-institucional`): la usan la acción de personal, el registro interno, la constancia de autoridad y los documentos de TIC (actas y reportes). Lleva el nombre oficial, la dependencia que emite y el logo secundario a la derecha, solo si se cargó. Los documentos con un formato propio (FEMO del MSP, receta, viáticos, certificados centrados, permisos, vacaciones) conservan su cabecera: cambian el logo y el nombre oficial, y no tienen lugar para el secundario.
+- **Hoja membretada (V6):** el informe de actividades la usa de fondo. Sin ella, el sistema pone el logo arriba y la dirección con el teléfono al pie, en los mismos márgenes.
 
 ### 4.4 Validaciones al subir
 
@@ -347,7 +356,7 @@ Cada punto es un PR con sus pruebas Pest y, si hay pantalla, revisión en el nav
 | PR | Contenido |
 |---|---|
 | 2.1 | Backend: `recursos_identidad` con vigencia y respaldos, datos institucionales, endpoint público, íconos sacados del isotipo y siembra con los archivos actuales |
-| 2.2 | Los 16 archivos de PDF dejan la ruta fija: una cabecera común, el logo según la fecha del documento, V5 y V6 |
+| 2.2 | Los 16 archivos de PDF dejan la ruta fija: una cabecera común, el logo según la fecha del documento, V5 y V6, el nombre y el RUC de la receta desde los datos |
 | 2.3 | Pantalla Identidad institucional con vista previa en contexto; sidebar, login, favicon e íconos, modo oscuro y correos con el logo; limpieza de imágenes sin uso |
 
 ### Fase 3: Credencial

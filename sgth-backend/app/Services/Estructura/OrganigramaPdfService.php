@@ -26,7 +26,7 @@ class OrganigramaPdfService
             'raices'      => $raices,
             'porCategoria' => $this->agruparPorCategoria($raices->first()),
             'institucion' => $raices->first(),
-            'logo'        => public_path('images/logo-gadpe.png'),
+            ...app(\App\Contracts\Comunicacion\IdentidadInstitucionalServiceInterface::class)->paraDocumento(),
             'fecha'       => now(),
         ])->setPaper('a4', 'portrait');
 

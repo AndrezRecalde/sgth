@@ -126,7 +126,8 @@ final class ReporteTicController extends Controller
                 'reporte'   => $reporte,
                 'titulo'    => $salida['titulo'],
                 'subtitulo' => $salida['subtitulo'],
-                'logo'      => public_path('images/logo-gadpe.png'),
+                // Un reporte se arma con los datos de hoy: lleva el logo de hoy.
+                ...app(\App\Contracts\Comunicacion\IdentidadInstitucionalServiceInterface::class)->paraDocumento(),
             ])->setPaper('a4', 'landscape')->download("{$salida['archivo']}.pdf"),
             default => ApiResponse::ok($reporte, $salida['titulo'] . '.'),
         };

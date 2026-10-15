@@ -1,7 +1,8 @@
 @php
-  $logoPath = public_path('images/logo-gadpe.png');
-  $logoSrc  = file_exists($logoPath)
-    ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath))
+  // El logo lo manda el controlador: el vigente hoy (fase 2.2).
+  $logoPath = $logo ?? '';
+  $logoSrc  = $logoPath !== '' && file_exists($logoPath)
+    ? 'data:'.(mime_content_type($logoPath) ?: 'image/png').';base64,'.base64_encode(file_get_contents($logoPath))
     : null;
 @endphp
 <!DOCTYPE html>

@@ -17,14 +17,13 @@ use Barryvdh\DomPDF\Facade\Pdf;
 final class PdfRecetaService
 {
     /**
-     * Datos de la institución que emite. Van aquí y no en el impreso porque el
-     * RUC y el establecimiento son los mismos que ya declara el formulario
-     * ocupacional (SNS-MSP/HCU-form.123), y conviene que no se contradigan.
+     * El Dispensario dentro de la institución. Van aquí y no en el impreso
+     * porque el establecimiento es el mismo que ya declara el formulario
+     * ocupacional (SNS-MSP/HCU-form.123), y conviene que no se contradigan. El
+     * nombre y el RUC salen de Identidad institucional (fase 2.2).
      */
-    private const INSTITUCION = [
-        'nombre'          => 'GOBIERNO AUTÓNOMO DESCENTRALIZADO PROVINCIAL DE ESMERALDAS',
+    private const DISPENSARIO = [
         'unidad'          => 'Dispensario Médico Laboral',
-        'ruc'             => '0860000160001',
         'establecimiento' => 'Dispensario Médico Laboral del GADPE',
     ];
 
@@ -71,9 +70,16 @@ final class PdfRecetaService
         // plantilla: lo que no se pasa no se puede imprimir por descuido.
         $omitirAlergias = (bool) $receta->omitir_alergias;
 
+        // El logo y los datos vigentes el día que se emitió (D3).
+        $membrete = app(\App\Contracts\Comunicacion\IdentidadInstitucionalServiceInterface::class)->paraDocumento($receta->fecha_emision);
+
         return [
             'receta'         => $receta,
-            'institucion'    => self::INSTITUCION,
+            'institucion'    => [
+                ...self::DISPENSARIO,
+                'nombre' => $membrete['identidad']['nombre_oficial'],
+                'ruc'    => $membrete['identidad']['ruc'],
+            ],
             'paciente'       => $this->datosDelPaciente($receta),
             'prescriptor'    => $this->datosDelPrescriptor($receta),
             'omitirAlergias' => $omitirAlergias,
@@ -85,7 +91,7 @@ final class PdfRecetaService
             'items'          => $receta->items
                 ->sortBy(fn (ItemReceta $item) => $item->esExterno() ? 1 : 0)
                 ->values(),
-            'logo'           => public_path('images/logo-gadpe.png'),
+            ...$membrete,
         ];
     }
 

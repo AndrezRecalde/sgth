@@ -131,7 +131,8 @@ final class PrestamoService implements PrestamoServiceInterface
 
         $pdf = Pdf::loadView('pdf.inventario.acta-prestamo', [
             'prestamo' => $prestamo,
-            'logo'     => public_path('images/logo-gadpe.png'),
+            // El logo vigente el día que se entregó (D3).
+            ...app(\App\Contracts\Comunicacion\IdentidadInstitucionalServiceInterface::class)->paraDocumento($prestamo->entregado_en),
         ])->setPaper('a4', 'portrait');
 
         return ['content' => $pdf->output(), 'filename' => "acta-prestamo-{$prestamo->folio}.pdf"];
