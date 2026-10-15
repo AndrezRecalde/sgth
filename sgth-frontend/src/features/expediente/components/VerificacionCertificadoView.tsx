@@ -1,7 +1,8 @@
 'use client'
 
 import { Alert, Center, Container, Paper, Skeleton, Stack, Text, Title } from '@mantine/core'
-import { IconCircleCheck, IconClockExclamation, IconFileOff } from '@tabler/icons-react'
+import { IconAlertTriangle, IconCircleCheck, IconClockExclamation, IconFileOff } from '@tabler/icons-react'
+import { isAxiosError } from 'axios'
 import { DetailList, SectionHeading, StatusBadge } from '@/components/ui'
 import { formatFecha } from '@/lib/fecha'
 import { useVerificacionCertificado } from '../hooks/useVerificacionCertificado'
@@ -19,7 +20,13 @@ interface Props {
  * cuando el certificado se emitió con ella.
  */
 export function VerificacionCertificadoView({ codigo }: Props) {
-  const { data: certificado, isLoading, isError } = useVerificacionCertificado(codigo)
+  const { data: certificado, isLoading, error } = useVerificacionCertificado(codigo)
+
+  // Solo un 404 dice que el certificado no salió de aquí. Un 429 —la ruta va
+  // limitada a 10 consultas por minuto por IP— o un fallo de red no dicen nada
+  // del documento, y presentarlos como «no encontrado» acusaría de falso a uno
+  // auténtico.
+  const estado = isAxiosError(error) ? error.response?.status : undefined
 
   return (
     <Container size="sm" py="xl">
@@ -33,7 +40,20 @@ export function VerificacionCertificadoView({ codigo }: Props) {
 
         {isLoading && <Skeleton height={280} radius="lg" />}
 
-        {isError && (
+        {error && estado !== 404 && (
+          <Alert
+            variant="light"
+            color="amber"
+            icon={<IconAlertTriangle size={18} />}
+            title="No se pudo comprobar ahora"
+          >
+            {estado === 429
+              ? 'Se hicieron demasiadas consultas desde esta red. Espere un minuto y vuelva a cargar la página.'
+              : 'El sistema no respondió. Intente de nuevo en unos minutos.'}
+          </Alert>
+        )}
+
+        {estado === 404 && (
           <Alert
             variant="light"
             color="red"
