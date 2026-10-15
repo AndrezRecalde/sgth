@@ -85,7 +85,8 @@ final class PdfFemoService
             // Etiquetas legibles de las subcategorías de «De seguridad»,
             // tomadas del mismo catálogo que valida la ficha.
             'etiquetasSubcategoria' => $this->etiquetasSubcategoria(),
-            'logo' => public_path('images/logo-gadpe.png'),
+            // El logo vigente el día de la evaluación (D3).
+            ...app(\App\Contracts\Comunicacion\IdentidadInstitucionalServiceInterface::class)->paraDocumento($ficha->fecha_evaluacion),
         ];
     }
 

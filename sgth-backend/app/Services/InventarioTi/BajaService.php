@@ -198,7 +198,8 @@ final class BajaService implements BajaServiceInterface
 
         $pdf = Pdf::loadView('pdf.inventario.informe-baja', [
             'baja' => $baja,
-            'logo' => public_path('images/logo-gadpe.png'),
+            // El logo vigente el día del informe técnico (D3).
+            ...app(\App\Contracts\Comunicacion\IdentidadInstitucionalServiceInterface::class)->paraDocumento($baja->fecha_informe),
         ])->setPaper('a4', 'portrait');
 
         return ['content' => $pdf->output(), 'filename' => 'informe-baja-' . $baja->numero() . '.pdf'];

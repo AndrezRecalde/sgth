@@ -96,7 +96,7 @@
     @if (file_exists($logo))
         <img src="{{ $logo }}" alt="">
     @endif
-    <p class="institucion">GOBIERNO AUTÓNOMO DESCENTRALIZADO PROVINCIAL DE ESMERALDAS</p>
+    <p class="institucion">{{ $identidad['nombre_oficial'] ?? '' }}</p>
     <p class="titulo">CERTIFICADO DE APTITUD MÉDICA OCUPACIONAL</p>
     <p class="unidad">Dispensario Médico Laboral del GADPE</p>
 </div>

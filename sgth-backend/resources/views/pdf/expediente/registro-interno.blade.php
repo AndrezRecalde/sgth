@@ -123,21 +123,7 @@
     $sinCambio = $movimiento->cierraElVinculo() ? '—' : 'Sin cambio';
 @endphp
 
-<div class="membrete">
-    <table>
-        <tr>
-            <td style="width: 26%;">
-                @if(file_exists($logo))
-                    <img src="{{ $logo }}" alt="Logo GADPE">
-                @endif
-            </td>
-            <td class="institucion">
-                <strong>Gobierno Autónomo Descentralizado Provincial de Esmeraldas</strong>
-                Dirección de Talento Humano
-            </td>
-        </tr>
-    </table>
-</div>
+@include('pdf._membrete-institucional', ['dependencia' => 'Dirección de Talento Humano'])
 
 <div class="footer">{{ $vistaPrevia ? 'BORRADOR' : $movimiento->codigo_registro }}</div>
 

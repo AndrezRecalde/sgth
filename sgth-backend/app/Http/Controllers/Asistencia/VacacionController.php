@@ -160,6 +160,8 @@ class VacacionController extends Controller
                 'impresion' => app(\App\Services\Asistencia\PeriodoVacacionService::class)
                     ->paraImpresion($vacacion),
                 'urlQr'     => Vacacion::urlVerificacion($vacacion->folio ?? (string) $vacacion->id),
+                // El logo vigente el día que se emitió la solicitud (D3).
+                ...app(\App\Contracts\Comunicacion\IdentidadInstitucionalServiceInterface::class)->paraDocumento($vacacion->fecha_emision),
             ]);
 
         $folio = $vacacion->folio ?? $vacacion->id;

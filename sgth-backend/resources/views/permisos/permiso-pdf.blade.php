@@ -1,5 +1,6 @@
 @php
-  $logoPath  = public_path('images/logo-gadpe.png');
+  // El logo lo manda el controlador, vigente a la fecha del permiso (fase 2.2).
+  $logoPath  = $logo ?? '';
 
   $tipoLabels = [
     'personal'   => 'PERSONAL',
@@ -99,7 +100,7 @@
   }
 
   // Logo base64
-  $logoSrc = file_exists($logoPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath)) : null;
+  $logoSrc = $logoPath !== '' && file_exists($logoPath) ? 'data:'.(mime_content_type($logoPath) ?: 'image/png').';base64,'.base64_encode(file_get_contents($logoPath)) : null;
 
   $copies = [
     ['marca' => 'SERVIDOR',       'label' => 'COPIA SERVIDOR'],

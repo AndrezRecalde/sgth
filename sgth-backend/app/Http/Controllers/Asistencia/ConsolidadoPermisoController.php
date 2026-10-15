@@ -90,6 +90,8 @@ class ConsolidadoPermisoController extends Controller
             ->setPaper('letter', 'landscape')
             ->loadView('permisos.consolidado-pdf', [
                 'consolidado' => $this->servicio->paraPdf($datos['consolidado']),
+                // Un informe se arma con los datos de hoy: lleva el logo de hoy.
+                ...app(\App\Contracts\Comunicacion\IdentidadInstitucionalServiceInterface::class)->paraDocumento(),
                 'totales'     => $datos['totales'],
                 'fechaInicio' => Carbon::parse($inicio)->format('d/m/Y'),
                 'fechaFin'    => Carbon::parse($fin)->format('d/m/Y'),
