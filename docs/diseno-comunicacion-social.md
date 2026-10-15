@@ -124,6 +124,10 @@ Lo que **no** se pide, y por qué:
   - actas y recetas: la fecha del acta o de la receta;
   - reportes y listados: hoy.
 - Las pantallas (sidebar, login, correos) usan siempre la versión vigente hoy.
+- **Reglas que fijó la 2.1:**
+  - una versión nueva **no puede empezar antes que la última** de su variante: reescribiría los documentos que ya se emitieron con ella. Sí puede empezar en el pasado si no hay otra después (el logo de una administración que se sube unos días tarde);
+  - solo una versión **programada**, que todavía no rige, se puede **anular**. Una que ya rigió salió en documentos; para volver atrás está «volver a esta versión», que comparte el archivo (ninguno se modifica ni se borra);
+  - un documento **anterior a la primera versión** usa la más antigua que ya rige, nunca una programada: así un documento viejo siempre tiene logo.
 
 ### 4.4 Validaciones al subir
 
@@ -139,7 +143,12 @@ Un formulario único con el nombre oficial, las siglas (GADPE), el nombre corto 
 
 - **Los logos son públicos**, porque van en cualquier documento: se sirven por `GET /api/v1/identidad/{variante}` sin sesión. Lo necesitan el login y los correos, que no tienen sesión. La URL lleva el número de versión, así que el navegador puede guardarla en caché y el cambio se ve al momento.
 - Los PDF leen el archivo del disco, porque dompdf necesita una ruta local.
-- **El despliegue no rompe nada:** la migración siembra como primera versión los archivos que se usan hoy.
+- **El despliegue no rompe nada:** la migración siembra como primera versión los archivos que se usan hoy: el logo horizontal de los PDF (V2), la hoja membretada del informe de actividades (V6) y el isotipo del sidebar (V1), que se copió del frontend a `sgth-backend/resources/identidad/` porque en producción el backend no ve esa carpeta. También siembra los datos institucionales que estaban escritos en el código.
+- **Lo que quedó en la 2.1:**
+  - `GET /api/v1/identidad`, sin sesión: el manifiesto con la ruta de cada variante vigente (con su respaldo resuelto y la marca `respaldo`), los íconos y los datos institucionales;
+  - `GET /api/v1/identidad/{variante}?v={id}`: el archivo vigente hoy. Con la versión exacta en la URL, caché de un año (`immutable`); sin ella, cinco minutos;
+  - `GET /api/v1/identidad/icono/{32|180|192|512}`: sacados del isotipo con GD, centrados y sin deformar, uno por versión y tamaño. El de 180 (Apple) va sobre blanco, porque iOS rellena de negro la transparencia;
+  - todo lo público lleva `throttle:120,1`. Una versión programada solo se ve con `gestionar-identidad-institucional`, por su id.
 
 ---
 
@@ -251,8 +260,10 @@ impresiones_credencial
   datos_impresos (json: nombre, cargo, unidad, tipo de sangre, contacto de emergencia), created_at
 
 recursos_identidad
-  id, variante, archivo, mime, ancho, alto, vigente_desde (date), subido_por, created_at
-  -- la versión vigente a una fecha: la de mayor vigente_desde <= fecha
+  id, variante, archivo, mime, ancho, alto, peso, vigente_desde (date),
+  origen (carga_inicial | subida | reutilizada), reutiliza_id, nota,
+  subido_por, anulada_en, anulada_por, timestamps
+  -- la versión vigente a una fecha: la de mayor vigente_desde <= fecha, sin las anuladas
 
 datos_institucionales   (una sola fila)
   nombre_oficial, siglas, nombre_corto, ruc, direccion, telefono, sitio_web, actualizado_por, timestamps
@@ -335,7 +346,7 @@ Cada punto es un PR con sus pruebas Pest y, si hay pantalla, revisión en el nav
 
 | PR | Contenido |
 |---|---|
-| 2.1 | Backend: `recursos_identidad` con vigencia y respaldos, datos institucionales, endpoint público y siembra con los archivos actuales |
+| 2.1 | Backend: `recursos_identidad` con vigencia y respaldos, datos institucionales, endpoint público, íconos sacados del isotipo y siembra con los archivos actuales |
 | 2.2 | Los 16 archivos de PDF dejan la ruta fija: una cabecera común, el logo según la fecha del documento, V5 y V6 |
 | 2.3 | Pantalla Identidad institucional con vista previa en contexto; sidebar, login, favicon e íconos, modo oscuro y correos con el logo; limpieza de imágenes sin uso |
 
