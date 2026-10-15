@@ -11,6 +11,7 @@ import {
 import { IconMail } from "@tabler/icons-react";
 import { LoginForm } from "@/features/auth/components/LoginForm";
 import { LogoInstitucional } from "@/features/comunicacion/components/LogoInstitucional";
+import { SiglasInstitucionales } from "@/features/comunicacion/components/SiglasInstitucionales";
 import classes from "./login.module.css";
 
 export const metadata: Metadata = {
@@ -59,10 +60,11 @@ export default function LoginPage() {
           </Button>
 
           <Box mt={60}>
+            {/* La app trata de usted; las siglas, de Identidad institucional. */}
             <Text size="xs" c="dimmed">
-              Estás navegando en{" "}
+              Está navegando en{" "}
               <Text span fw={700} c="var(--sgth-text)">
-                GADPE
+                <SiglasInstitucionales />
               </Text>
               . Solo para uso institucional.
             </Text>

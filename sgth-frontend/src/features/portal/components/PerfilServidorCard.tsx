@@ -10,6 +10,10 @@ import {
 } from "@mantine/core";
 import type { UsuarioAuth } from "@/store/auth.store";
 import { StatusBadge } from "@/components/ui";
+import { useIdentidadPublica } from "@/features/comunicacion/hooks/useIdentidadPublica";
+
+/** Mientras llegan los datos de Identidad institucional, el nombre de siempre. */
+const NOMBRE_INSTITUCION = "Gobierno Autónomo Descentralizado Provincial de Esmeraldas";
 
 interface Props {
   usuario: UsuarioAuth;
@@ -17,6 +21,7 @@ interface Props {
 
 export function PerfilServidorCard({ usuario }: Props) {
   const servidor = usuario.servidor;
+  const { data: identidad } = useIdentidadPublica();
 
   const nombreCompleto =
     usuario.nombre_completo ||
@@ -36,14 +41,11 @@ export function PerfilServidorCard({ usuario }: Props) {
   return (
     <Card withBorder radius="xl" p="md">
       <Stack gap="lg">
-        <Stack gap={2} align="center">
-          <Text size="xs" fw={600} c="dimmed" tt="uppercase" ta="center">
-            Gobierno Autónomo Descentralizado
-          </Text>
-          <Text size="xs" fw={600} c="dimmed" tt="uppercase" ta="center">
-            de la Provincia de Esmeraldas
-          </Text>
-        </Stack>
+        {/* El nombre oficial de Identidad institucional; antes iba escrito
+            aquí, partido a mano en dos líneas. */}
+        <Text size="xs" fw={600} c="dimmed" tt="uppercase" ta="center" maw={420} mx="auto" style={{ textWrap: "balance" }}>
+          {identidad?.datos.nombre_oficial || NOMBRE_INSTITUCION}
+        </Text>
 
         <Divider />
 
