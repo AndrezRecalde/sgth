@@ -25,6 +25,7 @@ final class UsuarioAutenticadoResource extends JsonResource
             'roles',
             'servidor.puesto.cargo',
             'servidor.unidadAdministrativa',
+            'servidor.fotografiaVigente',
         ]);
 
         $servidor = $this->servidor;
@@ -59,6 +60,12 @@ final class UsuarioAutenticadoResource extends JsonResource
                 'unidad_administrativa'    => $servidor->unidadAdministrativa ? [
                     'id'     => $servidor->unidadAdministrativa->id,
                     'nombre' => $servidor->unidadAdministrativa->nombre,
+                ] : null,
+                // La foto vigente, para el avatar del menú. La imagen se pide
+                // aparte por su id (Comunicación Social, fase 1.1).
+                'fotografia'               => $servidor->fotografiaVigente ? [
+                    'id'          => $servidor->fotografiaVigente->id,
+                    'activada_en' => $servidor->fotografiaVigente->activada_en?->toIso8601String(),
                 ] : null,
             ] : null,
         ];

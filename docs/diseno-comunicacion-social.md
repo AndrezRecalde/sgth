@@ -148,12 +148,13 @@ Un formulario único con el nombre oficial, las siglas (GADPE), el nombre corto 
 ### 5.1 Reglas [Propuesta]
 
 - **Las sube Comunicación** [D5], para que todas tengan el mismo fondo y el mismo encuadre.
-- **Una foto vigente por servidor.** La anterior queda en el historial, con quién y cuándo la subió, y se puede restaurar.
+- **Una foto vigente por servidor.** La anterior queda en el historial, con quién y cuándo la subió, y se puede restaurar. También se puede **retirar** la vigente (por ejemplo, si se subió a la persona equivocada y no había otra antes): el servidor queda sin foto y el archivo sigue en el historial. Ningún archivo se borra, y cada cambio queda en el registro de actividad.
 - **Recorte 3:4 en el navegador antes de subir**, con la cara centrada. El servidor guarda una versión de 600×800 en JPEG y una miniatura cuadrada de 160×160 para los avatares.
 - **No se guarda el original de la cámara.** Puede pesar 10 MB y trae metadatos, entre ellos la ubicación; al volver a codificar la imagen se eliminan.
 - Formatos: JPG, PNG y WebP, hasta 10 MB.
-- **Carga masiva:** varios archivos (o un ZIP) con la cédula como nombre (`0801234567.jpg`). Primero se simula y se entrega un informe: emparejadas, cédula inexistente, servidor inactivo, servidor que ya tenía foto (se reemplaza o no) y archivo ilegible. Es el mismo patrón que `inventario:cargar-excel --simular`. En la carga masiva el recorte es automático (centrado), así que las fotos deben tomarse ya encuadradas; cada una se puede ajustar después.
+- **Carga masiva:** se eligen los archivos de la carpeta, con la cédula en el nombre (`0801234567.jpg`, o `0801234567 - Ana Pérez.jpg`: se toman los primeros 10 dígitos seguidos). **Sin ZIP** (cambio de 1.1): un lote de cientos de fotos supera el tamaño que acepta una petición. Primero se simula **con los nombres, sin subir ninguna foto**, y se entrega un informe por archivo: foto nueva, reemplaza, ya tiene foto, sin cédula, sin servidor, servidor inactivo y cédula repetida en el lote. Después las fotos se suben en tandas de 10, y la carga vuelve a comprobarlo todo y agrega «ilegible» para la que no se pudo usar, sin tumbar la tanda. Los servidores inactivos se omiten en la carga masiva; de uno en uno sí se les puede subir (un ingreso que todavía no empieza). En la carga masiva el recorte es automático (centrado, tomando un poco más de arriba), así que las fotos deben tomarse ya encuadradas; cada una se puede ajustar después.
 - **Privacidad (LOPDP):** la foto es un dato personal. Va al disco privado y se entrega solo con sesión, a quien puede ver al servidor, o mediante la verificación de la credencial. Nunca se muestra en el organigrama público.
+- **Cómo se pide la imagen** (1.1): por el id de la foto (`comunicacion/fotografias/{id}/imagen?tamano=miniatura`), no por el servidor, porque ese archivo no cambia nunca y el navegador lo puede guardar. La sesión va en una cookie que el backend solo acepta con la cabecera `X-Requested-With`, así que un `<img src>` directo no sirve: el frontend la pide como blob, igual que los PDF. La vigente la ven el servidor, Talento Humano (ServidorPolicy), Comunicación y quien consulta credenciales; una que ya no es vigente, solo Comunicación. El perfil (`auth/perfil`) y la ficha del expediente traen el id de la foto vigente.
 
 ### 5.2 Dónde se ve [D10]
 
@@ -236,6 +237,7 @@ Las reglas son las de siempre: controlador delgado, `ApiResponse`, `ReglaNegocio
 ```
 fotografias_servidor
   id, servidor_id, archivo, miniatura, vigente (bool), origen (individual | carga_masiva),
+  activada_en, activada_por (quién la dejó vigente: al subirla o al restaurarla),
   subida_por, timestamps
   -- una sola vigente por servidor: índice único parcial WHERE vigente
 
@@ -269,7 +271,7 @@ Cada permiso va en el enum, en `RolPermisoSeeder` y en una migración con `Permi
 
 | Permiso | `comunicacion-social` | `responsable-identidad` | TH (`admin-uath`) | Servidor (todos) | Auditor |
 |---|---|---|---|---|---|
-| `gestionar-fotografias`: subir, reemplazar, restaurar y cargar en lote | ✓ | | | | |
+| `gestionar-fotografias`: subir, reemplazar, restaurar, retirar y cargar en lote | ✓ | | | | |
 | `gestionar-credenciales`: imprimir, revocar y reponer | ✓ | | | | |
 | `ver-credenciales`: consultar el estado y el historial de impresiones | ✓ | | ✓ | | ✓ |
 | `gestionar-identidad-institucional`: logos, vigencias y datos institucionales | | ✓ | | | |
@@ -325,7 +327,7 @@ Cada punto es un PR con sus pruebas Pest y, si hay pantalla, revisión en el nav
 
 | PR | Contenido |
 |---|---|
-| 1.1 | Backend: tabla e historial, disco privado, versión de 600×800 y miniatura con GD, endpoints, carga masiva por cédula con simulación e informe |
+| 1.1 | Backend: tabla e historial, disco privado, versión de 600×800 y miniatura con GD, endpoints, carga masiva por cédula con simulación e informe (sin ZIP: archivos de la carpeta en tandas de 10) |
 | 1.2 | Pantalla Fotografías con recorte 3:4 y carga masiva; la foto en el avatar y en la cabecera del expediente |
 
 ### Fase 2: Identidad institucional

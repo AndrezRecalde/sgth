@@ -111,6 +111,8 @@ use App\Http\Controllers\Tic\TableroTicController;
 use App\Http\Controllers\Helpdesk\TicketController;
 use App\Http\Controllers\InventarioTi\AsignacionBienController;
 use App\Http\Controllers\InventarioTi\CampaniaMantenimientoController;
+use App\Http\Controllers\Comunicacion\CargaFotografiasController;
+use App\Http\Controllers\Comunicacion\FotografiaServidorController;
 use App\Http\Controllers\InventarioTi\ConstatacionController;
 use App\Http\Controllers\InventarioTi\BajaController;
 use App\Http\Controllers\InventarioTi\BienInformaticoController;
@@ -2124,6 +2126,29 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 [EncuestaClimaController::class, 'resultados'])
                 ->middleware('role:admin-uath|director|maxima-autoridad');
         });
+
+    // Comunicación Social: las fotografías de los servidores
+    // (docs/diseno-comunicacion-social.md, fase 1.1).
+    Route::prefix('comunicacion')->group(function () {
+        Route::middleware('permission:gestionar-fotografias')->group(function () {
+            Route::get('fotografias', [FotografiaServidorController::class, 'index']);
+            Route::post('fotografias/carga/simular', [CargaFotografiasController::class, 'simular']);
+            Route::post('fotografias/carga', [CargaFotografiasController::class, 'cargar']);
+            Route::post('fotografias/{fotografia}/restaurar', [FotografiaServidorController::class, 'restaurar'])
+                ->whereNumber('fotografia');
+            Route::get('servidores/{servidor}/fotografias', [FotografiaServidorController::class, 'historial'])
+                ->whereNumber('servidor');
+            Route::post('servidores/{servidor}/fotografia', [FotografiaServidorController::class, 'store'])
+                ->whereNumber('servidor');
+            Route::delete('servidores/{servidor}/fotografia', [FotografiaServidorController::class, 'retirar'])
+                ->whereNumber('servidor');
+        });
+
+        // La imagen la ve también quien puede ver al servidor o consulta las
+        // credenciales: lo decide FotografiaServidorPolicy, no un permiso.
+        Route::get('fotografias/{fotografia}/imagen', [FotografiaServidorController::class, 'imagen'])
+            ->whereNumber('fotografia');
+    });
 
     // Módulo 18 — Reportería e Inteligencia Institucional
     Route::prefix('reporteria')
