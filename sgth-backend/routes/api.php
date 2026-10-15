@@ -14,6 +14,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Autoservicio\AutoservicioController;
 use App\Http\Controllers\Autoservicio\MisActividadesController;
+use App\Http\Controllers\Autoservicio\MiCredencialController;
 use App\Http\Controllers\Autoservicio\MisEquiposController;
 use App\Http\Controllers\Autoservicio\MisPrestamosController;
 use App\Http\Controllers\Autoservicio\MisCertificadosMedicosController;
@@ -97,6 +98,7 @@ use App\Http\Controllers\Expediente\DesvinculacionController;
 use App\Http\Controllers\Expediente\LoteAccionController;
 use App\Http\Controllers\Expediente\PeriodoDePruebaController;
 use App\Http\Controllers\Expediente\VerificacionCertificadoController;
+use App\Http\Controllers\Expediente\VerificacionCredencialController;
 use App\Http\Controllers\Expediente\VinculacionInicialController;
 use App\Http\Controllers\Expediente\ServidorController;
 use App\Http\Controllers\Expediente\SubrogacionController;
@@ -112,6 +114,7 @@ use App\Http\Controllers\Helpdesk\TicketController;
 use App\Http\Controllers\InventarioTi\AsignacionBienController;
 use App\Http\Controllers\InventarioTi\CampaniaMantenimientoController;
 use App\Http\Controllers\Comunicacion\CargaFotografiasController;
+use App\Http\Controllers\Comunicacion\CredencialController;
 use App\Http\Controllers\Comunicacion\FotografiaServidorController;
 use App\Http\Controllers\Comunicacion\IdentidadInstitucionalController;
 use App\Http\Controllers\Comunicacion\IdentidadPublicaController;
@@ -228,6 +231,14 @@ Route::prefix('v1')->group(function () {
     Route::get('certificados/verificar/{codigo}', VerificacionCertificadoController::class)
         ->middleware('throttle:10,1')
         ->name('certificados.verificar');
+
+    // La credencial del servidor, desde el QR de su reverso (Comunicación
+    // Social, 6.4). Igual que el certificado: código aleatorio de 40
+    // caracteres y límite por IP. Si no está vigente, no dice de quién era.
+    Route::get('credenciales/verificar/{codigo}', VerificacionCredencialController::class)
+        ->where('codigo', '[A-Za-z0-9]{32,64}')
+        ->middleware('throttle:10,1')
+        ->name('credenciales.verificar');
 
     // Los logos vigentes y los datos de la institución, sin sesión: los piden
     // el login, la verificación pública y los correos (Comunicación Social,
@@ -998,6 +1009,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // su PDF y el acuse de recibo. Siempre los del propio servidor.
         // «Mis equipos» (TIC, fase 1.3): los que tiene a su cargo o usa.
         Route::get('mis-equipos', [MisEquiposController::class, 'index'])
+            ->middleware('permission:acceso-autoservicio');
+        // «Mi credencial» (Comunicación Social, fase 3.1): la digital y su PDF.
+        Route::get('mi-credencial', [MiCredencialController::class, 'show'])
+            ->middleware('permission:acceso-autoservicio');
+        Route::get('mi-credencial/pdf', [MiCredencialController::class, 'pdf'])
             ->middleware('permission:acceso-autoservicio');
         Route::get('mis-equipos/{asignacion}/acta', [MisEquiposController::class, 'acta'])
             ->middleware('permission:acceso-autoservicio');
@@ -2155,6 +2171,22 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 ->whereNumber('servidor');
             Route::delete('servidores/{servidor}/fotografia', [FotografiaServidorController::class, 'retirar'])
                 ->whereNumber('servidor');
+        });
+
+        // Las credenciales (fase 3.1): consultarlas, Comunicación, Talento
+        // Humano y Auditoría; imprimir, revocar y recibir la tarjeta, solo
+        // Comunicación. No se emiten: nacen con la foto y el vínculo vigente.
+        Route::middleware('permission:ver-credenciales')->group(function () {
+            Route::get('credenciales', [CredencialController::class, 'index']);
+            Route::get('servidores/{servidor}/credenciales', [CredencialController::class, 'historial'])
+                ->whereNumber('servidor');
+        });
+        Route::middleware('permission:gestionar-credenciales')->group(function () {
+            Route::post('credenciales/imprimir', [CredencialController::class, 'imprimir']);
+            Route::post('credenciales/{credencial}/revocar', [CredencialController::class, 'revocar'])
+                ->whereNumber('credencial');
+            Route::post('credenciales/{credencial}/devolucion', [CredencialController::class, 'devolucion'])
+                ->whereNumber('credencial');
         });
 
         // La imagen la ve también quien puede ver al servidor o consulta las

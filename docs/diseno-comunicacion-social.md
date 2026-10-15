@@ -243,7 +243,8 @@ app/
                                    PdfCredencialService, IdentidadInstitucionalService
   Contracts/…                      una interfaz por servicio, enlazada en AppServiceProvider
   Policies/Comunicacion/
-  Enums/                           VarianteIdentidad, EstadoCredencial, MotivoRevocacionCredencial
+  Enums/                           VarianteIdentidad, EstadoCredencial, MotivoRevocacionCredencial,
+                                   FormatoImpresionCredencial
 ```
 
 `IdentidadInstitucionalService::archivo(VarianteIdentidad $variante, ?CarbonInterface $fecha = null)` resuelve la versión vigente con sus respaldos. Los 16 archivos que hoy llaman a `public_path('images/logo-gadpe.png')` pasan a pedirle el logo con la fecha del documento, y las cabeceras repetidas se juntan en una sola vista parcial.
@@ -261,12 +262,15 @@ fotografias_servidor
 
 credenciales
   id, servidor_id, codigo (aleatorio, único), estado, valida_hasta (null = sin fin),
-  revocada_en, revocada_por, motivo_revocacion, timestamps
-  -- una sola vigente por servidor: índice único parcial
+  reemplaza_a_id (la revocada a la que repone),
+  revocada_en, revocada_por, motivo_revocacion, detalle_revocacion, anulada_en,
+  devuelta_en, devolucion_registrada_por, devolucion_nota (la tarjeta al salir), timestamps
+  -- una sola viva (vigente o vencida) por servidor: índice único parcial
 
 impresiones_credencial
-  id, credencial_id, impresa_por, lote (nullable),
-  datos_impresos (json: nombre, cargo, unidad, tipo de sangre, contacto de emergencia), created_at
+  id, credencial_id, impresa_por, formato (cr80 | a4), lote (nullable),
+  datos_impresos (json: nombre, cargo, unidad, cédula, tipo de sangre, contacto de emergencia,
+  válida hasta y la foto), created_at
 
 recursos_identidad
   id, variante, archivo, mime, ancho, alto, peso, vigente_desde (date),
@@ -368,6 +372,18 @@ Cada punto es un PR con sus pruebas Pest y, si hay pantalla, revisión en el nav
 | 3.1 | Backend: credenciales e impresiones, estados, vencimiento y anulación automáticos, verificación pública, PDF CR80 y hoja A4 (una y por lote) y el paso de la desvinculación |
 | 3.2 | Pantalla Credenciales en `/comunicacion`, «Mi credencial» en el Portal y la página de verificación |
 | 3.3 | Inicio de Comunicación con el avance |
+
+**Lo que quedó en la 3.1** (y lo que se decidió al implementarla):
+
+- **Activo es `estado`, no el contrato.** La credencial nace cuando el servidor tiene `estado` activo y foto vigente; el contrato vigente solo aporta «Válida hasta». Desde la fase 1.5 de Acciones de Personal los dos dicen lo mismo, pero un expediente antiguo sin su contrato cargado sigue siendo un servidor activo y debe tener credencial. La sincronizan la foto al quedar vigente (subir, restaurar, carga masiva), `ContratoServidorService::sincronizarPuestoDesdeVinculo` —la única vía que cambia `estado`— y la reprogramación del plazo.
+- **Vencida no es final.** Si el contrato se prorroga o se renueva sin interrupción, la misma credencial vuelve a vigente con el mismo código: la tarjeta impresa sigue validando y queda marcada como desactualizada por su «Válida hasta». Revocada y anulada sí son finales. La base admite una sola credencial viva (vigente o vencida) por servidor.
+- **Revocar repone en el acto.** No hay un estado «sin credencial» para un servidor activo con foto, así que revocar crea la nueva con otro código (`reemplaza_a_id`). Los motivos son pérdida, robo, datos erróneos y otro, que pide el detalle. Una tarjeta deteriorada no se revoca: se reimprime con el mismo código.
+- **La tarea de cada noche**, `sgth:credenciales:conciliar` a las 00:45 (después del motor de efectos), vence las credenciales por la fecha y crea las que falten. Después de migrar en producción hay que lanzarla una vez a mano para crear las de quienes ya tienen foto. Aunque no corra, la verificación compara la fecha: una vencida nunca pasa por vigente.
+- **Imprimir registra.** Generar el PDF de impresión guarda una impresión por credencial con lo impreso (nombre, cargo, unidad, cédula, tipo de sangre, contacto de emergencia, «Válida hasta» y la foto), en un mismo lote si son varias. Hasta 90 por vez (diez hojas A4). Solo se imprimen las vigentes con foto. El historial que devuelve la API no repite el tipo de sangre ni el contacto impresos: dice qué cambió.
+- **El PDF** lleva los logos vigentes hoy (la tarjeta se imprime ahora). En la hoja A4 el reverso va en espejo por columnas, para imprimir a doble cara volteando por el borde largo, con guías de corte. La credencial digital del Portal es el mismo PDF CR80 y no cuenta como impresión.
+- **La verificación** es `GET /api/v1/credenciales/verificar/{codigo}` (40 caracteres hexadecimales, 10 por minuto por IP). Vigente: nombre, cargo, unidad y la foto en `data:`. No vigente: `{ vigente: false }` y nada más.
+- **El paso de la desvinculación** lee la última credencial del servidor, la que se anuló al salir: está hecho si nunca se imprimió, si la tarjeta se devolvió o si se revocó por pérdida o robo; si no, queda pendiente para Comunicación, que registra la devolución desde Credenciales (`devuelta_en`). Talento Humano puede marcarlo como que no aplica, con su motivo, como los demás.
+- **Endpoints:** `comunicacion/credenciales` (listado con `situacion`: sin foto, pendiente, sin imprimir, desactualizada, al día, vencida), `comunicacion/servidores/{id}/credenciales` (historial), `comunicacion/credenciales/imprimir`, `…/{id}/revocar` y `…/{id}/devolucion`; `autoservicio/mi-credencial` y su `/pdf`.
 
 ---
 

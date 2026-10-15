@@ -98,6 +98,19 @@ class Servidor extends Model
         return $this->hasOne(\App\Models\Comunicacion\FotografiaServidor::class)->where('vigente', true);
     }
 
+    /** Todas sus credenciales: la viva y las revocadas o anuladas (Comunicación Social, 3.1). */
+    public function credenciales(): HasMany
+    {
+        return $this->hasMany(\App\Models\Comunicacion\Credencial::class);
+    }
+
+    /** La que lleva hoy, vigente o vencida: hay una sola. */
+    public function credencialViva(): HasOne
+    {
+        return $this->hasOne(\App\Models\Comunicacion\Credencial::class)
+            ->whereIn('estado', \App\Enums\EstadoCredencial::vivas());
+    }
+
     public function unidadAdministrativa(): BelongsTo
     {
         return $this->belongsTo(UnidadAdministrativa::class);

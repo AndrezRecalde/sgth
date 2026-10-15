@@ -2,6 +2,7 @@
 
 namespace App\Services\Comunicacion;
 
+use App\Contracts\Comunicacion\CredencialServiceInterface;
 use App\Contracts\Comunicacion\FotografiaServiceInterface;
 use App\Enums\OrigenFotografia;
 use App\Exceptions\ReglaNegocioException;
@@ -35,7 +36,10 @@ final class FotografiaService implements FotografiaServiceInterface
         'cedula', 'nombre', 'segundo_nombre', 'apellido', 'segundo_apellido',
     ];
 
-    public function __construct(private readonly ProcesadorFotografia $procesador) {}
+    public function __construct(
+        private readonly ProcesadorFotografia $procesador,
+        private readonly CredencialServiceInterface $credenciales,
+    ) {}
 
     public function listar(array $filtros): LengthAwarePaginator
     {
@@ -109,7 +113,7 @@ final class FotografiaService implements FotografiaServiceInterface
                 $this->bloquear($servidor);
                 $this->dejarSinVigente($servidor);
 
-                return $servidor->fotografias()->create([
+                $fotografia = $servidor->fotografias()->create([
                     'archivo'      => $archivo,
                     'miniatura'    => $miniatura,
                     'origen'       => $origen,
@@ -118,6 +122,11 @@ final class FotografiaService implements FotografiaServiceInterface
                     'activada_por' => $usuario->id,
                     'subida_por'   => $usuario->id,
                 ]);
+
+                // Con foto y vínculo vigente, la credencial nace sola (6.1).
+                $this->credenciales->sincronizar($servidor->id);
+
+                return $fotografia;
             });
         } catch (Throwable $e) {
             $disco->delete([$archivo, $miniatura]);
@@ -151,6 +160,8 @@ final class FotografiaService implements FotografiaServiceInterface
                 'activada_en'  => now(),
                 'activada_por' => $usuario->id,
             ]);
+
+            $this->credenciales->sincronizar($servidor->id);
 
             return $fotografia;
         });

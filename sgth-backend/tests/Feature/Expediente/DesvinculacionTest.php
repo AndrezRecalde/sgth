@@ -2,9 +2,15 @@
 
 namespace Tests\Feature\Expediente;
 
+use App\Contracts\Comunicacion\CredencialServiceInterface;
 use App\Enums\EstadoAccionPersonal;
+use App\Enums\EstadoCredencial;
+use App\Enums\MotivoRevocacionCredencial;
 use App\Enums\SubtipoMovimientoPersonal;
 use App\Enums\TipoMovimientoPersonal;
+use App\Models\Comunicacion\Credencial;
+use App\Models\Comunicacion\FotografiaServidor;
+use App\Models\Comunicacion\ImpresionCredencial;
 use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\DeclaracionJuramentada;
 use App\Models\Expediente\Desvinculacion;
@@ -98,11 +104,14 @@ test('al cesar sin otro vínculo se abre la desvinculación, con sus pasos', fun
     $this->getJson('/api/v1/expediente/desvinculaciones')
         ->assertOk()
         ->assertJsonPath('datos.data.0.servidor_id', $servidor->id)
-        ->assertJsonPath('datos.data.0.pasos_total', 7);
+        ->assertJsonPath('datos.data.0.pasos_total', 8);
 
     $pasos = ($this->pasos)($desvinculacion);
-    expect($pasos)->toHaveCount(7)
+    expect($pasos)->toHaveCount(8)
         ->and($pasos['bienes']['estado'])->toBe('hecho')
+        // Sin credencial impresa no hay tarjeta que devolver (Comunicación, 6.5).
+        ->and($pasos['credencial']['estado'])->toBe('hecho')
+        ->and($pasos['credencial']['responsable'])->toBe('Comunicación Social')
         ->and($pasos['usuario']['estado'])->toBe('pendiente')
         ->and($pasos['usuario']['detalle'])->toContain('sale.uno')
         ->and($pasos['vacaciones']['estado'])->toBe('pendiente')
@@ -162,6 +171,53 @@ test('los pasos se leen de su módulo: el bien devuelto, el usuario de baja, el 
         ->and($pasos['declaracion']['estado'])->toBe('hecho');
 });
 
+test('la tarjeta impresa la recibe Comunicación: se anula al salir y el paso se cierra con la devolución', function () {
+    $servidor = ($this->servidor)();
+    FotografiaServidor::create([
+        'servidor_id' => $servidor->id, 'archivo' => 'f.jpg', 'miniatura' => 'f-m.jpg', 'origen' => 'individual', 'vigente' => true,
+    ]);
+    $credencial = app(CredencialServiceInterface::class)->sincronizar($servidor->id);
+    ImpresionCredencial::create([
+        'credencial_id' => $credencial->id, 'impresa_por' => $this->director->id, 'formato' => 'cr80', 'datos_impresos' => [],
+    ]);
+
+    $desvinculacion = Desvinculacion::where('movimiento_cierre_id', ($this->cesar)($servidor)->id)->sole();
+
+    // El cese anula la credencial: su QR deja de validar en el acto.
+    expect($credencial->fresh()->estado)->toBe(EstadoCredencial::ANULADA);
+
+    $pasos = ($this->pasos)($desvinculacion);
+    expect($pasos['credencial']['estado'])->toBe('pendiente')
+        ->and($pasos['credencial']['detalle'])->toContain('la recibe Comunicación Social')
+        ->and($pasos['credencial']['credencial_id'])->toBe($credencial->id);
+
+    app(CredencialServiceInterface::class)->registrarDevolucion($credencial->fresh(), '2026-10-19', null, $this->director);
+
+    expect(($this->pasos)($desvinculacion)['credencial'])
+        ->estado->toBe('hecho')
+        ->detalle->toBe('Entregó la tarjeta el 19/10/2026.');
+});
+
+test('una tarjeta perdida no queda pendiente: su código ya no valida', function () {
+    $servidor = ($this->servidor)();
+    FotografiaServidor::create([
+        'servidor_id' => $servidor->id, 'archivo' => 'f.jpg', 'miniatura' => 'f-m.jpg', 'origen' => 'individual', 'vigente' => true,
+    ]);
+    $credencial = app(CredencialServiceInterface::class)->sincronizar($servidor->id);
+    ImpresionCredencial::create([
+        'credencial_id' => $credencial->id, 'impresa_por' => $this->director->id, 'formato' => 'cr80', 'datos_impresos' => [],
+    ]);
+    // La repuesta no llegó a imprimirse: la última es esta, revocada por pérdida.
+    app(CredencialServiceInterface::class)->revocar($credencial, MotivoRevocacionCredencial::PERDIDA, null, $this->director);
+    Credencial::where('reemplaza_a_id', $credencial->id)->delete();
+
+    $desvinculacion = Desvinculacion::where('movimiento_cierre_id', ($this->cesar)($servidor)->id)->sole();
+
+    expect(($this->pasos)($desvinculacion)['credencial'])
+        ->estado->toBe('hecho')
+        ->detalle->toContain('pérdida');
+});
+
 test('el Inventario TI registra la devolución, una vez', function () {
     $servidor = ($this->servidor)();
     $bien = BienInformatico::create([
@@ -218,7 +274,7 @@ test('la liquidación la confirma el Director, lo que no aplica lleva su motivo,
     $marcar('reingreso', 'no_aplica', 'No cobró nada.')->assertStatus(422);
     $marcar('indemnizacion', 'no_aplica', 'Renuncia sin compensación.')->assertOk()
         ->assertJsonPath('datos.estado', 'cerrada')
-        ->assertJsonPath('datos.pasos.6.estado', 'no_aplica');
+        ->assertJsonPath('datos.pasos.7.estado', 'no_aplica');
 
     expect($desvinculacion->fresh()->estado)->toBe(Desvinculacion::CERRADA);
 
