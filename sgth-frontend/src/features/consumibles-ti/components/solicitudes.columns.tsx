@@ -33,6 +33,8 @@ export const columnasSolicitudes = ({ onPdf, onDespachar, onAnular }: Acciones):
   {
     accessor: 'servidor',
     title: 'De parte de',
+    // Con ancho propio: en un teléfono la tabla se desplaza en vez de aplastarlo.
+    width: 230,
     render: (s) => (
       <Stack gap={0}>
         <Text size="sm">{s.servidor ?? '—'}</Text>
@@ -40,7 +42,7 @@ export const columnasSolicitudes = ({ onPdf, onDespachar, onAnular }: Acciones):
       </Stack>
     ),
   },
-  { accessor: 'items', title: 'Qué se pidió', render: (s) => <Text size="sm" lineClamp={2}>{resumenItems(s)}</Text> },
+  { accessor: 'items', title: 'Qué se pidió', width: 260, render: (s) => <Text size="sm" lineClamp={2}>{resumenItems(s)}</Text> },
   {
     accessor: 'ticket',
     title: 'Ticket',

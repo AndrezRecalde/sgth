@@ -2,10 +2,11 @@
 
 import Link from 'next/link'
 import { Button, Stack } from '@mantine/core'
-import { IconDevices, IconLifebuoy, IconPresentation } from '@tabler/icons-react'
+import { IconDevices, IconDroplet, IconLifebuoy, IconPresentation } from '@tabler/icons-react'
 import { DataState, PageHeader, PageShell, SectionHeading } from '@/components/ui'
 import { ROUTES } from '@/config/routes'
 import { useTableroTic } from '@/features/tablero-tic/hooks/useTableroTic'
+import { TableroConsumibles } from '@/features/tablero-tic/components/TableroConsumibles'
 import { TableroEquipos } from '@/features/tablero-tic/components/TableroEquipos'
 import { TableroPrestamos } from '@/features/tablero-tic/components/TableroPrestamos'
 import { TableroTickets } from '@/features/tablero-tic/components/TableroTickets'
@@ -39,6 +40,12 @@ export function TicHomeView() {
             <Stack gap="md">
               <SectionHeading title="Inventario de equipos" icon={<IconDevices size={18} />} action={<Enlace href={ROUTES.TIC.EQUIPOS}>Ver equipos</Enlace>} />
               <TableroEquipos datos={data.equipos} />
+            </Stack>
+          )}
+          {data?.consumibles && (
+            <Stack gap="md">
+              <SectionHeading title="Consumibles" icon={<IconDroplet size={18} />} action={<Enlace href={ROUTES.TIC.CONSUMIBLES}>Ver el catálogo</Enlace>} />
+              <TableroConsumibles datos={data.consumibles} />
             </Stack>
           )}
           {data?.prestamos && (

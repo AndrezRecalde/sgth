@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { notificar } from '@/components/ui'
+import { guardarArchivo } from '@/lib/archivo'
 import { plural } from '@/lib/plural'
 import { clavesConsumibles } from '../constants/claves'
 import {
@@ -18,6 +19,20 @@ export const useKardex = (id: number, desde: string | null, hasta: string | null
 
 export const useConsumiblesDelEquipo = (bienId: number) =>
   useQuery({ queryKey: clavesConsumibles.delEquipo(bienId), queryFn: () => consumiblesService.delEquipo(bienId), enabled: bienId > 0 })
+
+/** «Tóner HP CE390A negro» → «toner-hp-ce390a-negro». */
+const aNombreDeArchivo = (texto: string) =>
+  // Sin las tildes: NFD las separa en marcas combinantes (de 0x300 a 0x36f) que se descartan.
+  [...texto.normalize('NFD')].filter((c) => c.charCodeAt(0) < 0x300 || c.charCodeAt(0) > 0x36f).join('')
+    .replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase()
+
+/** El kárdex en Excel, con las mismas fechas que en pantalla (5.4d). */
+export const useDescargaKardex = () =>
+  useMutation({
+    mutationFn: async ({ id, desde, hasta, descripcion }: { id: number; desde: string | null; hasta: string | null; descripcion: string }) =>
+      guardarArchivo(await consumiblesService.kardexExcel(id, desde, hasta), `kardex-${aNombreDeArchivo(descripcion)}.xlsx`),
+    onError: notificar.alFallar('No se pudo descargar el kárdex en Excel'),
+  })
 
 /** El catálogo: crear, editar y la compatibilidad. Todo cambia listados, detalle y fichas. */
 export function useConsumibleMutations(id = 0) {

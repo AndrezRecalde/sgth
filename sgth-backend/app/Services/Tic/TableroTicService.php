@@ -7,13 +7,16 @@ use App\Enums\EstadoBien;
 use App\Enums\EstadoPrestamo;
 use App\Enums\EstadoTicket;
 use App\Enums\Permiso;
+use App\Enums\TipoMovimientoConsumible;
 use App\Models\Helpdesk\CategoriaTicket;
 use App\Models\Helpdesk\Ticket;
 use App\Models\InventarioTi\AsignacionBien;
 use App\Models\InventarioTi\BajaBien;
 use App\Models\InventarioTi\BienInformatico;
+use App\Models\InventarioTi\Consumible;
 use App\Models\InventarioTi\ContratoVigencia;
 use App\Models\InventarioTi\CronogramaVigencia;
+use App\Models\InventarioTi\MovimientoConsumible;
 use App\Models\InventarioTi\PrestamoEquipo;
 use App\Models\User;
 use App\Services\Helpdesk\Tickets\MetricasTickets;
@@ -43,7 +46,7 @@ final class TableroTicService
         private readonly PrestamoService $prestamos,
     ) {}
 
-    /** @return array{tickets: ?array<string, mixed>, equipos: ?array<string, mixed>, prestamos: ?array<string, mixed>} */
+    /** @return array{tickets: ?array<string, mixed>, equipos: ?array<string, mixed>, prestamos: ?array<string, mixed>, consumibles: ?array<string, mixed>} */
     public function para(User $user): array
     {
         $atiende = $user->canAny([Permiso::GESTIONAR_TICKETS->value, Permiso::VER_TICKETS_TODOS->value]);
@@ -53,6 +56,32 @@ final class TableroTicService
             'tickets'   => $atiende ? $this->tickets($user) : null,
             'equipos'   => $inventario ? $this->equipos($user) : null,
             'prestamos' => $inventario || $user->can(Permiso::GESTIONAR_PRESTAMOS->value) ? $this->prestamos() : null,
+            'consumibles' => $inventario ? $this->consumibles() : null,
+        ];
+    }
+
+    /**
+     * Lo que guarda TIC y bajó del mínimo (fase 5.4d): el aviso de stock va
+     * solo aquí [P6]. Primero lo que más falta; y las unidades entregadas en
+     * el mes, de TIC y de Bodega.
+     *
+     * @return array<string, mixed>
+     */
+    private function consumibles(): array
+    {
+        $bajos = Consumible::conSaldo()
+            ->where('guarda_tic', true)->where('activo', true)->where('stock_minimo', '>', 0)
+            ->get(['id', 'descripcion', 'stock_minimo', 'guarda_tic', 'activo'])
+            ->map(fn (Consumible $c) => ['id' => $c->id, 'descripcion' => $c->descripcion, 'saldo' => (int) $c->saldo, 'stock_minimo' => $c->stock_minimo])
+            ->filter(fn (array $c) => $c['saldo'] < $c['stock_minimo'])
+            ->sortBy([fn (array $a, array $b) => ($a['saldo'] - $a['stock_minimo']) <=> ($b['saldo'] - $b['stock_minimo']), ['descripcion', 'asc']])
+            ->values();
+
+        return [
+            'bajo_minimo'  => $bajos->count(),
+            'lista'        => $bajos->take(8)->all(),
+            'entregas_mes' => (int) -MovimientoConsumible::where('tipo', TipoMovimientoConsumible::ENTREGA)->whereNull('anulado_en')
+                ->where('fecha', '>=', now()->startOfMonth()->toDateString())->sum('cantidad'),
         ];
     }
 

@@ -7,7 +7,10 @@ use App\Exports\Tic\ReportesTicExcel;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Services\Tic\Reportes\ReporteInventarioService;
+use App\Enums\TipoConsumible;
+use App\Services\Tic\Reportes\ReporteConsumosService;
 use App\Services\Tic\Reportes\ReporteObsolescenciaService;
+use App\Services\Tic\Reportes\ReporteSaldoConsumiblesService;
 use App\Services\Tic\Reportes\ReporteSatisfaccionService;
 use App\Services\Tic\Reportes\ReporteTicketsService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -87,6 +90,42 @@ final class ReporteTicController extends Controller
             'subtitulo' => 'Encuestas del ' . $desde->format('d/m/Y') . ' al ' . $hasta->format('d/m/Y'),
             'vista'     => 'pdf.tic.satisfaccion',
             'excel'     => fn () => ReportesTicExcel::satisfaccion($reporte),
+        ]);
+    }
+
+    /** El consumo de consumibles por impresora, área o consumible (fase 5.4d). */
+    public function consumos(Request $request, ReporteConsumosService $servicio): JsonResponse|BinaryFileResponse|Response
+    {
+        $filtros = $request->validate([
+            'agrupar' => ['nullable', Rule::in(ReporteConsumosService::AGRUPACIONES)],
+            'tipo'    => ['nullable', Rule::enum(TipoConsumible::class)],
+        ]);
+        [$desde, $hasta] = $this->rango($request);
+        $reporte = $servicio->generar($desde, $hasta, $filtros);
+        $por = ['impresora' => 'impresora', 'area' => 'área', 'consumible' => 'consumible'][$reporte['agrupado_por']];
+
+        return $this->responder($request, $reporte, [
+            'archivo'   => "consumo-por-{$reporte['agrupado_por']}-{$reporte['desde']}-a-{$reporte['hasta']}",
+            'titulo'    => "Consumo de consumibles por {$por}",
+            'subtitulo' => 'Entregas del ' . $desde->format('d/m/Y') . ' al ' . $hasta->format('d/m/Y'),
+            'vista'     => 'pdf.tic.consumos',
+            'excel'     => fn () => ReportesTicExcel::consumos($reporte),
+        ]);
+    }
+
+    /** El saldo de lo que guarda TIC al cierre de una fecha (fase 5.4d). */
+    public function saldoConsumibles(Request $request, ReporteSaldoConsumiblesService $servicio): JsonResponse|BinaryFileResponse|Response
+    {
+        $datos = $request->validate(['fecha' => ['required', 'date', 'before_or_equal:today'], ...$this->reglaFormato()]);
+        $fecha = Carbon::parse($datos['fecha']);
+        $reporte = $servicio->generar($fecha);
+
+        return $this->responder($request, $reporte, [
+            'archivo'   => "saldo-de-consumibles-{$reporte['fecha']}",
+            'titulo'    => 'Saldo de consumibles',
+            'subtitulo' => 'Lo que guarda TIC al cierre del ' . $fecha->format('d/m/Y'),
+            'vista'     => 'pdf.tic.saldo-consumibles',
+            'excel'     => fn () => ReportesTicExcel::saldoConsumibles($reporte),
         ]);
     }
 

@@ -818,6 +818,20 @@ El diseño detallado está en `docs/Diseno_Consumibles_TIC.docx`. Las respuestas
   - En el ticket «Consumibles», la sección «Solicitud a bodega» con lo mismo.
 - **Permisos:** consultar e imprimir, `ver-inventario-ti`; generar, despachar y anular, `gestionar-inventario-ti`.
 
+**Hecho en la 5.4d** (reportes y tablero; con ella se cierra la 5.4)
+
+- **Consumo** (`tic/reportes/consumos`), en pantalla, Excel y PDF: las entregas vivas de un período (hasta un año), de TIC y de Bodega.
+  - Se agrupan por consumible, por área (la que guardó cada entrega, así que no se mueve si el servidor cambia de unidad) o por impresora.
+  - Cada grupo trae su desglose: por área si se agrupa por consumible, por consumible en los otros casos. Se filtra por tipo.
+  - El Excel lleva tres hojas: el resumen, el desglose y las entregas una por una. Es el reporte mensual que reemplaza la constancia de entrega [P5].
+- **Saldo a una fecha** (`tic/reportes/saldo-consumibles`), en pantalla, Excel y PDF: lo que guarda TIC al cierre de un día, para cuadrar con Bodega en el cierre del año.
+  - Lleva el último movimiento de cada consumible y lo que estaba bajo el mínimo.
+  - Los inactivos salen solo si todavía tenían saldo ese día.
+- **Kárdex en Excel** (`inventario/consumibles/{id}/kardex/excel`), con las fechas que se ven en el detalle; lo anulado sale con su motivo.
+- **Tablero de Tecnologías**: el bloque «Consumibles», con lo que guarda TIC y bajó del mínimo (lo que más falta primero) y las unidades entregadas en el mes. Es el único aviso de stock [P6].
+- **Pantallas**: las pestañas «Consumo» y «Saldo de consumibles» en Tecnologías › Reportes, y el botón «Excel» en el kárdex del detalle.
+- **Permisos**: los de consultar el inventario (`ver-inventario-ti` o `gestionar-inventario-ti`), también el auditor.
+
 ---
 
 ## 9. Decisiones de la Unidad de TIC

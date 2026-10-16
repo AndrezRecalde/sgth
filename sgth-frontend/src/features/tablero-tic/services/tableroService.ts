@@ -57,11 +57,21 @@ export type TableroPrestamos = {
   entregas_hoy: FilaPrestamo[]
 }
 
+/** Lo que guarda TIC y bajó del mínimo (5.4d): el aviso de stock va solo aquí. */
+export type TableroConsumibles = {
+  bajo_minimo: number
+  /** Los que más faltan primero, hasta ocho. */
+  lista: { id: number; descripcion: string; saldo: number; stock_minimo: number }[]
+  /** Unidades entregadas en el mes, de TIC y de Bodega. */
+  entregas_mes: number
+}
+
 /** `GET tic/tablero`: un bloque sin permiso llega en null. */
 export type TableroTic = {
   tickets: TableroTickets | null
   equipos: TableroEquipos | null
   prestamos: TableroPrestamos | null
+  consumibles: TableroConsumibles | null
 }
 
 export const tableroTicService = {

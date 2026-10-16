@@ -160,6 +160,10 @@ export const consumiblesService = {
   kardex: (id: number, desde: string | null, hasta: string | null) =>
     api.get<ApiResponse<Kardex>>(`${URL}/${id}/kardex`, { params: { desde: desde ?? undefined, hasta: hasta ?? undefined } })
       .then((r) => r.data.datos),
+  /** El kárdex entre dos fechas, en Excel (5.4d). */
+  kardexExcel: (id: number, desde: string | null, hasta: string | null) =>
+    api.get<Blob>(`${URL}/${id}/kardex/excel`, { params: { desde: desde ?? undefined, hasta: hasta ?? undefined }, responseType: 'blob' })
+      .then((r) => r.data),
   apertura: (id: number, data: AperturaData) => api.post<ApiResponse<Movimiento>>(`${URL}/${id}/apertura`, data).then((r) => r.data.datos),
   ajuste: (id: number, data: AjusteData) => api.post<ApiResponse<Movimiento>>(`${URL}/${id}/ajustes`, data).then((r) => r.data.datos),
   ingreso: (data: IngresoData) => api.post<ApiResponse<Movimiento[]>>(`${URL}/ingresos`, data).then((r) => r.data.datos ?? []),

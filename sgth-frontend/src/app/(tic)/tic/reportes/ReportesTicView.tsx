@@ -2,11 +2,13 @@
 
 import { useState } from 'react'
 import { Stack, Tabs } from '@mantine/core'
-import { IconBuilding, IconHourglassLow, IconLifebuoy, IconMoodSmile } from '@tabler/icons-react'
+import { IconBuilding, IconDroplet, IconHourglassLow, IconLifebuoy, IconMoodSmile, IconStack2 } from '@tabler/icons-react'
 import { PageHeader, PageShell } from '@/components/ui'
 import { useAuth } from '@/hooks/useAuth'
+import { ReporteConsumosPanel } from '@/features/reportes-tic/components/ReporteConsumosPanel'
 import { ReporteInventarioPanel } from '@/features/reportes-tic/components/ReporteInventarioPanel'
 import { ReporteObsolescenciaPanel } from '@/features/reportes-tic/components/ReporteObsolescenciaPanel'
+import { ReporteSaldoConsumiblesPanel } from '@/features/reportes-tic/components/ReporteSaldoConsumiblesPanel'
 import { ReporteSatisfaccionPanel } from '@/features/reportes-tic/components/ReporteSatisfaccionPanel'
 import { ReporteTicketsPanel } from '@/features/reportes-tic/components/ReporteTicketsPanel'
 
@@ -23,13 +25,15 @@ export function ReportesTicView() {
 
   return (
     <PageShell>
-      <PageHeader title="Reportes" description="Inventario, obsolescencia y mesa de ayuda; en pantalla, Excel o PDF" />
+      <PageHeader title="Reportes" description="Inventario, obsolescencia, consumibles y mesa de ayuda; en pantalla, Excel o PDF" />
       <Tabs value={pestana} onChange={setPestana} keepMounted={false}>
         <Tabs.List>
           {inventario && (
             <>
               <Tabs.Tab value="inventario" leftSection={<IconBuilding size={14} />}>Inventario</Tabs.Tab>
               <Tabs.Tab value="obsolescencia" leftSection={<IconHourglassLow size={14} />}>Obsolescencia</Tabs.Tab>
+              <Tabs.Tab value="consumos" leftSection={<IconDroplet size={14} />}>Consumo</Tabs.Tab>
+              <Tabs.Tab value="saldo-consumibles" leftSection={<IconStack2 size={14} />}>Saldo de consumibles</Tabs.Tab>
             </>
           )}
           {mesa && (
@@ -43,6 +47,8 @@ export function ReportesTicView() {
           <>
             <Tabs.Panel value="inventario" pt="lg"><Stack gap="md"><ReporteInventarioPanel /></Stack></Tabs.Panel>
             <Tabs.Panel value="obsolescencia" pt="lg"><Stack gap="md"><ReporteObsolescenciaPanel /></Stack></Tabs.Panel>
+            <Tabs.Panel value="consumos" pt="lg"><Stack gap="md"><ReporteConsumosPanel /></Stack></Tabs.Panel>
+            <Tabs.Panel value="saldo-consumibles" pt="lg"><Stack gap="md"><ReporteSaldoConsumiblesPanel /></Stack></Tabs.Panel>
           </>
         )}
         {mesa && (
