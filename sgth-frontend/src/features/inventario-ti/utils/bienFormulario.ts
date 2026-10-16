@@ -1,4 +1,4 @@
-import { CAMPOS_CARACTERISTICA, CAMPOS_POR_FICHA, type ClaveCaracteristica } from '../constants/fichas'
+import { CAMPOS_CARACTERISTICA, CAMPOS_POR_FICHA, CONSERVADAS_POR_FICHA, type ClaveCaracteristica } from '../constants/fichas'
 import type { BienInformatico, FichaTipo, GuardarBienData } from '../services/tipos'
 import type { BienFormData } from '../schemas/bien.schema'
 
@@ -43,6 +43,8 @@ export function valoresParaOtro(v: BienFormData): BienFormData {
     codigo_institucional: '', codigo_anterior: '', numero_serie: '',
     nombre_red: '', usuario_dominio: '', direccion_ip: '',
     observaciones: '', bien_padre_id: null, estado_operativo: 'disponible',
+    // Lo que la ficha ya no pide es de cada equipo: no pasa al siguiente.
+    consumible: '',
   }
 }
 
@@ -53,11 +55,13 @@ const oNull = (v: string) => (v.trim() === '' ? null : v.trim())
 
 /**
  * Lo que viaja al backend: vacíos como null y, de las características, solo
- * las de la ficha del tipo. Si el tipo cambió, las de la ficha anterior se van.
+ * las de la ficha del tipo y las que ya no pide pero conserva (el consumible
+ * de la impresora). Si el tipo cambió, las de la ficha anterior se van.
  */
 export function aDatosDeBien(v: BienFormData, editando: boolean, ficha: FichaTipo): GuardarBienData {
+  const claves = [...CAMPOS_POR_FICHA[ficha].caracteristicas, ...(CONSERVADAS_POR_FICHA[ficha] ?? [])]
   const caracteristicas = Object.fromEntries(
-    CAMPOS_POR_FICHA[ficha].caracteristicas.map((k) => [k, v[k].trim()]).filter(([, valor]) => valor !== ''),
+    claves.map((k) => [k, v[k].trim()]).filter(([, valor]) => valor !== ''),
   )
 
   return {

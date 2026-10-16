@@ -776,6 +776,26 @@ El diseño detallado está en `docs/Diseno_Consumibles_TIC.docx`. Las respuestas
 - **API** en `inventario/consumibles` (catálogo, detalle, kárdex con saldo tras cada movimiento, apertura, ingresos, entregas, ajustes, modelos y anulación) y `inventario/bienes/{id}/consumibles`. Esta última es la sección de la ficha: compatibles con su saldo, últimas entregas, días desde la última y el texto viejo del campo «consumible».
 - **Permisos:** consultar es `ver-inventario-ti`; todo lo demás, `gestionar-inventario-ti` [P10].
 
+**Hecho en la 5.4b** (las pantallas; `features/consumibles-ti`)
+
+- **Inventario › Consumibles** (`/tic/inventario/consumibles`): el catálogo con el saldo de lo que guarda TIC, resaltado si bajó del mínimo, y los modelos a los que sirve cada uno.
+  - Filtros: texto, tipo, modelo de equipo, quién lo guarda, bajo el mínimo e inactivos.
+  - Desde aquí: nuevo consumible (con sus modelos compatibles), registrar ingreso (un documento con varios consumibles) y entregar.
+- **El detalle** (`/tic/inventario/consumibles/{id}`):
+  - el saldo, el mínimo, lo entregado en el año y la última entrega;
+  - los modelos compatibles con los equipos que coinciden (o el aviso si ninguno coincide);
+  - el kárdex, con fechas, el saldo tras cada movimiento y lo anulado tachado y con su motivo;
+  - las acciones de apertura (si no la tiene), ajuste, ingreso, anular y agregar o quitar modelos.
+- **Entregar** (`/tic/inventario/consumibles/entregar`, o desde la ficha del equipo con `?bien=`):
+  - el equipo se elige con el buscador, escribiendo su código o leyendo su etiqueta QR con el lector de la constatación;
+  - aparecen los compatibles con su saldo (sin pasar del saldo) y se agregan repuestos;
+  - «¿Falta uno?» marca un consumible como compatible con el modelo del equipo sin salir de la pantalla;
+  - quien retira es el custodio salvo que se elija otro; sin custodio, es obligatorio;
+  - un repuesto puede ir sin equipo, a un servidor.
+- **La ficha del equipo** tiene la pestaña **Consumibles**: los compatibles con su saldo, las últimas entregas y los días desde la última. Lo que se anotaba en el campo de texto aparece arriba.
+- **El campo «consumible»** sale del formulario de la impresora [P11]. Lo escrito se muestra en la ficha («Consumible (anotado antes)») y en el formulario, y se conserva al editar; «Registrar otro igual» no lo copia.
+- Visto en el navegador con datos de prueba locales (equipos 902031–902033, cinco consumibles) en claro, en oscuro y a 375 px.
+
 ---
 
 ## 9. Decisiones de la Unidad de TIC

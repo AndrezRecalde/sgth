@@ -25,12 +25,14 @@ const COLUMNA = { base: 12, sm: 6, lg: 4 }
 /**
  * Cómo es el equipo: los datos de red y las características que pide la
  * ficha de su tipo (un computador, su procesador; una impresora, su
- * consumible), y las observaciones.
+ * conexión), y las observaciones. El consumible de la impresora ya no se
+ * pide (5.4): lo anotado antes se muestra y se conserva.
  */
 export function BienFormCaracteristicas({ form, ficha }: Props) {
   const contained = useContainedInput()
-  const { register, control, formState: { errors } } = form
+  const { register, control, getValues, formState: { errors } } = form
   const campos = CAMPOS_POR_FICHA[ficha]
+  const consumibleAnterior = ficha === 'impresora' ? getValues('consumible').trim() : ''
   const vacia = campos.red.length === 0 && campos.caracteristicas.length === 0
 
   return (
@@ -62,6 +64,14 @@ export function BienFormCaracteristicas({ form, ficha }: Props) {
             </Grid.Col>
           )
         })}
+
+        {consumibleAnterior && (
+          <Grid.Col span={12}>
+            <Text size="sm" c="dimmed">
+              Consumible anotado antes: <b>{consumibleAnterior}</b>. Ahora los consumibles van en su catálogo y en la pestaña Consumibles de la ficha.
+            </Text>
+          </Grid.Col>
+        )}
 
         {vacia && (
           <Grid.Col span={12}>

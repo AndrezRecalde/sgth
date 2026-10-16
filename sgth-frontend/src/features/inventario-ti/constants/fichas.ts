@@ -3,7 +3,7 @@ import type { FichaTipo } from '../services/tipos'
 /** Las fichas que puede tener un tipo de equipo (`FichaTipoBien`). */
 export const FICHAS: { value: FichaTipo; label: string; descripcion: string }[] = [
   { value: 'computador', label: 'Computador', descripcion: 'Procesador, memoria, disco y sistema operativo' },
-  { value: 'impresora', label: 'Impresora', descripcion: 'Conexión, consumible y color' },
+  { value: 'impresora', label: 'Impresora', descripcion: 'Conexión y color' },
   { value: 'monitor', label: 'Monitor', descripcion: 'Pulgadas y entradas de video' },
   { value: 'escaner', label: 'Escáner', descripcion: 'Alimentación de hojas y conexión' },
   { value: 'general', label: 'General', descripcion: 'Solo los datos comunes' },
@@ -42,7 +42,8 @@ export const CAMPOS_CARACTERISTICA: Record<ClaveCaracteristica, CampoCaracterist
   tipo_disco:        { clave: 'tipo_disco', etiqueta: 'Tipo de disco', placeholder: 'SSD o HDD', opciones: [{ value: 'SSD', label: 'SSD' }, { value: 'HDD', label: 'HDD' }] },
   capacidad_disco:   { clave: 'capacidad_disco', etiqueta: 'Capacidad del disco', placeholder: 'Ej.: 512 GB' },
   conexion:          { clave: 'conexion', etiqueta: 'Conexión', placeholder: 'Cómo se conecta', opciones: CONEXION },
-  consumible:        { clave: 'consumible', etiqueta: 'Consumible', placeholder: 'Ej.: Tóner HP 85A' },
+  // Ya no se pide (5.4, P11): los consumibles van en su catálogo. Queda para mostrar lo escrito.
+  consumible:        { clave: 'consumible', etiqueta: 'Consumible (anotado antes)', placeholder: '' },
   color:             { clave: 'color', etiqueta: 'Impresión', placeholder: 'Monocromática o a color', opciones: [{ value: 'monocromatica', label: 'Monocromática' }, { value: 'color', label: 'A color' }] },
   pulgadas:          { clave: 'pulgadas', etiqueta: 'Pulgadas', placeholder: 'Ej.: 24' },
   entradas_video:    { clave: 'entradas_video', etiqueta: 'Entradas de video', placeholder: 'Ej.: HDMI y VGA' },
@@ -52,10 +53,19 @@ export const CAMPOS_CARACTERISTICA: Record<ClaveCaracteristica, CampoCaracterist
 /** Qué pide cada ficha: sus datos de red y sus características, en orden. */
 export const CAMPOS_POR_FICHA: Record<FichaTipo, { red: CampoRed[]; caracteristicas: ClaveCaracteristica[] }> = {
   computador: { red: ['nombre_red', 'usuario_dominio', 'direccion_ip'], caracteristicas: ['procesador', 'memoria_ram', 'sistema_operativo', 'tipo_disco', 'capacidad_disco'] },
-  impresora:  { red: ['nombre_red', 'direccion_ip'], caracteristicas: ['conexion', 'consumible', 'color'] },
+  impresora:  { red: ['nombre_red', 'direccion_ip'], caracteristicas: ['conexion', 'color'] },
   monitor:    { red: [], caracteristicas: ['pulgadas', 'entradas_video'] },
   escaner:    { red: ['direccion_ip'], caracteristicas: ['alimentacion', 'conexion'] },
   general:    { red: ['nombre_red', 'direccion_ip'], caracteristicas: [] },
+}
+
+/**
+ * Las que la ficha ya no pide pero se conservan al editar: el texto libre del
+ * consumible de la impresora salió del formulario con la 5.4 y lo escrito se
+ * sigue mostrando [P11].
+ */
+export const CONSERVADAS_POR_FICHA: Partial<Record<FichaTipo, ClaveCaracteristica[]>> = {
+  impresora: ['consumible'],
 }
 
 /** Para mostrar una característica guardada: la etiqueta de su opción, o el texto tal cual. */

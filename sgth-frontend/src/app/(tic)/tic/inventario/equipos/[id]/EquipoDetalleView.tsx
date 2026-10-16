@@ -3,12 +3,13 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Alert, Button, Group, Skeleton, Tabs } from '@mantine/core'
-import { IconCopy, IconDevices, IconEdit, IconHistory, IconId, IconPuzzle, IconQrcode, IconTrashX } from '@tabler/icons-react'
+import { IconCopy, IconDevices, IconDroplet, IconEdit, IconHistory, IconId, IconPuzzle, IconQrcode, IconTrashX } from '@tabler/icons-react'
 import { EmptyState, PageHeader, PageShell, StatusBadge } from '@/components/ui'
 import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import { ROUTES } from '@/config/routes'
 import { useAuth } from '@/hooks/useAuth'
 import { formatFecha } from '@/lib/fecha'
+import { ConsumiblesDelEquipo } from '@/features/consumibles-ti/components/ConsumiblesDelEquipo'
 import { BienComponentes } from '@/features/inventario-ti/components/BienComponentes'
 import { BienDatos } from '@/features/inventario-ti/components/BienDatos'
 import { BienHistorial } from '@/features/inventario-ti/components/BienHistorial'
@@ -94,11 +95,15 @@ export function EquipoDetalleView({ id }: { id: number }) {
           <Tabs.Tab value="datos" leftSection={<IconId size={14} />}>Datos</Tabs.Tab>
           <Tabs.Tab value="historial" leftSection={<IconHistory size={14} />}>Historial</Tabs.Tab>
           <Tabs.Tab value="componentes" leftSection={<IconPuzzle size={14} />}>{piezas}</Tabs.Tab>
+          <Tabs.Tab value="consumibles" leftSection={<IconDroplet size={14} />}>Consumibles</Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="datos" pt="lg"><BienDatos bien={bien} /></Tabs.Panel>
         <Tabs.Panel value="historial" pt="lg"><BienHistorial bien={bien} /></Tabs.Panel>
         <Tabs.Panel value="componentes" pt="lg"><BienComponentes bien={bien} /></Tabs.Panel>
+        <Tabs.Panel value="consumibles" pt="lg">
+          <ConsumiblesDelEquipo bienId={bien.id} deBaja={bien.estado_operativo === 'dado_de_baja'} />
+        </Tabs.Panel>
       </Tabs>
 
       <ProponerBajaModal bien={proponer ? bien : null} onClose={() => setProponer(false)} />
