@@ -19,11 +19,11 @@ class CategoriaTicket extends Model
 
     protected $table = 'categorias_ticket';
 
-    protected $fillable = ['nombre', 'es_hardware', 'descripcion', 'unidad_tic_id', 'activa'];
+    protected $fillable = ['nombre', 'es_hardware', 'es_consumibles', 'descripcion', 'unidad_tic_id', 'activa'];
 
     protected function casts(): array
     {
-        return ['es_hardware' => 'boolean', 'activa' => 'boolean'];
+        return ['es_hardware' => 'boolean', 'es_consumibles' => 'boolean', 'activa' => 'boolean'];
     }
 
     public function unidadTic(): BelongsTo

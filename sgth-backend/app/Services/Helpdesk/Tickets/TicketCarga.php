@@ -14,7 +14,7 @@ final class TicketCarga
 {
     /** Lo que muestran el listado y el detalle. */
     public const LISTADO = [
-        'categoria:id,nombre,es_hardware', 'solicitante:id,nombre,apellido,cedula,unidad_administrativa_id',
+        'categoria:id,nombre,es_hardware,es_consumibles', 'solicitante:id,nombre,apellido,cedula,unidad_administrativa_id',
         'solicitante.unidadAdministrativa:id,nombre,acronimo', 'unidadTic:id,nombre',
         'tecnico:id,usuario_ti,email,servidor_id', 'tecnico.servidor:id,nombre,apellido',
         'bien:id,codigo_institucional,modelo,tipo_bien_id,marca_id', 'bien.tipo:id,nombre', 'bien.marca:id,nombre',

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Alert, Anchor, Button, Grid, Group, Select, Stack, Switch, Text, Textarea } from '@mantine/core'
+import { Alert, Anchor, Button, Grid, Group, Stack, Switch, Text, Textarea } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { IconTruckDelivery } from '@tabler/icons-react'
 import { Controller, useForm } from 'react-hook-form'
@@ -17,6 +17,7 @@ import { plural } from '@/lib/plural'
 import { BuscarServidorSelect } from '@/features/expediente/components/BuscarServidorSelect'
 import { useBien } from '@/features/inventario-ti/hooks/useBienes'
 import { AgregarModeloModal } from '@/features/consumibles-ti/components/AgregarModeloModal'
+import { AgregarSelect } from '@/features/consumibles-ti/components/AgregarSelect'
 import { ElegirEquipoEntrega } from '@/features/consumibles-ti/components/ElegirEquipoEntrega'
 import { columnasEntrega, type RenglonEntrega } from '@/features/consumibles-ti/components/entrega.columns'
 import { useConsumibles, useMovimientoMutations } from '@/features/consumibles-ti/hooks/useConsumibles'
@@ -126,17 +127,17 @@ export function EntregarConsumiblesView({ bienId: inicial }: { bienId: number | 
                   noRecordsText={sinEquipo ? 'Agregue un repuesto.' : 'Ningún consumible del catálogo está marcado para este modelo.'} />
                 <Grid>
                   <Grid.Col span={{ base: 12, sm: conEquipo ? 6 : 12 }}>
-                    <Select label="Agregar un repuesto" placeholder="Teclado, cable, pasta térmica…" searchable {...contained}
+                    <AgregarSelect label="Agregar un repuesto" placeholder="Teclado, cable, pasta térmica…"
                       data={repuestos.map((c) => ({ value: String(c.id), label: c.descripcion }))}
                       nothingFoundMessage="No hay más repuestos en el catálogo"
-                      value={null} onChange={(v) => { if (v) setAgregados((a) => [...a, Number(v)]) }} />
+                      onElegir={(v) => setAgregados((a) => [...a, Number(v)])} />
                   </Grid.Col>
                   {conEquipo && (
                     <Grid.Col span={{ base: 12, sm: 6 }}>
-                      <Select label="¿Falta uno? Márquelo como compatible" placeholder="Tóner, tinta…" searchable {...contained}
+                      <AgregarSelect label="¿Falta uno? Márquelo como compatible" placeholder="Tóner, tinta…"
                         data={noCompatibles.map((c) => ({ value: String(c.id), label: c.descripcion }))}
                         nothingFoundMessage="No hay más consumibles de impresión"
-                        value={null} onChange={(v) => setFaltante(noCompatibles.find((c) => String(c.id) === v) ?? null)} />
+                        onElegir={(v) => setFaltante(noCompatibles.find((c) => String(c.id) === v) ?? null)} />
                     </Grid.Col>
                   )}
                 </Grid>

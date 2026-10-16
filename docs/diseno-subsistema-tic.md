@@ -796,6 +796,28 @@ El diseño detallado está en `docs/Diseno_Consumibles_TIC.docx`. Las respuestas
 - **El campo «consumible»** sale del formulario de la impresora [P11]. Lo escrito se muestra en la ficha («Consumible (anotado antes)») y en el formulario, y se conserva al editar; «Registrar otro igual» no lo copia.
 - Visto en el navegador con datos de prueba locales (equipos 902031–902033, cinco consumibles) en claro, en oscuro y a 375 px.
 
+**Hecho en la 5.4c** (la solicitud a bodega y el ticket «Consumibles»)
+
+- **Tablas** (migración `2026_11_06`): `solicitudes_bodega` y `solicitud_bodega_items`. También `movimientos_consumible.solicitud_bodega_id`, y la marca `es_consumibles` en `categorias_ticket` con la categoría **«Consumibles»** sembrada (Soporte Técnico, lleva equipo) [P16]. Si TIC ya tenía una con ese nombre, solo se marca.
+- **La solicitud**, número **SB-AAAA-NNNN** correlativo por año.
+  - Desde un ticket «Consumibles» toma el solicitante y el equipo; una sola pendiente por ticket. Sin ticket, se dice de parte de quién y, si hace falta, el equipo.
+  - Lo de impresión exige un equipo de un modelo compatible, como su entrega. Hasta 25 renglones.
+  - Firmantes sellados al generarla, todos del organigrama (`FirmanteOrganigramaService::jefeDeUnidadEn`): el jefe de la unidad del servidor, el de TIC (`helpdesk.unidad_tic_codigo`) y el de Gestión Administrativa (`inventario.unidad_bodega_codigo`, por defecto GADPE-01). Un puesto vacante sale con el cargo y sin nombre.
+- **El PDF** reproduce la hoja «REPUESTOS PEDIDOS»: original y copia lado a lado en A4 horizontal.
+  - Encabezado: fecha, para, de, proceso (la dirección) y subproceso (la unidad), el párrafo con para qué es, y los códigos nuevo y anterior del equipo.
+  - Renglones con código de bodega, descripción y cantidades solicitada y despachada en número y letra (`NumeroALetras::cantidad`), con al menos doce filas.
+  - Cinco firmas.
+- **El despacho**: TIC anota cuánto despachó Bodega por renglón (0 = nada, nunca más de lo pedido).
+  - Lo despachado es la entrega a quien pidió y a su equipo.
+  - Lo que guarda TIC entra antes a su saldo con la solicitud por documento y sale en la misma entrega, así que el saldo no cambia.
+  - Con ticket, el ticket se resuelve con lo entregado y **se cierra** sin esperar la confirmación, porque el servidor firmó la recepción (`TicketEstadoService::cerrarConEntrega`).
+  - Resolver a mano un ticket «Consumibles» no deja un mantenimiento en la ficha.
+- **Anular** solo la pendiente, con motivo. La despachada se corrige anulando sus movimientos.
+- **Pantallas**:
+  - Inventario › Solicitudes a bodega (`/tic/inventario/consumibles/solicitudes`), con filtros, imprimir, anotar despacho y anular; al generarla se abre el PDF.
+  - En el ticket «Consumibles», la sección «Solicitud a bodega» con lo mismo.
+- **Permisos:** consultar e imprimir, `ver-inventario-ti`; generar, despachar y anular, `gestionar-inventario-ti`.
+
 ---
 
 ## 9. Decisiones de la Unidad de TIC

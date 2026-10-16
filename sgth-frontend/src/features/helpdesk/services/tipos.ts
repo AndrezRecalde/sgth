@@ -55,7 +55,8 @@ export type Ticket = {
     pausado_desde: string | null
     vencido_en: string | null
   }
-  categoria?: { id: number; nombre: string; es_hardware: boolean } | null
+  /** `es_consumibles`: la categoría que genera la solicitud a bodega (5.4c). */
+  categoria?: { id: number; nombre: string; es_hardware: boolean; es_consumibles?: boolean } | null
   solicitante?: { id: number; cedula: string; nombre: string; unidad: string | null } | null
   unidad_tic?: { id: number; nombre: string } | null
   tecnico?: { id: number; nombre: string } | null

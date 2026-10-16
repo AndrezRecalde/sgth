@@ -9,4 +9,10 @@ export const clavesConsumibles = {
   uno: (id: number) => ['inventario-ti', 'consumibles', id] as const,
   kardex: (id: number, desde: string | null, hasta: string | null) => ['inventario-ti', 'consumibles', id, 'kardex', desde, hasta] as const,
   delEquipo: (bienId: number) => ['inventario-ti', 'consumibles', 'equipo', bienId] as const,
+  /** Las solicitudes a bodega (5.4c): despacharlas cambia el kárdex, así que cuelgan de lo mismo. */
+  solicitudes: {
+    todas: ['inventario-ti', 'consumibles', 'solicitudes'] as const,
+    lista: (filtros: unknown, page: number) => ['inventario-ti', 'consumibles', 'solicitudes', 'lista', filtros, page] as const,
+    una: (id: number) => ['inventario-ti', 'consumibles', 'solicitudes', id] as const,
+  },
 }

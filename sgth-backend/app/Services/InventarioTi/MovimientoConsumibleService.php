@@ -9,7 +9,6 @@ use App\Exceptions\ReglaNegocioException;
 use App\Models\Expediente\Servidor;
 use App\Models\InventarioTi\BienInformatico;
 use App\Models\InventarioTi\Consumible;
-use App\Models\InventarioTi\ConsumibleModelo;
 use App\Models\InventarioTi\MovimientoConsumible;
 use App\Models\User;
 use Illuminate\Support\Carbon;
@@ -103,11 +102,12 @@ final class MovimientoConsumibleService implements MovimientoConsumibleServiceIn
                 $this->exigirQueLoGuardeTic($c, 'ingresos');
 
                 return $this->crear($c, TipoMovimientoConsumible::INGRESO, $cantidad, [
-                    'fecha'            => $datos['fecha'],
-                    'tipo_documento'   => $datos['tipo_documento'],
-                    'numero_documento' => trim($datos['numero_documento']),
-                    'fecha_compra'     => $datos['fecha_compra'] ?? null,
-                    'observacion'      => $datos['observacion'] ?? null,
+                    'fecha'               => $datos['fecha'],
+                    'tipo_documento'      => $datos['tipo_documento'],
+                    'numero_documento'    => trim($datos['numero_documento']),
+                    'fecha_compra'        => $datos['fecha_compra'] ?? null,
+                    'solicitud_bodega_id' => $datos['solicitud_bodega_id'] ?? null,
+                    'observacion'         => $datos['observacion'] ?? null,
                 ], $user);
             })->values();
         });
@@ -151,6 +151,7 @@ final class MovimientoConsumibleService implements MovimientoConsumibleServiceIn
                     'servidor_retira_id'       => $retira->id,
                     'unidad_administrativa_id' => $unidad,
                     'ticket_id'                => $datos['ticket_id'] ?? null,
+                    'solicitud_bodega_id'      => $datos['solicitud_bodega_id'] ?? null,
                     'observacion'              => $datos['observacion'] ?? null,
                 ], $user);
             })->values();
@@ -293,11 +294,7 @@ final class MovimientoConsumibleService implements MovimientoConsumibleServiceIn
         if ($bien === null) {
             throw new ReglaNegocioException("«{$c->descripcion}» es de impresión: se entrega a un equipo.");
         }
-        $compatible = $c->modelos()
-            ->where('marca_id', $bien->marca_id)
-            ->where('modelo_normalizado', ConsumibleModelo::normalizar($bien->modelo))
-            ->exists();
-        if (! $compatible) {
+        if (! $c->sirveA($bien)) {
             $modelo = trim(($bien->marca?->nombre ?? '') . ' ' . ($bien->modelo ?? ''));
             throw new ReglaNegocioException("«{$c->descripcion}» no está marcado como compatible con el equipo {$bien->codigo_institucional} ({$modelo}). Agregue el modelo a sus compatibles.");
         }
