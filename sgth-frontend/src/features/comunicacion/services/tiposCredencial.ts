@@ -61,6 +61,8 @@ export interface ServidorConCredencial {
     ultima_impresion: ImpresionCredencial | null
     /** Qué cambió desde que se imprimió: «Cargo», «Foto», «Contacto de emergencia»… */
     cambios_desde_impresion: string[]
+    /** Lo que no saldrá en el reverso porque el expediente no lo tiene. */
+    datos_faltantes: string[]
   } | null
 }
 
@@ -125,9 +127,21 @@ export interface MiCredencial {
   vigente: boolean
   valida_hasta: string | null
   datos: DatosCredencial
+  /** Lo que no sale en la credencial porque falta en el expediente. */
+  datos_faltantes: string[]
   /** El QR de verificación como imagen SVG en `data:` URL. */
   qr: string | null
   url_verificacion: string
+}
+
+/**
+ * A dónde lleva el QR. `local` si solo la abre este equipo (desarrollo); en
+ * producción, así no se imprime.
+ */
+export interface DireccionVerificacion {
+  url_base: string
+  local: boolean
+  impresion_bloqueada: boolean
 }
 
 /**

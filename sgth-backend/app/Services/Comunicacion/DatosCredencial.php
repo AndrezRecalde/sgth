@@ -95,6 +95,22 @@ final class DatosCredencial
         return array_keys($cambios);
     }
 
+    /**
+     * Los datos del reverso que el expediente no tiene y que por eso no salen
+     * en la tarjeta (6.2: la línea no se imprime). Los registra Talento
+     * Humano; el servidor no los puede cambiar desde el Portal.
+     *
+     * @param  array<string, mixed>  $datos
+     * @return list<string>
+     */
+    public static function faltantes(array $datos): array
+    {
+        return array_values(array_filter([
+            $datos['tipo_sangre'] === null ? 'Tipo de sangre' : null,
+            $datos['contacto_emergencia'] === null ? 'Contacto de emergencia' : null,
+        ]));
+    }
+
     private static function unir(?string ...$partes): string
     {
         return trim(implode(' ', array_filter(array_map(fn (?string $p) => self::texto($p), $partes))));

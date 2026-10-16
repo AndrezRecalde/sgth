@@ -43,6 +43,21 @@ final class CredencialController extends Controller
         );
     }
 
+    /**
+     * A dónde lleva el QR. La pantalla avisa si es una dirección local: un
+     * teléfono no la abre, y en producción no se imprime así.
+     */
+    public function verificacion(): JsonResponse
+    {
+        $local = Credencial::verificacionEsLocal();
+
+        return ApiResponse::ok([
+            'url_base'            => rtrim((string) config('app.frontend_url'), '/').'/verificar/credencial/',
+            'local'               => $local,
+            'impresion_bloqueada' => $local && app()->isProduction(),
+        ], 'Dirección de verificación de las credenciales.');
+    }
+
     public function historial(Servidor $servidor): JsonResponse
     {
         return ApiResponse::ok(

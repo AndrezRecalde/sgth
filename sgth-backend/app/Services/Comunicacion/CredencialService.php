@@ -224,6 +224,8 @@ final class CredencialService implements CredencialServiceInterface
             throw new ReglaNegocioException('No hay credenciales para imprimir.');
         }
 
+        $this->exigirQrPublico();
+
         $credenciales = (new EloquentCollection($credenciales->values()->all()))
             ->loadMissing(['servidor' => fn ($q) => $q->with(DatosCredencial::RELACIONES_SERVIDOR)]);
 
@@ -255,6 +257,8 @@ final class CredencialService implements CredencialServiceInterface
 
     public function pdfDigital(Credencial $credencial): string
     {
+        $this->exigirQrPublico();
+
         $credencial->loadMissing(['servidor' => fn ($q) => $q->with(DatosCredencial::RELACIONES_SERVIDOR)]);
 
         return $this->pdf->generar(collect([$this->tarjeta($credencial)]), FormatoImpresionCredencial::CR80);
@@ -387,6 +391,20 @@ final class CredencialService implements CredencialServiceInterface
 
             return [$credencial, 'creadas'];
         });
+    }
+
+    /**
+     * En producción no sale una tarjeta cuyo QR apunte a una dirección local:
+     * quedaría impresa sin poder verificarse. En desarrollo sí, para probar.
+     */
+    private function exigirQrPublico(): void
+    {
+        if (app()->isProduction() && Credencial::verificacionEsLocal()) {
+            throw new ReglaNegocioException(
+                'El QR de la credencial llevaría la dirección '.rtrim((string) config('app.frontend_url'), '/')
+                .', que un teléfono no puede abrir. Configure FRONTEND_URL con la dirección pública del sistema antes de imprimir.'
+            );
+        }
     }
 
     /**

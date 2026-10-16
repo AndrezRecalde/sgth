@@ -68,11 +68,16 @@ export function columnasCredenciales(
       render: (s) => {
         const situacion = SITUACION_CREDENCIAL[s.situacion]
         const linea = detalle(s)
+        const faltan = s.credencial?.datos_faltantes ?? []
 
         return (
           <Stack gap={2}>
             <StatusBadge tone={situacion.tono} size="xs">{situacion.etiqueta}</StatusBadge>
             {linea && <Text size="xs" c="dimmed">{linea}</Text>}
+            {/* No saldrán en el reverso: se piden a Talento Humano antes de imprimir. */}
+            {faltan.length > 0 && (
+              <Text size="xs" c="amber.8">Sin {faltan.join(' ni ').toLowerCase()} en el expediente</Text>
+            )}
           </Stack>
         )
       },

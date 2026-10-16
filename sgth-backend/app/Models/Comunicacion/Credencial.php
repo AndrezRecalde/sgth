@@ -120,6 +120,22 @@ class Credencial extends Model
     }
 
     /**
+     * ¿El QR lleva una dirección que solo abre este equipo? Es lo que pasa en
+     * desarrollo, con `FRONTEND_URL=http://localhost:3000`: un teléfono que lo
+     * escanea busca «localhost» en sí mismo. En producción, una tarjeta
+     * impresa así no se verifica nunca: el QR no se cambia sin reimprimirla.
+     */
+    public static function verificacionEsLocal(): bool
+    {
+        $host = strtolower((string) parse_url((string) config('app.frontend_url'), PHP_URL_HOST));
+
+        return $host === ''
+            || in_array(trim($host, '[]'), ['localhost', '127.0.0.1', '::1'], true)
+            || str_ends_with($host, '.localhost')
+            || str_ends_with($host, '.test');
+    }
+
+    /**
      * Cada cambio de estado, la revocación y la devolución, con quién. El
      * código no: es lo que valida la tarjeta y no tiene por qué repetirse en
      * el registro de actividad.
