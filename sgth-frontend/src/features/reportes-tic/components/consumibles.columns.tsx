@@ -32,6 +32,7 @@ export const columnasSaldoConsumibles: DataTableColumn<FilaSaldo>[] = [
   {
     accessor: 'descripcion',
     title: 'Consumible',
+    width: 280,
     render: (f) => (
       <Stack gap={0}>
         <Group gap={6}>

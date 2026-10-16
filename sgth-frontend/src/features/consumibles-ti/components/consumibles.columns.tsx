@@ -28,6 +28,8 @@ export const columnasConsumibles: DataTableColumn<Consumible>[] = [
   {
     accessor: 'descripcion',
     title: 'Consumible',
+    // Con ancho propio: en un teléfono la tabla se desplaza en vez de aplastarlo.
+    width: 280,
     render: (c) => (
       <Stack gap={0}>
         <Group gap={6}>
@@ -41,6 +43,7 @@ export const columnasConsumibles: DataTableColumn<Consumible>[] = [
   {
     accessor: 'modelos',
     title: 'Sirve a',
+    width: 220,
     render: (c) => (c.modelos.length
       ? <Text size="sm" lineClamp={2}>{textoModelos(c.modelos)}</Text>
       : <Text size="sm" c="dimmed">{c.de_impresion ? 'Sin modelos compatibles' : 'Cualquier equipo'}</Text>),
