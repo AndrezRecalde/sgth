@@ -19,13 +19,17 @@ class MiCredencialResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $datos = DatosCredencial::de($this->servidor, $this->resource);
+
         return [
             'id'               => $this->id,
             'estado'           => $this->estado->value,
             'estado_etiqueta'  => $this->estado->etiqueta(),
             'vigente'          => $this->estaVigente(),
             'valida_hasta'     => $this->valida_hasta?->toDateString(),
-            'datos'            => DatosCredencial::de($this->servidor, $this->resource),
+            'datos'            => $datos,
+            // Lo que no sale en la credencial porque falta en el expediente.
+            'datos_faltantes'  => DatosCredencial::faltantes($datos),
             // El QR en data: URL, para no sumar una librería al frontend.
             'qr'               => app(CredencialServiceInterface::class)->qr($this->resource),
             'url_verificacion' => $this->urlVerificacion(),

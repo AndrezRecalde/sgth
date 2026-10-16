@@ -27,7 +27,8 @@ class ServidorCredencialResource extends JsonResource
     {
         $credencial = $this->credencialViva;
         $impresion = $credencial?->ultimaImpresion;
-        $cambios = $credencial ? DatosCredencial::cambios($impresion, DatosCredencial::de($this->resource, $credencial)) : [];
+        $datos = $credencial ? DatosCredencial::de($this->resource, $credencial) : null;
+        $cambios = $datos ? DatosCredencial::cambios($impresion, $datos) : [];
 
         return [
             'id'              => $this->id,
@@ -59,6 +60,13 @@ class ServidorCredencialResource extends JsonResource
                 'ultima_impresion'        => $impresion ? new ImpresionCredencialResource($impresion) : null,
                 /** @var list<string> */
                 'cambios_desde_impresion' => $cambios,
+                /**
+                 * Lo que no saldrá en el reverso porque el expediente no lo
+                 * tiene: para pedirlo a Talento Humano antes de imprimir.
+                 *
+                 * @var list<string>
+                 */
+                'datos_faltantes'         => DatosCredencial::faltantes($datos),
             ] : null,
         ];
     }

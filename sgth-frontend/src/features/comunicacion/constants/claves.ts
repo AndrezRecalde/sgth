@@ -26,6 +26,7 @@ export const clavesComunicacion = {
     lista: (filtros: unknown, page: number) => ['comunicacion', 'credenciales', 'lista', filtros, page] as const,
     historial: (servidorId: number) => ['comunicacion', 'credenciales', 'historial', servidorId] as const,
     mia: ['mi-credencial'] as const,
+    direccion: ['comunicacion', 'credenciales', 'direccion'] as const,
     verificada: (codigo: string) => ['credencial-verificada', codigo] as const,
   },
 

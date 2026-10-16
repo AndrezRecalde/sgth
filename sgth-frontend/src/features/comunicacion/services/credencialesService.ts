@@ -1,8 +1,8 @@
 import api from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
 import type {
-  Credencial, CredencialVerificada, FiltrosCredenciales, MiCredencial, MotivoRevocacion, PedidoImpresion,
-  ServidorConCredencial,
+  Credencial, CredencialVerificada, DireccionVerificacion, FiltrosCredenciales, MiCredencial, MotivoRevocacion,
+  PedidoImpresion, ServidorConCredencial,
 } from './tiposCredencial'
 
 type MetaPaginada = { total: number; pagina_actual: number }
@@ -15,6 +15,10 @@ export const credencialesService = {
     api.get<ApiResponse<ServidorConCredencial[], MetaPaginada>>(`${URL}/credenciales`, {
       params: { ...filtros, page, per_page: 15 },
     }).then((r) => ({ data: r.data.datos ?? [], total: r.data.meta?.total ?? 0 })),
+
+  /** A dónde lleva el QR, para avisar si es una dirección local. */
+  direccionVerificacion: () =>
+    api.get<ApiResponse<DireccionVerificacion>>(`${URL}/credenciales/verificacion`).then((r) => r.data.datos),
 
   historial: (servidorId: number) =>
     api.get<ApiResponse<Credencial[]>>(`${URL}/servidores/${servidorId}/credenciales`)

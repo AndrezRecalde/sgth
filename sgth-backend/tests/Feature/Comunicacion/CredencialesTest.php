@@ -458,3 +458,54 @@ test('con los fondos de Identidad, la tarjeta los lleva detrás de cada cara', f
 
     expect($imagenes($imprimir()))->toBe($sinFondo + 2);
 });
+
+test('avisa qué datos del reverso faltan en el expediente', function () {
+    $sinDatos = servidorDePruebaCredencial($this, '0806666666', [
+        'tipo_sangre' => null, 'contacto_emergencia_nombre' => null, 'contacto_emergencia_parentesco' => null,
+        'contacto_emergencia_telefono' => null,
+    ]);
+    fotoDePruebaCredencial($this, $sinDatos);
+    fotoDePruebaCredencial($this, $this->ana);
+
+    $filas = collect($this->actingAs($this->comunicacion, 'sanctum')->getJson('/api/v1/comunicacion/credenciales')->assertOk()->json('datos'))
+        ->keyBy('id');
+    expect($filas[$sinDatos->id]['credencial']['datos_faltantes'])->toBe(['Tipo de sangre', 'Contacto de emergencia'])
+        ->and($filas[$this->ana->id]['credencial']['datos_faltantes'])->toBe([]);
+
+    $this->actingAs(usuarioDePruebaCredencial('servidor', $sinDatos->id), 'sanctum')
+        ->getJson('/api/v1/autoservicio/mi-credencial')
+        ->assertOk()
+        ->assertJsonPath('datos.datos_faltantes', ['Tipo de sangre', 'Contacto de emergencia']);
+});
+
+test('en producción no imprime una tarjeta cuyo QR lleva una dirección local', function () {
+    fotoDePruebaCredencial($this, $this->ana);
+    $credencial = Credencial::where('servidor_id', $this->ana->id)->sole();
+    $imprimir = fn () => $this->actingAs($this->comunicacion, 'sanctum')
+        ->postJson('/api/v1/comunicacion/credenciales/imprimir', ['credenciales' => [$credencial->id], 'formato' => 'cr80']);
+
+    config(['app.frontend_url' => 'http://localhost:3000']);
+
+    // En desarrollo se imprime, para probar; la pantalla avisa.
+    $imprimir()->assertOk();
+    $this->getJson('/api/v1/comunicacion/credenciales/verificacion')
+        ->assertOk()
+        ->assertJsonPath('datos.local', true)
+        ->assertJsonPath('datos.impresion_bloqueada', false)
+        ->assertJsonPath('datos.url_base', 'http://localhost:3000/verificar/credencial/');
+
+    $this->app['env'] = 'production';
+    try {
+        $imprimir()->assertStatus(422)
+            ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'FRONTEND_URL'));
+        $this->getJson('/api/v1/comunicacion/credenciales/verificacion')->assertJsonPath('datos.impresion_bloqueada', true);
+
+        config(['app.frontend_url' => 'https://sgth.gadpe.gob.ec']);
+        $imprimir()->assertOk();
+        $this->getJson('/api/v1/comunicacion/credenciales/verificacion')->assertJsonPath('datos.local', false);
+    } finally {
+        $this->app['env'] = 'testing';
+    }
+
+    expect(ImpresionCredencial::count())->toBe(2);
+});

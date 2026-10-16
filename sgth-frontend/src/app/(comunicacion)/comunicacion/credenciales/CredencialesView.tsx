@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Button, Group } from '@mantine/core'
+import { Alert, Button, Group } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
-import { IconHistory, IconId, IconPrinter, IconShieldX } from '@tabler/icons-react'
+import { IconAlertTriangle, IconHistory, IconId, IconPrinter, IconShieldX } from '@tabler/icons-react'
 import { DataState, PAGINACION_ES, PageHeader, PageShell, SgthTable, type TableAction } from '@/components/ui'
 import { CredencialesFiltros } from '@/features/comunicacion/components/CredencialesFiltros'
 import { HistorialCredencialesDrawer } from '@/features/comunicacion/components/HistorialCredencialesDrawer'
@@ -12,7 +12,7 @@ import {
 } from '@/features/comunicacion/components/ImprimirCredencialesModal'
 import { RevocarCredencialModal } from '@/features/comunicacion/components/RevocarCredencialModal'
 import { columnasCredenciales } from '@/features/comunicacion/components/credenciales.columns'
-import { useCredenciales } from '@/features/comunicacion/hooks/useCredenciales'
+import { useCredenciales, useDireccionVerificacion } from '@/features/comunicacion/hooks/useCredenciales'
 import { usePuedeGestionarCredenciales } from '@/features/comunicacion/hooks/usePuedeGestionarCredenciales'
 import type { FiltrosCredenciales, ServidorConCredencial } from '@/features/comunicacion/services/tiposCredencial'
 
@@ -43,6 +43,7 @@ export function CredencialesView({ filtrosIniciales = {} }: { filtrosIniciales?:
 
   const consulta = { ...filtros, ...(buscar.length >= 2 ? { buscar } : {}) }
   const { data, isLoading, error } = useCredenciales(consulta, page)
+  const { data: direccion } = useDireccionVerificacion()
 
   const hayFiltros = busqueda.trim() !== '' || Object.values(filtros).some((v) => v !== undefined)
 
@@ -103,6 +104,21 @@ export function CredencialesView({ filtrosIniciales = {} }: { filtrosIniciales?:
           </Group>
         ) : undefined}
       />
+
+      {/* El QR guarda la dirección: con una local, ningún teléfono la abre. */}
+      {direccion?.local && (
+        <Alert
+          variant="light"
+          color={direccion.impresion_bloqueada ? 'red' : 'amber'}
+          icon={<IconAlertTriangle size={18} />}
+          title="El QR de las credenciales lleva una dirección local"
+        >
+          Apunta a {direccion.url_base}…, que solo se abre en este equipo: un teléfono que lo escanee no llega a la
+          verificación. {direccion.impresion_bloqueada
+            ? 'Por eso no se imprime: configure FRONTEND_URL con la dirección pública del sistema.'
+            : 'Sirve para probar; las tarjetas que se entreguen deben imprimirse con la dirección pública (FRONTEND_URL).'}
+        </Alert>
+      )}
 
       <CredencialesFiltros
         filtros={filtros}
