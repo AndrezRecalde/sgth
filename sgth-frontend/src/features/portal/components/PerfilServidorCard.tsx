@@ -5,11 +5,11 @@ import {
   Group,
   Stack,
   Text,
-  Avatar,
   Divider,
 } from "@mantine/core";
 import type { UsuarioAuth } from "@/store/auth.store";
 import { StatusBadge } from "@/components/ui";
+import { FotoServidor } from "@/features/comunicacion/components/FotoServidor";
 import { useIdentidadPublica } from "@/features/comunicacion/hooks/useIdentidadPublica";
 
 /** Mientras llegan los datos de Identidad institucional, el nombre de siempre. */
@@ -28,14 +28,6 @@ export function PerfilServidorCard({ usuario }: Props) {
     [servidor?.nombre, servidor?.apellido].filter(Boolean).join(" ") ||
     usuario.email;
 
-  const initials =
-    nombreCompleto
-      .split(" ")
-      .slice(0, 2)
-      .map((w: string) => w[0] ?? "")
-      .join("")
-      .toUpperCase() || "US";
-
   const activo = usuario.activo ?? false;
 
   return (
@@ -50,13 +42,14 @@ export function PerfilServidorCard({ usuario }: Props) {
         <Divider />
 
         <Group gap="lg" wrap="nowrap">
-          <Avatar
+          {/* La foto que registró Comunicación Social; sin ella, las iniciales. */}
+          <FotoServidor
+            fotografiaId={servidor?.fotografia?.id}
+            nombre={nombreCompleto}
             size={84}
             radius="xl"
             style={{ fontSize: 28, fontWeight: 700 }}
-          >
-            {initials}
-          </Avatar>
+          />
 
           <Stack gap={4} style={{ flex: 1 }}>
             <Text fw={700} size="lg">
