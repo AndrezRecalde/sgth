@@ -28,6 +28,7 @@ final class CategoriaTicketController extends Controller
             ->get()
             ->map(fn (CategoriaTicket $c) => [
                 'id' => $c->id, 'nombre' => $c->nombre, 'descripcion' => $c->descripcion, 'es_hardware' => $c->es_hardware,
+                'es_consumibles' => $c->es_consumibles,
                 'activa' => $c->activa, 'unidad_tic_id' => $c->unidad_tic_id, 'unidad_tic' => $c->unidadTic?->nombre,
                 'tickets_count' => $c->tickets_count,
             ]);

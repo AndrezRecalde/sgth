@@ -52,6 +52,8 @@ class TicketResource extends JsonResource
             'tecnico_id'          => $this->tecnico_id,
             'categoria'           => $this->whenLoaded('categoria', fn () => $this->categoria ? [
                 'id' => $this->categoria->id, 'nombre' => $this->categoria->nombre, 'es_hardware' => $this->categoria->es_hardware,
+                // El de consumibles genera la solicitud a bodega (5.4c).
+                'es_consumibles' => (bool) $this->categoria->es_consumibles,
             ] : null),
             'solicitante'         => $this->whenLoaded('solicitante', fn () => $this->solicitante ? [
                 'id' => $this->solicitante->id, 'cedula' => $this->solicitante->cedula,

@@ -23,7 +23,8 @@ final class RegistrarIngresoConsumibleRequest extends FormRequest
     {
         return [
             'fecha'                 => ['required', 'date', 'before_or_equal:today'],
-            'tipo_documento'        => ['required', Rule::enum(DocumentoIngresoConsumible::class)],
+            // El de la solicitud a bodega lo pone su despacho, no se elige aquí.
+            'tipo_documento'        => ['required', Rule::enum(DocumentoIngresoConsumible::class)->except(DocumentoIngresoConsumible::SOLICITUD_BODEGA)],
             'numero_documento'      => ['required', 'string', 'min:1', 'max:80'],
             'fecha_compra'          => ['nullable', 'date', 'before_or_equal:fecha'],
             'observacion'           => ['nullable', 'string', 'max:500'],

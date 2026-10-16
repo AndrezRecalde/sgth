@@ -115,6 +115,7 @@ use App\Http\Controllers\InventarioTi\AsignacionBienController;
 use App\Http\Controllers\InventarioTi\CampaniaMantenimientoController;
 use App\Http\Controllers\InventarioTi\ConsumibleController;
 use App\Http\Controllers\InventarioTi\MovimientoConsumibleController;
+use App\Http\Controllers\InventarioTi\SolicitudBodegaController;
 use App\Http\Controllers\Comunicacion\CargaFotografiasController;
 use App\Http\Controllers\Comunicacion\CredencialController;
 use App\Http\Controllers\Comunicacion\TableroComunicacionController;
@@ -1286,6 +1287,15 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::post('consumibles/{consumible}/apertura', [MovimientoConsumibleController::class, 'apertura'])->whereNumber('consumible')->middleware($gestionar);
             Route::post('consumibles/{consumible}/ajustes', [MovimientoConsumibleController::class, 'ajuste'])->whereNumber('consumible')->middleware($gestionar);
             Route::get('bienes/{bien}/consumibles', [ConsumibleController::class, 'delEquipo'])->whereNumber('bien')->middleware($ver);
+
+            // La solicitud de materiales a bodega (fase 5.4c): desde un ticket
+            // «Consumibles» o sin él; lo despachado por Bodega es la entrega.
+            Route::get('solicitudes-bodega', [SolicitudBodegaController::class, 'index'])->middleware($ver);
+            Route::post('solicitudes-bodega', [SolicitudBodegaController::class, 'store'])->middleware($gestionar);
+            Route::get('solicitudes-bodega/{solicitud}', [SolicitudBodegaController::class, 'show'])->whereNumber('solicitud')->middleware($ver);
+            Route::get('solicitudes-bodega/{solicitud}/pdf', [SolicitudBodegaController::class, 'pdf'])->whereNumber('solicitud')->middleware($ver);
+            Route::post('solicitudes-bodega/{solicitud}/despachar', [SolicitudBodegaController::class, 'despachar'])->whereNumber('solicitud')->middleware($gestionar);
+            Route::post('solicitudes-bodega/{solicitud}/anular', [SolicitudBodegaController::class, 'anular'])->whereNumber('solicitud')->middleware($gestionar);
 
             // Bajas (fase 1.6): el técnico la propone con su informe técnico y
             // el jefe de TIC la aprueba con el memorando o la rechaza.

@@ -178,7 +178,7 @@ final class TicketService implements TicketServiceInterface
 
         return [
             'categorias'  => CategoriaTicket::where('activa', true)->orderBy('nombre')
-                ->get(['id', 'nombre', 'es_hardware', 'descripcion', 'unidad_tic_id']),
+                ->get(['id', 'nombre', 'es_hardware', 'es_consumibles', 'descripcion', 'unidad_tic_id']),
             'prioridades' => collect(PrioridadTicket::cases())->map(fn ($p) => ['valor' => $p->value, 'etiqueta' => $p->etiqueta()])->all(),
             'subunidades' => $this->subunidades->todas(),
             'tecnicos'    => User::permission(Permiso::GESTIONAR_TICKETS->value)->where('activo', true)

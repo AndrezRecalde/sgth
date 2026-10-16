@@ -36,6 +36,15 @@ class NumeroALetras
         return trim($letras) . ' DÓLARES';
     }
 
+    /**
+     * Una cantidad de cosas, sin moneda: «UNO», «VEINTE Y UNO», «CIENTO UNO».
+     * La usa la solicitud a bodega para la cantidad en letras (fase 5.4c).
+     */
+    public static function cantidad(int $numero): string
+    {
+        return (string) preg_replace('/\bUN$/u', 'UNO', self::enLetras($numero));
+    }
+
     private static function enLetras(int $numero): string
     {
         if ($numero === 0) return 'CERO';

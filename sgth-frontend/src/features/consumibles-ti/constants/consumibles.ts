@@ -2,6 +2,7 @@ import type { SemanticTone } from '@/config/design.tokens'
 import type {
   ColorConsumible, DocumentoIngreso, MotivoAjuste, PresentacionConsumible, TipoConsumible, TipoMovimiento,
 } from '../services/consumiblesService'
+import type { EstadoSolicitud } from '../services/solicitudesService'
 
 type Opcion<T extends string> = { value: T; label: string }
 
@@ -62,4 +63,11 @@ export const TIPO_MOVIMIENTO: Record<TipoMovimiento, { etiqueta: string; tono: S
   ingreso:  { etiqueta: 'Ingreso', tono: 'neutral' },
   entrega:  { etiqueta: 'Entrega', tono: 'info' },
   ajuste:   { etiqueta: 'Ajuste', tono: 'neutral' },
+}
+
+/** La solicitud a bodega (5.4c): espera a Bodega; despachada, terminó bien; anulada, no siguió. */
+export const ESTADO_SOLICITUD: Record<EstadoSolicitud, { etiqueta: string; tono: SemanticTone }> = {
+  pendiente:  { etiqueta: 'Pendiente', tono: 'warning' },
+  despachada: { etiqueta: 'Despachada', tono: 'success' },
+  anulada:    { etiqueta: 'Anulada', tono: 'danger' },
 }

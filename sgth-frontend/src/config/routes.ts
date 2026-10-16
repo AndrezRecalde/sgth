@@ -140,6 +140,8 @@ export const ROUTES = {
     CONSUMIBLE:     (id: number) => `/tic/inventario/consumibles/${id}`,
     /** Entregar; desde la ficha de un equipo, ya elegido. */
     CONSUMIBLES_ENTREGAR: (bienId?: number) => `/tic/inventario/consumibles/entregar${bienId ? `?bien=${bienId}` : ''}`,
+    /** La solicitud de materiales a bodega (fase 5.4c). */
+    SOLICITUDES_BODEGA: '/tic/inventario/consumibles/solicitudes',
     EQUIPO:        (id: number) => `/tic/inventario/equipos/${id}`,
     EQUIPO_EDITAR: (id: number) => `/tic/inventario/equipos/${id}/editar`,
     MANTENIMIENTOS: '/tic/inventario/mantenimientos',

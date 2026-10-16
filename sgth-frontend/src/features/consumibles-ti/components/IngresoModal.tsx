@@ -1,6 +1,6 @@
 'use client'
 
-import { Grid, Select, Stack, Text, TextInput, Textarea } from '@mantine/core'
+import { Grid, NumberInput, Select, Stack, Text, TextInput, Textarea } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -11,6 +11,7 @@ import { fromDateValueOrNull, hoyIso, toDateValue } from '@/lib/fecha'
 import { DOCUMENTOS_INGRESO } from '../constants/consumibles'
 import { useConsumibles, useMovimientoMutations } from '../hooks/useConsumibles'
 import { ingresoSchema, type IngresoFormData } from '../schemas/movimiento.schema'
+import { AgregarSelect } from './AgregarSelect'
 import { columnasRenglones } from './renglones.columns'
 
 const CAMPOS = ['fecha', 'tipo_documento', 'numero_documento', 'fecha_compra', 'observacion', 'items']
@@ -47,9 +48,7 @@ function Formulario({ onClose, consumibleId }: Omit<Props, 'opened'>) {
   const enLista = new Set(renglones.fields.map((r) => r.consumible_id))
   const nombre = (id: number) => consumibles.find((c) => c.id === id)?.descripcion ?? '—'
 
-  const agregar = (v: string | null) => {
-    if (v) renglones.append({ consumible_id: Number(v), cantidad: 1 })
-  }
+  const agregar = (v: string) => renglones.append({ consumible_id: Number(v), cantidad: 1 })
 
   const enviar = (v: IngresoFormData) =>
     ingreso.mutateAsync({
@@ -90,13 +89,22 @@ function Formulario({ onClose, consumibleId }: Omit<Props, 'opened'>) {
         <Grid.Col span={12}>
           <Stack gap="xs">
             <SectionHeading title="Consumibles" />
-            <Select label="Agregar consumible" placeholder="Buscar en lo que guarda TIC" searchable {...contained}
+            <AgregarSelect label="Agregar consumible" placeholder="Buscar en lo que guarda TIC"
               data={consumibles.filter((c) => !enLista.has(c.id)).map((c) => ({ value: String(c.id), label: c.descripcion }))}
-              nothingFoundMessage="No hay más consumibles que guarde TIC"
-              value={null} onChange={agregar} />
+              nothingFoundMessage="No hay más consumibles que guarde TIC" onElegir={agregar} />
             {renglones.fields.length > 0 && (
               <SgthTable records={renglones.fields} minHeight={0} noRecordsText=""
-                columns={columnasRenglones({ control, errores: errors.items, nombre, onQuitar: renglones.remove })} />
+                columns={columnasRenglones({
+                  nombre,
+                  onQuitar: renglones.remove,
+                  cantidad: (i) => (
+                    <Controller name={`items.${i}.cantidad`} control={control} render={({ field }) => (
+                      <NumberInput aria-label="Cantidad" size="xs" min={1} max={9999} allowDecimal={false} hideControls
+                        error={errors.items?.[i]?.cantidad?.message}
+                        value={field.value} onChange={(v) => field.onChange(typeof v === 'number' ? v : Number.NaN)} />
+                    )} />
+                  ),
+                })} />
             )}
             {(errors.items?.message ?? errors.items?.root?.message) && (
               <Text size="xs" c="red">{errors.items?.message ?? errors.items?.root?.message}</Text>

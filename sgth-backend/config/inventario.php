@@ -12,6 +12,13 @@ return [
     'corte_soporte_anterior' => env('INVENTARIO_CORTE_SOPORTE_ANTERIOR', '2027-01-01'),
 
     /*
+    | A quién va la «Solicitud de materiales informáticos a bodega» (fase
+    | 5.4c): la unidad de la que depende Bodega, por su código en la estructura.
+    | Su jefe firma «Autorizado por».
+    */
+    'unidad_bodega_codigo' => env('INVENTARIO_UNIDAD_BODEGA_CODIGO', 'GADPE-01'),
+
+    /*
     | La carga del Excel de TIC (fase 1.4): de las siglas de la columna
     | «AREA» a la unidad administrativa, por su nombre en la estructura. TIC
     | revisa esta tabla antes de la carga real; lo que no esté aquí, o no

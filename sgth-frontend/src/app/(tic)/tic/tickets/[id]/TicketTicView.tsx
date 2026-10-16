@@ -9,6 +9,7 @@ import { ROUTES } from '@/config/routes'
 import { useAuth } from '@/hooks/useAuth'
 import { formatFechaHora } from '@/lib/fecha'
 import { plural } from '@/lib/plural'
+import { SolicitudesDelTicket } from '@/features/consumibles-ti/components/SolicitudesDelTicket'
 import { AccionesTicketTic } from '@/features/helpdesk/components/AccionesTicketTic'
 import { ConversacionTicket } from '@/features/helpdesk/components/ConversacionTicket'
 import { SlaBadge } from '@/features/helpdesk/components/SlaBadge'
@@ -63,6 +64,14 @@ export function TicketTicView({ id }: { id: number }) {
                 <Text size="sm" style={{ whiteSpace: 'pre-line' }}>{t.solucion}</Text>
                 <Text size="xs" c="dimmed" mt={4}>{t.resuelto_por} · {formatFechaHora(t.resuelto_en)}</Text>
               </SectionCard>
+            )}
+            {t.categoria?.es_consumibles && (
+              <SolicitudesDelTicket final={final} ticket={{
+                id: t.id,
+                folio: t.folio,
+                solicitante: t.solicitante?.nombre ?? null,
+                equipo: t.bien ? { id: t.bien.id, texto: [t.bien.codigo_institucional, t.bien.tipo, t.bien.modelo].filter(Boolean).join(' · ') } : null,
+              }} />
             )}
             <SectionCard title="Conversación">
               <Stack gap="md">

@@ -109,8 +109,10 @@ final class TicketEstadoService implements TicketEstadoServiceInterface
             $this->sla->marcarRespuesta($t);
             $t->loadMissing('categoria');
 
-            // El ticket de hardware con equipo deja el correctivo en la ficha (4.3).
-            $registrar = $datos['registrar_mantenimiento'] ?? ($t->categoria?->es_hardware ?? false);
+            // El ticket de hardware con equipo deja el correctivo en la ficha (4.3);
+            // el de consumibles lleva equipo, pero no es un mantenimiento (5.4c).
+            $registrar = $datos['registrar_mantenimiento']
+                ?? (($t->categoria?->es_hardware ?? false) && ! ($t->categoria?->es_consumibles ?? false));
             if ($t->bien_informatico_id && $registrar) {
                 $this->mantenimientos->registrar([
                     'bien_informatico_id' => $t->bien_informatico_id,
@@ -127,6 +129,43 @@ final class TicketEstadoService implements TicketEstadoServiceInterface
             }
 
             return null;
+        }, 'resuelto');
+    }
+
+    /**
+     * La entrega de lo que despachó Bodega cierra el ticket «Consumibles» (5.4c):
+     * se resuelve con lo entregado y se cierra sin esperar la confirmación,
+     * porque el servidor firmó la recepción en la solicitud. Si nadie lo había
+     * tomado, pasa antes por «en proceso» a nombre de quien entrega.
+     */
+    public function cerrarConEntrega(Ticket $ticket, User $user, string $solucion): Ticket
+    {
+        $ticket = $this->carga->cargar($ticket->id);
+        if ($ticket->estado->final()) {
+            return $ticket;
+        }
+
+        if (in_array($ticket->estado, [EstadoTicket::ABIERTO, EstadoTicket::ASIGNADO], true)) {
+            $ticket = $this->pasar($ticket, EstadoTicket::EN_PROCESO, function (Ticket $t) use ($user) {
+                $t->forceFill(['tecnico_id' => $t->tecnico_id ?? $user->id]);
+                $this->sla->marcarRespuesta($t);
+
+                return null;
+            });
+        }
+        if ($ticket->estado !== EstadoTicket::RESUELTO) {
+            $ticket = $this->pasar($ticket, EstadoTicket::RESUELTO, function (Ticket $t) use ($user, $solucion) {
+                $t->forceFill(['solucion' => $solucion, 'resuelto_en' => now(), 'resuelto_por' => $user->id]);
+                $this->sla->marcarRespuesta($t);
+
+                return 'Resuelto con la entrega de lo que despachó Bodega.';
+            });
+        }
+
+        return $this->pasar($ticket, EstadoTicket::CERRADO, function (Ticket $t) {
+            $t->update(['fecha_cierre' => now()]);
+
+            return 'Se cerró con la entrega: el servidor firmó la recepción en la solicitud a bodega.';
         }, 'resuelto');
     }
 

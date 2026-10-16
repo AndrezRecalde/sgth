@@ -497,6 +497,13 @@ export const NAV_TIC: NavGroup[] = [
         permisos: ['ver-inventario-ti', 'gestionar-inventario-ti'],
       },
       {
+        // Lo que TIC le pide a Bodega para un servidor; lo despachado es la entrega.
+        label:    'Solicitudes a bodega',
+        href:     ROUTES.TIC.SOLICITUDES_BODEGA,
+        icon:     'IconFileInvoice',
+        permisos: ['ver-inventario-ti', 'gestionar-inventario-ti'],
+      },
+      {
         label:    'Bajas',
         href:     ROUTES.TIC.BAJAS,
         icon:     'IconTrashX',

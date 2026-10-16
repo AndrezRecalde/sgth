@@ -25,7 +25,7 @@ class MovimientoConsumible extends Model
 
     protected $fillable = [
         'consumible_id', 'tipo', 'cantidad', 'afecta_saldo', 'fecha',
-        'bien_informatico_id', 'servidor_retira_id', 'unidad_administrativa_id', 'ticket_id',
+        'bien_informatico_id', 'servidor_retira_id', 'unidad_administrativa_id', 'ticket_id', 'solicitud_bodega_id',
         'tipo_documento', 'numero_documento', 'fecha_compra', 'motivo_ajuste', 'observacion',
         'registrado_por', 'anulado_en', 'anulado_por', 'motivo_anulacion',
     ];
@@ -68,6 +68,11 @@ class MovimientoConsumible extends Model
     public function ticket(): BelongsTo
     {
         return $this->belongsTo(Ticket::class);
+    }
+
+    public function solicitudBodega(): BelongsTo
+    {
+        return $this->belongsTo(SolicitudBodega::class);
     }
 
     public function registradoPor(): BelongsTo

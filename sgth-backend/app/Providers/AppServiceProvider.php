@@ -194,6 +194,10 @@ class AppServiceProvider extends ServiceProvider
             \App\Contracts\InventarioTi\MovimientoConsumibleServiceInterface::class,
             \App\Services\InventarioTi\MovimientoConsumibleService::class
         );
+        $this->app->bind(
+            \App\Contracts\InventarioTi\SolicitudBodegaServiceInterface::class,
+            \App\Services\InventarioTi\SolicitudBodegaService::class
+        );
         // Comunicación Social (docs/diseno-comunicacion-social.md, 1.1).
         $this->app->bind(
             \App\Contracts\Comunicacion\FotografiaServiceInterface::class,

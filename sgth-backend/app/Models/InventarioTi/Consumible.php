@@ -69,6 +69,15 @@ class Consumible extends Model
         return $q->whereHas('modelos', fn (Builder $m) => $m->where('marca_id', $marcaId)->where('modelo_normalizado', $normalizado));
     }
 
+    /** Sirve al equipo: está marcado para su marca y su modelo. */
+    public function sirveA(BienInformatico $bien): bool
+    {
+        return $this->modelos()
+            ->where('marca_id', $bien->marca_id)
+            ->where('modelo_normalizado', ConsumibleModelo::normalizar($bien->modelo))
+            ->exists();
+    }
+
     /** El saldo de ahora; null si no lo guarda TIC. */
     public function saldoActual(): ?int
     {
