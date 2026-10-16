@@ -135,6 +135,11 @@ export const ROUTES = {
     /** Plan de mantenimiento preventivo por campaña (fase 5.1). */
     CAMPANIAS:      '/tic/inventario/preventivo',
     CAMPANIA:       (id: number) => `/tic/inventario/preventivo/${id}`,
+    /** Consumibles de impresión y repuestos (fase 5.4): catálogo, kárdex y entregas. */
+    CONSUMIBLES:    '/tic/inventario/consumibles',
+    CONSUMIBLE:     (id: number) => `/tic/inventario/consumibles/${id}`,
+    /** Entregar; desde la ficha de un equipo, ya elegido. */
+    CONSUMIBLES_ENTREGAR: (bienId?: number) => `/tic/inventario/consumibles/entregar${bienId ? `?bien=${bienId}` : ''}`,
     EQUIPO:        (id: number) => `/tic/inventario/equipos/${id}`,
     EQUIPO_EDITAR: (id: number) => `/tic/inventario/equipos/${id}/editar`,
     MANTENIMIENTOS: '/tic/inventario/mantenimientos',

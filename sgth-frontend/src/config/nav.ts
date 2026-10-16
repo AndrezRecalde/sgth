@@ -490,6 +490,13 @@ export const NAV_TIC: NavGroup[] = [
         permisos: ['ver-inventario-ti', 'gestionar-inventario-ti'],
       },
       {
+        // Registran los técnicos y el jefe de TIC; el auditor consulta [P10].
+        label:    'Consumibles',
+        href:     ROUTES.TIC.CONSUMIBLES,
+        icon:     'IconDroplet',
+        permisos: ['ver-inventario-ti', 'gestionar-inventario-ti'],
+      },
+      {
         label:    'Bajas',
         href:     ROUTES.TIC.BAJAS,
         icon:     'IconTrashX',
