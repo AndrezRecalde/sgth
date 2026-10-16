@@ -82,12 +82,12 @@ function nuevoConsumible(array $datos = []): int
     ], $datos))->assertCreated()->json('datos.id');
 }
 
-function abrir(int $consumible, int $cantidad, string $fecha = '2026-10-01'): \Illuminate\Testing\TestResponse
+function aperturaDeConsumible(int $consumible, int $cantidad, string $fecha = '2026-10-01'): \Illuminate\Testing\TestResponse
 {
     return test()->postJson("/api/v1/inventario/consumibles/{$consumible}/apertura", ['fecha' => $fecha, 'cantidad' => $cantidad]);
 }
 
-function ingresar(int $consumible, int $cantidad, string $fecha = '2026-10-05'): \Illuminate\Testing\TestResponse
+function ingresoDeConsumible(int $consumible, int $cantidad, string $fecha = '2026-10-05'): \Illuminate\Testing\TestResponse
 {
     return test()->postJson('/api/v1/inventario/consumibles/ingresos', [
         'fecha' => $fecha, 'tipo_documento' => 'egreso_bodega', 'numero_documento' => 'EB-2026-0412',
@@ -95,7 +95,7 @@ function ingresar(int $consumible, int $cantidad, string $fecha = '2026-10-05'):
     ]);
 }
 
-function entregar(int $consumible, int $cantidad, array $datos = []): \Illuminate\Testing\TestResponse
+function entregarConsumible(int $consumible, int $cantidad, array $datos = []): \Illuminate\Testing\TestResponse
 {
     return test()->postJson('/api/v1/inventario/consumibles/entregas', array_merge([
         'fecha' => '2026-10-16', 'bien_informatico_id' => test()->m551->id,
@@ -103,7 +103,7 @@ function entregar(int $consumible, int $cantidad, array $datos = []): \Illuminat
     ], $datos));
 }
 
-function saldoDe(int $consumible): ?int
+function saldoDeConsumible(int $consumible): ?int
 {
     return test()->getJson("/api/v1/inventario/consumibles/{$consumible}")->assertOk()->json('datos.saldo');
 }
@@ -112,7 +112,7 @@ function saldoDe(int $consumible): ?int
 
 test('registran los técnicos; el auditor consulta y nadie más entra', function () {
     $id = nuevoConsumible();
-    abrir($id, 5)->assertCreated();
+    aperturaDeConsumible($id, 5)->assertCreated();
 
     $this->actingAs($this->auditor, 'sanctum');
     $this->getJson('/api/v1/inventario/consumibles')->assertOk()->assertJsonPath('datos.0.id', $id);
@@ -120,8 +120,8 @@ test('registran los técnicos; el auditor consulta y nadie más entra', function
     $this->getJson("/api/v1/inventario/consumibles/{$id}/kardex")->assertOk();
     $this->getJson("/api/v1/inventario/bienes/{$this->m551->id}/consumibles")->assertOk();
     $this->postJson('/api/v1/inventario/consumibles', [])->assertForbidden();
-    entregar($id, 1)->assertForbidden();
-    ingresar($id, 1)->assertForbidden();
+    entregarConsumible($id, 1)->assertForbidden();
+    ingresoDeConsumible($id, 1)->assertForbidden();
     $this->postJson("/api/v1/inventario/consumibles/{$id}/ajustes", [])->assertForbidden();
     $movimiento = MovimientoConsumible::sole();
     $this->postJson("/api/v1/inventario/consumibles/movimientos/{$movimiento->id}/anular", ['motivo' => 'Prueba de acceso'])->assertForbidden();
@@ -182,7 +182,7 @@ test('al editar, los modelos que vienen reemplazan a los que tenía', function (
 
 test('el catálogo filtra por tipo, por lo compatible con un equipo, por lo bajo del mínimo y oculta lo inactivo', function () {
     $toner = nuevoConsumible();
-    abrir($toner, 1)->assertCreated(); // mínimo 2: bajo
+    aperturaDeConsumible($toner, 1)->assertCreated(); // mínimo 2: bajo
     $tinta = nuevoConsumible(['descripcion' => 'Tinta Epson 664 cian', 'tipo' => 'tinta', 'color' => 'cian', 'stock_minimo' => 0, 'modelos' => [
         ['marca_id' => $this->lexmark->id, 'modelo' => 'X1'],
     ]]);
@@ -210,14 +210,14 @@ test('el catálogo filtra por tipo, por lo compatible con un equipo, por lo bajo
 
 test('apertura, ingreso, entrega y ajuste dejan el saldo, y el kárdex muestra lo que quedó tras cada uno', function () {
     $id = nuevoConsumible();
-    abrir($id, 3, '2026-10-01')->assertCreated();
-    ingresar($id, 4, '2026-10-05')->assertCreated()->assertJsonPath('datos.0.numero_documento', 'EB-2026-0412');
-    entregar($id, 2)->assertCreated();
+    aperturaDeConsumible($id, 3, '2026-10-01')->assertCreated();
+    ingresoDeConsumible($id, 4, '2026-10-05')->assertCreated()->assertJsonPath('datos.0.numero_documento', 'EB-2026-0412');
+    entregarConsumible($id, 2)->assertCreated();
     $this->postJson("/api/v1/inventario/consumibles/{$id}/ajustes", [
         'fecha' => '2026-10-16', 'cantidad' => -1, 'motivo_ajuste' => 'dano', 'observacion' => 'Llegó con la carcasa rota',
     ])->assertCreated();
 
-    expect(saldoDe($id))->toBe(4);
+    expect(saldoDeConsumible($id))->toBe(4);
     $kardex = $this->getJson("/api/v1/inventario/consumibles/{$id}/kardex")->assertOk()->json('datos');
     expect(array_column($kardex['filas'], 'tipo'))->toBe(['apertura', 'ingreso', 'entrega', 'ajuste'])
         ->and(array_column($kardex['filas'], 'cantidad'))->toBe([3, 4, -2, -1])
@@ -232,32 +232,32 @@ test('apertura, ingreso, entrega y ajuste dejan el saldo, y el kárdex muestra l
 
 test('no se entrega más de lo que hay', function () {
     $id = nuevoConsumible();
-    abrir($id, 2)->assertCreated();
+    aperturaDeConsumible($id, 2)->assertCreated();
 
-    entregar($id, 3)->assertStatus(422)->assertJsonPath('mensaje', 'No hay saldo suficiente de «Tóner HP CE390A negro»: quedan 2.');
+    entregarConsumible($id, 3)->assertStatus(422)->assertJsonPath('mensaje', 'No hay saldo suficiente de «Tóner HP CE390A negro»: quedan 2.');
     $this->postJson("/api/v1/inventario/consumibles/{$id}/ajustes", [
         'fecha' => '2026-10-16', 'cantidad' => -3, 'motivo_ajuste' => 'diferencia_conteo', 'observacion' => 'Conteo de fin de mes',
     ])->assertStatus(422);
-    expect(saldoDe($id))->toBe(2);
+    expect(saldoDeConsumible($id))->toBe(2);
 });
 
 test('el saldo tampoco queda negativo en el pasado: una entrega atrasada antes del ingreso no pasa', function () {
     $id = nuevoConsumible();
-    abrir($id, 1, '2026-10-01')->assertCreated();
-    ingresar($id, 5, '2026-10-10')->assertCreated();
+    aperturaDeConsumible($id, 1, '2026-10-01')->assertCreated();
+    ingresoDeConsumible($id, 5, '2026-10-10')->assertCreated();
 
     // Hoy hay 6, pero el 8 de octubre solo había 1.
-    entregar($id, 2, ['fecha' => '2026-10-08'])->assertStatus(422)
+    entregarConsumible($id, 2, ['fecha' => '2026-10-08'])->assertStatus(422)
         ->assertJsonPath('mensaje', 'Al 08/10/2026 no alcanzaba el saldo de «Tóner HP CE390A negro»: el kárdex quedaría en negativo el 08/10/2026.');
-    entregar($id, 2, ['fecha' => '2026-10-10'])->assertCreated();
+    entregarConsumible($id, 2, ['fecha' => '2026-10-10'])->assertCreated();
 });
 
 test('en el mismo día lo que entra va antes que lo que sale', function () {
     $id = nuevoConsumible();
-    abrir($id, 1, '2026-10-01')->assertCreated();
-    entregar($id, 1, ['fecha' => '2026-10-12'])->assertCreated();
+    aperturaDeConsumible($id, 1, '2026-10-01')->assertCreated();
+    entregarConsumible($id, 1, ['fecha' => '2026-10-12'])->assertCreated();
     // Un ingreso del mismo día registrado después va antes en el kárdex.
-    ingresar($id, 3, '2026-10-12')->assertCreated();
+    ingresoDeConsumible($id, 3, '2026-10-12')->assertCreated();
 
     $kardex = $this->getJson("/api/v1/inventario/consumibles/{$id}/kardex")->json('datos');
     expect(array_column($kardex['filas'], 'tipo'))->toBe(['apertura', 'ingreso', 'entrega'])
@@ -266,14 +266,14 @@ test('en el mismo día lo que entra va antes que lo que sale', function () {
 
 test('una sola apertura viva, y va antes que todo el kárdex', function () {
     $id = nuevoConsumible();
-    ingresar($id, 2, '2026-10-05')->assertCreated();
-    abrir($id, 3, '2026-10-06')->assertStatus(422);
-    $apertura = abrir($id, 3, '2026-10-01')->assertCreated()->json('datos.id');
-    abrir($id, 4, '2026-10-01')->assertStatus(422);
+    ingresoDeConsumible($id, 2, '2026-10-05')->assertCreated();
+    aperturaDeConsumible($id, 3, '2026-10-06')->assertStatus(422);
+    $apertura = aperturaDeConsumible($id, 3, '2026-10-01')->assertCreated()->json('datos.id');
+    aperturaDeConsumible($id, 4, '2026-10-01')->assertStatus(422);
 
     $this->postJson("/api/v1/inventario/consumibles/movimientos/{$apertura}/anular", ['motivo' => 'Se contó mal la bodega'])->assertOk();
-    abrir($id, 4, '2026-10-01')->assertCreated();
-    expect(saldoDe($id))->toBe(6);
+    aperturaDeConsumible($id, 4, '2026-10-01')->assertCreated();
+    expect(saldoDeConsumible($id))->toBe(6);
 
     // La base también la exige.
     expect(fn () => MovimientoConsumible::create([
@@ -296,13 +296,13 @@ test('la base rechaza una cantidad con el signo cambiado', function () {
 test('lo que despacha Bodega no lleva saldo: solo entregas', function () {
     $id = nuevoConsumible(['guarda_tic' => false, 'stock_minimo' => 5]);
 
-    abrir($id, 3)->assertStatus(422)->assertJsonPath('mensaje', '«Tóner HP CE390A negro» lo despacha Bodega: no lleva saldo en TIC, así que no tiene apertura.');
-    ingresar($id, 3)->assertStatus(422);
+    aperturaDeConsumible($id, 3)->assertStatus(422)->assertJsonPath('mensaje', '«Tóner HP CE390A negro» lo despacha Bodega: no lleva saldo en TIC, así que no tiene apertura.');
+    ingresoDeConsumible($id, 3)->assertStatus(422);
     $this->postJson("/api/v1/inventario/consumibles/{$id}/ajustes", [
         'fecha' => '2026-10-16', 'cantidad' => 1, 'motivo_ajuste' => 'otro', 'observacion' => 'No debería poder',
     ])->assertStatus(422);
 
-    entregar($id, 2)->assertCreated()->assertJsonPath('datos.0.afecta_saldo', false);
+    entregarConsumible($id, 2)->assertCreated()->assertJsonPath('datos.0.afecta_saldo', false);
     $detalle = $this->getJson("/api/v1/inventario/consumibles/{$id}")->json('datos');
     expect($detalle)->toMatchArray(['saldo' => null, 'stock_minimo' => null, 'bajo_minimo' => false]);
     expect($this->getJson("/api/v1/inventario/consumibles/{$id}/kardex")->json('datos.filas.0.saldo'))->toBeNull();
@@ -310,7 +310,7 @@ test('lo que despacha Bodega no lleva saldo: solo entregas', function () {
 
 test('pasarlo a Bodega o desactivarlo exige su saldo en cero', function () {
     $id = nuevoConsumible();
-    abrir($id, 2)->assertCreated();
+    aperturaDeConsumible($id, 2)->assertCreated();
     $editar = fn (array $datos) => $this->putJson("/api/v1/inventario/consumibles/{$id}", array_merge([
         'descripcion' => 'Tóner HP CE390A negro', 'tipo' => 'toner', 'presentacion' => 'unidad', 'guarda_tic' => true,
     ], $datos));
@@ -318,13 +318,13 @@ test('pasarlo a Bodega o desactivarlo exige su saldo en cero', function () {
     $editar(['guarda_tic' => false])->assertStatus(422);
     $editar(['activo' => false])->assertStatus(422);
 
-    entregar($id, 2)->assertCreated();
+    entregarConsumible($id, 2)->assertCreated();
     $editar(['activo' => false])->assertOk()->assertJsonPath('datos.activo', false);
     // Desactivado no recibe movimientos.
-    ingresar($id, 1)->assertStatus(422);
+    ingresoDeConsumible($id, 1)->assertStatus(422);
     $editar(['activo' => true, 'guarda_tic' => false])->assertOk()->assertJsonPath('datos.saldo', null);
     // Y si vuelve a TIC, arranca en cero: las entregas de Bodega no cuentan.
-    entregar($id, 1)->assertCreated();
+    entregarConsumible($id, 1)->assertCreated();
     $editar(['guarda_tic' => true])->assertOk()->assertJsonPath('datos.saldo', 0);
 });
 
@@ -332,25 +332,25 @@ test('pasarlo a Bodega o desactivarlo exige su saldo en cero', function () {
 
 test('lo de impresión va a un equipo compatible que no esté de baja', function () {
     $id = nuevoConsumible();
-    abrir($id, 5)->assertCreated();
+    aperturaDeConsumible($id, 5)->assertCreated();
 
-    entregar($id, 1, ['bien_informatico_id' => null, 'servidor_retira_id' => $this->ana->id])->assertStatus(422)
+    entregarConsumible($id, 1, ['bien_informatico_id' => null, 'servidor_retira_id' => $this->ana->id])->assertStatus(422)
         ->assertJsonPath('mensaje', '«Tóner HP CE390A negro» es de impresión: se entrega a un equipo.');
 
     $lexmark = impresoraDeConsumibles(['marca_id' => $this->lexmark->id, 'modelo' => 'MX622DHE']);
-    entregar($id, 1, ['bien_informatico_id' => $lexmark->id, 'servidor_retira_id' => $this->ana->id])->assertStatus(422)
+    entregarConsumible($id, 1, ['bien_informatico_id' => $lexmark->id, 'servidor_retira_id' => $this->ana->id])->assertStatus(422)
         ->assertJsonPath('mensaje', "«Tóner HP CE390A negro» no está marcado como compatible con el equipo {$lexmark->codigo_institucional} (Lexmark MX622DHE). Agregue el modelo a sus compatibles.");
 
     $deBaja = impresoraDeConsumibles(['estado_operativo' => 'dado_de_baja']);
-    entregar($id, 1, ['bien_informatico_id' => $deBaja->id, 'servidor_retira_id' => $this->ana->id])->assertStatus(422);
-    expect(saldoDe($id))->toBe(5);
+    entregarConsumible($id, 1, ['bien_informatico_id' => $deBaja->id, 'servidor_retira_id' => $this->ana->id])->assertStatus(422);
+    expect(saldoDeConsumible($id))->toBe(5);
 });
 
 test('retira por defecto el custodio, y la entrega guarda su unidad de ese momento', function () {
     $id = nuevoConsumible();
-    abrir($id, 5)->assertCreated();
+    aperturaDeConsumible($id, 5)->assertCreated();
 
-    entregar($id, 1)->assertCreated()
+    entregarConsumible($id, 1)->assertCreated()
         ->assertJsonPath('datos.0.retira', $this->ana->nombre_completo)
         ->assertJsonPath('datos.0.unidad', 'Asesoría Legal')
         ->assertJsonPath('datos.0.equipo.codigo_institucional', $this->m551->codigo_institucional);
@@ -360,7 +360,7 @@ test('retira por defecto el custodio, y la entrega guarda su unidad de ese momen
     expect(MovimientoConsumible::where('tipo', 'entrega')->sole()->unidad_administrativa_id)->toBe($this->unidadLegal->id);
 
     // Otro retira, pero la unidad sigue siendo la del custodio del equipo.
-    entregar($id, 1, ['servidor_retira_id' => $this->luis->id])->assertCreated()
+    entregarConsumible($id, 1, ['servidor_retira_id' => $this->luis->id])->assertCreated()
         ->assertJsonPath('datos.0.retira', $this->luis->nombre_completo)
         ->assertJsonPath('datos.0.unidad', 'Fomento Productivo');
 });
@@ -368,36 +368,36 @@ test('retira por defecto el custodio, y la entrega guarda su unidad de ese momen
 test('un equipo sin custodio pide quién retira', function () {
     $libre = impresoraDeConsumibles(['estado_operativo' => 'disponible', 'unidad_administrativa_id' => $this->unidadLegal->id]);
     $id = nuevoConsumible();
-    abrir($id, 5)->assertCreated();
+    aperturaDeConsumible($id, 5)->assertCreated();
 
-    entregar($id, 1, ['bien_informatico_id' => $libre->id])->assertStatus(422)->assertJsonValidationErrors('servidor_retira_id', 'errores');
+    entregarConsumible($id, 1, ['bien_informatico_id' => $libre->id])->assertStatus(422)->assertJsonValidationErrors('servidor_retira_id', 'errores');
     // La unidad es la del equipo cuando no tiene custodio.
-    entregar($id, 1, ['bien_informatico_id' => $libre->id, 'servidor_retira_id' => $this->luis->id])->assertCreated()
+    entregarConsumible($id, 1, ['bien_informatico_id' => $libre->id, 'servidor_retira_id' => $this->luis->id])->assertCreated()
         ->assertJsonPath('datos.0.unidad', 'Asesoría Legal');
 });
 
 test('el repuesto puede ir sin equipo, y cuenta para la unidad de quien retira', function () {
     $teclado = nuevoConsumible(['descripcion' => 'Teclado USB negro', 'tipo' => 'repuesto', 'color' => null, 'modelos' => []]);
-    abrir($teclado, 3)->assertCreated();
+    aperturaDeConsumible($teclado, 3)->assertCreated();
 
-    entregar($teclado, 1, ['bien_informatico_id' => null, 'servidor_retira_id' => $this->luis->id])->assertCreated()
+    entregarConsumible($teclado, 1, ['bien_informatico_id' => null, 'servidor_retira_id' => $this->luis->id])->assertCreated()
         ->assertJsonPath('datos.0.equipo', null)
         ->assertJsonPath('datos.0.unidad', 'Fomento Productivo');
     // Con equipo, no hace falta que sea compatible.
-    entregar($teclado, 1)->assertCreated();
+    entregarConsumible($teclado, 1)->assertCreated();
 });
 
 test('varios consumibles en una entrega: o pasan todos o ninguno', function () {
     $negro = nuevoConsumible();
     $cian = nuevoConsumible(['descripcion' => 'Tóner HP CE391A cian', 'color' => 'cian']);
-    abrir($negro, 3)->assertCreated();
-    abrir($cian, 1)->assertCreated();
+    aperturaDeConsumible($negro, 3)->assertCreated();
+    aperturaDeConsumible($cian, 1)->assertCreated();
 
     $this->postJson('/api/v1/inventario/consumibles/entregas', [
         'fecha' => '2026-10-16', 'bien_informatico_id' => $this->m551->id,
         'items' => [['consumible_id' => $negro, 'cantidad' => 1], ['consumible_id' => $cian, 'cantidad' => 2]],
     ])->assertStatus(422);
-    expect(saldoDe($negro))->toBe(3);
+    expect(saldoDeConsumible($negro))->toBe(3);
 
     $this->postJson('/api/v1/inventario/consumibles/entregas', [
         'fecha' => '2026-10-16', 'bien_informatico_id' => $this->m551->id,
@@ -408,16 +408,16 @@ test('varios consumibles en una entrega: o pasan todos o ninguno', function () {
         'fecha' => '2026-10-16', 'bien_informatico_id' => $this->m551->id,
         'items' => [['consumible_id' => $negro, 'cantidad' => 1], ['consumible_id' => $cian, 'cantidad' => 1]],
     ])->assertCreated()->assertJsonCount(2, 'datos');
-    expect(saldoDe($negro))->toBe(2)->and(saldoDe($cian))->toBe(0);
+    expect(saldoDeConsumible($negro))->toBe(2)->and(saldoDeConsumible($cian))->toBe(0);
 });
 
 // ── Anulación ─────────────────────────────────────────────────────────────
 
 test('anular con motivo: deja de contar pero sigue en el kárdex, y no si deja el saldo negativo', function () {
     $id = nuevoConsumible();
-    abrir($id, 1, '2026-10-01')->assertCreated();
-    $ingreso = ingresar($id, 4, '2026-10-05')->assertCreated()->json('datos.0.id');
-    $entrega = entregar($id, 3)->assertCreated()->json('datos.0.id');
+    aperturaDeConsumible($id, 1, '2026-10-01')->assertCreated();
+    $ingreso = ingresoDeConsumible($id, 4, '2026-10-05')->assertCreated()->json('datos.0.id');
+    $entrega = entregarConsumible($id, 3)->assertCreated()->json('datos.0.id');
 
     $anular = fn (int $m, string $motivo = 'Se registró dos veces') => $this->postJson("/api/v1/inventario/consumibles/movimientos/{$m}/anular", ['motivo' => $motivo]);
     $anular($ingreso)->assertStatus(422)->assertJsonPath('mensaje', 'No se puede anular: el saldo de «Tóner HP CE390A negro» quedaría en -2.');
@@ -427,7 +427,7 @@ test('anular con motivo: deja de contar pero sigue en el kárdex, y no si deja e
     $anular($entrega)->assertOk()->assertJsonPath('datos.motivo_anulacion', 'Se registró dos veces');
     $anular($entrega)->assertStatus(422);
     $anular($ingreso)->assertOk();
-    expect(saldoDe($id))->toBe(1);
+    expect(saldoDeConsumible($id))->toBe(1);
 
     $filas = collect($this->getJson("/api/v1/inventario/consumibles/{$id}/kardex")->json('datos.filas'));
     expect($filas)->toHaveCount(3)
@@ -437,9 +437,9 @@ test('anular con motivo: deja de contar pero sigue en el kárdex, y no si deja e
 
 test('anular un ingreso que el kárdex necesitó en su día tampoco pasa', function () {
     $id = nuevoConsumible();
-    $ingreso = ingresar($id, 2, '2026-10-05')->assertCreated()->json('datos.0.id');
-    entregar($id, 2, ['fecha' => '2026-10-06'])->assertCreated();
-    ingresar($id, 5, '2026-10-10')->assertCreated();
+    $ingreso = ingresoDeConsumible($id, 2, '2026-10-05')->assertCreated()->json('datos.0.id');
+    entregarConsumible($id, 2, ['fecha' => '2026-10-06'])->assertCreated();
+    ingresoDeConsumible($id, 5, '2026-10-10')->assertCreated();
 
     // Hoy quedarían 3, pero el 6 de octubre se entregó lo que había entrado el 5.
     $this->postJson("/api/v1/inventario/consumibles/movimientos/{$ingreso}/anular", ['motivo' => 'Documento equivocado'])
@@ -452,9 +452,9 @@ test('la ficha del equipo muestra sus compatibles con saldo, las últimas entreg
     $this->m551->update(['caracteristicas_tecnicas' => ['conexion' => 'red', 'consumible' => 'Tóner HP 90A']]);
     $id = nuevoConsumible();
     nuevoConsumible(['descripcion' => 'Tinta de otra impresora', 'tipo' => 'tinta', 'modelos' => [['marca_id' => $this->lexmark->id, 'modelo' => 'X1']]]);
-    abrir($id, 5, '2026-09-01')->assertCreated();
-    entregar($id, 1, ['fecha' => '2026-09-10'])->assertCreated();
-    entregar($id, 1, ['fecha' => '2026-10-06'])->assertCreated();
+    aperturaDeConsumible($id, 5, '2026-09-01')->assertCreated();
+    entregarConsumible($id, 1, ['fecha' => '2026-09-10'])->assertCreated();
+    entregarConsumible($id, 1, ['fecha' => '2026-10-06'])->assertCreated();
 
     $ficha = $this->getJson("/api/v1/inventario/bienes/{$this->m551->id}/consumibles")->assertOk()->json('datos');
     expect(array_column($ficha['compatibles'], 'id'))->toBe([$id])
