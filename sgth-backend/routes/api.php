@@ -113,6 +113,8 @@ use App\Http\Controllers\Tic\TableroTicController;
 use App\Http\Controllers\Helpdesk\TicketController;
 use App\Http\Controllers\InventarioTi\AsignacionBienController;
 use App\Http\Controllers\InventarioTi\CampaniaMantenimientoController;
+use App\Http\Controllers\InventarioTi\ConsumibleController;
+use App\Http\Controllers\InventarioTi\MovimientoConsumibleController;
 use App\Http\Controllers\Comunicacion\CargaFotografiasController;
 use App\Http\Controllers\Comunicacion\CredencialController;
 use App\Http\Controllers\Comunicacion\TableroComunicacionController;
@@ -1265,6 +1267,25 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::post('campanias/{campania}/realizar', [CampaniaMantenimientoController::class, 'realizar'])->whereNumber('campania')->middleware($registrar);
             Route::post('campanias/{campania}/omitir', [CampaniaMantenimientoController::class, 'omitir'])->whereNumber('campania')->middleware($registrar);
             Route::post('campanias/{campania}/cerrar', [CampaniaMantenimientoController::class, 'cerrar'])->whereNumber('campania')->middleware($gestionar);
+
+            // Consumibles de impresión y repuestos (fase 5.4a): registran los
+            // técnicos y el jefe de TIC; el auditor consulta [P10]. Las rutas
+            // fijas antes de `{consumible}`.
+            Route::get('consumibles', [ConsumibleController::class, 'index'])->middleware($ver);
+            Route::post('consumibles', [ConsumibleController::class, 'store'])->middleware($gestionar);
+            Route::post('consumibles/ingresos', [MovimientoConsumibleController::class, 'ingresos'])->middleware($gestionar);
+            Route::post('consumibles/entregas', [MovimientoConsumibleController::class, 'entregas'])->middleware($gestionar);
+            Route::post('consumibles/movimientos/{movimiento}/anular', [MovimientoConsumibleController::class, 'anular'])
+                ->whereNumber('movimiento')->middleware($gestionar);
+            Route::get('consumibles/{consumible}', [ConsumibleController::class, 'show'])->whereNumber('consumible')->middleware($ver);
+            Route::put('consumibles/{consumible}', [ConsumibleController::class, 'update'])->whereNumber('consumible')->middleware($gestionar);
+            Route::get('consumibles/{consumible}/kardex', [MovimientoConsumibleController::class, 'kardex'])->whereNumber('consumible')->middleware($ver);
+            Route::post('consumibles/{consumible}/modelos', [ConsumibleController::class, 'agregarModelo'])->whereNumber('consumible')->middleware($gestionar);
+            Route::delete('consumibles/{consumible}/modelos/{modelo}', [ConsumibleController::class, 'quitarModelo'])
+                ->whereNumber(['consumible', 'modelo'])->middleware($gestionar);
+            Route::post('consumibles/{consumible}/apertura', [MovimientoConsumibleController::class, 'apertura'])->whereNumber('consumible')->middleware($gestionar);
+            Route::post('consumibles/{consumible}/ajustes', [MovimientoConsumibleController::class, 'ajuste'])->whereNumber('consumible')->middleware($gestionar);
+            Route::get('bienes/{bien}/consumibles', [ConsumibleController::class, 'delEquipo'])->whereNumber('bien')->middleware($ver);
 
             // Bajas (fase 1.6): el técnico la propone con su informe técnico y
             // el jefe de TIC la aprueba con el memorando o la rechaza.

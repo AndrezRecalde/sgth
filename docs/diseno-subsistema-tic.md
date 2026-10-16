@@ -2,7 +2,7 @@
 
 **SGTH — GAD Provincial de Esmeraldas** · Versión 2, 13 de octubre de 2026 · Base: `main` en `3ba9c2e1`
 
-Estado: **diseño decidido**. Todas las decisiones de la sección 9 están tomadas: D1, D2, D12 y D13 con respuestas propias de TIC y las demás aceptando la propuesta (13-10-2026).
+Estado: **diseño decidido**. Todas las decisiones de la sección 9 están tomadas: D1, D2, D12 y D13 con respuestas propias de TIC y las demás aceptando la propuesta (13-10-2026). El cuestionario del 16-10-2026 (fase 5.4 y puesta en producción) también está respondido: TIC aceptó todas las propuestas, y la única pregunta abierta es el dominio (sección 9.1).
 
 Marcas que usa el documento:
 
@@ -714,8 +714,67 @@ En el orden acordado [D11]. TIC llenará el inventario a mano: la carga del Exce
 | 1 | 5.3 | Impresoras, monitores y escáneres a mano: la ficha de características por tipo y el registro en serie |
 | 2 | 5.2 | Constatación física por QR desde el celular, con alta en sitio de lo que no esté registrado; la hace solo TIC |
 | 3 | 5.1 | Plan de mantenimiento preventivo por campaña (piso, técnico, avance), como el «Planificador» |
-| 4 | 5.4 | Consumibles (tóner y tinta), que administra TIC: ingresos, entregas y saldo por impresora |
+| 4 | 5.4 | Consumibles (tóner, tinta y repuestos): pedido a Bodega, entregas por impresora y saldo de lo que guarda TIC. Se divide en 5.4a–5.4d (abajo) |
 | 5 | 5.5 | Base de conocimiento, a mediados de 2027, con tickets reales |
+
+Además, dos ajustes a lo ya construido, que salen del cuestionario del 16-10-2026 (sección 9.1):
+
+| PR | Contenido |
+|---|---|
+| 5.1b | Una campaña de preventivo puede ser **del proveedor**: se elige el contrato de vigencia tecnológica, y cada equipo hecho queda como mantenimiento del proveedor (`MantenimientoBien::POR_PROVEEDOR`, con `contrato_vigencia_id`), contado contra ese contrato [P12] |
+| 5.2b | El acta de constatación física suma una tercera firma, la de **Activos Fijos y Bodega**, cuando participa en el recorrido. Se marca al abrir la constatación [P13] |
+
+#### 5.4 Consumibles (decidida el 16-10-2026)
+
+El diseño detallado está en `docs/Diseno_Consumibles_TIC.docx`. Las respuestas de TIC lo ajustan así (las marcas [Pn] son las preguntas de la sección 9.1):
+
+- **Catálogo único** de tóner, tinta, cartuchos, cintas, unidades de imagen, kits de mantenimiento y repuestos informáticos, cada uno con su tipo [P9], el código de bodega (opcional y sin repetirse) [P8] y la compatibilidad **por modelo** de impresora [P1].
+- **Saldo solo de lo que guarda TIC** [P4]. Cada consumible dice si lo guarda TIC:
+  - si lo guarda TIC: apertura a mano [P7], ingresos con su documento (egreso de bodega, acta o memorando) [P8], entregas y ajustes; el saldo es la suma de los movimientos, es un **saldo único** sin lotes [P2], y lo que baja del mínimo se ve **solo en el tablero** [P6];
+  - si lo despacha Bodega: solo se registran los pedidos y las entregas (el consumo por impresora y por área); no hay ingresos, ajustes ni saldo, porque el saldo es de Bodega.
+- **El pedido sale de un ticket** [P3]. El servidor pide en TIC; TIC abre el ticket de la categoría nueva **«Consumibles»** (Soporte Técnico) [P16] a nombre del servidor, con la impresora del inventario. Desde el ticket genera la **«Solicitud de materiales informáticos a bodega»**:
+  - mismo formato que el Excel de hoy, en original y copia;
+  - número de pedido correlativo por año;
+  - para el jefe de Gestión Administrativa; de parte del servidor, con su unidad;
+  - códigos del equipo (nuevo y anterior), códigos de bodega, descripción y cantidad solicitada;
+  - cinco firmas: el jefe de la unidad del servidor (del organigrama, ya no de una hoja «Directores»), el jefe de TIC, el jefe de Gestión Administrativa, quien solicita y quien entrega.
+
+  Cuando Bodega despacha, TIC anota la **cantidad despachada**: esa es la entrega, ligada a la impresora y a la unidad, y cierra el ticket. Hasta que arranque la mesa de ayuda en 2027, la misma solicitud se genera desde el módulo de consumibles, sin ticket.
+- **Sin constancia de entrega**: el registro y el reporte mensual bastan [P5].
+- **Registran** los técnicos y el Jefe de TIC; el auditor consulta; nada se borra, un movimiento mal hecho se anula con su motivo [P10].
+- El campo de texto «consumible» de la ficha de la impresora **sale del formulario**; lo ya escrito se sigue mostrando [P11].
+
+| PR | Contenido |
+|---|---|
+| 5.4a | Tablas, catálogo, compatibilidad por modelo, la marca «lo guarda TIC» y los movimientos con sus reglas (saldo nunca negativo, bloqueo de la fila al entregar, anulación con motivo) y pruebas |
+| 5.4b | Pantallas: catálogo, detalle con kárdex, ingreso, ajuste, entrega (con el lector QR) y la sección «Consumibles» en la ficha de la impresora; se retira el campo de texto |
+| 5.4c | Solicitud a bodega: número, PDF con el formato actual, cantidad despachada como entrega; categoría «Consumibles» y el enlace con el ticket |
+| 5.4d | Reportes de consumo (por impresora, área o consumible), kárdex en Excel, saldo a una fecha y el bloque de stock mínimo en el tablero |
+
+**Hecho en la 5.4a** (el modelo y las reglas, sin pantallas)
+
+- **Tablas** (migración `2026_11_05`): `consumibles`, `consumible_modelos` y `movimientos_consumible`.
+- **El catálogo.** Cada consumible lleva descripción, tipo, color, presentación, código de bodega y si lo guarda TIC.
+  - Tipos: tóner, tinta, cartucho, cinta, unidad de imagen, kit de mantenimiento, otro de impresión y repuesto informático.
+  - No se borra: lo que ya no se compra se desactiva.
+  - Desactivarlo o pasarlo a Bodega exige su saldo en TIC en cero; si no, ese material quedaría fuera de toda cuenta.
+- **La compatibilidad** va por marca y modelo, comparado sin mayúsculas ni espacios. El detalle muestra, junto a cada modelo, los equipos del inventario que coinciden; un modelo sin equipos es la señal de que alguna ficha lo escribe distinto. Se agrega un modelo también desde la entrega.
+- **Los movimientos.** La cantidad va con signo: suman la apertura y el ingreso, resta la entrega, el ajuste va de los dos lados. Una restricción de la base lo exige.
+  - **Apertura:** una sola viva por consumible, y va antes que todo el kárdex.
+  - **Ingreso:** un documento (egreso de bodega, acta o memorando) con uno o varios consumibles, y la fecha de compra.
+  - **Entrega:** uno o varios consumibles a la vez.
+    - Lo de impresión va a un equipo de un modelo compatible que no esté dado de baja; el repuesto, a un equipo o a nadie en particular.
+    - Retira por defecto el custodio del equipo. La entrega guarda la unidad de ese momento: la del custodio o, si el equipo no tiene, la del equipo o la de quien retira.
+    - Lleva el ticket opcionalmente (5.4c).
+  - **Ajuste:** con su motivo (daño, caducidad, diferencia en el conteo u otro) y el detalle.
+- **El saldo nunca queda negativo**, ni hoy ni en ningún punto del kárdex.
+  - En el mismo día, lo que entra va antes que lo que sale.
+  - Una entrega con fecha atrasada se rechaza si en esa fecha no alcanzaba, y la anulación de un ingreso, si el kárdex lo necesitó.
+  - Cada movimiento bloquea la fila de sus consumibles, en orden de id, así que dos entregas simultáneas se atienden una tras otra.
+- **Lo que despacha Bodega** registra solo entregas, que no tocan ningún saldo (`afecta_saldo` falso). Si después pasa a TIC, arranca en cero.
+- **Anular** pide un motivo; el movimiento deja de contar, pero sigue en el kárdex.
+- **API** en `inventario/consumibles` (catálogo, detalle, kárdex con saldo tras cada movimiento, apertura, ingresos, entregas, ajustes, modelos y anulación) y `inventario/bienes/{id}/consumibles`. Esta última es la sección de la ficha: compatibles con su saldo, últimas entregas, días desde la última y el texto viejo del campo «consumible».
+- **Permisos:** consultar es `ver-inventario-ti`; todo lo demás, `gestionar-inventario-ti` [P10].
 
 ---
 
@@ -741,3 +800,31 @@ En el orden acordado [D11]. TIC llenará el inventario a mano: la carga del Exce
 | D16 | ~~Reglas del préstamo: plazo máximo, anticipación mínima, si se presta fuera del edificio, fuera del horario o en fin de semana, y si quien tiene un préstamo vencido puede pedir otro~~ | 2.1 | **Aceptada (13-10-2026):** Configurables en `/tic`; por defecto hasta 5 días hábiles, sin préstamo nuevo mientras tenga uno vencido, y margen de 1 hora para retirar |
 | D17 | ~~Constancia: ¿basta el registro con la fecha y la hora reales, o se imprime un acta de préstamo para firmar?~~ | 2.3 | **Aceptada (13-10-2026):** Registro en el sistema y correo al servidor en la entrega y la devolución; acta en PDF opcional para préstamos de varios días o fuera del edificio |
 | D18 | ~~¿La ubicación de un equipo se deriva de su unidad, o es un dato propio del equipo?~~ | 4 | **Aceptada (13-10-2026):** Propio del equipo, porque una nueva administración puede cambiar de piso a las unidades. Cada unidad tiene una ubicación habitual que solo se propone, y la mudanza en lote mueve los equipos cuando una unidad se cambia de piso. Sedes: Edificio Central, Dispensario Médico y San Mateo; UNAMY ya no existe |
+
+### 9.1 Cuestionario del 16 de octubre de 2026
+
+Preguntas de `docs/Preguntas_TIC_Subsistema_Tecnologias.docx` (21, numeradas P1–P21 en este documento). El 16-10-2026 TIC **aceptó todas las propuestas**; las tres respuestas propias son la P18, la P20 y la P21.
+
+| # | Tema | PR | Decisión |
+|---|---|---|---|
+| P1 | Compatibilidad del consumible | 5.4a | Por modelo de impresora (marca y modelo) |
+| P2 | Lotes de compra | 5.4a | Saldo único; la fecha de compra queda en el ingreso |
+| P3 | Cómo se pide | 5.4c | Por ticket «Consumibles», que genera la solicitud a bodega; la entrega es la cantidad despachada. Hasta 2027, la solicitud sale del módulo |
+| P4 | Quién guarda el material | 5.4a | Saldo solo de lo que guarda TIC: cada consumible lo indica. Lo que despacha Bodega se registra sin saldo |
+| P5 | Constancia de entrega | — | Sin constancia impresa |
+| P6 | Aviso de stock mínimo | 5.4d | Solo en el tablero |
+| P7 | Saldo inicial | 5.4a | A mano, con un ingreso de apertura |
+| P8 | Código y documento de bodega | 5.4a | Código de bodega opcional y único; cada ingreso anota su documento (egreso de bodega, acta o memorando) |
+| P9 | Otros repuestos | 5.4a | En el mismo catálogo, con su tipo |
+| P10 | Quién registra | 5.4a | Técnicos y Jefe de TIC; el auditor consulta; anular con motivo |
+| P11 | Campo «consumible» de la ficha | 5.4b | Sale del formulario; lo escrito se sigue mostrando |
+| P12 | Impresoras con contrato en el preventivo | 5.1b | Campañas también del proveedor, contra el contrato de vigencia |
+| P13 | Firmas del acta de constatación | 5.2b | Tercera firma de Activos Fijos y Bodega cuando participa |
+| P14 | Vida útil por tipo de equipo | — | La fija TIC en Configuración › Tipos (hoy todos en 0) |
+| P15 | Fichas de características | — | Se quedan como están |
+| P16 | Categorías de ticket | 5.4c | La lista base sirve, más «Consumibles» |
+| P17 | SLA | — | Se quedan como están hasta tener datos de 2027 |
+| P18 | Dominio y HTTPS | puesta en producción | **Abierta:** tendrá dominio propio y HTTPS, pero aún no está asignado. Hasta entonces no se imprimen etiquetas QR (llevan la dirección) y la cámara del celular no funciona en la constatación |
+| P19 | Tarea programada del servidor | puesta en producción | La configura Infraestructura y Redes al instalar y la revisa tras cada reinicio |
+| P20 | Cuenta de correo | puesta en producción | Por ahora, la cuenta del `.env` actual (`tic@gadpe.gob.ec`); la cuenta exclusiva del sistema queda para después |
+| P21 | Subunidades de TIC | — | Confirmadas: Desarrollo de Software, Infraestructura y Redes, Seguridad de la Información y Soporte Técnico |
