@@ -2,6 +2,9 @@
 
 namespace App\Exports\Tic;
 
+use App\Enums\DocumentoIngresoConsumible;
+use App\Enums\MotivoAjusteConsumible;
+
 /**
  * Las hojas de cada reporte de TIC (fase 4.2), a partir de lo que devuelve su
  * servicio: lo que se ve en pantalla es lo que se descarga.
@@ -97,5 +100,89 @@ final class ReportesTicExcel
                     $c['folio'], LibroReporteTic::fecha($c['fecha'], true), $c['calificacion'], $c['tecnico'], $c['categoria'], $c['comentario'],
                 ], $r['comentarios'])),
         ]);
+    }
+
+    /** @param  array<string, mixed>  $r  `ReporteConsumosService::generar` (fase 5.4d) */
+    public static function consumos(array $r): LibroReporteTic
+    {
+        $grupo = ['impresora' => 'Impresora', 'area' => 'Área', 'consumible' => 'Consumible'][$r['agrupado_por']];
+        $resumen = array_map(fn (array $g) => [$g['nombre'], $g['cantidad'], $g['entregas']], $r['grupos']);
+        $resumen[] = ['Total', $r['cantidad'], $r['entregas']];
+        $desglose = [];
+        foreach ($r['grupos'] as $g) {
+            foreach ($g['desglose'] as $d) {
+                $desglose[] = [$g['nombre'], $d['nombre'], $d['cantidad']];
+            }
+        }
+
+        return new LibroReporteTic([
+            new HojaReporteTic("Por {$grupo}", [$grupo, 'Cantidad', 'Entregas'], $resumen),
+            new HojaReporteTic('Desglose', [$grupo, $r['agrupado_por'] === 'consumible' ? 'Área' : 'Consumible', 'Cantidad'], $desglose),
+            new HojaReporteTic('Entregas', [
+                'Fecha', 'Consumible', 'Código de bodega', 'Tipo', 'Lo guarda', 'Cantidad', 'Equipo', 'Modelo', 'Área', 'Retiró', 'Ticket',
+            ], array_map(fn (array $f) => [
+                LibroReporteTic::fecha($f['fecha']), $f['consumible'], $f['codigo_bodega'], $f['tipo'], $f['guarda_tic'] ? 'TIC' : 'Bodega',
+                $f['cantidad'], $f['equipo'], $f['equipo_modelo'], $f['unidad'], $f['retira'], $f['ticket'],
+            ], $r['filas'])),
+        ]);
+    }
+
+    /** @param  array<string, mixed>  $r  `ReporteSaldoConsumiblesService::generar` (fase 5.4d) */
+    public static function saldoConsumibles(array $r): LibroReporteTic
+    {
+        return new LibroReporteTic([
+            new HojaReporteTic('Saldo al ' . LibroReporteTic::fecha($r['fecha']), [
+                'Código de bodega', 'Descripción', 'Tipo', 'Presentación', 'Saldo', 'Stock mínimo', 'Bajo el mínimo', 'Último movimiento', 'Activo',
+            ], [
+                ...array_map(fn (array $f) => [
+                    $f['codigo_bodega'], $f['descripcion'], $f['tipo'], $f['presentacion'], $f['saldo'], $f['stock_minimo'] ?: '',
+                    $f['bajo_minimo'] ? 'Sí' : '', LibroReporteTic::fecha($f['ultimo_movimiento']), $f['activo'] ? 'Sí' : 'No',
+                ], $r['filas']),
+                ['', 'Total', '', '', $r['unidades'], '', '', '', ''],
+            ]),
+        ]);
+    }
+
+    /**
+     * El kárdex de un consumible entre dos fechas (fase 5.4d).
+     *
+     * @param  array<string, mixed>  $k  `MovimientoConsumibleService::kardex`
+     */
+    public static function kardex(array $k): LibroReporteTic
+    {
+        $filas = [];
+        if ($k['saldo_inicial'] !== null) {
+            $filas[] = ['', 'Saldo inicial', '', '', $k['saldo_inicial'], '', '', ''];
+        }
+        foreach ($k['filas'] as $m) {
+            $filas[] = [
+                LibroReporteTic::fecha($m['fecha']),
+                ucfirst($m['tipo']),
+                self::detalleMovimiento($m),
+                $m['cantidad'],
+                $m['saldo'],
+                $m['registrado_por'],
+                LibroReporteTic::fecha($m['registrado_en'], true),
+                $m['anulado_en'] ? "Anulado por {$m['anulado_por']}: {$m['motivo_anulacion']}" : '',
+            ];
+        }
+
+        return new LibroReporteTic([
+            new HojaReporteTic('Kárdex', ['Fecha', 'Movimiento', 'Detalle', 'Cantidad', 'Saldo', 'Registró', 'Registrado', 'Anulación'], $filas),
+        ]);
+    }
+
+    /** @param  array<string, mixed>  $m */
+    private static function detalleMovimiento(array $m): string
+    {
+        return match ($m['tipo']) {
+            'ingreso' => trim(DocumentoIngresoConsumible::from($m['tipo_documento'])->etiqueta() . ' ' . $m['numero_documento']),
+            'entrega' => implode(' · ', array_filter([
+                $m['equipo'] ? "{$m['equipo']['codigo_institucional']} {$m['equipo']['descripcion']}" : 'Sin equipo',
+                $m['retira'], $m['unidad'], $m['ticket'],
+            ])),
+            'ajuste'  => trim(($m['motivo_ajuste'] ? MotivoAjusteConsumible::from($m['motivo_ajuste'])->etiqueta() . ': ' : '') . ($m['observacion'] ?? '')),
+            default   => (string) ($m['observacion'] ?? ''),
+        };
     }
 }

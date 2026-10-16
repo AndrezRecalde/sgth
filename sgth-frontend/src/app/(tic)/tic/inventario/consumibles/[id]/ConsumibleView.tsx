@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button, Group, SimpleGrid, Skeleton, Text } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import {
-  IconAdjustments, IconCalendarStats, IconDroplet, IconEdit, IconPackageImport, IconPlus, IconStack2, IconTruckDelivery,
+  IconAdjustments, IconCalendarStats, IconDroplet, IconEdit, IconFileSpreadsheet, IconPackageImport, IconPlus, IconStack2, IconTruckDelivery,
 } from '@tabler/icons-react'
 import { EmptyState, MotivoModal, PageHeader, PageShell, SectionCard, SgthTable, StatCard, StatusBadge, confirmar } from '@/components/ui'
 import { ROUTES } from '@/config/routes'
@@ -21,7 +21,7 @@ import { IngresoModal } from '@/features/consumibles-ti/components/IngresoModal'
 import { TIPO_MOVIMIENTO } from '@/features/consumibles-ti/constants/consumibles'
 import { columnasKardex } from '@/features/consumibles-ti/components/kardex.columns'
 import { columnasModelosCompatibles } from '@/features/consumibles-ti/components/modelos.columns'
-import { useConsumible, useConsumibleMutations, useKardex, useMovimientoMutations } from '@/features/consumibles-ti/hooks/useConsumibles'
+import { useConsumible, useConsumibleMutations, useDescargaKardex, useKardex, useMovimientoMutations } from '@/features/consumibles-ti/hooks/useConsumibles'
 import type { FilaKardex } from '@/features/consumibles-ti/services/consumiblesService'
 
 /**
@@ -40,6 +40,7 @@ export function ConsumibleView({ id }: { id: number }) {
   const { data: kardex, isLoading: cargandoKardex } = useKardex(id, desde, hasta)
   const { quitarModelo } = useConsumibleMutations(id)
   const { anular } = useMovimientoMutations(id)
+  const excel = useDescargaKardex()
   const [editando, setEditando] = useState(false)
   const [ingreso, setIngreso] = useState(false)
   const [apertura, setApertura] = useState(false)
@@ -141,6 +142,10 @@ export function ConsumibleView({ id }: { id: number }) {
               value={toDateValue(desde)} onChange={(d) => setDesde(fromDateValueOrNull(d))} />
             <DatePickerInput label="Hasta" placeholder="Hoy" valueFormat="DD/MM/YYYY" clearable w={150} {...compacto}
               minDate={desde ?? undefined} value={toDateValue(hasta)} onChange={(d) => setHasta(fromDateValueOrNull(d))} />
+            <Button variant="light" leftSection={<IconFileSpreadsheet size={16} />} h={40} disabled={!filas.length} loading={excel.isPending}
+              onClick={() => excel.mutate({ id: c.id, desde, hasta, descripcion: c.descripcion })}>
+              Excel
+            </Button>
           </Group>
         )}
       >

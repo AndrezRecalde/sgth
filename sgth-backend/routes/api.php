@@ -1135,6 +1135,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         $inventario = 'permission:ver-inventario-ti|gestionar-inventario-ti';
         Route::get('inventario', [ReporteTicController::class, 'inventario'])->middleware($inventario);
         Route::get('obsolescencia', [ReporteTicController::class, 'obsolescencia'])->middleware($inventario);
+        // Los de consumibles (fase 5.4d): el consumo y el saldo a una fecha.
+        Route::get('consumos', [ReporteTicController::class, 'consumos'])->middleware($inventario);
+        Route::get('saldo-consumibles', [ReporteTicController::class, 'saldoConsumibles'])->middleware($inventario);
         Route::get('tickets', [ReporteTicController::class, 'tickets'])->middleware('permission:ver-tickets-todos');
         Route::get('satisfaccion', [ReporteTicController::class, 'satisfaccion'])->middleware('permission:ver-tickets-todos');
     });
@@ -1281,6 +1284,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::get('consumibles/{consumible}', [ConsumibleController::class, 'show'])->whereNumber('consumible')->middleware($ver);
             Route::put('consumibles/{consumible}', [ConsumibleController::class, 'update'])->whereNumber('consumible')->middleware($gestionar);
             Route::get('consumibles/{consumible}/kardex', [MovimientoConsumibleController::class, 'kardex'])->whereNumber('consumible')->middleware($ver);
+            Route::get('consumibles/{consumible}/kardex/excel', [MovimientoConsumibleController::class, 'kardexExcel'])->whereNumber('consumible')->middleware($ver);
             Route::post('consumibles/{consumible}/modelos', [ConsumibleController::class, 'agregarModelo'])->whereNumber('consumible')->middleware($gestionar);
             Route::delete('consumibles/{consumible}/modelos/{modelo}', [ConsumibleController::class, 'quitarModelo'])
                 ->whereNumber(['consumible', 'modelo'])->middleware($gestionar);

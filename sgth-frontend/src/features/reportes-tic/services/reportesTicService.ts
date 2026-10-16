@@ -1,7 +1,7 @@
 import api from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
 
-export type NombreReporteTic = 'inventario' | 'obsolescencia' | 'tickets' | 'satisfaccion'
+export type NombreReporteTic = 'inventario' | 'obsolescencia' | 'tickets' | 'satisfaccion' | 'consumos' | 'saldo-consumibles'
 export type FormatoArchivo = 'excel' | 'pdf'
 export type ParametrosReporte = Record<string, string | number | null | undefined>
 
@@ -85,11 +85,60 @@ export type ReporteSatisfaccion = {
   comentarios: { id: number; ticket_id: number; folio: string | null; fecha: string; calificacion: number; tecnico: string | null; categoria: string | null; comentario: string }[]
 }
 
+export type AgrupacionConsumos = 'impresora' | 'area' | 'consumible'
+
+/** `ReporteConsumosService` (5.4d): las entregas del período, agrupadas. */
+export type ReporteConsumos = {
+  desde: string
+  hasta: string
+  agrupado_por: AgrupacionConsumos
+  cantidad: number
+  entregas: number
+  /** Cada grupo con el desglose por consumible (o por área, si se agrupa por consumible). */
+  grupos: { nombre: string; cantidad: number; entregas: number; desglose: { nombre: string; cantidad: number }[] }[]
+  filas: {
+    id: number
+    fecha: string
+    consumible: string | null
+    codigo_bodega: string | null
+    tipo: string | null
+    guarda_tic: boolean
+    cantidad: number
+    equipo: string | null
+    equipo_modelo: string
+    unidad: string | null
+    retira: string | null
+    ticket: string | null
+  }[]
+}
+
+/** `ReporteSaldoConsumiblesService` (5.4d): lo que guarda TIC al cierre de una fecha. */
+export type ReporteSaldoConsumibles = {
+  fecha: string
+  consumibles: number
+  unidades: number
+  bajo_minimo: number
+  filas: {
+    id: number
+    codigo_bodega: string | null
+    descripcion: string
+    tipo: string
+    presentacion: string
+    activo: boolean
+    saldo: number
+    stock_minimo: number
+    bajo_minimo: boolean
+    ultimo_movimiento: string | null
+  }[]
+}
+
 export type ReportesTic = {
   inventario: ReporteInventario
   obsolescencia: ReporteObsolescencia
   tickets: ReporteTickets
   satisfaccion: ReporteSatisfaccion
+  consumos: ReporteConsumos
+  'saldo-consumibles': ReporteSaldoConsumibles
 }
 
 const URL = '/tic/reportes'

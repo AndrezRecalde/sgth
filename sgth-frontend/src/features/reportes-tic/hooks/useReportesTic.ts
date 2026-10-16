@@ -19,6 +19,8 @@ const NOMBRE_ARCHIVO: Record<NombreReporteTic, string> = {
   obsolescencia: 'obsolescencia',
   tickets: 'mesa-de-ayuda',
   satisfaccion: 'satisfaccion',
+  consumos: 'consumo-de-consumibles',
+  'saldo-consumibles': 'saldo-de-consumibles',
 }
 
 /** Descarga un reporte en Excel o en PDF, con los mismos filtros que en pantalla. */

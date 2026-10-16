@@ -4,6 +4,7 @@ namespace App\Http\Controllers\InventarioTi;
 
 use App\Contracts\InventarioTi\MovimientoConsumibleServiceInterface;
 use App\Enums\MotivoAjusteConsumible;
+use App\Exports\Tic\ReportesTicExcel;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\InventarioTi\RegistrarEntregaConsumibleRequest;
 use App\Http\Requests\InventarioTi\RegistrarIngresoConsumibleRequest;
@@ -12,7 +13,10 @@ use App\Models\InventarioTi\Consumible;
 use App\Models\InventarioTi\MovimientoConsumible;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Los movimientos de los consumibles y su kárdex (fase 5.4a): apertura,
@@ -30,6 +34,19 @@ final class MovimientoConsumibleController extends Controller
         ]);
 
         return ApiResponse::ok($this->movimientos->kardex($consumible, $datos['desde'] ?? null, $datos['hasta'] ?? null), 'Kárdex del consumible.');
+    }
+
+    /** El kárdex entre dos fechas, en Excel (fase 5.4d). */
+    public function kardexExcel(Request $request, Consumible $consumible): BinaryFileResponse
+    {
+        $datos = $request->validate([
+            'desde' => ['nullable', 'date'],
+            'hasta' => ['nullable', 'date', 'after_or_equal:desde'],
+        ]);
+        $kardex = $this->movimientos->kardex($consumible, $datos['desde'] ?? null, $datos['hasta'] ?? null);
+        $nombre = 'kardex-' . Str::slug($consumible->descripcion) . '-' . ($datos['desde'] ?? 'inicio') . '-a-' . ($datos['hasta'] ?? today()->toDateString());
+
+        return Excel::download(ReportesTicExcel::kardex($kardex), "{$nombre}.xlsx");
     }
 
     public function apertura(Request $request, Consumible $consumible): JsonResponse
