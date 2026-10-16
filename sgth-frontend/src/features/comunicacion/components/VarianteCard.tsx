@@ -21,7 +21,8 @@ export function VarianteCard({ variante, enUso, onSubir, onHistorial }: Props) {
   const { vigente, programadas } = variante
   const regla = REGLAS_VARIANTE[variante.variante]
   // Las de página entera se ven más altas: si no, no se distingue nada.
-  const alto = variante.variante === 'hoja_membretada' || FONDOS_CREDENCIAL.includes(variante.variante) ? 150 : 64
+  const esFondo = FONDOS_CREDENCIAL.includes(variante.variante)
+  const alto = variante.variante === 'hoja_membretada' || esFondo ? 150 : 64
   const prestada = !vigente && enUso?.vigente
 
   return (
@@ -39,7 +40,9 @@ export function VarianteCard({ variante, enUso, onSubir, onHistorial }: Props) {
           <VistaVersion versionId={prestada.id} alt={prestada.variante_etiqueta} alto={alto} oscuro={regla.fondoOscuro} atenuada />
         ) : (
           <Center h={alto + 24}>
-            <Text size="sm" c="dimmed">Sin cargar: no se muestra.</Text>
+            <Text size="sm" c="dimmed" ta="center">
+              {esFondo ? 'Sin cargar: la cara queda en blanco, con su franja.' : 'Sin cargar: no se muestra.'}
+            </Text>
           </Center>
         )}
 
