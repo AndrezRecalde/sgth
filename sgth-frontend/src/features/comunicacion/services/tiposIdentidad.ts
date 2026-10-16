@@ -11,6 +11,8 @@ export type VarianteIdentidad =
   | 'logo_documentos'
   | 'logo_secundario_documentos'
   | 'hoja_membretada'
+  | 'fondo_credencial_anverso'
+  | 'fondo_credencial_reverso'
 
 export type EstadoVersion = 'vigente' | 'programada' | 'anterior' | 'anulada'
 

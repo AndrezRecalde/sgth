@@ -432,6 +432,33 @@ test('quien salió con la tarjeta impresa aparece por recibir hasta que la entre
     expect($porRecibir()->json('datos'))->toBe([]);
 });
 
+test('con los fondos de Identidad, la tarjeta los lleva detrás de cada cara', function () {
+    fotoDePruebaCredencial($this, $this->ana);
+    $credencial = Credencial::where('servidor_id', $this->ana->id)->sole();
+    $imagenes = fn (string $pdf) => preg_match_all('/\/Subtype\s*\/Image/', $pdf);
+    $imprimir = fn () => $this->actingAs($this->comunicacion, 'sanctum')
+        ->postJson('/api/v1/comunicacion/credenciales/imprimir', ['credenciales' => [$credencial->id], 'formato' => 'cr80'])
+        ->assertOk()
+        ->getContent();
+
+    $sinFondo = $imagenes($imprimir());
+
+    // La persona designada carga los dos fondos (D14).
+    $responsable = usuarioDePruebaCredencial('responsable-identidad');
+    foreach (['fondo_credencial_anverso', 'fondo_credencial_reverso'] as $variante) {
+        $imagen = imagecreatetruecolor(638, 1011);
+        imagefill($imagen, 0, 0, imagecolorallocate($imagen, $variante === 'fondo_credencial_anverso' ? 20 : 200, 90, 60));
+        $ruta = tempnam(sys_get_temp_dir(), 'fondo').'.png';
+        imagepng($imagen, $ruta);
+
+        $this->actingAs($responsable, 'sanctum')->post("/api/v1/comunicacion/identidad/{$variante}", [
+            'archivo' => new \Illuminate\Http\UploadedFile($ruta, 'fondo.png', 'image/png', null, true),
+        ], ['Accept' => 'application/json'])->assertCreated();
+    }
+
+    expect($imagenes($imprimir()))->toBe($sinFondo + 2);
+});
+
 test('avisa qué datos del reverso faltan en el expediente', function () {
     $sinDatos = servidorDePruebaCredencial($this, '0806666666', [
         'tipo_sangre' => null, 'contacto_emergencia_nombre' => null, 'contacto_emergencia_parentesco' => null,

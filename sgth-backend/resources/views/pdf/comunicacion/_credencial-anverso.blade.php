@@ -3,12 +3,16 @@
      credencial la valida el QR (D11).
 
      Recibe $t (la tarjeta de CredencialService), $x e $y (dónde va, en mm),
-     $guia (si lleva la guía de corte) y lo común: $logo, $logoMedidas e
-     $identidad. --}}
+     $guia (si lleva la guía de corte) y lo común: $logo, $logoMedidas,
+     $fondoAnverso e $identidad. --}}
 @php
     $d = $t['datos'];
 @endphp
-<div class="tarjeta{{ $guia ? ' con-guia' : '' }}" style="left: {{ $x }}mm; top: {{ $y }}mm;">
+<div class="tarjeta{{ $guia ? ' con-guia' : '' }}{{ $fondoAnverso ? ' con-fondo' : '' }}" style="left: {{ $x }}mm; top: {{ $y }}mm;">
+    @if ($fondoAnverso)
+        <img class="fondo" src="{{ $fondoAnverso }}" alt="">
+    @endif
+
     @if ($logo)
         <img class="logo" src="{{ $logo }}" alt=""
              style="width: {{ $logoMedidas['ancho'] }}mm; height: {{ $logoMedidas['alto'] }}mm;
@@ -38,5 +42,8 @@
         @endif
     </div>
 
-    <div class="banda">{{ $identidad['nombre_corto'] ?: ($identidad['siglas'] ?? '') }}</div>
+    {{-- Con fondo, la franja la pone el diseño de Comunicación. --}}
+    @unless ($fondoAnverso)
+        <div class="banda">{{ $identidad['nombre_corto'] ?: ($identidad['siglas'] ?? '') }}</div>
+    @endunless
 </div>

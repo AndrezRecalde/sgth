@@ -2,6 +2,7 @@
 
 import { AspectRatio, Box, Group, Image, Paper, SimpleGrid, Stack, Text } from '@mantine/core'
 import type { DatosInstitucionales, VarianteIdentidad } from '../services/tiposIdentidad'
+import classes from './CredencialDigital.module.css'
 
 interface Props {
   variante: VarianteIdentidad
@@ -64,6 +65,28 @@ function EnDocumento({ src, datos, secundario }: { src: string; datos: DatosInst
 }
 
 /**
+ * Una cara de la credencial con el fondo elegido y datos de ejemplo encima,
+ * sobre el panel claro que llevan en la tarjeta (D14).
+ */
+function EnCredencial({ src, cara }: { src: string; cara: 'anverso' | 'reverso' }) {
+  return (
+    <div>
+      <Rotulo>{cara === 'anverso' ? 'Anverso de la credencial' : 'Reverso de la credencial'}</Rotulo>
+      <AspectRatio ratio={54 / 85.6} w={170}>
+        <Paper withBorder radius="md" style={{ backgroundImage: `url(${src})`, backgroundSize: 'cover', overflow: 'hidden' }}>
+          <Stack justify="flex-end" h="100%" p={8}>
+            <div className={classes.panelSobreFondo}>
+              <Text size="xs" fw={700} ta="center">{cara === 'anverso' ? 'Nombres APELLIDOS' : 'Tipo de sangre: O+'}</Text>
+              <Text size="xs" c="dimmed" ta="center">{cara === 'anverso' ? 'Cargo y unidad' : 'Contacto de emergencia'}</Text>
+            </div>
+          </Stack>
+        </Paper>
+      </AspectRatio>
+    </div>
+  )
+}
+
+/**
  * Cómo se vería el archivo elegido donde se usa, antes de subirlo
  * (docs/diseno-comunicacion-social.md, 4.4). Es una imitación: la pantalla de
  * verdad se ve al guardar.
@@ -76,6 +99,10 @@ export function VistaPreviaContexto({ variante, src, datos }: Props) {
       return <EnDocumento src={src} datos={datos} secundario={false} />
     case 'logo_secundario_documentos':
       return <EnDocumento src={src} datos={datos} secundario />
+    case 'fondo_credencial_anverso':
+      return <EnCredencial src={src} cara="anverso" />
+    case 'fondo_credencial_reverso':
+      return <EnCredencial src={src} cara="reverso" />
     case 'hoja_membretada':
       return (
         <div>

@@ -48,6 +48,21 @@
         font-size: 5.5pt; line-height: 5mm; text-align: center; letter-spacing: 0.3pt;
     }
 
+    /* El fondo de la cara (V7 y V8): a sangre, detrás de todo. */
+    .tarjeta .fondo { position: absolute; left: 0; top: 0; width: 54mm; height: 85.6mm; }
+    /* Sobre un fondo el texto va en un panel claro: se lee sobre cualquier imagen. */
+    .tarjeta.con-fondo .servidor,
+    .tarjeta.con-fondo .reverso-datos,
+    .tarjeta.con-fondo .aviso {
+        background: rgba(255, 255, 255, 0.86);
+        border-radius: 1.5mm;
+    }
+    /* Sin franja abajo, el panel toma la altura de lo que lleva. */
+    .tarjeta.con-fondo .servidor { top: 56mm; height: auto; padding: 0.8mm 0 1mm; }
+    .tarjeta.con-fondo .reverso-datos { height: auto; padding: 1mm 0 0.4mm; }
+    .tarjeta.con-fondo .aviso { top: 63mm; height: auto; padding: 0.8mm 0 1mm; }
+    .tarjeta.con-fondo .qr-texto { background: rgba(255, 255, 255, 0.86); border-radius: 1mm; }
+
     /* Reverso */
     .tarjeta .marca-agua { position: absolute; top: 34mm; left: 9mm; width: 36mm; height: 36mm; opacity: 0.07; }
     .tarjeta .qr { position: absolute; top: 5mm; left: 14.5mm; width: 25mm; height: 25mm; }

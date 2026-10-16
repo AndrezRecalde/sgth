@@ -22,6 +22,9 @@ use Illuminate\Support\Collection;
  *
  * Los logos son los vigentes hoy: la tarjeta se imprime ahora, no es un acto
  * con fecha (D3). V2 arriba en el anverso y V1 como marca de agua en el reverso.
+ * Los fondos (V7 y V8, D14) van detrás de cada cara; con fondo, la cara pierde
+ * su franja y la marca de agua —el fondo ya es el diseño— y el texto lleva un
+ * panel blanco translúcido, para que se lea sobre cualquier imagen.
  */
 final class PdfCredencialService
 {
@@ -52,6 +55,8 @@ final class PdfCredencialService
             'logo'      => $logo,
             'logoMedidas' => $logo ? $this->encajar($logo, self::LOGO_ANCHO, self::LOGO_ALTO) : null,
             'isotipo'   => $this->archivo(VarianteIdentidad::ISOTIPO),
+            'fondoAnverso' => $this->archivo(VarianteIdentidad::FONDO_CREDENCIAL_ANVERSO),
+            'fondoReverso' => $this->archivo(VarianteIdentidad::FONDO_CREDENCIAL_REVERSO),
             'identidad' => $this->identidad->datos()->only(['nombre_oficial', 'siglas', 'nombre_corto', 'direccion', 'telefono', 'sitio_web']),
         ];
 

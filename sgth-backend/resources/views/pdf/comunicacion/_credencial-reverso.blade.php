@@ -9,8 +9,11 @@
     $contacto = $d['contacto_emergencia'];
     $sitio = $identidad['sitio_web'] ?? null;
 @endphp
-<div class="tarjeta{{ $guia ? ' con-guia' : '' }}" style="left: {{ $x }}mm; top: {{ $y }}mm;">
-    @if ($isotipo)
+<div class="tarjeta{{ $guia ? ' con-guia' : '' }}{{ $fondoReverso ? ' con-fondo' : '' }}" style="left: {{ $x }}mm; top: {{ $y }}mm;">
+    {{-- Con fondo, la marca de agua y la franja las pone el diseño. --}}
+    @if ($fondoReverso)
+        <img class="fondo" src="{{ $fondoReverso }}" alt="">
+    @elseif ($isotipo)
         <img class="marca-agua" src="{{ $isotipo }}" alt="">
     @endif
 
@@ -53,5 +56,7 @@
         @endif
     </div>
 
-    <div class="banda">{{ $sitio ?: ($identidad['siglas'] ?? '') }}</div>
+    @unless ($fondoReverso)
+        <div class="banda">{{ $sitio ?: ($identidad['siglas'] ?? '') }}</div>
+    @endunless
 </div>
