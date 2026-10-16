@@ -4,7 +4,7 @@ import { Button, Center, Group, Paper, Stack, Text } from '@mantine/core'
 import { IconHistory, IconUpload } from '@tabler/icons-react'
 import { StatusBadge } from '@/components/ui'
 import { formatFecha } from '@/lib/fecha'
-import { REGLAS_VARIANTE } from '../constants/identidad'
+import { FONDOS_CREDENCIAL, REGLAS_VARIANTE } from '../constants/identidad'
 import type { EstadoVariante } from '../services/tiposIdentidad'
 import { VistaVersion } from './VistaVersion'
 
@@ -20,7 +20,8 @@ interface Props {
 export function VarianteCard({ variante, enUso, onSubir, onHistorial }: Props) {
   const { vigente, programadas } = variante
   const regla = REGLAS_VARIANTE[variante.variante]
-  const alto = variante.variante === 'hoja_membretada' ? 150 : 64
+  // Las de página entera se ven más altas: si no, no se distingue nada.
+  const alto = variante.variante === 'hoja_membretada' || FONDOS_CREDENCIAL.includes(variante.variante) ? 150 : 64
   const prestada = !vigente && enUso?.vigente
 
   return (

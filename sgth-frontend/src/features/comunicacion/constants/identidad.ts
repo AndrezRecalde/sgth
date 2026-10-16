@@ -21,7 +21,13 @@ export const REGLAS_VARIANTE: Record<VarianteIdentidad, ReglaVariante> = {
   logo_documentos:            { tipos: ['image/png'], minimo: { ancho: 1200, alto: 1 } },
   logo_secundario_documentos: { tipos: ['image/png'], minimo: { ancho: 300, alto: 1 } },
   hoja_membretada:            { tipos: ['image/png', 'image/jpeg'], minimo: { ancho: 1240, alto: 1754 }, proporcion: { valor: 210 / 297, tolerancia: 0.02 } },
+  // La tarjeta CR80 (54 × 85,6 mm) a 300 ppp.
+  fondo_credencial_anverso:   { tipos: ['image/png', 'image/jpeg'], minimo: { ancho: 638, alto: 1011 }, proporcion: { valor: 54 / 85.6, tolerancia: 0.02 } },
+  fondo_credencial_reverso:   { tipos: ['image/png', 'image/jpeg'], minimo: { ancho: 638, alto: 1011 }, proporcion: { valor: 54 / 85.6, tolerancia: 0.02 } },
 }
+
+/** Los fondos de la credencial (D14): van aparte de los logos en la pantalla. */
+export const FONDOS_CREDENCIAL: VarianteIdentidad[] = ['fondo_credencial_anverso', 'fondo_credencial_reverso']
 
 export const PESO_MAXIMO_LOGO_MB = 5
 

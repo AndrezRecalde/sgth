@@ -102,6 +102,8 @@ Lo que está mal:
 | V4 | **Logo para documentos** | No | Cabecera de todos los PDF | PNG, fondo blanco o transparente, desde 1200 px de ancho | V2 |
 | V5 | Logo secundario de documentos | No | Lado derecho de la cabecera de los PDF (escudo provincial, marca de una campaña) | PNG transparente | No se muestra |
 | V6 | Hoja membretada A4 | No | Fondo de los documentos tipo memorando (hoy, el informe de actividades) | JPG o PNG, A4 vertical: 1240×1754 (150 ppp) o 2480×3508 (300 ppp) | V4 arriba, y la dirección y el teléfono al pie escritos por el sistema |
+| V7 | Fondo de la credencial: anverso [D14] | No | Detrás del logo, la foto y los datos de la credencial, impresa y digital | JPG o PNG vertical del tamaño de la tarjeta (54 × 85,6 mm): desde 638×1011 (300 ppp) | La cara en blanco, con su franja |
+| V8 | Fondo de la credencial: reverso [D14] | No | Detrás del QR y los datos del reverso, impresa y digital | Igual que V7 | La cara en blanco, con su franja y V1 de marca de agua |
 
 Los **íconos de la app** (favicon de 32 px, ícono de Apple de 180 px y los de 192 y 512 px) **se generan solos a partir de V1**; nadie los sube.
 
@@ -111,7 +113,7 @@ Lo que **no** se pide, y por qué:
 
 - **Versión vertical o apilada:** ninguna pantalla la necesita. La credencial vertical tiene 54 mm de ancho y el imagotipo horizontal cabe arriba.
 - **Monocromo para blanco y negro:** un logo a color se imprime bien en escala de grises. Si algún documento sale mal, se agrega después.
-- **SVG:** dompdf dibuja mal muchos SVG, y un SVG puede llevar código ejecutable. Se aceptan PNG (y JPG para V6).
+- **SVG:** dompdf dibuja mal muchos SVG, y un SVG puede llevar código ejecutable. Se aceptan PNG (y JPG para V6, V7 y V8).
 - **Isotipo en negativo:** el isotipo a color se ve bien sobre el sidebar oscuro.
 
 ### 4.3 Vigencia e historial
@@ -202,6 +204,7 @@ Formato CR80 (85,6 × 54 mm, el de una tarjeta bancaria), vertical, con dos sali
 - **Reverso:** el QR de verificación; «Válida hasta», solo si el vínculo tiene fecha de fin; el texto «Esta credencial es personal e intransferible. Si la encuentra, devuélvala a…» con la dirección y el teléfono de 4.5, y V1 como marca de agua.
 - **Tipo de sangre y contacto de emergencia** (nombre, parentesco y teléfono), en el reverso [D6]. TH y Jurídico aprobaron mostrarlos. Salen del expediente (`tipo_sangre` y `contacto_emergencia_*`); si el servidor no los tiene registrados, la línea no se imprime, en lugar de quedar en blanco. El tipo de sangre es un dato de salud, que la LOPDP trata como sensible: va en la tarjeta que lleva el propio servidor y en su credencial digital, **nunca en la verificación pública**.
 - **Sin firma:** la credencial la valida el QR [D11].
+- **Fondo de cada cara [D14]:** si la persona designada para los logos cargó V7 o V8 en Identidad institucional, la imagen cubre esa cara a sangre, en la impresa y en la digital. La cara pierde entonces su franja (y el reverso, la marca de agua): el fondo ya es el diseño. Los datos, el aviso y el texto del QR van en un panel blanco al 86 %, para que se lean sobre cualquier imagen; el QR conserva su blanco, sin el que la cámara no lo lee, y el logo sigue siendo V2. Como los logos, el fondo es el vigente hoy, y cambiarlo no marca como desactualizadas las tarjetas ya impresas: no cambia ningún dato.
 
 ### 6.3 Ciclo de vida
 
@@ -433,3 +436,4 @@ Cada punto es un PR con sus pruebas Pest y, si hay pantalla, revisión en el nav
 | D11 | ~~¿La credencial lleva firma?~~ | 3.1 | **Aceptada (14-10-2026):** no; la valida el QR |
 | D12 | ~~¿En qué orden?~~ | todo | **Aceptada (14-10-2026):** fotografías, identidad y credencial |
 | D13 | ~~¿Se recoge la credencial impresa al desvincularse?~~ | 3.1 | **Aceptada (14-10-2026):** sí, como paso de la desvinculación a cargo de Comunicación Social |
+| D14 | ~~¿Comunicación puede poner un fondo propio a la credencial? ¿Quién lo sube, uno o dos, y con qué logo?~~ | después de la 3.3 | **Resuelta (15-10-2026):** sí. Lo sube la persona de Identidad (`responsable-identidad`), con vigencia e historial como los logos; uno por cara (V7 y V8), opcionales; el logo sigue siendo el imagotipo horizontal (sección 6.2) |

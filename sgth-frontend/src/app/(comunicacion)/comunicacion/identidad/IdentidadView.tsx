@@ -8,13 +8,15 @@ import { DatosInstitucionalesForm } from '@/features/comunicacion/components/Dat
 import { HistorialVersionesDrawer } from '@/features/comunicacion/components/HistorialVersionesDrawer'
 import { SubirVersionModal } from '@/features/comunicacion/components/SubirVersionModal'
 import { VarianteCard } from '@/features/comunicacion/components/VarianteCard'
+import { FONDOS_CREDENCIAL } from '@/features/comunicacion/constants/identidad'
 import { useEstadoIdentidad } from '@/features/comunicacion/hooks/useIdentidad'
 import type { EstadoVariante } from '@/features/comunicacion/services/tiposIdentidad'
 
 /**
  * Identidad institucional (docs/diseno-comunicacion-social.md, 4; fase 2.3):
- * las seis variantes del logo con su versión vigente, las programadas y el
- * historial, y los datos de la institución. La usa la persona designada (D2).
+ * las seis variantes del logo y los dos fondos de la credencial (D14) con su
+ * versión vigente, las programadas y el historial, y los datos de la
+ * institución. La usa la persona designada (D2).
  */
 export function IdentidadView() {
   const { data, isLoading, error } = useEstadoIdentidad()
@@ -23,6 +25,17 @@ export function IdentidadView() {
 
   const variantes = data?.variantes ?? []
   const enUsoDe = (v: EstadoVariante) => variantes.find((otra) => otra.variante === v.en_uso && otra.variante !== v.variante) ?? null
+  const logos = variantes.filter((v) => !FONDOS_CREDENCIAL.includes(v.variante))
+  const fondos = variantes.filter((v) => FONDOS_CREDENCIAL.includes(v.variante))
+  const tarjeta = (v: EstadoVariante) => (
+    <VarianteCard
+      key={v.variante}
+      variante={v}
+      enUso={enUsoDe(v)}
+      onSubir={() => setSubiendo(v)}
+      onHistorial={() => setHistorial(v)}
+    />
+  )
 
   return (
     <PageShell>
@@ -43,17 +56,20 @@ export function IdentidadView() {
             description="Con el isotipo y el imagotipo horizontal el sistema funciona completo; los demás son opcionales y tienen respaldo."
           >
             <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
-              {variantes.map((v) => (
-                <VarianteCard
-                  key={v.variante}
-                  variante={v}
-                  enUso={enUsoDe(v)}
-                  onSubir={() => setSubiendo(v)}
-                  onHistorial={() => setHistorial(v)}
-                />
-              ))}
+              {logos.map(tarjeta)}
             </SimpleGrid>
           </SectionCard>
+
+          {fondos.length > 0 && (
+            <SectionCard
+              title="Fondos de la credencial"
+              description="Detrás de cada cara de la credencial, impresa y digital. Sin fondo, la cara queda en blanco con su franja. Los datos van sobre un panel claro, para que se lean sobre cualquier imagen; el logo es el imagotipo horizontal."
+            >
+              <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
+                {fondos.map(tarjeta)}
+              </SimpleGrid>
+            </SectionCard>
+          )}
 
           {/* La clave remonta el formulario cuando cambian los datos guardados. */}
           {data && <DatosInstitucionalesForm key={data.datos.actualizado_en ?? 'inicial'} datos={data.datos} />}

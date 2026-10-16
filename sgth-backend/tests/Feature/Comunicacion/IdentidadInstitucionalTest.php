@@ -133,7 +133,22 @@ test('cada variante exige su formato, su tamano y su proporcion', function (stri
     'horizontal angosto'      => ['imagotipo_horizontal', fn () => archivoDePruebaIdentidad(800, 300), 'mide 800 × 300'],
     // Pasa el mínimo (1240 × 1754) y falla solo por la proporción.
     'hoja que no es A4'       => ['hoja_membretada', fn () => archivoDePruebaIdentidad(2400, 2400, 'jpg'), 'no tiene la proporción'],
+    // El fondo de la credencial (D14) es la tarjeta CR80 vertical a 300 ppp.
+    'fondo horizontal'        => ['fondo_credencial_anverso', fn () => archivoDePruebaIdentidad(1011, 1011, 'jpg'), 'no tiene la proporción'],
+    'fondo pequeño'           => ['fondo_credencial_reverso', fn () => archivoDePruebaIdentidad(319, 506), 'mide 319 × 506'],
 ]);
+
+test('los fondos de la credencial se aceptan en jpg o png del tamaño de la tarjeta, sin respaldo', function () {
+    subirVersionDePrueba($this, 'fondo_credencial_anverso', archivoDePruebaIdentidad(638, 1011, 'jpg'))
+        ->assertCreated()
+        ->assertJsonPath('datos.mime', 'image/jpeg');
+    subirVersionDePrueba($this, 'fondo_credencial_reverso', archivoDePruebaIdentidad(1276, 2022))->assertCreated();
+
+    // Opcionales y sin respaldo: sin versión, la cara queda como siempre.
+    expect(VarianteIdentidad::FONDO_CREDENCIAL_ANVERSO->obligatoria())->toBeFalse()
+        ->and(VarianteIdentidad::FONDO_CREDENCIAL_ANVERSO->respaldo())->toBeNull()
+        ->and($this->identidad->archivo(VarianteIdentidad::FONDO_CREDENCIAL_ANVERSO))->not->toBeNull();
+});
 
 test('la hoja membretada se acepta en jpg con la proporcion del a4', function () {
     subirVersionDePrueba($this, 'hoja_membretada', archivoDePruebaIdentidad(1240, 1754, 'jpg'))
