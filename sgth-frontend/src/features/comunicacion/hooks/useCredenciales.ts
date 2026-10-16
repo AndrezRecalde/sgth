@@ -15,6 +15,15 @@ export function useCredenciales(filtros: FiltrosCredenciales, page: number) {
   })
 }
 
+/** A dónde lleva el QR: no cambia mientras la aplicación corre. */
+export function useDireccionVerificacion() {
+  return useQuery({
+    queryKey: clavesComunicacion.credenciales.direccion,
+    queryFn: credencialesService.direccionVerificacion,
+    staleTime: Infinity,
+  })
+}
+
 /** Todas las credenciales de un servidor con sus impresiones. */
 export function useHistorialCredenciales(servidorId: number | null) {
   return useQuery({

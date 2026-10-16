@@ -2184,6 +2184,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // Comunicación. No se emiten: nacen con la foto y el vínculo vigente.
         Route::middleware('permission:ver-credenciales')->group(function () {
             Route::get('credenciales', [CredencialController::class, 'index']);
+            Route::get('credenciales/verificacion', [CredencialController::class, 'verificacion']);
             Route::get('servidores/{servidor}/credenciales', [CredencialController::class, 'historial'])
                 ->whereNumber('servidor');
         });
