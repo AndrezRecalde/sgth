@@ -617,14 +617,12 @@ export const NAV_PORTAL: NavGroup[] = [
     label: 'Mi Espacio',
     items: [
       {
+        // La ficha, la formación académica y la hoja de vida en PDF. «Mi CV»
+        // y «Formación académica» eran entradas aparte, sin página detrás:
+        // son los mismos datos, así que viven aquí (decisión del 2026-10-17).
         label: 'Mi Perfil',
         href:  ROUTES.PORTAL.MI_PERFIL,
         icon:  'IconUser',
-      },
-      {
-        label: 'Mi CV',
-        href:  ROUTES.PORTAL.MI_CV,
-        icon:  'IconFileText',
       },
       {
         // La credencial digital, con su QR (Comunicación Social, 6.1).
@@ -672,11 +670,10 @@ export const NAV_PORTAL: NavGroup[] = [
         icon:    'IconInbox',
         permiso: 'ver-viaticos-todos',
       },
-      {
-        label: 'Certificados',
-        href:  ROUTES.PORTAL.CERTIFICADOS,
-        icon:  'IconCertificate',
-      },
+      // Aquí estaba «Certificados», que llevaba a un 404: el certificado
+      // laboral lo emite solo Talento Humano (decisión de la UATH del
+      // 2026-09-25) y los reposos médicos salen en «Permisos». Vuelve cuando
+      // haya algo que mostrarle al servidor.
     ],
   },
   {
@@ -698,11 +695,6 @@ export const NAV_PORTAL: NavGroup[] = [
         label: 'Actividades',
         href:  ROUTES.PORTAL.MIS_ACTIVIDADES,
         icon:  'IconListCheck',
-      },
-      {
-        label: 'Formación académica',
-        href:  ROUTES.PORTAL.ACADEMICO,
-        icon:  'IconSchool',
       },
     ],
   },
@@ -729,11 +721,8 @@ export const NAV_PORTAL: NavGroup[] = [
         href:  ROUTES.PORTAL.MIS_PRESTAMOS,
         icon:  'IconListDetails',
       },
-      {
-        label: 'Reportar abuso',
-        href:  ROUTES.PORTAL.REPORTES,
-        icon:  'IconAlertTriangle',
-      },
+      // «Reportar abuso» sale del menú hasta que exista su página
+      // (2026-10-17): llevaba a un 404.
     ],
   },
 ]

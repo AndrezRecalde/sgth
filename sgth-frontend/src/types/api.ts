@@ -1989,6 +1989,16 @@ export type Vacacion = {
   observacion?:          string | null
 }
 
+/**
+ * «Mis vacaciones» del autoservicio (`AutoservicioService::obtenerMisVacaciones`):
+ * las solicitudes del servidor con sesión, sin paginar. El saldo y los
+ * períodos se leen aparte, del resumen de períodos, como en Talento Humano.
+ */
+export type MisVacaciones = {
+  saldo_dias_disponibles: number
+  historial_solicitudes:  Vacacion[]
+}
+
 // ── Períodos de vacaciones ───────────────────────
 export type PeriodoVacacion = {
   id:                   number

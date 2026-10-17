@@ -216,8 +216,8 @@ export const asistenciaService = {
         `/asistencia/vacaciones/saldo/${servidorId}`
       ).then(r => r.data.datos),
 
+    // Sin unidad: el backend guarda siempre la del servidor.
     crear: (data: {
-      unidad_administrativa_id?:  number | null
       servidor_id:                number
       jefe_id?:                   number | null
       persona_reemplaza_id?:      number | null
