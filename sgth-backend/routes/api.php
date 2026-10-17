@@ -1256,6 +1256,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::post('constataciones/{constatacion}/items/{item}/mover', [ConstatacionController::class, 'mover'])
                 ->whereNumber(['constatacion', 'item'])->middleware($gestionar);
             Route::post('constataciones/{constatacion}/cerrar', [ConstatacionController::class, 'cerrar'])->whereNumber('constatacion')->middleware($gestionar);
+            // Si participa Activos Fijos y Bodega (5.2b): solo mientras está en curso.
+            Route::patch('constataciones/{constatacion}/activos-fijos', [ConstatacionController::class, 'activosFijos'])->whereNumber('constatacion')->middleware($gestionar);
 
             // Plan de mantenimiento preventivo por campaña (fase 5.1). Planificar
             // es de quien gestiona el inventario; marcar lo hecho u omitido, de

@@ -389,7 +389,7 @@ abierto ───────────► asignado ────────�
     - **estaba dado de baja**.
   - un código que no está en el inventario se registra ahí mismo, con el código y la ubicación ya puestos; al guardar vuelve a la constatación, ya escaneado.
 - **Cerrar.** Lo esperado que no se escaneó queda como **no encontrado** y la constatación ya no cambia. El estado de esos equipos no se toca: decidir si están extraviados es de TIC, desde la ficha.
-- **Acta de constatación física en PDF**, agrupada por resultado y con las firmas de quien constató y del jefe de TIC.
+- **Acta de constatación física en PDF**, agrupada por resultado y con las firmas de quien constató y del jefe de TIC (y, desde la 5.2b, la de Activos Fijos y Bodega cuando participa).
 - Solo TIC escanea, mueve y cierra (`gestionar-inventario-ti`); el auditor consulta y descarga el acta.
 - Se retiran las rutas `inventario/auditoria/*` y su controlador, que eran simulados.
 
@@ -846,6 +846,22 @@ El diseño detallado está en `docs/Diseno_Consumibles_TIC.docx`. Las respuestas
   - El listado dice quién la hace (la empresa y su contrato); el detalle, lo mismo en su cabecera.
   - Al marcar como hecho no hay técnico que elegir, y la fecha no pasa del fin del contrato. Al agregar equipos se avisa que solo entran los del contrato.
 
+**Hecho en la 5.2b** (Activos Fijos y Bodega en el acta de constatación) [P13]
+
+- **Migración `2026_11_08`**: `constataciones` suma `participa_activos_fijos` (falso por defecto) y `firmante_activos_fijos` (`{nombre, cargo}`, vacío hasta el cierre).
+- **Reglas decididas**:
+  - **Quién firma**: el jefe de la unidad Activos Fijos y Bodega en el organigrama (`FirmanteOrganigramaService::jefeDeUnidadEn`, que también ve al subrogante), buscada por su código en `inventario.unidad_activos_fijos_codigo` (`INVENTARIO_UNIDAD_ACTIVOS_FIJOS_CODIGO`, por defecto `GADPE-01-01`). Es el mismo patrón que la solicitud a bodega (5.4c).
+  - **Sellado al cerrar**, con la fecha del cierre: el acta se reimprime igual aunque después cambie el jefe. Mientras sigue en curso, el detalle y el acta muestran al jefe de hoy.
+  - Un puesto vacante, o una unidad que no está con ese código, sale con el cargo («Responsable de Activos Fijos y Bodega» si el puesto no tiene uno) y sin nombre: se firma a mano. El cierre no se bloquea por eso.
+  - **La marca se pone al abrir y se puede cambiar mientras la constatación sigue en curso**, porque Activos Fijos puede sumarse a mitad del recorrido o marcarse por error, y la firma no cambia nada de lo escaneado. Cerrada, queda fija junto con su firmante. El cambio y el cierre no se cruzan: el cierre bloquea la fila y el cambio solo actualiza una que siga en curso.
+- **El acta**: con Activos Fijos, el párrafo dice «con la participación de la Unidad de Activos Fijos y Bodega» y suma la tercera firma, «Por Activos Fijos y Bodega», con el nombre y el cargo sellados; sin ella, quedan las dos de TIC.
+- **API**: `participa_activos_fijos` al abrir (`POST inventario/constataciones`), en la cabecera y en el listado; el detalle trae `firmante_activos_fijos` (`{nombre, cargo, sellado}` o null). `PATCH inventario/constataciones/{id}/activos-fijos` la cambia en curso (`gestionar-inventario-ti`); cerrada responde 422.
+- **Pantallas**:
+  - En la nueva constatación, el interruptor «Participa Activos Fijos y Bodega».
+  - En el detalle, la sección «Firmas del acta» con las tres firmas: quién firma por Activos Fijos y si ya quedó sellado, o «No participa». Mientras sigue en curso, quien gestiona el inventario la cambia ahí mismo.
+  - El listado lo dice debajo del nombre («Con Activos Fijos y Bodega»).
+- **Producción**: `php artisan migrate` (2026_11_08) y, si la unidad Activos Fijos y Bodega no es `GADPE-01-01`, `INVENTARIO_UNIDAD_ACTIVOS_FIJOS_CODIGO`.
+
 ---
 
 ## 9. Decisiones de la Unidad de TIC
@@ -889,7 +905,7 @@ Preguntas de `docs/Preguntas_TIC_Subsistema_Tecnologias.docx` (21, numeradas P1�
 | P10 | Quién registra | 5.4a | Técnicos y Jefe de TIC; el auditor consulta; anular con motivo |
 | P11 | Campo «consumible» de la ficha | 5.4b | Sale del formulario; lo escrito se sigue mostrando |
 | P12 | Impresoras con contrato en el preventivo | 5.1b | Campañas también del proveedor, contra el contrato de vigencia |
-| P13 | Firmas del acta de constatación | 5.2b | Tercera firma de Activos Fijos y Bodega cuando participa |
+| P13 | Firmas del acta de constatación | 5.2b | Tercera firma de Activos Fijos y Bodega cuando participa (hecho: su jefe del organigrama, sellado al cerrar) |
 | P14 | Vida útil por tipo de equipo | — | La fija TIC en Configuración › Tipos (hoy todos en 0) |
 | P15 | Fichas de características | — | Se quedan como están |
 | P16 | Categorías de ticket | 5.4c | La lista base sirve, más «Consumibles» |

@@ -14,7 +14,9 @@ export const columnasConstataciones: DataTableColumn<Constatacion>[] = [
     render: (c) => (
       <Stack gap={0}>
         <Text size="sm" fw={500}>{c.nombre}</Text>
-        <Text size="xs" c="dimmed">{c.ubicacion}{c.unidad ? ` · ${c.unidad}` : ''}</Text>
+        <Text size="xs" c="dimmed">
+          {c.ubicacion}{c.unidad ? ` · ${c.unidad}` : ''}{c.participa_activos_fijos ? ' · Con Activos Fijos y Bodega' : ''}
+        </Text>
       </Stack>
     ),
   },

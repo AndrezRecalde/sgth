@@ -1,6 +1,6 @@
 'use client'
 
-import { Grid, Select, TextInput, Textarea } from '@mantine/core'
+import { Grid, Select, Switch, TextInput, Textarea } from '@mantine/core'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormModal } from '@/components/ui'
@@ -12,7 +12,7 @@ import { useConstatacionMutations } from '../hooks/useConstataciones'
 import { constatacionSchema, type ConstatacionFormData } from '../schemas/constatacion.schema'
 import type { Constatacion } from '../services/constatacionesService'
 
-const CAMPOS = ['nombre', 'ubicacion_id', 'unidad_administrativa_id', 'observaciones']
+const CAMPOS = ['nombre', 'ubicacion_id', 'unidad_administrativa_id', 'participa_activos_fijos', 'observaciones']
 
 interface Props {
   opened: boolean
@@ -20,7 +20,11 @@ interface Props {
   onCreada: (c: Constatacion) => void
 }
 
-/** Abrir una constatación: qué lugar se recorre y, si se quiere, de qué unidad se esperan los equipos. */
+/**
+ * Abrir una constatación: qué lugar se recorre, si se quiere de qué unidad se
+ * esperan los equipos, y si Activos Fijos y Bodega va en el recorrido (su
+ * responsable firma el acta).
+ */
 export function NuevaConstatacionModal({ opened, ...props }: Props) {
   return opened ? <Formulario {...props} /> : null
 }
@@ -32,7 +36,7 @@ function Formulario({ onClose, onCreada }: Omit<Props, 'opened'>) {
   const { crear } = useConstatacionMutations()
   const { register, control, handleSubmit, setError, formState: { errors } } = useForm<ConstatacionFormData>({
     resolver: zodResolver(constatacionSchema),
-    defaultValues: { nombre: '', unidad_administrativa_id: null, observaciones: '' },
+    defaultValues: { nombre: '', unidad_administrativa_id: null, participa_activos_fijos: false, observaciones: '' },
   })
 
   const enviar = (v: ConstatacionFormData) =>
@@ -64,6 +68,14 @@ function Formulario({ onClose, onCreada }: Omit<Props, 'opened'>) {
               error={errors.unidad_administrativa_id?.message}
               data={unidades.map((u) => ({ value: String(u.id), label: u.nombre ?? '' }))}
               value={field.value ? String(field.value) : null} onChange={(v) => field.onChange(v ? Number(v) : null)} />
+          )} />
+        </Grid.Col>
+        <Grid.Col span={12}>
+          <Controller name="participa_activos_fijos" control={control} render={({ field }) => (
+            <Switch label="Participa Activos Fijos y Bodega" checked={field.value} onChange={(e) => field.onChange(e.currentTarget.checked)}
+              description={field.value
+                ? 'Su responsable firma el acta junto a TIC. Se puede cambiar mientras la constatación siga en curso.'
+                : 'El acta lleva solo las firmas de TIC. Se puede cambiar mientras la constatación siga en curso.'} />
           )} />
         </Grid.Col>
         <Grid.Col span={12}>

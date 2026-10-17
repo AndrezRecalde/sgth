@@ -43,7 +43,8 @@
 
 <p class="parrafo">
     La Dirección de Tecnologías de la Información y Comunicación del Gobierno Autónomo Descentralizado
-    Provincial de Esmeraldas realizó la constatación física de los bienes informáticos registrados en
+    Provincial de Esmeraldas{{ $activosFijos ? ', con la participación de la Unidad de Activos Fijos y Bodega,' : '' }}
+    realizó la constatación física de los bienes informáticos registrados en
     {{ $c->ubicacion?->nombre }}{{ $c->unidad ? ', de ' . $c->unidad->nombre : '' }}, mediante la lectura de
     sus etiquetas, con el resultado que se detalla.
     @unless($c->enCurso())
@@ -112,21 +113,33 @@
     </div>
 @endif
 
+@php $ancho = $activosFijos ? '33.33%' : '50%'; @endphp
 <div class="firmas">
     <table>
         <tr>
-            <td style="width: 50%;">
+            <td style="width: {{ $ancho }};">
                 <div class="firma-rotulo">Constató</div>
                 <div class="firma-linea"></div>
                 <p class="firma-nombre">{{ $c->iniciadaPor?->nombre_completo }}</p>
                 <p class="firma-cargo">Unidad de Tecnologías de la Información</p>
             </td>
-            <td style="width: 50%;">
+            <td style="width: {{ $ancho }};">
                 <div class="firma-rotulo">Revisó</div>
                 <div class="firma-linea"></div>
                 <p class="firma-nombre">&nbsp;</p>
                 <p class="firma-cargo">Jefe de Tecnologías de la Información</p>
             </td>
+            @if($activosFijos)
+                {{-- Sellado al cerrar la constatación (5.2b): una reimpresión no
+                     le atribuye el acta a quien sea jefe hoy. Un puesto vacante
+                     sale con el cargo y se firma a mano. --}}
+                <td style="width: {{ $ancho }};">
+                    <div class="firma-rotulo">Por Activos Fijos y Bodega</div>
+                    <div class="firma-linea"></div>
+                    <p class="firma-nombre">@if($activosFijos['nombre']){{ $activosFijos['nombre'] }}@else&nbsp;@endif</p>
+                    <p class="firma-cargo">{{ $activosFijos['cargo'] }}</p>
+                </td>
+            @endif
         </tr>
     </table>
 </div>

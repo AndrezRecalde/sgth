@@ -1,10 +1,11 @@
 import { z } from 'zod/v4'
 
-/** Abrir una constatación: el lugar que se recorre y, si se quiere, la unidad. */
+/** Abrir una constatación: el lugar que se recorre, si se quiere la unidad, y si participa Activos Fijos y Bodega. */
 export const constatacionSchema = z.object({
   nombre: z.string().trim().min(3, 'Mínimo 3 caracteres').max(150, 'Máximo 150 caracteres'),
   ubicacion_id: z.number({ message: 'Elija la ubicación que va a recorrer' }),
   unidad_administrativa_id: z.number().nullable(),
+  participa_activos_fijos: z.boolean(),
   observaciones: z.string().trim().max(2000, 'Máximo 2000 caracteres'),
 })
 export type ConstatacionFormData = z.infer<typeof constatacionSchema>
