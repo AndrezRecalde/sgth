@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\InventarioTi\CampaniaEquipo;
 use App\Models\InventarioTi\CampaniaMantenimiento;
+use App\Models\InventarioTi\MantenimientoBien;
 use App\Services\InventarioTi\CampaniaMantenimientoService;
 use Closure;
 use Illuminate\Http\JsonResponse;
@@ -22,6 +23,7 @@ final class CampaniaMantenimientoController extends Controller
 {
     private const ATRIBUTOS = [
         'ubicacion_id' => 'ubicación', 'unidad_administrativa_id' => 'unidad', 'tecnico_id' => 'técnico',
+        'realizado_por' => 'quién la hace', 'contrato_vigencia_id' => 'contrato de vigencia',
         'fecha_inicio' => 'fecha de inicio', 'fecha_fin' => 'fecha de fin', 'descripcion' => 'qué se hace',
     ];
 
@@ -37,9 +39,13 @@ final class CampaniaMantenimientoController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        // La del proveedor (5.1b) lleva su contrato; el lugar y el técnico de TIC son opcionales.
+        $delProveedor = $request->input('realizado_por') === MantenimientoBien::POR_PROVEEDOR;
         $datos = $request->validate([
-            ...$this->reglasCabecera(),
-            'ubicacion_id'             => ['required', 'integer', Rule::exists('ubicaciones', 'id')->whereNull('deleted_at')],
+            ...$this->reglasCabecera($delProveedor),
+            'realizado_por'            => ['sometimes', Rule::in([MantenimientoBien::POR_TIC, MantenimientoBien::POR_PROVEEDOR])],
+            'contrato_vigencia_id'     => [$delProveedor ? 'required' : 'prohibited', 'nullable', 'integer', Rule::exists('contratos_vigencia', 'id')->whereNull('deleted_at')],
+            'ubicacion_id'             => [$delProveedor ? 'nullable' : 'required', 'integer', Rule::exists('ubicaciones', 'id')->whereNull('deleted_at')],
             'unidad_administrativa_id' => ['nullable', 'integer', Rule::exists('unidades_administrativas', 'id')],
         ], [], self::ATRIBUTOS);
 
@@ -55,7 +61,8 @@ final class CampaniaMantenimientoController extends Controller
 
     public function update(Request $request, CampaniaMantenimiento $campania): JsonResponse
     {
-        $datos = $request->validate($this->reglasCabecera(), [], self::ATRIBUTOS);
+        // Quién la hace, su contrato y su lugar quedan como se crearon.
+        $datos = $request->validate($this->reglasCabecera($campania->esDelProveedor()), [], self::ATRIBUTOS);
 
         return ApiResponse::ok($this->cargada($this->campanias->actualizar($campania, $datos)), 'Campaña actualizada.');
     }
@@ -111,13 +118,18 @@ final class CampaniaMantenimientoController extends Controller
         return ApiResponse::ok($this->cargada($c), 'Campaña cerrada: lo pendiente quedó como no realizado.');
     }
 
-    /** @return array<string, mixed> */
-    private function reglasCabecera(): array
+    /**
+     * En la del proveedor, el técnico de TIC es opcional: acompaña o hace el
+     * seguimiento, pero el mantenimiento lo hace la empresa.
+     *
+     * @return array<string, mixed>
+     */
+    private function reglasCabecera(bool $delProveedor = false): array
     {
         return [
             'nombre'       => ['required', 'string', 'min:3', 'max:150'],
             'descripcion'  => ['required', 'string', 'min:5', 'max:500'],
-            'tecnico_id'   => ['required', 'integer', $this->tecnicoValido()],
+            'tecnico_id'   => [$delProveedor ? 'nullable' : 'required', 'integer', $this->tecnicoValido()],
             'fecha_inicio' => ['required', 'date'],
             'fecha_fin'    => ['required', 'date', 'after_or_equal:fecha_inicio'],
         ];
@@ -136,6 +148,6 @@ final class CampaniaMantenimientoController extends Controller
     /** @return array<string, mixed> */
     private function cargada(CampaniaMantenimiento $c): array
     {
-        return $this->campanias->cabecera($c->load('ubicacion', 'unidad', 'tecnico.servidor', 'cerradaPor.servidor'));
+        return $this->campanias->cabecera($c->load('ubicacion', 'unidad', 'tecnico.servidor', 'cerradaPor.servidor', 'contrato'));
     }
 }

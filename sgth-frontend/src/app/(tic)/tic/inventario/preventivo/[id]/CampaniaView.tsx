@@ -20,6 +20,7 @@ import { RealizarCampaniaModal } from '@/features/inventario-ti/components/Reali
 import { SITUACION_CAMPANIA } from '@/features/inventario-ti/constants/campania'
 import { useCampania, useCampaniaMutations } from '@/features/inventario-ti/hooks/useCampanias'
 import type { FilaCampania } from '@/features/inventario-ti/services/campaniasService'
+import { lugarDeCampania, quienHaceCampania } from '@/features/inventario-ti/utils/campania'
 
 type Filtro = 'todos' | 'pendientes' | 'hechos' | 'omitidos'
 
@@ -66,6 +67,9 @@ export function CampaniaView({ id }: { id: number }) {
   const situacion = SITUACION_CAMPANIA[c.situacion]
   // Lo hecho ya tiene su mantenimiento: no se vuelve a marcar ni se omite.
   const elegibles = seleccion.filter((f) => f.estado !== 'hecho')
+  const quien = quienHaceCampania(c)
+  const descripcion = [lugarDeCampania(c), `${formatFecha(c.fecha_inicio)} – ${formatFecha(c.fecha_fin)}`, quien.principal, quien.detalle]
+    .filter(Boolean).join(' · ')
 
   const preguntarCierre = () => confirmar({
     title: `Cerrar «${c.nombre}»`,
@@ -89,7 +93,7 @@ export function CampaniaView({ id }: { id: number }) {
     <PageShell>
       <PageHeader
         title={c.nombre}
-        description={`${c.ubicacion ?? ''}${c.unidad ? ` · ${c.unidad}` : ''} · ${formatFecha(c.fecha_inicio)} – ${formatFecha(c.fecha_fin)} · ${c.tecnico ?? ''}`}
+        description={descripcion}
         estado={<StatusBadge tone={situacion.tono}>{situacion.etiqueta}</StatusBadge>}
         backHref={ROUTES.TIC.CAMPANIAS}
         actions={gestiona ? (
@@ -160,7 +164,7 @@ export function CampaniaView({ id }: { id: number }) {
         })}
       />
       <CampaniaModal opened={editando} campania={c} onClose={() => setEditando(false)} />
-      <AgregarEquiposCampaniaModal opened={agregando} campaniaId={c.id} onClose={() => setAgregando(false)} />
+      <AgregarEquiposCampaniaModal opened={agregando} campaniaId={c.id} contrato={c.contrato} onClose={() => setAgregando(false)} />
     </PageShell>
   )
 }

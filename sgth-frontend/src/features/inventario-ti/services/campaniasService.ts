@@ -5,17 +5,29 @@ export type SituacionCampania = 'programada' | 'en_curso' | 'atrasada' | 'cerrad
 
 export type EstadoEquipoCampania = 'pendiente' | 'hecho' | 'omitido' | 'no_realizado'
 
+/** Quién hace el preventivo: TIC con su técnico, o la empresa de la vigencia contra su contrato (5.1b). */
+export type QuienHaceCampania = 'tic' | 'proveedor'
+
 /** La cabecera de una campaña (`CampaniaMantenimientoService::cabecera`). */
 export type Campania = {
   id: number
   nombre: string
   descripcion: string
   situacion: SituacionCampania
-  ubicacion_id: number
+  realizado_por: QuienHaceCampania
+  /** Solo en la del proveedor: su contrato de vigencia. */
+  contrato_id: number | null
+  contrato: string | null
+  proveedor: string | null
+  /** Hasta cuándo cuenta contra el contrato lo que haga el proveedor. */
+  contrato_fin: string | null
+  /** Sin lugar, la del proveedor recorre todo su contrato. */
+  ubicacion_id: number | null
   ubicacion: string | null
   unidad_id: number | null
   unidad: string | null
-  tecnico_id: number
+  /** En la del proveedor es opcional: acompaña, pero no lo hace él. */
+  tecnico_id: number | null
   tecnico: string | null
   fecha_inicio: string
   fecha_fin: string
@@ -39,6 +51,7 @@ export type FilaCampania = {
   anulado: boolean
   mantenimiento_id: number | null
   fecha: string | null
+  /** Quién lo hizo: el técnico o, en la del proveedor, la empresa. */
   tecnico: string | null
   motivo_omision: string | null
   actualizado_por: string | null
@@ -58,13 +71,15 @@ export type DetalleCampania = Campania & { filas: FilaCampania[]; resumen: Resum
 export type CampaniaData = {
   nombre: string
   descripcion: string
-  tecnico_id: number
+  tecnico_id: number | null
   fecha_inicio: string
   fecha_fin: string
 }
 
 export type NuevaCampaniaData = CampaniaData & {
-  ubicacion_id: number
+  realizado_por: QuienHaceCampania
+  contrato_vigencia_id: number | null
+  ubicacion_id: number | null
   unidad_administrativa_id: number | null
 }
 

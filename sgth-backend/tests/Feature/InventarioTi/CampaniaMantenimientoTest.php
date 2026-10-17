@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\InventarioTi\BienInformatico;
+use App\Models\InventarioTi\ContratoVigencia;
 use App\Models\InventarioTi\MantenimientoBien;
 use App\Models\InventarioTi\Marca;
 use App\Models\InventarioTi\TipoBien;
@@ -183,4 +184,109 @@ test('programada, atrasada y cerrada; cerrada, lo pendiente queda como no realiz
         'nombre' => 'Otra', 'descripcion' => 'Limpieza interna', 'tecnico_id' => $this->tecnico->id,
         'fecha_inicio' => '2026-10-01', 'fecha_fin' => '2026-10-30',
     ])->assertStatus(422);
+});
+
+// ── La campaña del proveedor (5.1b) ───────────────────────────────────────
+
+function contratoDePreventivo(array $atributos = []): ContratoVigencia
+{
+    return ContratoVigencia::create(array_merge([
+        'proceso' => 'SIE-GADPE-018-2021', 'proveedor' => 'Compusoft S.A.', 'fecha_inicio' => '2021-11-01', 'fecha_fin' => '2026-11-13',
+    ], $atributos));
+}
+
+function crearCampaniaDelProveedor(ContratoVigencia $contrato, array $datos = []): \Illuminate\Testing\TestResponse
+{
+    return test()->postJson('/api/v1/inventario/campanias', [
+        'nombre' => 'Preventivo de la vigencia, noviembre', 'descripcion' => 'Limpieza y revisión según el cronograma del contrato',
+        'realizado_por' => 'proveedor', 'contrato_vigencia_id' => $contrato->id,
+        'fecha_inicio' => '2026-10-12', 'fecha_fin' => '2026-10-23', ...$datos,
+    ]);
+}
+
+test('la del proveedor pide su contrato, no exige técnico ni lugar y recorre todo el contrato', function () {
+    $contrato = contratoDePreventivo();
+    $piso3 = equipoDePreventivo(['contrato_vigencia_id' => $contrato->id]);
+    $sanMateo = equipoDePreventivo(['contrato_vigencia_id' => $contrato->id, 'ubicacion_id' => $this->sanMateo->id]);
+    equipoDePreventivo(); // sin contrato
+    equipoDePreventivo(['contrato_vigencia_id' => contratoDePreventivo(['proceso' => 'SIE-OTRO-2022'])->id]);
+
+    $this->postJson('/api/v1/inventario/campanias', [
+        'nombre' => 'Sin contrato', 'descripcion' => 'Limpieza interna', 'realizado_por' => 'proveedor',
+        'fecha_inicio' => '2026-10-12', 'fecha_fin' => '2026-10-23',
+    ])->assertStatus(422)->assertJsonValidationErrors('contrato_vigencia_id', 'errores');
+
+    $id = crearCampaniaDelProveedor($contrato)->assertCreated()->json('datos.id');
+    $c = campania($id);
+    expect($c)->toMatchArray([
+        'realizado_por' => 'proveedor', 'contrato' => 'SIE-GADPE-018-2021', 'proveedor' => 'Compusoft S.A.',
+        'tecnico_id' => null, 'ubicacion_id' => null, 'contrato_fin' => '2026-11-13',
+    ])
+        ->and(collect($c['filas'])->pluck('bien_id')->sort()->values()->all())->toBe([$piso3->id, $sanMateo->id]);
+
+    // Con lugar, solo los del contrato en ese lugar.
+    $soloPiso3 = campania(crearCampaniaDelProveedor($contrato, ['ubicacion_id' => $this->piso3->id])->assertCreated()->json('datos.id'));
+    expect(collect($soloPiso3['filas'])->pluck('bien_id')->all())->toBe([$piso3->id]);
+});
+
+test('la de TIC sigue pidiendo técnico y lugar, y no lleva contrato', function () {
+    $this->postJson('/api/v1/inventario/campanias', [
+        'nombre' => 'Sin técnico', 'descripcion' => 'Limpieza interna', 'fecha_inicio' => '2026-10-12', 'fecha_fin' => '2026-10-23',
+        'contrato_vigencia_id' => contratoDePreventivo()->id,
+    ])->assertStatus(422)->assertJsonValidationErrors(['tecnico_id', 'ubicacion_id', 'contrato_vigencia_id'], 'errores');
+
+    expect(campania(crearCampania()))->toMatchArray(['realizado_por' => 'tic', 'contrato_id' => null]);
+});
+
+test('hecho por el proveedor: mantenimiento del proveedor, sin técnico y contado contra su contrato', function () {
+    $contrato = contratoDePreventivo();
+    $pc = equipoDePreventivo(['contrato_vigencia_id' => $contrato->id]);
+    $id = crearCampaniaDelProveedor($contrato, ['tecnico_id' => $this->tecnico->id])->assertCreated()->json('datos.id');
+    $c = campania($id);
+    expect($c['tecnico_id'])->toBe($this->tecnico->id); // acompaña, pero no lo hace él
+
+    $this->postJson("/api/v1/inventario/campanias/{$id}/realizar", [
+        'items' => [itemDe($c, $pc)], 'fecha' => '2026-10-13', 'tecnico_id' => $this->otroTecnico->id,
+    ])->assertOk();
+
+    $m = MantenimientoBien::where('bien_informatico_id', $pc->id)->sole();
+    expect($m->realizado_por)->toBe(MantenimientoBien::POR_PROVEEDOR)
+        ->and($m->contrato_vigencia_id)->toBe($contrato->id)
+        ->and($m->tecnico_id)->toBeNull()
+        ->and($m->tipo_mantenimiento->value)->toBe('preventivo');
+    expect(collect(campania($id)['filas'])->firstWhere('bien_id', $pc->id))->toMatchArray(['estado' => 'hecho', 'tecnico' => 'Compusoft S.A.']);
+    $this->getJson("/api/v1/inventario/mantenimientos?contrato_vigencia_id={$contrato->id}")->assertOk()->assertJsonPath('meta.total', 1);
+});
+
+test('al del proveedor solo se agregan equipos de su contrato', function () {
+    $contrato = contratoDePreventivo();
+    $id = crearCampaniaDelProveedor($contrato, ['ubicacion_id' => $this->sanMateo->id])->assertCreated()->json('datos.id');
+    $delContrato = equipoDePreventivo(['contrato_vigencia_id' => $contrato->id]);
+    $ajeno = equipoDePreventivo();
+
+    $this->postJson("/api/v1/inventario/campanias/{$id}/equipos", ['bienes' => [$ajeno->id]])->assertStatus(422)
+        ->assertJsonPath('mensaje', "No están en el contrato SIE-GADPE-018-2021: {$ajeno->codigo_institucional}.");
+    $this->postJson("/api/v1/inventario/campanias/{$id}/equipos", ['bienes' => [$delContrato->id]])->assertOk()->assertJsonPath('datos.agregados', 1);
+});
+
+test('lo que el proveedor haga después de que venció el contrato ya no cuenta contra él', function () {
+    $vencido = contratoDePreventivo(['proceso' => 'SIE-VENCIDO-2019', 'fecha_fin' => '2026-10-10']);
+    crearCampaniaDelProveedor($vencido)->assertStatus(422)
+        ->assertJsonPath('mensaje', 'El contrato SIE-VENCIDO-2019 venció el 10/10/2026: una campaña después ya no cuenta contra él.');
+
+    $porVencer = contratoDePreventivo(['proceso' => 'SIE-POR-VENCER', 'fecha_fin' => '2026-10-13']);
+    $pc = equipoDePreventivo(['contrato_vigencia_id' => $porVencer->id]);
+    $id = crearCampaniaDelProveedor($porVencer)->assertCreated()->json('datos.id');
+    $this->postJson("/api/v1/inventario/campanias/{$id}/realizar", ['items' => [itemDe(campania($id), $pc)], 'fecha' => '2026-10-14'])
+        ->assertStatus(422);
+    $this->postJson("/api/v1/inventario/campanias/{$id}/realizar", ['items' => [itemDe(campania($id), $pc)], 'fecha' => '2026-10-13'])->assertOk();
+});
+
+test('al editar la del proveedor el técnico sigue siendo opcional, y quién la hace no cambia', function () {
+    $id = crearCampaniaDelProveedor(contratoDePreventivo())->assertCreated()->json('datos.id');
+
+    $this->putJson("/api/v1/inventario/campanias/{$id}", [
+        'nombre' => 'Preventivo de la vigencia, segunda vuelta', 'descripcion' => 'Limpieza y revisión según el cronograma',
+        'fecha_inicio' => '2026-10-12', 'fecha_fin' => '2026-10-30', 'realizado_por' => 'tic', 'contrato_vigencia_id' => null,
+    ])->assertOk()->assertJsonPath('datos.realizado_por', 'proveedor')->assertJsonPath('datos.contrato', 'SIE-GADPE-018-2021');
 });

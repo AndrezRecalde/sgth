@@ -24,7 +24,9 @@ interface Props {
 
 /**
  * Marcar como hechos los equipos elegidos: a cada uno se le registra un
- * mantenimiento preventivo en su ficha, con lo que dice la campaña.
+ * mantenimiento preventivo en su ficha, con lo que dice la campaña. En la del
+ * proveedor no hay técnico que elegir: lo hizo la empresa, contra su contrato,
+ * y no después de que este venció.
  */
 export function RealizarCampaniaModal({ filas, ...props }: Props) {
   return filas.length ? <Formulario filas={filas} {...props} /> : null
@@ -35,13 +37,21 @@ function Formulario({ campania: c, filas, onClose, onHecho }: Props) {
   const { data: tecnicos = [] } = useTecnicosTic()
   const { realizar } = useCampaniaMutations(c.id)
   const hoy = hoyIso()
+  const delProveedor = c.realizado_por === 'proveedor'
+  // Lo que el proveedor haga después del fin de su contrato ya no cuenta contra él.
+  const tope = c.contrato_fin && c.contrato_fin < hoy ? c.contrato_fin : hoy
+  const quien = delProveedor
+    ? <> del proveedor{c.proveedor ? ` (${c.proveedor})` : ''}, contado contra el contrato <b>{c.contrato}</b>,</>
+    : null
   const { register, control, handleSubmit, setError, formState: { errors } } = useForm<RealizarFormData>({
     resolver: zodResolver(realizarSchema),
-    defaultValues: { fecha: hoy < c.fecha_inicio ? '' : hoy, tecnico_id: c.tecnico_id, observacion: '' },
+    defaultValues: { fecha: tope < c.fecha_inicio ? '' : tope, tecnico_id: delProveedor ? null : c.tecnico_id, observacion: '' },
   })
 
   const enviar = (v: RealizarFormData) =>
-    realizar.mutateAsync({ items: filas.map((f) => f.item_id), fecha: v.fecha, tecnico_id: v.tecnico_id, observacion: v.observacion || null })
+    realizar.mutateAsync({
+      items: filas.map((f) => f.item_id), fecha: v.fecha, tecnico_id: delProveedor ? null : v.tecnico_id, observacion: v.observacion || null,
+    })
       .then(() => { onClose(); onHecho() })
       .catch((e) => erroresAlFormulario(e, setError, ['fecha', 'tecnico_id', 'observacion'], 'No se pudo registrar el mantenimiento'))
 
@@ -51,7 +61,7 @@ function Formulario({ campania: c, filas, onClose, onHecho }: Props) {
       <Grid>
         <Grid.Col span={12}>
           <Text size="sm">
-            Se registrará un mantenimiento preventivo en la ficha de{' '}
+            Se registrará un mantenimiento preventivo{quien} en la ficha de{' '}
             <b>{filas.length === 1 ? filas[0].codigo_institucional : plural(filas.length, 'equipo', 'equipos')}</b>:
             {' '}«{c.descripcion}».
           </Text>
@@ -59,19 +69,21 @@ function Formulario({ campania: c, filas, onClose, onHecho }: Props) {
         <Grid.Col span={{ base: 12, sm: 6 }}>
           <Controller name="fecha" control={control} render={({ field }) => (
             <DatePickerInput label="Fecha" placeholder="Seleccionar" valueFormat="DD/MM/YYYY" withAsterisk
-              minDate={c.fecha_inicio} maxDate={hoy}
+              minDate={c.fecha_inicio} maxDate={tope}
               error={errors.fecha?.message} {...contained}
               value={toDateValue(field.value)} onChange={(d) => field.onChange(fromDateValueOrNull(d) ?? '')} />
           )} />
         </Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6 }}>
-          <Controller name="tecnico_id" control={control} render={({ field }) => (
-            <Select label="Lo hizo" placeholder="El técnico de la campaña" searchable {...contained}
-              error={errors.tecnico_id?.message}
-              data={tecnicos.map((t) => ({ value: String(t.id), label: t.nombre }))}
-              value={field.value ? String(field.value) : null} onChange={(v) => field.onChange(v ? Number(v) : null)} />
-          )} />
-        </Grid.Col>
+        {!delProveedor && (
+          <Grid.Col span={{ base: 12, sm: 6 }}>
+            <Controller name="tecnico_id" control={control} render={({ field }) => (
+              <Select label="Lo hizo" placeholder="El técnico de la campaña" searchable {...contained}
+                error={errors.tecnico_id?.message}
+                data={tecnicos.map((t) => ({ value: String(t.id), label: t.nombre }))}
+                value={field.value ? String(field.value) : null} onChange={(v) => field.onChange(v ? Number(v) : null)} />
+            )} />
+          </Grid.Col>
+        )}
         <Grid.Col span={12}>
           <Textarea label="Observación" placeholder="Opcional. Ej.: Se cambió la pasta térmica." autosize minRows={2}
             description="Se agrega a la descripción del mantenimiento."

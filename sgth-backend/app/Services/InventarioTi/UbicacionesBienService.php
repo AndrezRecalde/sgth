@@ -56,11 +56,12 @@ final class UbicacionesBienService
      *
      * @return Builder<BienInformatico>
      */
-    public function principalesEn(int $ubicacionId, ?int $unidadId = null): Builder
+    public function principalesEn(?int $ubicacionId, ?int $unidadId = null): Builder
     {
         return BienInformatico::whereNull('bien_padre_id')
             ->where('estado_operativo', '<>', EstadoBien::DADO_DE_BAJA->value)
-            ->where('ubicacion_id', $ubicacionId)
+            // Sin lugar, de todas partes: la campaña del proveedor recorre todo su contrato (5.1b).
+            ->when($ubicacionId, fn (Builder $q) => $q->where('ubicacion_id', $ubicacionId))
             ->when($unidadId, fn (Builder $q) => $q->where(fn (Builder $w) => $w
                 ->whereHas('asignacionVigente.servidor', fn (Builder $s) => $s->where('unidad_administrativa_id', $unidadId))
                 ->orWhere(fn (Builder $sin) => $sin->whereDoesntHave('asignacionVigente')->where('unidad_administrativa_id', $unidadId))))
