@@ -11,6 +11,7 @@ import { plural } from '@/lib/plural'
 import { CerrarConstatacionModal } from '@/features/inventario-ti/components/CerrarConstatacionModal'
 import { columnasFilasConstatacion } from '@/features/inventario-ti/components/constataciones.columns'
 import { EscaneoConstatacion } from '@/features/inventario-ti/components/EscaneoConstatacion'
+import { FirmasActaConstatacion } from '@/features/inventario-ti/components/FirmasActaConstatacion'
 import { useConstatacion, useConstatacionMutations } from '@/features/inventario-ti/hooks/useConstataciones'
 import type { FilaConstatacion } from '@/features/inventario-ti/services/constatacionesService'
 
@@ -94,6 +95,8 @@ export function ConstatacionView({ id }: { id: number }) {
         <SgthTable idAccessor="bien_id" records={filas} columns={columnasFilasConstatacion}
           noRecordsText="No hay equipos con este filtro." />
       </SectionCard>
+
+      <FirmasActaConstatacion constatacion={c} gestiona={gestiona} />
 
       <CerrarConstatacionModal constatacion={cerrando ? c : null} onClose={() => setCerrando(false)} />
     </PageShell>

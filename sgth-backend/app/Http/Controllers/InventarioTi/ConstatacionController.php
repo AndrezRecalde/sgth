@@ -15,7 +15,8 @@ use Illuminate\Validation\Rule;
 /**
  * La constatación física de los equipos (fase 5.2): abrirla para una
  * ubicación, escanear las etiquetas desde el celular, mover aquí lo que
- * estaba registrado en otra parte, cerrarla y descargar el acta.
+ * estaba registrado en otra parte, cerrarla y descargar el acta. Si participa
+ * Activos Fijos y Bodega (5.2b), el acta lleva su firma.
  */
 final class ConstatacionController extends Controller
 {
@@ -32,8 +33,9 @@ final class ConstatacionController extends Controller
             'nombre'                   => ['required', 'string', 'min:3', 'max:150'],
             'ubicacion_id'             => ['required', 'integer', Rule::exists('ubicaciones', 'id')->whereNull('deleted_at')],
             'unidad_administrativa_id' => ['nullable', 'integer', Rule::exists('unidades_administrativas', 'id')],
+            'participa_activos_fijos'  => ['sometimes', 'boolean'],
             'observaciones'            => ['nullable', 'string', 'max:2000'],
-        ], [], ['ubicacion_id' => 'ubicación', 'unidad_administrativa_id' => 'unidad']);
+        ], [], ['ubicacion_id' => 'ubicación', 'unidad_administrativa_id' => 'unidad', 'participa_activos_fijos' => 'participa Activos Fijos y Bodega']);
 
         $c = $this->constataciones->crear($datos, $request->user());
 
@@ -44,7 +46,22 @@ final class ConstatacionController extends Controller
     {
         $constatacion->load('ubicacion', 'unidad', 'iniciadaPor.servidor', 'cerradaPor.servidor');
 
-        return ApiResponse::ok([...$this->cabecera($constatacion), ...$this->constataciones->detalle($constatacion)], 'Constatación física.');
+        return ApiResponse::ok([
+            ...$this->cabecera($constatacion),
+            'firmante_activos_fijos' => $this->constataciones->firmanteActivosFijos($constatacion),
+            ...$this->constataciones->detalle($constatacion),
+        ], 'Constatación física.');
+    }
+
+    public function activosFijos(Request $request, Constatacion $constatacion): JsonResponse
+    {
+        $datos = $request->validate(['participa_activos_fijos' => ['required', 'boolean']], [], ['participa_activos_fijos' => 'participa Activos Fijos y Bodega']);
+        $c = $this->constataciones->cambiarActivosFijos($constatacion, $datos['participa_activos_fijos']);
+
+        return ApiResponse::ok(
+            $this->cabecera($c->load('ubicacion', 'unidad', 'iniciadaPor.servidor')),
+            $c->participa_activos_fijos ? 'Activos Fijos y Bodega firmará el acta.' : 'El acta queda sin la firma de Activos Fijos y Bodega.',
+        );
     }
 
     public function escanear(Request $request, Constatacion $constatacion): JsonResponse
@@ -96,6 +113,7 @@ final class ConstatacionController extends Controller
             'unidad_id'     => $c->unidad_administrativa_id,
             'unidad'        => $c->unidad?->nombre,
             'observaciones' => $c->observaciones,
+            'participa_activos_fijos' => $c->participa_activos_fijos,
             'iniciada_por'  => $c->iniciadaPor?->nombre_completo,
             'iniciada_en'   => $c->created_at?->toIso8601String(),
             'cerrada_por'   => $c->cerradaPor?->nombre_completo,

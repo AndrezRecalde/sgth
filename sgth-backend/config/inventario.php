@@ -19,6 +19,13 @@ return [
     'unidad_bodega_codigo' => env('INVENTARIO_UNIDAD_BODEGA_CODIGO', 'GADPE-01'),
 
     /*
+    | Quién firma por Activos Fijos y Bodega el acta de constatación física
+    | cuando esa unidad participa en el recorrido (fase 5.2b, P13): el jefe
+    | de la unidad con este código en la estructura, sellado al cerrar.
+    */
+    'unidad_activos_fijos_codigo' => env('INVENTARIO_UNIDAD_ACTIVOS_FIJOS_CODIGO', 'GADPE-01-01'),
+
+    /*
     | La carga del Excel de TIC (fase 1.4): de las siglas de la columna
     | «AREA» a la unidad administrativa, por su nombre en la estructura. TIC
     | revisa esta tabla antes de la carga real; lo que no esté aquí, o no

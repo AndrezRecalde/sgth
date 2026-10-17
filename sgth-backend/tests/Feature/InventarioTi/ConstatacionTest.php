@@ -1,8 +1,11 @@
 <?php
 
 use App\Enums\RegimenLaboral;
+use App\Models\Estructura\Puesto;
+use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\Servidor;
 use App\Models\InventarioTi\BienInformatico;
+use App\Models\InventarioTi\Constatacion;
 use App\Models\InventarioTi\Marca;
 use App\Models\InventarioTi\MovimientoUbicacionBien;
 use App\Models\InventarioTi\TipoBien;
@@ -10,6 +13,7 @@ use App\Models\InventarioTi\Ubicacion;
 use App\Models\User;
 use Database\Seeders\RolPermisoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\View;
 
 /*
 | La constatación física por QR (docs/diseno-subsistema-tic.md, fase 5.2): TIC
@@ -138,4 +142,102 @@ test('con unidad, solo se espera lo de esa unidad: la de quien lo tiene o, sin c
 
     expect($filas->pluck('codigo_institucional')->sort()->values()->all())
         ->toBe(collect([$dePaola->codigo_institucional, $bodegaTic->codigo_institucional])->sort()->values()->all());
+});
+
+// ── Activos Fijos y Bodega (5.2b, P13) ─────────────────────────────────────
+
+/** El jefe de Activos Fijos y Bodega en el organigrama: el titular con contrato vigente sobre el puesto de jefatura. */
+function jefeDeActivosFijosDePrueba(Puesto $puesto, string $apellido, string $cedula): ContratoServidor
+{
+    $s = Servidor::create([
+        'cedula' => $cedula, 'nombre' => 'Jefe', 'apellido' => $apellido,
+        'unidad_administrativa_id' => $puesto->unidad_administrativa_id, 'regimen_laboral' => RegimenLaboral::LOSEP, 'estado' => true,
+    ]);
+
+    return ContratoServidor::create([
+        'servidor_id' => $s->id, 'tipo_nombramiento' => 'nombramiento_permanente', 'unidad_administrativa_id' => $puesto->unidad_administrativa_id,
+        'puesto_id' => $puesto->id, 'fecha_inicio' => '2024-01-02', 'estado' => 'vigente',
+    ]);
+}
+
+/** El acta, en HTML, con los mismos datos con los que la ruta armó el PDF. */
+function actaDeConstatacionEnHtml(int $id): string
+{
+    $datos = null;
+    View::composer('pdf.inventario.acta-constatacion', function ($vista) use (&$datos) {
+        $datos ??= $vista->getData();
+    });
+    test()->get("/api/v1/inventario/constataciones/{$id}/acta")->assertOk();
+
+    return view('pdf.inventario.acta-constatacion', $datos)->render();
+}
+
+test('se abre con o sin Activos Fijos y Bodega, y la marca solo cambia mientras está en curso', function () {
+    $sin = abrirConstatacion();
+    $con = abrirConstatacion(['participa_activos_fijos' => true]);
+
+    $this->getJson("/api/v1/inventario/constataciones/{$sin}")->assertOk()
+        ->assertJsonPath('datos.participa_activos_fijos', false)->assertJsonPath('datos.firmante_activos_fijos', null);
+    $this->getJson("/api/v1/inventario/constataciones/{$con}")->assertOk()
+        ->assertJsonPath('datos.participa_activos_fijos', true)->assertJsonPath('datos.firmante_activos_fijos.sellado', false);
+    expect(collect($this->getJson('/api/v1/inventario/constataciones')->json('datos'))->pluck('participa_activos_fijos', 'id')->all())
+        ->toBe([$con => true, $sin => false]);
+
+    // En curso se corrige; el auditor no.
+    $this->patchJson("/api/v1/inventario/constataciones/{$sin}/activos-fijos", ['participa_activos_fijos' => true])->assertOk()
+        ->assertJsonPath('datos.participa_activos_fijos', true);
+    $this->patchJson("/api/v1/inventario/constataciones/{$sin}/activos-fijos", [])->assertStatus(422)
+        ->assertJsonValidationErrors('participa_activos_fijos', 'errores');
+    $this->actingAs($this->auditor, 'sanctum')
+        ->patchJson("/api/v1/inventario/constataciones/{$sin}/activos-fijos", ['participa_activos_fijos' => false])->assertForbidden();
+
+    // Cerrada, ya no.
+    $this->actingAs($this->tecnico, 'sanctum')->postJson("/api/v1/inventario/constataciones/{$con}/cerrar")->assertOk();
+    $this->patchJson("/api/v1/inventario/constataciones/{$con}/activos-fijos", ['participa_activos_fijos' => false])->assertStatus(422)
+        ->assertJsonPath('mensaje', 'La constatación ya está cerrada: no se puede modificar.');
+    expect(Constatacion::find($con)->participa_activos_fijos)->toBeTrue();
+});
+
+test('quien firma por Activos Fijos y Bodega queda sellado al cerrar, aunque después cambie el jefe', function () {
+    $unidad = unidadDePrueba(['codigo' => 'AFB-01', 'nombre' => 'Activos Fijos y Bodega']);
+    config(['inventario.unidad_activos_fijos_codigo' => 'AFB-01']);
+    $puesto = puestoJefeDePrueba($unidad, 'Jefe de Activos Fijos y Bodega');
+    $saliente = jefeDeActivosFijosDePrueba($puesto, 'Cortez', '0805550001');
+
+    $cerrada = abrirConstatacion(['participa_activos_fijos' => true]);
+    $abierta = abrirConstatacion(['participa_activos_fijos' => true]);
+    $this->getJson("/api/v1/inventario/constataciones/{$cerrada}")
+        ->assertJsonPath('datos.firmante_activos_fijos', ['nombre' => 'Jefe Cortez', 'cargo' => 'Jefe de Activos Fijos y Bodega', 'sellado' => false]);
+    $this->postJson("/api/v1/inventario/constataciones/{$cerrada}/cerrar")->assertOk();
+
+    // Cambia el jefe: la cerrada conserva al de su cierre; la que sigue en curso ya muestra al nuevo.
+    $saliente->update(['estado' => 'terminado', 'fecha_fin' => now()->toDateString()]);
+    jefeDeActivosFijosDePrueba($puesto, 'Valencia', '0805550002');
+
+    $this->getJson("/api/v1/inventario/constataciones/{$cerrada}")
+        ->assertJsonPath('datos.firmante_activos_fijos', ['nombre' => 'Jefe Cortez', 'cargo' => 'Jefe de Activos Fijos y Bodega', 'sellado' => true]);
+    $this->getJson("/api/v1/inventario/constataciones/{$abierta}")
+        ->assertJsonPath('datos.firmante_activos_fijos.nombre', 'Jefe Valencia');
+    expect(actaDeConstatacionEnHtml($cerrada))->toContain('Jefe Cortez')->not->toContain('Jefe Valencia');
+});
+
+test('el acta lleva dos firmas, o tres cuando participa Activos Fijos y Bodega', function () {
+    $sin = abrirConstatacion();
+    $this->postJson("/api/v1/inventario/constataciones/{$sin}/cerrar")->assertOk();
+    // Sin la unidad en el organigrama (o con el puesto vacante) sale el cargo, y se firma a mano.
+    config(['inventario.unidad_activos_fijos_codigo' => 'SIN-UNIDAD']);
+    $con = abrirConstatacion(['participa_activos_fijos' => true]);
+    $this->postJson("/api/v1/inventario/constataciones/{$con}/cerrar")->assertOk();
+
+    $html = actaDeConstatacionEnHtml($sin);
+    expect(substr_count($html, 'class="firma-rotulo"'))->toBe(2)
+        ->and($html)->not->toContain('Activos Fijos');
+
+    $html = actaDeConstatacionEnHtml($con);
+    expect(substr_count($html, 'class="firma-rotulo"'))->toBe(3)
+        ->and($html)->toContain('con la participación de la Unidad de Activos Fijos y Bodega')
+        ->toContain('Por Activos Fijos y Bodega')
+        ->toContain('Responsable de Activos Fijos y Bodega');
+    expect(Constatacion::find($con)->firmante_activos_fijos)
+        ->toBe(['nombre' => null, 'cargo' => 'Responsable de Activos Fijos y Bodega']);
 });

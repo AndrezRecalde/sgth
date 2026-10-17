@@ -37,6 +37,17 @@ export function useConstatacionMutations(id = 0) {
     },
     onError: notificar.alFallar('No se pudo mover el equipo'),
   })
+  const activosFijos = useMutation({
+    mutationFn: (participa: boolean) => constatacionesService.cambiarActivosFijos(id, participa),
+    onSuccess: (c) => {
+      notificar.exito(
+        c.participa_activos_fijos ? 'Participa Activos Fijos y Bodega' : 'Sin Activos Fijos y Bodega',
+        c.participa_activos_fijos ? 'Su responsable firmará el acta.' : 'El acta queda con las dos firmas de TIC.',
+      )
+      refrescar()
+    },
+    onError: notificar.alFallar('No se pudo cambiar la participación de Activos Fijos y Bodega'),
+  })
   const cerrar = useMutation({
     mutationFn: (observaciones: string | null) => constatacionesService.cerrar(id, observaciones),
     onSuccess: () => {
@@ -50,5 +61,5 @@ export function useConstatacionMutations(id = 0) {
     onError: notificar.alFallar('No se pudo generar el acta'),
   })
 
-  return { crear, escanear, mover, cerrar, acta }
+  return { crear, escanear, mover, activosFijos, cerrar, acta }
 }

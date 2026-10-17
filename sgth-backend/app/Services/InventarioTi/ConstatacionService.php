@@ -4,11 +4,14 @@ namespace App\Services\InventarioTi;
 
 use App\Enums\EstadoBien;
 use App\Exceptions\ReglaNegocioException;
+use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\InventarioTi\BienInformatico;
 use App\Models\InventarioTi\Constatacion;
 use App\Models\InventarioTi\ConstatacionItem;
 use App\Models\User;
+use App\Services\Estructura\FirmanteOrganigramaService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +24,11 @@ use Illuminate\Support\Facades\DB;
  * otra ubicación (y se puede mover aquí), recién registrado o dado de baja; lo
  * esperado que no apareció queda, al cerrar, como no encontrado. La hace solo
  * TIC (D11).
+ *
+ * Si Activos Fijos y Bodega participa en el recorrido (5.2b, P13), el acta
+ * lleva la firma de su responsable: se marca al abrirla y se puede cambiar
+ * mientras sigue en curso; quién firma sale del organigrama y queda sellado al
+ * cerrarla.
  */
 final class ConstatacionService
 {
@@ -29,7 +37,12 @@ final class ConstatacionService
         'asignacionVigente.servidor:id,nombre,apellido',
     ];
 
-    public function __construct(private readonly UbicacionesBienService $ubicaciones) {}
+    private const CARGO_ACTIVOS_FIJOS = 'Responsable de Activos Fijos y Bodega';
+
+    public function __construct(
+        private readonly UbicacionesBienService $ubicaciones,
+        private readonly FirmanteOrganigramaService $firmantes,
+    ) {}
 
     /** @return Collection<int, Constatacion> */
     public function listar(): Collection
@@ -45,7 +58,46 @@ final class ConstatacionService
 
     public function crear(array $datos, User $user): Constatacion
     {
-        return Constatacion::create([...$datos, 'estado' => Constatacion::EN_CURSO, 'iniciada_por' => $user->id]);
+        return Constatacion::create([
+            ...$datos,
+            'participa_activos_fijos' => (bool) ($datos['participa_activos_fijos'] ?? false),
+            'estado'                  => Constatacion::EN_CURSO,
+            'iniciada_por'            => $user->id,
+        ]);
+    }
+
+    /**
+     * Si Activos Fijos y Bodega participa: se corrige mientras la constatación
+     * sigue en curso. La condición va en el UPDATE, así que un cierre al mismo
+     * tiempo no deja una cerrada con la marca cambiada y sin firmante.
+     */
+    public function cambiarActivosFijos(Constatacion $c, bool $participa): Constatacion
+    {
+        $this->exigirEnCurso($c);
+        $cambiadas = Constatacion::whereKey($c->id)->where('estado', Constatacion::EN_CURSO)
+            ->update(['participa_activos_fijos' => $participa, 'updated_at' => now()]);
+        if ($cambiadas === 0) {
+            throw new ReglaNegocioException('La constatación ya está cerrada: no se puede modificar.');
+        }
+
+        return $c->fresh();
+    }
+
+    /**
+     * Quién firma por Activos Fijos y Bodega, o null si no participa. Cerrada,
+     * el que quedó sellado; en curso, el jefe de la unidad hoy, que todavía
+     * puede cambiar hasta el cierre.
+     *
+     * @return array{nombre: string|null, cargo: string|null, sellado: bool}|null
+     */
+    public function firmanteActivosFijos(Constatacion $c): ?array
+    {
+        if (! $c->participa_activos_fijos) {
+            return null;
+        }
+        $sellado = $c->enCurso() ? null : $c->firmante_activos_fijos;
+
+        return [...($sellado ?? $this->jefeDeActivosFijos($c->cerrada_en ?? now())), 'sellado' => $sellado !== null];
     }
 
     /**
@@ -135,6 +187,11 @@ final class ConstatacionService
         $this->exigirEnCurso($c);
 
         return DB::transaction(function () use ($c, $user, $observaciones) {
+            // Con la fila bloqueada, la marca de Activos Fijos que se sella es la última.
+            $c = Constatacion::lockForUpdate()->findOrFail($c->id);
+            $this->exigirEnCurso($c);
+            $cierre = now();
+
             $escaneados = $c->items()->pluck('bien_informatico_id');
             $this->esperados($c)->whereNotIn('id', $escaneados)->get(['id', 'ubicacion_id'])
                 ->each(fn (BienInformatico $b) => $c->items()->create([
@@ -142,8 +199,10 @@ final class ConstatacionService
                 ]));
 
             $c->update([
-                'estado' => Constatacion::CERRADA, 'cerrada_por' => $user->id, 'cerrada_en' => now(),
+                'estado' => Constatacion::CERRADA, 'cerrada_por' => $user->id, 'cerrada_en' => $cierre,
                 'observaciones' => $observaciones ?? $c->observaciones,
+                // Sellado: el acta se reimprime igual aunque después cambie el jefe.
+                'firmante_activos_fijos' => $c->participa_activos_fijos ? $this->jefeDeActivosFijos($cierre) : null,
             ]);
 
             return $c->fresh();
@@ -161,11 +220,27 @@ final class ConstatacionService
             'filas'        => collect($detalle['filas'])->groupBy('resultado'),
             'resumen'      => $detalle['resumen'],
             'resultados'   => ConstatacionItem::RESULTADOS + ['pendiente' => 'Pendiente'],
+            'activosFijos' => $this->firmanteActivosFijos($c),
             // El de cuando se cerró, o el de cuando empezó si sigue abierta (D3).
             ...app(\App\Contracts\Comunicacion\IdentidadInstitucionalServiceInterface::class)->paraDocumento($c->cerrada_en ?? $c->created_at),
         ])->setPaper('a4', 'portrait');
 
         return ['content' => $pdf->output(), 'filename' => "constatacion-{$c->id}.pdf"];
+    }
+
+    /**
+     * El jefe de Activos Fijos y Bodega en el organigrama a esa fecha, por el
+     * código de la unidad. Un puesto vacante sale con el cargo y sin nombre:
+     * se firma igual a mano.
+     *
+     * @return array{nombre: string|null, cargo: string|null}
+     */
+    private function jefeDeActivosFijos(CarbonInterface $fecha): array
+    {
+        $unidad = UnidadAdministrativa::where('codigo', (string) config('inventario.unidad_activos_fijos_codigo'))->value('id');
+        $f = $this->firmantes->jefeDeUnidadEn($unidad, $fecha->toDateString(), self::CARGO_ACTIVOS_FIJOS);
+
+        return ['nombre' => $f['servidor']?->nombre_completo, 'cargo' => $f['cargo']];
     }
 
     /** Lo que se espera encontrar: los equipos principales en servicio del lugar (y la unidad, si la acota). */

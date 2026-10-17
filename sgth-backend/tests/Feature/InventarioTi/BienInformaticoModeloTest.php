@@ -253,6 +253,9 @@ test('la migracion pasa los estados viejos a los nuevos segun la custodia', func
     $solicitudes = require database_path('migrations/2026_11_06_000000_solicitudes_a_bodega.php');
     // Y la del preventivo del proveedor (5.1b), de las campañas y de los contratos de vigencia.
     $delProveedor = require database_path('migrations/2026_11_07_000000_campanias_de_preventivo_del_proveedor.php');
+    // Y la de Activos Fijos en la constatación (5.2b), de `constataciones`.
+    $activosFijos = require database_path('migrations/2026_11_08_000000_activos_fijos_en_la_constatacion.php');
+    $activosFijos->down();
     $delProveedor->down();
     $solicitudes->down();
     $consumibles->down();
@@ -286,6 +289,7 @@ test('la migracion pasa los estados viejos a los nuevos segun la custodia', func
     $consumibles->up();
     $solicitudes->up();
     $delProveedor->up();
+    $activosFijos->up();
 
     $estado = fn (int $id) => DB::table('bienes_informaticos')->where('id', $id)->value('estado_operativo');
     expect($estado($conCustodio))->toBe('en_uso')

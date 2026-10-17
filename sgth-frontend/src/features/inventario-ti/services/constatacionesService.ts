@@ -15,6 +15,8 @@ export type Constatacion = {
   unidad_id: number | null
   unidad: string | null
   observaciones: string | null
+  /** Si Activos Fijos y Bodega participa en el recorrido y firma el acta (5.2b). */
+  participa_activos_fijos: boolean
   iniciada_por: string | null
   iniciada_en: string
   cerrada_por: string | null
@@ -49,7 +51,18 @@ export type ResumenConstatacion = {
   no_encontrados: number
 }
 
-export type DetalleConstatacion = Constatacion & { filas: FilaConstatacion[]; resumen: ResumenConstatacion }
+/**
+ * Quién firma el acta por Activos Fijos y Bodega: el jefe de la unidad en el
+ * organigrama. En curso es el de hoy (`sellado` falso); al cerrar queda
+ * sellado. Sin nombre, el puesto está vacante y se firma a mano.
+ */
+export type FirmanteActivosFijos = { nombre: string | null; cargo: string | null; sellado: boolean }
+
+export type DetalleConstatacion = Constatacion & {
+  firmante_activos_fijos: FirmanteActivosFijos | null
+  filas: FilaConstatacion[]
+  resumen: ResumenConstatacion
+}
 
 export type ResultadoEscaneo = {
   encontrado: boolean
@@ -62,6 +75,7 @@ export type NuevaConstatacionData = {
   nombre: string
   ubicacion_id: number
   unidad_administrativa_id: number | null
+  participa_activos_fijos: boolean
   observaciones: string | null
 }
 
@@ -75,6 +89,8 @@ export const constatacionesService = {
   escanear: (id: number, codigo: string) =>
     api.post<ApiResponse<ResultadoEscaneo>>(`${URL}/${id}/escanear`, { codigo }).then((r) => ({ ...r.data.datos, mensaje: r.data.mensaje })),
   mover: (id: number, itemId: number) => api.post(`${URL}/${id}/items/${itemId}/mover`),
+  cambiarActivosFijos: (id: number, participa: boolean) =>
+    api.patch<ApiResponse<Constatacion>>(`${URL}/${id}/activos-fijos`, { participa_activos_fijos: participa }).then((r) => r.data.datos),
   cerrar: (id: number, observaciones: string | null) =>
     api.post<ApiResponse<Constatacion>>(`${URL}/${id}/cerrar`, { observaciones }).then((r) => r.data.datos),
   acta: (id: number) => api.get<Blob>(`${URL}/${id}/acta`, { responseType: 'blob' }).then((r) => r.data),
