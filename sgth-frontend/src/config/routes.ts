@@ -188,7 +188,6 @@ export const ROUTES = {
     MIS_MARCACIONES: '/portal/mis-marcaciones',
     MARCACION_ONLINE: '/portal/marcacion-online',
     MIS_ACTIVIDADES: '/portal/mis-actividades',
-    ACADEMICO:       '/portal/academico',
     MIS_TICKETS:     '/portal/mis-tickets',
     /** Un ticket de la mesa de ayuda, desde quien lo abrió (fase 3.3). */
     MI_TICKET:       (id: number) => `/portal/mis-tickets/${id}`,
@@ -197,10 +196,7 @@ export const ROUTES = {
     /** Préstamo de equipos de TIC (fase 2.2): la disponibilidad y la solicitud. */
     PRESTAMOS:       '/portal/prestamos',
     MIS_PRESTAMOS:   '/portal/mis-prestamos',
-    CERTIFICADOS:    '/portal/certificados',
     DOCUMENTOS:      '/portal/documentos',
-    REPORTES:        '/portal/reportes',
-    MI_CV:           '/portal/mi-cv',
     /** La credencial digital del servidor (Comunicación Social, fase 3.2). */
     MI_CREDENCIAL:   '/portal/mi-credencial',
     VIATICOS:        '/portal/viaticos',

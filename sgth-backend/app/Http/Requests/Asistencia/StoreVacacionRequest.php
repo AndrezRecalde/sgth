@@ -23,7 +23,8 @@ class StoreVacacionRequest extends FormRequest
             'dias_solicitados' => 'required|integer|min:1',
             'tipo_dias'        => 'required|in:habiles,calendario',
             'observacion'      => 'nullable|string|max:500',
-            'unidad_administrativa_id' => 'nullable|exists:unidades_administrativas,id',
+            // Sin `unidad_administrativa_id`: la solicitud lleva siempre la
+            // unidad del servidor (`VacacionService::solicitar()`).
             'persona_reemplaza_id' => 'nullable|exists:servidores,id',
             // Aquí se aceptaba `periodo_vacacion_id`, que el cliente podía
             // mandar y ningún servicio leía nunca: de qué períodos salen los

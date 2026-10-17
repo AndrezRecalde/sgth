@@ -10,6 +10,7 @@ export function useVacacionMutations() {
   const invalidar = () => {
     qc.invalidateQueries({ queryKey: ['vacaciones'] })
     qc.invalidateQueries({ queryKey: ['periodos-vacaciones'] })
+    qc.invalidateQueries({ queryKey: ['mis-vacaciones'] })
   }
 
   const crear = useMutation({
