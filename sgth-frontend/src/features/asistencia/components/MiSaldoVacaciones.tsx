@@ -44,23 +44,23 @@ export function MiSaldoVacaciones({ servidorId, diasPorAprobar }: Props) {
       <SimpleGrid cols={{ base: 1, xs: 3 }} spacing="md">
         <StatCard
           label="Saldo disponible"
-          value={`${saldo.toFixed(1)} días`}
+          value={saldo.toFixed(1)}
           icon={IconSum}
           tone={alerta ? 'warning' : undefined}
-          hint={tope !== null ? `de un tope de ${tope.toFixed(0)} días` : undefined}
+          hint={tope !== null ? `días, de un tope de ${tope.toFixed(0)}` : 'días'}
           loading={isLoading}
         />
         <StatCard
           label="Por aprobar"
-          value={`${diasPorAprobar} días`}
+          value={diasPorAprobar}
           icon={IconHourglassHigh}
-          hint="todavía no se descuentan del saldo"
+          hint="días que aún no se descuentan del saldo"
         />
         <StatCard
           label="Gozados por vacaciones"
-          value={`${Number(resumen?.total_vacaciones_aprobadas ?? 0).toFixed(1)} días`}
+          value={Number(resumen?.total_vacaciones_aprobadas ?? 0).toFixed(1)}
           icon={IconBeach}
-          hint="en todos sus períodos"
+          hint="días, en todos sus períodos"
           loading={isLoading}
         />
       </SimpleGrid>
