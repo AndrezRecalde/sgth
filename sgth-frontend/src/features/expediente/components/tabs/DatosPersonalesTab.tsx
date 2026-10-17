@@ -8,9 +8,14 @@ import { ESTADO_CIVIL_LABELS, GENERO_LABELS } from '../../constants/servidor'
 
 interface Props {
   servidor: ServidorConRelaciones
+  /**
+   * La condición de salud remite a la pestaña Condición del expediente. «Mi
+   * perfil» del portal no la tiene, así que la oculta.
+   */
+  conCondicion?: boolean
 }
 
-export function DatosPersonalesTab({ servidor }: Props) {
+export function DatosPersonalesTab({ servidor, conCondicion = true }: Props) {
   const nombreCompleto = [
     servidor.apellido,
     servidor.segundo_apellido,
@@ -75,23 +80,25 @@ export function DatosPersonalesTab({ servidor }: Props) {
         <DetailList items={contacto} />
       </SectionCard>
 
-      <SectionCard
-        title="Condición de salud"
-        description="El detalle de cada caso vive en la pestaña Condición."
-      >
-        {sinCondiciones ? (
-          <Text size="sm" c="dimmed">Sin condiciones registradas</Text>
-        ) : (
-          <Group gap="xs">
-            {servidor.tiene_discapacidad && (
-              <StatusBadge>Tiene discapacidad</StatusBadge>
-            )}
-            {servidor.tiene_enfermedad_catastrofica && (
-              <StatusBadge>Enfermedad catastrófica</StatusBadge>
-            )}
-          </Group>
-        )}
-      </SectionCard>
+      {conCondicion && (
+        <SectionCard
+          title="Condición de salud"
+          description="El detalle de cada caso vive en la pestaña Condición."
+        >
+          {sinCondiciones ? (
+            <Text size="sm" c="dimmed">Sin condiciones registradas</Text>
+          ) : (
+            <Group gap="xs">
+              {servidor.tiene_discapacidad && (
+                <StatusBadge>Tiene discapacidad</StatusBadge>
+              )}
+              {servidor.tiene_enfermedad_catastrofica && (
+                <StatusBadge>Enfermedad catastrófica</StatusBadge>
+              )}
+            </Group>
+          )}
+        </SectionCard>
+      )}
     </Stack>
   )
 }

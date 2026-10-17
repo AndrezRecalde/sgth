@@ -19,8 +19,12 @@ type Handlers = {
   onDelete: (id: number) => void
 }
 
+/**
+ * Sin `handlers`, la tabla es de solo lectura: así la muestra «Mi perfil» del
+ * portal, donde el servidor ve su formación pero la registra Talento Humano.
+ */
 export const getHistorialAcademicoColumns = (
-  { onEdit, onDelete }: Handlers,
+  handlers?: Handlers,
 ): DataTableColumn<HistorialAcademicoServidor>[] => [
   {
     accessor: 'titulo_capacitacion',
@@ -74,7 +78,13 @@ export const getHistorialAcademicoColumns = (
       <Text size="sm" ff="monospace">{codigo_senescyt || '—'}</Text>
     ),
   },
-  {
+  ...(handlers ? [columnaAcciones(handlers)] : []),
+]
+
+function columnaAcciones(
+  { onEdit, onDelete }: Handlers,
+): DataTableColumn<HistorialAcademicoServidor> {
+  return {
     accessor: 'acciones',
     title: '',
     width: 50,
@@ -98,5 +108,5 @@ export const getHistorialAcademicoColumns = (
         },
       ]} />
     ),
-  },
-]
+  }
+}
