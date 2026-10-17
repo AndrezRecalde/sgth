@@ -15,6 +15,7 @@ use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Autoservicio\AutoservicioController;
 use App\Http\Controllers\Autoservicio\MisActividadesController;
 use App\Http\Controllers\Autoservicio\MiCredencialController;
+use App\Http\Controllers\Autoservicio\MiPerfilController;
 use App\Http\Controllers\Autoservicio\MisEquiposController;
 use App\Http\Controllers\Autoservicio\MisPrestamosController;
 use App\Http\Controllers\Autoservicio\MisCertificadosMedicosController;
@@ -1018,6 +1019,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::get('mi-credencial', [MiCredencialController::class, 'show'])
             ->middleware('permission:acceso-autoservicio');
         Route::get('mi-credencial/pdf', [MiCredencialController::class, 'pdf'])
+            ->middleware('permission:acceso-autoservicio');
+        // «Mi perfil» (2026-10-17): la formación propia y la hoja de vida en PDF.
+        Route::get('mi-formacion-academica', [MiPerfilController::class, 'formacion'])
+            ->middleware('permission:acceso-autoservicio');
+        Route::get('mi-hoja-de-vida', [MiPerfilController::class, 'hojaDeVida'])
             ->middleware('permission:acceso-autoservicio');
         Route::get('mis-equipos/{asignacion}/acta', [MisEquiposController::class, 'acta'])
             ->middleware('permission:acceso-autoservicio');
