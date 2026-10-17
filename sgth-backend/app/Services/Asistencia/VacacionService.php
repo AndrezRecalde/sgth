@@ -184,7 +184,10 @@ class VacacionService implements VacacionServiceInterface
             // descartaban aquí: el PDF salía siempre con «—» en los dos.
             $vacacion = Vacacion::create([
                 'servidor_id'              => $servidorId,
-                'unidad_administrativa_id' => $datos['unidad_administrativa_id'] ?? $servidor->unidad_administrativa_id ?? null,
+                // Siempre la del servidor, como en permisos (#372): la unidad
+                // decide qué jefe la ve (`VacacionPolicy::ver`), y desde el
+                // portal cualquiera podía mandar otra y dejársela a ese jefe.
+                'unidad_administrativa_id' => $servidor->unidad_administrativa_id,
                 'jefe_id'                  => $datos['jefe_id'] ?? null,
                 'persona_reemplaza_id'     => $reemplazoId,
                 'motivo'                   => $datos['motivo'] ?? null,

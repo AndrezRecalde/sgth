@@ -87,8 +87,11 @@ final class AutoservicioService implements AutoservicioServiceInterface
     {
         $saldo = $this->vacacionService->calcularSaldoActual($servidorId);
         
+        // created_at es timestamp(0): sin el id, dos del mismo segundo salían
+        // en cualquier orden.
         $solicitudes = Vacacion::where('servidor_id', $servidorId)
             ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
             ->get();
 
         return [
