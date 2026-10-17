@@ -9,6 +9,7 @@ use App\Exceptions\ReglaNegocioException;
 use App\Models\InventarioTi\BienInformatico;
 use App\Models\InventarioTi\CampaniaEquipo;
 use App\Models\InventarioTi\CampaniaMantenimiento;
+use App\Models\InventarioTi\ContratoVigencia;
 use App\Models\InventarioTi\MantenimientoBien;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -28,10 +29,17 @@ use Illuminate\Support\Facades\DB;
  *   a contar como pendiente.
  * - Un equipo que no se pudo atender se omite con su motivo; al cerrar la
  *   campaña, lo pendiente queda como no realizado.
+ * - La del proveedor (5.1b, P12) la hace la empresa de la vigencia
+ *   tecnológica: solo entran equipos de su contrato, cada uno hecho es un
+ *   mantenimiento del proveedor contado contra ese contrato, y no se registra
+ *   después de que el contrato venció. Sin lugar, recorre todo el contrato.
  */
 final class CampaniaMantenimientoService
 {
-    private const RELACIONES = ['ubicacion:id,sede,piso', 'unidad:id,nombre', 'tecnico.servidor:id,nombre,apellido'];
+    private const RELACIONES = [
+        'ubicacion:id,sede,piso', 'unidad:id,nombre', 'tecnico.servidor:id,nombre,apellido',
+        'contrato:id,proceso,proveedor,fecha_inicio,fecha_fin',
+    ];
 
     private const RELACIONES_BIEN = [
         'tipo:id,nombre', 'marca:id,nombre', 'ubicacion:id,sede,piso',
@@ -58,10 +66,22 @@ final class CampaniaMantenimientoService
 
     public function crear(array $datos, User $user): CampaniaMantenimiento
     {
-        return DB::transaction(function () use ($datos, $user) {
-            $c = CampaniaMantenimiento::create([...$datos, 'created_by' => $user->id]);
-            $ids = $this->ubicaciones->principalesEn($c->ubicacion_id, $c->unidad_administrativa_id)->pluck('id');
-            $this->sumar($c, $ids, $user);
+        $delProveedor = ($datos['realizado_por'] ?? MantenimientoBien::POR_TIC) === MantenimientoBien::POR_PROVEEDOR;
+        if ($delProveedor) {
+            $contrato = ContratoVigencia::findOrFail($datos['contrato_vigencia_id']);
+            if ($contrato->fecha_fin && Carbon::parse($datos['fecha_inicio'])->gt($contrato->fecha_fin)) {
+                throw new ReglaNegocioException("El contrato {$contrato->proceso} venció el {$contrato->fecha_fin->format('d/m/Y')}: una campaña después ya no cuenta contra él.");
+            }
+        }
+
+        return DB::transaction(function () use ($datos, $user, $delProveedor) {
+            $c = CampaniaMantenimiento::create([
+                ...$datos,
+                'realizado_por'        => $delProveedor ? MantenimientoBien::POR_PROVEEDOR : MantenimientoBien::POR_TIC,
+                'contrato_vigencia_id' => $delProveedor ? $datos['contrato_vigencia_id'] : null,
+                'created_by'           => $user->id,
+            ]);
+            $this->sumar($c, $this->esperados($c)->pluck('id'), $user);
 
             return $c;
         });
@@ -86,7 +106,7 @@ final class CampaniaMantenimientoService
         $filas = $c->equipos()
             ->with([
                 'bien' => fn ($q) => $q->with(self::RELACIONES_BIEN),
-                'mantenimiento:id,fecha_mantenimiento,tecnico_id,anulado_en',
+                'mantenimiento:id,fecha_mantenimiento,tecnico_id,realizado_por,anulado_en',
                 'mantenimiento.tecnico.servidor:id,nombre,apellido',
                 'actualizadoPor.servidor:id,nombre,apellido',
             ])
@@ -111,14 +131,15 @@ final class CampaniaMantenimientoService
 
     /**
      * Suma equipos a la campaña, de cualquier lugar: los principales que no
-     * están dados de baja. Los que ya estaban no se repiten.
+     * están dados de baja (en la del proveedor, solo los de su contrato). Los
+     * que ya estaban no se repiten.
      *
      * @param  list<int>  $bienIds
      */
     public function agregar(CampaniaMantenimiento $c, array $bienIds, User $user): int
     {
         $this->exigirAbierta($c);
-        $bienes = BienInformatico::whereKey($bienIds)->get(['id', 'codigo_institucional', 'bien_padre_id', 'estado_operativo']);
+        $bienes = BienInformatico::whereKey($bienIds)->get(['id', 'codigo_institucional', 'bien_padre_id', 'estado_operativo', 'contrato_vigencia_id']);
 
         $componentes = $bienes->whereNotNull('bien_padre_id');
         if ($componentes->isNotEmpty()) {
@@ -127,6 +148,13 @@ final class CampaniaMantenimientoService
         $deBaja = $bienes->filter(fn (BienInformatico $b) => $b->estado_operativo === EstadoBien::DADO_DE_BAJA);
         if ($deBaja->isNotEmpty()) {
             throw new ReglaNegocioException('Están dados de baja: ' . $deBaja->pluck('codigo_institucional')->join(', ') . '.');
+        }
+        // El proveedor solo atiende lo que cubre su contrato: lo demás no cuenta contra él.
+        $fuera = $c->esDelProveedor()
+            ? $bienes->filter(fn (BienInformatico $b) => (int) $b->contrato_vigencia_id !== (int) $c->contrato_vigencia_id)
+            : collect();
+        if ($fuera->isNotEmpty()) {
+            throw new ReglaNegocioException('No están en el contrato ' . $c->contrato?->proceso . ': ' . $fuera->pluck('codigo_institucional')->join(', ') . '.');
         }
 
         return $this->sumar($c, $bienes->pluck('id'), $user);
@@ -145,8 +173,9 @@ final class CampaniaMantenimientoService
 
     /**
      * Marca como hechos los equipos elegidos: a cada uno le registra un
-     * mantenimiento preventivo hecho por TIC, con lo que dice la campaña (y la
-     * observación, si la hay). Pueden estar pendientes u omitidos.
+     * mantenimiento preventivo, con lo que dice la campaña (y la observación,
+     * si la hay). Pueden estar pendientes u omitidos. En la de TIC lo hizo su
+     * técnico; en la del proveedor, la empresa, contra su contrato.
      *
      * @param  list<int>  $itemIds
      */
@@ -156,6 +185,10 @@ final class CampaniaMantenimientoService
         $fecha = Carbon::parse($datos['fecha']);
         if ($fecha->lt($c->fecha_inicio)) {
             throw new ReglaNegocioException('La fecha no puede ser anterior al inicio de la campaña (' . $c->fecha_inicio->format('d/m/Y') . ').');
+        }
+        $contrato = $c->esDelProveedor() ? $c->contrato : null;
+        if ($contrato?->fecha_fin && $fecha->gt($contrato->fecha_fin)) {
+            throw new ReglaNegocioException("El contrato {$contrato->proceso} venció el {$contrato->fecha_fin->format('d/m/Y')}: lo que el proveedor haga después ya no cuenta contra él.");
         }
 
         $items = $this->elegidos($c, $itemIds);
@@ -168,13 +201,15 @@ final class CampaniaMantenimientoService
 
         return DB::transaction(function () use ($c, $items, $datos, $descripcion, $user) {
             foreach ($items as $e) {
+                // El del proveedor va sin técnico y contra el contrato de la campaña.
                 $m = $this->mantenimientos->registrar([
-                    'bien_informatico_id' => $e->bien_informatico_id,
-                    'tipo_mantenimiento'  => TipoMantenimiento::PREVENTIVO->value,
-                    'realizado_por'       => MantenimientoBien::POR_TIC,
-                    'fecha_mantenimiento' => $datos['fecha'],
-                    'tecnico_id'          => $datos['tecnico_id'] ?? $c->tecnico_id,
-                    'descripcion'         => mb_substr("Campaña «{$c->nombre}»: {$descripcion}", 0, 2000),
+                    'bien_informatico_id'  => $e->bien_informatico_id,
+                    'tipo_mantenimiento'   => TipoMantenimiento::PREVENTIVO->value,
+                    'realizado_por'        => $c->realizado_por,
+                    'contrato_vigencia_id' => $c->contrato_vigencia_id,
+                    'fecha_mantenimiento'  => $datos['fecha'],
+                    'tecnico_id'           => $c->esDelProveedor() ? null : ($datos['tecnico_id'] ?? $c->tecnico_id),
+                    'descripcion'          => mb_substr("Campaña «{$c->nombre}»: {$descripcion}", 0, 2000),
                 ]);
                 $e->update([
                     'estado' => CampaniaEquipo::HECHO, 'mantenimiento_bien_id' => $m->id,
@@ -226,6 +261,12 @@ final class CampaniaMantenimientoService
             'nombre'      => $c->nombre,
             'descripcion' => $c->descripcion,
             'situacion'   => $c->situacion(),
+            'realizado_por' => $c->realizado_por,
+            'contrato_id' => $c->contrato_vigencia_id,
+            'contrato'    => $c->contrato?->proceso,
+            'proveedor'   => $c->contrato?->proveedor,
+            // Hasta cuándo cuenta contra el contrato lo que haga el proveedor.
+            'contrato_fin' => $c->contrato?->fecha_fin?->toDateString(),
             'ubicacion_id' => $c->ubicacion_id,
             'ubicacion'   => $c->ubicacion?->nombre,
             'unidad_id'   => $c->unidad_administrativa_id,
@@ -271,6 +312,17 @@ final class CampaniaMantenimientoService
         return $items;
     }
 
+    /**
+     * Lo que entra al crearla: los equipos principales en servicio del lugar
+     * (y de la unidad, si se acota). En la del proveedor, solo los de su
+     * contrato; y sin lugar, todos los del contrato.
+     */
+    private function esperados(CampaniaMantenimiento $c): Builder
+    {
+        return $this->ubicaciones->principalesEn($c->ubicacion_id, $c->unidad_administrativa_id)
+            ->when($c->esDelProveedor(), fn (Builder $q) => $q->where('contrato_vigencia_id', $c->contrato_vigencia_id));
+    }
+
     /** Hecho de verdad: con su mantenimiento sin anular (lo mismo que `CampaniaEquipo::estadoEfectivo`). */
     private function soloHechos(Builder $q): Builder
     {
@@ -297,7 +349,10 @@ final class CampaniaMantenimientoService
             'anulado'              => $e->estado === CampaniaEquipo::HECHO && ! $hecho,
             'mantenimiento_id'     => $hecho ? $e->mantenimiento_bien_id : null,
             'fecha'                => $hecho ? $e->mantenimiento->fecha_mantenimiento?->toDateString() : null,
-            'tecnico'              => $hecho ? $e->mantenimiento->tecnico?->nombre_completo : null,
+            // El del proveedor no tiene técnico: lo hizo la empresa del contrato.
+            'tecnico'              => $hecho
+                ? ($e->mantenimiento->realizado_por === MantenimientoBien::POR_PROVEEDOR ? ($c->contrato?->proveedor ?? 'Proveedor de la vigencia') : $e->mantenimiento->tecnico?->nombre_completo)
+                : null,
             'motivo_omision'       => $estado === CampaniaEquipo::OMITIDO ? $e->motivo_omision : null,
             'actualizado_por'      => $e->actualizadoPor?->nombre_completo,
             'actualizado_en'       => $e->updated_at?->toIso8601String(),

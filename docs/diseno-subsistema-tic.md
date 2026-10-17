@@ -832,6 +832,20 @@ El diseño detallado está en `docs/Diseno_Consumibles_TIC.docx`. Las respuestas
 - **Pantallas**: las pestañas «Consumo» y «Saldo de consumibles» en Tecnologías › Reportes, y el botón «Excel» en el kárdex del detalle.
 - **Permisos**: los de consultar el inventario (`ver-inventario-ti` o `gestionar-inventario-ti`), también el auditor.
 
+**Hecho en la 5.1b** (la campaña de preventivo del proveedor) [P12]
+
+- **Migración `2026_11_07`**: `campanias_mantenimiento` suma `realizado_por` (`tic` o `proveedor`) y `contrato_vigencia_id`. El técnico y el lugar pasan a ser opcionales en la tabla; una restricción de la base exige técnico y lugar en la de TIC, y el contrato en la del proveedor.
+- **Reglas decididas**:
+  - La del proveedor pide su contrato de vigencia. El técnico de TIC es opcional: acompaña o hace el seguimiento, pero el mantenimiento queda a nombre de la empresa, sin técnico.
+  - Solo entran equipos que cubre el contrato. Al crearla, los del contrato en el lugar elegido o, sin lugar, todos los del contrato; al agregar, se rechazan los que no cubre.
+  - Cada equipo hecho es un mantenimiento preventivo del proveedor (`POR_PROVEEDOR`, con su contrato) y sale entre los mantenimientos de ese contrato.
+  - No se crea una campaña que empieza después del fin del contrato, ni se registra lo que el proveedor hizo después de ese fin: ya no cuenta contra él.
+  - Quién la hace, el contrato y el lugar quedan como se crearon: al editar no se cambian.
+- **Pantallas**:
+  - En la nueva campaña, «La hace TIC / La hace el proveedor de la vigencia». Con el proveedor: el contrato (solo los vigentes, con cuántos equipos cubre y hasta cuándo), la ubicación opcional («Todas las del contrato») y el técnico de TIC que acompaña.
+  - El listado dice quién la hace (la empresa y su contrato); el detalle, lo mismo en su cabecera.
+  - Al marcar como hecho no hay técnico que elegir, y la fecha no pasa del fin del contrato. Al agregar equipos se avisa que solo entran los del contrato.
+
 ---
 
 ## 9. Decisiones de la Unidad de TIC

@@ -9,6 +9,7 @@ import { formatFecha } from '@/lib/fecha'
 import { plural } from '@/lib/plural'
 import { ESTADO_EQUIPO_CAMPANIA, SITUACION_CAMPANIA } from '../constants/campania'
 import type { Campania, FilaCampania } from '../services/campaniasService'
+import { lugarDeCampania, quienHaceCampania } from '../utils/campania'
 
 /** El avance de una campaña: hechos sobre el total, y los omitidos aparte. */
 export function AvanceCampania({ hechos, total, omitidos }: { hechos: number; total: number; omitidos: number }) {
@@ -33,11 +34,24 @@ export const columnasCampanias: DataTableColumn<Campania>[] = [
     render: (c) => (
       <Stack gap={0}>
         <Text size="sm" fw={500}>{c.nombre}</Text>
-        <Text size="xs" c="dimmed">{c.ubicacion}{c.unidad ? ` · ${c.unidad}` : ''}</Text>
+        <Text size="xs" c="dimmed">{lugarDeCampania(c)}</Text>
       </Stack>
     ),
   },
-  { accessor: 'tecnico', title: 'Técnico', width: 200, render: (c) => c.tecnico ?? '—' },
+  {
+    accessor: 'tecnico',
+    title: 'Quién la hace',
+    width: 220,
+    render: (c) => {
+      const { principal, detalle } = quienHaceCampania(c)
+      return (
+        <Stack gap={0}>
+          <Text size="sm">{principal}</Text>
+          {detalle && <Text size="xs" c="dimmed">{detalle}</Text>}
+        </Stack>
+      )
+    },
+  },
   {
     accessor: 'fecha_inicio',
     title: 'Período',
