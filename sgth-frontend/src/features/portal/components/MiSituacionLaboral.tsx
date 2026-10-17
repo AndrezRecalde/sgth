@@ -17,8 +17,7 @@ interface Props {
  * aquí basta la foto de hoy.
  */
 export function MiSituacionLaboral({ servidor, nombramiento }: Props) {
-  const anios = servidor.anios_servicio
-
+  // Los años de servicio no van aquí: ya los da Identificación, debajo.
   const items = [
     {
       label: 'Puesto',
@@ -34,10 +33,6 @@ export function MiSituacionLaboral({ servidor, nombramiento }: Props) {
     { label: 'Régimen laboral', value: REGIMEN_LABELS[servidor.regimen_laboral ?? ''] ?? servidor.regimen_laboral },
     { label: 'Nombramiento', value: nombramiento },
     { label: 'Ingreso a la institución', value: formatFecha(servidor.fecha_ingreso_institucion) },
-    {
-      label: 'Años de servicio',
-      value: anios != null ? `${anios} ${anios === 1 ? 'año' : 'años'}` : null,
-    },
   ]
 
   return (
