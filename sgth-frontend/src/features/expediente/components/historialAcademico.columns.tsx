@@ -40,6 +40,24 @@ export const getHistorialAcademicoColumns = (
     ),
   },
   {
+    accessor: 'estado',
+    title: 'Estado',
+    width: 170,
+    // El motivo del rechazo, debajo: es lo primero que se busca.
+    render: ({ estado, motivo_rechazo }) => (
+      <Stack gap={2}>
+        <StatusBadge tone={TONO_ESTADO_FORMACION[estado] ?? 'neutral'}>
+          {ESTADO_FORMACION_LABELS[estado] ?? estado}
+        </StatusBadge>
+        {estado === 'rechazado' && motivo_rechazo && (
+          <Text size="xs" c="dimmed" lineClamp={2} title={motivo_rechazo}>
+            {motivo_rechazo}
+          </Text>
+        )}
+      </Stack>
+    ),
+  },
+  {
     accessor: 'institucion',
     title: 'Institución',
     render: ({ institucion, nacionalidad_estudio }) => (
@@ -54,7 +72,8 @@ export const getHistorialAcademicoColumns = (
   {
     accessor: 'tipo_estudio',
     title: 'Tipo',
-    width: 120,
+    // «TÍTULO ACADÉMICO» mide ~117 px más el relleno: con 120 se salía.
+    width: 160,
     render: ({ tipo_estudio }) => (
       <StatusBadge size="xs">
         {tipo_estudio === 'estudio' ? 'Título académico' : 'Capacitación'}
@@ -75,24 +94,6 @@ export const getHistorialAcademicoColumns = (
     width: 120,
     render: ({ codigo_senescyt }) => (
       <Text size="sm" ff="monospace">{codigo_senescyt || '—'}</Text>
-    ),
-  },
-  {
-    accessor: 'estado',
-    title: 'Estado',
-    width: 170,
-    // El motivo del rechazo, debajo: es lo primero que se busca.
-    render: ({ estado, motivo_rechazo }) => (
-      <Stack gap={2}>
-        <StatusBadge tone={TONO_ESTADO_FORMACION[estado] ?? 'neutral'}>
-          {ESTADO_FORMACION_LABELS[estado] ?? estado}
-        </StatusBadge>
-        {estado === 'rechazado' && motivo_rechazo && (
-          <Text size="xs" c="dimmed" lineClamp={2} title={motivo_rechazo}>
-            {motivo_rechazo}
-          </Text>
-        )}
-      </Stack>
     ),
   },
   ...(handlers ? [columnaAcciones(handlers)] : []),

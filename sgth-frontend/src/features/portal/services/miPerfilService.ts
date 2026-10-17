@@ -22,7 +22,11 @@ export const miPerfilService = {
       if (valor !== null && valor !== undefined && valor !== '') datos.append(campo, valor)
     })
 
-    return api.post<ApiResponse<HistorialAcademicoServidor>>(FORMACION, datos)
+    // La instancia de axios fija JSON: sin esto el PDF no llegaba.
+    return api
+      .post<ApiResponse<HistorialAcademicoServidor>>(FORMACION, datos, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
       .then(r => r.data)
   },
 
