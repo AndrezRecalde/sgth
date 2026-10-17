@@ -15,6 +15,7 @@ use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Autoservicio\AutoservicioController;
 use App\Http\Controllers\Autoservicio\MisActividadesController;
 use App\Http\Controllers\Autoservicio\MiCredencialController;
+use App\Http\Controllers\Autoservicio\MiFormacionController;
 use App\Http\Controllers\Autoservicio\MiPerfilController;
 use App\Http\Controllers\Autoservicio\MisEquiposController;
 use App\Http\Controllers\Autoservicio\MisPrestamosController;
@@ -628,6 +629,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::get('servidores/{id}/certificado-laboral', [CertificadoLaboralController::class, 'generar'])
             ->middleware('role:admin-uath|asistente-uath');
 
+        // Los títulos y cursos que los servidores registraron desde el portal
+        // y esperan a Talento Humano. Mismo rol que el historial académico.
+        Route::get('formacion-por-validar', [HistorialAcademicoController::class, 'porValidar'])
+            ->middleware('role:admin-uath|asistente-uath');
+
         // La bitácora de lo ya emitido. Mismo rol que emitir: quien no puede
         // entregar un certificado tampoco tiene por qué saber a quién se le
         // entregó uno ni cuándo.
@@ -676,6 +682,14 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 Route::post('historial-academico', [HistorialAcademicoController::class, 'store']);
                 Route::put('historial-academico/{id}', [HistorialAcademicoController::class, 'update']);
                 Route::delete('historial-academico/{id}', [HistorialAcademicoController::class, 'destroy']);
+                // Lo que el servidor registra desde «Mi perfil» llega por
+                // validar, con su PDF (2026-10-17).
+                Route::post('historial-academico/{id}/validar', [HistorialAcademicoController::class, 'validar'])
+                    ->whereNumber('id');
+                Route::post('historial-academico/{id}/rechazar', [HistorialAcademicoController::class, 'rechazar'])
+                    ->whereNumber('id');
+                Route::get('historial-academico/{id}/documento', [HistorialAcademicoController::class, 'documento'])
+                    ->whereNumber('id');
 
                 // Cargas familiares
                 Route::get('cargas-familiares', [CargaFamiliarController::class, 'index']);
@@ -1021,8 +1035,14 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::get('mi-credencial/pdf', [MiCredencialController::class, 'pdf'])
             ->middleware('permission:acceso-autoservicio');
         // «Mi perfil» (2026-10-17): la formación propia y la hoja de vida en PDF.
-        Route::get('mi-formacion-academica', [MiPerfilController::class, 'formacion'])
-            ->middleware('permission:acceso-autoservicio');
+        // Los títulos y cursos que registra el propio servidor quedan por
+        // validar hasta que los revisa Talento Humano.
+        Route::middleware('permission:acceso-autoservicio')->group(function () {
+            Route::get('mi-formacion-academica', [MiFormacionController::class, 'index']);
+            Route::post('mi-formacion-academica', [MiFormacionController::class, 'store']);
+            Route::delete('mi-formacion-academica/{id}', [MiFormacionController::class, 'destroy'])->whereNumber('id');
+            Route::get('mi-formacion-academica/{id}/documento', [MiFormacionController::class, 'documento'])->whereNumber('id');
+        });
         Route::get('mi-hoja-de-vida', [MiPerfilController::class, 'hojaDeVida'])
             ->middleware('permission:acceso-autoservicio');
         Route::get('mis-equipos/{asignacion}/acta', [MisEquiposController::class, 'acta'])

@@ -7,8 +7,10 @@ import { IconPlus, IconSchool } from '@tabler/icons-react'
 import { DataState, SectionCard, SgthTable } from '@/components/ui'
 import { useHistorialAcademico } from '../../hooks/useHistorialAcademico'
 import { useHistorialAcademicoMutations } from '../../hooks/useHistorialAcademicoMutations'
+import { useValidacionFormacion } from '../../hooks/useValidacionFormacion'
 import { getHistorialAcademicoColumns } from '../historialAcademico.columns'
 import { HistorialAcademicoModal } from '../HistorialAcademicoModal'
+import { RechazarFormacionModal } from '../RechazarFormacionModal'
 import type { HistorialAcademicoServidor } from '@/types/api'
 
 interface Props { servidorId: number }
@@ -16,12 +18,17 @@ interface Props { servidorId: number }
 export function AcademicoTab({ servidorId }: Props) {
   const [opened, { open, close }] = useDisclosure(false)
   const [editItem, setEditItem] = useState<HistorialAcademicoServidor | null>(null)
+  const [rechazando, setRechazando] = useState<HistorialAcademicoServidor | null>(null)
   const { data: historial = [], isLoading, error } = useHistorialAcademico(servidorId)
   const { eliminar } = useHistorialAcademicoMutations(servidorId)
+  const { validar, verDocumento } = useValidacionFormacion()
 
   const columns = getHistorialAcademicoColumns({
     onEdit: (item) => { setEditItem(item); open() },
     onDelete: (id) => eliminar.mutate(id),
+    onDocumento: (item) => verDocumento.mutate({ servidorId, id: item.id }),
+    onValidar: (item) => validar.mutate({ servidorId, id: item.id }),
+    onRechazar: setRechazando,
   })
 
   return (
@@ -62,6 +69,8 @@ export function AcademicoTab({ servidorId }: Props) {
         servidorId={servidorId}
         initialValues={editItem}
       />
+
+      <RechazarFormacionModal registro={rechazando} onClose={() => setRechazando(null)} />
     </Stack>
   )
 }

@@ -1140,7 +1140,32 @@ export type HistorialAcademicoServidor = {
   fecha_fin: string | null
   titulo_capacitacion: string
   codigo_senescyt: string | null
+  /**
+   * Lo que registra el servidor desde el portal llega por validar, con su PDF;
+   * lo que registra Talento Humano, validado (2026-10-17).
+   */
+  estado: EstadoFormacion
+  tiene_documento: boolean
+  registrado_por?: number | null
+  validado_por?: number | null
+  validado_en?: string | null
+  motivo_rechazo?: string | null
   created_at?: string
+}
+
+export type EstadoFormacion = 'validado' | 'por_validar' | 'rechazado'
+
+/** Un título o curso por validar, con de quién es (`formacion-por-validar`). */
+export type FormacionPorValidar = HistorialAcademicoServidor & {
+  servidor: {
+    id: number
+    cedula: string
+    nombre: string
+    segundo_nombre?: string | null
+    apellido: string
+    segundo_apellido?: string | null
+    unidad_administrativa?: { id: number; nombre: string } | null
+  }
 }
 
 export type HistorialAcademicoParams = {

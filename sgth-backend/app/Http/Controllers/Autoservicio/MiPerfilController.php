@@ -11,26 +11,13 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 /**
- * «Mi perfil» del Portal: la formación académica y la hoja de vida del propio
- * servidor. Los datos personales se leen del expediente, que ya deja ver el
- * propio (`ServidorPolicy::ver`).
- *
- * El historial académico del expediente está cerrado a Talento Humano: hasta
- * aquí el servidor no tenía cómo ver su propia formación.
+ * La hoja de vida de «Mi perfil». Los datos personales se leen del expediente,
+ * que ya deja ver el propio (`ServidorPolicy::ver`), y la formación, de
+ * `MiFormacionController`.
  */
 final class MiPerfilController extends Controller
 {
     public function __construct(private readonly HojaDeVidaService $hojaDeVida) {}
-
-    public function formacion(Request $request): JsonResponse
-    {
-        $servidor = $this->servidor($request);
-
-        return ApiResponse::ok(
-            $servidor ? $this->hojaDeVida->formacion($servidor) : [],
-            'Su formación académica.',
-        );
-    }
 
     public function hojaDeVida(Request $request): Response|JsonResponse
     {
