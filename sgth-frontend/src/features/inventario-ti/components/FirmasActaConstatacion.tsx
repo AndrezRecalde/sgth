@@ -30,12 +30,12 @@ export function FirmasActaConstatacion({ constatacion: c, gestiona }: Props) {
       ) : undefined}>
       <DetailList columnas={3} items={[
         { label: 'Constató', value: <Firma nombre={c.iniciada_por} cargo="Unidad de Tecnologías de la Información" /> },
-        { label: 'Revisó', value: <Firma nombre={null} cargo="Jefe de Tecnologías de la Información" /> },
+        { label: 'Revisó', value: <Firma nombre="Firma a mano" cargo="Jefe de Tecnologías de la Información" /> },
         {
           label: 'Por Activos Fijos y Bodega',
           value: f
-            ? <Firma nombre={f.nombre} cargo={f.cargo}
-                nota={f.sellado ? 'Quedó así al cerrar la constatación.' : 'El jefe de la unidad hoy: queda sellado al cerrar.'} />
+            ? <Firma nombre={f.nombre ?? 'Sin titular: firma a mano'} cargo={f.cargo}
+                nota={f.sellado ? 'Quedó así al cerrar la constatación.' : 'Según el organigrama de hoy: queda sellado al cerrar.'} />
             : 'No participa',
         },
       ]} />
@@ -43,11 +43,10 @@ export function FirmasActaConstatacion({ constatacion: c, gestiona }: Props) {
   )
 }
 
-/** Sin nombre se firma a mano: el jefe de TIC siempre y un puesto vacante de Activos Fijos. */
 function Firma({ nombre, cargo, nota }: { nombre: string | null; cargo: string | null; nota?: string }) {
   return (
     <Stack gap={0}>
-      <Text size="sm" fw={500}>{nombre ?? 'Firma a mano'}</Text>
+      <Text size="sm" fw={500}>{nombre ?? '—'}</Text>
       {cargo && <Text size="xs" c="dimmed">{cargo}</Text>}
       {nota && <Text size="xs" c="dimmed">{nota}</Text>}
     </Stack>
