@@ -1,35 +1,15 @@
 'use client'
 
-import { Stack, TextInput, Select } from '@mantine/core'
-import { FormModal } from '@/components/ui'
-import { useForm, Controller, useWatch } from 'react-hook-form'
-import { DatePickerInput } from '@mantine/dates'
-import { fromDateValue, fromDateValueOrNull, toDateValue } from '@/lib/fecha'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
-import { useContainedInput } from '@/hooks/useContainedInput'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { FormModal } from '@/components/ui'
 import { erroresAlFormulario } from '@/lib/erroresAlFormulario'
 import { useHistorialAcademicoMutations } from '../hooks/useHistorialAcademicoMutations'
 import { historialAcademicoSchema, type HistorialAcademicoFormData }
   from '../schemas/historialAcademico.schema'
+import { HistorialAcademicoCampos } from './HistorialAcademicoCampos'
 import type { HistorialAcademicoServidor } from '@/types/api'
-
-const TIPO_OPTIONS = [
-  { value: 'estudio',      label: 'Título Académico' },
-  { value: 'capacitacion', label: 'Capacitación / Curso' },
-]
-
-const NIVEL_OPTIONS = [
-  { value: 'primaria',     label: 'Primaria' },
-  { value: 'secundaria',   label: 'Secundaria' },
-  { value: 'tercer_nivel', label: 'Tercer nivel (Pregrado)' },
-  { value: 'cuarto_nivel', label: 'Cuarto nivel (Posgrado)' },
-]
-
-const NACIONALIDAD_OPTIONS = [
-  { value: 'nacional',      label: 'Nacional' },
-  { value: 'internacional', label: 'Internacional' },
-]
 
 interface Props {
   opened:     boolean
@@ -38,30 +18,30 @@ interface Props {
   initialValues?: HistorialAcademicoServidor | null
 }
 
+const VACIO: HistorialAcademicoFormData = {
+  tipo_estudio:         'estudio',
+  nivel_estudio:        'tercer_nivel',
+  nacionalidad_estudio: 'nacional',
+  institucion:          '',
+  fecha_inicio:         '',
+  fecha_fin:            '',
+  titulo_capacitacion:  '',
+  codigo_senescyt:      '',
+}
+
+/**
+ * Registrar o corregir un título o curso desde el expediente. Lo que registra
+ * Talento Humano entra validado; los campos los comparte con «Mi perfil».
+ */
 export function HistorialAcademicoModal({ opened, onClose, servidorId, initialValues }: Props) {
-  const contained = useContainedInput()
   const { crear, editar }  = useHistorialAcademicoMutations(servidorId)
   const isEditing = !!initialValues
 
-  const { register, control, handleSubmit, reset, setError, formState: { errors } } =
-    useForm<HistorialAcademicoFormData>({
-      resolver: zodResolver(historialAcademicoSchema),
-      defaultValues: {
-        tipo_estudio:         'estudio',
-        nivel_estudio:        'tercer_nivel',
-        nacionalidad_estudio: 'nacional',
-        institucion:          '',
-        fecha_inicio:         '',
-        fecha_fin:            '',
-        titulo_capacitacion:  '',
-        codigo_senescyt:      '',
-      },
-    })
-
-  const tipoEstudio = useWatch({
-    control,
-    name: 'tipo_estudio',
+  const form = useForm<HistorialAcademicoFormData>({
+    resolver: zodResolver(historialAcademicoSchema),
+    defaultValues: VACIO,
   })
+  const { handleSubmit, reset, setError } = form
 
   useEffect(() => {
     if (initialValues) {
@@ -76,22 +56,15 @@ export function HistorialAcademicoModal({ opened, onClose, servidorId, initialVa
         codigo_senescyt:      initialValues.codigo_senescyt ?? '',
       })
     } else {
-      reset({
-        tipo_estudio:         'estudio',
-        nivel_estudio:        'tercer_nivel',
-        nacionalidad_estudio: 'nacional',
-        institucion:          '',
-        fecha_inicio:         '',
-        fecha_fin:            '',
-        titulo_capacitacion:  '',
-        codigo_senescyt:      '',
-      })
+      reset(VACIO)
     }
   }, [initialValues, reset])
 
   const onSubmit = (values: HistorialAcademicoFormData) => {
+    // El documento solo lo adjunta el servidor desde el portal.
+    const { documento: _documento, ...datos } = values
     const payload = {
-      ...values,
+      ...datos,
       nivel_estudio: values.tipo_estudio === 'estudio' ? (values.nivel_estudio || null) : null,
       fecha_fin: values.fecha_fin || null,
       codigo_senescyt: values.codigo_senescyt || null,
@@ -117,78 +90,7 @@ export function HistorialAcademicoModal({ opened, onClose, servidorId, initialVa
       submitLabel={isEditing ? "Guardar cambios" : "Registrar"}
       submitting={initialValues ? editar.isPending : crear.isPending}
     >
-      <Stack gap="sm">
-        <Controller name="tipo_estudio" control={control}
-          render={({ field }) => (
-            <Select label="Tipo de registro"
-              data={TIPO_OPTIONS} {...contained} allowDeselect={false}
-              value={field.value} onChange={field.onChange}
-              error={errors.tipo_estudio?.message} />
-          )} />
-
-        {tipoEstudio === 'estudio' && (
-          <Controller name="nivel_estudio" control={control}
-            render={({ field }) => (
-              <Select label="Nivel de instrucción"
-                data={NIVEL_OPTIONS} {...contained}
-                value={field.value ?? ''} onChange={field.onChange}
-                error={errors.nivel_estudio?.message} />
-            )} />
-        )}
-
-        <Controller name="nacionalidad_estudio" control={control}
-          render={({ field }) => (
-            <Select label="Nacionalidad de la institución"
-              data={NACIONALIDAD_OPTIONS} {...contained} allowDeselect={false}
-              value={field.value} onChange={field.onChange}
-              error={errors.nacionalidad_estudio?.message} />
-          )} />
-
-        <TextInput label="Título / Capacitación obtenida"
-          placeholder="Ej: Ingeniero en Sistemas, Certificado Scrum Master"
-          {...contained} {...register('titulo_capacitacion')}
-          error={errors.titulo_capacitacion?.message} />
-
-        <TextInput label="Institución educativa"
-          placeholder="Nombre de la institución o centro de estudios"
-          {...contained} {...register('institucion')}
-          error={errors.institucion?.message} />
-
-        {/* El selector de fechas del resto del sistema: el `type="date"`
-            nativo cambiaba de aspecto y de formato según el navegador, y su
-            placeholder no se veía nunca. */}
-        <Controller name="fecha_inicio" control={control}
-          render={({ field }) => (
-            <DatePickerInput label="Fecha de inicio"
-              placeholder="Seleccionar fecha"
-              valueFormat="DD/MM/YYYY"
-              maxDate={new Date()}
-              {...contained}
-              value={toDateValue(field.value)}
-              onChange={(d) => field.onChange(fromDateValue(d))}
-              error={errors.fecha_inicio?.message} />
-          )} />
-
-        <Controller name="fecha_fin" control={control}
-          render={({ field }) => (
-            <DatePickerInput label="Fecha de fin (opcional)"
-              placeholder="Vacío si sigue cursando"
-              valueFormat="DD/MM/YYYY"
-              clearable
-              {...contained}
-              value={toDateValue(field.value)}
-              onChange={(d) => field.onChange(fromDateValueOrNull(d))}
-              error={errors.fecha_fin?.message} />
-          )} />
-
-        {tipoEstudio === 'estudio' && (
-          <TextInput label="Código de registro SENESCYT (opcional)"
-            placeholder="Ej: 1005-2021-2245367"
-            {...contained} {...register('codigo_senescyt')}
-            error={errors.codigo_senescyt?.message} />
-        )}
-      </Stack>
+      <HistorialAcademicoCampos form={form} />
     </FormModal>
   )
 }
-

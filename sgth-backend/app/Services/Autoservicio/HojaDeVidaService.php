@@ -3,6 +3,7 @@
 namespace App\Services\Autoservicio;
 
 use App\Contracts\Comunicacion\IdentidadInstitucionalServiceInterface;
+use App\Enums\EstadoFormacion;
 use App\Enums\TipoEstudio;
 use App\Models\Expediente\HistorialAcademicoServidor;
 use App\Models\Expediente\Servidor;
@@ -13,8 +14,8 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * «Mi perfil» del Portal: la formación académica del propio servidor y su hoja
- * de vida en PDF, armada con lo que ya está en el expediente.
+ * La hoja de vida en PDF de «Mi perfil», armada con lo que ya está en el
+ * expediente.
  *
  * La hoja de vida no es el certificado laboral: no lleva firma, código ni
  * remuneración, y lo dice al pie. El certificado lo emite solo Talento Humano
@@ -35,19 +36,6 @@ final class HojaDeVidaService
         private readonly IdentidadInstitucionalServiceInterface $identidad,
     ) {}
 
-    /**
-     * La formación del servidor, del título o curso más reciente al más viejo.
-     *
-     * @return Collection<int, HistorialAcademicoServidor>
-     */
-    public function formacion(Servidor $servidor): Collection
-    {
-        return $servidor->historialAcademico()
-            ->orderByDesc('fecha_inicio')
-            ->orderByDesc('id')
-            ->get();
-    }
-
     /** @return array<string, mixed> */
     public function datos(Servidor $servidor): array
     {
@@ -61,7 +49,7 @@ final class HojaDeVidaService
             'fotografiaVigente',
         ]);
 
-        [$estudios, $capacitaciones] = $this->formacion($servidor)
+        [$estudios, $capacitaciones] = $this->formacionValidada($servidor)
             ->partition(fn (HistorialAcademicoServidor $h) => $h->tipo_estudio === TipoEstudio::ESTUDIO);
 
         return [
@@ -148,6 +136,22 @@ final class HojaDeVidaService
     public function nombreArchivo(Servidor $servidor): string
     {
         return "hoja_de_vida_{$servidor->cedula}.pdf";
+    }
+
+    /**
+     * Solo lo validado: lo que el servidor registró desde el portal no entra
+     * mientras Talento Humano no lo revise, ni lo rechazado. Del más reciente
+     * al más viejo.
+     *
+     * @return Collection<int, HistorialAcademicoServidor>
+     */
+    private function formacionValidada(Servidor $servidor): Collection
+    {
+        return $servidor->historialAcademico()
+            ->where('estado', EstadoFormacion::VALIDADO)
+            ->orderByDesc('fecha_inicio')
+            ->orderByDesc('id')
+            ->get();
     }
 
     private function periodo(int|string|null $desde, int|string|null $hasta): string

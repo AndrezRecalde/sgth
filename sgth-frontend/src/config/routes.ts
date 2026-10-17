@@ -36,6 +36,8 @@ export const ROUTES = {
     // quedaría en el historial del navegador y en los registros del servidor.
     EXPEDIENTE_SERVIDOR: (id: string | number) => `/sgth/expediente/${id}`,
     SUBROGACIONES:    '/sgth/expediente/subrogaciones',
+    /** Los títulos y cursos que los servidores registran desde «Mi perfil». */
+    FORMACION_POR_VALIDAR: '/sgth/expediente/formacion-por-validar',
     ACCIONES_PERSONAL: '/sgth/expediente/acciones-personal',
     NOMINA:           '/sgth/nomina',
     ASISTENCIA:       '/sgth/asistencia',

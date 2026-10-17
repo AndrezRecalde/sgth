@@ -104,6 +104,14 @@ export const NAV_SGTH: NavGroup[] = [
             roles: ['admin-uath', 'asistente-uath'],
           },
           {
+            // Lo que los servidores registran desde «Mi perfil» del portal
+            // (2026-10-17). Mismos roles que el historial académico.
+            label: 'Títulos por validar',
+            href:  ROUTES.SGTH.FORMACION_POR_VALIDAR,
+            icon:  'IconSchool',
+            roles: ['admin-uath', 'asistente-uath'],
+          },
+          {
             label: 'Subrogaciones y encargos',
             href:  ROUTES.SGTH.SUBROGACIONES,
             icon:  'IconArrowsExchange',
