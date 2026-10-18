@@ -4,10 +4,12 @@ namespace App\Services\Comunicados;
 
 use App\Contracts\Comunicados\DestinatariosComunicadoServiceInterface;
 use App\Enums\AudienciaComunicado;
+use App\Enums\EstadoComunicado;
 use App\Models\Comunicados\Comunicado;
 use App\Models\User;
 use App\Services\Estructura\ArbolUnidades;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 
 /**
  * A quién llega una publicación (docs/diseno-noticias-comunicados.md, 3.3).
@@ -47,6 +49,39 @@ final class DestinatariosComunicadoService implements DestinatariosComunicadoSer
             if ($regimenes !== []) {
                 $servidor->whereIn('regimen_laboral', $regimenes);
             }
+        });
+    }
+
+    public function visiblesPara(User $usuario): Builder
+    {
+        $query = Comunicado::query()
+            ->where('estado', EstadoComunicado::PUBLICADO->value)
+            ->where('publicado_desde', '<=', Carbon::now());
+
+        // Lo segmentado solo alcanza a quien tiene la ficha activa; una cuenta
+        // sin servidor, o con la ficha inactiva, ve únicamente lo de todos.
+        $servidor = $usuario->servidor;
+        $alcanzaSegmentadas = $servidor !== null && $servidor->estado;
+
+        return $query->where(function (Builder $q) use ($servidor, $alcanzaSegmentadas) {
+            $q->where('audiencia', AudienciaComunicado::TODOS->value);
+
+            if (! $alcanzaSegmentadas) {
+                return;
+            }
+
+            // Las unidades guardadas de lo publicado ya incluyen las
+            // dependencias congeladas al publicar.
+            $q->orWhere(function (Builder $segmentada) use ($servidor) {
+                $segmentada->where('audiencia', AudienciaComunicado::SEGMENTADA->value)
+                    ->where(fn (Builder $u) => $u->whereDoesntHave('unidades')
+                        ->orWhereHas('unidades', fn (Builder $w) => $w->where(
+                            'unidades_administrativas.id',
+                            $servidor->unidad_administrativa_id ?? 0,
+                        )))
+                    ->where(fn (Builder $r) => $r->whereNull('regimenes')
+                        ->orWhereJsonContains('regimenes', $servidor->regimen_laboral?->value ?? ''));
+            });
         });
     }
 

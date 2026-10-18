@@ -1,13 +1,14 @@
 'use client'
 
-import { ActionIcon, Burger, Group, Indicator, Kbd, Tooltip, UnstyledButton } from '@mantine/core'
+import { ActionIcon, Burger, Group, Kbd, Tooltip, UnstyledButton } from '@mantine/core'
 import {
-  IconBell, IconLayoutSidebarLeftCollapse,
+  IconLayoutSidebarLeftCollapse,
   IconLayoutSidebarLeftExpand, IconSearch,
 } from '@tabler/icons-react'
 import { AppBreadcrumbs } from './AppBreadcrumbs'
 import { UserMenu } from './UserMenu'
 import { DisponibilidadToggle } from '@/features/dispensario/components/DisponibilidadToggle'
+import { CampanaComunicados } from '@/features/comunicados/components/CampanaComunicados'
 import { usePaletteStore } from '@/store/ui.palette.store'
 import type { Subsistema } from '@/config/routes'
 import classes from './Topbar.module.css'
@@ -94,13 +95,8 @@ export function Topbar({
           </ActionIcon>
         </Tooltip>
 
-        <Tooltip label="Notificaciones">
-          <Indicator color="red" size={7} offset={7} disabled>
-            <ActionIcon size="lg" radius="xl" aria-label="Notificaciones">
-              <IconBell size={19} stroke={1.6} />
-            </ActionIcon>
-          </Indicator>
-        </Tooltip>
+        {/* Las noticias y comunicados sin leer, en cualquier subsistema (D7). */}
+        <CampanaComunicados />
 
         <UserMenu />
       </div>

@@ -202,6 +202,11 @@ export const ROUTES = {
     PRESTAMOS:       '/portal/prestamos',
     MIS_PRESTAMOS:   '/portal/mis-prestamos',
     DOCUMENTOS:      '/portal/documentos',
+    /** Lo que Talento Humano publica (docs/diseno-noticias-comunicados.md, 5). */
+    COMUNICADOS:     '/portal/comunicados',
+    /** El listado abierto en lo que espera su confirmación: a donde lleva el aviso del inicio. */
+    COMUNICADOS_POR_CONFIRMAR: '/portal/comunicados?lectura=por_confirmar',
+    COMUNICADO:      (id: number) => `/portal/comunicados/${id}`,
     /** La credencial digital del servidor (Comunicación Social, fase 3.2). */
     MI_CREDENCIAL:   '/portal/mi-credencial',
     VIATICOS:        '/portal/viaticos',

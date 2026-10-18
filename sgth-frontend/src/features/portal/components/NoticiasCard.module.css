@@ -1,0 +1,39 @@
+/* Cada publicación es un enlace de fila completa; el realce va al pasar. */
+.fila {
+  display: flex;
+  gap: var(--mantine-spacing-sm);
+  padding: var(--mantine-spacing-sm);
+  margin-inline: calc(var(--mantine-spacing-sm) * -1);
+  border-radius: var(--mantine-radius-md);
+  transition: background-color var(--sgth-motion-fast) var(--sgth-easing);
+}
+
+.fila:hover {
+  background-color: var(--sgth-surface-hover);
+}
+
+/* El punto de «sin leer» y su hueco, para que las filas leídas no se corran. */
+.sinLeer,
+.leido {
+  flex: 0 0 8px;
+  height: 8px;
+  margin-top: 7px;
+  border-radius: 999px;
+}
+
+.sinLeer {
+  background-color: var(--sgth-accent);
+}
+
+.contenido {
+  flex: 1;
+  min-width: 0;
+}
+
+.verTodas {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  padding-top: var(--mantine-spacing-sm);
+}

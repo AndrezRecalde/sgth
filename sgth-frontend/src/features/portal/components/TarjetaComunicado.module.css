@@ -1,0 +1,24 @@
+.tarjeta {
+  color: inherit;
+  text-decoration: none;
+  transition: border-color var(--sgth-motion-fast) var(--sgth-easing);
+}
+
+.tarjeta:hover {
+  border-color: var(--sgth-accent-border);
+}
+
+.pie {
+  border-top: 1px solid var(--sgth-border);
+}
+
+.sinLeer {
+  color: var(--sgth-accent-text);
+}
+
+.punto {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background-color: var(--sgth-accent);
+}

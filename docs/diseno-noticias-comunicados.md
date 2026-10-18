@@ -132,7 +132,7 @@ Encima de la tarjeta, como el aviso de documentos laborales: **«Tiene 2 comunic
 
 ### 5.4 Campana [D7]
 
-La campana de la barra superior se enciende con el número de comunicados sin leer (se consulta cada 5 minutos) y abre un menú con los últimos, que enlaza al detalle.
+La campana de la barra superior se enciende con el número de publicaciones sin leer (se consulta cada 5 minutos) y abre un menú con las cinco más nuevas sin abrir, que enlazan al detalle, y «Ver todas en el Portal». Está en todos los subsistemas y solo la ve quien tiene `acceso-autoservicio`. [Hecho, PR 3]
 
 ---
 
@@ -270,7 +270,7 @@ Leer en el Portal usa el `acceso-autoservicio` que ya existe.
 ### 7.4 Frontend
 
 - **TH** [Hecho, PR 2]: las pantallas en `src/app/(sgth)/sgth/comunicados` (`ComunicadosView`, `NuevoComunicadoView`, `EditarComunicadoView`, `DetalleComunicadoView`) y el módulo en `src/features/comunicados`, con sus `hooks`, `services`, `schemas` (zod) y `utils`. **La vista previa es el detalle**, no un cajón aparte: se guarda el borrador, el detalle muestra cómo lo verá el servidor y desde ahí se publica. Los documentos se agregan en la pantalla de edición, porque necesitan que el borrador exista. El seguimiento con su Excel queda para el PR 4.
-- **Portal** (`src/features/portal`): `NoticiasCard` rehecha, `MisComunicadosView`, `ComunicadoDetalleView`, `ComunicadosPorConfirmarAviso`.
+- **Portal** [Hecho, PR 3] (`src/features/portal`): `NoticiasCard` rehecha, `ComunicadosPorConfirmarAviso`, `MisComunicadosView` (pestañas Vigentes y Archivo; filtros Buscar, Tipo y Mostrar —sin leer, por confirmar—), `TarjetaComunicado` (solo texto), `ComunicadoPortalView` y `ConfirmacionLectura`. En `src/features/comunicados`: `CampanaComunicados`, que monta la barra superior, y `EtiquetasComunicado`, que comparten la tarjeta, el listado y la campana. Los datos van por `misComunicadosService` y `useMisComunicados`, con sus claves en su propia raíz (`mis-comunicados`). En el backend, `MisComunicadosService` y `ComunicadoPortalResource`; la regla de quién ve qué es `DestinatariosComunicadoService::visiblesPara`, la misma que cuenta a quién llega, y una prueba comprueba que las dos coincidan.
 - **Compartido**: `ComunicadoContenido` pinta el asunto o título, el cuerpo y los adjuntos; lo usan la vista previa de TH y el detalle del Portal.
 - **Catálogo** [Hecho, PR 2]: `RichTextInput` sale de `features/dispensario` a `src/components/ui`, con la prop `completo` (títulos, citas y enlaces). El recorte de imagen pasó a `src/lib/` y volvió a Comunicación Social al quitarse la portada: es su único usuario.
 - **Rutas**: `ROUTES.SGTH.COMUNICADOS` y `ROUTES.PORTAL.COMUNICADOS`; entradas en `NAV_SGTH` y `NAV_PORTAL`.
@@ -299,7 +299,7 @@ Consecuencias:
 |---|---|---|
 | **1. Backend de gestión** [Hecho] | Migraciones, modelos, enums, permisos (enum, seeder, migración, módulo «Noticias y comunicados» en Permisos adicionales), `HtmlEnriquecido`, servicios, rutas de TH y adjuntos (la portada se quitó en el PR 2) | Pest: permisos por rol, asistente con y sin el permiso adicional, reglas 1–8, limpieza de HTML, archivos fuera del disco público |
 | **2. Pantallas de TH** [Hecho] | Menú, listado, formulario, documentos, detalle con vista previa, publicar, retirar, duplicar, fijar, fecha de fin; regenerar los tipos | Lint, tipos, revisión en el navegador |
-| **3. Portal** | Rutas de autoservicio, tarjeta del inicio, listado, detalle, lectura, confirmación, aviso de pendientes, campana | Pest: visibilidad por unidad, dependencias, régimen, cuenta sin servidor, 404 al que no es destinatario; navegador |
+| **3. Portal** [Hecho] | Rutas de autoservicio, tarjeta del inicio, listado, detalle, lectura, confirmación, aviso de pendientes, campana | Pest: visibilidad por unidad, dependencias, régimen, cuenta sin servidor, 404 al que no es destinatario; navegador |
 | **4. Seguimiento** | Pantalla de seguimiento con las cifras de lectura, tabla de destinatarios y Excel de pendientes de confirmación | Pest: cifras por unidad, Excel solo con `ver-lecturas-comunicados` |
 
 Producción: `php artisan migrate` (crea tablas y permisos). Sin datos que conciliar: el módulo nace vacío.

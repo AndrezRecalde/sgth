@@ -633,6 +633,12 @@ export const NAV_PORTAL: NavGroup[] = [
     label: 'Mi Espacio',
     items: [
       {
+        // Lo que Talento Humano publica para el servidor (docs/diseno-noticias-comunicados.md, 5.2).
+        label: 'Noticias y comunicados',
+        href:  ROUTES.PORTAL.COMUNICADOS,
+        icon:  'IconNews',
+      },
+      {
         // La ficha, la formación académica y la hoja de vida en PDF. «Mi CV»
         // y «Formación académica» eran entradas aparte, sin página detrás:
         // son los mismos datos, así que viven aquí (decisión del 2026-10-17).
