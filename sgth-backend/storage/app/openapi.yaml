@@ -38634,6 +38634,402 @@
                 }
             }
         },
+        "/v1/autoservicio/comunicados": {
+            "get": {
+                "operationId": "misComunicados.index",
+                "tags": [
+                    "MisComunicados"
+                ],
+                "parameters": [
+                    {
+                        "name": "archivo",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "boolean",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "tipo",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/TipoComunicado"
+                        }
+                    },
+                    {
+                        "name": "lectura",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "sin_leer",
+                                "por_confirmar"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "buscar",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 100
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1,
+                            "maximum": 50
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Mis noticias y comunicados."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {}
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "pagina_actual": {
+                                                    "type": "integer"
+                                                },
+                                                "por_pagina": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "ultima_pagina": {
+                                                    "type": "integer"
+                                                },
+                                                "desde": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "hasta": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "pagina_actual",
+                                                "por_pagina",
+                                                "total",
+                                                "ultima_pagina",
+                                                "desde",
+                                                "hasta"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/autoservicio/comunicados/resumen": {
+            "get": {
+                "operationId": "misComunicados.resumen",
+                "summary": "Lo del inicio y la campana: las cinco primeras, las no le\u00eddas y las cifras",
+                "tags": [
+                    "MisComunicados"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Resumen de noticias y comunicados."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "recientes": {
+                                                    "type": "array",
+                                                    "items": {}
+                                                },
+                                                "no_leidos": {
+                                                    "type": "array",
+                                                    "items": {}
+                                                },
+                                                "sin_leer": {
+                                                    "type": "integer"
+                                                },
+                                                "por_confirmar": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "recientes",
+                                                "no_leidos",
+                                                "sin_leer",
+                                                "por_confirmar"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/autoservicio/comunicados/{comunicado}": {
+            "get": {
+                "operationId": "misComunicados.show",
+                "summary": "Abrirla la deja le\u00edda",
+                "tags": [
+                    "MisComunicados"
+                ],
+                "parameters": [
+                    {
+                        "name": "comunicado",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Detalle de la publicaci\u00f3n."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/ComunicadoPortalResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/autoservicio/comunicados/{comunicado}/confirmacion": {
+            "post": {
+                "operationId": "misComunicados.confirmar",
+                "tags": [
+                    "MisComunicados"
+                ],
+                "parameters": [
+                    {
+                        "name": "comunicado",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Confirm\u00f3 la lectura."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/ComunicadoPortalResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/autoservicio/comunicados/{comunicado}/adjuntos/{adjunto}": {
+            "get": {
+                "operationId": "misComunicados.adjunto",
+                "tags": [
+                    "MisComunicados"
+                ],
+                "parameters": [
+                    {
+                        "name": "comunicado",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "adjunto",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "required": true,
+                                "schema": {
+                                    "type": "string"
+                                },
+                                "example": "attachment"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "El documento no est\u00e1 en el servidor."
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "errores": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "errores"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/autoservicio/mis-documentos": {
             "get": {
                 "operationId": "misDocumentosLaborales.index",
@@ -67903,6 +68299,97 @@
                     "orden"
                 ],
                 "title": "ComunicadoAdjuntoResource"
+            },
+            "ComunicadoPortalResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "tipo": {
+                        "type": "string"
+                    },
+                    "tipo_etiqueta": {
+                        "type": "string",
+                        "enum": [
+                            "Noticia",
+                            "Comunicado"
+                        ]
+                    },
+                    "titulo": {
+                        "type": "string"
+                    },
+                    "extracto": {
+                        "type": "string"
+                    },
+                    "cuerpo": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "referencia": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "estado": {
+                        "type": "string"
+                    },
+                    "fijado": {
+                        "type": "string",
+                        "description": "Vencida, ya no sale arriba: la marca solo vale mientras est\u00e1 vigente."
+                    },
+                    "vencido": {
+                        "type": "boolean"
+                    },
+                    "publicado_desde": {
+                        "type": "string"
+                    },
+                    "publicado_hasta": {
+                        "type": "string"
+                    },
+                    "requiere_confirmacion": {
+                        "type": "boolean"
+                    },
+                    "leido_at": {
+                        "type": "string"
+                    },
+                    "confirmado_at": {
+                        "type": "string"
+                    },
+                    "por_confirmar": {
+                        "type": "string"
+                    },
+                    "adjuntos_count": {
+                        "type": "integer"
+                    },
+                    "adjuntos": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ComunicadoAdjuntoResource"
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "tipo",
+                    "tipo_etiqueta",
+                    "titulo",
+                    "extracto",
+                    "referencia",
+                    "estado",
+                    "fijado",
+                    "vencido",
+                    "publicado_desde",
+                    "publicado_hasta",
+                    "requiere_confirmacion",
+                    "leido_at",
+                    "confirmado_at",
+                    "por_confirmar"
+                ],
+                "title": "ComunicadoPortalResource"
             },
             "ComunicadoResource": {
                 "type": "object",

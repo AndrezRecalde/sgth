@@ -4,6 +4,7 @@ namespace App\Contracts\Comunicados;
 
 use App\Enums\AudienciaComunicado;
 use App\Models\Comunicados\Comunicado;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 
 /** A quién llega una publicación (docs/diseno-noticias-comunicados.md, 3.3). */
@@ -17,6 +18,15 @@ interface DestinatariosComunicadoServiceInterface
      * @return Builder<\App\Models\User>
      */
     public function usuarios(AudienciaComunicado $audiencia, array $unidadIds, array $regimenes): Builder;
+
+    /**
+     * Lo publicado que ya salió y le corresponde a este usuario, vigente o
+     * vencido: el Portal decide si pide lo uno o lo otro. Es la misma regla
+     * que `usuarios()`, leída desde el otro lado.
+     *
+     * @return Builder<Comunicado>
+     */
+    public function visiblesPara(User $usuario): Builder;
 
     /** Cuántos la verían: un borrador con sus dependencias de hoy; lo publicado, con las congeladas. */
     public function contar(Comunicado $comunicado): int;

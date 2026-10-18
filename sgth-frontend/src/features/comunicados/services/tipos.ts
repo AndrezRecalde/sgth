@@ -100,3 +100,49 @@ export interface ComunicadoPayload {
 }
 
 export type SeleccionDestinatarios = Pick<ComunicadoPayload, 'audiencia' | 'unidades' | 'regimenes'>
+
+// ── Portal del servidor ─────────────────────────────────────────────────────
+
+/**
+ * Una publicación como la ve el servidor (ComunicadoPortalResource): con su
+ * propia lectura y nada de la gestión. `fijado` ya viene apagado si venció.
+ */
+export interface ComunicadoPortal {
+  id: number
+  tipo: TipoComunicado
+  tipo_etiqueta: string
+  titulo: string
+  extracto: string
+  /** Solo en el detalle. */
+  cuerpo?: string | null
+  referencia: string | null
+  estado: EstadoComunicado
+  fijado: boolean
+  vencido: boolean
+  publicado_desde: string | null
+  publicado_hasta: string | null
+  requiere_confirmacion: boolean
+  leido_at: string | null
+  confirmado_at: string | null
+  /** Pide confirmación, no la ha dado y todavía está vigente. */
+  por_confirmar: boolean
+  adjuntos_count?: number
+  adjuntos?: ComunicadoAdjunto[]
+}
+
+/** Lo del inicio y la campana. */
+export interface ResumenComunicados {
+  recientes: ComunicadoPortal[]
+  no_leidos: ComunicadoPortal[]
+  sin_leer: number
+  por_confirmar: number
+}
+
+export type FiltroLectura = 'sin_leer' | 'por_confirmar'
+
+export interface FiltrosMisComunicados {
+  archivo?: boolean
+  tipo?: TipoComunicado
+  lectura?: FiltroLectura
+  buscar?: string
+}

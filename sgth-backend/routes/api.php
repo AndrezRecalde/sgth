@@ -15,6 +15,7 @@ use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Autoservicio\AutoservicioController;
 use App\Http\Controllers\Autoservicio\MisActividadesController;
 use App\Http\Controllers\Autoservicio\MiCredencialController;
+use App\Http\Controllers\Autoservicio\MisComunicadosController;
 use App\Http\Controllers\Autoservicio\MiFormacionController;
 use App\Http\Controllers\Autoservicio\MiPerfilController;
 use App\Http\Controllers\Autoservicio\MisEquiposController;
@@ -1036,6 +1037,17 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->middleware('permission:acceso-autoservicio');
         Route::get('mi-credencial/pdf', [MiCredencialController::class, 'pdf'])
             ->middleware('permission:acceso-autoservicio');
+        // «Noticias y comunicados» (docs/diseno-noticias-comunicados.md, 5): lo
+        // que Talento Humano publicó para quien pregunta. Abrir una la deja
+        // leída; lo que no le corresponde responde 404.
+        Route::prefix('comunicados')->middleware('permission:acceso-autoservicio')->group(function () {
+            Route::get('/', [MisComunicadosController::class, 'index']);
+            Route::get('resumen', [MisComunicadosController::class, 'resumen']);
+            Route::get('{comunicado}', [MisComunicadosController::class, 'show'])->whereNumber('comunicado');
+            Route::post('{comunicado}/confirmacion', [MisComunicadosController::class, 'confirmar'])->whereNumber('comunicado');
+            Route::get('{comunicado}/adjuntos/{adjunto}', [MisComunicadosController::class, 'adjunto'])
+                ->whereNumber(['comunicado', 'adjunto']);
+        });
         // «Mi perfil» (2026-10-17): la formación propia y la hoja de vida en PDF.
         // Los títulos y cursos que registra el propio servidor quedan por
         // validar hasta que los revisa Talento Humano.

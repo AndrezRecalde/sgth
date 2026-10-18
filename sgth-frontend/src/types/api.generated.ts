@@ -5828,6 +5828,88 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/autoservicio/comunicados": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["misComunicados.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/autoservicio/comunicados/resumen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lo del inicio y la campana: las cinco primeras, las no leídas y las cifras */
+        get: operations["misComunicados.resumen"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/autoservicio/comunicados/{comunicado}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Abrirla la deja leída */
+        get: operations["misComunicados.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/autoservicio/comunicados/{comunicado}/confirmacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["misComunicados.confirmar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/autoservicio/comunicados/{comunicado}/adjuntos/{adjunto}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["misComunicados.adjunto"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/autoservicio/mis-documentos": {
         parameters: {
             query?: never;
@@ -11008,6 +11090,29 @@ export interface components {
             nombre: string;
             tamano: number;
             orden: number;
+        };
+        /** ComunicadoPortalResource */
+        ComunicadoPortalResource: {
+            id: number;
+            tipo: string;
+            /** @enum {string} */
+            tipo_etiqueta: "Noticia" | "Comunicado";
+            titulo: string;
+            extracto: string;
+            cuerpo?: string | null;
+            referencia: string | null;
+            estado: string;
+            /** @description Vencida, ya no sale arriba: la marca solo vale mientras está vigente. */
+            fijado: string;
+            vencido: boolean;
+            publicado_desde: string;
+            publicado_hasta: string;
+            requiere_confirmacion: boolean;
+            leido_at: string;
+            confirmado_at: string;
+            por_confirmar: string;
+            adjuntos_count?: number;
+            adjuntos?: components["schemas"]["ComunicadoAdjuntoResource"][];
         };
         /** ComunicadoResource */
         ComunicadoResource: {
@@ -33361,6 +33466,172 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             422: components["responses"]["ValidationException"];
+        };
+    };
+    "misComunicados.index": {
+        parameters: {
+            query?: {
+                archivo?: boolean | null;
+                tipo?: components["schemas"]["TipoComunicado"];
+                lectura?: "sin_leer" | "por_confirmar" | null;
+                buscar?: string | null;
+                per_page?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Mis noticias y comunicados.";
+                        datos: unknown[];
+                        meta: {
+                            pagina_actual: number;
+                            por_pagina: number;
+                            total: number;
+                            ultima_pagina: number;
+                            desde: number | null;
+                            hasta: number | null;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "misComunicados.resumen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Resumen de noticias y comunicados.";
+                        datos: {
+                            recientes: unknown[];
+                            no_leidos: unknown[];
+                            sin_leer: number;
+                            por_confirmar: number;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "misComunicados.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                comunicado: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Detalle de la publicación.";
+                        datos: components["schemas"]["ComunicadoPortalResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "misComunicados.confirmar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                comunicado: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Confirmó la lectura.";
+                        datos: components["schemas"]["ComunicadoPortalResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "misComunicados.adjunto": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                comunicado: number;
+                adjunto: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    /** @example attachment */
+                    "Content-Disposition": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "El documento no está en el servidor.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
         };
     };
     "misDocumentosLaborales.index": {
