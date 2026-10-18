@@ -34,6 +34,7 @@ del módulo.
 | `FormModal` | Modal de formulario | `SgthModal` + `<form>` + `ModalFooter` |
 | `MotivoModal` | Confirmación que pide un motivo | `destructiva` al anular o rechazar |
 | `confirmar` | Confirmación de acción irreversible | Nunca el diálogo del navegador |
+| `RichTextInput` | Texto con formato (TipTap) que se guarda como HTML | `completo` agrega títulos, citas y enlaces; el backend limpia el HTML al guardar |
 
 ## Tablas
 

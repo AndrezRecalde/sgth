@@ -4,7 +4,7 @@ import { formatFecha } from '@/lib/fecha'
 import { clavesComunicacion } from '../constants/claves'
 import { identidadService } from '../services/identidadService'
 import type { DatosInstitucionales, VarianteIdentidad } from '../services/tiposIdentidad'
-import { aDataUrl } from '../utils/dataUrl'
+import { aDataUrl } from '@/lib/dataUrl'
 
 /** Cada variante con su versión vigente, la que se ve hoy y las programadas; y los datos. */
 export function useEstadoIdentidad() {

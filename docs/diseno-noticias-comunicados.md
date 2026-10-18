@@ -271,12 +271,12 @@ Leer en el Portal usa el `acceso-autoservicio` que ya existe.
 
 ### 7.4 Frontend
 
-- **TH** (`src/features/comunicados`): `ComunicadosListView`, `ComunicadoFormView`, `ComunicadoSeguimientoView`, `ComunicadoVistaPreviaDrawer`, con sus `hooks`, `services` y `schemas` (zod).
+- **TH** [Hecho, PR 2]: las pantallas en `src/app/(sgth)/sgth/comunicados` (`ComunicadosView`, `NuevoComunicadoView`, `EditarComunicadoView`, `DetalleComunicadoView`) y el módulo en `src/features/comunicados`, con sus `hooks`, `services`, `schemas` (zod) y `utils`. **La vista previa es el detalle**, no un cajón aparte: se guarda el borrador, el detalle muestra cómo lo verá el servidor y desde ahí se publica. La portada y los documentos se agregan en la pantalla de edición, porque necesitan que el borrador exista. El seguimiento con su Excel queda para el PR 4.
 - **Portal** (`src/features/portal`): `NoticiasCard` rehecha, `MisComunicadosView`, `ComunicadoDetalleView`, `ComunicadosPorConfirmarAviso`.
 - **Compartido**: `ComunicadoContenido` pinta título, portada, cuerpo y adjuntos; lo usan la vista previa de TH y el detalle del Portal.
-- **Catálogo**: `RichTextInput` sale de `features/dispensario` a `src/components/ui`, con su regla de lint si aplica.
+- **Catálogo** [Hecho, PR 2]: `RichTextInput` sale de `features/dispensario` a `src/components/ui`, con la prop `completo` (títulos, citas y enlaces). El recorte de imagen y la imagen como `data:` URL pasan a `src/lib/` (`recortarImagen`, `dataUrl`), que ahora comparten Comunicación Social y este módulo.
 - **Rutas**: `ROUTES.SGTH.COMUNICADOS` y `ROUTES.PORTAL.COMUNICADOS`; entradas en `NAV_SGTH` y `NAV_PORTAL`.
-- **Tipos**: `npm run types:sync`. En el PR 1 no se regeneraron: los tipos llevaban sin regenerarse desde el PR #430 y el diff arrastraba unas 88 000 líneas de otros módulos. Se regeneran en el PR 2, que es donde se usan y donde el compilador los comprueba.
+- **Tipos**: `npm run types:sync`. En el PR 1 no se regeneraron: llevaban sin regenerarse desde el PR #430 y el diff arrastraba unas 88 000 líneas de otros módulos. Se regeneraron en el PR 2, con `tsc` limpio. Para eso se nombraron las dos rutas GET de las reglas de préstamo de TIC, que compartían método y el generador les daba el mismo identificador. El tipo del comunicado va escrito a mano en `features/comunicados/services/tipos.ts`, como en los módulos de TIC y de Comunicación: Scramble deja `unidades` como `string` y `regimenes` como `unknown[]`.
 
 ---
 
@@ -300,7 +300,7 @@ Consecuencias:
 | PR | Contenido | Pruebas |
 |---|---|---|
 | **1. Backend de gestión** [Hecho] | Migraciones, modelos, enums, permisos (enum, seeder, migración, módulo «Noticias y comunicados» en Permisos adicionales), `HtmlEnriquecido`, servicios, rutas de TH, portada y adjuntos | Pest: permisos por rol, asistente con y sin el permiso adicional, reglas 1–8, limpieza de HTML, archivos fuera del disco público |
-| **2. Pantallas de TH** | Menú, listado, formulario, vista previa, publicar, retirar, duplicar, fijar; regenerar los tipos | Lint, tipos, revisión en el navegador |
+| **2. Pantallas de TH** [Hecho] | Menú, listado, formulario, portada y documentos, detalle con vista previa, publicar, retirar, duplicar, fijar, fecha de fin; regenerar los tipos | Lint, tipos, revisión en el navegador |
 | **3. Portal** | Rutas de autoservicio, tarjeta del inicio, listado, detalle, lectura, confirmación, aviso de pendientes, campana | Pest: visibilidad por unidad, dependencias, régimen, cuenta sin servidor, 404 al que no es destinatario; navegador |
 | **4. Seguimiento** | Pantalla de seguimiento con las cifras de lectura, tabla de destinatarios y Excel de pendientes de confirmación | Pest: cifras por unidad, Excel solo con `ver-lecturas-comunicados` |
 

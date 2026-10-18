@@ -277,6 +277,14 @@ export const NAV_SGTH: NavGroup[] = [
           },
         ],
       },
+      {
+        // Lo que Talento Humano publica en el Portal (docs/diseno-noticias-
+        // comunicados.md). Entra quien redacta, publica o sigue las lecturas.
+        label:    'Noticias y comunicados',
+        href:     ROUTES.SGTH.COMUNICADOS,
+        icon:     'IconNews',
+        permisos: ['redactar-comunicados', 'publicar-comunicados', 'ver-lecturas-comunicados'],
+      },
     ],
   },
   {

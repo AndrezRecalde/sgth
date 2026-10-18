@@ -74,70 +74,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/actividades/por-unidad": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["actividadLaboral.porUnidad"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/actividades/exportar-informe": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["actividadLaboral.exportarInforme"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/actividades": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["index"];
-        put?: never;
-        post: operations["store"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/actividades/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["show"];
-        put: operations["update"];
-        post?: never;
-        delete: operations["destroy"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/dispensario/adquisiciones": {
         parameters: {
             query?: never;
@@ -399,34 +335,49 @@ export interface paths {
         patch: operations["antecedentePaciente.anular"];
         trace?: never;
     };
-    "/v1/helpdesk/areas": {
+    "/v1/comunicados/{comunicado}/portada": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["areas.index"];
+        get: operations["archivosComunicado.portada"];
         put?: never;
-        post: operations["areas.store"];
-        delete?: never;
+        post: operations["archivosComunicado.subirPortada"];
+        delete: operations["archivosComunicado.quitarPortada"];
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/v1/helpdesk/areas/{id}": {
+    "/v1/comunicados/{comunicado}/adjuntos/{adjunto}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** El `apiResource` declaraba esta ruta y el método no existía: 500 seguro */
-        get: operations["areas.show"];
-        put: operations["areas.update"];
+        get: operations["archivosComunicado.adjunto"];
+        put?: never;
         post?: never;
-        delete: operations["areas.destroy"];
+        delete: operations["archivosComunicado.quitarAdjunto"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicados/{comunicado}/adjuntos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["archivosComunicado.agregarAdjunto"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -441,7 +392,7 @@ export interface paths {
         };
         get: operations["asignaciones.index"];
         put?: never;
-        post: operations["asignaciones.store"];
+        post: operations["asignacionBien.store"];
         delete?: never;
         options?: never;
         head?: never;
@@ -471,11 +422,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * El acta de entrega-recepción, en PDF
-         * @description Se devuelve `inline`: lo normal es mirarla antes de imprimirla para la
-         *     firma, que es para lo que existe el documento.
-         */
+        /** El acta de entrega-recepción, `inline`: se mira antes de imprimirla para la firma */
         get: operations["asignacionBien.acta"];
         put?: never;
         post?: never;
@@ -494,8 +441,41 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** La devolución del bien (fase 7.4a) */
+        /** La devolución a TIC. La desvinculación la usa también (fase 7.4a) */
         post: operations["asignacionBien.devolver"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/asignaciones/{asignacion}/traspasar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["asignacionBien.traspasar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/asignaciones/{asignacion}/memorando": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["asignacionBien.memorando"];
+        put?: never;
+        /** El PDF del memorando de Quipux que respalda la entrega o el traspaso */
+        post: operations["asignacionBien.adjuntarMemorando"];
         delete?: never;
         options?: never;
         head?: never;
@@ -544,38 +524,6 @@ export interface paths {
         get: operations["dispensario.catalogo-servicios-enfermeria"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/inventario/auditoria/escanear": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["auditoriaInventario.escanear"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/inventario/auditoria/registrar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["auditoriaInventario.registrarAuditoria"];
         delete?: never;
         options?: never;
         head?: never;
@@ -880,22 +828,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/autoservicio/mis-actividades": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["autoservicio.misActividades"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/autoservicio/mi-historia-clinica": {
         parameters: {
             query?: never;
@@ -922,6 +854,104 @@ export interface paths {
         get: operations["baja.index"];
         put?: never;
         post: operations["baja.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/bajas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["baja.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/bajas/{id}/informe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** El informe técnico de baja, `inline`: se mira antes de imprimirlo para la firma */
+        get: operations["baja.informe"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/bajas/{baja}/memorando": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["baja.memorando"];
+        put?: never;
+        /** El PDF del memorando de Quipux que aprueba la baja */
+        post: operations["baja.adjuntarMemorando"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/bajas/{baja}/aprobar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["baja.aprobar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/bajas/{baja}/rechazar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["baja.rechazar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/bajas/{baja}/entrega-activos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["baja.entregaActivos"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1019,11 +1049,9 @@ export interface paths {
         put: operations["bienes.update"];
         post?: never;
         /**
-         * Borra la ficha de un bien registrado por error
-         * @description Respondía «Bien dado de baja» sin borrar nada, y encima nombraba otra
-         *     cosa: la baja retira el bien del servicio, exige motivo y va por
-         *     «bajas»; el bien sigue en el inventario. Esto borra la ficha, y solo
-         *     mientras no tenga historial.
+         * Borra la ficha de un equipo registrado por error, y solo mientras no
+         *     tenga historial. La baja —el equipo que sale del servicio— va por
+         *     «bajas»
          */
         delete: operations["bienes.destroy"];
         options?: never;
@@ -1038,11 +1066,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * La vida del bien: quién lo ha tenido y qué se le ha hecho
-         * @description La ruta declaraba este método y el controlador no lo tenía, así que
-         *     `bienes/{id}/historial` devolvía un 500 desde que se escribió.
-         */
+        /** La vida del equipo: quién lo ha tenido y qué se le ha hecho */
         get: operations["bienInformatico.historial"];
         put?: never;
         post?: never;
@@ -1088,6 +1112,118 @@ export interface paths {
          *     marcadas en `opcion_ids`
          */
         post: operations["calificacion.guardar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/campanias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["campaniaMantenimiento.index"];
+        put?: never;
+        post: operations["campaniaMantenimiento.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/campanias/{campania}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["campaniaMantenimiento.show"];
+        put: operations["campaniaMantenimiento.update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/campanias/{campania}/equipos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["campaniaMantenimiento.agregar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/campanias/{campania}/equipos/{equipo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["campaniaMantenimiento.quitar"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/campanias/{campania}/realizar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["campaniaMantenimiento.realizar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/campanias/{campania}/omitir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["campaniaMantenimiento.omitir"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/campanias/{campania}/cerrar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["campaniaMantenimiento.cerrar"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1191,6 +1327,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/comunicacion/fotografias/carga/simular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cargaFotografias.simular"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicacion/fotografias/carga": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cargaFotografias.cargar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/estructura/cargos": {
         parameters: {
             query?: never;
@@ -1239,6 +1407,150 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/inventario/catalogos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["catalogoInventario.formularios"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/tipos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tipos.index"];
+        put?: never;
+        post: operations["tipos.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/marcas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["marcas.index"];
+        put?: never;
+        post: operations["marcas.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/ubicaciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ubicaciones.index"];
+        put?: never;
+        post: operations["ubicaciones.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/tipos/{tipo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["tipos.update"];
+        post?: never;
+        delete: operations["tipos.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/subtipos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["subtipos.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/subtipos/{subtipo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["subtipos.update"];
+        post?: never;
+        delete: operations["subtipos.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/marcas/{marca}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["marcas.update"];
+        post?: never;
+        delete: operations["marcas.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/ubicaciones/{ubicacion}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["ubicaciones.update"];
+        post?: never;
+        delete: operations["ubicaciones.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/viaticos/catalogos/tipos-transporte": {
         parameters: {
             query?: never;
@@ -1280,6 +1592,38 @@ export interface paths {
         };
         get: operations["catalogoViatico.categoriasFactura"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/helpdesk/categorias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["categoriaTicket.index"];
+        put?: never;
+        post: operations["categoriaTicket.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/helpdesk/categorias/{categoria}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["categoriaTicket.update"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1555,7 +1899,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/helpdesk/tickets/{ticketId}/comentarios": {
+    "/v1/helpdesk/tickets/{ticket}/comentarios": {
         parameters: {
             query?: never;
             header?: never;
@@ -1569,6 +1913,135 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/v1/helpdesk/tickets/{ticket}/comentarios/{comentario}/archivo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["comentarioTicket.archivo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicados": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["comunicados.index"];
+        put?: never;
+        post: operations["comunicado.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicados/{comunicado}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["comunicado.show"];
+        put: operations["comunicado.update"];
+        post?: never;
+        delete: operations["comunicado.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicados/destinatarios/conteo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cuántos lo verían, para el aviso del formulario antes de publicar */
+        post: operations["comunicado.contarDestinatarios"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicados/{comunicado}/duplicar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["comunicado.duplicar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicados/{comunicado}/publicar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["comunicado.publicar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicados/{comunicado}/retirar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["comunicado.retirar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicados/{comunicado}/publicacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["comunicado.actualizarPublicacion"];
         trace?: never;
     };
     "/v1/nomina/conceptos": {
@@ -1635,6 +2108,118 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/inventario/constataciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["constatacion.index"];
+        put?: never;
+        post: operations["constatacion.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/constataciones/{constatacion}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["constatacion.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/constataciones/{constatacion}/acta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["constatacion.acta"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/constataciones/{constatacion}/escanear": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["constatacion.escanear"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/constataciones/{constatacion}/items/{item}/mover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["constatacion.mover"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/constataciones/{constatacion}/cerrar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["constatacion.cerrar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/constataciones/{constatacion}/activos-fijos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["constatacion.activosFijos"];
+        trace?: never;
+    };
     "/v1/dispensario/consultas": {
         parameters: {
             query?: never;
@@ -1685,6 +2270,87 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["consultaMedica.update"];
+        trace?: never;
+    };
+    "/v1/inventario/consumibles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["consumible.index"];
+        put?: never;
+        post: operations["consumible.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/consumibles/{consumible}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["consumible.show"];
+        put: operations["consumible.update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/consumibles/{consumible}/modelos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Agregar un modelo compatible, también desde la entrega cuando falta */
+        post: operations["consumible.agregarModelo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/consumibles/{consumible}/modelos/{modelo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["consumible.quitarModelo"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/bienes/{bien}/consumibles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["consumible.delEquipo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/v1/seleccion/express/resumen": {
@@ -1901,6 +2567,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/inventario/contratos-vigencia": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["contratoVigencia.index"];
+        put?: never;
+        post: operations["contratoVigencia.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/contratos-vigencia/{contrato}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["contratoVigencia.show"];
+        put: operations["contratoVigencia.update"];
+        post?: never;
+        delete: operations["contratoVigencia.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/seleccion/convocatorias": {
         parameters: {
             query?: never;
@@ -1968,6 +2666,110 @@ export interface paths {
         put?: never;
         /** Declara desierto o cancela un concurso publicado, con su motivo */
         post: operations["convocatoria.cerrar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicacion/credenciales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["credencial.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicacion/credenciales/verificacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A dónde lleva el QR. La pantalla avisa si es una dirección local: un
+         *     teléfono no la abre, y en producción no se imprime así
+         */
+        get: operations["credencial.verificacion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicacion/servidores/{servidor}/credenciales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["credencial.historial"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicacion/credenciales/imprimir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * El PDF para imprimir. Queda registrado lo que se imprimió de cada una:
+         *     así se sabe después qué tarjetas quedaron desactualizadas
+         */
+        post: operations["credencial.imprimir"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicacion/credenciales/{credencial}/revocar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["credencial.revocar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicacion/credenciales/{credencial}/devolucion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["credencial.devolucion"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3138,6 +3940,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/inventario/bienes/{bien}/etiqueta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["etiquetaBien.una"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/etiquetas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["etiquetaBien.lote"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/evaluacion/evaluaciones/{evaluacionId}/servidor/{servidorId}": {
         parameters: {
             query?: never;
@@ -3485,6 +4319,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/comunicacion/fotografias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["fotografiaServidor.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicacion/fotografias/{fotografia}/restaurar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["fotografiaServidor.restaurar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicacion/servidores/{servidor}/fotografias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["fotografiaServidor.historial"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicacion/servidores/{servidor}/fotografia": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["fotografiaServidor.store"];
+        delete: operations["fotografiaServidor.retirar"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicacion/fotografias/{fotografia}/imagen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * La imagen, para quien puede verla (FotografiaServidorPolicy). Se pide por
+         *     el id de la foto y no del servidor: ese archivo no cambia nunca, así que
+         *     el navegador lo guarda, y una foto nueva tiene otro id
+         */
+        get: operations["fotografiaServidor.imagen"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/estructura/grupos-ocupacionales": {
         parameters: {
             query?: never;
@@ -3601,6 +4520,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/expediente/formacion-por-validar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Los títulos y cursos que los servidores registraron desde el portal */
+        get: operations["historialAcademico.porValidar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/expediente/servidores/{servidorId}/historial-academico": {
         parameters: {
             query?: never;
@@ -3610,6 +4546,7 @@ export interface paths {
         };
         get: operations["historialAcademico.index"];
         put?: never;
+        /** Lo que registra Talento Humano entra validado: lo revisó quien lo registra */
         post: operations["historialAcademico.store"];
         delete?: never;
         options?: never;
@@ -3628,6 +4565,54 @@ export interface paths {
         put: operations["historialAcademico.update"];
         post?: never;
         delete: operations["historialAcademico.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/servidores/{servidorId}/historial-academico/{id}/validar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["historialAcademico.validar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/servidores/{servidorId}/historial-academico/{id}/rechazar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["historialAcademico.rechazar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/servidores/{servidorId}/historial-academico/{id}/documento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["historialAcademico.documento"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -3660,6 +4645,167 @@ export interface paths {
         put?: never;
         post?: never;
         delete: operations["horasTrabajadas.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicacion/identidad": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["identidadInstitucional.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicacion/identidad/datos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["identidadInstitucional.actualizarDatos"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicacion/identidad/versiones/{recurso}/archivo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** El archivo de cualquier versión, incluida una programada, que aún no es pública */
+        get: operations["identidadInstitucional.archivo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicacion/identidad/versiones/{recurso}/reutilizar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["identidadInstitucional.reutilizar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicacion/identidad/versiones/{recurso}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["identidadInstitucional.anular"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicacion/identidad/{variante}/versiones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["identidadInstitucional.versiones"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicacion/identidad/{variante}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["identidadInstitucional.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/identidad": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["identidadPublica.manifiesto"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/identidad/icono/{lado}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["identidadPublica.icono"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/identidad/{variante}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["identidadPublica.variante"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -4370,6 +5516,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/inventario/mantenimientos/tecnicos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Quiénes pueden figurar como técnico: los que registran mantenimientos */
+        get: operations["mantenimientoBien.tecnicos"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/inventario/mantenimientos": {
         parameters: {
             query?: never;
@@ -4379,7 +5542,7 @@ export interface paths {
         };
         get: operations["mantenimientos.index"];
         put?: never;
-        post: operations["mantenimientos.store"];
+        post: operations["mantenimientoBien.store"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4396,6 +5559,22 @@ export interface paths {
         get: operations["mantenimientos.show"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/mantenimientos/{mantenimiento}/anular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["mantenimientoBien.anular"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4486,6 +5665,87 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/autoservicio/mi-credencial": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["miCredencial.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/autoservicio/mi-credencial/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** La credencial digital en PDF: no cuenta como una impresión de Comunicación */
+        get: operations["miCredencial.pdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/autoservicio/mi-formacion-academica": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["miFormacion.index"];
+        put?: never;
+        post: operations["miFormacion.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/autoservicio/mi-formacion-academica/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["miFormacion.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/autoservicio/mi-formacion-academica/{id}/documento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["miFormacion.documento"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/dispensario/mi-jornada": {
         parameters: {
             query?: never;
@@ -4495,6 +5755,71 @@ export interface paths {
         };
         /** Lo de quien pregunta: sus turnos, sus pendientes y su mes */
         get: operations["miJornada.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/autoservicio/mi-hoja-de-vida": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["miPerfil.hojaDeVida"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/autoservicio/mis-actividades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["misActividades.index"];
+        put?: never;
+        post: operations["misActividades.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/autoservicio/mis-actividades/{actividad}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["misActividades.update"];
+        post?: never;
+        delete: operations["misActividades.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/autoservicio/mis-actividades/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** El informe del rango filtrado, dirigido a su jefe, con las dos firmas */
+        get: operations["misActividades.pdf"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4567,6 +5892,104 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/autoservicio/mis-equipos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["misEquipos.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/autoservicio/mis-equipos/{asignacion}/acta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** El acta es del custodio: quien solo usa el equipo no la firmó */
+        get: operations["misEquipos.acta"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/autoservicio/mis-prestamos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["misPrestamos.index"];
+        put?: never;
+        post: operations["misPrestamos.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/autoservicio/mis-prestamos/disponibilidad": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ocupado y hasta cuándo, sin decir quién lo tiene (D15) */
+        get: operations["misPrestamos.disponibilidad"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/autoservicio/mis-prestamos/{prestamo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["misPrestamos.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/autoservicio/mis-prestamos/{prestamo}/cancelar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["misPrestamos.cancelar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/autoservicio/mis-solicitudes": {
         parameters: {
             query?: never;
@@ -4610,6 +6033,119 @@ export interface paths {
         get: operations["misSolicitudesAccion.documento"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/consumibles/ingresos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["movimientoConsumible.ingresos"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/consumibles/entregas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["movimientoConsumible.entregas"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/consumibles/movimientos/{movimiento}/anular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["movimientoConsumible.anular"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/consumibles/{consumible}/kardex": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["movimientoConsumible.kardex"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/consumibles/{consumible}/kardex/excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** El kárdex entre dos fechas, en Excel (fase 5.4d) */
+        get: operations["movimientoConsumible.kardexExcel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/consumibles/{consumible}/apertura": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["movimientoConsumible.apertura"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/consumibles/{consumible}/ajustes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["movimientoConsumible.ajuste"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5805,6 +7341,185 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/inventario/prestamos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["prestamoEquipo.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/prestamos/disponibilidad": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** La agenda de TIC: con el folio y quién tiene cada equipo */
+        get: operations["prestamoEquipo.disponibilidad"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/prestamos/resumen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Los contadores de las pestañas de la bandeja */
+        get: operations["prestamoEquipo.resumen"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/prestamos/{id}/acta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** El acta del préstamo, `inline`: se mira antes de imprimirla para la firma */
+        get: operations["prestamoEquipo.acta"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/prestamos/directo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["prestamoEquipo.directo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/prestamos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["prestamoEquipo.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/prestamos/{prestamo}/aprobar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["prestamoEquipo.aprobar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/prestamos/{prestamo}/rechazar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["prestamoEquipo.rechazar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/prestamos/{prestamo}/cancelar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["prestamoEquipo.cancelar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/prestamos/{prestamo}/entregar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["prestamoEquipo.entregar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/prestamos/{prestamo}/recibir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["prestamoEquipo.recibir"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/sso/programa-drogas/actividades": {
         parameters: {
             query?: never;
@@ -6084,6 +7799,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/autoservicio/mis-prestamos/reglas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["autoservicio.prestamos.reglas"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/prestamos/reglas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["inventario.prestamos.reglas"];
+        put: operations["reglasPrestamo.update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/reporteria/configuraciones": {
         parameters: {
             query?: never;
@@ -6295,6 +8042,136 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["reporteSiithSut.actualizarConfiguracion"];
+        trace?: never;
+    };
+    "/v1/tic/reportes/inventario": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["reporteTic.inventario"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tic/reportes/obsolescencia": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["reporteTic.obsolescencia"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tic/reportes/consumos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** El consumo de consumibles por impresora, área o consumible (fase 5.4d) */
+        get: operations["reporteTic.consumos"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tic/reportes/saldo-consumibles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** El saldo de lo que guarda TIC al cierre de una fecha (fase 5.4d) */
+        get: operations["reporteTic.saldoConsumibles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tic/reportes/tickets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["reporteTic.tickets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tic/reportes/satisfaccion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["reporteTic.satisfaccion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/prestamos/reporte-uso": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["reporteUsoPrestamo.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/prestamos/reporte-uso/excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["reporteUsoPrestamo.excel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/v1/sso/assist/{codigo}/cuestionario": {
@@ -6570,7 +8447,6 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** El `apiResource` declaraba esta ruta y el método no existía: 500 seguro */
         get: operations["slas.show"];
         put: operations["slas.update"];
         post?: never;
@@ -6639,6 +8515,86 @@ export interface paths {
         get: operations["solicitudAccionPersonal.documento"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/solicitudes-bodega": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["solicitudBodega.index"];
+        put?: never;
+        post: operations["solicitudBodega.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/solicitudes-bodega/{solicitud}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["solicitudBodega.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/solicitudes-bodega/{solicitud}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["solicitudBodega.pdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/solicitudes-bodega/{solicitud}/despachar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["solicitudBodega.despachar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/solicitudes-bodega/{solicitud}/anular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["solicitudBodega.anular"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6919,6 +8875,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/comunicacion/tablero": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["comunicacion.tableroComunicacion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/dispensario/salud-ocupacional/tablero": {
         parameters: {
             query?: never;
@@ -6927,6 +8899,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["tableroSaludOcupacional.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tic/tablero": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tic.tableroTic"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6958,7 +8946,6 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** El `apiResource` declaraba esta ruta y el método no existía: 500 seguro */
         get: operations["tecnicos.show"];
         put: operations["tecnicos.update"];
         post?: never;
@@ -7034,6 +9021,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/helpdesk/tickets/catalogos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Las categorías, prioridades, subunidades de TIC y técnicos para los formularios */
+        get: operations["ticket.catalogos"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/helpdesk/tickets/resumen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Los contadores de las pestañas de la bandeja de TIC */
+        get: operations["ticket.resumen"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/helpdesk/tickets": {
         parameters: {
             query?: never;
@@ -7066,23 +9087,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/helpdesk/tickets/{id}/estado": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: operations["ticket.cambiarEstado"];
-        trace?: never;
-    };
-    "/v1/helpdesk/tickets/{id}/asignar": {
+    "/v1/helpdesk/tickets/{ticket}/asignar": {
         parameters: {
             query?: never;
             header?: never;
@@ -7098,7 +9103,55 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/helpdesk/tickets/{id}/escalar": {
+    "/v1/helpdesk/tickets/{ticket}/tomar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ticket.tomar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/helpdesk/tickets/{ticket}/pedir-informacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ticket.pedirInformacion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/helpdesk/tickets/{ticket}/resolver": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ticket.resolver"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/helpdesk/tickets/{ticket}/escalar": {
         parameters: {
             query?: never;
             header?: never;
@@ -7114,23 +9167,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/helpdesk/tickets/{id}/cerrar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["ticket.cerrar"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/helpdesk/tickets/{id}/vincular-bien": {
+    "/v1/helpdesk/tickets/{ticket}/vincular-bien": {
         parameters: {
             query?: never;
             header?: never;
@@ -7140,6 +9177,54 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["ticket.vincularBien"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/helpdesk/tickets/{ticket}/confirmar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ticket.confirmar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/helpdesk/tickets/{ticket}/reabrir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ticket.reabrir"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/helpdesk/tickets/{ticket}/anular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ticket.anular"];
         delete?: never;
         options?: never;
         head?: never;
@@ -7259,6 +9344,71 @@ export interface paths {
         get: operations["triaje.historial"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/ubicaciones-por-unidad": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ubicacionesBien.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/ubicaciones-por-unidad/sugerida": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** La que se propone al registrar un equipo (por su unidad) o al entregarlo (por el custodio) */
+        get: operations["ubicacionesBien.sugerida"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/ubicaciones-por-unidad/{unidad}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["ubicacionesBien.fijar"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inventario/ubicaciones-por-unidad/mudanza": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ubicacionesBien.mudanza"];
         delete?: never;
         options?: never;
         head?: never;
@@ -7560,6 +9710,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["certificados.verificar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/credenciales/verificar/{codigo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["credenciales.verificar"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7913,25 +10079,6 @@ export interface components {
             updated_at: string | null;
             tiene_documento: string;
         };
-        /** ActividadLaboral */
-        ActividadLaboral: {
-            id: number;
-            servidor_id: number;
-            /** Format: date-time */
-            fecha: string;
-            hora_inicio: string;
-            hora_fin: string;
-            descripcion: string;
-            categoria: components["schemas"]["CategoriaActividadEnum"];
-            producto_entregable: string | null;
-            estado: string;
-            /** Format: date-time */
-            created_at: string | null;
-            /** Format: date-time */
-            updated_at: string | null;
-            /** Format: date-time */
-            deleted_at: string | null;
-        };
         /** ActividadLiquidacion */
         ActividadLiquidacion: {
             id: number;
@@ -7959,6 +10106,29 @@ export interface components {
         ActualizarContrasenaRequest: {
             contrasena_actual: string;
             nueva_contrasena?: string;
+        };
+        /**
+         * ActualizarDatosInstitucionalesRequest
+         * @description Los datos de la institución (docs/diseno-comunicacion-social.md, 4.5).
+         */
+        ActualizarDatosInstitucionalesRequest: {
+            nombre_oficial: string;
+            siglas: string;
+            nombre_corto: string;
+            ruc: string;
+            direccion: string;
+            telefono: string;
+            sitio_web?: string | null;
+        };
+        /**
+         * ActualizarPublicacionRequest
+         * @description Lo que cambia en lo publicado: el fijado y la fecha de fin
+         *     (docs/diseno-noticias-comunicados.md, regla 1). Se manda solo lo que cambia.
+         */
+        ActualizarPublicacionRequest: {
+            fijado?: boolean;
+            /** Format: date */
+            publicado_hasta?: string | null;
         };
         /**
          * AdjuntarResolucionVistoBuenoRequest
@@ -8099,6 +10269,18 @@ export interface components {
             motivo: string;
         };
         /**
+         * AprobarBajaRequest
+         * @description Aprobar una baja (fase 1.6): la fecha, el memorando de Quipux que la
+         *     respalda (D4) y qué componentes salen con el equipo. Los componentes que no
+         *     se eligen se desenlazan y siguen en servicio.
+         */
+        AprobarBajaRequest: {
+            /** Format: date-time */
+            fecha_baja: string;
+            memorando_numero: string;
+            componentes_baja?: number[] | null;
+        };
+        /**
          * AprobarCertificadoSinSirha7Request
          * @description Aprobar un certificado médico sin que el SGTH escriba en Sirha7, porque TH
          *     ya lo cargó a mano allí. La nota lo deja dicho: quién, cuándo o por qué.
@@ -8120,37 +10302,51 @@ export interface components {
          * @enum {string}
          */
         AptitudMedica: "apto" | "en_observacion" | "apto_con_restricciones" | "no_apto";
-        /** AreaDtic */
-        AreaDtic: {
-            id: number;
-            nombre: string;
-            descripcion: string | null;
-            /** Format: date-time */
-            created_at: string | null;
-            /** Format: date-time */
-            updated_at: string | null;
-            /** Format: date-time */
-            deleted_at: string | null;
-        };
-        /** AsignacionBien */
-        AsignacionBien: {
+        /** AsignacionBienResource */
+        AsignacionBienResource: {
             id: number;
             bien_informatico_id: number;
             servidor_id: number;
-            /** Format: date-time */
+            usuario_servidor_id: number | null;
             fecha_asignacion: string;
-            /** Format: date-time */
-            fecha_devolucion: string | null;
+            fecha_devolucion: string;
+            vigente: boolean;
+            motivo: string;
             observaciones: string | null;
-            estado: string;
-            created_by: number | null;
-            updated_by: number | null;
-            /** Format: date-time */
-            created_at: string | null;
-            /** Format: date-time */
-            updated_at: string | null;
-            /** Format: date-time */
-            deleted_at: string | null;
+            memorando_numero: string | null;
+            tiene_memorando_pdf: boolean;
+            memorando_nombre: string | null;
+            soporte_anterior: string | null;
+            custodio?: {
+                id: string;
+                cedula: string;
+                nombre: string;
+            } | null;
+            unidad?: {
+                id: number;
+                nombre: string;
+                acronimo: string | null;
+            } | null;
+            usuario?: {
+                id: string;
+                cedula: string;
+                nombre: string;
+            } | null;
+            custodio_anterior?: {
+                id: string;
+                cedula: string;
+                nombre: string;
+            } | null;
+            registrada_por?: string;
+            bien?: {
+                id: number;
+                codigo_institucional: string;
+                tipo: string;
+                subtipo: string | null;
+                marca: string;
+                modelo: string | null;
+                ubicacion: string | null;
+            } | null;
         };
         /** AsignarServidorRequest */
         AsignarServidorRequest: {
@@ -8179,6 +10375,12 @@ export interface components {
             anulado_por: number | null;
             motivo_anulacion: string | null;
         };
+        /**
+         * AudienciaComunicado
+         * @description A quién va una publicación (docs/diseno-noticias-comunicados.md, 3.3). Segmentada es por unidades, por régimen o por las dos a la vez: con las dos, el servidor tiene que cumplir ambas.
+         * @enum {string}
+         */
+        AudienciaComunicado: "todos" | "segmentada";
         /** AutorizacionVueloResource */
         AutorizacionVueloResource: {
             id: number;
@@ -8260,29 +10462,154 @@ export interface components {
             /** Format: date-time */
             fecha_informe?: string | null;
         };
-        /** BienInformatico */
-        BienInformatico: {
+        /** BajaBienResource */
+        BajaBienResource: {
             id: number;
-            codigo_qr: string;
-            codigo_institucional: string;
-            tipo_bien_id: number;
-            marca_id: number;
-            origen_bien_id: number;
-            modelo: string | null;
-            numero_serie: string;
-            estado_operativo: string;
-            condicion_fisica: string;
+            numero: string;
+            bien_informatico_id: number;
+            estado: string;
+            /** @enum {string} */
+            estado_etiqueta: "Propuesta" | "Aprobada" | "Rechazada";
+            motivo: string;
+            /** @enum {string} */
+            motivo_etiqueta: "Obsolescencia" | "Daño irreparable" | "Robo o pérdida" | "Siniestro" | "Otro";
+            diagnostico: string;
+            recomendacion: string | null;
+            fecha_informe: string;
+            soporte_anterior: string | null;
+            fecha_baja: string;
             /** Format: date-time */
-            fecha_fin_vida_util: string | null;
+            aprobado_en: string | null;
+            memorando_numero: string | null;
+            tiene_memorando: boolean;
+            memorando_nombre: string | null;
+            entregado_activos_en: string;
+            /** Format: date-time */
+            rechazado_en: string | null;
+            motivo_rechazo: string | null;
+            baja_principal_id: number | null;
+            informado_por?: string;
+            aprobado_por?: string;
+            rechazado_por?: string;
+            bien?: {
+                id: number;
+                codigo_institucional: string;
+                codigo_anterior: string | null;
+                numero_serie: string | null;
+                tipo: string;
+                marca: string;
+                modelo: string | null;
+            } | null;
+            principal?: {
+                id: number;
+                numero: string;
+                codigo_institucional: string;
+            } | null;
+            componentes?: {
+                id: number;
+                bien_informatico_id: number;
+                codigo_institucional: string;
+                tipo: string;
+            }[];
+        };
+        /** BienInformaticoResource */
+        BienInformaticoResource: {
+            id: number;
+            codigo_institucional: string;
+            codigo_anterior: string | null;
+            codigo_qr: string;
+            numero_serie: string | null;
+            modelo: string | null;
+            tipo_bien_id: number;
+            subtipo_bien_id: number | null;
+            marca_id: number;
+            origen_bien_id: number | null;
+            ubicacion_id: number | null;
+            unidad_administrativa_id: number | null;
+            contrato_vigencia_id: number | null;
+            bien_padre_id: number | null;
+            estado_operativo: string;
+            estado_etiqueta: string;
+            condicion_fisica: string;
+            fecha_compra: string;
+            fecha_fin_vida_util: string;
+            vida_util_cumplida: string;
+            nombre_red: string | null;
+            usuario_dominio: string | null;
+            direccion_ip: string | null;
+            prestable: boolean;
             caracteristicas_tecnicas: unknown[] | null;
-            created_by: number | null;
-            updated_by: number | null;
+            observaciones: string | null;
+            componentes_count: string | 0;
+            tipo?: {
+                id: number;
+                nombre: string;
+                ficha: string | "general";
+            };
+            subtipo?: {
+                id: number;
+                nombre: string;
+            } | null;
+            marca?: {
+                id: number;
+                nombre: string;
+            };
+            ubicacion?: {
+                id: number;
+                sede: string;
+                piso: string | null;
+                nombre: string;
+            } | null;
+            contrato_vigencia?: {
+                id: number;
+                proceso: string;
+                fecha_fin: string;
+            } | null;
+            origen?: {
+                id: number;
+                tipo_origen: string;
+                entidad_origen: string;
+                identificador_documento: string | null;
+            } | null;
+            custodio: {
+                asignacion_id: number;
+                desde: string;
+                servidor_id: string;
+                cedula: string;
+                nombre: string;
+            } | null;
+            unidad: {
+                id: string | number;
+                nombre: string;
+                acronimo: string | null;
+            } | null;
+            padre?: {
+                id: number;
+                codigo_institucional: string;
+                modelo: string | null;
+                tipo: string;
+            } | null;
+            componentes?: {
+                id: number;
+                codigo_institucional: string;
+                modelo: string | null;
+                tipo: string;
+                estado_operativo: string;
+            }[];
+            /** @description La baja en curso o aprobada: la ficha avisa y no ofrece proponer otra. */
+            baja?: {
+                id: number;
+                numero: string;
+                estado: string;
+                /** @enum {string} */
+                motivo: "Obsolescencia" | "Daño irreparable" | "Robo o pérdida" | "Siniestro" | "Otro";
+                fecha_informe: string;
+                fecha_baja: string;
+            } | null;
             /** Format: date-time */
             created_at: string | null;
             /** Format: date-time */
             updated_at: string | null;
-            /** Format: date-time */
-            deleted_at: string | null;
         };
         /** BorradorConsulta */
         BorradorConsulta: {
@@ -8378,6 +10705,16 @@ export interface components {
             estado: boolean;
             genero: string | null;
         };
+        /**
+         * CargarFotografiasRequest
+         * @description Una tanda de la carga masiva. Aquí solo se exige que lleguen archivos: el
+         *     peso y si se pueden leer se revisan foto por foto en el servicio, para que
+         *     una mala no tumbe la tanda entera y el informe diga cuál fue.
+         */
+        CargarFotografiasRequest: {
+            reemplazar?: boolean;
+            fotos: string[];
+        };
         /** Cargo */
         Cargo: {
             id: number;
@@ -8420,6 +10757,7 @@ export interface components {
         };
         /**
          * CategoriaActividadEnum
+         * @description De qué tipo es una actividad laboral: sirve para filtrarlas.
          * @enum {string}
          */
         CategoriaActividadEnum: "reunion" | "visita_campo" | "elaboracion_documentos" | "coordinacion" | "capacitacion" | "atencion_ciudadana" | "otro";
@@ -8452,6 +10790,22 @@ export interface components {
          * @enum {string}
          */
         CategoriaRiesgoLaboral: "fisico" | "seguridad" | "quimico" | "biologico" | "ergonomico" | "psicosocial";
+        /** CategoriaTicket */
+        CategoriaTicket: {
+            id: number;
+            nombre: string;
+            es_hardware: boolean;
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+            /** Format: date-time */
+            deleted_at: string | null;
+            descripcion: string | null;
+            unidad_tic_id: number | null;
+            activa: boolean;
+            es_consumibles: boolean;
+        };
         /**
          * CausaLicencia
          * @description Las licencias con remuneración (LOSEP, Art. 27; Código del Trabajo, Art. 152 para los obreros; diseño de Acciones de Personal, 4.4 y 9.4; TH N12; fase 5.1). Se registran en Asistencia, sin acción de personal, con su causa, su tope y su respaldo, y no descuentan vacaciones. Hasta aquí eran «motivos» de la solicitud de vacaciones, sin tope ni respaldo. La licencia sin remuneración no está aquí: es acción de personal (LOSEP 28; fase 2.2). Ni la capacitación, que es comisión de servicios.  Los topes son por licencia, en días calendario, y salen del diseño (4.4); la paternidad de 15 días es la de la Ley Orgánica del Derecho al Cuidado Humano (2023). Conviene que Talento Humano o jurídico revise la tabla: vive aquí y en ningún otro sitio.  `PACTADA` no es de la ley: es una causa que el contrato colectivo de los obreros añade (fase 5.3). Su nombre, sus días y su base son los de la cláusula (`ClausulaDeLicencia`), y sin ella no se registra. El contrato también puede ampliar los días de una causa de la ley.
@@ -8635,20 +10989,87 @@ export interface components {
             /** Format: date-time */
             updated_at: string | null;
         };
-        /** ComentarioTicket */
-        ComentarioTicket: {
+        /**
+         * ColorConsumible
+         * @description El color de un consumible de impresión (fase 5.4a); sin color, no aplica.
+         * @enum {string}
+         */
+        ColorConsumible: "negro" | "cian" | "magenta" | "amarillo" | "tricolor";
+        /**
+         * ComentarTicketRequest
+         * @description Un mensaje en la conversación de un ticket, con un archivo si hace falta.
+         */
+        ComentarTicketRequest: {
+            comentario: string;
+            es_interno?: boolean | null;
+            /** Format: binary */
+            archivo?: string | null;
+        };
+        /** ComentarioTicketResource */
+        ComentarioTicketResource: {
             id: number;
             ticket_id: number;
-            user_id: number;
             comentario: string;
             es_interno: boolean;
-            evidencia_url: string | null;
+            autor_id: number;
+            autor?: string;
+            tiene_archivo: boolean;
+            archivo_nombre: string | null;
             /** Format: date-time */
             created_at: string | null;
-            /** Format: date-time */
-            updated_at: string | null;
-            /** Format: date-time */
-            deleted_at: string | null;
+        };
+        /** ComunicadoAdjuntoResource */
+        ComunicadoAdjuntoResource: {
+            id: number;
+            nombre: string;
+            tamano: number;
+            orden: number;
+        };
+        /** ComunicadoResource */
+        ComunicadoResource: {
+            id: number;
+            tipo: string;
+            /** @enum {string} */
+            tipo_etiqueta: "Noticia" | "Comunicado";
+            titulo: string;
+            resumen: string | null;
+            cuerpo?: string | null;
+            referencia: string | null;
+            estado: string;
+            vigencia: string;
+            /** @enum {string} */
+            vigencia_etiqueta: "Borrador" | "Programado" | "Publicado" | "Vencido" | "Retirado";
+            audiencia: string;
+            regimenes: unknown[];
+            unidades?: string;
+            publicado_desde: string;
+            publicado_hasta: string;
+            fijado: boolean;
+            requiere_confirmacion: boolean;
+            tiene_portada: boolean;
+            duplicado_de_id: number | null;
+            creado_por?: {
+                id: number;
+                nombre: string;
+            } | null;
+            publicado_por?: {
+                id: number;
+                nombre: string;
+            } | null;
+            publicado_at: string;
+            retirado_por?: {
+                id: number;
+                nombre: string;
+            } | null;
+            retirado_at: string;
+            motivo_retiro: string | null;
+            total_destinatarios: number | null;
+            leidos?: number;
+            confirmados?: number;
+            adjuntos_count?: number;
+            adjuntos?: components["schemas"]["ComunicadoAdjuntoResource"][];
+            creado_en: string;
+            actualizado_en: string;
         };
         /** ConceptoNomina */
         ConceptoNomina: {
@@ -8666,6 +11087,12 @@ export interface components {
             /** Format: date-time */
             deleted_at: string | null;
         };
+        /**
+         * CondicionFisicaBien
+         * @description Cómo está físicamente un equipo informático, independiente de dónde esté (ver `EstadoBien`). Son los tres valores de la columna «ESTADO EQUIPO» del Excel de TIC y de la pestaña de impresoras.
+         * @enum {string}
+         */
+        CondicionFisicaBien: "bueno" | "regular" | "malo";
         /** ConfiguracionReporte */
         ConfiguracionReporte: {
             id: number;
@@ -8708,6 +11135,18 @@ export interface components {
             tipo_atencion: string;
             tipo_diagnostico: string;
             especialidad: components["schemas"]["EspecialidadAtencion"];
+        };
+        /**
+         * ContarDestinatariosRequest
+         * @description Cuántos verían lo elegido en el formulario, antes de guardar (docs/diseno-noticias-comunicados.md, 6.3).
+         */
+        ContarDestinatariosRequest: {
+            audiencia: components["schemas"]["AudienciaComunicado"];
+            regimenes?: components["schemas"]["RegimenLaboral"][] | null;
+            unidades?: {
+                id: number;
+                incluye_dependencias?: boolean;
+            }[] | null;
         };
         /** ContratoColectivo */
         ContratoColectivo: {
@@ -8774,6 +11213,31 @@ export interface components {
             lugar_trabajo: string | null;
             rau: string;
         };
+        /** ContratoVigenciaResource */
+        ContratoVigenciaResource: {
+            id: number;
+            proceso: string;
+            proveedor: string | null;
+            objeto: string | null;
+            administrador_id: number | null;
+            fecha_inicio: string;
+            fecha_fin: string;
+            /** @description Vigente mientras no haya pasado su fin; sin fin, se da por vigente. */
+            vigente: string;
+            observaciones: string | null;
+            bienes_count: string | null;
+            administrador?: {
+                id: number;
+                cedula: string;
+                nombre: string;
+            } | null;
+            cronograma?: {
+                id: number;
+                fecha_desde: string;
+                fecha_hasta: string;
+                descripcion: string | null;
+            }[];
+        };
         /** Convocatoria */
         Convocatoria: {
             id: number;
@@ -8801,6 +11265,53 @@ export interface components {
             tipo_nombramiento_previsto: components["schemas"]["TipoNombramiento"] | null;
             es_contenedor_permanente: boolean;
             motivo_cierre: string | null;
+        };
+        /**
+         * CrearTicketRequest
+         * @description Abrir un ticket (fase 3.1). Desde el Portal, a nombre de quien lo abre;
+         *     TIC lo registra a nombre de otro con `servidor_id` y puede poner la
+         *     prioridad. Que el equipo sea suyo lo comprueba el servicio.
+         */
+        CrearTicketRequest: {
+            servidor_id?: number | null;
+            categoria_id: number;
+            /** @enum {string|null} */
+            tipo_ticket?: "incidente" | "solicitud" | null;
+            prioridad?: components["schemas"]["PrioridadTicket"];
+            asunto: string;
+            descripcion: string;
+            bien_informatico_id?: number | null;
+            /** Format: binary */
+            archivo?: string | null;
+        };
+        /** CredencialResource */
+        CredencialResource: {
+            id: number;
+            servidor_id: number;
+            estado: string;
+            /** @enum {string} */
+            estado_etiqueta: "Vigente" | "Vencida" | "Revocada" | "Anulada";
+            vigente: boolean;
+            valida_hasta: string;
+            url_verificacion: string;
+            creada_en: string;
+            reemplaza_a_id: number | null;
+            revocada_en: string;
+            revocada_por?: {
+                id: number;
+                nombre: string;
+            } | null;
+            motivo_revocacion: string;
+            motivo_etiqueta: string;
+            detalle_revocacion: string | null;
+            anulada_en: string;
+            devuelta_en: string;
+            devolucion_registrada_por?: {
+                id: number;
+                nombre: string;
+            } | null;
+            devolucion_nota: string | null;
+            impresiones?: components["schemas"]["ImpresionCredencialResource"][];
         };
         /** CriterioEvaluacion */
         CriterioEvaluacion: {
@@ -8875,6 +11386,21 @@ export interface components {
             updated_at: string | null;
             /** Format: date-time */
             deleted_at: string | null;
+        };
+        /** DatosInstitucionalesResource */
+        DatosInstitucionalesResource: {
+            nombre_oficial: string;
+            siglas: string;
+            nombre_corto: string;
+            ruc: string;
+            direccion: string;
+            telefono: string;
+            sitio_web: string | null;
+            actualizado_en: string;
+            actualizado_por?: {
+                id: number;
+                nombre: string;
+            } | null;
         };
         /** DeclaracionJuramentada */
         DeclaracionJuramentada: {
@@ -9142,6 +11668,21 @@ export interface components {
             /** Format: date-time */
             deleted_at: string | null;
         };
+        /**
+         * EntregarPrestamoRequest
+         * @description Entregar un préstamo reservado (fase 2.1): la fecha y hora reales y, por
+         *     cada equipo, los accesorios y la condición con que sale.
+         */
+        EntregarPrestamoRequest: {
+            /** Format: date-time */
+            entregado_en: string;
+            observaciones?: string | null;
+            items: {
+                id: number;
+                accesorios?: string | null;
+                condicion_entrega: components["schemas"]["CondicionFisicaBien"];
+            }[];
+        };
         /** EppEntrega */
         EppEntrega: {
             id: number;
@@ -9290,6 +11831,12 @@ export interface components {
          * @enum {string}
          */
         EstadoDescuentoRecurrente: "activo" | "completado" | "suspendido";
+        /**
+         * EstadoFormacion
+         * @description Dónde está un título o curso del historial académico. Lo que registra Talento Humano entra validado; lo que registra el servidor desde el portal, por validar.
+         * @enum {string}
+         */
+        EstadoFormacion: "validado" | "por_validar" | "rechazado";
         /**
          * EstadoNomina
          * @enum {string}
@@ -9547,6 +12094,31 @@ export interface components {
             fecha_fin: string;
         };
         /**
+         * FormatoImpresionCredencial
+         * @description Las dos salidas de impresión de la credencial (docs/diseno-comunicacion-social.md, 6.2; D7): una tarjeta CR80 por hoja, anverso y reverso, para la impresora de PVC; u hojas A4 de nueve por cara para recortar y plastificar.
+         * @enum {string}
+         */
+        FormatoImpresionCredencial: "cr80" | "a4";
+        /** FotografiaServidorResource */
+        FotografiaServidorResource: {
+            id: number;
+            servidor_id: number;
+            origen: string;
+            /** @enum {string} */
+            origen_etiqueta: "Subida individual" | "Carga masiva";
+            vigente: boolean;
+            subida_en: string;
+            subida_por?: {
+                id: number;
+                nombre: string;
+            } | null;
+            activada_en: string;
+            activada_por?: {
+                id: number;
+                nombre: string;
+            } | null;
+        };
+        /**
          * GravedadAccidente
          * @description Gravedad de un accidente de trabajo. La columna nació como texto libre (`string, 50`) y los Form Requests la validaban igual —`['required','string','max:50']`—, así que el API aceptaba cualquier cosa: la tabla pintaba lo que llegara y el mapa de tonos le daba el neutro a lo que no reconocía. Los cuatro valores son los que el formulario ofrece desde siempre.  NOTA: el modelo todavía NO castea esta columna a enum. Las filas anteriores a esta validación pueden tener cualquier texto, y un cast haría reventar la lectura del listado entero con un `ValueError` por una sola fila rara. Normalizar lo que haya —y recién entonces castear— necesita mirar los datos reales de producción, que es una decisión de Talento Humano y no del código.
          * @enum {string}
@@ -9567,6 +12139,18 @@ export interface components {
             archivo?: string | null;
         };
         /**
+         * GuardarActividadRequest
+         * @description Una actividad del portal, al anotarla o corregirla. Que la fecha caiga en el
+         *     mes en curso lo decide `MisActividadesService`.
+         */
+        GuardarActividadRequest: {
+            /** Format: date */
+            fecha: string;
+            descripcion: string;
+            categoria: components["schemas"]["CategoriaActividadEnum"];
+            producto_entregable?: string | null;
+        };
+        /**
          * GuardarClausulaDeLicenciaRequest
          * @description Una cláusula de licencia del contrato colectivo (fase 5.3): amplía una causa
          *     de la ley o crea una con su nombre. Que mejore la ley y que no se repita lo
@@ -9581,6 +12165,32 @@ export interface components {
             dias: number;
             dias_por_anio?: number | null;
             observacion?: string | null;
+        };
+        /**
+         * GuardarComunicadoRequest
+         * @description Crear o editar un borrador (docs/diseno-noticias-comunicados.md, 6.3).
+         *
+         *     Un borrador puede quedar a medias: el resumen y el texto se exigen al
+         *     publicar, no al guardar. Lo que sí se valida aquí es la forma de cada campo.
+         */
+        GuardarComunicadoRequest: {
+            tipo: components["schemas"]["TipoComunicado"];
+            titulo: string;
+            resumen?: string | null;
+            cuerpo?: string | null;
+            referencia?: string | null;
+            audiencia: components["schemas"]["AudienciaComunicado"];
+            /** Format: date */
+            publicado_desde?: string | null;
+            /** Format: date */
+            publicado_hasta?: string | null;
+            fijado?: boolean;
+            requiere_confirmacion?: boolean;
+            regimenes?: components["schemas"]["RegimenLaboral"][] | null;
+            unidades?: {
+                id: number;
+                incluye_dependencias?: boolean;
+            }[] | null;
         };
         /**
          * GuardarContratoColectivoRequest
@@ -9694,6 +12304,14 @@ export interface components {
             updated_at: string | null;
             /** Format: date-time */
             deleted_at: string | null;
+            estado: components["schemas"]["EstadoFormacion"];
+            documento_nombre: string | null;
+            registrado_por: number | null;
+            validado_por: number | null;
+            /** Format: date-time */
+            validado_en: string | null;
+            motivo_rechazo: string | null;
+            tiene_documento: string;
         };
         /** HorasTrabajadasPeriodo */
         HorasTrabajadasPeriodo: {
@@ -9728,6 +12346,36 @@ export interface components {
             /** Format: date-time */
             updated_at: string | null;
         };
+        /** ImpresionCredencialResource */
+        ImpresionCredencialResource: {
+            id: number;
+            formato: string;
+            /** @enum {string} */
+            formato_etiqueta: "Tarjeta CR80 (impresora de PVC)" | "Hoja A4 de 9 (para recortar)";
+            lote: string | null;
+            impresa_en: string;
+            impresa_por?: {
+                id: number;
+                nombre: string;
+            } | null;
+            datos_impresos: {
+                nombres?: string;
+                apellidos?: string;
+                cargo?: string;
+                unidad?: string;
+                valida_hasta?: string;
+            };
+        };
+        /**
+         * ImprimirCredencialesRequest
+         * @description Qué se imprime (docs/diseno-comunicacion-social.md, 6.1): unas credenciales
+         *     elegidas, o todas las vigentes de una unidad, en uno de los dos formatos.
+         */
+        ImprimirCredencialesRequest: {
+            formato: components["schemas"]["FormatoImpresionCredencial"];
+            unidad_administrativa_id?: number;
+            credenciales?: number[];
+        };
         /**
          * IncrementoEnLoteRequest
          * @description El incremento de los obreros en lote (fase 4.6). Para previsualizarlo basta
@@ -9745,22 +12393,6 @@ export interface components {
             descripcion: string;
             documento_origen: string;
             dictamen_presupuestario_ref: string;
-        };
-        /** InformeActividad */
-        InformeActividad: {
-            id: number;
-            servidor_id: number;
-            mes: number;
-            anio: number;
-            url_pdf: string;
-            estado: string;
-            aprobado_por: number | null;
-            /** Format: date-time */
-            created_at: string | null;
-            /** Format: date-time */
-            updated_at: string | null;
-            /** Format: date-time */
-            deleted_at: string | null;
         };
         /** InscripcionCurso */
         InscripcionCurso: {
@@ -9935,12 +12567,99 @@ export interface components {
             usuario: string;
             contrasena: string;
         };
+        /** MantenimientoBienResource */
+        MantenimientoBienResource: {
+            id: number;
+            bien_informatico_id: number;
+            ticket_id: number | null;
+            tipo_mantenimiento: string;
+            tipo_etiqueta: string;
+            realizado_por: string;
+            fecha_mantenimiento: string;
+            descripcion: string;
+            costo: number;
+            soporte_anterior: string | null;
+            anulado: boolean;
+            /** Format: date-time */
+            anulado_en: string | null;
+            motivo_anulacion: string | null;
+            tecnico?: {
+                id: number;
+                nombre: string;
+            } | null;
+            contrato_vigencia?: {
+                id: number;
+                proceso: string;
+                proveedor: string | null;
+            } | null;
+            registrado_por?: string;
+            anulado_por?: string;
+            bien?: {
+                id: number;
+                codigo_institucional: string;
+                tipo: string;
+                marca: string;
+                modelo: string | null;
+            } | null;
+        };
+        /** MarcaResource */
+        MarcaResource: {
+            id: number;
+            nombre: string;
+            bienes_count: string | null;
+        };
         /**
          * MedioNotificacion
          * @description Cómo se notifica la acción de personal al servidor (Reglamento a la LOSEP, Art. 22; diseño, 6.4; TH 26; fase 6.3a). Por el portal, el documento aparece en «Mis documentos laborales», le llega al correo y él acusa recibo. En persona, Talento Humano registra si la recibió o si se negó, con la razón y un testigo.
          * @enum {string}
          */
         MedioNotificacion: "portal" | "personal";
+        /** MiCredencialResource */
+        MiCredencialResource: {
+            id: number;
+            estado: string;
+            /** @enum {string} */
+            estado_etiqueta: "Vigente" | "Vencida" | "Revocada" | "Anulada";
+            vigente: boolean;
+            valida_hasta: string;
+            datos: {
+                nombres: string;
+                apellidos: string;
+                cedula: string;
+                /**
+                 * @description El puesto y la unidad del vínculo, como el certificado laboral;
+                 *     los del servidor solo si el vínculo no los trae.
+                 */
+                cargo: string;
+                unidad: string;
+                tipo_sangre: string | null;
+                /** @description Sin nombre no hay a quién llamar: la línea no se imprime. */
+                contacto_emergencia: {
+                    nombre: string | null;
+                    parentesco: string | null;
+                    telefono: string | null;
+                } | null;
+                valida_hasta: string;
+                fotografia_id: string;
+            };
+            /** @description Lo que no sale en la credencial porque falta en el expediente. */
+            datos_faltantes: unknown[];
+            /** @description El QR en data: URL, para no sumar una librería al frontend. */
+            qr: string;
+            url_verificacion: string;
+        };
+        /**
+         * MotivoAjusteConsumible
+         * @description Por qué se ajusta el saldo de un consumible (fase 5.4a); siempre con el detalle.
+         * @enum {string}
+         */
+        MotivoAjusteConsumible: "dano" | "caducidad" | "diferencia_conteo" | "otro";
+        /**
+         * MotivoBaja
+         * @description Por qué sale un equipo del servicio (docs/diseno-subsistema-tic.md, fase 1.6).
+         * @enum {string}
+         */
+        MotivoBaja: "obsolescencia" | "dano_irreparable" | "robo_o_perdida" | "siniestro" | "otro";
         /**
          * MotivoEntregaEpp
          * @enum {string}
@@ -9962,6 +12681,12 @@ export interface components {
         MotivoPermisoRequest: {
             motivo: string;
         };
+        /**
+         * MotivoRevocacionCredencial
+         * @description Por qué se revoca una credencial (docs/diseno-comunicacion-social.md, 6.3). Revocar apaga el QR de la tarjeta que anda suelta y repone otra con un código nuevo. Una tarjeta deteriorada no se revoca: se vuelve a imprimir con el mismo código, porque la vieja no circula.
+         * @enum {string}
+         */
+        MotivoRevocacionCredencial: "perdida" | "robo" | "datos_erroneos" | "otro";
         /**
          * MotivoSubrogacion
          * @enum {string}
@@ -10701,6 +13426,12 @@ export interface components {
             fecha_inscripcion: string;
         };
         /**
+         * PresentacionConsumible
+         * @description Cómo viene un consumible (fase 5.4a): la cantidad se cuenta en esta presentación.
+         * @enum {string}
+         */
+        PresentacionConsumible: "unidad" | "botella" | "caja";
+        /**
          * PresentacionMedicamento
          * @enum {string}
          */
@@ -10722,6 +13453,103 @@ export interface components {
             /** Format: binary */
             archivo: string;
         };
+        /**
+         * PrestamoDirectoRequest
+         * @description El préstamo directo en el mostrador (fase 2.1): a quién, qué equipos con sus
+         *     accesorios y su condición, y hasta cuándo. Empieza ahora.
+         */
+        PrestamoDirectoRequest: {
+            servidor_id: number;
+            /** Format: date-time */
+            fin_previsto: string;
+            motivo: string;
+            lugar_uso: string;
+            fuera_del_edificio?: boolean;
+            observaciones?: string | null;
+            items: {
+                bien_informatico_id: number;
+                accesorios?: string | null;
+                condicion_entrega: components["schemas"]["CondicionFisicaBien"];
+            }[];
+        };
+        /** PrestamoEquipoResource */
+        PrestamoEquipoResource: {
+            id: number;
+            folio: string;
+            estado: string;
+            /** @enum {string} */
+            estado_etiqueta: "Solicitado" | "Reservado" | "En curso" | "Devuelto" | "Rechazado" | "Cancelado" | "No retirado";
+            vencido: boolean;
+            cancelable: boolean;
+            directo: boolean;
+            servidor_id: number;
+            servidor?: {
+                id: number;
+                cedula: string;
+                nombre: string;
+            } | null;
+            unidad?: {
+                id: number;
+                nombre: string;
+                acronimo: string | null;
+            } | null;
+            motivo: string;
+            lugar_uso: string;
+            fuera_del_edificio: boolean;
+            /** Format: date-time */
+            inicio_previsto: string;
+            /** Format: date-time */
+            fin_previsto: string;
+            /** Format: date-time */
+            aprobado_en: string | null;
+            /** Format: date-time */
+            rechazado_en: string | null;
+            motivo_rechazo: string | null;
+            /** Format: date-time */
+            cancelado_en: string | null;
+            motivo_cancelacion: string | null;
+            /** Format: date-time */
+            entregado_en: string | null;
+            /** Format: date-time */
+            devuelto_en: string | null;
+            observaciones: string | null;
+            registrado_por?: string;
+            aprobado_por?: string;
+            rechazado_por?: string;
+            cancelado_por?: string;
+            entregado_por?: string;
+            recibido_por?: string;
+            items?: {
+                id: number;
+                bien: {
+                    id: number;
+                    codigo_institucional: string;
+                    tipo: string;
+                    marca: string;
+                    modelo: string | null;
+                } | null;
+                accesorios: string | null;
+                condicion_entrega: string;
+                condicion_devolucion: string;
+                novedad: string | null;
+            }[];
+            historial?: {
+                estado_anterior: string;
+                estado_nuevo: string;
+                /** @enum {string} */
+                etiqueta: "Solicitado" | "Reservado" | "En curso" | "Devuelto" | "Rechazado" | "Cancelado" | "No retirado";
+                usuario: string;
+                detalle: string | null;
+                /** Format: date-time */
+                fecha: string;
+            }[];
+        };
+        /**
+         * PrioridadTicket
+         * @description La prioridad del ticket. La pone TIC al asignar; con la categoría decide el SLA (fase 3.2).
+         * @enum {string}
+         */
+        PrioridadTicket: "baja" | "media" | "alta" | "urgente";
         /**
          * ProcedimientoDisciplinario
          * @description Por qué procedimiento se sanciona (diseño de Acciones de Personal, 9.15; fase 4.4). Lo decide el régimen del servidor al abrirlo: - el **sumario administrativo** es el de la LOSEP (Arts. 42 a 44), con su   gravedad leve o grave; - el **procedimiento del reglamento interno** es el del obrero: la falta sale   del catálogo de su reglamento interno de trabajo, porque el Código del   Trabajo prohíbe sancionar lo que el reglamento no prevea (Art. 44 a).  Los dos comparten los hitos —apertura, notificación, descargos, informe y resolución— y el debido proceso (Constitución Art. 76).
@@ -10759,6 +13587,21 @@ export interface components {
             created_at: string | null;
             /** Format: date-time */
             updated_at: string | null;
+        };
+        /**
+         * ProponerBajaRequest
+         * @description Proponer la baja de un equipo con su informe técnico (fase 1.6). El
+         *     diagnóstico es lo que sostiene la baja ante Activos Fijos: no basta una
+         *     palabra.
+         */
+        ProponerBajaRequest: {
+            bien_informatico_id: number;
+            motivo: components["schemas"]["MotivoBaja"];
+            diagnostico: string;
+            recomendacion?: string | null;
+            /** Format: date-time */
+            fecha_informe: string;
+            soporte_anterior?: string | null;
         };
         /** ProvinciaResource */
         ProvinciaResource: {
@@ -10920,6 +13763,60 @@ export interface components {
             omitir_alergias: boolean;
         };
         /**
+         * RechazarFormacionRequest
+         * @description El rechazo de un título o curso registrado desde el portal: siempre con motivo.
+         */
+        RechazarFormacionRequest: {
+            motivo: string;
+        };
+        /**
+         * RecibirPrestamoRequest
+         * @description Recibir un préstamo en curso (fase 2.1): la fecha y hora reales y, por cada
+         *     equipo, la condición con que vuelve y la novedad, si la hay.
+         */
+        RecibirPrestamoRequest: {
+            /** Format: date-time */
+            devuelto_en: string;
+            observaciones?: string | null;
+            items: {
+                id: number;
+                condicion_devolucion: components["schemas"]["CondicionFisicaBien"];
+                novedad?: string | null;
+            }[];
+        };
+        /** RecursoIdentidadResource */
+        RecursoIdentidadResource: {
+            id: number;
+            variante: string;
+            /** @enum {string} */
+            variante_etiqueta: "Isotipo" | "Imagotipo horizontal" | "Imagotipo horizontal en negativo" | "Logo para documentos" | "Logo secundario de documentos" | "Hoja membretada A4" | "Fondo de la credencial: anverso" | "Fondo de la credencial: reverso";
+            mime: string;
+            ancho: number;
+            alto: number;
+            peso: number;
+            vigente_desde: string;
+            /**
+             * @description vigente, programada, anterior o anulada.
+             * @enum {string}
+             */
+            estado: "anulada" | "programada" | "vigente" | "anterior";
+            origen: string;
+            /** @enum {string} */
+            origen_etiqueta: "Carga inicial" | "Subida" | "Reutiliza una versión anterior";
+            reutiliza_id: number | null;
+            nota: string | null;
+            subido_en: string;
+            subido_por?: {
+                id: number;
+                nombre: string;
+            } | null;
+            anulada_en: string;
+            anulada_por?: {
+                id: number;
+                nombre: string;
+            } | null;
+        };
+        /**
          * RegimenLaboral
          * @description Marco legal bajo el que se vincula una persona con la institución. `SERVICIOS_PROFESIONALES` se agregó el 2026-08-29. Hasta entonces solo había dos valores y los contratos de servicios profesionales se metían en `CODIGO_TRABAJO`, porque era el cajón de «lo que no es LOSEP». El efecto visible era que un profesional contratado sobre un puesto LOSEP aparecía con régimen Código de Trabajo sin que nadie lo hubiera elegido.  No es una distinción cosmética: un contrato de servicios profesionales es civil, no laboral. No hay relación de dependencia, y de ahí se siguen las reglas de abajo — no genera vacaciones, no accede a permisos y no marca.
          * @enum {string}
@@ -10930,6 +13827,57 @@ export interface components {
          * @enum {string}
          */
         RegionExamenFisico: "piel" | "ojos" | "oido" | "orofaringe" | "nariz" | "cuello" | "torax_1" | "torax_2" | "abdomen" | "columna" | "pelvis" | "extremidades" | "neurologico";
+        /**
+         * RegistrarDevolucionCredencialRequest
+         * @description La tarjeta impresa volvió a Comunicación Social (docs/diseno-comunicacion-social.md,
+         *     6.5): el paso «Devolución de la credencial» de la desvinculación.
+         */
+        RegistrarDevolucionCredencialRequest: {
+            /** Format: date-time */
+            fecha: string;
+            nota?: string | null;
+        };
+        /**
+         * RegistrarEntregaConsumibleRequest
+         * @description Entregar consumibles (fase 5.4a): uno o varios a la vez, a un equipo (los de
+         *     impresión, siempre) y a quien retira, que por defecto es el custodio del
+         *     equipo. Opcionalmente, el ticket del pedido [P3].
+         */
+        RegistrarEntregaConsumibleRequest: {
+            /** Format: date-time */
+            fecha: string;
+            bien_informatico_id?: number | null;
+            servidor_retira_id?: number | null;
+            ticket_id?: number | null;
+            observacion?: string | null;
+            items: {
+                consumible_id: number;
+                cantidad: number;
+            }[];
+        };
+        /**
+         * RegistrarIngresoConsumibleRequest
+         * @description Registrar lo que TIC recibe de bodega (fase 5.4a): un documento (egreso de
+         *     bodega, acta o memorando) con uno o varios consumibles [P8]. La fecha de
+         *     compra queda en el ingreso; el saldo es único, sin lotes [P2].
+         */
+        RegistrarIngresoConsumibleRequest: {
+            /** Format: date-time */
+            fecha: string;
+            /**
+             * @description El de la solicitud a bodega lo pone su despacho, no se elige aquí.
+             * @enum {string}
+             */
+            tipo_documento: "egreso_bodega" | "acta" | "memorando";
+            numero_documento: string;
+            /** Format: date-time */
+            fecha_compra?: string | null;
+            observacion?: string | null;
+            items: {
+                consumible_id: number;
+                cantidad: number;
+            }[];
+        };
         /**
          * RegistrarPosesionRequest
          * @description La posesión del cargo, o el día en que el ocasional se presentó a laborar
@@ -11002,6 +13950,32 @@ export interface components {
             motivo?: components["schemas"]["MotivoSubrogacion"];
             resolucion_numero?: string | null;
             observacion?: string | null;
+        };
+        /**
+         * ReglasPrestamoRequest
+         * @description Las reglas del préstamo que configura TIC (D16).
+         */
+        ReglasPrestamoRequest: {
+            plazo_maximo_dias_habiles: number;
+            anticipacion_minima_minutos: number;
+            hora_apertura: string;
+            hora_cierre: string;
+            presta_fines_de_semana: boolean;
+            bloquea_con_vencido: boolean;
+            margen_retiro_minutos: number;
+        };
+        /** ReglasPrestamoResource */
+        ReglasPrestamoResource: {
+            plazo_maximo_dias_habiles: number;
+            anticipacion_minima_minutos: number;
+            hora_apertura: string;
+            hora_cierre: string;
+            presta_fines_de_semana: boolean;
+            bloquea_con_vencido: boolean;
+            margen_retiro_minutos: number;
+            actualizado_por?: string;
+            /** Format: date-time */
+            updated_at: string | null;
         };
         /**
          * ReintegrarAscensoRequest
@@ -11137,6 +14111,21 @@ export interface components {
          */
         ResultadoNotificacion: "recibida" | "negada";
         /**
+         * RetirarComunicadoRequest
+         * @description Retirar lo publicado: el motivo queda en el historial (docs/diseno-noticias-comunicados.md, regla 3).
+         */
+        RetirarComunicadoRequest: {
+            motivo: string;
+        };
+        /**
+         * ReutilizarRecursoIdentidadRequest
+         * @description «Volver a esta versión»: desde cuándo vuelve a regir (hoy, si no se dice).
+         */
+        ReutilizarRecursoIdentidadRequest: {
+            /** Format: date-time */
+            vigente_desde?: string | null;
+        };
+        /**
          * RevisionDeClasificacionRequest
          * @description La revisión de la clasificación de uno o varios puestos ocupados (LOSEP
          *     Arts. 61 y 62; fase 7.1b). La vista previa pide la causal y los puestos, con
@@ -11157,6 +14146,14 @@ export interface components {
                 grupo_ocupacional_id?: number | null;
                 cargo_id?: number | null;
             }[];
+        };
+        /**
+         * RevocarCredencialRequest
+         * @description Revocar una credencial: el motivo es obligatorio (docs/diseno-comunicacion-social.md, 6.3).
+         */
+        RevocarCredencialRequest: {
+            motivo: components["schemas"]["MotivoRevocacionCredencial"];
+            detalle?: string | null;
         };
         /** RiesgoLaboralResource */
         RiesgoLaboralResource: {
@@ -11400,6 +14397,22 @@ export interface components {
             ultimo_nombramiento?: string;
             documentos?: components["schemas"]["DocumentoServidorResource"][];
             movimientos?: components["schemas"]["MovimientoPersonal"][];
+            /**
+             * @description La foto vigente, para la cabecera del expediente. La imagen se
+             *     pide aparte por su id (Comunicación Social, fase 1.1).
+             */
+            fotografia?: {
+                id: number;
+                activada_en: string;
+            } | null;
+        };
+        /**
+         * SimularCargaFotografiasRequest
+         * @description Los nombres de los archivos de una carga masiva, sin las fotos.
+         */
+        SimularCargaFotografiasRequest: {
+            reemplazar?: boolean;
+            archivos: string[];
         };
         /** Sla */
         Sla: {
@@ -11413,6 +14426,23 @@ export interface components {
             updated_at: string | null;
             /** Format: date-time */
             deleted_at: string | null;
+            categoria_id: number | null;
+        };
+        /**
+         * SolicitarPrestamoRequest
+         * @description La solicitud de préstamo desde el Portal (fase 2.1): los equipos concretos
+         *     (D13), el horario, para qué y dónde. El horario contra las reglas de TIC, y
+         *     si los equipos se pueden prestar y están libres, lo comprueba el servicio.
+         */
+        SolicitarPrestamoRequest: {
+            /** Format: date-time */
+            inicio_previsto: string;
+            /** Format: date-time */
+            fin_previsto: string;
+            motivo: string;
+            lugar_uso: string;
+            fuera_del_edificio?: boolean;
+            bienes: number[];
         };
         /** SolicitarViaticoRequest */
         SolicitarViaticoRequest: {
@@ -11528,6 +14558,27 @@ export interface components {
             descripcion: string;
             fecha_aproximada?: number | null;
         };
+        /**
+         * StoreAsignacionBienRequest
+         * @description Entregar un equipo en custodia (fase 1.3). Hasta la 1.1 llegaba
+         *     `$request->all()` sin validar.
+         *
+         *     El memorando se hace en Quipux: aquí va su número, y el PDF se adjunta
+         *     aparte (D4). El número de soporte del sistema antiguo solo se acepta hasta
+         *     la fecha de corte (D1).
+         */
+        StoreAsignacionBienRequest: {
+            bien_informatico_id: number;
+            servidor_id: number;
+            usuario_servidor_id?: number | null;
+            /** Format: date-time */
+            fecha_asignacion: string;
+            memorando_numero?: string | null;
+            soporte_anterior?: string | null;
+            observaciones?: string | null;
+            /** @description Dónde queda el equipo; si no se manda, sigue donde estaba. */
+            ubicacion_id?: number | null;
+        };
         /** StoreAtencionEnfermeriaRequest */
         StoreAtencionEnfermeriaRequest: {
             servidor_id?: number | null;
@@ -11537,23 +14588,39 @@ export interface components {
         };
         /**
          * StoreBienInformaticoRequest
-         * @description Registrar un bien no validaba nada: llegaba `$request->all()` directo al
-         *     servicio, que componía `codigo_qr` concatenando el código institucional. Sin
-         *     ese campo el QR salía `-QR`, y el segundo bien registrado así chocaba contra
-         *     el índice único.
+         * @description La ficha de un equipo (docs/diseno-subsistema-tic.md, 4.2).
+         *
+         *     El código institucional es obligatorio: todo equipo entra por Activos Fijos,
+         *     que se lo asigna (D2). La serie es opcional, porque hay equipos «S/N», y si
+         *     se da no puede repetirse.
+         *
+         *     `codigo_qr` y la fecha de fin de vida útil no se aceptan: los calcula el
+         *     servicio.
          */
         StoreBienInformaticoRequest: {
             codigo_institucional: string;
-            numero_serie: string;
+            codigo_anterior?: string | null;
+            numero_serie?: string | null;
             tipo_bien_id: number;
+            subtipo_bien_id?: number | null;
             marca_id: number;
-            origen_bien_id: number;
             modelo?: string | null;
-            /** @enum {string|null} */
-            estado_operativo?: "activo" | "en_mantenimiento" | "robado" | "perdido" | null;
-            /** @enum {string|null} */
-            condicion_fisica?: "bueno" | "regular" | "malo" | null;
+            origen_bien_id?: number | null;
+            /** Format: date-time */
+            fecha_compra?: string | null;
+            ubicacion_id?: number | null;
+            unidad_administrativa_id?: number | null;
+            nombre_red?: string | null;
+            usuario_dominio?: string | null;
+            direccion_ip?: string | null;
+            bien_padre_id?: number | null;
+            contrato_vigencia_id?: number | null;
+            prestable?: boolean;
+            /** @enum {string} */
+            estado_operativo?: "en_uso" | "disponible" | "en_mantenimiento" | "en_garantia" | "extraviado";
+            condicion_fisica?: components["schemas"]["CondicionFisicaBien"];
             caracteristicas_tecnicas?: string[] | null;
+            observaciones?: string | null;
         };
         /** StoreCapacitacionSsoRequest */
         StoreCapacitacionSsoRequest: {
@@ -11611,6 +14678,26 @@ export interface components {
             notas_medico?: string | null;
             diagnosticos_secundarios?: number[] | null;
         };
+        /**
+         * StoreConsumibleRequest
+         * @description Crear o editar un consumible del catálogo (fase 5.4a). El código de bodega
+         *     es opcional y no se repite [P8]; los modelos compatibles, si vienen,
+         *     reemplazan los que tenía.
+         */
+        StoreConsumibleRequest: {
+            codigo_bodega?: string | null;
+            descripcion: string;
+            tipo: components["schemas"]["TipoConsumible"];
+            color?: components["schemas"]["ColorConsumible"];
+            presentacion: components["schemas"]["PresentacionConsumible"];
+            guarda_tic: boolean;
+            stock_minimo?: number | null;
+            activo?: boolean;
+            modelos?: {
+                marca_id: number;
+                modelo: string;
+            }[];
+        };
         /** StoreContratoServidorRequest */
         StoreContratoServidorRequest: {
             tipo_nombramiento: components["schemas"]["TipoNombramiento"];
@@ -11627,6 +14714,31 @@ export interface components {
             /** Format: binary */
             archivo_contrato?: string | null;
             remuneracion?: number | null;
+        };
+        /**
+         * StoreContratoVigenciaRequest
+         * @description Un contrato de vigencia tecnológica: el proceso de compra que lo origina, el
+         *     proveedor, el servidor que lo administra y las ventanas de mantenimiento.
+         *
+         *     El cronograma llega entero y reemplaza al anterior.
+         */
+        StoreContratoVigenciaRequest: {
+            proceso: string;
+            proveedor?: string | null;
+            objeto?: string | null;
+            administrador_id?: number | null;
+            /** Format: date-time */
+            fecha_inicio?: string | null;
+            /** Format: date-time */
+            fecha_fin?: string | null;
+            observaciones?: string | null;
+            cronograma?: {
+                /** Format: date-time */
+                fecha_desde: string;
+                /** Format: date-time */
+                fecha_hasta: string;
+                descripcion?: string | null;
+            }[];
         };
         /** StoreCuentaBancariaServidorRequest */
         StoreCuentaBancariaServidorRequest: {
@@ -11938,6 +15050,54 @@ export interface components {
             observacion?: string | null;
             /** Format: binary */
             archivo: string;
+        };
+        /**
+         * StoreMantenimientoRequest
+         * @description Registrar un mantenimiento (fase 1.5). La fecha es obligatoria: solo los que
+         *     vinieron del Excel de TIC no la tienen. El número de soporte del sistema
+         *     antiguo se acepta hasta la fecha de corte (D1).
+         */
+        StoreMantenimientoRequest: {
+            bien_informatico_id: number;
+            tipo_mantenimiento: components["schemas"]["TipoMantenimiento"];
+            /** @enum {string} */
+            realizado_por: "tic" | "proveedor";
+            contrato_vigencia_id?: number | null;
+            /** Format: date-time */
+            fecha_mantenimiento: string;
+            tecnico_id?: number | null;
+            descripcion: string;
+            costo?: number | null;
+            soporte_anterior?: string | null;
+            /**
+             * @description En qué estado queda el equipo. «disponible» o «en_uso» es «vuelve al
+             *     servicio»: la ficha pone el que toca por la custodia.
+             * @enum {string}
+             */
+            estado_equipo?: "en_uso" | "disponible" | "en_mantenimiento" | "en_garantia";
+        };
+        /**
+         * StoreMiFormacionRequest
+         * @description Un título o curso que el servidor registra desde «Mi perfil»: los mismos
+         *     datos que pide Talento Humano en el expediente, y además el PDF con el que
+         *     se valida.
+         */
+        StoreMiFormacionRequest: {
+            tipo_estudio: components["schemas"]["TipoEstudio"];
+            nivel_estudio?: components["schemas"]["NivelEstudio"];
+            nacionalidad_estudio: components["schemas"]["NacionalidadEstudio"];
+            institucion: string;
+            /** Format: date-time */
+            fecha_inicio: string;
+            /**
+             * Format: date-time
+             * @description `after` impedía registrar un curso de un solo día.
+             */
+            fecha_fin?: string | null;
+            titulo_capacitacion: string;
+            codigo_senescyt?: string | null;
+            /** Format: binary */
+            documento: string;
         };
         /** StoreMovimientoPersonalRequest */
         StoreMovimientoPersonalRequest: {
@@ -12263,6 +15423,24 @@ export interface components {
             provincia_domicilio?: string | null;
             ciudad_domicilio?: string | null;
         };
+        /**
+         * StoreSolicitudBodegaRequest
+         * @description Generar la solicitud a bodega (fase 5.4c). Desde un ticket, el servidor y el
+         *     equipo salen de él; sin ticket, se dicen aquí. Hasta 25 renglones, como el
+         *     formulario de hoy.
+         */
+        StoreSolicitudBodegaRequest: {
+            ticket_id?: number | null;
+            servidor_id?: number | null;
+            bien_informatico_id?: number | null;
+            /** Format: date-time */
+            fecha?: string | null;
+            motivo: string;
+            items: {
+                consumible_id: number;
+                cantidad: number;
+            }[];
+        };
         /** StoreSolicitudCertificacionLoteRequest */
         StoreSolicitudCertificacionLoteRequest: {
             /** @enum {string} */
@@ -12373,7 +15551,10 @@ export interface components {
             /** @enum {string} */
             tipo_dias: "habiles" | "calendario";
             observacion?: string | null;
-            unidad_administrativa_id?: number | null;
+            /**
+             * @description Sin `unidad_administrativa_id`: la solicitud lleva siempre la
+             *     unidad del servidor (`VacacionService::solicitar()`).
+             */
             persona_reemplaza_id?: number | null;
         };
         /**
@@ -12466,6 +15647,49 @@ export interface components {
             inspectoria?: string | null;
             inspector_nombre?: string | null;
         };
+        /**
+         * SubirAdjuntoRequest
+         * @description Un PDF de hasta 10 MB (docs/diseno-noticias-comunicados.md, regla 6).
+         */
+        SubirAdjuntoRequest: {
+            /**
+             * Format: binary
+             * @description `mimetypes` mira el contenido; `mimes` solo la extensión.
+             */
+            archivo: string;
+        };
+        /**
+         * SubirFotografiaRequest
+         * @description La foto de un servidor, de una en una. Llega ya recortada en el navegador;
+         *     el tamaño mínimo y que se pueda leer lo comprueba ProcesadorFotografia.
+         */
+        SubirFotografiaRequest: {
+            /** Format: binary */
+            foto: string;
+        };
+        /**
+         * SubirPortadaRequest
+         * @description La portada: JPG, PNG o WebP de hasta 5 MB (docs/diseno-noticias-comunicados.md,
+         *     regla 6). La pantalla la recorta a 16:9 antes de subirla; aquí se exige un
+         *     tamaño que se vea bien en una tarjeta.
+         */
+        SubirPortadaRequest: {
+            /** Format: binary */
+            portada: string;
+        };
+        /**
+         * SubirRecursoIdentidadRequest
+         * @description Una versión nueva de una variante del logo. Que sea PNG o JPG, sus medidas y
+         *     su proporción dependen de la variante: las revisa
+         *     IdentidadInstitucionalService, que da el motivo con las medidas reales.
+         */
+        SubirRecursoIdentidadRequest: {
+            /** Format: binary */
+            archivo: string;
+            /** Format: date-time */
+            vigente_desde?: string | null;
+            nota?: string | null;
+        };
         /** Subrogacion */
         Subrogacion: {
             id: number;
@@ -12492,6 +15716,13 @@ export interface components {
             ausencia_id: number | null;
             /** Format: date-time */
             cancelada_en: string | null;
+        };
+        /** SubtipoBienResource */
+        SubtipoBienResource: {
+            id: number;
+            tipo_bien_id: number;
+            nombre: string;
+            bienes_count: string | null;
         };
         /**
          * SubtipoMovimientoPersonal
@@ -12541,43 +15772,96 @@ export interface components {
             /** @enum {string} */
             base_legal: "LOSEP Art. 17 b.1" | "LOSEP Art. 17 b.3" | "LOSEP Art. 17 b.4" | "LOSEP Art. 17 b.5" | "LOSEP Arts. 17 b.5 y 68";
         };
-        /** TecnicoDtic */
-        TecnicoDtic: {
+        /** TicketResource */
+        TicketResource: {
             id: number;
-            user_id: number;
-            area_dtic_id: number;
-            nivel: number;
+            folio: string;
             estado: string;
+            /** @enum {string} */
+            estado_etiqueta: "Abierto" | "Asignado" | "En proceso" | "Esperando al usuario" | "Resuelto" | "Cerrado" | "Anulado";
+            prioridad: string;
+            /** @enum {string} */
+            prioridad_etiqueta: "Baja" | "Media" | "Alta" | "Urgente";
+            canal: string;
+            tipo_ticket: string;
+            nivel: number;
+            asunto: string;
+            descripcion: string;
+            solucion: string | null;
+            reabierto_veces: number;
+            motivo_anulacion: string | null;
             /** Format: date-time */
             created_at: string | null;
             /** Format: date-time */
-            updated_at: string | null;
-            /** Format: date-time */
-            deleted_at: string | null;
-        };
-        /** Ticket */
-        Ticket: {
-            id: number;
-            codigo_ticket: string;
-            solicitante_id: number;
-            tipo_ticket: string;
-            sla_id: number;
-            estado: string;
-            asunto: string;
-            descripcion: string;
-            bien_informatico_id: number | null;
-            tecnico_id: number | null;
-            /** Format: date-time */
-            fecha_vencimiento_sla: string | null;
+            resuelto_en: string | null;
             /** Format: date-time */
             fecha_cierre: string | null;
             /** Format: date-time */
-            created_at: string | null;
-            /** Format: date-time */
-            updated_at: string | null;
-            /** Format: date-time */
-            deleted_at: string | null;
-            categoria_id: number | null;
+            anulado_en: string | null;
+            /** @description El SLA (fase 3.2), en horas hábiles. */
+            sla: {
+                estado: string | null;
+                respuesta_horas: number | null;
+                resolucion_horas: number | null;
+                /** Format: date-time */
+                vence_respuesta_en: string | null;
+                /** Format: date-time */
+                primera_respuesta_en: string | null;
+                /** Format: date-time */
+                vence_en: string | null;
+                /** Format: date-time */
+                pausado_desde: string | null;
+                /** Format: date-time */
+                vencido_en: string | null;
+            };
+            solicitante_id: number;
+            tecnico_id: number | null;
+            categoria?: {
+                id: number;
+                nombre: string;
+                es_hardware: boolean;
+                /** @description El de consumibles genera la solicitud a bodega (5.4c). */
+                es_consumibles: boolean;
+            } | null;
+            solicitante?: {
+                id: number;
+                cedula: string;
+                nombre: string;
+                unidad: string;
+            } | null;
+            unidad_tic?: {
+                id: number;
+                nombre: string;
+            } | null;
+            tecnico?: {
+                id: number;
+                nombre: string;
+            } | null;
+            bien?: {
+                id: number;
+                codigo_institucional: string;
+                tipo: string;
+                marca: string;
+                modelo: string | null;
+            } | null;
+            registrado_por?: string;
+            resuelto_por?: string;
+            anulado_por?: string;
+            comentarios?: components["schemas"]["ComentarioTicketResource"][];
+            historial?: {
+                estado_anterior: string;
+                estado_nuevo: string;
+                /** @enum {string} */
+                etiqueta: "Abierto" | "Asignado" | "En proceso" | "Esperando al usuario" | "Resuelto" | "Cerrado" | "Anulado";
+                usuario: string;
+                detalle: string | null;
+                /** Format: date-time */
+                fecha: string;
+            }[];
+            encuesta?: {
+                calificacion: number;
+                comentarios: string | null;
+            } | null;
         };
         /**
          * TipoActoDeOrigen
@@ -12606,11 +15890,46 @@ export interface components {
          * @enum {string}
          */
         TipoAusenciaTitular: "vacacion" | "licencia" | "reposo" | "accion_personal" | "otra";
+        /** TipoBienResource */
+        TipoBienResource: {
+            id: number;
+            nombre: string;
+            anios_vida_util: number;
+            ficha: string | "general";
+            bienes_count: string | null;
+            subtipos?: {
+                id: number;
+                tipo_bien_id: number;
+                nombre: string;
+            }[];
+        };
+        /**
+         * TipoComunicado
+         * @description Lo que publica Talento Humano (docs/diseno-noticias-comunicados.md, 3.1). La noticia informa. El comunicado es oficial: puede llevar el número de su circular o memorando y pedir confirmación de lectura.
+         * @enum {string}
+         */
+        TipoComunicado: "noticia" | "comunicado";
         /**
          * TipoConcepto
          * @enum {string}
          */
         TipoConcepto: "ingreso" | "descuento" | "aporte";
+        /**
+         * TipoConsumible
+         * @description Qué es un consumible del catálogo de TIC (fase 5.4a) [P9]. Los de impresión van a un equipo compatible; el repuesto informático (un teclado, un cable, la pasta térmica) puede ir a cualquier equipo o a ninguno.
+         *     | |
+         *     |---|
+         *     | `toner` <br/>  |
+         *     | `tinta` <br/>  |
+         *     | `cartucho` <br/>  |
+         *     | `cinta` <br/>  |
+         *     | `unidad_imagen` <br/>  |
+         *     | `kit_mantenimiento` <br/>  |
+         *     | `otro` <br/> Otro de impresión: una banda de transferencia, un rodillo. |
+         *     | `repuesto` <br/>  |
+         * @enum {string}
+         */
+        TipoConsumible: "toner" | "tinta" | "cartucho" | "cinta" | "unidad_imagen" | "kit_mantenimiento" | "otro" | "repuesto";
         /**
          * TipoDeclaracion
          * @enum {string}
@@ -12652,6 +15971,12 @@ export interface components {
          * @enum {string}
          */
         TipoFichaFemo: "ingreso" | "periodica" | "reintegro" | "retiro" | "especial";
+        /**
+         * TipoMantenimiento
+         * @description Qué se le hizo a un equipo (docs/diseno-subsistema-tic.md, fase 1.5). La repotenciación —el cambio a SSD del Excel de TIC, más memoria— mejora el equipo en vez de repararlo, y conviene contarla aparte de la reparación.
+         * @enum {string}
+         */
+        TipoMantenimiento: "preventivo" | "correctivo" | "repotenciacion";
         /**
          * TipoMovimientoPersonal
          * @enum {string}
@@ -12799,6 +16124,22 @@ export interface components {
             fecha_impugnacion?: string | null;
         };
         /**
+         * TraspasarAsignacionRequest
+         * @description Traspasar la custodia vigente a otra persona: los mismos datos que una
+         *     entrega, sin el equipo, que es el de la custodia que se traspasa.
+         */
+        TraspasarAsignacionRequest: {
+            servidor_id: number;
+            usuario_servidor_id?: number | null;
+            /** Format: date-time */
+            fecha_asignacion: string;
+            memorando_numero?: string | null;
+            soporte_anterior?: string | null;
+            observaciones?: string | null;
+            /** @description Dónde queda el equipo; si no se manda, sigue donde estaba. */
+            ubicacion_id?: number | null;
+        };
+        /**
          * TraspasoDePuestoRequest
          * @description El traspaso de un puesto a otra unidad (LOSEP Art. 37; Reglamento a la LOSEP
          *     Art. 69; fase 7.1a). La vista previa pide solo el puesto y, si la hay, la
@@ -12839,6 +16180,15 @@ export interface components {
             updated_at: string | null;
             nivel_alerta: components["schemas"]["NivelAlertaTriaje"];
             hallazgos_alerta: unknown[] | null;
+        };
+        /** UbicacionResource */
+        UbicacionResource: {
+            id: number;
+            sede: string;
+            piso: string | null;
+            nombre: string;
+            descripcion: string | null;
+            bienes_count: string | null;
         };
         /** UnidadAdministrativa */
         UnidadAdministrativa: {
@@ -12930,26 +16280,34 @@ export interface components {
         };
         /**
          * UpdateBienInformaticoRequest
-         * @description `codigo_qr` no se acepta: se deriva del código institucional y lo recalcula
-         *     el servicio. Dejarlo entrar permitiría separar la etiqueta pegada al equipo
-         *     del código con que se lo busca al escanearla.
+         * @description Corregir la ficha de un equipo: las mismas reglas que al registrarlo, sobre
+         *     los campos que lleguen. El estado `dado_de_baja` no se acepta: va por
+         *     «bajas», con su informe técnico.
          */
         UpdateBienInformaticoRequest: {
             codigo_institucional?: string;
-            numero_serie?: string;
+            codigo_anterior?: string | null;
+            numero_serie?: string | null;
             tipo_bien_id?: number;
+            subtipo_bien_id?: number | null;
             marca_id?: number;
-            origen_bien_id?: number;
             modelo?: string | null;
-            /**
-             * @description `dado_de_baja` queda fuera a propósito: esa transición pide
-             *     motivo y va por «bajas».
-             * @enum {string}
-             */
-            estado_operativo?: "activo" | "en_mantenimiento" | "robado" | "perdido";
+            origen_bien_id?: number | null;
+            /** Format: date-time */
+            fecha_compra?: string | null;
+            ubicacion_id?: number | null;
+            unidad_administrativa_id?: number | null;
+            nombre_red?: string | null;
+            usuario_dominio?: string | null;
+            direccion_ip?: string | null;
+            bien_padre_id?: number | null;
+            contrato_vigencia_id?: number | null;
+            prestable?: boolean;
             /** @enum {string} */
-            condicion_fisica?: "bueno" | "regular" | "malo";
+            estado_operativo?: "en_uso" | "disponible" | "en_mantenimiento" | "en_garantia" | "extraviado";
+            condicion_fisica?: components["schemas"]["CondicionFisicaBien"];
             caracteristicas_tecnicas?: string[] | null;
+            observaciones?: string | null;
         };
         /** UpdateCapacitacionSsoRequest */
         UpdateCapacitacionSsoRequest: {
@@ -12975,6 +16333,28 @@ export interface components {
             plan_tratamiento?: string | null;
             notas_medico?: string | null;
             diagnosticos_secundarios?: number[] | null;
+        };
+        /**
+         * UpdateContratoVigenciaRequest
+         * @description Corregir un contrato de vigencia: las mismas reglas, sobre lo que llegue.
+         */
+        UpdateContratoVigenciaRequest: {
+            proceso?: string;
+            proveedor?: string | null;
+            objeto?: string | null;
+            administrador_id?: number | null;
+            /** Format: date-time */
+            fecha_inicio?: string | null;
+            /** Format: date-time */
+            fecha_fin?: string | null;
+            observaciones?: string | null;
+            cronograma?: {
+                /** Format: date-time */
+                fecha_desde: string;
+                /** Format: date-time */
+                fecha_hasta: string;
+                descripcion?: string | null;
+            }[];
         };
         /** UpdateDescuentoRecurrenteRequest */
         UpdateDescuentoRecurrenteRequest: {
@@ -13385,6 +16765,14 @@ export interface components {
                     id: number;
                     nombre: string;
                 } | null;
+                /**
+                 * @description La foto vigente, para el avatar del menú. La imagen se pide
+                 *     aparte por su id (Comunicación Social, fase 1.1).
+                 */
+                fotografia: {
+                    id: number;
+                    activada_en: string;
+                } | null;
             } | null;
         };
         /** UsuarioResource */
@@ -13439,6 +16827,22 @@ export interface components {
             motivo_anulacion: string | null;
             observacion: string | null;
         };
+        /**
+         * VarianteIdentidad
+         * @description Las variantes del logo institucional (docs/diseno-comunicacion-social.md, 4.2). Dos son obligatorias; las demás tienen un respaldo, así que el sistema funciona completo con dos archivos. Solo PNG (y JPG para la hoja membretada y los fondos de la credencial): dompdf dibuja mal muchos SVG, y un SVG puede llevar código ejecutable.
+         *     | |
+         *     |---|
+         *     | `isotipo` <br/> V1. El símbolo solo. De él salen también el favicon y los íconos. |
+         *     | `imagotipo_horizontal` <br/> V2. El símbolo con «Esmeraldas Prefectura» y el lema, en una línea. |
+         *     | `imagotipo_negativo` <br/> V3. El mismo, en blanco, para fondos oscuros. |
+         *     | `logo_documentos` <br/> V4. El de la cabecera de los PDF, si no es el horizontal. |
+         *     | `logo_secundario_documentos` <br/> V5. Al lado derecho de la cabecera de los PDF: el escudo, una campaña. |
+         *     | `hoja_membretada` <br/> V6. La página A4 entera, con el logo, la marca de agua y la dirección. |
+         *     | `fondo_credencial_anverso` <br/> V7 y V8. El fondo de cada cara de la credencial, del tamaño de la tarjeta CR80 (D14). Sin él, la cara queda en blanco con su franja, como siempre. |
+         *     | `fondo_credencial_reverso` <br/>  |
+         * @enum {string}
+         */
+        VarianteIdentidad: "isotipo" | "imagotipo_horizontal" | "imagotipo_negativo" | "logo_documentos" | "logo_secundario_documentos" | "hoja_membretada" | "fondo_credencial_anverso" | "fondo_credencial_reverso";
         /** Viatico */
         Viatico: {
             id: number;
@@ -13471,6 +16875,12 @@ export interface components {
             motivo_rechazo: string | null;
             partida_presupuestaria_id: number | null;
         };
+        /**
+         * VigenciaComunicado
+         * @description El estado que se enseña: el guardado más lo que dicen las fechas (docs/diseno-noticias-comunicados.md, 3.2). Un publicado cuya fecha de inicio no llega está programado; uno cuya fecha de fin pasó está vencido. Se calcula siempre al consultar, así que no hace falta una tarea que cambie estados a medianoche.
+         * @enum {string}
+         */
+        VigenciaComunicado: "borrador" | "programado" | "publicado" | "vencido" | "retirado";
         /** VistoBueno */
         VistoBueno: {
             id: number;
@@ -13526,6 +16936,18 @@ export interface components {
                 };
             };
         };
+        /** @description Not found */
+        ModelNotFoundException: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    /** @description Error overview. */
+                    message: string;
+                };
+            };
+        };
         /** @description Unauthenticated */
         AuthenticationException: {
             headers: {
@@ -13540,18 +16962,6 @@ export interface components {
         };
         /** @description Authorization error */
         AuthorizationException: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/json": {
-                    /** @description Error overview. */
-                    message: string;
-                };
-            };
-        };
-        /** @description Not found */
-        ModelNotFoundException: {
             headers: {
                 [name: string]: unknown;
             };
@@ -13782,238 +17192,6 @@ export interface operations {
                 };
                 content: {
                     "application/pdf": string;
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-        };
-    };
-    "actividadLaboral.porUnidad": {
-        parameters: {
-            query?: {
-                /**
-                 * @description Solo para Jefes/Directores: Lista las actividades de los servidores que pertenecen a su misma unidad
-                 *      Aquí se asumiría que extraemos el unidad_administrativa_id del usuario autenticado
-                 */
-                unidad_administrativa_id?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Actividades del equipo listadas correctamente.";
-                        datos: components["schemas"]["ActividadLaboral"][];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-        };
-    };
-    "actividadLaboral.exportarInforme": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    servidor_id: number;
-                    mes: number;
-                    anio: number;
-                };
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Informe PDF exportado correctamente.";
-                        datos: components["schemas"]["InformeActividad"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
-    index: {
-        parameters: {
-            query?: {
-                fecha?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Actividades del servidor listadas correctamente.";
-                        datos: components["schemas"]["ActividadLaboral"][];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-        };
-    };
-    store: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    servidor_id: number;
-                    /** Format: date-time */
-                    fecha: string;
-                    hora_inicio: string;
-                    hora_fin: string;
-                    descripcion: string;
-                    categoria: string;
-                    producto_entregable?: string | null;
-                };
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Actividad registrada exitosamente.";
-                        datos: string;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
-    show: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Detalle de la actividad.";
-                        datos: string;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-        };
-    };
-    update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    /** Format: date-time */
-                    fecha?: string;
-                    hora_inicio?: string;
-                    hora_fin?: string;
-                    descripcion?: string;
-                    categoria?: string;
-                    producto_entregable?: string | null;
-                };
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Actividad actualizada correctamente.";
-                        datos: string;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
-    destroy: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Actividad eliminada correctamente.";
-                        datos: null;
-                        meta: null;
-                    };
                 };
             };
             401: components["responses"]["AuthenticationException"];
@@ -14700,11 +17878,75 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
-    "areas.index": {
+    "archivosComunicado.portada": {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                /** @description The comunicado ID */
+                comunicado: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "archivosComunicado.subirPortada": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The comunicado ID */
+                comunicado: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["SubirPortadaRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Portada guardada.";
+                        datos: {
+                            tiene_portada: boolean;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "archivosComunicado.quitarPortada": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The comunicado ID */
+                comunicado: number;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -14717,28 +17959,91 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Áreas DTIC listadas correctamente.";
-                        datos: components["schemas"]["AreaDtic"][];
+                        mensaje: "Portada quitada.";
+                        datos: {
+                            tiene_portada: boolean;
+                        };
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
         };
     };
-    "areas.store": {
+    "archivosComunicado.adjunto": {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                /** @description The comunicado ID */
+                comunicado: number;
+                /** @description The adjunto ID */
+                adjunto: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    /** @example attachment */
+                    "Content-Disposition": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "archivosComunicado.quitarAdjunto": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The comunicado ID */
+                comunicado: number;
+                /** @description The adjunto ID */
+                adjunto: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Documento quitado.";
+                        datos: null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "archivosComunicado.agregarAdjunto": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The comunicado ID */
+                comunicado: number;
+            };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": {
-                    nombre: string;
-                    descripcion?: string | null;
-                };
+                "multipart/form-data": components["schemas"]["SubirAdjuntoRequest"];
             };
         };
         responses: {
@@ -14750,106 +18055,15 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Área DTIC creada exitosamente.";
-                        datos: components["schemas"]["AreaDtic"];
+                        mensaje: "Documento agregado.";
+                        datos: components["schemas"]["ComunicadoAdjuntoResource"];
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
             422: components["responses"]["ValidationException"];
-        };
-    };
-    "areas.show": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Área DTIC obtenida correctamente.";
-                        datos: string;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-        };
-    };
-    "areas.update": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    nombre?: string;
-                    descripcion?: string | null;
-                };
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Área DTIC actualizada exitosamente.";
-                        datos: string;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
-    "areas.destroy": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Área DTIC eliminada exitosamente.";
-                        datos: null;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
         };
     };
     "asignaciones.index": {
@@ -14869,28 +18083,35 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Asignaciones listadas";
-                        datos: string[];
-                        meta: null;
+                        mensaje: "Custodias de equipos.";
+                        datos: unknown[];
+                        meta: {
+                            pagina_actual: number;
+                            por_pagina: number;
+                            total: number;
+                            ultima_pagina: number;
+                            desde: number | null;
+                            hasta: number | null;
+                        };
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
         };
     };
-    "asignaciones.store": {
+    "asignacionBien.store": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreAsignacionBienRequest"];
+            };
+        };
         responses: {
-            /**
-             * @description Decía «Asignación creada y Acta PDF generada» y no se generaba
-             *     ninguna. El acta se pide aparte, y aquí se dice dónde.
-             */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -14899,13 +18120,14 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Asignación creada";
-                        datos: components["schemas"]["AsignacionBien"];
+                        mensaje: "Equipo entregado en custodia.";
+                        datos: components["schemas"]["AsignacionBienResource"];
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "asignaciones.show": {
@@ -14927,10 +18149,8 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Detalle de asignación";
-                        datos: {
-                            id: number;
-                        };
+                        mensaje: "Custodia del equipo.";
+                        datos: components["schemas"]["AsignacionBienResource"];
                         meta: null;
                     };
                 };
@@ -14977,6 +18197,7 @@ export interface operations {
                     /** Format: date-time */
                     fecha_devolucion: string;
                     observaciones?: string | null;
+                    soporte_anterior?: string | null;
                 };
             };
         };
@@ -14990,7 +18211,104 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Devolución registrada.";
-                        datos: components["schemas"]["AsignacionBien"];
+                        datos: components["schemas"]["AsignacionBienResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "asignacionBien.traspasar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The asignacion ID */
+                asignacion: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TraspasarAsignacionRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Custodia traspasada.";
+                        datos: components["schemas"]["AsignacionBienResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "asignacionBien.memorando": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The asignacion ID */
+                asignacion: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "asignacionBien.adjuntarMemorando": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The asignacion ID */
+                asignacion: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    archivo: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Memorando adjuntado.";
+                        datos: components["schemas"]["AsignacionBienResource"];
                         meta: null;
                     };
                 };
@@ -15120,75 +18438,6 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
-        };
-    };
-    "auditoriaInventario.escanear": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    codigo_qr?: string;
-                    numero_serie?: string;
-                };
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Ficha técnica del bien informático.";
-                        datos: unknown[];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
-    "auditoriaInventario.registrarAuditoria": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    bien_informatico_id: number;
-                    estado_fisico: string;
-                    observaciones?: string | null;
-                };
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Auditoría física registrada exitosamente.";
-                        datos: string;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
         };
     };
     "ausenciaTemporal.index": {
@@ -15842,32 +19091,6 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
-    "autoservicio.misActividades": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Mis actividades obtenidas.";
-                        datos: unknown[];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-        };
-    };
     "autoservicio.miHistoriaClinica": {
         parameters: {
             query?: never;
@@ -15911,9 +19134,16 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Bienes informáticos dados de baja.";
-                        datos: components["schemas"]["BienInformatico"][];
-                        meta: null;
+                        mensaje: "Bajas de equipos.";
+                        datos: unknown[];
+                        meta: {
+                            pagina_actual: number;
+                            por_pagina: number;
+                            total: number;
+                            ultima_pagina: number;
+                            desde: number | null;
+                            hasta: number | null;
+                        };
                     };
                 };
             };
@@ -15929,11 +19159,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    bien_informatico_id: number;
-                    motivo: string;
-                    documento_respaldo?: string | null;
-                };
+                "application/json": components["schemas"]["ProponerBajaRequest"];
             };
         };
         responses: {
@@ -15945,13 +19171,236 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Bien dado de baja. El acta queda pendiente de generar.";
-                        datos: string;
+                        mensaje: "Baja propuesta. Queda esperando la aprobación del jefe de TIC.";
+                        datos: components["schemas"]["BajaBienResource"];
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "baja.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Baja del equipo.";
+                        datos: components["schemas"]["BajaBienResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "baja.informe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "baja.memorando": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The baja ID */
+                baja: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "baja.adjuntarMemorando": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The baja ID */
+                baja: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    archivo: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Memorando adjuntado.";
+                        datos: components["schemas"]["BajaBienResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "baja.aprobar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The baja ID */
+                baja: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AprobarBajaRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Baja aprobada: el equipo salió del servicio.";
+                        datos: components["schemas"]["BajaBienResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "baja.rechazar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The baja ID */
+                baja: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    motivo: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Baja rechazada. El equipo sigue en el inventario.";
+                        datos: components["schemas"]["BajaBienResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "baja.entregaActivos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The baja ID */
+                baja: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: date-time */
+                    fecha: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Entrega a Activos Fijos registrada.";
+                        datos: components["schemas"]["BajaBienResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
             422: components["responses"]["ValidationException"];
         };
     };
@@ -16109,10 +19558,8 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Bienes listados";
-                        datos: {
-                            [key: string]: string;
-                        };
+                        mensaje: "Equipos del inventario.";
+                        datos: unknown[];
                         meta: {
                             pagina_actual: number;
                             por_pagina: number;
@@ -16140,11 +19587,6 @@ export interface operations {
             };
         };
         responses: {
-            /**
-             * @description Decía «Bien registrado y QR generado». Lo que se genera es el código
-             *     con el que la auditoría busca el bien al escanear; la etiqueta física
-             *     no la produce el sistema.
-             */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -16153,8 +19595,8 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Bien registrado";
-                        datos: components["schemas"]["BienInformatico"];
+                        mensaje: "Equipo registrado.";
+                        datos: components["schemas"]["BienInformaticoResource"];
                         meta: null;
                     };
                 };
@@ -16182,8 +19624,8 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Detalle de bien";
-                        datos: components["schemas"]["BienInformatico"];
+                        mensaje: "Ficha del equipo.";
+                        datos: components["schemas"]["BienInformaticoResource"];
                         meta: null;
                     };
                 };
@@ -16214,8 +19656,8 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Bien actualizado";
-                        datos: components["schemas"]["BienInformatico"];
+                        mensaje: "Equipo actualizado.";
+                        datos: components["schemas"]["BienInformaticoResource"];
                         meta: null;
                     };
                 };
@@ -16243,7 +19685,7 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Bien retirado del inventario";
+                        mensaje: "Equipo retirado del inventario.";
                         datos: null;
                         meta: null;
                     };
@@ -16443,6 +19885,483 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             422: components["responses"]["ValidationException"];
+        };
+    };
+    "campaniaMantenimiento.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Campañas de mantenimiento preventivo.";
+                        datos: {
+                            id: number;
+                            nombre: string;
+                            descripcion: string;
+                            /** @enum {string} */
+                            situacion: "cerrada" | "programada" | "atrasada" | "en_curso";
+                            realizado_por: string;
+                            contrato_id: number | null;
+                            contrato: string;
+                            proveedor: string;
+                            /** @description Hasta cuándo cuenta contra el contrato lo que haga el proveedor. */
+                            contrato_fin: string;
+                            ubicacion_id: number | null;
+                            ubicacion: string;
+                            unidad_id: number | null;
+                            unidad: string;
+                            tecnico_id: number | null;
+                            tecnico: string;
+                            fecha_inicio: string;
+                            fecha_fin: string;
+                            cerrada_por: string;
+                            cerrada_en: string;
+                            total: string | null;
+                            hechos: string | null;
+                            omitidos: string | null;
+                        }[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "campaniaMantenimiento.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    nombre: string;
+                    descripcion: string;
+                    tecnico_id: number;
+                    /** Format: date-time */
+                    fecha_inicio: string;
+                    /** Format: date-time */
+                    fecha_fin: string;
+                    /** @enum {string} */
+                    realizado_por?: "tic" | "proveedor";
+                    contrato_vigencia_id?: number | null;
+                    ubicacion_id: number;
+                    unidad_administrativa_id?: number | null;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Campaña creada con los equipos del lugar.";
+                        datos: {
+                            id: number;
+                            nombre: string;
+                            descripcion: string;
+                            /** @enum {string} */
+                            situacion: "cerrada" | "programada" | "atrasada" | "en_curso";
+                            realizado_por: string;
+                            contrato_id: number | null;
+                            contrato: string;
+                            proveedor: string;
+                            /** @description Hasta cuándo cuenta contra el contrato lo que haga el proveedor. */
+                            contrato_fin: string;
+                            ubicacion_id: number | null;
+                            ubicacion: string;
+                            unidad_id: number | null;
+                            unidad: string;
+                            tecnico_id: number | null;
+                            tecnico: string;
+                            fecha_inicio: string;
+                            fecha_fin: string;
+                            cerrada_por: string;
+                            cerrada_en: string;
+                            total: string | null;
+                            hechos: string | null;
+                            omitidos: string | null;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "campaniaMantenimiento.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The campania ID */
+                campania: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Campaña de mantenimiento preventivo.";
+                        datos: {
+                            id: number;
+                            nombre: string;
+                            descripcion: string;
+                            /** @enum {string} */
+                            situacion: "cerrada" | "programada" | "atrasada" | "en_curso";
+                            realizado_por: string;
+                            contrato_id: number | null;
+                            contrato: string;
+                            proveedor: string;
+                            /** @description Hasta cuándo cuenta contra el contrato lo que haga el proveedor. */
+                            contrato_fin: string;
+                            ubicacion_id: number | null;
+                            ubicacion: string;
+                            unidad_id: number | null;
+                            unidad: string;
+                            tecnico_id: number | null;
+                            tecnico: string;
+                            fecha_inicio: string;
+                            fecha_fin: string;
+                            cerrada_por: string;
+                            cerrada_en: string;
+                            total: string | null;
+                            hechos: string | null;
+                            omitidos: string | null;
+                            filas: {
+                                item_id: number;
+                                bien_id: number;
+                                codigo_institucional: string;
+                                equipo: string;
+                                custodio: string;
+                                ubicacion: string;
+                                estado: string;
+                                /** @description Hecho y luego anulado desde la ficha: vuelve a pendiente y se avisa. */
+                                anulado: string;
+                                mantenimiento_id: number | null;
+                                fecha: string | null;
+                                /** @description El del proveedor no tiene técnico: lo hizo la empresa del contrato. */
+                                tecnico: string | null | "Proveedor de la vigencia";
+                                motivo_omision: string | null;
+                                actualizado_por: string;
+                                actualizado_en: string;
+                            }[];
+                            resumen: {
+                                total: number;
+                                hechos: number;
+                                pendientes: number;
+                                omitidos: number;
+                                no_realizados: number;
+                            };
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "campaniaMantenimiento.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The campania ID */
+                campania: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    nombre: string;
+                    descripcion: string;
+                    tecnico_id: number;
+                    /** Format: date-time */
+                    fecha_inicio: string;
+                    /** Format: date-time */
+                    fecha_fin: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Campaña actualizada.";
+                        datos: {
+                            id: number;
+                            nombre: string;
+                            descripcion: string;
+                            /** @enum {string} */
+                            situacion: "cerrada" | "programada" | "atrasada" | "en_curso";
+                            realizado_por: string;
+                            contrato_id: number | null;
+                            contrato: string;
+                            proveedor: string;
+                            /** @description Hasta cuándo cuenta contra el contrato lo que haga el proveedor. */
+                            contrato_fin: string;
+                            ubicacion_id: number | null;
+                            ubicacion: string;
+                            unidad_id: number | null;
+                            unidad: string;
+                            tecnico_id: number | null;
+                            tecnico: string;
+                            fecha_inicio: string;
+                            fecha_fin: string;
+                            cerrada_por: string;
+                            cerrada_en: string;
+                            total: string | null;
+                            hechos: string | null;
+                            omitidos: string | null;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "campaniaMantenimiento.agregar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The campania ID */
+                campania: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    bienes: number[];
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @enum {string} */
+                        mensaje: "Esos equipos ya estaban en la campaña." | "Equipos agregados a la campaña.";
+                        datos: {
+                            agregados: number;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "campaniaMantenimiento.quitar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The campania ID */
+                campania: number;
+                /** @description The equipo ID */
+                equipo: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Equipo quitado de la campaña.";
+                        datos: null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "campaniaMantenimiento.realizar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The campania ID */
+                campania: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: date-time */
+                    fecha: string;
+                    tecnico_id?: number | null;
+                    observacion?: string | null;
+                    items: number[];
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Mantenimiento registrado en la ficha de cada equipo.";
+                        datos: {
+                            hechos: number;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "campaniaMantenimiento.omitir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The campania ID */
+                campania: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    motivo: string;
+                    items: number[];
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Equipos omitidos, con su motivo.";
+                        datos: {
+                            omitidos: number;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "campaniaMantenimiento.cerrar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The campania ID */
+                campania: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Campaña cerrada: lo pendiente quedó como no realizado.";
+                        datos: {
+                            id: number;
+                            nombre: string;
+                            descripcion: string;
+                            /** @enum {string} */
+                            situacion: "cerrada" | "programada" | "atrasada" | "en_curso";
+                            realizado_por: string;
+                            contrato_id: number | null;
+                            contrato: string;
+                            proveedor: string;
+                            /** @description Hasta cuándo cuenta contra el contrato lo que haga el proveedor. */
+                            contrato_fin: string;
+                            ubicacion_id: number | null;
+                            ubicacion: string;
+                            unidad_id: number | null;
+                            unidad: string;
+                            tecnico_id: number | null;
+                            tecnico: string;
+                            fecha_inicio: string;
+                            fecha_fin: string;
+                            cerrada_por: string;
+                            cerrada_en: string;
+                            total: string | null;
+                            hechos: string | null;
+                            omitidos: string | null;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
         };
     };
     "canton.porProvincia": {
@@ -16814,6 +20733,84 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
+    "cargaFotografias.simular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SimularCargaFotografiasRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: {
+                            resumen: {
+                                total: number;
+                                se_cargan: number;
+                                se_omiten: number;
+                            };
+                            archivos: {
+                                [key: string]: unknown;
+                            }[];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "cargaFotografias.cargar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["CargarFotografiasRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: {
+                            resumen: {
+                                total: number;
+                                se_cargan: number;
+                                se_omiten: number;
+                            };
+                            archivos: {
+                                [key: string]: unknown;
+                            }[];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "estructura.cargos.index": {
         parameters: {
             query?: never;
@@ -17006,6 +21003,462 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
+    "catalogoInventario.formularios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Catálogos del inventario.";
+                        datos: unknown[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "tipos.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Tipos de equipo.";
+                        datos: components["schemas"]["TipoBienResource"][];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "tipos.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Tipo registrado.";
+                        datos: components["schemas"]["TipoBienResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "marcas.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Marcas.";
+                        datos: components["schemas"]["MarcaResource"][];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "marcas.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Marca registrada.";
+                        datos: components["schemas"]["MarcaResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "ubicaciones.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Ubicaciones.";
+                        datos: components["schemas"]["UbicacionResource"][];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "ubicaciones.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Ubicación registrada.";
+                        datos: components["schemas"]["UbicacionResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "tipos.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The tipo ID */
+                tipo: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Tipo actualizado.";
+                        datos: components["schemas"]["TipoBienResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "tipos.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The tipo ID */
+                tipo: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Tipo eliminado.";
+                        datos: null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "subtipos.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Subtipo registrado.";
+                        datos: components["schemas"]["SubtipoBienResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "subtipos.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The subtipo ID */
+                subtipo: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Subtipo actualizado.";
+                        datos: components["schemas"]["SubtipoBienResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "subtipos.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The subtipo ID */
+                subtipo: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Subtipo eliminado.";
+                        datos: null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "marcas.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The marca ID */
+                marca: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Marca actualizada.";
+                        datos: components["schemas"]["MarcaResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "marcas.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The marca ID */
+                marca: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Marca eliminada.";
+                        datos: null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "ubicaciones.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ubicacion ID */
+                ubicacion: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Ubicación actualizada.";
+                        datos: components["schemas"]["UbicacionResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "ubicaciones.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ubicacion ID */
+                ubicacion: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Ubicación eliminada.";
+                        datos: null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
     "catalogoViatico.tiposTransporte": {
         parameters: {
             query?: never;
@@ -17084,6 +21537,98 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "categoriaTicket.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Categorías de los tickets.";
+                        datos: {
+                            id: number;
+                            nombre: string;
+                            descripcion: string | null;
+                            es_hardware: boolean;
+                            es_consumibles: boolean;
+                            activa: boolean;
+                            unidad_tic_id: number | null;
+                            unidad_tic: string;
+                            tickets_count: string;
+                        }[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "categoriaTicket.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Categoría registrada.";
+                        datos: components["schemas"]["CategoriaTicket"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "categoriaTicket.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The categoria ID */
+                categoria: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @enum {string} */
+                        mensaje: "Categoría actualizada." | "Categoría desactivada: ya no se ofrece al abrir tickets.";
+                        datos: components["schemas"]["CategoriaTicket"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
         };
     };
     "asistencia.certificados.index": {
@@ -17662,7 +22207,8 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                ticketId: number;
+                /** @description The ticket ID */
+                ticket: number;
             };
             cookie?: never;
         };
@@ -17676,13 +22222,15 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Comentarios del ticket.";
-                        datos: components["schemas"]["ComentarioTicket"][];
+                        mensaje: "Conversación del ticket.";
+                        datos: components["schemas"]["ComentarioTicketResource"][];
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: components["responses"]["ModelNotFoundException"];
         };
     };
     "comentarioTicket.store": {
@@ -17690,17 +22238,114 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                ticketId: number;
+                /** @description The ticket ID */
+                ticket: number;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": {
-                    comentario: string;
-                    es_interno?: boolean | null;
-                    evidencia_url?: string | null;
+                "multipart/form-data": components["schemas"]["ComentarTicketRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
                 };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @enum {string} */
+                        mensaje: "Nota interna agregada." | "Mensaje enviado.";
+                        datos: components["schemas"]["ComentarioTicketResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "comentarioTicket.archivo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ticket ID */
+                ticket: number;
+                /** @description The comentario ID */
+                comentario: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "comunicados.index": {
+        parameters: {
+            query?: {
+                vigencia?: components["schemas"]["VigenciaComunicado"];
+                tipo?: components["schemas"]["TipoComunicado"];
+                anio?: number | null;
+                buscar?: string | null;
+                per_page?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Noticias y comunicados.";
+                        datos: unknown[];
+                        meta: {
+                            pagina_actual: number;
+                            por_pagina: number;
+                            total: number;
+                            ultima_pagina: number;
+                            desde: number | null;
+                            hasta: number | null;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "comunicado.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuardarComunicadoRequest"];
             };
         };
         responses: {
@@ -17712,13 +22357,270 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Comentario agregado.";
-                        datos: components["schemas"]["ComentarioTicket"];
+                        mensaje: "Borrador guardado.";
+                        datos: components["schemas"]["ComunicadoResource"];
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "comunicado.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The comunicado ID */
+                comunicado: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Detalle de la publicación.";
+                        datos: components["schemas"]["ComunicadoResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "comunicado.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The comunicado ID */
+                comunicado: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuardarComunicadoRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Borrador guardado.";
+                        datos: components["schemas"]["ComunicadoResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "comunicado.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The comunicado ID */
+                comunicado: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Borrador eliminado.";
+                        datos: null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "comunicado.contarDestinatarios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContarDestinatariosRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Destinatarios contados.";
+                        datos: {
+                            total: number;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "comunicado.duplicar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The comunicado ID */
+                comunicado: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Copia creada como borrador.";
+                        datos: components["schemas"]["ComunicadoResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "comunicado.publicar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The comunicado ID */
+                comunicado: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string | "Publicado: ya se ve en el Portal.";
+                        datos: components["schemas"]["ComunicadoResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "comunicado.retirar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The comunicado ID */
+                comunicado: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RetirarComunicadoRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Retirado: ya no se ve en el Portal.";
+                        datos: components["schemas"]["ComunicadoResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "comunicado.actualizarPublicacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The comunicado ID */
+                comunicado: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ActualizarPublicacionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Publicación actualizada.";
+                        datos: components["schemas"]["ComunicadoResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
             422: components["responses"]["ValidationException"];
         };
     };
@@ -17850,6 +22752,397 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "constatacion.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Constataciones físicas.";
+                        datos: {
+                            id: number;
+                            nombre: string;
+                            estado: string;
+                            ubicacion_id: number;
+                            ubicacion: string;
+                            unidad_id: number | null;
+                            unidad: string;
+                            observaciones: string | null;
+                            participa_activos_fijos: boolean;
+                            iniciada_por: string;
+                            iniciada_en: string;
+                            cerrada_por: string;
+                            cerrada_en: string;
+                            escaneados: string | null;
+                            no_encontrados: string | null;
+                        }[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "constatacion.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    nombre: string;
+                    ubicacion_id: number;
+                    unidad_administrativa_id?: number | null;
+                    participa_activos_fijos?: boolean;
+                    observaciones?: string | null;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Constatación abierta.";
+                        datos: {
+                            id: number;
+                            nombre: string;
+                            estado: string;
+                            ubicacion_id: number;
+                            ubicacion: string;
+                            unidad_id: number | null;
+                            unidad: string;
+                            observaciones: string | null;
+                            participa_activos_fijos: boolean;
+                            iniciada_por: string;
+                            iniciada_en: string;
+                            cerrada_por: string;
+                            cerrada_en: string;
+                            escaneados: string | null;
+                            no_encontrados: string | null;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "constatacion.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The constatacion ID */
+                constatacion: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Constatación física.";
+                        datos: {
+                            id: number;
+                            nombre: string;
+                            estado: string;
+                            ubicacion_id: number;
+                            ubicacion: string;
+                            unidad_id: number | null;
+                            unidad: string;
+                            observaciones: string | null;
+                            participa_activos_fijos: boolean;
+                            iniciada_por: string;
+                            iniciada_en: string;
+                            cerrada_por: string;
+                            cerrada_en: string;
+                            escaneados: string | null;
+                            no_encontrados: string | null;
+                            firmante_activos_fijos: {
+                                ""?: unknown[] | {
+                                    nombre: string;
+                                    cargo: string;
+                                };
+                                sellado: boolean;
+                            } | null;
+                            filas: ({
+                                bien_id: number;
+                                item_id: string;
+                                codigo_institucional: string;
+                                equipo: string;
+                                custodio: string;
+                                ubicacion_actual: string;
+                                esperado: boolean;
+                                resultado: string | "pendiente";
+                                ubicacion_registrada: string;
+                                movido: boolean;
+                                escaneado_en: string;
+                                escaneado_por: string;
+                            } | string)[];
+                            resumen: {
+                                esperados: number;
+                                pendientes: number;
+                                en_su_lugar: number;
+                                otra_ubicacion: number;
+                                nuevos: number;
+                                de_baja: number;
+                                no_encontrados: number;
+                            };
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "constatacion.acta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The constatacion ID */
+                constatacion: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "constatacion.escanear": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The constatacion ID */
+                constatacion: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    codigo: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: {
+                            encontrado: boolean;
+                            codigo: string;
+                            repetido: boolean;
+                            fila: {
+                                bien_id: number;
+                                item_id: string;
+                                codigo_institucional: string;
+                                equipo: string;
+                                custodio: string;
+                                ubicacion_actual: string;
+                                esperado: boolean;
+                                resultado: string | "pendiente";
+                                ubicacion_registrada: string;
+                                movido: boolean;
+                                escaneado_en: string;
+                                escaneado_por: string;
+                            };
+                        } | {
+                            encontrado: boolean;
+                            codigo: string;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "constatacion.mover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The constatacion ID */
+                constatacion: number;
+                /** @description The item ID */
+                item: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "El equipo quedó en esta ubicación, con sus componentes.";
+                        datos: null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "constatacion.cerrar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The constatacion ID */
+                constatacion: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    observaciones?: string | null;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Constatación cerrada: lo que no apareció quedó como no encontrado.";
+                        datos: {
+                            id: number;
+                            nombre: string;
+                            estado: string;
+                            ubicacion_id: number;
+                            ubicacion: string;
+                            unidad_id: number | null;
+                            unidad: string;
+                            observaciones: string | null;
+                            participa_activos_fijos: boolean;
+                            iniciada_por: string;
+                            iniciada_en: string;
+                            cerrada_por: string;
+                            cerrada_en: string;
+                            escaneados: string | null;
+                            no_encontrados: string | null;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "constatacion.activosFijos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The constatacion ID */
+                constatacion: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    participa_activos_fijos: boolean;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @enum {string} */
+                        mensaje: "Activos Fijos y Bodega firmará el acta." | "El acta queda sin la firma de Activos Fijos y Bodega.";
+                        datos: {
+                            id: number;
+                            nombre: string;
+                            estado: string;
+                            ubicacion_id: number;
+                            ubicacion: string;
+                            unidad_id: number | null;
+                            unidad: string;
+                            observaciones: string | null;
+                            participa_activos_fijos: boolean;
+                            iniciada_por: string;
+                            iniciada_en: string;
+                            cerrada_por: string;
+                            cerrada_en: string;
+                            escaneados: string | null;
+                            no_encontrados: string | null;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "consultaMedica.index": {
@@ -18038,6 +23331,252 @@ export interface operations {
                 };
             };
             422: components["responses"]["ValidationException"];
+        };
+    };
+    "consumible.index": {
+        parameters: {
+            query?: {
+                search?: string | null;
+                tipo?: components["schemas"]["TipoConsumible"];
+                guarda_tic?: boolean | null;
+                incluir_inactivos?: boolean | null;
+                bajo_minimo?: boolean | null;
+                bien_informatico_id?: number | null;
+                marca_id?: number | null;
+                modelo?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Catálogo de consumibles.";
+                        datos: {
+                            [key: string]: unknown;
+                        }[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "consumible.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreConsumibleRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Consumible registrado.";
+                        datos: {
+                            [key: string]: unknown;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "consumible.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The consumible ID */
+                consumible: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Consumible.";
+                        datos: {
+                            [key: string]: unknown;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "consumible.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The consumible ID */
+                consumible: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreConsumibleRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Consumible actualizado.";
+                        datos: {
+                            [key: string]: unknown;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "consumible.agregarModelo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The consumible ID */
+                consumible: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    marca_id: number;
+                    modelo: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Modelo agregado a los compatibles.";
+                        datos: {
+                            [key: string]: unknown;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "consumible.quitarModelo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The consumible ID */
+                consumible: number;
+                /** @description The modelo ID */
+                modelo: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Modelo quitado de los compatibles.";
+                        datos: {
+                            [key: string]: unknown;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "consumible.delEquipo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The bien ID */
+                bien: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Consumibles del equipo.";
+                        datos: {
+                            [key: string]: unknown;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
         };
     };
     "contenedorExpress.resumen": {
@@ -18576,6 +24115,158 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "contratoVigencia.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Contratos de vigencia tecnológica.";
+                        datos: components["schemas"]["ContratoVigenciaResource"][];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "contratoVigencia.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreContratoVigenciaRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Contrato registrado.";
+                        datos: components["schemas"]["ContratoVigenciaResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "contratoVigencia.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The contrato ID */
+                contrato: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Contrato de vigencia.";
+                        datos: components["schemas"]["ContratoVigenciaResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "contratoVigencia.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The contrato ID */
+                contrato: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["UpdateContratoVigenciaRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Contrato actualizado.";
+                        datos: components["schemas"]["ContratoVigenciaResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "contratoVigencia.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The contrato ID */
+                contrato: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Contrato eliminado.";
+                        datos: null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
     "convocatoria.index": {
         parameters: {
             query?: {
@@ -18877,6 +24568,205 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "credencial.index": {
+        parameters: {
+            query?: {
+                buscar?: string | null;
+                unidad_administrativa_id?: number | null;
+                situacion?: "sin_foto" | "sin_imprimir" | "desactualizada" | "al_dia" | "vencida" | "por_recibir" | null;
+                per_page?: number | null;
+                page?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Credenciales de los servidores.";
+                        datos: unknown[];
+                        meta: {
+                            pagina_actual: number;
+                            por_pagina: number;
+                            total: number;
+                            ultima_pagina: number;
+                            desde: number | null;
+                            hasta: number | null;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "credencial.verificacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Dirección de verificación de las credenciales.";
+                        datos: {
+                            url_base: string;
+                            local: boolean;
+                            impresion_bloqueada: string;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "credencial.historial": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The servidor ID */
+                servidor: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Historial de credenciales del servidor.";
+                        datos: components["schemas"]["CredencialResource"][];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "credencial.imprimir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImprimirCredencialesRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "credencial.revocar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The credencial ID */
+                credencial: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RevocarCredencialRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @enum {string} */
+                        mensaje: "Credencial revocada. Se repuso con otro código: imprima la nueva tarjeta." | "Credencial revocada. Se repondrá sola cuando el servidor tenga foto.";
+                        datos: {
+                            revocada: components["schemas"]["CredencialResource"];
+                            repuesta: components["schemas"]["CredencialResource"] | null;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "credencial.devolucion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The credencial ID */
+                credencial: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegistrarDevolucionCredencialRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Devolución de la tarjeta registrada.";
+                        datos: components["schemas"]["CredencialResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
             422: components["responses"]["ValidationException"];
         };
     };
@@ -20120,9 +26010,9 @@ export interface operations {
                             pasos: {
                                 paso: string;
                                 /** @enum {string} */
-                                etiqueta: "Liquidación de vacaciones no gozadas y de haberes" | "Indemnización o compensación" | "Devolución de los bienes" | "Baja del usuario" | "Certificado laboral" | "Declaración patrimonial de fin de gestión" | "Prohibición de reingreso";
+                                etiqueta: "Liquidación de vacaciones no gozadas y de haberes" | "Indemnización o compensación" | "Devolución de los bienes" | "Devolución de la credencial" | "Baja del usuario" | "Certificado laboral" | "Declaración patrimonial de fin de gestión" | "Prohibición de reingreso";
                                 /** @enum {string} */
-                                responsable: "Director de Talento Humano y Financiero" | "Tecnologías de la Información" | "Talento Humano" | "El servidor, ante la Contraloría; Talento Humano la registra";
+                                responsable: "Director de Talento Humano y Financiero" | "Tecnologías de la Información" | "Comunicación Social" | "Talento Humano" | "El servidor, ante la Contraloría; Talento Humano la registra";
                                 estado: string | "no_aplica";
                                 se_marca: boolean;
                                 lo_marca_el_director: boolean;
@@ -20189,9 +26079,9 @@ export interface operations {
                             pasos: {
                                 paso: string;
                                 /** @enum {string} */
-                                etiqueta: "Liquidación de vacaciones no gozadas y de haberes" | "Indemnización o compensación" | "Devolución de los bienes" | "Baja del usuario" | "Certificado laboral" | "Declaración patrimonial de fin de gestión" | "Prohibición de reingreso";
+                                etiqueta: "Liquidación de vacaciones no gozadas y de haberes" | "Indemnización o compensación" | "Devolución de los bienes" | "Devolución de la credencial" | "Baja del usuario" | "Certificado laboral" | "Declaración patrimonial de fin de gestión" | "Prohibición de reingreso";
                                 /** @enum {string} */
-                                responsable: "Director de Talento Humano y Financiero" | "Tecnologías de la Información" | "Talento Humano" | "El servidor, ante la Contraloría; Talento Humano la registra";
+                                responsable: "Director de Talento Humano y Financiero" | "Tecnologías de la Información" | "Comunicación Social" | "Talento Humano" | "El servidor, ante la Contraloría; Talento Humano la registra";
                                 estado: string | "no_aplica";
                                 se_marca: boolean;
                                 lo_marca_el_director: boolean;
@@ -20260,9 +26150,9 @@ export interface operations {
                             pasos: {
                                 paso: string;
                                 /** @enum {string} */
-                                etiqueta: "Liquidación de vacaciones no gozadas y de haberes" | "Indemnización o compensación" | "Devolución de los bienes" | "Baja del usuario" | "Certificado laboral" | "Declaración patrimonial de fin de gestión" | "Prohibición de reingreso";
+                                etiqueta: "Liquidación de vacaciones no gozadas y de haberes" | "Indemnización o compensación" | "Devolución de los bienes" | "Devolución de la credencial" | "Baja del usuario" | "Certificado laboral" | "Declaración patrimonial de fin de gestión" | "Prohibición de reingreso";
                                 /** @enum {string} */
-                                responsable: "Director de Talento Humano y Financiero" | "Tecnologías de la Información" | "Talento Humano" | "El servidor, ante la Contraloría; Talento Humano la registra";
+                                responsable: "Director de Talento Humano y Financiero" | "Tecnologías de la Información" | "Comunicación Social" | "Talento Humano" | "El servidor, ante la Contraloría; Talento Humano la registra";
                                 estado: string | "no_aplica";
                                 se_marca: boolean;
                                 lo_marca_el_director: boolean;
@@ -20322,9 +26212,9 @@ export interface operations {
                             pasos: {
                                 paso: string;
                                 /** @enum {string} */
-                                etiqueta: "Liquidación de vacaciones no gozadas y de haberes" | "Indemnización o compensación" | "Devolución de los bienes" | "Baja del usuario" | "Certificado laboral" | "Declaración patrimonial de fin de gestión" | "Prohibición de reingreso";
+                                etiqueta: "Liquidación de vacaciones no gozadas y de haberes" | "Indemnización o compensación" | "Devolución de los bienes" | "Devolución de la credencial" | "Baja del usuario" | "Certificado laboral" | "Declaración patrimonial de fin de gestión" | "Prohibición de reingreso";
                                 /** @enum {string} */
-                                responsable: "Director de Talento Humano y Financiero" | "Tecnologías de la Información" | "Talento Humano" | "El servidor, ante la Contraloría; Talento Humano la registra";
+                                responsable: "Director de Talento Humano y Financiero" | "Tecnologías de la Información" | "Comunicación Social" | "Talento Humano" | "El servidor, ante la Contraloría; Talento Humano la registra";
                                 estado: string | "no_aplica";
                                 se_marca: boolean;
                                 lo_marca_el_director: boolean;
@@ -20392,9 +26282,9 @@ export interface operations {
                             pasos: {
                                 paso: string;
                                 /** @enum {string} */
-                                etiqueta: "Liquidación de vacaciones no gozadas y de haberes" | "Indemnización o compensación" | "Devolución de los bienes" | "Baja del usuario" | "Certificado laboral" | "Declaración patrimonial de fin de gestión" | "Prohibición de reingreso";
+                                etiqueta: "Liquidación de vacaciones no gozadas y de haberes" | "Indemnización o compensación" | "Devolución de los bienes" | "Devolución de la credencial" | "Baja del usuario" | "Certificado laboral" | "Declaración patrimonial de fin de gestión" | "Prohibición de reingreso";
                                 /** @enum {string} */
-                                responsable: "Director de Talento Humano y Financiero" | "Tecnologías de la Información" | "Talento Humano" | "El servidor, ante la Contraloría; Talento Humano la registra";
+                                responsable: "Director de Talento Humano y Financiero" | "Tecnologías de la Información" | "Comunicación Social" | "Talento Humano" | "El servidor, ante la Contraloría; Talento Humano la registra";
                                 estado: string | "no_aplica";
                                 se_marca: boolean;
                                 lo_marca_el_director: boolean;
@@ -20462,9 +26352,9 @@ export interface operations {
                             pasos: {
                                 paso: string;
                                 /** @enum {string} */
-                                etiqueta: "Liquidación de vacaciones no gozadas y de haberes" | "Indemnización o compensación" | "Devolución de los bienes" | "Baja del usuario" | "Certificado laboral" | "Declaración patrimonial de fin de gestión" | "Prohibición de reingreso";
+                                etiqueta: "Liquidación de vacaciones no gozadas y de haberes" | "Indemnización o compensación" | "Devolución de los bienes" | "Devolución de la credencial" | "Baja del usuario" | "Certificado laboral" | "Declaración patrimonial de fin de gestión" | "Prohibición de reingreso";
                                 /** @enum {string} */
-                                responsable: "Director de Talento Humano y Financiero" | "Tecnologías de la Información" | "Talento Humano" | "El servidor, ante la Contraloría; Talento Humano la registra";
+                                responsable: "Director de Talento Humano y Financiero" | "Tecnologías de la Información" | "Comunicación Social" | "Talento Humano" | "El servidor, ante la Contraloría; Talento Humano la registra";
                                 estado: string | "no_aplica";
                                 se_marca: boolean;
                                 lo_marca_el_director: boolean;
@@ -21557,7 +27447,7 @@ export interface operations {
                 fecha_inicio?: string | null;
                 fecha_fin?: string | null;
                 tecnico_dtic_id?: number | null;
-                area_dtic_id?: number | null;
+                unidad_tic_id?: number | null;
             };
             header?: never;
             path?: never;
@@ -22507,6 +28397,52 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
             404: components["responses"]["ModelNotFoundException"];
             422: components["responses"]["ValidationException"];
+        };
+    };
+    "etiquetaBien.una": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The bien ID */
+                bien: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "etiquetaBien.lote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
         };
     };
     "evaluacion.registrarResultado": {
@@ -23591,6 +29527,201 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
+    "fotografiaServidor.index": {
+        parameters: {
+            query?: {
+                buscar?: string | null;
+                unidad_administrativa_id?: number | null;
+                foto?: "con" | "sin" | null;
+                estado?: "activos" | "inactivos" | "todos" | null;
+                subida_antes_de?: string | null;
+                per_page?: number | null;
+                page?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Fotografías de los servidores.";
+                        datos: unknown[];
+                        meta: {
+                            pagina_actual: number;
+                            por_pagina: number;
+                            total: number;
+                            ultima_pagina: number;
+                            desde: number | null;
+                            hasta: number | null;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "fotografiaServidor.restaurar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The fotografia ID */
+                fotografia: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Foto restaurada: vuelve a ser la vigente.";
+                        datos: components["schemas"]["FotografiaServidorResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "fotografiaServidor.historial": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The servidor ID */
+                servidor: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Historial de fotos del servidor.";
+                        datos: components["schemas"]["FotografiaServidorResource"][];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "fotografiaServidor.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The servidor ID */
+                servidor: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["SubirFotografiaRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Foto guardada. La anterior, si había, quedó en el historial.";
+                        datos: components["schemas"]["FotografiaServidorResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "fotografiaServidor.retirar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The servidor ID */
+                servidor: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Foto retirada. El servidor queda sin foto; se puede restaurar desde el historial.";
+                        datos: components["schemas"]["FotografiaServidorResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "fotografiaServidor.imagen": {
+        parameters: {
+            query?: {
+                tamano?: "completa" | "miniatura" | null;
+            };
+            header?: never;
+            path: {
+                /** @description The fotografia ID */
+                fotografia: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "estructura.grupos-ocupacionales": {
         parameters: {
             query?: never;
@@ -23867,6 +29998,32 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
+    "historialAcademico.porValidar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Formación por validar.";
+                        datos: components["schemas"]["HistorialAcademicoServidor"][];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "historialAcademico.index": {
         parameters: {
             query?: never;
@@ -23991,6 +30148,92 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
+    "historialAcademico.validar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                servidorId: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Validado: ya consta en la hoja de vida del servidor.";
+                        datos: components["schemas"]["HistorialAcademicoServidor"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "historialAcademico.rechazar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                servidorId: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RechazarFormacionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Rechazado: el servidor verá el motivo en su perfil.";
+                        datos: components["schemas"]["HistorialAcademicoServidor"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "historialAcademico.documento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                servidorId: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "horasTrabajadas.index": {
         parameters: {
             query?: {
@@ -24098,6 +30341,313 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "identidadInstitucional.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Identidad institucional.";
+                        datos: {
+                            variantes: {
+                                variante: string;
+                                etiqueta: string;
+                                obligatoria: string;
+                                usos: string;
+                                requisito: string;
+                                formatos: string;
+                                respaldo: string;
+                                vigente: components["schemas"]["RecursoIdentidadResource"] | null;
+                                /** @description La variante que se ve hoy: ella misma, su respaldo o ninguna. */
+                                en_uso: string;
+                                programadas: string;
+                            }[];
+                            datos: components["schemas"]["DatosInstitucionalesResource"];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "identidadInstitucional.actualizarDatos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActualizarDatosInstitucionalesRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Datos de la institución actualizados.";
+                        datos: components["schemas"]["DatosInstitucionalesResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "identidadInstitucional.archivo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The recurso ID */
+                recurso: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "identidadInstitucional.reutilizar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The recurso ID */
+                recurso: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ReutilizarRecursoIdentidadRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Se volvió a esa versión con una versión nueva; la historia queda como estaba.";
+                        datos: components["schemas"]["RecursoIdentidadResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "identidadInstitucional.anular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The recurso ID */
+                recurso: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Versión programada anulada: no llegará a regir.";
+                        datos: components["schemas"]["RecursoIdentidadResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "identidadInstitucional.versiones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The variante ID */
+                variante: components["schemas"]["VarianteIdentidad"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: components["schemas"]["RecursoIdentidadResource"][];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "identidadInstitucional.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The variante ID */
+                variante: components["schemas"]["VarianteIdentidad"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["SubirRecursoIdentidadRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string | "Versión guardada: ya es la vigente.";
+                        datos: components["schemas"]["RecursoIdentidadResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "identidadPublica.manifiesto": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Identidad institucional vigente.";
+                        datos: unknown[];
+                        meta: null;
+                    };
+                };
+            };
+        };
+    };
+    "identidadPublica.icono": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lado: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": string;
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "No hay isotipo cargado para el ícono.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
+        };
+    };
+    "identidadPublica.variante": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The variante ID */
+                variante: components["schemas"]["VarianteIdentidad"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
         };
     };
     "indicadoresSso.reactivos": {
@@ -26147,6 +32697,35 @@ export interface operations {
             404: components["responses"]["ModelNotFoundException"];
         };
     };
+    "mantenimientoBien.tecnicos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Técnicos de TIC.";
+                        datos: {
+                            id: number;
+                            nombre: string;
+                        }[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "mantenimientos.index": {
         parameters: {
             query?: never;
@@ -26164,23 +32743,34 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Mantenimientos listados";
-                        datos: string[];
-                        meta: null;
+                        mensaje: "Mantenimientos de equipos.";
+                        datos: unknown[];
+                        meta: {
+                            pagina_actual: number;
+                            por_pagina: number;
+                            total: number;
+                            ultima_pagina: number;
+                            desde: number | null;
+                            hasta: number | null;
+                        };
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
         };
     };
-    "mantenimientos.store": {
+    "mantenimientoBien.store": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreMantenimientoRequest"];
+            };
+        };
         responses: {
             201: {
                 headers: {
@@ -26190,13 +32780,14 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Mantenimiento programado";
-                        datos: string[];
+                        mensaje: "Mantenimiento registrado.";
+                        datos: components["schemas"]["MantenimientoBienResource"];
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "mantenimientos.show": {
@@ -26218,15 +32809,50 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Detalle de mantenimiento";
-                        datos: {
-                            id: number;
-                        };
+                        mensaje: "Mantenimiento.";
+                        datos: components["schemas"]["MantenimientoBienResource"];
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "mantenimientoBien.anular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The mantenimiento ID */
+                mantenimiento: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    motivo: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Mantenimiento anulado.";
+                        datos: components["schemas"]["MantenimientoBienResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "marcacion.index": {
@@ -26353,6 +32979,186 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
+    "miCredencial.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Su credencial.";
+                        datos: components["schemas"]["MiCredencialResource"];
+                        meta: null;
+                    } | {
+                        exito: boolean;
+                        /** @enum {string} */
+                        mensaje: "No tiene un vínculo vigente con la institución." | "Se crea cuando Comunicación Social registre su foto." | "Ya tiene foto: su credencial se crea esta noche.";
+                        datos: null;
+                        meta: null;
+                    } | {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Su usuario no está vinculado a un expediente.";
+                        datos: null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "miCredencial.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "No tiene una credencial vigente para descargar.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
+        };
+    };
+    "miFormacion.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Su formación académica.";
+                        datos: components["schemas"]["HistorialAcademicoServidor"][] | string[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "miFormacion.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["StoreMiFormacionRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Registrado. Talento Humano lo validará con el documento que adjuntó.";
+                        datos: components["schemas"]["HistorialAcademicoServidor"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "miFormacion.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Registro retirado.";
+                        datos: null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "miFormacion.documento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "miJornada.index": {
         parameters: {
             query?: {
@@ -26420,6 +33226,202 @@ export interface operations {
                         };
                         meta: null;
                     };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "miPerfil.hojaDeVida": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Su usuario no está vinculado a un expediente.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
+        };
+    };
+    "misActividades.index": {
+        parameters: {
+            query?: {
+                desde?: string | null;
+                hasta?: string | null;
+                categoria?: components["schemas"]["CategoriaActividadEnum"];
+                buscar?: string | null;
+                page?: number | null;
+                per_page?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Mis actividades.";
+                        datos: unknown[];
+                        meta: {
+                            pagina_actual: number;
+                            por_pagina: number;
+                            total: number;
+                            ultima_pagina: number;
+                            desde: number | null;
+                            hasta: number | null;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "misActividades.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuardarActividadRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Actividad anotada.";
+                        datos: unknown[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "misActividades.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                actividad: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuardarActividadRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Actividad corregida.";
+                        datos: unknown[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "misActividades.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                actividad: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Actividad eliminada.";
+                        datos: null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "misActividades.pdf": {
+        parameters: {
+            query: {
+                desde: string;
+                hasta: string;
+                categoria?: components["schemas"]["CategoriaActividadEnum"];
+                buscar?: string | null;
+                page?: number | null;
+                per_page?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
                 };
             };
             401: components["responses"]["AuthenticationException"];
@@ -26556,6 +33558,246 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
+    "misEquipos.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Sus equipos.";
+                        datos: components["schemas"]["AsignacionBienResource"][];
+                        meta: null;
+                    } | {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Su usuario no está vinculado a un expediente.";
+                        datos: string[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "misEquipos.acta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The asignacion ID */
+                asignacion: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "misPrestamos.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Sus préstamos de equipos.";
+                        datos: unknown[];
+                        meta: {
+                            pagina_actual: number;
+                            por_pagina: number;
+                            total: number;
+                            ultima_pagina: number;
+                            desde: number | null;
+                            hasta: number | null;
+                        };
+                    } | {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Su usuario no está vinculado a un expediente.";
+                        datos: string[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "misPrestamos.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SolicitarPrestamoRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: components["schemas"]["PrestamoEquipoResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Su usuario no está vinculado a un expediente: no puede pedir equipos.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "misPrestamos.disponibilidad": {
+        parameters: {
+            query: {
+                desde: string;
+                hasta: string;
+                tipo_bien_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Disponibilidad de los equipos de préstamo.";
+                        datos: {
+                            [key: string]: unknown;
+                        }[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "misPrestamos.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The prestamo ID */
+                prestamo: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Su préstamo de equipos.";
+                        datos: components["schemas"]["PrestamoEquipoResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "misPrestamos.cancelar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The prestamo ID */
+                prestamo: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    motivo?: string | null;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Préstamo cancelado.";
+                        datos: components["schemas"]["PrestamoEquipoResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "misSolicitudesAccion.index": {
         parameters: {
             query?: never;
@@ -26660,6 +33902,264 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "movimientoConsumible.ingresos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegistrarIngresoConsumibleRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Ingreso registrado.";
+                        datos: {
+                            [key: string]: unknown;
+                        }[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "movimientoConsumible.entregas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegistrarEntregaConsumibleRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Entrega registrada.";
+                        datos: {
+                            [key: string]: unknown;
+                        }[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "movimientoConsumible.anular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The movimiento ID */
+                movimiento: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    motivo: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Movimiento anulado: deja de contar, pero sigue en el kárdex.";
+                        datos: {
+                            [key: string]: unknown;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "movimientoConsumible.kardex": {
+        parameters: {
+            query?: {
+                desde?: string | null;
+                hasta?: string | null;
+            };
+            header?: never;
+            path: {
+                /** @description The consumible ID */
+                consumible: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Kárdex del consumible.";
+                        datos: {
+                            saldo_inicial: number | null;
+                            filas: {
+                                [key: string]: unknown;
+                            }[];
+                            saldo_final: number | null;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "movimientoConsumible.kardexExcel": {
+        parameters: {
+            query?: {
+                desde?: string | null;
+                hasta?: string | null;
+            };
+            header?: never;
+            path: {
+                /** @description The consumible ID */
+                consumible: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "movimientoConsumible.apertura": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The consumible ID */
+                consumible: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: date-time */
+                    fecha: string;
+                    cantidad: number;
+                    observacion?: string | null;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Apertura registrada.";
+                        datos: {
+                            [key: string]: unknown;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "movimientoConsumible.ajuste": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The consumible ID */
+                consumible: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: date-time */
+                    fecha: string;
+                    cantidad: number;
+                    motivo_ajuste: components["schemas"]["MotivoAjusteConsumible"];
+                    observacion: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Ajuste registrado.";
+                        datos: {
+                            [key: string]: unknown;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "movimientoPersonal.index": {
@@ -28373,7 +35873,7 @@ export interface operations {
                             id: number;
                             nombre: string;
                             /** @enum {string} */
-                            modulo: "Nómina" | "Autoservicio" | "Actividades y Bienestar" | "Sistema" | "Estructura" | "Expediente" | "Asistencia" | "Viáticos" | "Dispensario y SSO" | "Evaluación" | "Capacitación" | "TI y Helpdesk" | "Reportería" | "Disciplinario" | "Selección" | "General";
+                            modulo: "Nómina" | "Autoservicio" | "Actividades y Bienestar" | "Comunicación" | "Noticias y comunicados" | "Sistema" | "Estructura" | "Expediente" | "Asistencia" | "Viáticos" | "Dispensario y SSO" | "Evaluación" | "Capacitación" | "TI y Helpdesk" | "Reportería" | "Disciplinario" | "Selección" | "General";
                         }[];
                         meta: null;
                     };
@@ -29687,6 +37187,345 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "prestamoEquipo.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Préstamos de equipos.";
+                        datos: unknown[];
+                        meta: {
+                            pagina_actual: number;
+                            por_pagina: number;
+                            total: number;
+                            ultima_pagina: number;
+                            desde: number | null;
+                            hasta: number | null;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "prestamoEquipo.disponibilidad": {
+        parameters: {
+            query: {
+                desde: string;
+                hasta: string;
+                tipo_bien_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Disponibilidad de los equipos de préstamo.";
+                        datos: {
+                            [key: string]: unknown;
+                        }[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "prestamoEquipo.resumen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Préstamos que piden atención.";
+                        datos: {
+                            por_aprobar: number;
+                            reservados: number;
+                            por_entregar_hoy: number;
+                            en_curso: number;
+                            vencidos: number;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "prestamoEquipo.acta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "prestamoEquipo.directo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrestamoDirectoRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: components["schemas"]["PrestamoEquipoResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "prestamoEquipo.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Préstamo de equipos.";
+                        datos: components["schemas"]["PrestamoEquipoResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "prestamoEquipo.aprobar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The prestamo ID */
+                prestamo: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Préstamo aprobado: el horario queda reservado.";
+                        datos: components["schemas"]["PrestamoEquipoResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "prestamoEquipo.rechazar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The prestamo ID */
+                prestamo: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Préstamo rechazado.";
+                        datos: components["schemas"]["PrestamoEquipoResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "prestamoEquipo.cancelar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The prestamo ID */
+                prestamo: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Préstamo cancelado.";
+                        datos: components["schemas"]["PrestamoEquipoResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "prestamoEquipo.entregar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The prestamo ID */
+                prestamo: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EntregarPrestamoRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Entrega registrada.";
+                        datos: components["schemas"]["PrestamoEquipoResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "prestamoEquipo.recibir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The prestamo ID */
+                prestamo: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecibirPrestamoRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Devolución registrada.";
+                        datos: components["schemas"]["PrestamoEquipoResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "programaDrogaActividad.index": {
         parameters: {
             query?: {
@@ -30575,6 +38414,89 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "autoservicio.prestamos.reglas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Reglas del préstamo de equipos.";
+                        datos: components["schemas"]["ReglasPrestamoResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "inventario.prestamos.reglas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Reglas del préstamo de equipos.";
+                        datos: components["schemas"]["ReglasPrestamoResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "reglasPrestamo.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReglasPrestamoRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Reglas del préstamo actualizadas.";
+                        datos: components["schemas"]["ReglasPrestamoResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "reporte.indexConfiguraciones": {
         parameters: {
             query?: never;
@@ -31076,6 +38998,214 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
             404: components["responses"]["ModelNotFoundException"];
             422: components["responses"]["ValidationException"];
+        };
+    };
+    "reporteTic.inventario": {
+        parameters: {
+            query?: {
+                agrupar?: "unidad" | "ubicacion" | null;
+                tipo_bien_id?: number | null;
+                unidad_administrativa_id?: number | null;
+                ubicacion_id?: number | null;
+                formato?: "json" | "excel" | "pdf" | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "reporteTic.obsolescencia": {
+        parameters: {
+            query?: {
+                tipo_bien_id?: number | null;
+                formato?: "json" | "excel" | "pdf" | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "reporteTic.consumos": {
+        parameters: {
+            query?: {
+                agrupar?: "impresora" | "area" | "consumible" | null;
+                tipo?: components["schemas"]["TipoConsumible"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "reporteTic.saldoConsumibles": {
+        parameters: {
+            query: {
+                fecha: string;
+                formato?: "json" | "excel" | "pdf" | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "reporteTic.tickets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "reporteTic.satisfaccion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "reporteUsoPrestamo.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Uso de los equipos de préstamo.";
+                        datos: {
+                            desde: string;
+                            hasta: string;
+                            equipos: {
+                                id: number;
+                                codigo_institucional: string;
+                                tipo: string;
+                                marca: string;
+                                modelo: string | null;
+                                prestable: boolean;
+                                prestamos: number;
+                                horas: number;
+                                /** @description Volvió después de la hora prevista, o sigue fuera con la hora pasada. */
+                                devoluciones_tarde: number;
+                                no_retirados: number;
+                                ultimo_prestamo: string;
+                            }[];
+                            totales: {
+                                prestamos: string;
+                                horas: number;
+                                devoluciones_tarde: string;
+                                no_retirados: string;
+                            };
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "reporteUsoPrestamo.excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
         };
     };
     "respuestaAssist.cuestionario": {
@@ -32104,6 +40234,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description Lo que rige para una prioridad sin fila general (config/helpdesk.php). */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -32112,8 +40243,11 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Configuraciones de SLA listadas correctamente.";
-                        datos: components["schemas"]["Sla"][];
+                        mensaje: "Tabla de SLA.";
+                        datos: {
+                            reglas: components["schemas"]["Sla"][];
+                            por_defecto: string;
+                        };
                         meta: null;
                     };
                 };
@@ -32128,15 +40262,7 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": {
-                    prioridad: string;
-                    tiempo_resolucion_horas: number;
-                    tiempo_respuesta_horas: number;
-                };
-            };
-        };
+        requestBody?: never;
         responses: {
             201: {
                 headers: {
@@ -32146,14 +40272,13 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Configuración de SLA creada exitosamente.";
+                        mensaje: "SLA registrado.";
                         datos: components["schemas"]["Sla"];
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
         };
     };
     "slas.show": {
@@ -32175,13 +40300,14 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Configuración de SLA obtenida correctamente.";
+                        mensaje: "SLA.";
                         datos: string;
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
         };
     };
     "slas.update": {
@@ -32193,16 +40319,7 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    /** @description Mismo campo fantasma que en el alta. */
-                    prioridad?: string;
-                    tiempo_resolucion_horas?: number;
-                    tiempo_respuesta_horas?: number;
-                };
-            };
-        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
@@ -32212,14 +40329,13 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Configuración de SLA actualizada exitosamente.";
+                        mensaje: "SLA actualizado.";
                         datos: string;
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
         };
     };
     "slas.destroy": {
@@ -32241,7 +40357,7 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Configuración de SLA eliminada exitosamente.";
+                        mensaje: "SLA eliminado: rige el general de esa prioridad.";
                         datos: null;
                         meta: null;
                     };
@@ -32364,6 +40480,221 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "solicitudBodega.index": {
+        parameters: {
+            query?: {
+                estado?: "pendiente" | "despachada" | "anulada" | null;
+                ticket_id?: number | null;
+                search?: string | null;
+                per_page?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Solicitudes a bodega.";
+                        datos: {
+                            [key: string]: {
+                                [key: string]: unknown;
+                            };
+                        };
+                        meta: {
+                            pagina_actual: number;
+                            por_pagina: number;
+                            total: number;
+                            ultima_pagina: number;
+                            desde: number | null;
+                            hasta: number | null;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "solicitudBodega.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreSolicitudBodegaRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: {
+                            [key: string]: unknown;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "solicitudBodega.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The solicitud ID */
+                solicitud: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Solicitud a bodega.";
+                        datos: {
+                            [key: string]: unknown;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "solicitudBodega.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The solicitud ID */
+                solicitud: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "solicitudBodega.despachar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The solicitud ID */
+                solicitud: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: date-time */
+                    fecha: string;
+                    items: {
+                        item_id: number;
+                        cantidad_despachada: number;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @enum {string} */
+                        mensaje: "La entrega quedó en el kárdex y el ticket se cerró." | "La entrega quedó en el kárdex.";
+                        datos: {
+                            [key: string]: unknown;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "solicitudBodega.anular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The solicitud ID */
+                solicitud: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    motivo: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Solicitud anulada.";
+                        datos: {
+                            [key: string]: unknown;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "solicitudCertificacion.pendientesTriaje": {
@@ -32936,6 +41267,86 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "comunicacion.tableroComunicacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Inicio de Comunicación Social.";
+                        datos: {
+                            fotografias: {
+                                activos: number;
+                                con_foto: number;
+                                sin_foto: string;
+                                por_unidad: ({
+                                    unidad_id: string;
+                                    unidad: string | ("Unidad" | "Sin unidad");
+                                    activos: number;
+                                    con_foto: number;
+                                } | {
+                                    unidad_id: null;
+                                    unidad: string;
+                                    activos: string;
+                                    con_foto: string;
+                                })[];
+                            } | null;
+                            credenciales: {
+                                /**
+                                 * @description Llegan solas del cese: si se acumulan, alguien sale sin su
+                                 *     evaluación de retiro.
+                                 */
+                                vigentes: number;
+                                /**
+                                 * @description Llegan solas del cese: si se acumulan, alguien sale sin su
+                                 *     evaluación de retiro.
+                                 */
+                                sin_imprimir: number;
+                                desactualizadas: number;
+                                vencidas: string;
+                                /**
+                                 * @description Llegan solas del cese: si se acumulan, alguien sale sin su
+                                 *     evaluación de retiro.
+                                 */
+                                por_vencer: number;
+                                /** @constant */
+                                dias_por_vencer: 30;
+                                proximas: {
+                                    servidor_id: number;
+                                    nombre: string;
+                                    unidad: string;
+                                    valida_hasta: string;
+                                }[];
+                                /**
+                                 * @description Llegan solas del cese: si se acumulan, alguien sale sin su
+                                 *     evaluación de retiro.
+                                 */
+                                por_recibir: number;
+                            } | null;
+                            identidad: {
+                                faltan_obligatorias: string[];
+                                con_respaldo: string[];
+                                programadas: string[];
+                            } | null;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "tableroSaludOcupacional.index": {
         parameters: {
             query?: {
@@ -33006,6 +41417,129 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "tic.tableroTic": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Tablero de Tecnologías.";
+                        datos: {
+                            tickets: {
+                                /** @enum {string} */
+                                alcance: "todos" | "propios";
+                                por_estado: {
+                                    [key: string]: string;
+                                };
+                                sin_asignar: number;
+                                mios: number;
+                                vencidos: number;
+                                por_vencer: number;
+                                por_confirmar: number;
+                                mes: {
+                                    abiertos: string;
+                                    resueltos: string;
+                                    cumplimiento_sla: number | null;
+                                    horas_resolucion: number | null;
+                                    satisfaccion: number | null;
+                                    encuestas: number;
+                                };
+                                por_categoria: {
+                                    categoria: string | "Sin categoría";
+                                    total: number;
+                                }[];
+                                mi_cola: {
+                                    id: number;
+                                    folio: string;
+                                    asunto: string;
+                                    estado: string;
+                                    prioridad: string;
+                                    /** @enum {string|null} */
+                                    sla: "pausado" | "vencido" | "por_vencer" | "en_plazo" | "cumplido" | "incumplido" | null;
+                                    vence_en: string;
+                                }[];
+                            } | null;
+                            equipos: {
+                                en_servicio: number;
+                                por_estado: {
+                                    [key: string]: string;
+                                };
+                                por_unidad: {
+                                    unidad_id: string;
+                                    unidad: string;
+                                    total: number;
+                                }[];
+                                antiguedad: {
+                                    [key: string]: number;
+                                };
+                                vida_util_cumplida: number;
+                                bajas_por_resolver: number | null;
+                                contratos_por_vencer: {
+                                    id: number;
+                                    proceso: string;
+                                    proveedor: string | null;
+                                    fecha_fin: string;
+                                    dias: number;
+                                    equipos: string;
+                                }[];
+                                ventanas_proximas: {
+                                    id: number;
+                                    contrato_id: number;
+                                    proceso: string;
+                                    proveedor: string;
+                                    desde: string;
+                                    hasta: string;
+                                    descripcion: string | null;
+                                }[];
+                            } | null;
+                            prestamos: {
+                                por_aprobar: number;
+                                reservados: number;
+                                por_entregar_hoy: number;
+                                en_curso: number;
+                                vencidos: number;
+                                lista_vencidos: {
+                                    id: number;
+                                    folio: string;
+                                    servidor: string;
+                                    hora: string;
+                                }[];
+                                entregas_hoy: {
+                                    id: number;
+                                    folio: string;
+                                    servidor: string;
+                                    hora: string;
+                                }[];
+                            } | null;
+                            consumibles: {
+                                bajo_minimo: number;
+                                lista: {
+                                    id: number;
+                                    descripcion: string;
+                                    saldo: number;
+                                    stock_minimo: number;
+                                }[];
+                                entregas_mes: number;
+                            } | null;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "tecnicos.index": {
         parameters: {
             query?: never;
@@ -33023,8 +41557,17 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Técnicos DTIC listados correctamente.";
-                        datos: components["schemas"]["TecnicoDtic"][];
+                        mensaje: "Técnicos de la mesa de ayuda.";
+                        datos: {
+                            id: number;
+                            user_id: number;
+                            nombre: string;
+                            usuario_ti: string;
+                            unidad_tic_id: number | null;
+                            unidad_tic: string;
+                            nivel: number;
+                            estado: boolean;
+                        }[];
                         meta: null;
                     };
                 };
@@ -33039,21 +41582,7 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /**
-                     * @description Era `servidor_id`, columna que esta tabla no tiene: la propia
-                     *     regla `unique` consultaba por ella y reventaba, así que dar de
-                     *     alta un técnico era imposible.
-                     */
-                    user_id: number;
-                    area_dtic_id: number;
-                    nivel: number;
-                    estado?: string | null;
-                };
-            };
-        };
+        requestBody?: never;
         responses: {
             201: {
                 headers: {
@@ -33063,14 +41592,22 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Técnico registrado exitosamente.";
-                        datos: components["schemas"]["TecnicoDtic"];
+                        mensaje: "Técnico registrado.";
+                        datos: {
+                            id: number;
+                            user_id: number;
+                            nombre: string;
+                            usuario_ti: string;
+                            unidad_tic_id: number | null;
+                            unidad_tic: string;
+                            nivel: number;
+                            estado: boolean;
+                        };
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
         };
     };
     "tecnicos.show": {
@@ -33092,8 +41629,17 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Técnico DTIC obtenido correctamente.";
-                        datos: string;
+                        mensaje: "Técnico de la mesa de ayuda.";
+                        datos: {
+                            id: number;
+                            user_id: number;
+                            nombre: string;
+                            usuario_ti: string;
+                            unidad_tic_id: number | null;
+                            unidad_tic: string;
+                            nivel: number;
+                            estado: boolean;
+                        };
                         meta: null;
                     };
                 };
@@ -33111,15 +41657,7 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    area_dtic_id?: number;
-                    nivel?: number;
-                    estado?: string;
-                };
-            };
-        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
@@ -33129,14 +41667,22 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Datos del técnico actualizados.";
-                        datos: string;
+                        mensaje: "Técnico actualizado.";
+                        datos: {
+                            id: number;
+                            user_id: number;
+                            nombre: string;
+                            usuario_ti: string;
+                            unidad_tic_id: number | null;
+                            unidad_tic: string;
+                            nivel: number;
+                            estado: boolean;
+                        };
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
         };
     };
     "tecnicos.destroy": {
@@ -33158,7 +41704,7 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Técnico desactivado exitosamente.";
+                        mensaje: "El usuario ya no figura como técnico de la mesa de ayuda.";
                         datos: null;
                         meta: null;
                     };
@@ -33186,7 +41732,7 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Carga de trabajo y métricas obtenidas correctamente.";
+                        mensaje: "Carga de trabajo del técnico.";
                         datos: unknown[];
                         meta: null;
                     };
@@ -33296,6 +41842,66 @@ export interface operations {
             404: components["responses"]["ModelNotFoundException"];
         };
     };
+    "ticket.catalogos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Catálogos de la mesa de ayuda.";
+                        datos: {
+                            [key: string]: unknown;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "ticket.resumen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Tickets por pestaña.";
+                        datos: {
+                            sin_asignar: number;
+                            mios: number;
+                            en_curso: number;
+                            vencidos: number;
+                            resueltos: number;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "ticket.index": {
         parameters: {
             query?: never;
@@ -33313,13 +41919,21 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Tickets listados exitosamente.";
-                        datos: components["schemas"]["Ticket"][];
-                        meta: null;
+                        mensaje: "Tickets.";
+                        datos: unknown[];
+                        meta: {
+                            pagina_actual: number;
+                            por_pagina: number;
+                            total: number;
+                            ultima_pagina: number;
+                            desde: number | null;
+                            hasta: number | null;
+                        };
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
         };
     };
     "ticket.store": {
@@ -33331,14 +41945,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    categoria_id: number;
-                    sla_id: number;
-                    asunto: string;
-                    descripcion: string;
-                    prioridad: string;
-                    bien_informatico_id?: number | null;
-                };
+                "multipart/form-data": components["schemas"]["CrearTicketRequest"];
             };
         };
         responses: {
@@ -33349,14 +41956,14 @@ export interface operations {
                 content: {
                     "application/json": {
                         exito: boolean;
-                        /** @constant */
-                        mensaje: "Ticket creado exitosamente.";
-                        datos: components["schemas"]["Ticket"];
+                        mensaje: string;
+                        datos: components["schemas"]["TicketResource"];
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
         };
     };
@@ -33380,48 +41987,13 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Detalle del ticket.";
-                        datos: string;
+                        datos: components["schemas"]["TicketResource"];
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
-            404: components["responses"]["ModelNotFoundException"];
-        };
-    };
-    "ticket.cambiarEstado": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    estado: string;
-                };
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Estado del ticket cambiado.";
-                        datos: string;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
+            403: components["responses"]["AuthorizationException"];
         };
     };
     "ticket.asignar": {
@@ -33429,14 +42001,17 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: number;
+                /** @description The ticket ID */
+                ticket: number;
             };
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
                 "application/json": {
-                    tecnico_dtic_id: number;
+                    tecnico_id?: number | null;
+                    unidad_tic_id?: number | null;
+                    prioridad?: components["schemas"]["PrioridadTicket"];
                 };
             };
         };
@@ -33449,57 +42024,25 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Ticket asignado exitosamente.";
-                        datos: string;
+                        mensaje: "Ticket asignado.";
+                        datos: components["schemas"]["TicketResource"];
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: components["responses"]["ModelNotFoundException"];
             422: components["responses"]["ValidationException"];
         };
     };
-    "ticket.escalar": {
+    "ticket.tomar": {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    nivel: number;
-                };
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Ticket escalado exitosamente.";
-                        datos: components["schemas"]["Ticket"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
-    "ticket.cerrar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
+                /** @description The ticket ID */
+                ticket: number;
             };
             cookie?: never;
         };
@@ -33513,28 +42056,31 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Ticket cerrado exitosamente.";
-                        datos: components["schemas"]["Ticket"];
+                        mensaje: "Ticket en proceso.";
+                        datos: components["schemas"]["TicketResource"];
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: components["responses"]["ModelNotFoundException"];
         };
     };
-    "ticket.vincularBien": {
+    "ticket.pedirInformacion": {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                id: number;
+                /** @description The ticket ID */
+                ticket: number;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
                 "application/json": {
-                    bien_informatico_id: number;
+                    pregunta: string;
                 };
             };
         };
@@ -33547,13 +42093,250 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Bien informático vinculado al ticket exitosamente.";
-                        datos: components["schemas"]["Ticket"];
+                        mensaje: "Se pidió información al usuario.";
+                        datos: components["schemas"]["TicketResource"];
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "ticket.resolver": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ticket ID */
+                ticket: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    solucion: string;
+                    registrar_mantenimiento?: boolean | null;
+                    /** @enum {string} */
+                    estado_equipo?: "en_uso" | "disponible" | "en_mantenimiento" | "en_garantia";
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Ticket resuelto.";
+                        datos: components["schemas"]["TicketResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "ticket.escalar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ticket ID */
+                ticket: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {integer} */
+                    nivel: "2" | "3";
+                    motivo: string;
+                    tecnico_id?: number | null;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Ticket escalado.";
+                        datos: components["schemas"]["TicketResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "ticket.vincularBien": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ticket ID */
+                ticket: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    bien_informatico_id?: number | null;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Equipo vinculado al ticket.";
+                        datos: components["schemas"]["TicketResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "ticket.confirmar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ticket ID */
+                ticket: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    calificacion?: number | null;
+                    comentario?: string | null;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Gracias: el ticket quedó cerrado.";
+                        datos: components["schemas"]["TicketResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "ticket.reabrir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ticket ID */
+                ticket: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    motivo: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Ticket reabierto.";
+                        datos: components["schemas"]["TicketResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "ticket.anular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ticket ID */
+                ticket: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    motivo: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Ticket anulado.";
+                        datos: components["schemas"]["TicketResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: components["responses"]["ModelNotFoundException"];
             422: components["responses"]["ValidationException"];
         };
     };
@@ -33901,6 +42684,151 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "ubicacionesBien.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Ubicación habitual de cada unidad.";
+                        datos: {
+                            unidad_id: number;
+                            unidad: string;
+                            ubicacion_id: string | null;
+                            ubicacion: string | null;
+                        }[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "ubicacionesBien.sugerida": {
+        parameters: {
+            query?: {
+                unidad_administrativa_id?: number | null;
+                servidor_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Ubicación sugerida.";
+                        datos: {
+                            id: number;
+                            nombre: string;
+                        } | null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "ubicacionesBien.fijar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The unidad ID */
+                unidad: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    ubicacion_id: number | null;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @enum {string} */
+                        mensaje: "Ubicación habitual guardada." | "La unidad queda sin ubicación habitual.";
+                        datos: null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "ubicacionesBien.mudanza": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    unidad_administrativa_id: number;
+                    desde_ubicacion_id: number | null;
+                    hacia_ubicacion_id: number;
+                    aplicar?: boolean;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: {
+                            total: number;
+                            aplicada: boolean;
+                            equipos: {
+                                id: number;
+                                codigo_institucional: string;
+                                equipo: string;
+                                custodio: string;
+                            }[];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "unidadAdministrativa.todas": {
@@ -34717,6 +43645,53 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "No existe ningún certificado con ese código de verificación.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
+        };
+    };
+    "credenciales.verificar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                codigo: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @enum {string} */
+                        mensaje: "Credencial vigente." | "Esta credencial no está vigente.";
+                        datos: {
+                            vigente: boolean;
+                            nombre?: string;
+                            cargo?: string;
+                            unidad?: string;
+                            foto?: string;
+                        } | null;
+                        meta: null;
+                    };
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "No existe ninguna credencial con ese código de verificación.";
                         datos: null;
                         errores: null;
                     };

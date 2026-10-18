@@ -1,0 +1,14 @@
+/* El recortador se posiciona en absoluto: necesita un contenedor con alto. */
+.lienzo {
+  position: relative;
+  height: 340px;
+  overflow: hidden;
+  border-radius: var(--mantine-radius-md);
+  background: var(--sgth-surface-sunken);
+}
+
+@media (max-width: 48em) {
+  .lienzo {
+    height: 240px;
+  }
+}
