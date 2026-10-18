@@ -12,6 +12,7 @@ require_once __DIR__.'/Support/ViaticoFixtures.php';
 require_once __DIR__.'/Support/SesionFixtures.php';
 require_once __DIR__.'/Support/AccionesPersonalFixtures.php';
 require_once __DIR__.'/Support/VacacionesFixtures.php';
+require_once __DIR__.'/Support/ComunicadosFixtures.php';
 
 /*
 |--------------------------------------------------------------------------

@@ -124,6 +124,8 @@ use App\Http\Controllers\Comunicacion\TableroComunicacionController;
 use App\Http\Controllers\Comunicacion\FotografiaServidorController;
 use App\Http\Controllers\Comunicacion\IdentidadInstitucionalController;
 use App\Http\Controllers\Comunicacion\IdentidadPublicaController;
+use App\Http\Controllers\Comunicados\ArchivosComunicadoController;
+use App\Http\Controllers\Comunicados\ComunicadoController;
 use App\Http\Controllers\InventarioTi\ConstatacionController;
 use App\Http\Controllers\InventarioTi\BajaController;
 use App\Http\Controllers\InventarioTi\BienInformaticoController;
@@ -2277,6 +2279,42 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 ->whereNumber('recurso');
             Route::get('{variante}/versiones', [IdentidadInstitucionalController::class, 'versiones']);
             Route::post('{variante}', [IdentidadInstitucionalController::class, 'store']);
+        });
+    });
+
+    // Noticias y comunicados de Talento Humano
+    // (docs/diseno-noticias-comunicados.md, 7.1). Redacta asistente-uath y
+    // admin-uath; publica admin-uath, y un asistente solo con el permiso
+    // adicional (D1). Lo que depende del estado lo decide ComunicadoService.
+    // Los servidores los leerán por `autoservicio/comunicados`.
+    Route::prefix('comunicados')->group(function () {
+        Route::middleware('permission:redactar-comunicados|publicar-comunicados|ver-lecturas-comunicados')->group(function () {
+            Route::get('/', [ComunicadoController::class, 'index'])->name('comunicados.index');
+            Route::get('{comunicado}', [ComunicadoController::class, 'show'])->whereNumber('comunicado');
+            Route::get('{comunicado}/portada', [ArchivosComunicadoController::class, 'portada'])->whereNumber('comunicado');
+            Route::get('{comunicado}/adjuntos/{adjunto}', [ArchivosComunicadoController::class, 'adjunto'])
+                ->whereNumber(['comunicado', 'adjunto'])
+                ->scopeBindings();
+        });
+
+        Route::middleware('permission:redactar-comunicados')->group(function () {
+            Route::post('/', [ComunicadoController::class, 'store']);
+            Route::post('destinatarios/conteo', [ComunicadoController::class, 'contarDestinatarios']);
+            Route::put('{comunicado}', [ComunicadoController::class, 'update'])->whereNumber('comunicado');
+            Route::delete('{comunicado}', [ComunicadoController::class, 'destroy'])->whereNumber('comunicado');
+            Route::post('{comunicado}/duplicar', [ComunicadoController::class, 'duplicar'])->whereNumber('comunicado');
+            Route::post('{comunicado}/portada', [ArchivosComunicadoController::class, 'subirPortada'])->whereNumber('comunicado');
+            Route::delete('{comunicado}/portada', [ArchivosComunicadoController::class, 'quitarPortada'])->whereNumber('comunicado');
+            Route::post('{comunicado}/adjuntos', [ArchivosComunicadoController::class, 'agregarAdjunto'])->whereNumber('comunicado');
+            Route::delete('{comunicado}/adjuntos/{adjunto}', [ArchivosComunicadoController::class, 'quitarAdjunto'])
+                ->whereNumber(['comunicado', 'adjunto'])
+                ->scopeBindings();
+        });
+
+        Route::middleware('permission:publicar-comunicados')->group(function () {
+            Route::post('{comunicado}/publicar', [ComunicadoController::class, 'publicar'])->whereNumber('comunicado');
+            Route::post('{comunicado}/retirar', [ComunicadoController::class, 'retirar'])->whereNumber('comunicado');
+            Route::patch('{comunicado}/publicacion', [ComunicadoController::class, 'actualizarPublicacion'])->whereNumber('comunicado');
         });
     });
 

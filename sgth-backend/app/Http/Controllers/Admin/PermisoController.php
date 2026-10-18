@@ -106,6 +106,10 @@ class PermisoController extends Controller
             str_contains($permiso, 'identidad-institucional')
                 => 'Comunicación',
 
+            // Los de Talento Humano, aparte de los de Comunicación Social: es
+            // donde se busca `publicar-comunicados` para dárselo a un asistente.
+            str_contains($permiso, 'comunicados')       => 'Noticias y comunicados',
+
             str_contains($permiso, 'usuario') ||
             str_contains($permiso, 'rol') ||
             str_contains($permiso, 'contrasena') ||
