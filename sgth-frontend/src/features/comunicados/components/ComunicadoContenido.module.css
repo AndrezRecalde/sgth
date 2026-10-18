@@ -1,0 +1,22 @@
+.titulo {
+  text-wrap: balance;
+}
+
+/* Un texto largo se lee mejor sin llegar de borde a borde en una pantalla ancha. */
+.cuerpo {
+  max-width: 72ch;
+  font-size: var(--mantine-font-size-md);
+  line-height: 1.7;
+}
+
+.adjunto {
+  padding: var(--mantine-spacing-sm);
+  border: 1px solid var(--sgth-border);
+  border-radius: var(--mantine-radius-md);
+}
+
+.nombreAdjunto {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

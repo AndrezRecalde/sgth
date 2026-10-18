@@ -16,13 +16,25 @@ interface Props {
   description?: string
   minHeight?:   number
   maxHeight?:   number
+  /**
+   * Agrega títulos, citas y enlaces a la barra. Es lo que permite el cuerpo de
+   * una noticia o un comunicado (`HtmlEnriquecido` en el backend); la nota
+   * clínica se queda con la barra corta.
+   */
+  completo?:    boolean
 }
 
+/**
+ * Editor de texto enriquecido (TipTap). Lo guardado es HTML, y el backend lo
+ * limpia al recibirlo con su propia lista blanca: la barra solo ofrece lo que
+ * esa lista deja pasar.
+ */
 export function RichTextInput({
   label, value, onChange,
   required, error, description,
   minHeight = 120,
   maxHeight = 400,
+  completo = false,
 }: Props) {
   const editor = useEditor({
     // El editor no se crea en el primer render, sino después. Es lo que TipTap
@@ -78,6 +90,13 @@ export function RichTextInput({
         }}
       >
         <RichTextEditor.Toolbar sticky stickyOffset={0}>
+          {completo && (
+            <RichTextEditor.ControlsGroup>
+              <RichTextEditor.H2 />
+              <RichTextEditor.H3 />
+              <RichTextEditor.Blockquote />
+            </RichTextEditor.ControlsGroup>
+          )}
           <RichTextEditor.ControlsGroup>
             <RichTextEditor.Bold />
             <RichTextEditor.Italic />
@@ -88,6 +107,12 @@ export function RichTextInput({
             <RichTextEditor.BulletList />
             <RichTextEditor.OrderedList />
           </RichTextEditor.ControlsGroup>
+          {completo && (
+            <RichTextEditor.ControlsGroup>
+              <RichTextEditor.Link />
+              <RichTextEditor.Unlink />
+            </RichTextEditor.ControlsGroup>
+          )}
           <RichTextEditor.ControlsGroup>
             <RichTextEditor.ClearFormatting />
           </RichTextEditor.ControlsGroup>

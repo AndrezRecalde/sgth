@@ -6,7 +6,7 @@ import {
 import { Controller, type UseFormReturn } from 'react-hook-form'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { BuscarCie10Input } from './BuscarCie10Input'
-import { RichTextInput } from './RichTextInput'
+import { RichTextInput } from '@/components/ui'
 import {
   TIPO_ATENCION_OPTIONS,
   TIPO_DIAGNOSTICO_OPTIONS,

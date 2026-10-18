@@ -109,7 +109,6 @@ test('un servidor no entra a la gestión', function (string $rol) {
 
     $this->actingAs($usuario, 'sanctum')->getJson('/api/v1/comunicados')->assertForbidden();
     $this->actingAs($usuario, 'sanctum')->getJson("/api/v1/comunicados/{$comunicado->id}")->assertForbidden();
-    $this->actingAs($usuario, 'sanctum')->getJson("/api/v1/comunicados/{$comunicado->id}/portada")->assertForbidden();
     $this->actingAs($usuario, 'sanctum')->postJson('/api/v1/comunicados', datosDeComunicado())->assertForbidden();
 })->with(['servidor', 'jefe-unidad', 'director', 'analista-uath', 'comunicacion-social']);
 

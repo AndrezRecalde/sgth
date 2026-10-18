@@ -240,3 +240,39 @@ test('el detalle trae el texto, las unidades elegidas y quién lo hizo', functio
         ->assertJsonPath('datos.total_destinatarios', 1)
         ->assertJsonPath('datos.creado_por.id', $this->autor->id);
 });
+
+test('el campo se llama asunto en un comunicado y título en una noticia', function () {
+    $this->actingAs($this->autor, 'sanctum')
+        ->postJson('/api/v1/comunicados', ['tipo' => 'comunicado', 'audiencia' => 'todos'])
+        ->assertStatus(422)
+        ->assertJsonPath('errores.titulo.0', 'El campo asunto es obligatorio.');
+
+    $this->actingAs($this->autor, 'sanctum')
+        ->postJson('/api/v1/comunicados', ['tipo' => 'noticia', 'audiencia' => 'todos'])
+        ->assertStatus(422)
+        ->assertJsonPath('errores.titulo.0', 'El campo título es obligatorio.');
+});
+
+test('la tarjeta usa el resumen, y sin él el comienzo del texto', function () {
+    $conResumen = borradorDeComunicado($this->autor, ['resumen' => 'Lo esencial, en una frase.']);
+
+    $saludo = '<p>A las servidoras, servidores, trabajadoras y trabajadores de la Prefectura:</p>'
+        .'<p>Con base en el calendario de feriados nacionales de 2026, la Dirección de Talento Humano comunica '
+        .'que el lunes 2 y el martes 3 de noviembre son de <strong>descanso obligatorio</strong> para todo el personal.</p>';
+    $sinResumen = borradorDeComunicado($this->autor, ['resumen' => null, 'cuerpo' => $saludo]);
+
+    expect($conResumen->textoDeTarjeta())->toBe('Lo esencial, en una frase.');
+
+    $extracto = $sinResumen->textoDeTarjeta();
+    expect($extracto)
+        ->toStartWith('A las servidoras, servidores, trabajadoras y trabajadores de la Prefectura: Con base en')
+        ->toEndWith('…')
+        ->not->toContain('<')
+        ->and(mb_strlen($extracto))->toBeLessThanOrEqual(201);
+
+    // El listado no trae el texto, pero sí lo de la tarjeta.
+    $fila = collect($this->actingAs($this->autor, 'sanctum')->getJson('/api/v1/comunicados')->assertOk()->json('datos'))
+        ->firstWhere('id', $sinResumen->id);
+    expect($fila)->not->toHaveKey('cuerpo')
+        ->and($fila['extracto'])->toBe($extracto);
+});

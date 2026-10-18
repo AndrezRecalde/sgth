@@ -13,63 +13,21 @@ use Illuminate\Support\Str;
 use Throwable;
 
 /**
- * La portada y los PDF de una publicación (docs/diseno-noticias-comunicados.md,
- * regla 6).
+ * Los PDF de una publicación (docs/diseno-noticias-comunicados.md, regla 6).
  *
  * Van al disco privado y se sirven por controlador, que decide quién los ve:
  * nunca por una URL pública, que es lo que dejó a LOTAIP publicando sin sesión
  * (docs/scheduler.md). Solo se cambian en un borrador: lo publicado está
  * congelado, y un PDF que alguien ya confirmó haber leído no se reemplaza.
+ *
+ * No hay portada: Talento Humano no publica imágenes (decisión del
+ * 2026-10-18), y el Portal se diseña con tarjetas de solo texto.
  */
 final class ArchivosComunicadoService implements ArchivosComunicadoServiceInterface
 {
     public const DISCO = 'local';
 
     public const MAXIMO_ADJUNTOS = 5;
-
-    public function subirPortada(Comunicado $comunicado, UploadedFile $archivo): Comunicado
-    {
-        $disco = Storage::disk(self::DISCO);
-        $ruta = $this->carpeta($comunicado->id).'/portada-'.Str::uuid().'.'.$this->extensionDeImagen($archivo);
-        $disco->put($ruta, (string) file_get_contents($archivo->getRealPath()));
-
-        try {
-            $anterior = DB::transaction(function () use ($comunicado, $ruta) {
-                $bloqueado = $this->bloquearBorrador($comunicado);
-                $anterior = $bloqueado->portada_path;
-                $bloqueado->update(['portada_path' => $ruta]);
-
-                return $anterior;
-            });
-        } catch (Throwable $e) {
-            $disco->delete($ruta);
-
-            throw $e;
-        }
-
-        if ($anterior) {
-            $disco->delete($anterior);
-        }
-
-        return $comunicado->refresh();
-    }
-
-    public function quitarPortada(Comunicado $comunicado): Comunicado
-    {
-        $anterior = DB::transaction(function () use ($comunicado) {
-            $bloqueado = $this->bloquearBorrador($comunicado);
-            $anterior = $bloqueado->portada_path;
-            $bloqueado->update(['portada_path' => null]);
-
-            return $anterior;
-        });
-
-        if ($anterior) {
-            Storage::disk(self::DISCO)->delete($anterior);
-        }
-
-        return $comunicado->refresh();
-    }
 
     public function agregarAdjunto(Comunicado $comunicado, UploadedFile $archivo): ComunicadoAdjunto
     {
@@ -112,26 +70,16 @@ final class ArchivosComunicadoService implements ArchivosComunicadoServiceInterf
         Storage::disk(self::DISCO)->delete($adjunto->path);
     }
 
-    public function rutaPortada(Comunicado $comunicado): ?string
-    {
-        return $comunicado->portada_path ? $this->rutaSiExiste($comunicado->portada_path) : null;
-    }
-
     public function rutaAdjunto(ComunicadoAdjunto $adjunto): ?string
     {
-        return $this->rutaSiExiste($adjunto->path);
+        $disco = Storage::disk(self::DISCO);
+
+        return $disco->exists($adjunto->path) ? $disco->path($adjunto->path) : null;
     }
 
     public function copiar(Comunicado $origen, Comunicado $destino): void
     {
         $disco = Storage::disk(self::DISCO);
-
-        if ($origen->portada_path && $disco->exists($origen->portada_path)) {
-            $extension = pathinfo($origen->portada_path, PATHINFO_EXTENSION);
-            $ruta = $this->carpeta($destino->id).'/portada-'.Str::uuid().'.'.$extension;
-            $disco->copy($origen->portada_path, $ruta);
-            $destino->update(['portada_path' => $ruta]);
-        }
 
         foreach ($origen->adjuntos as $adjunto) {
             if (! $disco->exists($adjunto->path)) {
@@ -166,21 +114,11 @@ final class ArchivosComunicadoService implements ArchivosComunicadoServiceInterf
 
         if (! $bloqueado->esBorrador()) {
             throw new ReglaNegocioException(
-                'Los archivos solo se cambian en un borrador. Para corregir lo publicado, retírelo y duplíquelo.'
+                'Los documentos solo se cambian en un borrador. Para corregir lo publicado, retírelo y duplíquelo.'
             );
         }
 
         return $bloqueado;
-    }
-
-    /** La extensión según el contenido, no según el nombre que trae el archivo. */
-    private function extensionDeImagen(UploadedFile $archivo): string
-    {
-        return match ($archivo->getMimeType()) {
-            'image/png'  => 'png',
-            'image/webp' => 'webp',
-            default      => 'jpg',
-        };
     }
 
     /** El nombre con que se descarga: sin carpetas ni caracteres de control, y en .pdf. */
@@ -190,12 +128,5 @@ final class ArchivosComunicadoService implements ArchivosComunicadoServiceInterf
         $nombre = trim(Str::limit(pathinfo($nombre, PATHINFO_FILENAME), 180, ''));
 
         return ($nombre === '' ? 'documento' : $nombre).'.pdf';
-    }
-
-    private function rutaSiExiste(string $ruta): ?string
-    {
-        $disco = Storage::disk(self::DISCO);
-
-        return $disco->exists($ruta) ? $disco->path($ruta) : null;
     }
 }

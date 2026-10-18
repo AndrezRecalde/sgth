@@ -85,6 +85,11 @@ export const ROUTES = {
     CONVOCATORIA_EDITAR: (id: string | number) =>
       `/sgth/reclutamiento/convocatorias/${id}/editar`,
     // Sin CONVOCATORIA_POSTULANTE (2026-10-05): el perfil es un panel lateral.
+    // Noticias y comunicados de Talento Humano (docs/diseno-noticias-comunicados.md, 6).
+    COMUNICADOS:       '/sgth/comunicados',
+    COMUNICADO_NUEVO:  '/sgth/comunicados/nuevo',
+    COMUNICADO: (id: string | number) => `/sgth/comunicados/${id}`,
+    COMUNICADO_EDITAR: (id: string | number) => `/sgth/comunicados/${id}/editar`,
     RECLUTAMIENTO_EXPRESS: '/sgth/reclutamiento/express',
     PLANTILLAS:       '/sgth/reclutamiento/plantillas',
     PLANTILLA: (id: string | number) => `/sgth/reclutamiento/plantillas/${id}`,

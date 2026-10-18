@@ -1055,7 +1055,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::get('/', [MisPrestamosController::class, 'index']);
             Route::post('/', [MisPrestamosController::class, 'store']);
             Route::get('disponibilidad', [MisPrestamosController::class, 'disponibilidad']);
-            Route::get('reglas', [ReglasPrestamoController::class, 'show']);
+            // Con nombre: las dos rutas de las reglas comparten método, y sin él
+            // el generador de tipos les daba el mismo identificador a ambas.
+            Route::get('reglas', [ReglasPrestamoController::class, 'show'])->name('autoservicio.prestamos.reglas');
             Route::get('{prestamo}', [MisPrestamosController::class, 'show'])->whereNumber('prestamo');
             Route::post('{prestamo}/cancelar', [MisPrestamosController::class, 'cancelar'])->whereNumber('prestamo');
         });
@@ -1379,7 +1381,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 Route::get('reporte-uso', [ReporteUsoPrestamoController::class, 'index'])->middleware($verPrestamos);
                 Route::get('reporte-uso/excel', [ReporteUsoPrestamoController::class, 'excel'])->middleware($verPrestamos);
                 Route::get('{id}/acta', [PrestamoEquipoController::class, 'acta'])->whereNumber('id')->middleware($verPrestamos);
-                Route::get('reglas', [ReglasPrestamoController::class, 'show'])->middleware($verPrestamos);
+                Route::get('reglas', [ReglasPrestamoController::class, 'show'])->middleware($verPrestamos)->name('inventario.prestamos.reglas');
                 Route::put('reglas', [ReglasPrestamoController::class, 'update'])->middleware($gestionarPrestamos);
                 Route::post('directo', [PrestamoEquipoController::class, 'directo'])->middleware($gestionarPrestamos);
                 Route::get('{id}', [PrestamoEquipoController::class, 'show'])->whereNumber('id')->middleware($verPrestamos);
@@ -2291,7 +2293,6 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::middleware('permission:redactar-comunicados|publicar-comunicados|ver-lecturas-comunicados')->group(function () {
             Route::get('/', [ComunicadoController::class, 'index'])->name('comunicados.index');
             Route::get('{comunicado}', [ComunicadoController::class, 'show'])->whereNumber('comunicado');
-            Route::get('{comunicado}/portada', [ArchivosComunicadoController::class, 'portada'])->whereNumber('comunicado');
             Route::get('{comunicado}/adjuntos/{adjunto}', [ArchivosComunicadoController::class, 'adjunto'])
                 ->whereNumber(['comunicado', 'adjunto'])
                 ->scopeBindings();
@@ -2303,8 +2304,6 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::put('{comunicado}', [ComunicadoController::class, 'update'])->whereNumber('comunicado');
             Route::delete('{comunicado}', [ComunicadoController::class, 'destroy'])->whereNumber('comunicado');
             Route::post('{comunicado}/duplicar', [ComunicadoController::class, 'duplicar'])->whereNumber('comunicado');
-            Route::post('{comunicado}/portada', [ArchivosComunicadoController::class, 'subirPortada'])->whereNumber('comunicado');
-            Route::delete('{comunicado}/portada', [ArchivosComunicadoController::class, 'quitarPortada'])->whereNumber('comunicado');
             Route::post('{comunicado}/adjuntos', [ArchivosComunicadoController::class, 'agregarAdjunto'])->whereNumber('comunicado');
             Route::delete('{comunicado}/adjuntos/{adjunto}', [ArchivosComunicadoController::class, 'quitarAdjunto'])
                 ->whereNumber(['comunicado', 'adjunto'])

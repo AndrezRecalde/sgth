@@ -17,8 +17,8 @@ Marcas que usa el documento:
 1. **Lo que se pide.** Un módulo para que Talento Humano redacte, publique y retire **noticias y comunicados**, y para que cada servidor los lea en el **Portal del servidor**.
 2. **No es un subsistema nuevo.** Quien publica es Talento Humano, así que la gestión entra al SGTH (menú *Talento Humano › Noticias y comunicados*), y la lectura al Portal. El subsistema «Comunicación» es de Comunicación Social y no se toca [D2].
 3. **El hueco ya está reservado.** El inicio del Portal tiene una tarjeta «Noticias y comunicados» vacía que dice «Funcionalidad próximamente disponible», y la campana de la barra superior está apagada. Las dos se encienden con este módulo.
-4. **Dos tipos que se comportan distinto** [D3]: la **noticia** informa (con imagen de portada); el **comunicado** es oficial de TH, puede llevar el número de su circular o memorando, un PDF adjunto y pedir **confirmación de lectura**.
-5. **Cada publicación tiene destinatarios** [D4]: todos, unas unidades (con sus dependencias) o un régimen laboral. El Portal solo enseña al servidor lo que le corresponde.
+4. **Dos tipos que se comportan distinto** [D3]: la **noticia** informa; el **comunicado** es oficial de TH, puede llevar el número de su circular o memorando, un PDF adjunto y pedir **confirmación de lectura**.
+5. **Cada publicación tiene destinatarios** [D4]: todos, unas direcciones (con sus dependencias) o un régimen laboral. El Portal solo enseña al servidor lo que le corresponde.
 6. **Lo publicado no se enmienda** [D5]: se retira con motivo y, si hace falta, se duplica como borrador corregido. Es la misma regla de las acciones de personal, y aquí importa por el acuse: no se puede cambiar el texto que alguien ya confirmó haber leído.
 7. **El único canal es el Portal** [D8]: no se manda correo. El aviso llega por el inicio del Portal y la campana.
 8. **Plan:** 4 PRs (sección 9): backend de gestión, pantallas de TH, Portal (lectura y acuse), seguimiento.
@@ -34,8 +34,7 @@ Marcas que usa el documento:
 | Aviso de documentos por acusar | `DocumentosPorAcusarAviso.tsx` (fase 6.3a) | Mismo patrón para «comunicados por confirmar» |
 | Editor enriquecido (TipTap) | `features/dispensario/components/RichTextInput.tsx` | Se mueve al catálogo de `components/ui` y lo usan los dos |
 | Limpieza de HTML al guardar | `app/Support/HtmlClinico.php` (Symfony HtmlSanitizer, lista blanca) | Mismo enfoque: el cuerpo se limpia al entrar, no al pintar |
-| Archivos en disco privado servidos por controlador | Fotografías de Comunicación Social | Portada y adjuntos nunca por URL pública (la lección de LOTAIP en `docs/scheduler.md`) |
-| Dropzone y recorte de imagen | `@mantine/dropzone`, `react-easy-crop` (fotografías) | La portada se recorta a 16:9 |
+| Archivos en disco privado servidos por controlador | Fotografías de Comunicación Social | Los adjuntos nunca por URL pública (la lección de LOTAIP en `docs/scheduler.md`) |
 | Unidad y régimen del servidor | `servidores.unidad_administrativa_id`, `servidores.regimen_laboral`; `unidades_administrativas.unidad_padre_id` | Resolver los destinatarios sin pasar por el vínculo |
 | Permisos adicionales por usuario | *Usuarios › Permisos adicionales* (`PermisosDrawer.tsx`, `UsuarioService::sincronizarPermisos`) | Dar `publicar-comunicados` a un asistente concreto [D1] |
 
@@ -47,10 +46,12 @@ No existe tabla, modelo ni ruta de noticias en el backend.
 
 ### 3.1 Tipos [Propuesta, D3]
 
-| Tipo | Para qué | Portada | Referencia (n.º de documento) | Adjuntos PDF | Confirmación de lectura |
+| Tipo | Para qué | Cómo se llama el encabezado | Referencia (n.º de documento) | Adjuntos PDF | Confirmación de lectura |
 |---|---|---|---|---|---|
-| **Noticia** | Eventos, logros, campañas de bienestar, capacitaciones | Sí, recomendada | No | Sí | No |
-| **Comunicado** | Circulares, disposiciones, recordatorios de plazos, cambios de horario | Opcional | Sí, opcional (p. ej. «Circular GADPE-DATH-2026-045») | Sí (el documento firmado escaneado) | Opcional, por comunicado |
+| **Noticia** | Eventos, logros, campañas de bienestar, capacitaciones | Título | No | Sí | No |
+| **Comunicado** | Circulares, disposiciones, recordatorios de plazos, cambios de horario | Asunto, como en la circular impresa | Sí, opcional (p. ej. «Circular GADPE-DATH-2026-045») | Sí (el documento firmado escaneado) | Opcional, por comunicado |
+
+En la base es la misma columna (`titulo`); solo cambia cómo se llama en pantalla y en los mensajes de validación (decisión del 18-10-2026). No hay imágenes: ni portada ni dentro del texto [D10].
 
 ### 3.2 Estados [Propuesta]
 
@@ -69,9 +70,9 @@ Se guarda solo lo que decide una persona; lo que depende de la fecha se **deduce
 ### 3.3 Destinatarios [Propuesta, D4]
 
 - **Todos** los usuarios con acceso al Portal.
-- **Por unidad**: una o varias unidades administrativas; cada una con la casilla «incluir sus dependencias».
+- **Por dirección** (18-10-2026): una o varias unidades de **nivel 2** del orgánico, cada una siempre con sus dependencias. El nivel 1 es la institución entera, que ya es «a todos», y ofrecer las 59 unidades hacía la lista larga sin necesidad. Se pierde enviar a una sola jefatura de nivel 3; si un día hace falta, se agrega. Conviene revisar en producción que nadie esté asignado directamente a la unidad de nivel 1: no se alcanzaría por dirección, solo con «todos».
 - **Por régimen**: LOSEP, Código del Trabajo, Servicios Profesionales.
-- Unidad y régimen se pueden combinar (se cumplen los dos).
+- Dirección y régimen se pueden combinar (se cumplen los dos).
 
 Los destinatarios se calculan **al leer**, no se congelan al publicar: quien ingresa la semana siguiente ve los comunicados vigentes de su unidad. Las dependencias sí se expanden al publicar (se guardan las unidades concretas), para que un cambio del orgánico no cambie en silencio a quién iba dirigido.
 
@@ -91,12 +92,12 @@ Hasta **3 publicaciones fijadas** a la vez; salen primero en el inicio y en el l
 
 ## 4. Reglas [Propuesta]
 
-1. **Solo el borrador se edita libremente.** En lo publicado se puede cambiar la fecha de fin y el fijado; el título, el cuerpo, la portada, los adjuntos y los destinatarios quedan congelados [D5].
+1. **Solo el borrador se edita libremente.** En lo publicado se puede cambiar la fecha de fin y el fijado; el asunto o título, el cuerpo, los adjuntos y los destinatarios quedan congelados [D5].
 2. **Corregir es retirar y duplicar.** «Duplicar» crea un borrador con todo copiado (adjuntos incluidos) y la referencia al original.
 3. **El borrador se puede eliminar; lo publicado nunca se borra.** Se retira con motivo, sale del Portal y queda en el historial de TH con sus lecturas.
-4. **Para publicar** se exigen título (máx. 150), resumen (máx. 300), cuerpo y, si hay fecha de fin, que sea posterior a la de inicio. La fecha de inicio puede ser futura (queda programado), pero no anterior a hoy.
-5. **El cuerpo se limpia al guardar** con una lista blanca: párrafos, negrita, cursiva, subrayado, títulos, listas, citas, enlaces (`http`, `https`, `mailto`) y resaltado. Sin imágenes dentro del texto: la imagen va como portada.
-6. **Archivos:** portada JPG, PNG o WebP de hasta 5 MB, recortada a 16:9; hasta 5 adjuntos PDF de hasta 10 MB cada uno. Se guardan en el disco privado y se sirven por controlador, que comprueba que quien pide es destinatario o de TH.
+4. **Para publicar** se exigen el asunto o título (máx. 150) y el cuerpo y, si hay fecha de fin, que sea posterior a la de inicio. El **resumen** (máx. 300) es opcional desde el 18-10-2026: sin él, la tarjeta del Portal y la campana muestran el comienzo del texto (unos 200 caracteres, cortado en una palabra, con «Leer más»). Existe para cuando el texto empieza con el saludo de la circular, que no dice nada de lo que se comunica. La fecha de inicio puede ser futura (queda programado), pero no anterior a hoy.
+5. **El cuerpo se limpia al guardar** con una lista blanca: párrafos, negrita, cursiva, subrayado, títulos, listas, citas, enlaces (`http`, `https`, `mailto`) y resaltado. Sin imágenes.
+6. **Archivos:** hasta 5 adjuntos PDF de hasta 10 MB cada uno; sin portada [D10]. Se guardan en el disco privado y se sirven por controlador, que comprueba que quien pide es destinatario o de TH.
 7. **El aviso de publicación muestra cuántos lo verán** («Lo verán 312 servidores») antes de confirmar.
 8. **Auditoría:** quién creó, quién publicó y cuándo, quién retiró, cuándo y por qué.
 
@@ -109,7 +110,7 @@ Hasta **3 publicaciones fijadas** a la vez; salen primero en el inicio y en el l
 La tarjeta «Noticias y comunicados» (misma posición, junto a la ficha) pasa a mostrar:
 
 - Hasta 5 publicaciones: fijadas primero, luego las más recientes.
-- Por cada una: insignia del tipo, título, fecha («hace 2 días»), resumen en dos líneas y un punto si no la ha leído.
+- Por cada una: insignia del tipo, asunto o título, fecha («hace 2 días»), el resumen o el comienzo del texto en dos líneas (`extracto` del API) y un punto si no la ha leído.
 - Al pie, «Ver todas» con el número sin leer.
 - Sin publicaciones: el estado vacío del catálogo («Talento Humano no ha publicado novedades»), sin el «próximamente».
 
@@ -118,14 +119,14 @@ Encima de la tarjeta, como el aviso de documentos laborales: **«Tiene 2 comunic
 ### 5.2 Listado — `/portal/comunicados`
 
 - Entrada nueva en el menú del Portal, grupo *Mi Espacio*: **Noticias y comunicados**.
-- Tarjetas con portada (o el icono del tipo si no tiene), tipo, título, fecha y resumen.
+- Tarjetas de solo texto: tipo, asunto o título, fecha, el `extracto` y «Leer más».
 - Filtros: Todas · Noticias · Comunicados · Sin leer · Por confirmar; búsqueda por título.
 - Pestaña **Archivo** con los vencidos [D6]. Paginado.
 
 ### 5.3 Detalle — `/portal/comunicados/{id}`
 
 - Cabecera: tipo, referencia del documento si la tiene, «Talento Humano», fecha de publicación.
-- Portada, cuerpo y adjuntos para descargar.
+- Cuerpo y adjuntos para descargar.
 - Si pide confirmación: botón **«Confirmo que he leído este comunicado»** con confirmación; después, «Confirmó la lectura el 17/10/2026 a las 10:42».
 - Abrirlo lo marca como leído.
 
@@ -149,9 +150,9 @@ Tabla (`SgthTable`) con: título, tipo, estado (con su color), destinatarios en 
 
 Página completa en cuatro bloques:
 
-1. **Datos:** tipo, título, resumen, referencia del documento (solo comunicado).
-2. **Contenido:** editor enriquecido; portada con recorte 16:9; adjuntos PDF.
-3. **Destinatarios:** Todos / Por unidad / Por régimen; selector de unidades con «incluir dependencias»; el conteo de destinatarios se actualiza al cambiar.
+1. **Datos**, cada campo en su propia línea: tipo, referencia del documento (solo comunicado), asunto o título según el tipo, y resumen opcional.
+2. **Contenido:** editor enriquecido; adjuntos PDF (en la edición, porque necesitan que el borrador exista).
+3. **Destinatarios:** Todos / Por dirección / Por régimen; el conteo de destinatarios se actualiza al cambiar.
 4. **Publicación:** fecha de inicio (hoy por defecto), fecha de fin opcional, fijar, pedir confirmación de lectura (solo comunicado).
 
 Botones: *Guardar borrador*, *Vista previa*, *Publicar*. *Publicar* solo aparece a quien tiene `publicar-comunicados`; quien no lo tiene deja el borrador listo y lo publica otra persona [D1]. La vista previa usa **el mismo componente** que el detalle del Portal, para que lo que TH revisa sea exactamente lo que ve el servidor.
@@ -184,7 +185,7 @@ El espacio de nombres es `Comunicados`, distinto de `Comunicacion` (el subsistem
 
 - **Modelos** (`app/Models/Comunicados`): `Comunicado`, `ComunicadoAdjunto`, `ComunicadoLectura`.
 - **Enums**: `TipoComunicado` (noticia, comunicado), `EstadoComunicado` (borrador, publicado, retirado: lo guardado), `VigenciaComunicado` (lo que se enseña: suma programado y vencido, deducidos de las fechas) y `AudienciaComunicado` (todos, segmentada).
-- **Servicios** (`app/Services/Comunicados`, cada uno con su interfaz en `app/Contracts/Comunicados`): `ComunicadoService` (el ciclo: borrador, publicar, retirar, duplicar, fijado y fecha de fin, listado), `DestinatariosComunicadoService` (a quién llega y cuántos son) y `ArchivosComunicadoService` (portada y adjuntos).
+- **Servicios** (`app/Services/Comunicados`, cada uno con su interfaz en `app/Contracts/Comunicados`): `ComunicadoService` (el ciclo: borrador, publicar, retirar, duplicar, fijado y fecha de fin, listado), `DestinatariosComunicadoService` (a quién llega y cuántos son) y `ArchivosComunicadoService` (los PDF adjuntos).
 - **Sin policy** [Hecho, PR 1]: cada ruta pide su permiso (`permission:` como el resto del API) y las reglas de estado viven en `ComunicadoService`. Así valen también para `admin-ti`, a quien el `Gate::before` le aprobaría cualquier habilidad de una policy: tampoco él edita lo publicado.
 - **HTML**: `app/Support/HtmlEnriquecido.php` con la lista blanca de la regla 5; `HtmlClinico` se queda como está. De lo que no se permite se quita la etiqueta y se deja el texto cuando es un contenedor (`div`, `span`, un `h1` pegado); `script`, `style`, `img`, `iframe` y similares se van con su contenido.
 
@@ -197,7 +198,6 @@ Rutas de TH (`/v1/comunicados`):
 | GET | `/comunicados/{id}` | Detalle e historial |
 | PUT | `/comunicados/{id}` | Edita el borrador |
 | DELETE | `/comunicados/{id}` | Elimina el borrador |
-| GET / POST / DELETE | `/comunicados/{id}/portada` | La ve, la sube o cambia, la quita |
 | GET | `/comunicados/{id}/adjuntos/{adjunto}` | Descarga un PDF (vista previa y seguimiento) |
 | POST / DELETE | `/comunicados/{id}/adjuntos[/{adjunto}]` | Agrega o quita un PDF |
 | POST | `/comunicados/destinatarios/conteo` | Cuántos lo verían |
@@ -216,7 +216,6 @@ Rutas del Portal (`/v1/autoservicio/comunicados`, con `acceso-autoservicio`):
 | GET | `/comunicados/resumen` | Los 5 del inicio, sin leer y por confirmar (inicio y campana) |
 | GET | `/comunicados/{id}` | Detalle; registra la lectura |
 | POST | `/comunicados/{id}/confirmacion` | Confirma la lectura |
-| GET | `/comunicados/{id}/portada` | La imagen |
 | GET | `/comunicados/{id}/adjuntos/{adjunto}` | El PDF |
 
 Un comunicado no visible para el usuario responde 404, no 403: no se revela que existe.
@@ -230,10 +229,9 @@ Un comunicado no visible para el usuario responde 404, no 403: no se revela que 
 | `id` | bigint | |
 | `tipo` | varchar | `TipoComunicado` |
 | `titulo` | varchar(150) | |
-| `resumen` | varchar(300) null | Se exige al publicar |
+| `resumen` | varchar(300) null | Opcional; el recurso devuelve también `extracto` |
 | `cuerpo` | text null | HTML ya limpio; se exige al publicar |
 | `referencia` | varchar(100) null | N.º de circular o memorando |
-| `portada_path` | varchar null | Disco privado |
 | `estado` | varchar | `EstadoComunicado` |
 | `audiencia` | varchar | `todos` o `segmentada` |
 | `regimenes` | jsonb null | Vacío = cualquier régimen |
@@ -271,12 +269,12 @@ Leer en el Portal usa el `acceso-autoservicio` que ya existe.
 
 ### 7.4 Frontend
 
-- **TH** (`src/features/comunicados`): `ComunicadosListView`, `ComunicadoFormView`, `ComunicadoSeguimientoView`, `ComunicadoVistaPreviaDrawer`, con sus `hooks`, `services` y `schemas` (zod).
+- **TH** [Hecho, PR 2]: las pantallas en `src/app/(sgth)/sgth/comunicados` (`ComunicadosView`, `NuevoComunicadoView`, `EditarComunicadoView`, `DetalleComunicadoView`) y el módulo en `src/features/comunicados`, con sus `hooks`, `services`, `schemas` (zod) y `utils`. **La vista previa es el detalle**, no un cajón aparte: se guarda el borrador, el detalle muestra cómo lo verá el servidor y desde ahí se publica. Los documentos se agregan en la pantalla de edición, porque necesitan que el borrador exista. El seguimiento con su Excel queda para el PR 4.
 - **Portal** (`src/features/portal`): `NoticiasCard` rehecha, `MisComunicadosView`, `ComunicadoDetalleView`, `ComunicadosPorConfirmarAviso`.
-- **Compartido**: `ComunicadoContenido` pinta título, portada, cuerpo y adjuntos; lo usan la vista previa de TH y el detalle del Portal.
-- **Catálogo**: `RichTextInput` sale de `features/dispensario` a `src/components/ui`, con su regla de lint si aplica.
+- **Compartido**: `ComunicadoContenido` pinta el asunto o título, el cuerpo y los adjuntos; lo usan la vista previa de TH y el detalle del Portal.
+- **Catálogo** [Hecho, PR 2]: `RichTextInput` sale de `features/dispensario` a `src/components/ui`, con la prop `completo` (títulos, citas y enlaces). El recorte de imagen pasó a `src/lib/` y volvió a Comunicación Social al quitarse la portada: es su único usuario.
 - **Rutas**: `ROUTES.SGTH.COMUNICADOS` y `ROUTES.PORTAL.COMUNICADOS`; entradas en `NAV_SGTH` y `NAV_PORTAL`.
-- **Tipos**: `npm run types:sync`. En el PR 1 no se regeneraron: los tipos llevaban sin regenerarse desde el PR #430 y el diff arrastraba unas 88 000 líneas de otros módulos. Se regeneran en el PR 2, que es donde se usan y donde el compilador los comprueba.
+- **Tipos**: `npm run types:sync`. En el PR 1 no se regeneraron: llevaban sin regenerarse desde el PR #430 y el diff arrastraba unas 88 000 líneas de otros módulos. Se regeneraron en el PR 2, con `tsc` limpio. Para eso se nombraron las dos rutas GET de las reglas de préstamo de TIC, que compartían método y el generador les daba el mismo identificador. El tipo del comunicado va escrito a mano en `features/comunicados/services/tipos.ts`, como en los módulos de TIC y de Comunicación: Scramble deja `unidades` como `string` y `regimenes` como `unknown[]`.
 
 ---
 
@@ -299,8 +297,8 @@ Consecuencias:
 
 | PR | Contenido | Pruebas |
 |---|---|---|
-| **1. Backend de gestión** [Hecho] | Migraciones, modelos, enums, permisos (enum, seeder, migración, módulo «Noticias y comunicados» en Permisos adicionales), `HtmlEnriquecido`, servicios, rutas de TH, portada y adjuntos | Pest: permisos por rol, asistente con y sin el permiso adicional, reglas 1–8, limpieza de HTML, archivos fuera del disco público |
-| **2. Pantallas de TH** | Menú, listado, formulario, vista previa, publicar, retirar, duplicar, fijar; regenerar los tipos | Lint, tipos, revisión en el navegador |
+| **1. Backend de gestión** [Hecho] | Migraciones, modelos, enums, permisos (enum, seeder, migración, módulo «Noticias y comunicados» en Permisos adicionales), `HtmlEnriquecido`, servicios, rutas de TH y adjuntos (la portada se quitó en el PR 2) | Pest: permisos por rol, asistente con y sin el permiso adicional, reglas 1–8, limpieza de HTML, archivos fuera del disco público |
+| **2. Pantallas de TH** [Hecho] | Menú, listado, formulario, documentos, detalle con vista previa, publicar, retirar, duplicar, fijar, fecha de fin; regenerar los tipos | Lint, tipos, revisión en el navegador |
 | **3. Portal** | Rutas de autoservicio, tarjeta del inicio, listado, detalle, lectura, confirmación, aviso de pendientes, campana | Pest: visibilidad por unidad, dependencias, régimen, cuenta sin servidor, 404 al que no es destinatario; navegador |
 | **4. Seguimiento** | Pantalla de seguimiento con las cifras de lectura, tabla de destinatarios y Excel de pendientes de confirmación | Pest: cifras por unidad, Excel solo con `ver-lecturas-comunicados` |
 
@@ -321,4 +319,5 @@ Producción: `php artisan migrate` (crea tablas y permisos). Sin datos que conci
 | D7 | ~~¿Se enciende la campana con los comunicados sin leer?~~ | 5.4 | **Aceptada (17-10-2026):** sí |
 | D8 | ~~¿Aviso por correo?~~ | 8 | **Resuelta (17-10-2026):** no. El Portal es el único canal: inicio, aviso de pendientes y campana |
 | D9 | ~~¿TH necesita el Excel de quién no confirmó?~~ | 6.4 | **Aceptada (17-10-2026):** sí |
-| D10 | ~~¿La portada es obligatoria en las noticias?~~ | 4 | **Aceptada (17-10-2026):** no; sin portada se muestra el icono del tipo |
+| D10 | ~~¿La portada es obligatoria en las noticias?~~ | 4 | **Resuelta (18-10-2026):** no hay portada. TH no publica imágenes; las tarjetas del Portal son de solo texto. La primera entrega la tenía y se quitó en el PR 2, con la migración `2026_11_10_000200`, antes de llegar a producción |
+| D11 | ~~Observaciones de TH al formulario~~ | 3.1, 3.3, 4, 6.3 | **Resuelta (18-10-2026):** «Asunto» en el comunicado y «Título» en la noticia; resumen opcional con extracto automático; destinatarios solo por dirección (nivel 2), siempre con sus dependencias; cada campo de «Datos» en su línea |
