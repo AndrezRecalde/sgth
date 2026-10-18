@@ -215,6 +215,19 @@ class AppServiceProvider extends ServiceProvider
             \App\Contracts\Comunicacion\CredencialServiceInterface::class,
             \App\Services\Comunicacion\CredencialService::class
         );
+        // Noticias y comunicados de Talento Humano (docs/diseno-noticias-comunicados.md, 7.1).
+        $this->app->bind(
+            \App\Contracts\Comunicados\ComunicadoServiceInterface::class,
+            \App\Services\Comunicados\ComunicadoService::class
+        );
+        $this->app->bind(
+            \App\Contracts\Comunicados\DestinatariosComunicadoServiceInterface::class,
+            \App\Services\Comunicados\DestinatariosComunicadoService::class
+        );
+        $this->app->bind(
+            \App\Contracts\Comunicados\ArchivosComunicadoServiceInterface::class,
+            \App\Services\Comunicados\ArchivosComunicadoService::class
+        );
         $this->app->bind(
             HelpdeskServiceInterface::class,
             HelpdeskService::class

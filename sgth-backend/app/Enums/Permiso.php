@@ -188,6 +188,15 @@ enum Permiso: string
     // Los logos salen en todos los documentos: solo la persona designada (D2).
     case GESTIONAR_IDENTIDAD_INSTITUCIONAL = 'gestionar-identidad-institucional';
 
+    // ── Noticias y comunicados de Talento Humano ────────────────
+    // docs/diseno-noticias-comunicados.md, 7.3. Leerlos en el Portal va con
+    // `acceso-autoservicio`.
+    case REDACTAR_COMUNICADOS = 'redactar-comunicados';
+    // Por rol solo admin-uath. A un asistente se le da como permiso adicional
+    // desde Usuarios, a la persona concreta (D1).
+    case PUBLICAR_COMUNICADOS = 'publicar-comunicados';
+    case VER_LECTURAS_COMUNICADOS = 'ver-lecturas-comunicados';
+
     // ── ADMIN SISTEMA ────────────────────────────────────────────
     case GESTIONAR_USUARIOS = 'gestionar-usuarios';
     case ACTIVAR_USUARIO = 'activar-usuario';

@@ -49,6 +49,17 @@ class RolPermisoSeeder extends Seeder
         Permiso::GESTIONAR_IDENTIDAD_INSTITUCIONAL,
     ];
 
+    /**
+     * Las noticias y comunicados de Talento Humano
+     * (docs/diseno-noticias-comunicados.md, 7.3). Publicar no va en el rol del
+     * asistente: se le da a la persona como permiso adicional (D1).
+     */
+    public const PERMISOS_COMUNICADOS = [
+        Permiso::REDACTAR_COMUNICADOS,
+        Permiso::PUBLICAR_COMUNICADOS,
+        Permiso::VER_LECTURAS_COMUNICADOS,
+    ];
+
     public function run(): void
     {
         // 1. Crear todos los permisos del Enum
@@ -97,6 +108,7 @@ class RolPermisoSeeder extends Seeder
             // Todo lo de Comunicación, por la misma razón (D2).
             ...self::PERMISOS_COMUNICACION_SOCIAL,
             ...self::PERMISOS_RESPONSABLE_IDENTIDAD,
+            ...self::PERMISOS_COMUNICADOS,
             // Carga inicial de servidores. Se deja en TI y no en UATH porque
             // es una vía excepcional que se revoca al terminar la migración:
             // durante ese lapso se le concede también a quien la ejecute.
@@ -173,6 +185,8 @@ class RolPermisoSeeder extends Seeder
             Permiso::VALIDAR_TRABAJO_SOCIAL,
             // Consulta las credenciales; las imprime Comunicación Social.
             Permiso::VER_CREDENCIALES,
+            // Redacta, publica y sigue las noticias y comunicados.
+            ...self::PERMISOS_COMUNICADOS,
         ]));
 
         // ASISTENTE_UATH
@@ -212,6 +226,10 @@ class RolPermisoSeeder extends Seeder
             // Confirma y rechaza el documento físico, como hacía por su rol en
             // la ruta de confirmar.
             Permiso::CONFIRMAR_RECEPCION,
+            // Redacta y sigue las noticias y comunicados. Publicar no: se le
+            // da a la persona como permiso adicional desde Usuarios (D1).
+            Permiso::REDACTAR_COMUNICADOS,
+            Permiso::VER_LECTURAS_COMUNICADOS,
         ]));
 
         // ANALISTA_UATH
@@ -363,6 +381,8 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_INVENTARIO_TI,
             // Las credenciales, solo para consultarlas.
             Permiso::VER_CREDENCIALES,
+            // Quién leyó y confirmó cada comunicado, solo para consultarlo.
+            Permiso::VER_LECTURAS_COMUNICADOS,
         ]));
     }
 
