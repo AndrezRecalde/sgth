@@ -366,27 +366,20 @@ final class ComunicadoService implements ComunicadoServiceInterface
         }
     }
 
-    /** Lo que se exige para publicar (regla 4). */
+    /**
+     * Lo que se exige para publicar (regla 4). El resumen no: sin él, la
+     * tarjeta del Portal muestra el comienzo del texto.
+     */
     private function exigirCompleto(Comunicado $comunicado): void
     {
-        $falta = [];
-
-        if (trim((string) $comunicado->resumen) === '') {
-            $falta[] = 'el resumen';
-        }
-
         if (! HtmlEnriquecido::tieneTexto($comunicado->cuerpo)) {
-            $falta[] = 'el texto';
-        }
-
-        if ($falta !== []) {
-            throw new ReglaNegocioException('Para publicar falta '.implode(' y ', $falta).'.');
+            throw new ReglaNegocioException('Para publicar falta el texto.');
         }
 
         if ($comunicado->audiencia === AudienciaComunicado::SEGMENTADA
             && $comunicado->regimenes === null
             && ! $comunicado->unidadesSeleccionadas()->exists()) {
-            throw new ReglaNegocioException('Elija al menos una unidad o un régimen, o envíelo a todos.');
+            throw new ReglaNegocioException('Elija al menos una dirección o un régimen, o envíelo a todos.');
         }
     }
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { Alert, Checkbox, Group, MultiSelect, Radio, Stack, Text } from '@mantine/core'
+import { Alert, Group, MultiSelect, Radio, Stack, Text } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
 import { IconAlertTriangle, IconUsers } from '@tabler/icons-react'
 import { Controller, useWatch, type Control } from 'react-hook-form'
@@ -15,22 +15,28 @@ interface Props {
   control: Control<ComunicadoFormData>
 }
 
+/**
+ * Se elige entre las direcciones (nivel 2 del orgánico), y cada una va con sus
+ * jefaturas: el nivel 1 es la institución entera, que ya es «a todos», y
+ * ofrecer las 59 unidades hacía la lista larga sin necesidad (2026-10-18).
+ */
+const NIVEL_DIRECCION = 2
+
 const REGIMENES = ['losep', 'codigo_trabajo', 'servicios_profesionales'] as const
 const esRegimen = (v: string): v is (typeof REGIMENES)[number] => REGIMENES.some((r) => r === v)
 
 /**
- * A quién va (docs/diseno-noticias-comunicados.md, 3.3): todos, unas unidades
- * —cada una con o sin sus dependencias— o un régimen; unidad y régimen a la
- * vez se cumplen los dos. Debajo, cuántos lo verían hoy.
+ * A quién va (docs/diseno-noticias-comunicados.md, 3.3): todos, unas
+ * direcciones o un régimen; dirección y régimen a la vez se cumplen los dos.
+ * Debajo, cuántos lo verían hoy.
  */
 export function DestinatariosCampos({ control }: Props) {
   const contained = useContainedInput()
-  const { data: unidades = [] } = useTodasUnidades()
+  const { data: direcciones = [] } = useTodasUnidades({ nivel: NIVEL_DIRECCION })
   const [audiencia, elegidas, regimenes] = useWatch({ control, name: ['audiencia', 'unidades', 'regimenes'] })
   const [seleccion] = useDebouncedValue({ audiencia, unidades: elegidas, regimenes }, 400)
   const { data: total, isFetching } = useConteoDestinatarios(seleccion)
 
-  const nombreDe = (id: number) => unidades.find((u) => u.id === id)?.nombre ?? `Unidad ${id}`
   const sinElegir = audiencia === 'segmentada' && !elegidas.length && !regimenes.length
 
   return (
@@ -42,7 +48,7 @@ export function DestinatariosCampos({ control }: Props) {
           <Radio.Group label="¿A quién va?" value={field.value} onChange={field.onChange}>
             <Group gap="xl" mt="xs">
               <Radio value="todos" label="A todos los servidores" />
-              <Radio value="segmentada" label="A unas unidades o a un régimen" />
+              <Radio value="segmentada" label="A unas direcciones o a un régimen" />
             </Group>
           </Radio.Group>
         )}
@@ -54,31 +60,17 @@ export function DestinatariosCampos({ control }: Props) {
             name="unidades"
             control={control}
             render={({ field }) => (
-              <Stack gap="xs">
-                <MultiSelect
-                  label="Unidades"
-                  placeholder="Busque una unidad"
-                  data={unidades.map((u) => ({ value: String(u.id), label: u.nombre ?? '' }))}
-                  searchable
-                  clearable
-                  {...contained}
-                  value={field.value.map((u) => String(u.id))}
-                  onChange={(ids) => field.onChange(ids.map((id) => ({
-                    id: Number(id),
-                    incluye_dependencias: field.value.find((u) => u.id === Number(id))?.incluye_dependencias ?? true,
-                  })))}
-                />
-                {field.value.map((u) => (
-                  <Checkbox
-                    key={u.id}
-                    label={`${nombreDe(u.id)}: incluir las unidades que dependen de ella`}
-                    checked={u.incluye_dependencias}
-                    onChange={(e) => field.onChange(field.value.map((x) => (
-                      x.id === u.id ? { ...x, incluye_dependencias: e.currentTarget.checked } : x
-                    )))}
-                  />
-                ))}
-              </Stack>
+              <MultiSelect
+                label="Direcciones"
+                description="Cada una incluye las unidades que dependen de ella."
+                placeholder="Busque una dirección"
+                data={direcciones.map((u) => ({ value: String(u.id), label: u.nombre ?? '' }))}
+                searchable
+                clearable
+                {...contained}
+                value={field.value.map((u) => String(u.id))}
+                onChange={(ids) => field.onChange(ids.map((id) => ({ id: Number(id), incluye_dependencias: true })))}
+              />
             )}
           />
 
@@ -88,7 +80,7 @@ export function DestinatariosCampos({ control }: Props) {
             render={({ field }) => (
               <MultiSelect
                 label="Régimen laboral"
-                description="Vacío: cualquier régimen. Con unidades, deben cumplirse las dos cosas."
+                description="Vacío: cualquier régimen. Con direcciones, deben cumplirse las dos cosas."
                 placeholder="Cualquiera"
                 data={OPCIONES_REGIMEN}
                 clearable
@@ -103,7 +95,7 @@ export function DestinatariosCampos({ control }: Props) {
 
       {sinElegir ? (
         <Alert variant="light" color="amber" icon={<IconAlertTriangle size={16} />}>
-          Elija al menos una unidad o un régimen, o envíelo a todos.
+          Elija al menos una dirección o un régimen, o envíelo a todos.
         </Alert>
       ) : (
         <Alert variant="light" color={total === 0 ? 'amber' : 'ocean'} icon={<IconUsers size={16} />}>

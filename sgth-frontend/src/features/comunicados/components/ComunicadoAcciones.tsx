@@ -54,7 +54,7 @@ export function ComunicadoAcciones({ comunicado: c }: { comunicado: Comunicado }
 
   const confirmarEliminacion = () => confirmar({
     title: 'Eliminar borrador',
-    message: <>Se eliminará <b>{c.titulo}</b> con su portada y sus documentos. No se puede deshacer.</>,
+    message: <>Se eliminará <b>{c.titulo}</b> con sus documentos. No se puede deshacer.</>,
     confirmLabel: 'Eliminar',
     destructiva: true,
     onConfirm: () => eliminar.mutate(c.id, { onSuccess: () => router.push(ROUTES.SGTH.COMUNICADOS) }),

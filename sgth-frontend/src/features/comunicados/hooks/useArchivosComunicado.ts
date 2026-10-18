@@ -5,28 +5,10 @@ import { clavesComunicados } from '../constants/claves'
 import { comunicadosService } from '../services/comunicadosService'
 import type { ComunicadoAdjunto } from '../services/tipos'
 
-/** La portada y los PDF de un borrador; el backend rechaza tocarlos en lo publicado. */
+/** Los PDF de un borrador; el backend rechaza tocarlos en lo publicado. */
 export function useArchivosComunicado(comunicadoId: number) {
   const qc = useQueryClient()
   const refrescar = () => qc.invalidateQueries({ queryKey: clavesComunicados.todas })
-
-  const subirPortada = useMutation({
-    mutationFn: (portada: Blob) => comunicadosService.subirPortada(comunicadoId, portada),
-    onSuccess: () => {
-      refrescar()
-      notificar.exito('Portada guardada', 'Así se verá en la tarjeta del Portal.')
-    },
-    onError: notificar.alFallar('No se pudo guardar la portada'),
-  })
-
-  const quitarPortada = useMutation({
-    mutationFn: () => comunicadosService.quitarPortada(comunicadoId),
-    onSuccess: () => {
-      refrescar()
-      notificar.exito('Portada quitada', 'El Portal mostrará el icono del tipo en su lugar.')
-    },
-    onError: notificar.alFallar('No se pudo quitar la portada'),
-  })
 
   const agregarAdjunto = useMutation({
     mutationFn: (archivo: File) => comunicadosService.agregarAdjunto(comunicadoId, archivo),
@@ -52,5 +34,5 @@ export function useArchivosComunicado(comunicadoId: number) {
     onError: notificar.alFallar('No se pudo descargar el documento'),
   })
 
-  return { subirPortada, quitarPortada, agregarAdjunto, quitarAdjunto, descargarAdjunto }
+  return { agregarAdjunto, quitarAdjunto, descargarAdjunto }
 }

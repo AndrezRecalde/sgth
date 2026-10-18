@@ -8,6 +8,7 @@ use App\Enums\TipoComunicado;
 use App\Enums\VigenciaComunicado;
 use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\User;
+use App\Support\HtmlEnriquecido;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -39,7 +40,7 @@ class Comunicado extends Model
     protected $table = 'comunicados';
 
     protected $fillable = [
-        'tipo', 'titulo', 'resumen', 'cuerpo', 'referencia', 'portada_path',
+        'tipo', 'titulo', 'resumen', 'cuerpo', 'referencia',
         'estado', 'audiencia', 'regimenes', 'publicado_desde', 'publicado_hasta',
         'fijado', 'requiere_confirmacion', 'duplicado_de_id',
         'creado_por', 'publicado_por', 'publicado_at',
@@ -103,6 +104,19 @@ class Comunicado extends Model
     public function retiradoPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'retirado_por');
+    }
+
+    /**
+     * Lo que sale en la tarjeta del Portal y en la campana: el resumen si lo
+     * escribieron; si no, el comienzo del texto. El resumen es opcional porque
+     * casi siempre basta el texto, y existe porque un comunicado oficial suele
+     * empezar con el saludo, que no dice nada de lo que se comunica.
+     */
+    public function textoDeTarjeta(): string
+    {
+        $resumen = trim((string) $this->resumen);
+
+        return $resumen !== '' ? $resumen : HtmlEnriquecido::extracto($this->cuerpo);
     }
 
     public function esBorrador(): bool

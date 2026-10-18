@@ -16,7 +16,7 @@ export function useMutacionesComunicado() {
     mutationFn: comunicadosService.crear,
     onSuccess: () => {
       refrescar()
-      notificar.exito('Borrador guardado', 'Agregue la portada y los documentos, revíselo y publíquelo cuando esté listo.')
+      notificar.exito('Borrador guardado', 'Agregue los documentos si hacen falta, revíselo y publíquelo cuando esté listo.')
     },
     onError: notificar.alFallarSalvoCampos('No se pudo guardar el borrador'),
   })
@@ -34,7 +34,7 @@ export function useMutacionesComunicado() {
     mutationFn: comunicadosService.eliminar,
     onSuccess: () => {
       refrescar()
-      notificar.exito('Borrador eliminado', 'Se borró junto con su portada y sus documentos.')
+      notificar.exito('Borrador eliminado', 'Se borró junto con sus documentos.')
     },
     onError: notificar.alFallar('No se pudo eliminar el borrador'),
   })

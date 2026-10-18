@@ -2,15 +2,19 @@ import { z } from 'zod/v4'
 
 /**
  * El formulario de un borrador (docs/diseno-noticias-comunicados.md, 6.3). Un
- * borrador puede quedar a medias: el resumen y el texto se exigen al publicar,
- * y eso lo dice el backend. Aquí solo la forma de cada campo.
+ * borrador puede quedar a medias: el texto se exige al publicar, y eso lo dice
+ * el backend. El resumen es opcional: sin él, la tarjeta del Portal muestra el
+ * comienzo del texto.
+ *
+ * `titulo` es el asunto en un comunicado y el título en una noticia: la
+ * columna es la misma, solo cambia cómo se llama en pantalla.
  *
  * Las fechas van como `YYYY-MM-DD`; vacía es «sin fecha»: la de inicio sale al
  * publicar, y sin fecha de fin no vence.
  */
 export const comunicadoSchema = z.object({
   tipo:                  z.enum(['noticia', 'comunicado']),
-  titulo:                z.string().trim().min(1, 'Escriba el título').max(150, 'Máximo 150 caracteres'),
+  titulo:                z.string().trim().max(150, 'Máximo 150 caracteres'),
   resumen:               z.string().trim().max(300, 'Máximo 300 caracteres'),
   cuerpo:                z.string(),
   referencia:            z.string().trim().max(100, 'Máximo 100 caracteres'),
@@ -22,6 +26,12 @@ export const comunicadoSchema = z.object({
   fijado:                z.boolean(),
   requiere_confirmacion: z.boolean(),
 }).superRefine((datos, ctx) => {
+  if (!datos.titulo) {
+    ctx.addIssue({
+      code: 'custom', path: ['titulo'],
+      message: datos.tipo === 'comunicado' ? 'Escriba el asunto' : 'Escriba el título',
+    })
+  }
   // El backend lo valida igual; aquí deja el error junto a la fecha de fin.
   if (datos.publicado_desde && datos.publicado_hasta && datos.publicado_hasta < datos.publicado_desde) {
     ctx.addIssue({ code: 'custom', path: ['publicado_hasta'], message: 'No puede ser anterior a la fecha de inicio' })

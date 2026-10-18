@@ -9,7 +9,7 @@ import { ComunicadoContenido } from '@/features/comunicados/components/Comunicad
 import { ComunicadoResumen } from '@/features/comunicados/components/ComunicadoResumen'
 import { TONO_VIGENCIA } from '@/features/comunicados/constants/comunicados'
 import { useArchivosComunicado } from '@/features/comunicados/hooks/useArchivosComunicado'
-import { useComunicado, usePortadaComunicado } from '@/features/comunicados/hooks/useComunicados'
+import { useComunicado } from '@/features/comunicados/hooks/useComunicados'
 
 /**
  * Una publicación (docs/diseno-noticias-comunicados.md, 6.4): a la izquierda,
@@ -19,7 +19,6 @@ import { useComunicado, usePortadaComunicado } from '@/features/comunicados/hook
 export function DetalleComunicadoView({ id }: { id: string }) {
   const comunicadoId = Number(id)
   const { data: c, isLoading, error } = useComunicado(comunicadoId)
-  const { data: portada } = usePortadaComunicado(c)
   const { descargarAdjunto } = useArchivosComunicado(comunicadoId)
 
   if (isLoading) {
@@ -61,7 +60,6 @@ export function DetalleComunicadoView({ id }: { id: string }) {
           >
             <ComunicadoContenido
               comunicado={c}
-              portadaSrc={portada}
               onDescargar={(adjunto) => descargarAdjunto.mutate(adjunto)}
               pie={c.requiere_confirmacion && c.estado !== 'retirado' && (
                 <Alert variant="light" color="amber" icon={<IconChecklist size={16} />}>

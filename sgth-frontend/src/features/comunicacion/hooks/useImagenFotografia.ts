@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { clavesComunicacion } from '../constants/claves'
 import { fotografiasService } from '../services/fotografiasService'
 import type { TamanoFotografia } from '../services/tipos'
-import { aDataUrl } from '@/lib/dataUrl'
+import { aDataUrl } from '../utils/dataUrl'
 
 /**
  * La imagen de una foto, lista para un `src`.

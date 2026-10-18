@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, Grid, Group, Select, Stack, Textarea, TextInput } from '@mantine/core'
+import { Button, Group, Select, Stack, Textarea, TextInput } from '@mantine/core'
 import { IconArrowLeft, IconDeviceFloppy } from '@tabler/icons-react'
 import { Controller, useForm, useWatch, type UseFormSetError } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -28,6 +28,9 @@ const esTipo = (v: string | null): v is ComunicadoFormData['tipo'] => v === 'not
  * mismo para crearlo y para seguir editándolo. Publicar va aparte, en el
  * detalle, que es también la vista previa: se guarda, se revisa cómo lo verá
  * el servidor y se publica.
+ *
+ * Cada campo de «Datos» ocupa su propia línea, sea noticia o comunicado: así el
+ * formulario no cambia de forma al elegir el tipo.
  */
 export function ComunicadoForm({ valoresIniciales, onSubmit, enviando, onCancelar }: Props) {
   const contained = useContainedInput()
@@ -38,68 +41,62 @@ export function ComunicadoForm({ valoresIniciales, onSubmit, enviando, onCancela
   })
 
   const [tipo, resumen] = useWatch({ control, name: ['tipo', 'resumen'] })
+  const oficial = tipo === 'comunicado'
 
   return (
     <form onSubmit={handleSubmit((datos) => onSubmit(datos, setError))} noValidate>
       <Stack gap="md">
         <SectionCard title="Datos">
-          <Grid gap="md">
-            <Grid.Col span={{ base: 12, sm: 5 }}>
-              <Controller
-                name="tipo"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    label="Tipo"
-                    description={OPCIONES_TIPO.find((o) => o.value === field.value)?.descripcion}
-                    data={OPCIONES_TIPO.map(({ value, label }) => ({ value, label }))}
-                    allowDeselect={false}
-                    {...contained}
-                    value={field.value}
-                    onChange={(v) => esTipo(v) && field.onChange(v)}
-                  />
-                )}
-              />
-            </Grid.Col>
-            {tipo === 'comunicado' && (
-              <Grid.Col span={{ base: 12, sm: 7 }}>
-                <TextInput
-                  label="Número de documento"
-                  description="Opcional: el de la circular o el memorando"
-                  placeholder="Ej: Circular GADPE-DATH-2026-045"
+          <Stack gap="md">
+            <Controller
+              name="tipo"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Tipo"
+                  description={OPCIONES_TIPO.find((o) => o.value === field.value)?.descripcion}
+                  data={OPCIONES_TIPO.map(({ value, label }) => ({ value, label }))}
+                  allowDeselect={false}
                   {...contained}
-                  {...register('referencia')}
-                  error={errors.referencia?.message}
+                  value={field.value}
+                  onChange={(v) => esTipo(v) && field.onChange(v)}
                 />
-              </Grid.Col>
-            )}
-            <Grid.Col span={12}>
+              )}
+            />
+            {oficial && (
               <TextInput
-                label="Título"
-                placeholder="Ej: Descanso obligatorio del 2 y 3 de noviembre"
-                required
+                label="Número de documento"
+                description="Opcional: el de la circular o el memorando"
+                placeholder="Ej: Circular GADPE-DATH-2026-045"
                 {...contained}
-                {...register('titulo')}
-                error={errors.titulo?.message}
+                {...register('referencia')}
+                error={errors.referencia?.message}
               />
-            </Grid.Col>
-            <Grid.Col span={12}>
-              <Textarea
-                label="Resumen"
-                description={`Lo que se lee en la tarjeta del Portal · ${resumen.length} de 300`}
-                placeholder="Una o dos frases con lo esencial"
-                autosize
-                minRows={2}
-                maxRows={4}
-                {...contained}
-                {...register('resumen')}
-                error={errors.resumen?.message}
-              />
-            </Grid.Col>
-          </Grid>
+            )}
+            <TextInput
+              // En un comunicado oficial es el asunto, como en la circular impresa.
+              label={oficial ? 'Asunto' : 'Título'}
+              placeholder={oficial ? 'Ej: Descanso obligatorio del 2 y 3 de noviembre' : 'Ej: Jornada deportiva de integración'}
+              required
+              {...contained}
+              {...register('titulo')}
+              error={errors.titulo?.message}
+            />
+            <Textarea
+              label="Resumen"
+              description={`Opcional. Si lo deja vacío, la tarjeta del Portal muestra el comienzo del texto · ${resumen.length} de 300`}
+              placeholder="Una o dos frases con lo esencial, si el texto empieza con un saludo"
+              autosize
+              minRows={2}
+              maxRows={4}
+              {...contained}
+              {...register('resumen')}
+              error={errors.resumen?.message}
+            />
+          </Stack>
         </SectionCard>
 
-        <SectionCard title="Texto" description="Lo que se lee al abrir la publicación. Las imágenes van como portada.">
+        <SectionCard title="Texto" description="Lo que se lee al abrir la publicación.">
           <Controller
             name="cuerpo"
             control={control}

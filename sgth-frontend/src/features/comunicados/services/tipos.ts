@@ -44,6 +44,8 @@ export interface Comunicado {
   tipo_etiqueta: string
   titulo: string
   resumen: string | null
+  /** Lo que sale en la tarjeta del Portal: el resumen o, sin él, el comienzo del texto. */
+  extracto: string
   /** Solo en el detalle: el listado no lo trae. */
   cuerpo?: string | null
   referencia: string | null
@@ -58,7 +60,6 @@ export interface Comunicado {
   publicado_hasta: string | null
   fijado: boolean
   requiere_confirmacion: boolean
-  tiene_portada: boolean
   duplicado_de_id: number | null
   creado_por?: PersonaQueActuo | null
   publicado_por?: PersonaQueActuo | null

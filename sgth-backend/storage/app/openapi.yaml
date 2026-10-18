@@ -1883,185 +1883,6 @@
                 }
             }
         },
-        "/v1/comunicados/{comunicado}/portada": {
-            "get": {
-                "operationId": "archivosComunicado.portada",
-                "tags": [
-                    "ArchivosComunicado"
-                ],
-                "parameters": [
-                    {
-                        "name": "comunicado",
-                        "in": "path",
-                        "required": true,
-                        "description": "The comunicado ID",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/octet-stream": {
-                                "schema": {
-                                    "type": "string",
-                                    "format": "binary"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            },
-            "post": {
-                "operationId": "archivosComunicado.subirPortada",
-                "tags": [
-                    "ArchivosComunicado"
-                ],
-                "parameters": [
-                    {
-                        "name": "comunicado",
-                        "in": "path",
-                        "required": true,
-                        "description": "The comunicado ID",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/SubirPortadaRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Portada guardada."
-                                        },
-                                        "datos": {
-                                            "type": "object",
-                                            "properties": {
-                                                "tiene_portada": {
-                                                    "type": "boolean"
-                                                }
-                                            },
-                                            "required": [
-                                                "tiene_portada"
-                                            ]
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    }
-                }
-            },
-            "delete": {
-                "operationId": "archivosComunicado.quitarPortada",
-                "tags": [
-                    "ArchivosComunicado"
-                ],
-                "parameters": [
-                    {
-                        "name": "comunicado",
-                        "in": "path",
-                        "required": true,
-                        "description": "The comunicado ID",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Portada quitada."
-                                        },
-                                        "datos": {
-                                            "type": "object",
-                                            "properties": {
-                                                "tiene_portada": {
-                                                    "type": "boolean"
-                                                }
-                                            },
-                                            "required": [
-                                                "tiene_portada"
-                                            ]
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
         "/v1/comunicados/{comunicado}/adjuntos/{adjunto}": {
             "get": {
                 "operationId": "archivosComunicado.adjunto",
@@ -68108,6 +67929,10 @@
                             "null"
                         ]
                     },
+                    "extracto": {
+                        "type": "string",
+                        "description": "Lo que muestra la tarjeta: el resumen, o el comienzo del texto."
+                    },
                     "cuerpo": {
                         "type": [
                             "string",
@@ -68156,9 +67981,6 @@
                         "type": "boolean"
                     },
                     "requiere_confirmacion": {
-                        "type": "boolean"
-                    },
-                    "tiene_portada": {
                         "type": "boolean"
                     },
                     "duplicado_de_id": {
@@ -68267,6 +68089,7 @@
                     "tipo_etiqueta",
                     "titulo",
                     "resumen",
+                    "extracto",
                     "referencia",
                     "estado",
                     "vigencia",
@@ -68277,7 +68100,6 @@
                     "publicado_hasta",
                     "fijado",
                     "requiere_confirmacion",
-                    "tiene_portada",
                     "duplicado_de_id",
                     "publicado_at",
                     "retirado_at",
@@ -85297,22 +85119,6 @@
                     "foto"
                 ],
                 "title": "SubirFotografiaRequest"
-            },
-            "SubirPortadaRequest": {
-                "type": "object",
-                "description": "La portada: JPG, PNG o WebP de hasta 5 MB (docs/diseno-noticias-comunicados.md,\nregla 6). La pantalla la recorta a 16:9 antes de subirla; aqu\u00ed se exige un\ntama\u00f1o que se vea bien en una tarjeta.",
-                "properties": {
-                    "portada": {
-                        "type": "string",
-                        "format": "binary",
-                        "contentMediaType": "application/octet-stream",
-                        "maxLength": 5120
-                    }
-                },
-                "required": [
-                    "portada"
-                ],
-                "title": "SubirPortadaRequest"
             },
             "SubirRecursoIdentidadRequest": {
                 "type": "object",

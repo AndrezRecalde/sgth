@@ -48,17 +48,6 @@ export const comunicadosService = {
     api.post<ApiResponse<{ total: number }>>(`${URL}/destinatarios/conteo`, seleccion)
       .then((r) => r.data.datos.total),
 
-  portada: (id: number) =>
-    api.get<Blob>(`${URL}/${id}/portada`, { responseType: 'blob' }).then((r) => r.data),
-
-  subirPortada: (id: number, portada: Blob) => {
-    const datos = new FormData()
-    datos.append('portada', portada, 'portada.jpg')
-    return api.post(`${URL}/${id}/portada`, datos)
-  },
-
-  quitarPortada: (id: number) => api.delete(`${URL}/${id}/portada`),
-
   agregarAdjunto: (id: number, archivo: File) => {
     const datos = new FormData()
     datos.append('archivo', archivo)

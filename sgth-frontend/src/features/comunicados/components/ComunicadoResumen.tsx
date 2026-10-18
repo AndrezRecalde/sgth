@@ -30,7 +30,11 @@ export function ComunicadoResumen({ comunicado: c }: { comunicado: Comunicado })
           ancho: true,
         }]
       : []),
-    { label: 'Resumen en la tarjeta del Portal', value: c.resumen, ancho: true },
+    {
+      label: c.resumen ? 'En la tarjeta del Portal (resumen)' : 'En la tarjeta del Portal (comienzo del texto)',
+      value: c.extracto,
+      ancho: true,
+    },
   ]
 
   const historial: DetailItem[] = [

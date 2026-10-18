@@ -16,7 +16,8 @@ use Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig;
  * consumidor nuevo.
  *
  * Las diferencias con la nota clínica: sin `h1` (el título de la publicación ya
- * lo es) y sin imágenes dentro del texto (la imagen va como portada). Los
+ * lo es) y sin imágenes (Talento Humano no las publica; los documentos van como
+ * PDF adjuntos). Los
  * enlaces salen con `rel="noopener noreferrer"`.
  *
  * Lo que no está permitido se descarta con su contenido, salvo los
@@ -57,6 +58,31 @@ final class HtmlEnriquecido
 
         // El espacio duro (`&nbsp;`) que deja el editor en un párrafo vacío no es texto.
         return preg_match('/[^\s\x{00A0}]/u', $texto) === 1;
+    }
+
+    /**
+     * El comienzo del texto, sin formato, para la tarjeta del Portal cuando no
+     * hay resumen: hasta `$largo` caracteres, cortado en una palabra y con
+     * puntos suspensivos si sigue. Los párrafos y los elementos de lista se
+     * separan con un espacio para que dos frases no queden pegadas.
+     */
+    public static function extracto(?string $html, int $largo = 200): string
+    {
+        $conEspacios = preg_replace('/<\/(p|li|h[1-6]|blockquote)>|<br\s*\/?>/i', ' ', (string) $html) ?? '';
+        $texto = html_entity_decode(strip_tags($conEspacios), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $texto = trim(preg_replace('/[\s\x{00A0}]+/u', ' ', $texto) ?? '');
+
+        if (mb_strlen($texto) <= $largo) {
+            return $texto;
+        }
+
+        $corte = mb_substr($texto, 0, $largo);
+        $espacio = mb_strrpos($corte, ' ');
+        if ($espacio !== false && $espacio > $largo * 0.6) {
+            $corte = mb_substr($corte, 0, $espacio);
+        }
+
+        return rtrim($corte, ' ,;:.').'…';
     }
 
     private static function sanitizador(): HtmlSanitizer

@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, Group, Image, Stack, Text, Title, Typography } from '@mantine/core'
+import { Button, Group, Stack, Text, Title, Typography } from '@mantine/core'
 import { IconBuilding, IconDownload, IconFileTypePdf, IconPinned } from '@tabler/icons-react'
 import { SectionHeading, StatusBadge } from '@/components/ui'
 import type { Comunicado, ComunicadoAdjunto } from '../services/tipos'
@@ -22,8 +22,6 @@ function cuando(c: Contenido): string {
 
 interface Props {
   comunicado: Contenido
-  /** La portada ya cargada (`data:` URL); sin ella no se dibuja el recuadro. */
-  portadaSrc?: string | null
   onDescargar?: (adjunto: ComunicadoAdjunto) => void
   /** Lo que va al final: el aviso de confirmación en la vista previa, el botón en el Portal. */
   pie?: React.ReactNode
@@ -31,14 +29,14 @@ interface Props {
 
 /**
  * Una noticia o un comunicado tal como lo lee el servidor
- * (docs/diseno-noticias-comunicados.md, 5.3): tipo, título, quién y cuándo,
- * portada, texto y documentos. Es el mismo en la vista previa de Talento
+ * (docs/diseno-noticias-comunicados.md, 5.3): tipo, asunto, quién y cuándo,
+ * texto y documentos. Es el mismo en la vista previa de Talento
  * Humano y en el Portal, para que lo que se revisa sea lo que se publica.
  *
  * El texto llega limpio del backend (HtmlEnriquecido, al guardar): por eso se
  * pinta como HTML.
  */
-export function ComunicadoContenido({ comunicado: c, portadaSrc, onDescargar, pie }: Props) {
+export function ComunicadoContenido({ comunicado: c, onDescargar, pie }: Props) {
   const adjuntos = c.adjuntos ?? []
 
   return (
@@ -63,10 +61,6 @@ export function ComunicadoContenido({ comunicado: c, portadaSrc, onDescargar, pi
           {c.referencia && <Text size="sm">{c.referencia}</Text>}
         </Group>
       </Stack>
-
-      {portadaSrc && (
-        <Image src={portadaSrc} alt={`Portada: ${c.titulo}`} className={classes.portada} />
-      )}
 
       {c.cuerpo ? (
         <Typography className={classes.cuerpo} dangerouslySetInnerHTML={{ __html: c.cuerpo }} />

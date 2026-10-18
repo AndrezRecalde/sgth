@@ -1,8 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { aDataUrl } from '@/lib/dataUrl'
 import { clavesComunicados } from '../constants/claves'
 import { comunicadosService } from '../services/comunicadosService'
-import type { Comunicado, FiltrosComunicados, SeleccionDestinatarios } from '../services/tipos'
+import type { FiltrosComunicados, SeleccionDestinatarios } from '../services/tipos'
 
 export const POR_PAGINA_COMUNICADOS = 15
 
@@ -36,20 +35,5 @@ export function useConteoDestinatarios(seleccion: SeleccionDestinatarios) {
     queryFn: () => comunicadosService.contarDestinatarios(seleccion),
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60,
-  })
-}
-
-/**
- * La portada, lista para un `src`. Va como `data:` URL por la misma razón que
- * la foto del servidor (ver `aDataUrl`), y la clave lleva la fecha del
- * registro: al reemplazarla cambia, y se vuelve a pedir.
- */
-export function usePortadaComunicado(comunicado: Pick<Comunicado, 'id' | 'tiene_portada' | 'actualizado_en'> | null | undefined) {
-  return useQuery({
-    queryKey: clavesComunicados.portada(comunicado?.id ?? 0, comunicado?.actualizado_en ?? null),
-    queryFn: async () => aDataUrl(await comunicadosService.portada(comunicado?.id ?? 0)),
-    enabled: !!comunicado?.tiene_portada,
-    staleTime: Infinity,
-    retry: false,
   })
 }

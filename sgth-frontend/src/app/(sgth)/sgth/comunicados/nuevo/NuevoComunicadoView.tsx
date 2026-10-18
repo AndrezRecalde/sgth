@@ -11,8 +11,8 @@ import { aPayload } from '@/features/comunicados/utils/formulario'
 
 /**
  * Una publicación nueva: se guarda como borrador y se sigue en la pantalla de
- * edición, donde ya se le pueden poner la portada y los documentos, que
- * necesitan que exista.
+ * edición, donde ya se le pueden agregar los documentos, que necesitan que
+ * exista.
  */
 export function NuevoComunicadoView() {
   const router = useRouter()

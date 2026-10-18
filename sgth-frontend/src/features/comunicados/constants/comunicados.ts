@@ -20,9 +20,8 @@ export const OPCIONES_VIGENCIA: { value: VigenciaComunicado; label: string }[] =
 ]
 
 export const OPCIONES_TIPO: { value: TipoComunicado; label: string; descripcion: string }[] = [
-  // Cortas a propósito: van encima del campo, junto al del número de documento.
-  { value: 'noticia',    label: 'Noticia',    descripcion: 'Informativa: eventos y campañas' },
-  { value: 'comunicado', label: 'Comunicado', descripcion: 'Oficial; puede pedir confirmación' },
+  { value: 'noticia',    label: 'Noticia',    descripcion: 'Informativa: eventos, campañas y capacitaciones' },
+  { value: 'comunicado', label: 'Comunicado', descripcion: 'Oficial: circulares y disposiciones; puede pedir confirmación de lectura' },
 ]
 
 export const OPCIONES_REGIMEN = Object.entries(REGIMEN_LABELS).map(([value, label]) => ({ value, label }))

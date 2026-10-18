@@ -73,14 +73,22 @@ test('con fecha de inicio futura queda programado hasta ese día', function () {
     expect($borrador->fresh()->vigencia()->value)->toBe('publicado');
 });
 
-test('sin resumen o sin texto no se publica', function () {
-    $borrador = borradorDeComunicado($this->admin, ['resumen' => null, 'cuerpo' => '<p>&nbsp;</p>']);
+test('sin texto no se publica; sin resumen, sí', function () {
+    $vacio = borradorDeComunicado($this->admin, ['resumen' => null, 'cuerpo' => '<p>&nbsp;</p>']);
 
-    publicarComunicadoPorApi($this, $borrador)
+    publicarComunicadoPorApi($this, $vacio)
         ->assertStatus(422)
-        ->assertJsonPath('mensaje', 'Para publicar falta el resumen y el texto.');
+        ->assertJsonPath('mensaje', 'Para publicar falta el texto.');
 
-    expect($borrador->fresh()->estado)->toBe(EstadoComunicado::BORRADOR);
+    expect($vacio->fresh()->estado)->toBe(EstadoComunicado::BORRADOR);
+
+    // El resumen es opcional: la tarjeta usa el comienzo del texto.
+    $sinResumen = borradorDeComunicado($this->admin, ['resumen' => null]);
+
+    publicarComunicadoPorApi($this, $sinResumen)
+        ->assertOk()
+        ->assertJsonPath('datos.resumen', null)
+        ->assertJsonPath('datos.extracto', 'A todos los servidores: Descanso el lunes 2.');
 });
 
 test('un borrador cuya fecha de inicio ya pasó no se publica hasta corregirla', function () {
@@ -109,7 +117,7 @@ test('segmentado sin unidades ni regímenes no se publica', function () {
 
     publicarComunicadoPorApi($this, $borrador)
         ->assertStatus(422)
-        ->assertJsonPath('mensaje', 'Elija al menos una unidad o un régimen, o envíelo a todos.');
+        ->assertJsonPath('mensaje', 'Elija al menos una dirección o un régimen, o envíelo a todos.');
 });
 
 test('si nadie lo recibiría, no se publica', function () {

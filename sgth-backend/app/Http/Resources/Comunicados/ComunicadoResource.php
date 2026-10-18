@@ -28,6 +28,8 @@ class ComunicadoResource extends JsonResource
             'tipo_etiqueta'         => $this->tipo->etiqueta(),
             'titulo'                => $this->titulo,
             'resumen'               => $this->resumen,
+            // Lo que muestra la tarjeta: el resumen, o el comienzo del texto.
+            'extracto'              => $this->textoDeTarjeta(),
             'cuerpo'                => $this->when($this->esDetalle($request), $this->cuerpo),
             'referencia'            => $this->referencia,
             'estado'                => $this->estado->value,
@@ -45,7 +47,6 @@ class ComunicadoResource extends JsonResource
             'publicado_hasta'       => $this->publicado_hasta?->toIso8601String(),
             'fijado'                => $this->fijado,
             'requiere_confirmacion' => $this->requiere_confirmacion,
-            'tiene_portada'         => $this->portada_path !== null,
             'duplicado_de_id'       => $this->duplicado_de_id,
             'creado_por'            => $this->whenLoaded('creadoPor', fn () => $this->persona($this->creadoPor)),
             'publicado_por'         => $this->whenLoaded('publicadoPor', fn () => $this->persona($this->publicadoPor)),

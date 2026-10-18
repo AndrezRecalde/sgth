@@ -54,7 +54,8 @@ class GuardarComunicadoRequest extends FormRequest
     {
         return [
             'tipo'                            => 'tipo',
-            'titulo'                          => 'título',
+            // En un comunicado oficial es el asunto, como en la circular impresa.
+            'titulo'                          => $this->input('tipo') === 'comunicado' ? 'asunto' : 'título',
             'resumen'                         => 'resumen',
             'cuerpo'                          => 'texto',
             'referencia'                      => 'número de documento',

@@ -2293,7 +2293,6 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::middleware('permission:redactar-comunicados|publicar-comunicados|ver-lecturas-comunicados')->group(function () {
             Route::get('/', [ComunicadoController::class, 'index'])->name('comunicados.index');
             Route::get('{comunicado}', [ComunicadoController::class, 'show'])->whereNumber('comunicado');
-            Route::get('{comunicado}/portada', [ArchivosComunicadoController::class, 'portada'])->whereNumber('comunicado');
             Route::get('{comunicado}/adjuntos/{adjunto}', [ArchivosComunicadoController::class, 'adjunto'])
                 ->whereNumber(['comunicado', 'adjunto'])
                 ->scopeBindings();
@@ -2305,8 +2304,6 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::put('{comunicado}', [ComunicadoController::class, 'update'])->whereNumber('comunicado');
             Route::delete('{comunicado}', [ComunicadoController::class, 'destroy'])->whereNumber('comunicado');
             Route::post('{comunicado}/duplicar', [ComunicadoController::class, 'duplicar'])->whereNumber('comunicado');
-            Route::post('{comunicado}/portada', [ArchivosComunicadoController::class, 'subirPortada'])->whereNumber('comunicado');
-            Route::delete('{comunicado}/portada', [ArchivosComunicadoController::class, 'quitarPortada'])->whereNumber('comunicado');
             Route::post('{comunicado}/adjuntos', [ArchivosComunicadoController::class, 'agregarAdjunto'])->whereNumber('comunicado');
             Route::delete('{comunicado}/adjuntos/{adjunto}', [ArchivosComunicadoController::class, 'quitarAdjunto'])
                 ->whereNumber(['comunicado', 'adjunto'])

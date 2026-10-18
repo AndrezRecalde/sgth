@@ -2,16 +2,6 @@
   text-wrap: balance;
 }
 
-/* La misma proporción que la tarjeta del Portal: lo que se ve aquí es lo que sale allá. */
-.portada {
-  display: block;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-  border-radius: var(--mantine-radius-lg);
-  background: var(--sgth-surface-sunken);
-}
-
 /* Un texto largo se lee mejor sin llegar de borde a borde en una pantalla ancha. */
 .cuerpo {
   max-width: 72ch;

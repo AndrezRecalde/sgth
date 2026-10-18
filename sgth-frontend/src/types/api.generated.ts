@@ -335,22 +335,6 @@ export interface paths {
         patch: operations["antecedentePaciente.anular"];
         trace?: never;
     };
-    "/v1/comunicados/{comunicado}/portada": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["archivosComunicado.portada"];
-        put?: never;
-        post: operations["archivosComunicado.subirPortada"];
-        delete: operations["archivosComunicado.quitarPortada"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/comunicados/{comunicado}/adjuntos/{adjunto}": {
         parameters: {
             query?: never;
@@ -11033,6 +11017,8 @@ export interface components {
             tipo_etiqueta: "Noticia" | "Comunicado";
             titulo: string;
             resumen: string | null;
+            /** @description Lo que muestra la tarjeta: el resumen, o el comienzo del texto. */
+            extracto: string;
             cuerpo?: string | null;
             referencia: string | null;
             estado: string;
@@ -11046,7 +11032,6 @@ export interface components {
             publicado_hasta: string;
             fijado: boolean;
             requiere_confirmacion: boolean;
-            tiene_portada: boolean;
             duplicado_de_id: number | null;
             creado_por?: {
                 id: number;
@@ -15668,16 +15653,6 @@ export interface components {
             foto: string;
         };
         /**
-         * SubirPortadaRequest
-         * @description La portada: JPG, PNG o WebP de hasta 5 MB (docs/diseno-noticias-comunicados.md,
-         *     regla 6). La pantalla la recorta a 16:9 antes de subirla; aquí se exige un
-         *     tamaño que se vea bien en una tarjeta.
-         */
-        SubirPortadaRequest: {
-            /** Format: binary */
-            portada: string;
-        };
-        /**
          * SubirRecursoIdentidadRequest
          * @description Una versión nueva de una variante del logo. Que sea PNG o JPG, sus medidas y
          *     su proporción dependen de la variante: las revisa
@@ -17876,99 +17851,6 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             422: components["responses"]["ValidationException"];
-        };
-    };
-    "archivosComunicado.portada": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The comunicado ID */
-                comunicado: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/octet-stream": string;
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            404: components["responses"]["ModelNotFoundException"];
-        };
-    };
-    "archivosComunicado.subirPortada": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The comunicado ID */
-                comunicado: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["SubirPortadaRequest"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Portada guardada.";
-                        datos: {
-                            tiene_portada: boolean;
-                        };
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            404: components["responses"]["ModelNotFoundException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
-    "archivosComunicado.quitarPortada": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The comunicado ID */
-                comunicado: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Portada quitada.";
-                        datos: {
-                            tiene_portada: boolean;
-                        };
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            404: components["responses"]["ModelNotFoundException"];
         };
     };
     "archivosComunicado.adjunto": {

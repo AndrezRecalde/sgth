@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, Grid, Stack } from '@mantine/core'
+import { Button, Grid } from '@mantine/core'
 import { IconLock } from '@tabler/icons-react'
 import { useRouter } from 'next/navigation'
 import { DataState, EmptyState, PageHeader, PageShell } from '@/components/ui'
@@ -8,7 +8,6 @@ import { ROUTES } from '@/config/routes'
 import { erroresAlFormulario } from '@/lib/erroresAlFormulario'
 import { AdjuntosComunicado } from '@/features/comunicados/components/AdjuntosComunicado'
 import { ComunicadoForm } from '@/features/comunicados/components/ComunicadoForm'
-import { PortadaComunicado } from '@/features/comunicados/components/PortadaComunicado'
 import { useComunicado } from '@/features/comunicados/hooks/useComunicados'
 import { useMutacionesComunicado } from '@/features/comunicados/hooks/useMutacionesComunicado'
 import { usePermisosComunicados } from '@/features/comunicados/hooks/usePermisosComunicados'
@@ -17,7 +16,7 @@ import { aFormulario, aPayload } from '@/features/comunicados/utils/formulario'
 
 /**
  * Seguir un borrador: el texto, los destinatarios y las fechas a la izquierda;
- * la portada y los documentos, que se guardan al subirlos, a la derecha. Al
+ * los documentos, que se guardan al subirlos, a la derecha. Al
  * guardar se pasa al detalle, que es la vista previa y donde se publica.
  * Lo publicado no se edita (D5): se retira y se duplica.
  */
@@ -74,10 +73,7 @@ export function EditarComunicadoView({ id }: { id: string }) {
               />
             </Grid.Col>
             <Grid.Col span={{ base: 12, lg: 4 }}>
-              <Stack gap="md">
-                <PortadaComunicado comunicado={comunicado} />
-                <AdjuntosComunicado comunicado={comunicado} />
-              </Stack>
+              <AdjuntosComunicado comunicado={comunicado} />
             </Grid.Col>
           </Grid>
         )}
