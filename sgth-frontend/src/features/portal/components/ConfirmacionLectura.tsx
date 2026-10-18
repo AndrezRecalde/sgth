@@ -1,6 +1,6 @@
 'use client'
 
-import { Alert, Button, Group, Stack, Text } from '@mantine/core'
+import { Alert, Button, Group, Text } from '@mantine/core'
 import { IconCheck, IconCircleCheck, IconSignature } from '@tabler/icons-react'
 import { confirmar } from '@/components/ui'
 import { formatFechaMesHora } from '@/lib/fecha'
@@ -35,11 +35,12 @@ export function ConfirmacionLectura({ c }: { c: ComunicadoPortal }) {
 
   const preguntar = () => confirmar({
     title: 'Confirmar la lectura',
+    // En línea: `confirmar()` ya lo pone dentro de un párrafo.
     message: (
-      <Stack gap="xs">
-        <Text size="sm">¿Confirma que leyó <b>{c.titulo}</b>?</Text>
-        <Text size="sm" c="dimmed">Quedará registrado a su nombre, con la fecha y la hora, y no se puede deshacer.</Text>
-      </Stack>
+      <>
+        ¿Confirma que leyó <b>{c.titulo}</b>? Quedará registrado a su nombre, con la fecha y la hora,
+        y no se puede deshacer.
+      </>
     ),
     confirmLabel: 'Sí, confirmo',
     onConfirm: () => confirmarLectura.mutate(),

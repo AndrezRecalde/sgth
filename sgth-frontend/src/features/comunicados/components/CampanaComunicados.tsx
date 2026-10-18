@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { ActionIcon, Indicator, Menu, Stack, Text, ThemeIcon, Tooltip } from '@mantine/core'
 import { IconBell, IconChevronRight, IconNews, IconSpeakerphone } from '@tabler/icons-react'
@@ -20,6 +21,8 @@ const SIN_PERMISOS: readonly string[] = []
 export function CampanaComunicados() {
   const tienePortal = useAuthStore((s) => (s.usuario?.permisos ?? SIN_PERMISOS).includes('acceso-autoservicio'))
   const { data } = useResumenComunicados()
+  // Con el menú abierto el tooltip sobra: se ponía encima del título del menú.
+  const [abierto, setAbierto] = useState(false)
 
   if (!tienePortal) return null
 
@@ -30,9 +33,9 @@ export function CampanaComunicados() {
     : 'Noticias y comunicados'
 
   return (
-    <Menu position="bottom-end" width={360} shadow="md">
+    <Menu position="bottom-end" width={360} shadow="md" opened={abierto} onChange={setAbierto}>
       <Menu.Target>
-        <Tooltip label={etiqueta}>
+        <Tooltip label={etiqueta} disabled={abierto}>
           <Indicator color="red" size={16} offset={6} label={sinLeer > 9 ? '9+' : sinLeer} disabled={!sinLeer}>
             <ActionIcon size="lg" radius="xl" aria-label={etiqueta}>
               <IconBell size={19} stroke={1.6} />
