@@ -88,7 +88,11 @@ export function ServidorFormPersonal() {
       </Grid.Col>
       {/* Los cuatro a `sm: 6`. Género y estado civil iban a `sm: 4` y los dos
           de abajo a `sm: 6`: la primera fila quedaba con un hueco de un tercio
-          a la derecha y las cajas de las dos filas no coincidían de ancho. */}
+          a la derecha y las cajas de las dos filas no coincidían de ancho.
+
+          Los dos son obligatorios y arrancan vacíos, sin `allowDeselect`: en
+          Mantine pulsar la opción ya marcada la quita, y volvía el campo a
+          vacío, que el esquema rechaza. */}
       <Grid.Col span={{ base: 12, sm: 6 }}>
         <Controller
           name="genero"
@@ -98,8 +102,9 @@ export function ServidorFormPersonal() {
               label="Género"
               placeholder="Seleccionar"
               data={GENERO_OPTIONS}
+              allowDeselect={false}
               {...contained}
-              value={field.value}
+              value={field.value ?? null}
               onChange={field.onChange}
               error={errors.genero?.message}
             />
@@ -115,8 +120,9 @@ export function ServidorFormPersonal() {
               label="Estado civil"
               placeholder="Seleccionar"
               data={ESTADO_CIVIL_OPTIONS}
+              allowDeselect={false}
               {...contained}
-              value={field.value}
+              value={field.value ?? null}
               onChange={field.onChange}
               error={errors.estado_civil?.message}
             />

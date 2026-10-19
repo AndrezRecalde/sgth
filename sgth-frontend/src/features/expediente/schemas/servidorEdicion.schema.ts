@@ -19,10 +19,10 @@ export const servidorEdicionSchema = z.object({
     .regex(/^\d+$/, 'Solo dígitos'),
 
   fecha_nacimiento: z.string().optional(),
-  genero:           z.enum(['masculino', 'femenino', 'otro']),
+  genero:           z.enum(['masculino', 'femenino', 'otro'], { error: 'Seleccione el género' }),
   estado_civil:     z.enum([
     'soltero', 'casado', 'union_libre', 'divorciado', 'viudo',
-  ]),
+  ], { error: 'Seleccione el estado civil' }),
   tipo_sangre: z.enum([
     'A+','A-','B+','B-','AB+','AB-','O+','O-',
   ]).optional().nullable(),
@@ -55,6 +55,8 @@ export type ServidorEdicionFormData = z.infer<typeof servidorEdicionSchema>
 
 /** Los datos que la ficha necesita para estar completa, con su nombre. */
 export const CAMPOS_OBLIGATORIOS_DE_LA_FICHA = {
+  genero: 'género',
+  estado_civil: 'estado civil',
   fecha_nacimiento: 'fecha de nacimiento',
   provincia_nacimiento_id: 'provincia de nacimiento',
   canton_nacimiento_id: 'cantón de nacimiento',
@@ -62,12 +64,18 @@ export const CAMPOS_OBLIGATORIOS_DE_LA_FICHA = {
 
 /**
  * Qué le falta a la ficha. Un servidor extranjero no tiene provincia ni
- * cantón, así que ahí solo se mira la fecha de nacimiento.
+ * cantón, así que ahí no se miran.
+ *
+ * Género y estado civil entraron el 2026-10-19. Hasta entonces el formulario
+ * los rellenaba con «Masculino» y «Soltero/a» cuando faltaban, y la ficha
+ * parecía completa sin estarlo.
  */
 export function camposQueFaltan(
   valores: Partial<ServidorEdicionFormData>,
 ): string[] {
   const faltan: string[] = []
+  if (!valores.genero) faltan.push(CAMPOS_OBLIGATORIOS_DE_LA_FICHA.genero)
+  if (!valores.estado_civil) faltan.push(CAMPOS_OBLIGATORIOS_DE_LA_FICHA.estado_civil)
   if (!valores.fecha_nacimiento) faltan.push(CAMPOS_OBLIGATORIOS_DE_LA_FICHA.fecha_nacimiento)
   if (!valores.es_extranjero) {
     if (!valores.provincia_nacimiento_id) {

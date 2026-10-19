@@ -39,7 +39,7 @@ const {
   formState: { errors, isSubmitting },
 } = useForm<ServidorFormData>({
   resolver: zodResolver(servidorSchema),
-  defaultValues: { nombres: '', cedula: '', genero: 'masculino' },
+  defaultValues: { nombres: '', cedula: '' },   // `genero` se omite: lo elige quien registra
 })
 
 return (
@@ -69,9 +69,10 @@ return (
             <Select
               label="Género"
               data={OPCIONES_GENERO}
+              allowDeselect={false}
               error={errors.genero?.message}
               {...contained}
-              value={field.value}
+              value={field.value ?? null}
               onChange={field.onChange}
             />
           )}
@@ -84,6 +85,14 @@ return (
 
 `defaultValues` **siempre**. Sin ellos el campo arranca no controlado y React
 avisa en consola la primera vez que se escribe.
+
+Pero un dato de la persona —género, estado civil, sexo— **no lleva valor por
+defecto**: se omite la clave y el `Select` recibe `field.value ?? null`. Con
+`'masculino'` y `'soltero'` de entrada, el alta registraba así a quien nadie
+tocaba, y la edición mostraba como guardado un dato que la ficha no tenía; como
+el modal de edición envía solo lo tocado, ni siquiera guardar lo arreglaba
+(2026-10-19). Un `Select` obligatorio lleva además `allowDeselect={false}`: en
+Mantine, pulsar la opción ya marcada la quita.
 
 ## `register` o `Controller`
 

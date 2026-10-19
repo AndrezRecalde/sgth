@@ -12,8 +12,7 @@ import { CAMPOS_POR_PASO } from './servidorFormValues'
 export const VINCULACION_EN_BLANCO: DefaultValues<VinculacionInicialFormData> = {
   nombre: '', segundo_nombre: '', apellido: '', segundo_apellido: '', cedula: '',
   fecha_nacimiento: '',
-  genero: 'masculino',
-  estado_civil: 'soltero',
+  // Sin género ni estado civil: los elige quien registra (ver BLANK_FORM_VALUES).
   tipo_sangre: null,
   es_extranjero: false,
   provincia_nacimiento_id: null,

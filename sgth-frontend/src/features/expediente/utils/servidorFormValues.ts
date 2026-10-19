@@ -1,18 +1,25 @@
+import type { DefaultValues } from 'react-hook-form'
 import type { ServidorConRelaciones } from '@/types/api'
 import type { ServidorBasicoFormData } from '../schemas/servidorBasico.schema'
 import type { ServidorLaboralFormData } from '../schemas/servidorLaboral.schema'
 
-/** Valores del formulario de la ficha: en blanco y a partir de un servidor. */
+/**
+ * Valores del formulario de la ficha: en blanco y a partir de un servidor.
+ *
+ * Género y estado civil no tienen valor por defecto. Arrancaban en
+ * «Masculino» y «Soltero/a»: en el alta, quien no los tocaba registraba así a
+ * cualquiera, y en la edición una ficha que no los tenía los mostraba como si
+ * estuvieran guardados. Como el modal envía solo lo que se tocó, guardar no los
+ * enviaba nunca y la pestaña Personal seguía diciendo «—» (2026-10-19).
+ */
 
-export const BLANK_FORM_VALUES: ServidorBasicoFormData = {
+export const BLANK_FORM_VALUES: DefaultValues<ServidorBasicoFormData> = {
   nombre:           '',
   segundo_nombre:   '',
   apellido:         '',
   segundo_apellido: '',
   cedula:           '',
   fecha_nacimiento: '',
-  genero:           'masculino',
-  estado_civil:     'soltero',
   tipo_sangre:             null,
   es_extranjero:           false,
   provincia_nacimiento_id: null,
@@ -33,7 +40,9 @@ export const BLANK_FORM_VALUES: ServidorBasicoFormData = {
 
 const soloFecha = (v?: string | null) => (v ? v.split('T')[0] : null)
 
-export function mapServidorToFormValues(servidor: ServidorConRelaciones): ServidorBasicoFormData {
+export function mapServidorToFormValues(
+  servidor: ServidorConRelaciones,
+): DefaultValues<ServidorBasicoFormData> {
   return {
     nombre:           servidor.nombre  ?? '',
     segundo_nombre:   servidor.segundo_nombre  ?? '',
@@ -41,10 +50,8 @@ export function mapServidorToFormValues(servidor: ServidorConRelaciones): Servid
     segundo_apellido: servidor.segundo_apellido ?? '',
     cedula:           servidor.cedula ?? '',
     fecha_nacimiento: soloFecha(servidor.fecha_nacimiento) ?? '',
-    genero:           (servidor.genero as ServidorBasicoFormData['genero'])
-      ?? 'masculino',
-    estado_civil: (servidor.estado_civil as ServidorBasicoFormData['estado_civil'])
-      ?? 'soltero',
+    genero:       (servidor.genero ?? undefined) as ServidorBasicoFormData['genero'] | undefined,
+    estado_civil: (servidor.estado_civil ?? undefined) as ServidorBasicoFormData['estado_civil'] | undefined,
     tipo_sangre:             (servidor.tipo_sangre as ServidorBasicoFormData['tipo_sangre']) ?? null,
     es_extranjero:           servidor.es_extranjero ?? false,
     provincia_nacimiento_id: servidor.provincia_nacimiento_id ?? null,
