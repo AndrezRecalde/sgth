@@ -1178,6 +1178,14 @@ export type HistorialAcademicoParams = {
 // ── Cargas Familiares ─────────────────────────
 export type TipoParentesco = 'conyugue' | 'hijo'
 
+// Las que el servidor pide desde «Mi perfil» (docs/diseno-cargas-familiares-portal.md).
+// Salen del generado: los recursos se devuelven sin `resolve()` para que
+// Scramble los lea.
+export type MiCargaFamiliar        = components['schemas']['MiCargaFamiliarResource']
+export type SolicitudCargaFamiliar = components['schemas']['SolicitudCargaFamiliarResource']
+export type TipoSolicitudCarga     = components['schemas']['TipoSolicitudCarga']
+export type EstadoSolicitudCarga   = components['schemas']['EstadoSolicitudCarga']
+
 export type CargaFamiliar = {
   id:          number
   servidor_id: number
