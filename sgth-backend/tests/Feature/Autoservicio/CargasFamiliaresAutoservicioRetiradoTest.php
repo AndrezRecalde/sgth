@@ -7,8 +7,13 @@
 | Ninguna pantalla lo usaba, y no pedía rol: cualquier servidor podía, por API,
 | darse de alta familiares —que entran como pacientes del Dispensario—,
 | marcarles discapacidad o enfermedad catastrófica, o borrar los que había
-| registrado Talento Humano. Las cargas familiares las registra Talento Humano
-| desde el Expediente; el titular las ve en «Mi expediente».
+| registrado Talento Humano.
+|
+| El 2026-10-19 la ruta volvió con otro contrato
+| (docs/diseno-cargas-familiares-portal.md): el titular lee sus cargas y
+| presenta solicitudes, que no cuentan hasta que las valida Talento Humano
+| (SolicitudesCargaFamiliarTest). Lo que estas pruebas cuidan sigue en pie:
+| por el Portal nadie crea, edita ni borra una carga directamente.
 */
 
 use App\Models\Expediente\CargaFamiliar;
@@ -40,26 +45,39 @@ beforeEach(function () {
     ]);
 });
 
-test('el titular ya no se da de alta familiares por API', function () {
-    $this->actingAs($this->usuario, 'sanctum')
-        ->postJson('/api/v1/autoservicio/mis-cargas-familiares', [
-            'cedula' => '0805555553', 'nombres' => 'Teo', 'apellidos' => 'Portal',
-            'parentesco' => 'hijo', 'fecha_nacimiento' => '2018-01-01', 'genero' => 'masculino',
-            'persona_con_discapacidad' => true, 'posee_enfermedad_catastrofica' => false,
-        ])
-        ->assertNotFound();
+test('el titular no se da de alta familiares directamente por API', function () {
+    $datos = [
+        'cedula' => '0805555553', 'nombres' => 'Teo', 'apellidos' => 'Portal',
+        'parentesco' => 'hijo', 'fecha_nacimiento' => '2018-01-01', 'genero' => 'masculino',
+        'persona_con_discapacidad' => true, 'posee_enfermedad_catastrofica' => false,
+    ];
+    $this->actingAs($this->usuario, 'sanctum');
+
+    expect($this->postJson('/api/v1/autoservicio/mis-cargas-familiares', $datos)->status())->toBeIn([404, 405]);
+
+    // Por la solicitud sí entra, pero como solicitud: la carga no existe
+    // hasta que la valide Talento Humano, y la discapacidad no viaja.
+    $this->post('/api/v1/autoservicio/mis-cargas-familiares/solicitudes', [
+        ...$datos,
+        'tipo'      => 'alta',
+        'documento' => \Illuminate\Http\UploadedFile::fake()->create('partida.pdf', 50, 'application/pdf'),
+    ], ['Accept' => 'application/json'])->assertCreated();
 
     expect(CargaFamiliar::where('cedula', '0805555553')->exists())->toBeFalse();
 });
 
-test('el titular ya no edita ni borra los familiares que registró Talento Humano', function () {
+test('el titular no edita ni borra los familiares que registró Talento Humano', function () {
     $url = "/api/v1/autoservicio/mis-cargas-familiares/{$this->registradaPorTh->id}";
     $this->actingAs($this->usuario, 'sanctum');
 
     $this->putJson($url, ['nombres' => 'Otra', 'posee_enfermedad_catastrofica' => true])
         ->assertNotFound();
     $this->deleteJson($url)->assertNotFound();
-    $this->getJson('/api/v1/autoservicio/mis-cargas-familiares')->assertNotFound();
+
+    // Leerlas sí: es «Mi perfil».
+    $this->getJson('/api/v1/autoservicio/mis-cargas-familiares')
+        ->assertOk()
+        ->assertJsonPath('datos.cargas.0.nombres', 'Eva');
 
     expect($this->registradaPorTh->fresh())
         ->not->toBeNull()

@@ -8018,62 +8018,27 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "anyOf": [
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "exito": {
-                                                    "type": "boolean"
-                                                },
-                                                "mensaje": {
-                                                    "type": "string",
-                                                    "const": "Carga familiar registrada."
-                                                },
-                                                "datos": {
-                                                    "$ref": "#/components/schemas/CargaFamiliar"
-                                                },
-                                                "meta": {
-                                                    "type": "null"
-                                                }
-                                            },
-                                            "required": [
-                                                "exito",
-                                                "mensaje",
-                                                "datos",
-                                                "meta"
-                                            ]
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
                                         },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "exito": {
-                                                    "type": "boolean"
-                                                },
-                                                "mensaje": {
-                                                    "type": "string",
-                                                    "const": "Carga familiar registrada."
-                                                },
-                                                "datos": {
-                                                    "anyOf": [
-                                                        {
-                                                            "$ref": "#/components/schemas/CargaFamiliar"
-                                                        },
-                                                        {
-                                                            "type": "null"
-                                                        }
-                                                    ]
-                                                },
-                                                "meta": {
-                                                    "type": "null"
-                                                }
-                                            },
-                                            "required": [
-                                                "exito",
-                                                "mensaje",
-                                                "datos",
-                                                "meta"
-                                            ]
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Carga familiar registrada."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/CargaFamiliar"
+                                        },
+                                        "meta": {
+                                            "type": "null"
                                         }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
                                     ]
                                 }
                             }
@@ -38450,6 +38415,216 @@
                 }
             }
         },
+        "/v1/autoservicio/mis-cargas-familiares": {
+            "get": {
+                "operationId": "misCargasFamiliares.index",
+                "tags": [
+                    "MisCargasFamiliares"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Los recursos van sin `resolve()`: as\u00ed Scramble infiere su forma y\nel Portal tiene los tipos generados.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Sus cargas familiares."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "cargas": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/MiCargaFamiliarResource"
+                                                    }
+                                                },
+                                                "solicitudes": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/SolicitudCargaFamiliarResource"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "cargas",
+                                                "solicitudes"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/autoservicio/mis-cargas-familiares/solicitudes": {
+            "post": {
+                "operationId": "misCargasFamiliares.store",
+                "tags": [
+                    "MisCargasFamiliares"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PresentarSolicitudCargaRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Solicitud enviada. Talento Humano la revisar\u00e1; hasta entonces, su familiar no puede atenderse en el Dispensario.",
+                                                "Solicitud enviada. Talento Humano la revisar\u00e1."
+                                            ]
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/SolicitudCargaFamiliarResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/autoservicio/mis-cargas-familiares/solicitudes/{solicitud}/retirar": {
+            "post": {
+                "operationId": "misCargasFamiliares.retirar",
+                "tags": [
+                    "MisCargasFamiliares"
+                ],
+                "parameters": [
+                    {
+                        "name": "solicitud",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Solicitud retirada."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/SolicitudCargaFamiliarResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/autoservicio/mis-cargas-familiares/solicitudes/{solicitud}/documento": {
+            "get": {
+                "operationId": "misCargasFamiliares.documento",
+                "summary": "El documento que adjunt\u00f3",
+                "tags": [
+                    "MisCargasFamiliares"
+                ],
+                "parameters": [
+                    {
+                        "name": "solicitud",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/autoservicio/mis-certificados-medicos": {
             "get": {
                 "operationId": "autoservicio.misCertificadosMedicos",
@@ -55996,6 +56171,233 @@
                 }
             }
         },
+        "/v1/expediente/cargas-por-validar": {
+            "get": {
+                "operationId": "cargas-por-validar.index",
+                "tags": [
+                    "SolicitudCargaFamiliar"
+                ],
+                "parameters": [
+                    {
+                        "name": "servidor_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Cargas familiares por validar."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/SolicitudCargaFamiliarResource"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/cargas-por-validar/{solicitud}/validar": {
+            "post": {
+                "operationId": "cargas-por-validar.validar",
+                "tags": [
+                    "SolicitudCargaFamiliar"
+                ],
+                "parameters": [
+                    {
+                        "name": "solicitud",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Solicitud validada: el cambio ya consta en el expediente."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/SolicitudCargaFamiliarResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/cargas-por-validar/{solicitud}/rechazar": {
+            "post": {
+                "operationId": "cargas-por-validar.rechazar",
+                "tags": [
+                    "SolicitudCargaFamiliar"
+                ],
+                "parameters": [
+                    {
+                        "name": "solicitud",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "motivo": {
+                                        "type": "string",
+                                        "minLength": 5,
+                                        "maxLength": 500
+                                    }
+                                },
+                                "required": [
+                                    "motivo"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Solicitud rechazada."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/SolicitudCargaFamiliarResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/cargas-por-validar/{solicitud}/documento": {
+            "get": {
+                "operationId": "cargas-por-validar.documento",
+                "summary": "El documento que adjunt\u00f3 el servidor",
+                "tags": [
+                    "SolicitudCargaFamiliar"
+                ],
+                "parameters": [
+                    {
+                        "name": "solicitud",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/dispensario/solicitudes-certificacion/pendientes-triaje": {
             "get": {
                 "operationId": "solicitudCertificacion.pendientesTriaje",
@@ -71859,6 +72261,17 @@
                 ],
                 "title": "EstadoSolicitudAccion"
             },
+            "EstadoSolicitudCarga": {
+                "type": "string",
+                "description": "D\u00f3nde est\u00e1 una solicitud de carga familiar del Portal (dise\u00f1o, 3.3). Los nombres siguen los de las solicitudes de acciones de personal, salvo \u00abvalidada\u00bb, que es la palabra de los t\u00edtulos.\n",
+                "enum": [
+                    "pendiente",
+                    "validada",
+                    "rechazada",
+                    "retirada"
+                ],
+                "title": "EstadoSolicitudCarga"
+            },
             "EstadoSubrogacion": {
                 "type": "string",
                 "description": "| |\n|---|\n| `pendiente` <br/> Registrada, pero su Acci\u00f3n de Personal todav\u00eda no se aprueba. No surte ning\u00fan efecto: el subrogante no asume el puesto ni adquiere la facultad de firmar mientras est\u00e9 aqu\u00ed. |\n| `activa` <br/> Acci\u00f3n registrada: el subrogante asume el puesto y puede firmar. |\n| `finalizada` <br/>  |\n| `cancelada` <br/>  |",
@@ -74792,6 +75205,61 @@
                     "personal"
                 ],
                 "title": "MedioNotificacion"
+            },
+            "MiCargaFamiliarResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "cedula": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "nombres": {
+                        "type": "string"
+                    },
+                    "apellidos": {
+                        "type": "string"
+                    },
+                    "parentesco": {
+                        "$ref": "#/components/schemas/TipoParentesco"
+                    },
+                    "parentesco_etiqueta": {
+                        "type": "string"
+                    },
+                    "fecha_nacimiento": {
+                        "type": "string"
+                    },
+                    "genero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "estado": {
+                        "type": "boolean"
+                    },
+                    "tiene_solicitud_pendiente": {
+                        "type": "boolean",
+                        "description": "Para no ofrecer pedir dos veces lo mismo."
+                    }
+                },
+                "required": [
+                    "id",
+                    "cedula",
+                    "nombres",
+                    "apellidos",
+                    "parentesco",
+                    "parentesco_etiqueta",
+                    "fecha_nacimiento",
+                    "genero",
+                    "estado",
+                    "tiene_solicitud_pendiente"
+                ],
+                "title": "MiCargaFamiliarResource"
             },
             "MiCredencialResource": {
                 "type": "object",
@@ -78082,6 +78550,73 @@
                     "archivo"
                 ],
                 "title": "PresentarSolicitudAccionRequest"
+            },
+            "PresentarSolicitudCargaRequest": {
+                "type": "object",
+                "description": "Lo que el servidor manda desde \u00abMi perfil\u00bb sobre sus cargas familiares\n(docs/diseno-cargas-familiares-portal.md, 3.2 y 5.2): el registro trae al\nfamiliar entero, la correcci\u00f3n sus datos nuevos y la baja su motivo. Lo que\ndepende de la ficha \u2014la c\u00e9dula que ya consta, el c\u00f3nyuge activo, el\ndocumento de una correcci\u00f3n\u2014 lo mira SolicitudCargaFamiliarService.",
+                "properties": {
+                    "tipo": {
+                        "$ref": "#/components/schemas/TipoSolicitudCarga"
+                    },
+                    "carga_familiar_id": {
+                        "type": "integer"
+                    },
+                    "cedula": {
+                        "type": "string",
+                        "description": "La c\u00e9dula no se corrige: solo viene en un registro."
+                    },
+                    "nombres": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "apellidos": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "parentesco": {
+                        "$ref": "#/components/schemas/TipoParentesco"
+                    },
+                    "fecha_nacimiento": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Desde el mismo d\u00eda en que nace (D8)."
+                    },
+                    "genero": {
+                        "type": "string",
+                        "enum": [
+                            "masculino",
+                            "femenino"
+                        ]
+                    },
+                    "motivo": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 1000
+                    },
+                    "documento": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "description": "Obligatorio para un hijo; opcional para el c\u00f3nyuge o conviviente (D11).",
+                        "maxLength": 10240
+                    }
+                },
+                "required": [
+                    "tipo",
+                    "carga_familiar_id",
+                    "cedula",
+                    "nombres",
+                    "apellidos",
+                    "parentesco",
+                    "fecha_nacimiento",
+                    "genero"
+                ],
+                "title": "PresentarSolicitudCargaRequest"
             },
             "PrestamoDirectoRequest": {
                 "type": "object",
@@ -81721,6 +82256,224 @@
                 ],
                 "title": "SolicitarViaticoRequest"
             },
+            "SolicitudCargaFamiliarResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "tipo": {
+                        "$ref": "#/components/schemas/TipoSolicitudCarga"
+                    },
+                    "tipo_etiqueta": {
+                        "type": "string",
+                        "enum": [
+                            "Registro",
+                            "Correcci\u00f3n",
+                            "Baja"
+                        ]
+                    },
+                    "estado": {
+                        "$ref": "#/components/schemas/EstadoSolicitudCarga"
+                    },
+                    "estado_etiqueta": {
+                        "type": "string",
+                        "enum": [
+                            "Pendiente",
+                            "Validada",
+                            "Rechazada",
+                            "Retirada"
+                        ]
+                    },
+                    "servidor": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "cedula": {
+                                "type": "string"
+                            },
+                            "nombre": {
+                                "type": "string"
+                            },
+                            "segundo_nombre": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "apellido": {
+                                "type": "string"
+                            },
+                            "segundo_apellido": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "unidad": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "cedula",
+                            "nombre",
+                            "segundo_nombre",
+                            "apellido",
+                            "segundo_apellido",
+                            "unidad"
+                        ]
+                    },
+                    "cedula": {
+                        "type": "string",
+                        "description": "Lo que propone. En una baja, vac\u00edo: se lee de `carga`."
+                    },
+                    "nombres": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "apellidos": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "parentesco": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/TipoParentesco"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "parentesco_etiqueta": {
+                        "type": "string"
+                    },
+                    "fecha_nacimiento": {
+                        "type": "string"
+                    },
+                    "genero": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "motivo": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "carga": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "La carga como est\u00e1 hoy: el \u00abantes\u00bb de una correcci\u00f3n, o a qui\u00e9n\nda de baja.",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "cedula": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "nombres": {
+                                "type": "string"
+                            },
+                            "apellidos": {
+                                "type": "string"
+                            },
+                            "parentesco": {
+                                "$ref": "#/components/schemas/TipoParentesco"
+                            },
+                            "fecha_nacimiento": {
+                                "type": "string"
+                            },
+                            "genero": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "estado": {
+                                "type": "boolean"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "cedula",
+                            "nombres",
+                            "apellidos",
+                            "parentesco",
+                            "fecha_nacimiento",
+                            "genero",
+                            "estado"
+                        ]
+                    },
+                    "tiene_documento": {
+                        "type": "boolean"
+                    },
+                    "documento_nombre": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "motivo_rechazo": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "resuelto_en": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "puede_retirar": {
+                        "type": "boolean"
+                    },
+                    "avisos": {
+                        "type": "array",
+                        "description": "Solo en la bandeja de Talento Humano.",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "tipo",
+                    "tipo_etiqueta",
+                    "estado",
+                    "estado_etiqueta",
+                    "cedula",
+                    "nombres",
+                    "apellidos",
+                    "parentesco",
+                    "parentesco_etiqueta",
+                    "fecha_nacimiento",
+                    "genero",
+                    "motivo",
+                    "tiene_documento",
+                    "documento_nombre",
+                    "motivo_rechazo",
+                    "resuelto_en",
+                    "created_at",
+                    "puede_retirar"
+                ],
+                "title": "SolicitudCargaFamiliarResource"
+            },
             "SolicitudCertificacionMedica": {
                 "type": "object",
                 "properties": {
@@ -82431,7 +83184,8 @@
                     },
                     "fecha_nacimiento": {
                         "type": "string",
-                        "format": "date-time"
+                        "format": "date-time",
+                        "description": "Desde el mismo d\u00eda en que nace (D8 del dise\u00f1o de cargas desde el\nPortal, 2026-10-19). Con `before:today`, un reci\u00e9n nacido se\nregistraba reci\u00e9n al d\u00eda siguiente."
                     },
                     "genero": {
                         "type": "string",
@@ -87070,6 +87824,16 @@
                     "jubilacion"
                 ],
                 "title": "TipoSolicitudAccion"
+            },
+            "TipoSolicitudCarga": {
+                "type": "string",
+                "description": "Lo que el servidor pide desde \u00abMi perfil\u00bb sobre sus cargas familiares (docs/diseno-cargas-familiares-portal.md, 3.2). Ninguna cuenta hasta que Talento Humano la valida.\n",
+                "enum": [
+                    "alta",
+                    "correccion",
+                    "baja"
+                ],
+                "title": "TipoSolicitudCarga"
             },
             "TipoSubrogacion": {
                 "type": "string",

@@ -7,11 +7,13 @@ use App\Http\Requests\Expediente\StoreCargaFamiliarRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\Expediente\CargaFamiliar;
 use App\Models\Expediente\Servidor;
+use App\Services\Expediente\CargaFamiliarService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
 
 class CargaFamiliarController extends Controller
 {
+    public function __construct(private readonly CargaFamiliarService $cargas) {}
+
     public function index(int $servidorId): JsonResponse
     {
         $servidor = Servidor::findOrFail($servidorId);
@@ -31,24 +33,10 @@ class CargaFamiliarController extends Controller
         int $servidorId
     ): JsonResponse {
         Servidor::findOrFail($servidorId);
-        $datos = array_merge($request->validated(), ['servidor_id' => $servidorId]);
 
-        // Un familiar borrado se recupera con su misma fila, no se crea otro.
-        // Su historia clínica del Dispensario cuelga de ese id y se numera con
-        // la cédula, que es única: una fila nueva se quedaría sin historia.
-        $borrada = CargaFamiliar::onlyTrashed()
-            ->where('cedula', $datos['cedula'])
-            ->first();
+        // Un familiar borrado se recupera con su misma fila (ver el servicio).
+        $carga = $this->cargas->registrar($servidorId, $request->validated());
 
-        if ($borrada) {
-            DB::transaction(function () use ($borrada, $datos) {
-                $borrada->restore();
-                $borrada->update([...$datos, 'estado' => true]);
-            });
-            return ApiResponse::created($borrada, 'Carga familiar registrada.');
-        }
-
-        $carga = CargaFamiliar::create($datos);
         return ApiResponse::created($carga, 'Carga familiar registrada.');
     }
 
@@ -59,7 +47,7 @@ class CargaFamiliarController extends Controller
     ): JsonResponse {
         $carga = CargaFamiliar::where('servidor_id', $servidorId)
             ->findOrFail($id);
-        $carga->update($request->validated());
+        $this->cargas->actualizar($carga, $request->validated());
         return ApiResponse::ok($carga, 'Carga familiar actualizada.');
     }
 
@@ -78,7 +66,7 @@ class CargaFamiliarController extends Controller
         $carga = CargaFamiliar::where('servidor_id', $servidorId)
             ->findOrFail($id);
 
-        $carga->update(['estado' => !$carga->estado]);
+        $this->cargas->alternarEstado($carga);
 
         $mensaje = $carga->estado
             ? 'Carga familiar activada.'
