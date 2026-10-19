@@ -1,17 +1,18 @@
 'use client'
 
 import { Button, Stack, Tabs, Text } from '@mantine/core'
-import { IconFileDownload, IconSchool, IconUser, IconUserOff } from '@tabler/icons-react'
+import { IconFileDownload, IconSchool, IconUser, IconUserOff, IconUsers } from '@tabler/icons-react'
 import { DataState, EmptyState, PageHeader, PageShell } from '@/components/ui'
 import { DatosPersonalesTab } from '@/features/expediente/components/tabs/DatosPersonalesTab'
 import { useServidor } from '@/features/expediente/hooks/useServidor'
 import { useAuth } from '@/hooks/useAuth'
 import { useDescargarHojaDeVida } from '../hooks/useMiPerfil'
 import { MiFormacionAcademica } from './MiFormacionAcademica'
+import { MisCargasFamiliares } from './MisCargasFamiliares'
 import { MiSituacionLaboral } from './MiSituacionLaboral'
 
 const TITULO      = 'Mi perfil'
-const DESCRIPCION = 'Su ficha del expediente, su formación académica y su hoja de vida.'
+const DESCRIPCION = 'Su ficha del expediente, su formación académica, sus cargas familiares y su hoja de vida.'
 
 /**
  * «Mi perfil» del Portal del Servidor.
@@ -74,6 +75,9 @@ export function MiPerfilView() {
               <Tabs.Tab value="formacion" leftSection={<IconSchool size={14} />}>
                 Formación académica
               </Tabs.Tab>
+              <Tabs.Tab value="cargas" leftSection={<IconUsers size={14} />}>
+                Cargas familiares
+              </Tabs.Tab>
             </Tabs.List>
 
             <Tabs.Panel value="datos" pt="md">
@@ -92,6 +96,12 @@ export function MiPerfilView() {
 
             <Tabs.Panel value="formacion" pt="md">
               <MiFormacionAcademica />
+            </Tabs.Panel>
+
+            {/* Lo que registra el servidor no cuenta hasta que lo valida
+                Talento Humano (docs/diseno-cargas-familiares-portal.md). */}
+            <Tabs.Panel value="cargas" pt="md">
+              <MisCargasFamiliares />
             </Tabs.Panel>
           </Tabs>
         )}
