@@ -19,7 +19,10 @@ class StoreCargaFamiliarRequest extends FormRequest
             'apellidos'                     => ['required', 'string', 'max:100'],
             'nombres'                       => ['required', 'string', 'max:100'],
             'parentesco'                    => ['required', new Enum(TipoParentesco::class)],
-            'fecha_nacimiento'              => ['required', 'date', 'before:today'],
+            // Desde el mismo día en que nace (D8 del diseño de cargas desde el
+            // Portal, 2026-10-19). Con `before:today`, un recién nacido se
+            // registraba recién al día siguiente.
+            'fecha_nacimiento'              => ['required', 'date', 'before_or_equal:today'],
             // El sexo, con los valores de `servidores.genero`. Obligatorio al
             // registrar o editar: los familiares antiguos lo completan así.
             'genero'                        => ['required', 'in:masculino,femenino'],

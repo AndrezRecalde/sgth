@@ -68,10 +68,6 @@ export function CargaFamiliarModal({
     onClose();
   };
 
-  // El backend pide una fecha anterior a hoy (`before:today`).
-  const ayer = new Date();
-  ayer.setDate(ayer.getDate() - 1);
-
   const onSubmit = (values: CargaFamiliarFormData) => {
     const payload = {
       ...values,
@@ -181,12 +177,14 @@ export function CargaFamiliarModal({
           control={control}
           render={({ field }) => (
             // Obligatoria y sin `clearable`: borrarla dejaba `null` y el
-            // esquema respondía en inglés que esperaba una cadena.
+            // esquema respondía en inglés que esperaba una cadena. Hasta hoy:
+            // un hijo se registra desde el día en que nace (D8 del diseño de
+            // cargas desde el Portal; el backend pide `before_or_equal:today`).
             <DatePickerInput
               label="Fecha de nacimiento"
               placeholder="Seleccionar fecha"
               valueFormat="DD/MM/YYYY"
-              maxDate={ayer}
+              maxDate={new Date()}
               {...contained}
               value={toDateValue(field.value)}
               onChange={(d) => field.onChange(fromDateValue(d))}

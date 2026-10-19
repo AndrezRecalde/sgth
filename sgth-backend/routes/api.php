@@ -20,6 +20,7 @@ use App\Http\Controllers\Autoservicio\MiFormacionController;
 use App\Http\Controllers\Autoservicio\MiPerfilController;
 use App\Http\Controllers\Autoservicio\MisEquiposController;
 use App\Http\Controllers\Autoservicio\MisPrestamosController;
+use App\Http\Controllers\Autoservicio\MisCargasFamiliaresController;
 use App\Http\Controllers\Autoservicio\MisCertificadosMedicosController;
 use App\Http\Controllers\Autoservicio\MisDocumentosLaboralesController;
 use App\Http\Controllers\Autoservicio\MisSolicitudesAccionController;
@@ -97,6 +98,7 @@ use App\Http\Controllers\Expediente\AutoridadElectaController;
 use App\Http\Controllers\Expediente\TerminacionObreroController;
 use App\Http\Controllers\Expediente\ContratoColectivoController;
 use App\Http\Controllers\Expediente\SolicitudAccionPersonalController;
+use App\Http\Controllers\Expediente\SolicitudCargaFamiliarController;
 use App\Http\Controllers\Expediente\DesvinculacionController;
 use App\Http\Controllers\Expediente\LoteAccionController;
 use App\Http\Controllers\Expediente\PeriodoDePruebaController;
@@ -638,6 +640,23 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::get('formacion-por-validar', [HistorialAcademicoController::class, 'porValidar'])
             ->middleware('role:admin-uath|asistente-uath');
 
+        // Las cargas familiares que los servidores piden desde «Mi perfil»
+        // (docs/diseno-cargas-familiares-portal.md, 6.2). Los mismos roles
+        // que gestionan las cargas en el expediente; nadie resuelve las de su
+        // propia familia (lo impide el servicio).
+        Route::prefix('cargas-por-validar')
+            ->middleware('role:admin-uath|asistente-uath')
+            ->name('cargas-por-validar.')
+            ->group(function () {
+                Route::get('/', [SolicitudCargaFamiliarController::class, 'index'])->name('index');
+                Route::post('{solicitud}/validar', [SolicitudCargaFamiliarController::class, 'validar'])
+                    ->whereNumber('solicitud')->name('validar');
+                Route::post('{solicitud}/rechazar', [SolicitudCargaFamiliarController::class, 'rechazar'])
+                    ->whereNumber('solicitud')->name('rechazar');
+                Route::get('{solicitud}/documento', [SolicitudCargaFamiliarController::class, 'documento'])
+                    ->whereNumber('solicitud')->name('documento');
+            });
+
         // La bitácora de lo ya emitido. Mismo rol que emitir: quien no puede
         // entregar un certificado tampoco tiene por qué saber a quién se le
         // entregó uno ni cuándo.
@@ -1091,11 +1110,21 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // justifica el certificado médico, que ya crea su permiso con folio.
         Route::get('mi-historia-clinica', [AutoservicioController::class, 'miHistoriaClinica']);
 
-        // Aquí estaba `mis-cargas-familiares` (CRUD), retirado el 2026-10-03.
-        // Ninguna pantalla lo usaba y no pedía rol: cualquier servidor podía
-        // darse de alta familiares —que entran como pacientes del Dispensario—
-        // o borrar los que registró Talento Humano. Las cargas las registra
-        // Talento Humano desde el Expediente.
+        // `mis-cargas-familiares` vuelve el 2026-10-19 con otro contrato. El
+        // CRUD que hubo aquí se retiró el 2026-10-03: ninguna pantalla lo
+        // usaba y no pedía rol, así que cualquier servidor podía darse de alta
+        // familiares —que entran como pacientes del Dispensario— o borrar los
+        // que registró Talento Humano. Ahora el servidor solo presenta
+        // solicitudes, y nada cuenta hasta que Talento Humano las valida
+        // (docs/diseno-cargas-familiares-portal.md).
+        Route::prefix('mis-cargas-familiares')->middleware('permission:acceso-autoservicio')->group(function () {
+            Route::get('/', [MisCargasFamiliaresController::class, 'index']);
+            Route::post('solicitudes', [MisCargasFamiliaresController::class, 'store']);
+            Route::post('solicitudes/{solicitud}/retirar', [MisCargasFamiliaresController::class, 'retirar'])
+                ->whereNumber('solicitud');
+            Route::get('solicitudes/{solicitud}/documento', [MisCargasFamiliaresController::class, 'documento'])
+                ->whereNumber('solicitud');
+        });
     });
 
     // Módulo 07: Selección e Incorporación

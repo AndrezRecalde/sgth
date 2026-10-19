@@ -55,6 +55,12 @@ class CargaFamiliar extends Model
         return $this->hasMany(EnfermedadCatastroficaCargaFamiliar::class);
     }
 
+    /** Lo que el servidor pidió sobre este familiar desde el Portal. */
+    public function solicitudes(): HasMany
+    {
+        return $this->hasMany(SolicitudCargaFamiliar::class);
+    }
+
     public function scopeActivos(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
     {
         return $query->where('estado', true);

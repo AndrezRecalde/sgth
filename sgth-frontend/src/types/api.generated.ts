@@ -5812,6 +5812,71 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/autoservicio/mis-cargas-familiares": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["misCargasFamiliares.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/autoservicio/mis-cargas-familiares/solicitudes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["misCargasFamiliares.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/autoservicio/mis-cargas-familiares/solicitudes/{solicitud}/retirar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["misCargasFamiliares.retirar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/autoservicio/mis-cargas-familiares/solicitudes/{solicitud}/documento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** El documento que adjuntó */
+        get: operations["misCargasFamiliares.documento"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/autoservicio/mis-certificados-medicos": {
         parameters: {
             query?: never;
@@ -8709,6 +8774,71 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["solicitudBodega.anular"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/cargas-por-validar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["cargas-por-validar.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/cargas-por-validar/{solicitud}/validar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cargas-por-validar.validar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/cargas-por-validar/{solicitud}/rechazar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cargas-por-validar.rechazar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/cargas-por-validar/{solicitud}/documento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** El documento que adjuntó el servidor */
+        get: operations["cargas-por-validar.documento"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -11997,6 +12127,12 @@ export interface components {
          */
         EstadoSolicitudAccion: "pendiente" | "atendida" | "rechazada" | "retirada";
         /**
+         * EstadoSolicitudCarga
+         * @description Dónde está una solicitud de carga familiar del Portal (diseño, 3.3). Los nombres siguen los de las solicitudes de acciones de personal, salvo «validada», que es la palabra de los títulos.
+         * @enum {string}
+         */
+        EstadoSolicitudCarga: "pendiente" | "validada" | "rechazada" | "retirada";
+        /**
          * EstadoSubrogacion
          * @description | |
          *     |---|
@@ -12752,6 +12888,20 @@ export interface components {
          * @enum {string}
          */
         MedioNotificacion: "portal" | "personal";
+        /** MiCargaFamiliarResource */
+        MiCargaFamiliarResource: {
+            id: number;
+            cedula: string | null;
+            nombres: string;
+            apellidos: string;
+            parentesco: components["schemas"]["TipoParentesco"];
+            parentesco_etiqueta: string;
+            fecha_nacimiento: string;
+            genero: string | null;
+            estado: boolean;
+            /** @description Para no ofrecer pedir dos veces lo mismo. */
+            tiene_solicitud_pendiente: boolean;
+        };
         /** MiCredencialResource */
         MiCredencialResource: {
             id: number;
@@ -13590,6 +13740,36 @@ export interface components {
             motivo?: string | null;
             /** Format: binary */
             archivo: string;
+        };
+        /**
+         * PresentarSolicitudCargaRequest
+         * @description Lo que el servidor manda desde «Mi perfil» sobre sus cargas familiares
+         *     (docs/diseno-cargas-familiares-portal.md, 3.2 y 5.2): el registro trae al
+         *     familiar entero, la corrección sus datos nuevos y la baja su motivo. Lo que
+         *     depende de la ficha —la cédula que ya consta, el cónyuge activo, el
+         *     documento de una corrección— lo mira SolicitudCargaFamiliarService.
+         */
+        PresentarSolicitudCargaRequest: {
+            tipo: components["schemas"]["TipoSolicitudCarga"];
+            carga_familiar_id: number;
+            /** @description La cédula no se corrige: solo viene en un registro. */
+            cedula: string;
+            nombres: string;
+            apellidos: string;
+            parentesco: components["schemas"]["TipoParentesco"];
+            /**
+             * Format: date-time
+             * @description Desde el mismo día en que nace (D8).
+             */
+            fecha_nacimiento: string;
+            /** @enum {string} */
+            genero: "masculino" | "femenino";
+            motivo?: string | null;
+            /**
+             * Format: binary
+             * @description Obligatorio para un hijo; opcional para el cónyuge o conviviente (D11).
+             */
+            documento?: string | null;
         };
         /**
          * PrestamoDirectoRequest
@@ -14604,6 +14784,56 @@ export interface components {
             pais_destino?: string | null;
             monto_calculado?: number | null;
         };
+        /** SolicitudCargaFamiliarResource */
+        SolicitudCargaFamiliarResource: {
+            id: number;
+            tipo: components["schemas"]["TipoSolicitudCarga"];
+            /** @enum {string} */
+            tipo_etiqueta: "Registro" | "Corrección" | "Baja";
+            estado: components["schemas"]["EstadoSolicitudCarga"];
+            /** @enum {string} */
+            estado_etiqueta: "Pendiente" | "Validada" | "Rechazada" | "Retirada";
+            servidor?: {
+                id: number;
+                cedula: string;
+                nombre: string;
+                segundo_nombre: string | null;
+                apellido: string;
+                segundo_apellido: string | null;
+                unidad: string;
+            };
+            /** @description Lo que propone. En una baja, vacío: se lee de `carga`. */
+            cedula: string;
+            nombres: string | null;
+            apellidos: string | null;
+            parentesco: components["schemas"]["TipoParentesco"] | null;
+            parentesco_etiqueta: string;
+            fecha_nacimiento: string;
+            genero: string | null;
+            motivo: string | null;
+            /**
+             * @description La carga como está hoy: el «antes» de una corrección, o a quién
+             *     da de baja.
+             */
+            carga?: {
+                id: number;
+                cedula: string | null;
+                nombres: string;
+                apellidos: string;
+                parentesco: components["schemas"]["TipoParentesco"];
+                fecha_nacimiento: string;
+                genero: string | null;
+                estado: boolean;
+            } | null;
+            tiene_documento: boolean;
+            documento_nombre: string | null;
+            motivo_rechazo: string | null;
+            resuelto_en: string;
+            created_at: string;
+            puede_retirar: boolean;
+            /** @description Solo en la bandeja de Talento Humano. */
+            avisos?: string[];
+        };
         /** SolicitudCertificacionMedica */
         SolicitudCertificacionMedica: {
             id: number;
@@ -14779,7 +15009,12 @@ export interface components {
             apellidos: string;
             nombres: string;
             parentesco: components["schemas"]["TipoParentesco"];
-            /** Format: date-time */
+            /**
+             * Format: date-time
+             * @description Desde el mismo día en que nace (D8 del diseño de cargas desde el
+             *     Portal, 2026-10-19). Con `before:today`, un recién nacido se
+             *     registraba recién al día siguiente.
+             */
             fecha_nacimiento: string;
             /**
              * @description El sexo, con los valores de `servidores.genero`. Obligatorio al
@@ -16162,6 +16397,12 @@ export interface components {
          * @enum {string}
          */
         TipoSolicitudAccion: "renuncia" | "licencia_sin_remuneracion" | "jubilacion";
+        /**
+         * TipoSolicitudCarga
+         * @description Lo que el servidor pide desde «Mi perfil» sobre sus cargas familiares (docs/diseno-cargas-familiares-portal.md, 3.2). Ninguna cuenta hasta que Talento Humano la valida.
+         * @enum {string}
+         */
+        TipoSolicitudCarga: "alta" | "correccion" | "baja";
         /**
          * TipoSubrogacion
          * @enum {string}
@@ -20677,12 +20918,6 @@ export interface operations {
                         /** @constant */
                         mensaje: "Carga familiar registrada.";
                         datos: components["schemas"]["CargaFamiliar"];
-                        meta: null;
-                    } | {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Carga familiar registrada.";
-                        datos: components["schemas"]["CargaFamiliar"] | null;
                         meta: null;
                     };
                 };
@@ -33478,6 +33713,120 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "misCargasFamiliares.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /**
+             * @description Los recursos van sin `resolve()`: así Scramble infiere su forma y
+             *     el Portal tiene los tipos generados.
+             */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Sus cargas familiares.";
+                        datos: {
+                            cargas: components["schemas"]["MiCargaFamiliarResource"][];
+                            solicitudes: components["schemas"]["SolicitudCargaFamiliarResource"][];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "misCargasFamiliares.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["PresentarSolicitudCargaRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @enum {string} */
+                        mensaje: "Solicitud enviada. Talento Humano la revisará; hasta entonces, su familiar no puede atenderse en el Dispensario." | "Solicitud enviada. Talento Humano la revisará.";
+                        datos: components["schemas"]["SolicitudCargaFamiliarResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "misCargasFamiliares.retirar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                solicitud: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Solicitud retirada.";
+                        datos: components["schemas"]["SolicitudCargaFamiliarResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "misCargasFamiliares.documento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                solicitud: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "autoservicio.misCertificadosMedicos": {
         parameters: {
             query?: {
@@ -41021,6 +41370,120 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
             404: components["responses"]["ModelNotFoundException"];
             422: components["responses"]["ValidationException"];
+        };
+    };
+    "cargas-por-validar.index": {
+        parameters: {
+            query?: {
+                servidor_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Cargas familiares por validar.";
+                        datos: components["schemas"]["SolicitudCargaFamiliarResource"][];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "cargas-por-validar.validar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                solicitud: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Solicitud validada: el cambio ya consta en el expediente.";
+                        datos: components["schemas"]["SolicitudCargaFamiliarResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "cargas-por-validar.rechazar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                solicitud: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    motivo: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Solicitud rechazada.";
+                        datos: components["schemas"]["SolicitudCargaFamiliarResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "cargas-por-validar.documento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                solicitud: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
         };
     };
     "solicitudCertificacion.pendientesTriaje": {
