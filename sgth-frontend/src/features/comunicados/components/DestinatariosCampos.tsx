@@ -7,20 +7,13 @@ import { Controller, useWatch, type Control } from 'react-hook-form'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { plural } from '@/lib/plural'
 import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
-import { OPCIONES_REGIMEN } from '../constants/comunicados'
+import { NIVEL_DIRECCION, OPCIONES_REGIMEN } from '../constants/comunicados'
 import { useConteoDestinatarios } from '../hooks/useComunicados'
 import type { ComunicadoFormData } from '../schemas/comunicado.schema'
 
 interface Props {
   control: Control<ComunicadoFormData>
 }
-
-/**
- * Se elige entre las direcciones (nivel 2 del orgánico), y cada una va con sus
- * jefaturas: el nivel 1 es la institución entera, que ya es «a todos», y
- * ofrecer las 59 unidades hacía la lista larga sin necesidad (2026-10-18).
- */
-const NIVEL_DIRECCION = 2
 
 const REGIMENES = ['losep', 'codigo_trabajo', 'servicios_profesionales'] as const
 const esRegimen = (v: string): v is (typeof REGIMENES)[number] => REGIMENES.some((r) => r === v)

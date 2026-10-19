@@ -233,6 +233,10 @@ class AppServiceProvider extends ServiceProvider
             \App\Services\Comunicados\MisComunicadosService::class
         );
         $this->app->bind(
+            \App\Contracts\Comunicados\SeguimientoComunicadoServiceInterface::class,
+            \App\Services\Comunicados\SeguimientoComunicadoService::class
+        );
+        $this->app->bind(
             HelpdeskServiceInterface::class,
             HelpdeskService::class
         );

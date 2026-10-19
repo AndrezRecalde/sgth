@@ -101,6 +101,39 @@ export interface ComunicadoPayload {
 
 export type SeleccionDestinatarios = Pick<ComunicadoPayload, 'audiencia' | 'unidades' | 'regimenes'>
 
+// ── Seguimiento de lecturas ─────────────────────────────────────────────────
+
+/** Cómo va cada destinatario con la publicación (SeguimientoComunicadoService). */
+export type EstadoLectura = 'sin_leer' | 'leido' | 'confirmado'
+
+/** «Pendiente» depende de la publicación: sin confirmar si la pide, sin leer si no. */
+export type FiltroEstadoLectura = EstadoLectura | 'pendiente'
+
+export interface LecturaDestinatario {
+  user_id: number
+  /** Una cuenta sin ficha no la tiene. */
+  cedula: string | null
+  nombre: string
+  unidad: string | null
+  estado: EstadoLectura
+  leido_at: string | null
+  confirmado_at: string | null
+}
+
+/** Las cifras, contadas sobre los destinatarios de hoy. */
+export interface ResumenLecturas {
+  destinatarios: number
+  leidos: number
+  confirmados: number
+  pendientes: number
+}
+
+export interface FiltrosLecturas {
+  estado?: FiltroEstadoLectura
+  unidad_administrativa_id?: number
+  buscar?: string
+}
+
 // ── Portal del servidor ─────────────────────────────────────────────────────
 
 /**

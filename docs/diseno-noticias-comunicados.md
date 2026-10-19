@@ -164,6 +164,14 @@ Botones: *Guardar borrador*, *Vista previa*, *Publicar*. *Publicar* solo aparece
 - Tabla de destinatarios con su estado (sin leer, leído, confirmado) y fecha, filtrable por unidad.
 - **Excel de pendientes de confirmación**, para el seguimiento de circulares que deben acatarse [D9].
 
+**Cómo quedó** [Hecho, PR 4]: el detalle de una publicación ya publicada tiene dos pestañas, *Publicación* (la vista previa y el historial) y *Lecturas*, que solo ve quien tiene `ver-lecturas-comunicados`; un borrador no tiene pestañas.
+
+- **Sobre quién se cuenta.** Todo —tarjetas, tabla y Excel— se cuenta sobre los destinatarios de hoy, con la misma regla que decide quién la ve en el Portal (`DestinatariosComunicadoService::usuarios`, con las dependencias congeladas al publicar). Quien se fue de la dirección después de leer ya no cuenta; quien llegó después de publicada aparece como pendiente. Por eso la columna *Lecturas* del listado, que cuenta lecturas guardadas, puede diferir un poco de las tarjetas.
+- **Tarjetas:** destinatarios, leídos y confirmados con su porcentaje, y los que faltan: *Sin confirmar* si la publicación pide confirmación, *Sin leer* si no (entonces no hay tarjeta de confirmados).
+- **Tabla:** servidor y cédula, unidad, estado, fecha de lectura y, si pide confirmación, fecha de confirmación. Filtra por estado (con confirmación, también «pendientes de confirmar»), por dirección —con sus dependencias; si se envió a unas direcciones, ofrece solo esas— y busca por nombre o cédula. Ordenada por apellido.
+- **Excel** (`LecturasPendientesExport`): cédula, servidor, unidad, estado y fecha de lectura de quien falta, ordenado por unidad para repartirlo por dirección. Respeta la dirección elegida en la tabla. El botón dice «Excel de quién no confirmó» o «de quién no la leyó» según la publicación, y se apaga si no falta nadie.
+- Las cifras se vuelven a pedir al volver a la ventana pasado un minuto, porque cambian mientras TH las mira.
+
 ### 6.5 Acciones
 
 | Acción | Sobre | Permiso |
@@ -185,7 +193,7 @@ El espacio de nombres es `Comunicados`, distinto de `Comunicacion` (el subsistem
 
 - **Modelos** (`app/Models/Comunicados`): `Comunicado`, `ComunicadoAdjunto`, `ComunicadoLectura`.
 - **Enums**: `TipoComunicado` (noticia, comunicado), `EstadoComunicado` (borrador, publicado, retirado: lo guardado), `VigenciaComunicado` (lo que se enseña: suma programado y vencido, deducidos de las fechas) y `AudienciaComunicado` (todos, segmentada).
-- **Servicios** (`app/Services/Comunicados`, cada uno con su interfaz en `app/Contracts/Comunicados`): `ComunicadoService` (el ciclo: borrador, publicar, retirar, duplicar, fijado y fecha de fin, listado), `DestinatariosComunicadoService` (a quién llega y cuántos son) y `ArchivosComunicadoService` (los PDF adjuntos).
+- **Servicios** (`app/Services/Comunicados`, cada uno con su interfaz en `app/Contracts/Comunicados`): `ComunicadoService` (el ciclo: borrador, publicar, retirar, duplicar, fijado y fecha de fin, listado), `DestinatariosComunicadoService` (a quién llega y cuántos son), `ArchivosComunicadoService` (los PDF adjuntos), `MisComunicadosService` (el Portal) y `SeguimientoComunicadoService` (quién leyó y quién falta).
 - **Sin policy** [Hecho, PR 1]: cada ruta pide su permiso (`permission:` como el resto del API) y las reglas de estado viven en `ComunicadoService`. Así valen también para `admin-ti`, a quien el `Gate::before` le aprobaría cualquier habilidad de una policy: tampoco él edita lo publicado.
 - **HTML**: `app/Support/HtmlEnriquecido.php` con la lista blanca de la regla 5; `HtmlClinico` se queda como está. De lo que no se permite se quita la etiqueta y se deja el texto cuando es un contenedor (`div`, `span`, un `h1` pegado); `script`, `style`, `img`, `iframe` y similares se van con su contenido.
 
@@ -205,8 +213,9 @@ Rutas de TH (`/v1/comunicados`):
 | POST | `/comunicados/{id}/retirar` | Retira con motivo |
 | POST | `/comunicados/{id}/duplicar` | Nuevo borrador desde este |
 | PATCH | `/comunicados/{id}/publicacion` | Fijado y fecha de fin |
-| GET | `/comunicados/{id}/lecturas` | Destinatarios y su estado |
-| GET | `/comunicados/{id}/lecturas/excel` | Pendientes de confirmación |
+| GET | `/comunicados/{id}/lecturas` | Destinatarios y su estado, con filtros por estado, dirección y búsqueda |
+| GET | `/comunicados/{id}/lecturas/resumen` | Las cifras de las tarjetas |
+| GET | `/comunicados/{id}/lecturas/excel` | Pendientes de confirmación (o de lectura), de todos o de una dirección |
 
 Rutas del Portal (`/v1/autoservicio/comunicados`, con `acceso-autoservicio`):
 
@@ -271,6 +280,7 @@ Leer en el Portal usa el `acceso-autoservicio` que ya existe.
 
 - **TH** [Hecho, PR 2]: las pantallas en `src/app/(sgth)/sgth/comunicados` (`ComunicadosView`, `NuevoComunicadoView`, `EditarComunicadoView`, `DetalleComunicadoView`) y el módulo en `src/features/comunicados`, con sus `hooks`, `services`, `schemas` (zod) y `utils`. **La vista previa es el detalle**, no un cajón aparte: se guarda el borrador, el detalle muestra cómo lo verá el servidor y desde ahí se publica. Los documentos se agregan en la pantalla de edición, porque necesitan que el borrador exista. El seguimiento con su Excel queda para el PR 4.
 - **Portal** [Hecho, PR 3] (`src/features/portal`): `NoticiasCard` rehecha, `ComunicadosPorConfirmarAviso`, `MisComunicadosView` (pestañas Vigentes y Archivo; filtros Buscar, Tipo y Mostrar —sin leer, por confirmar—), `TarjetaComunicado` (solo texto), `ComunicadoPortalView` y `ConfirmacionLectura`. En `src/features/comunicados`: `CampanaComunicados`, que monta la barra superior, y `EtiquetasComunicado`, que comparten la tarjeta, el listado y la campana. Los datos van por `misComunicadosService` y `useMisComunicados`, con sus claves en su propia raíz (`mis-comunicados`). En el backend, `MisComunicadosService` y `ComunicadoPortalResource`; la regla de quién ve qué es `DestinatariosComunicadoService::visiblesPara`, la misma que cuenta a quién llega, y una prueba comprueba que las dos coincidan.
+- **Seguimiento** [Hecho, PR 4] (`src/features/comunicados`): `SeguimientoLecturas` (tarjetas, filtros y tabla), `LecturasFiltros` (con el botón del Excel) y `lecturas.columns`; los datos van por `comunicadosService` y `useSeguimientoComunicado`, con sus claves bajo `comunicados` para que las acciones sobre la publicación también las refresquen. `DetalleComunicadoView` las monta en la pestaña *Lecturas*.
 - **Compartido**: `ComunicadoContenido` pinta el asunto o título, el cuerpo y los adjuntos; lo usan la vista previa de TH y el detalle del Portal.
 - **Catálogo** [Hecho, PR 2]: `RichTextInput` sale de `features/dispensario` a `src/components/ui`, con la prop `completo` (títulos, citas y enlaces). El recorte de imagen pasó a `src/lib/` y volvió a Comunicación Social al quitarse la portada: es su único usuario.
 - **Rutas**: `ROUTES.SGTH.COMUNICADOS` y `ROUTES.PORTAL.COMUNICADOS`; entradas en `NAV_SGTH` y `NAV_PORTAL`.
@@ -300,7 +310,7 @@ Consecuencias:
 | **1. Backend de gestión** [Hecho] | Migraciones, modelos, enums, permisos (enum, seeder, migración, módulo «Noticias y comunicados» en Permisos adicionales), `HtmlEnriquecido`, servicios, rutas de TH y adjuntos (la portada se quitó en el PR 2) | Pest: permisos por rol, asistente con y sin el permiso adicional, reglas 1–8, limpieza de HTML, archivos fuera del disco público |
 | **2. Pantallas de TH** [Hecho] | Menú, listado, formulario, documentos, detalle con vista previa, publicar, retirar, duplicar, fijar, fecha de fin; regenerar los tipos | Lint, tipos, revisión en el navegador |
 | **3. Portal** [Hecho] | Rutas de autoservicio, tarjeta del inicio, listado, detalle, lectura, confirmación, aviso de pendientes, campana | Pest: visibilidad por unidad, dependencias, régimen, cuenta sin servidor, 404 al que no es destinatario; navegador |
-| **4. Seguimiento** | Pantalla de seguimiento con las cifras de lectura, tabla de destinatarios y Excel de pendientes de confirmación | Pest: cifras por unidad, Excel solo con `ver-lecturas-comunicados` |
+| **4. Seguimiento** [Hecho] | Pestaña *Lecturas* del detalle con las cifras, la tabla de destinatarios y el Excel de pendientes (`SeguimientoComunicadoService`, `LecturasPendientesExport`) | Pest: cifras, destinatarios de hoy, filtros por estado, dirección y búsqueda, borrador sin seguimiento, Excel solo con `ver-lecturas-comunicados`; navegador |
 
 Producción: `php artisan migrate` (crea tablas y permisos). Sin datos que conciliar: el módulo nace vacío.
 

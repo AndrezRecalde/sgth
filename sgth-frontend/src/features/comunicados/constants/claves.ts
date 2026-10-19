@@ -8,6 +8,8 @@ export const clavesComunicados = {
   lista: (filtros: unknown, page: number) => ['comunicados', 'lista', filtros, page] as const,
   detalle: (id: number) => ['comunicados', 'detalle', id] as const,
   conteo: (seleccion: unknown) => ['comunicados', 'conteo', seleccion] as const,
+  resumenLecturas: (id: number) => ['comunicados', 'lecturas', id, 'resumen'] as const,
+  lecturas: (id: number, filtros: unknown, page: number) => ['comunicados', 'lecturas', id, 'lista', filtros, page] as const,
 }
 
 /**

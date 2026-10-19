@@ -127,6 +127,7 @@ use App\Http\Controllers\Comunicacion\IdentidadInstitucionalController;
 use App\Http\Controllers\Comunicacion\IdentidadPublicaController;
 use App\Http\Controllers\Comunicados\ArchivosComunicadoController;
 use App\Http\Controllers\Comunicados\ComunicadoController;
+use App\Http\Controllers\Comunicados\SeguimientoComunicadoController;
 use App\Http\Controllers\InventarioTi\ConstatacionController;
 use App\Http\Controllers\InventarioTi\BajaController;
 use App\Http\Controllers\InventarioTi\BienInformaticoController;
@@ -2326,6 +2327,13 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::post('{comunicado}/publicar', [ComunicadoController::class, 'publicar'])->whereNumber('comunicado');
             Route::post('{comunicado}/retirar', [ComunicadoController::class, 'retirar'])->whereNumber('comunicado');
             Route::patch('{comunicado}/publicacion', [ComunicadoController::class, 'actualizarPublicacion'])->whereNumber('comunicado');
+        });
+
+        // El seguimiento (6.4): quién leyó, quién confirmó y el Excel de quién falta.
+        Route::middleware('permission:ver-lecturas-comunicados')->group(function () {
+            Route::get('{comunicado}/lecturas', [SeguimientoComunicadoController::class, 'index'])->whereNumber('comunicado');
+            Route::get('{comunicado}/lecturas/resumen', [SeguimientoComunicadoController::class, 'resumen'])->whereNumber('comunicado');
+            Route::get('{comunicado}/lecturas/excel', [SeguimientoComunicadoController::class, 'excel'])->whereNumber('comunicado');
         });
     });
 

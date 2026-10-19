@@ -1,7 +1,8 @@
 import api from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
 import type {
-  Comunicado, ComunicadoAdjunto, ComunicadoPayload, FiltrosComunicados, SeleccionDestinatarios,
+  Comunicado, ComunicadoAdjunto, ComunicadoPayload, FiltrosComunicados, FiltrosLecturas, LecturaDestinatario,
+  ResumenLecturas, SeleccionDestinatarios,
 } from './tipos'
 
 type MetaPaginada = { total: number; pagina_actual: number }
@@ -58,4 +59,18 @@ export const comunicadosService = {
 
   descargarAdjunto: (id: number, adjuntoId: number) =>
     api.get<Blob>(`${URL}/${id}/adjuntos/${adjuntoId}`, { responseType: 'blob' }).then((r) => r.data),
+
+  // El seguimiento (`SeguimientoComunicadoController`): un borrador responde 422.
+
+  resumenLecturas: (id: number) =>
+    api.get<ApiResponse<ResumenLecturas>>(`${URL}/${id}/lecturas/resumen`).then((r) => r.data.datos),
+
+  lecturas: (id: number, filtros: FiltrosLecturas, page: number, porPagina: number) =>
+    api.get<ApiResponse<LecturaDestinatario[], MetaPaginada>>(`${URL}/${id}/lecturas`, { params: { ...filtros, page, per_page: porPagina } })
+      .then((r) => ({ data: r.data.datos ?? [], total: r.data.meta?.total ?? 0 })),
+
+  /** Quién falta, de toda la audiencia o de la dirección elegida en la tabla. */
+  excelPendientes: (id: number, unidadId?: number) =>
+    api.get<Blob>(`${URL}/${id}/lecturas/excel`, { params: { unidad_administrativa_id: unidadId }, responseType: 'blob' })
+      .then((r) => r.data),
 }

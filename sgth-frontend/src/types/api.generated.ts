@@ -8384,6 +8384,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/comunicados/{comunicado}/lecturas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["seguimientoComunicado.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicados/{comunicado}/lecturas/resumen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["seguimientoComunicado.resumen"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicados/{comunicado}/lecturas/excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["seguimientoComunicado.excel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/seleccion/convocatorias/{convocatoriaId}/declarar-ganador": {
         parameters: {
             query?: never;
@@ -40163,6 +40211,116 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "seguimientoComunicado.index": {
+        parameters: {
+            query?: {
+                estado?: "sin_leer" | "leido" | "confirmado" | "pendiente" | null;
+                unidad_administrativa_id?: number | null;
+                buscar?: string | null;
+                per_page?: number | null;
+            };
+            header?: never;
+            path: {
+                /** @description The comunicado ID */
+                comunicado: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Destinatarios de la publicación.";
+                        datos: {
+                            [key: string]: string;
+                        };
+                        meta: {
+                            pagina_actual: number;
+                            por_pagina: number;
+                            total: number;
+                            ultima_pagina: number;
+                            desde: number | null;
+                            hasta: number | null;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "seguimientoComunicado.resumen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The comunicado ID */
+                comunicado: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Lecturas de la publicación.";
+                        datos: {
+                            destinatarios: number;
+                            leidos: number;
+                            confirmados: number;
+                            pendientes: number;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "seguimientoComunicado.excel": {
+        parameters: {
+            query?: {
+                estado?: "sin_leer" | "leido" | "confirmado" | "pendiente" | null;
+                unidad_administrativa_id?: number | null;
+                buscar?: string | null;
+                per_page?: number | null;
+            };
+            header?: never;
+            path: {
+                /** @description The comunicado ID */
+                comunicado: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "seleccion.declararGanador": {

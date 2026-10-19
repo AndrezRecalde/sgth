@@ -54278,6 +54278,320 @@
                 }
             }
         },
+        "/v1/comunicados/{comunicado}/lecturas": {
+            "get": {
+                "operationId": "seguimientoComunicado.index",
+                "tags": [
+                    "SeguimientoComunicado"
+                ],
+                "parameters": [
+                    {
+                        "name": "comunicado",
+                        "in": "path",
+                        "required": true,
+                        "description": "The comunicado ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "estado",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "sin_leer",
+                                "leido",
+                                "confirmado",
+                                "pendiente"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "unidad_administrativa_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "buscar",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 100
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Destinatarios de la publicaci\u00f3n."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "pagina_actual": {
+                                                    "type": "integer"
+                                                },
+                                                "por_pagina": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "ultima_pagina": {
+                                                    "type": "integer"
+                                                },
+                                                "desde": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "hasta": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "pagina_actual",
+                                                "por_pagina",
+                                                "total",
+                                                "ultima_pagina",
+                                                "desde",
+                                                "hasta"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/comunicados/{comunicado}/lecturas/resumen": {
+            "get": {
+                "operationId": "seguimientoComunicado.resumen",
+                "tags": [
+                    "SeguimientoComunicado"
+                ],
+                "parameters": [
+                    {
+                        "name": "comunicado",
+                        "in": "path",
+                        "required": true,
+                        "description": "The comunicado ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Lecturas de la publicaci\u00f3n."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "destinatarios": {
+                                                    "type": "integer"
+                                                },
+                                                "leidos": {
+                                                    "type": "integer"
+                                                },
+                                                "confirmados": {
+                                                    "type": "integer"
+                                                },
+                                                "pendientes": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "destinatarios",
+                                                "leidos",
+                                                "confirmados",
+                                                "pendientes"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/comunicados/{comunicado}/lecturas/excel": {
+            "get": {
+                "operationId": "seguimientoComunicado.excel",
+                "tags": [
+                    "SeguimientoComunicado"
+                ],
+                "parameters": [
+                    {
+                        "name": "comunicado",
+                        "in": "path",
+                        "required": true,
+                        "description": "The comunicado ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "estado",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "sin_leer",
+                                "leido",
+                                "confirmado",
+                                "pendiente"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "unidad_administrativa_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "buscar",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 100
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/v1/seleccion/convocatorias/{convocatoriaId}/declarar-ganador": {
             "post": {
                 "operationId": "seleccion.declararGanador",
