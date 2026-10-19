@@ -4,17 +4,7 @@ import type { DataTableColumn } from 'mantine-datatable'
 import { StatusBadge, TableActions, confirmar } from '@/components/ui'
 import { formatFecha } from '@/lib/fecha'
 import type { CargaFamiliar } from '@/types/api'
-
-const PARENTESCO_LABELS: Record<string, string> = {
-  // La columna guarda «conyugue» desde el primer día; se muestra bien escrito.
-  conyugue: 'Cónyuge',
-  conyuge: 'Cónyuge',
-  hijo: 'Hijo/a',
-  padre: 'Padre',
-  madre: 'Madre',
-  hermano: 'Hermano/a',
-  otro: 'Otro',
-}
+import { PARENTESCO_LABELS, SEXO_LABELS } from '../constants/cargaFamiliar'
 
 type Handlers = {
   onEdit: (carga: CargaFamiliar) => void
@@ -41,7 +31,7 @@ export const getCargasFamiliaresColumns = (
     width: 110,
     render: (c) => (
       <StatusBadge size="xs">
-        {PARENTESCO_LABELS[c.parentesco ?? ''] ?? c.parentesco ?? '—'}
+        {PARENTESCO_LABELS[c.parentesco] ?? c.parentesco}
       </StatusBadge>
     ),
   },
@@ -51,7 +41,7 @@ export const getCargasFamiliaresColumns = (
     width: 110,
     // Los registrados antes de existir el campo lo dicen, para completarlo.
     render: (c) => c.genero
-      ? <Text size="sm">{c.genero === 'femenino' ? 'Femenino' : 'Masculino'}</Text>
+      ? <Text size="sm">{SEXO_LABELS[c.genero] ?? c.genero}</Text>
       : <StatusBadge size="xs" tone="warning">Sin registrar</StatusBadge>,
   },
   {
@@ -111,7 +101,9 @@ export const getCargasFamiliaresColumns = (
           color: 'red',
           onClick: () => confirmar({
             title: 'Eliminar carga familiar',
-            message: 'Se eliminará esta carga familiar del expediente. No se puede deshacer.',
+            // No se borra del todo: registrar de nuevo la misma cédula la
+            // recupera con su historia clínica (CargaFamiliarController).
+            message: 'Se quitará esta carga familiar del expediente. Si vuelve a registrarla con la misma cédula, se recupera con su historia clínica del Dispensario.',
             destructiva: true,
             onConfirm: () => onDelete(Number(c.id)),
           }),
