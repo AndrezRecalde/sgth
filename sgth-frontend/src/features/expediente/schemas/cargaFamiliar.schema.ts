@@ -7,7 +7,7 @@ export const cargaFamiliarSchema = z.object({
   nombres:                       z.string().min(2, 'Mínimo 2 caracteres'),
   apellidos:                     z.string().min(2, 'Mínimo 2 caracteres'),
   parentesco:                    z.enum(['conyugue', 'hijo']),
-  fecha_nacimiento:              z.string().min(1, 'Requerido'),
+  fecha_nacimiento:              z.string().min(1, 'Indique la fecha de nacimiento'),
   /** El Dispensario lo usa en sus reportes de morbilidad por sexo. */
   genero:                        z.enum(['masculino', 'femenino'], { error: 'Indique el sexo' }),
   observaciones:                 z.string().optional().nullable(),
