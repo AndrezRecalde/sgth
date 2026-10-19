@@ -12,10 +12,11 @@ export const servidorBasicoSchema = z.object({
 
   // Datos personales — obligatorios
   fecha_nacimiento: z.string().min(1, 'La fecha de nacimiento es requerida'),
-  genero:           z.enum(['masculino', 'femenino', 'otro']),
+  // Sin valor inicial: el mensaje es el que ve quien no los eligió.
+  genero:           z.enum(['masculino', 'femenino', 'otro'], { error: 'Seleccione el género' }),
   estado_civil:     z.enum([
     'soltero', 'casado', 'union_libre', 'divorciado', 'viudo',
-  ]),
+  ], { error: 'Seleccione el estado civil' }),
   tipo_sangre: z.enum([
     'A+','A-','B+','B-','AB+','AB-','O+','O-',
   ]).optional().nullable(),

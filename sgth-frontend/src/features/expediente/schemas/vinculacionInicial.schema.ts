@@ -33,8 +33,11 @@ export const vinculacionInicialSchema = z.object({
     .regex(/^\d+$/, 'Solo dígitos'),
 
   fecha_nacimiento: z.string().min(1, 'La fecha de nacimiento es requerida'),
-  genero:           z.enum(['masculino', 'femenino', 'otro']),
-  estado_civil:     z.enum(['soltero', 'casado', 'union_libre', 'divorciado', 'viudo']),
+  genero:           z.enum(['masculino', 'femenino', 'otro'], { error: 'Seleccione el género' }),
+  estado_civil:     z.enum(
+    ['soltero', 'casado', 'union_libre', 'divorciado', 'viudo'],
+    { error: 'Seleccione el estado civil' },
+  ),
   tipo_sangre: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'])
     .optional().nullable(),
 

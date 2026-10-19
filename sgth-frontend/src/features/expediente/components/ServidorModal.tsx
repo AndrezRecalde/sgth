@@ -32,8 +32,10 @@ interface Props {
   onCreado?: (servidor: ServidorConRelaciones) => void
 }
 
+// Por el esquema y no por los valores en blanco: género y estado civil no
+// tienen valor inicial, así que no son claves de BLANK_FORM_VALUES.
 const esCampo = (c: string): c is keyof ServidorBasicoFormData =>
-  c in BLANK_FORM_VALUES
+  c in servidorBasicoSchema.shape
 
 /**
  * Alta de una ficha, en dos pasos. Editar una ficha ya creada es otra cosa y

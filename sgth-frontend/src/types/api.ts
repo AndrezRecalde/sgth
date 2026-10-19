@@ -553,8 +553,11 @@ export type ServidorConRelaciones = Servidor & {
   apellidos?: string      // campo calculado para compatibilidad
   cedula?: string
   fecha_nacimiento?: string
-  genero?: string
-  estado_civil?: string
+  // Con `null`: el generado lo dice y así llega de una ficha incompleta.
+  // Declarados solo `string`, la intersección con el generado borraba el
+  // `null` y el formulario lo rellenaba sin que el compilador avisara.
+  genero?: string | null
+  estado_civil?: string | null
   tipo_sangre?: string | null
   es_extranjero?: boolean
   provincia_nacimiento_id?: number | null
