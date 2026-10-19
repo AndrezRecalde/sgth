@@ -19,7 +19,7 @@ export const VINCULACION_EN_BLANCO: DefaultValues<VinculacionInicialFormData> = 
   provincia_nacimiento_id: null,
   canton_nacimiento_id: null,
   nacionalidad: '', pais_origen: '',
-  numero_papeleta_votacion: '', pasaporte_numero: '',
+  numero_papeleta_votacion: '', pasaporte_numero: '', pasaporte_vencimiento: null,
   telefono_celular: '', telefono_convencional: '',
   correo_personal: '', direccion_domicilio: '',
   fecha_ingreso_institucion: null,

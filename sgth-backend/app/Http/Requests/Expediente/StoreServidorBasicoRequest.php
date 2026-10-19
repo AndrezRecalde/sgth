@@ -52,6 +52,9 @@ class StoreServidorBasicoRequest extends FormRequest
             ],
             'numero_papeleta_votacion' => 'nullable|string|max:20',
             'pasaporte_numero'         => 'nullable|string|max:50',
+            // La misma regla que UpdateServidorRequest. Hasta el 2026-10-19
+            // solo la edición lo aceptaba y ningún formulario lo enviaba.
+            'pasaporte_vencimiento'    => 'nullable|date|after:today',
             // Se derivan de los registros de la pestaña Condición: una ficha
             // nueva nace sin ninguno.
             'tiene_discapacidad'            => ['prohibited'],

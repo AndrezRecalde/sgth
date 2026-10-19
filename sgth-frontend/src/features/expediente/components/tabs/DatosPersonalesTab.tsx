@@ -2,7 +2,7 @@
 
 import { Group, Stack, Text } from '@mantine/core'
 import { DetailList, SectionCard, StatusBadge } from '@/components/ui'
-import { formatFecha } from '@/lib/fecha'
+import { edadEnAnios, formatFecha } from '@/lib/fecha'
 import type { ServidorConRelaciones } from '@/types/api'
 import { ESTADO_CIVIL_LABELS, GENERO_LABELS } from '../../constants/servidor'
 
@@ -23,16 +23,30 @@ export function DatosPersonalesTab({ servidor, conCondicion = true }: Props) {
     servidor.segundo_nombre,
   ].filter(Boolean).join(' ')
 
-  const anios = servidor.anios_servicio
+  const edad = edadEnAnios(servidor.fecha_nacimiento)
+  const nacimiento = servidor.fecha_nacimiento
+    ? `${formatFecha(servidor.fecha_nacimiento)}${edad != null ? ` (${edad} años)` : ''}`
+    : null
 
+  const pasaporte = servidor.pasaporte_numero
+    ? [
+        servidor.pasaporte_numero,
+        servidor.pasaporte_vencimiento && `vence el ${formatFecha(servidor.pasaporte_vencimiento)}`,
+      ].filter(Boolean).join(' · ')
+    : null
+
+  /*
+   * Lo que la ficha guarda, todo. Hasta el 2026-10-19 el lugar de nacimiento
+   * —obligatorio en el alta— no salía en ninguna parte, el pasaporte de un
+   * ecuatoriano tampoco y el código médico solo en el formulario.
+   *
+   * Los años de servicio ya no van aquí: no son identidad, y los dan la
+   * cabecera del expediente y la situación laboral de «Mi perfil».
+   */
   const identificacion = [
     { label: 'Nombre completo', value: nombreCompleto, ancho: true },
     { label: 'Cédula de identidad', value: servidor.cedula },
-    {
-      label: 'Años de servicio',
-      value: anios != null ? `${anios} ${anios === 1 ? 'año' : 'años'}` : null,
-    },
-    { label: 'Fecha de nacimiento', value: formatFecha(servidor.fecha_nacimiento) },
+    { label: 'Fecha de nacimiento', value: nacimiento },
     { label: 'Género', value: GENERO_LABELS[servidor.genero ?? ''] ?? servidor.genero },
     {
       label: 'Estado civil',
@@ -44,8 +58,21 @@ export function DatosPersonalesTab({ servidor, conCondicion = true }: Props) {
       ? [
           { label: 'Nacionalidad', value: servidor.nacionalidad },
           { label: 'País de origen', value: servidor.pais_origen },
-          { label: 'Pasaporte', value: servidor.pasaporte_numero },
         ]
+      : [
+          {
+            label: 'Lugar de nacimiento',
+            value: [servidor.canton_nacimiento, servidor.provincia_nacimiento]
+              .filter(Boolean).join(', '),
+          },
+        ]),
+    // Un ecuatoriano también puede tenerlo: el formulario lo pide a todos.
+    ...(servidor.es_extranjero || servidor.pasaporte_numero
+      ? [{ label: 'Pasaporte', value: pasaporte }]
+      : []),
+    // Solo lo tiene el personal de salud; a los demás no se les pinta vacío.
+    ...(servidor.codigo_medico
+      ? [{ label: 'Código médico (ACESS)', value: servidor.codigo_medico }]
       : []),
   ]
 

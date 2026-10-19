@@ -34,6 +34,7 @@ export const servidorEdicionSchema = z.object({
   pais_origen:             z.string().optional(),
   numero_papeleta_votacion: z.string().optional(),
   pasaporte_numero:        z.string().optional(),
+  pasaporte_vencimiento:   z.string().optional().nullable(),
 
   telefono_celular:      z.string().optional(),
   telefono_convencional: z.string().optional(),

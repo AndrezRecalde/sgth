@@ -17,7 +17,9 @@ interface Props {
  * aquí basta la foto de hoy.
  */
 export function MiSituacionLaboral({ servidor, nombramiento }: Props) {
-  // Los años de servicio no van aquí: ya los da Identificación, debajo.
+  // Los años de servicio van aquí y no en Identificación, que es la identidad
+  // de la persona; en el expediente los da la cabecera.
+  const anios = servidor.anios_servicio
   const items = [
     {
       label: 'Puesto',
@@ -33,6 +35,10 @@ export function MiSituacionLaboral({ servidor, nombramiento }: Props) {
     { label: 'Régimen laboral', value: REGIMEN_LABELS[servidor.regimen_laboral ?? ''] ?? servidor.regimen_laboral },
     { label: 'Nombramiento', value: nombramiento },
     { label: 'Ingreso a la institución', value: formatFecha(servidor.fecha_ingreso_institucion) },
+    {
+      label: 'Años de servicio',
+      value: anios != null ? `${anios} ${anios === 1 ? 'año' : 'años'}` : null,
+    },
   ]
 
   return (

@@ -62,16 +62,6 @@ export function rangoSinAlerta(campo: string): string {
   return `Sin alerta: ${desde}–${hasta} ${UNIDADES[campo]}`
 }
 
-/** Años cumplidos a una fecha `AAAA-MM-DD` (o ISO); `null` si no hay fecha. */
-export function edadEnAnios(fechaNacimiento?: string | null): number | null {
-  if (!fechaNacimiento) return null
-  const [a, m, d] = fechaNacimiento.slice(0, 10).split('-').map(Number)
-  const hoy = new Date()
-  const edad = hoy.getFullYear() - a
-  const cumplioEsteAnio = hoy.getMonth() + 1 > m || (hoy.getMonth() + 1 === m && hoy.getDate() >= d)
-  return cumplioEsteAnio ? edad : edad - 1
-}
-
 /** Nivel de una constante suelta. */
 function nivelDeConstante(
   campo: string,

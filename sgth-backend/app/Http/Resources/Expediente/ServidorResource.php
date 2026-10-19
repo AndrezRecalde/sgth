@@ -46,6 +46,15 @@ class ServidorResource extends JsonResource
             'pais_origen'             => $this->pais_origen,
             'provincia_nacimiento_id' => $this->provincia_nacimiento_id,
             'canton_nacimiento_id'    => $this->canton_nacimiento_id,
+            // Los nombres, solo si se cargaron (el detalle del expediente).
+            'provincia_nacimiento' => $this->whenLoaded(
+                'provinciaNacimiento',
+                fn () => $this->resource->provinciaNacimiento?->nombre,
+            ),
+            'canton_nacimiento' => $this->whenLoaded(
+                'cantonNacimiento',
+                fn () => $this->resource->cantonNacimiento?->nombre,
+            ),
 
             // ── Sección B · documentos de identidad ─────────────────
             'numero_papeleta_votacion' => $this->numero_papeleta_votacion,

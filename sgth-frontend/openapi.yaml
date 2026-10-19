@@ -81191,6 +81191,13 @@
                             "null"
                         ]
                     },
+                    "provincia_nacimiento": {
+                        "type": "string",
+                        "description": "Los nombres, solo si se cargaron (el detalle del expediente)."
+                    },
+                    "canton_nacimiento": {
+                        "type": "string"
+                    },
                     "numero_papeleta_votacion": {
                         "type": [
                             "string",
@@ -85028,6 +85035,14 @@
                         ],
                         "maxLength": 50
                     },
+                    "pasaporte_vencimiento": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "La misma regla que UpdateServidorRequest. Hasta el 2026-10-19\nsolo la edici\u00f3n lo aceptaba y ning\u00fan formulario lo enviaba."
+                    },
                     "tiene_discapacidad": {
                         "type": "string",
                         "description": "Se derivan de los registros de la pesta\u00f1a Condici\u00f3n: una ficha\nnueva nace sin ninguno."
@@ -85695,6 +85710,14 @@
                             "null"
                         ],
                         "maxLength": 50
+                    },
+                    "pasaporte_vencimiento": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "La misma regla que UpdateServidorRequest. Hasta el 2026-10-19\nsolo la edici\u00f3n lo aceptaba y ning\u00fan formulario lo enviaba."
                     },
                     "tiene_discapacidad": {
                         "type": "string",
