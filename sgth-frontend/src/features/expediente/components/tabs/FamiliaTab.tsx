@@ -1,11 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { Button, Stack } from '@mantine/core'
+import Link from 'next/link'
+import { Alert, Button, Group, Stack, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconPlus, IconUsers } from '@tabler/icons-react'
+import { IconInbox, IconPlus, IconUsers } from '@tabler/icons-react'
 import { DataState, SectionCard, SgthTable } from '@/components/ui'
+import { SEMANTIC_COLOR } from '@/config/design.tokens'
+import { ROUTES } from '@/config/routes'
 import { useCargasFamiliares } from '../../hooks/useCargasFamiliares'
+import { useCargasPorValidar } from '../../hooks/useValidacionCargas'
 import { useCargaFamiliarMutations } from '../../hooks/useCargaFamiliarMutations'
 import { getCargasFamiliaresColumns } from '../cargasFamiliares.columns'
 import { CargaFamiliarCondiciones } from '../CargaFamiliarCondiciones'
@@ -19,6 +23,9 @@ export function FamiliaTab({ servidorId }: Props) {
   const [editItem, setEditItem] = useState<CargaFamiliar | null>(null)
   const { data: cargas = [], isLoading, error } = useCargasFamiliares(servidorId)
   const { eliminar, toggleEstado } = useCargaFamiliarMutations(servidorId)
+  // Lo que el servidor pidió desde «Mi perfil» y espera a Talento Humano
+  // (docs/diseno-cargas-familiares-portal.md, 6.3).
+  const { data: pendientes = [] } = useCargasPorValidar(servidorId)
 
   const columns = getCargasFamiliaresColumns({
     onEdit: (carga) => { setEditItem(carga); open() },
@@ -38,6 +45,22 @@ export function FamiliaTab({ servidorId }: Props) {
           </Button>
         }
       >
+        {pendientes.length > 0 && (
+          <Alert color={SEMANTIC_COLOR.warning} variant="light" icon={<IconInbox size={16} />} mb="md">
+            <Group justify="space-between" gap="sm">
+              <Text size="sm">
+                {pendientes.length === 1
+                  ? '1 solicitud del Portal por validar.'
+                  : `${pendientes.length} solicitudes del Portal por validar.`}
+              </Text>
+              <Button component={Link} href={ROUTES.SGTH.CARGAS_POR_VALIDAR_DE(servidorId)}
+                size="xs" variant="light" color={SEMANTIC_COLOR.warning}>
+                Revisarlas
+              </Button>
+            </Group>
+          </Alert>
+        )}
+
         <DataState
           loading={isLoading}
           error={error}

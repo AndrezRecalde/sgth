@@ -245,7 +245,7 @@ Si el servidor tiene solicitudes pendientes, la sección lo dice («2 solicitude
 | PR | Contenido | Pruebas |
 |---|---|---|
 | **1. Backend** [Hecho, #488] | Migración, enums, `CargaFamiliarService` extraído (sin cambio de comportamiento), `SolicitudCargaFamiliarService`, rutas del Portal y de Talento Humano, documento en disco privado, bitácora | Pest: solo lo propio (404 a lo ajeno), una pendiente por cédula, cédula de otro con mensaje neutro, servidor como carga, un cónyuge activo, recuperar al validar y no al presentar, nadie valida lo suyo, validar dos veces, baja que desactiva, PDF obligatorio para un hijo y opcional para el cónyuge, hijo nacido hoy, las pruebas actuales de cargas en verde |
-| **2. Portal** | Pestaña *Cargas familiares* de «Mi perfil», formularios, retirar, estado y motivo, aviso de las condiciones de salud | Lint, tipos, navegador con un usuario servidor |
+| **2. Portal** [Hecho, #489] | Pestaña *Cargas familiares* de «Mi perfil», formularios, retirar, estado y motivo, aviso de las condiciones de salud | Lint, tipos, navegador con un usuario servidor |
 | **3. Talento Humano** | Bandeja *Cargas por validar*, validar con avisos, rechazar, documento, aviso en el expediente | Lint, tipos, navegador |
 
 Producción: `php artisan migrate`. No hay datos que conciliar: las cargas actuales no cambian.

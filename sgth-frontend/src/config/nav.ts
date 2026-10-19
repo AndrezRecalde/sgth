@@ -112,6 +112,15 @@ export const NAV_SGTH: NavGroup[] = [
             roles: ['admin-uath', 'asistente-uath'],
           },
           {
+            // Las cargas familiares que los servidores piden desde «Mi
+            // perfil» (docs/diseno-cargas-familiares-portal.md). Los roles de
+            // `expediente/cargas-por-validar`.
+            label: 'Cargas por validar',
+            href:  ROUTES.SGTH.CARGAS_POR_VALIDAR,
+            icon:  'IconUsers',
+            roles: ['admin-uath', 'asistente-uath'],
+          },
+          {
             label: 'Subrogaciones y encargos',
             href:  ROUTES.SGTH.SUBROGACIONES,
             icon:  'IconArrowsExchange',
