@@ -22,6 +22,20 @@ export function formatFecha(value?: string | null): string {
   })
 }
 
+/**
+ * Años cumplidos a una fecha `AAAA-MM-DD` (o ISO); `null` si no hay fecha.
+ * Vivía en las constantes de signos vitales del Dispensario; la pestaña
+ * Personal del expediente también la usa.
+ */
+export function edadEnAnios(fechaNacimiento?: string | null): number | null {
+  if (!fechaNacimiento) return null
+  const [a, m, d] = fechaNacimiento.slice(0, 10).split('-').map(Number)
+  const hoy = new Date()
+  const edad = hoy.getFullYear() - a
+  const cumplioEsteAnio = hoy.getMonth() + 1 > m || (hoy.getMonth() + 1 === m && hoy.getDate() >= d)
+  return cumplioEsteAnio ? edad : edad - 1
+}
+
 /** `YYYY-MM-DD` (o ISO completo) del backend a `Date` local, para el selector. */
 export function toDateValue(v?: string | null): Date | null {
   if (!v) return null

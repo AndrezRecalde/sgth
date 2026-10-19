@@ -14452,6 +14452,9 @@ export interface components {
             pais_origen: string | null;
             provincia_nacimiento_id: number | null;
             canton_nacimiento_id: number | null;
+            /** @description Los nombres, solo si se cargaron (el detalle del expediente). */
+            provincia_nacimiento?: string;
+            canton_nacimiento?: string;
             /** @description ── Sección B · documentos de identidad ───────────────── */
             numero_papeleta_votacion: string | null;
             pasaporte_numero: string | null;
@@ -15535,6 +15538,12 @@ export interface components {
             numero_papeleta_votacion?: string | null;
             pasaporte_numero?: string | null;
             /**
+             * Format: date-time
+             * @description La misma regla que UpdateServidorRequest. Hasta el 2026-10-19
+             *     solo la edición lo aceptaba y ningún formulario lo enviaba.
+             */
+            pasaporte_vencimiento?: string | null;
+            /**
              * @description Se derivan de los registros de la pestaña Condición: una ficha
              *     nueva nace sin ninguno.
              */
@@ -15727,6 +15736,12 @@ export interface components {
             pais_origen?: string | null;
             numero_papeleta_votacion?: string | null;
             pasaporte_numero?: string | null;
+            /**
+             * Format: date-time
+             * @description La misma regla que UpdateServidorRequest. Hasta el 2026-10-19
+             *     solo la edición lo aceptaba y ningún formulario lo enviaba.
+             */
+            pasaporte_vencimiento?: string | null;
             /**
              * @description Se derivan de los registros de la pestaña Condición: la carga
              *     inicial solo trae la identidad y el vínculo.

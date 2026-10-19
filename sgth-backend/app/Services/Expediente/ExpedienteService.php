@@ -117,6 +117,10 @@ class ExpedienteService implements ExpedienteServiceInterface
             // endpoints— y este detalle se pide cada vez que se abre la ficha.
             // La foto vigente, para la cabecera (Comunicación Social, 1.1).
             'fotografiaVigente',
+            // El lugar de nacimiento, para la pestaña Personal: con solo los
+            // ids se guardaba y no se enseñaba en ninguna parte.
+            'provinciaNacimiento:id,nombre',
+            'cantonNacimiento:id,nombre',
         ])->findOrFail($servidorId);
     }
 

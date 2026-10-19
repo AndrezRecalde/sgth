@@ -29,6 +29,7 @@ export const servidorBasicoSchema = z.object({
   pais_origen:             z.string().optional(),
   numero_papeleta_votacion: z.string().optional(),
   pasaporte_numero:        z.string().optional(),
+  pasaporte_vencimiento:   z.string().optional().nullable(),
 
   // Las condiciones de salud no están aquí: se derivan de los registros de
   // la pestaña Condición, y el backend rechaza escribirlas desde la ficha.

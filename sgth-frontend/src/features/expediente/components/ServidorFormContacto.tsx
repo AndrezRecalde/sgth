@@ -1,8 +1,10 @@
 'use client'
 
 import { TextInput, Grid, Text } from '@mantine/core'
+import { DatePickerInput } from '@mantine/dates'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { useFormContext } from 'react-hook-form'
+import { Controller, useFormContext } from 'react-hook-form'
+import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 import type { ServidorBasicoFormData } from '../schemas/servidorBasico.schema'
 import { SectionHeading } from '@/components/ui'
 
@@ -13,7 +15,10 @@ import { SectionHeading } from '@/components/ui'
  */
 export function ServidorFormContacto({ sinTitulo = false }: { sinTitulo?: boolean }) {
   const contained = useContainedInput()
-  const { register, formState: { errors } } = useFormContext<ServidorBasicoFormData>()
+  const { register, control, formState: { errors } } = useFormContext<ServidorBasicoFormData>()
+  // El backend lo pide posterior a hoy (`after:today`).
+  const manana = new Date()
+  manana.setDate(manana.getDate() + 1)
 
   return (
     <Grid>
@@ -98,7 +103,10 @@ export function ServidorFormContacto({ sinTitulo = false }: { sinTitulo?: boolea
       <Grid.Col span={12}>
         <SectionHeading title="Documentos adicionales" mt="xs" mb="xs" />
       </Grid.Col>
-      <Grid.Col span={{ base: 12, sm: 6 }}>
+      {/* La papeleta sola en su fila, y el pasaporte junto a su vencimiento.
+          El vencimiento existía en la ficha y en la edición del backend, pero
+          ningún formulario lo pedía (2026-10-19). */}
+      <Grid.Col span={12}>
         <TextInput
           label="Número papeleta de votación (opcional)"
           placeholder="Ej: 007-0001"
@@ -114,6 +122,25 @@ export function ServidorFormContacto({ sinTitulo = false }: { sinTitulo?: boolea
           {...contained}
           {...register('pasaporte_numero')}
           error={errors.pasaporte_numero?.message}
+        />
+      </Grid.Col>
+      <Grid.Col span={{ base: 12, sm: 6 }}>
+        <Controller
+          name="pasaporte_vencimiento"
+          control={control}
+          render={({ field }) => (
+            <DatePickerInput
+              label="Vencimiento del pasaporte (opcional)"
+              placeholder="Seleccionar fecha"
+              valueFormat="DD/MM/YYYY"
+              clearable
+              minDate={manana}
+              {...contained}
+              value={toDateValue(field.value)}
+              onChange={(d) => field.onChange(fromDateValueOrNull(d))}
+              error={errors.pasaporte_vencimiento?.message}
+            />
+          )}
         />
       </Grid.Col>
 

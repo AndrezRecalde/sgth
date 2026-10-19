@@ -48,6 +48,7 @@ export const vinculacionInicialSchema = z.object({
   pais_origen:             z.string().optional(),
   numero_papeleta_votacion: z.string().optional(),
   pasaporte_numero:        z.string().optional(),
+  pasaporte_vencimiento:   z.string().optional().nullable(),
 
   // Sin las marcas de salud: se derivan de los registros de la pestaña
   // Condición y el backend las rechaza aquí.
