@@ -28,9 +28,12 @@ use Maatwebsite\Excel\Facades\Excel;
  *
  * Lo que cambie después en un mes ya entregado —un reintegro que acorta la
  * licencia, un acto que se anula, un incremento con fecha anterior— no
- * reescribe lo entregado: se entrega como ajuste en el mes siguiente, por la
- * diferencia entre lo que hoy resulta y lo que ya se dio. Los meses que nunca
- * se entregaron, como los anteriores a empezar a usarlo, no generan ajustes.
+ * reescribe lo entregado: se entrega como ajuste en el mes siguiente, con lo
+ * que hoy resulta. Los meses que nunca se entregaron, como los anteriores a
+ * empezar a usarlo, no generan ajustes.
+ *
+ * Sin montos desde el 2026-10-20: el SGTH es informativo y Financiero calcula
+ * los valores en su sistema.
  *
  * @phpstan-import-type Novedad from NovedadesDelMes
  */
@@ -125,8 +128,6 @@ class NovedadesNominaService
                     'desde'          => $novedad['desde'],
                     'hasta'          => $novedad['hasta'],
                     'dias'           => $novedad['dias'],
-                    'base'           => $novedad['base'],
-                    'monto'          => $novedad['monto'],
                     'detalle'        => $novedad['detalle'],
                 ]);
             }
@@ -155,8 +156,6 @@ class NovedadesNominaService
                 'DESDE'             => $n['desde'],
                 'HASTA'             => $n['hasta'],
                 'DÍAS'              => $n['dias'],
-                'BASE'              => $n['base'],
-                'MONTO REFERENCIAL' => $n['monto'],
                 'ACTO'              => $n['acto'],
             ]);
     }
@@ -178,10 +177,15 @@ class NovedadesNominaService
     }
 
     /**
-     * Lo que hoy resulta para un mes entregado, menos lo que ya se entregó de
-     * él: en su entrega y en los ajustes que le siguieron. Cada fila guarda si
-     * la novedad seguía en pie después de ella (`vigente`), para que la que ya
-     * se revirtió no se revierta otra vez cada mes.
+     * Lo que hoy resulta para un mes entregado y no coincide con lo último que
+     * se entregó de él, en su entrega o en un ajuste posterior. Cada fila guarda
+     * si la novedad seguía en pie después de ella (`vigente`), para que la que
+     * ya se revirtió no se revierta otra vez cada mes.
+     *
+     * Sin montos, el ajuste no es una resta: dice cómo queda la novedad, o que
+     * ya no corresponde. Se compara lo que pasó —las fechas, los días y el
+     * detalle—, que es lo que cambia un reintegro, una cancelación o una
+     * confirmación rehecha; los actos registrados no se corrigen, se anulan.
      *
      * @return Collection<int, Novedad>
      */
@@ -200,31 +204,22 @@ class NovedadesNominaService
         foreach ($hoy->keys()->merge($entregado->keys())->unique() as $clave) {
             $actual = $hoy->get($clave);
             $filas = $entregado->get($clave, collect());
-            $enPie = (bool) $filas->last()?->vigente;
+            $ultima = $filas->last();
+            $enPie = (bool) $ultima?->vigente;
 
             if ($actual === null && ! $enPie) {
                 continue;
             }
 
-            $monto = $this->resta($actual['monto'] ?? null, $filas->pluck('monto'), 2);
-            $dias = $this->resta($actual['dias'] ?? null, $filas->pluck('dias'), 0);
-
-            // Sigue igual que como se entregó.
-            if ($actual !== null && $enPie
-                && ($monto === null || abs($monto) < 0.005) && ($dias === null || $dias == 0)
-            ) {
+            if ($actual !== null && $enPie && $this->sigueIgual($actual, $ultima, $mes)) {
                 continue;
             }
 
-            $referencia = $actual ?? $this->deLaFila($filas->last());
-
             $ajustes->push([
-                ...$referencia,
+                ...($actual ?? $this->deLaFila($ultima)),
                 'mes_afectado' => $mes->periodo,
                 'es_ajuste'    => true,
                 'vigente'      => $actual !== null,
-                'dias'         => $dias !== null ? (int) $dias : null,
-                'monto'        => $monto,
                 'detalle'      => "Ajuste de {$mes->etiqueta()}: ".($actual !== null
                     ? $actual['detalle']
                     : 'ya no corresponde, porque el acto se anuló o cambió. Se había entregado: '.$this->deLaFila($filas->first())['detalle']),
@@ -234,23 +229,19 @@ class NovedadesNominaService
         return $ajustes->values();
     }
 
-    /**
-     * Lo de hoy menos lo entregado. Null si ninguno de los dos tiene la cifra:
-     * una novedad sin monto —falta la remuneración en el acto— no se inventa uno.
-     *
-     * @param  Collection<int, mixed>  $entregado
-     */
-    private function resta(mixed $hoy, Collection $entregado, int $decimales): float|int|null
+    /** @param Novedad $actual */
+    private function sigueIgual(array $actual, NovedadNomina $entregada, MesDeNomina $mes): bool
     {
-        $cifras = $entregado->filter(fn ($v) => $v !== null);
+        // El ajuste guarda su detalle con el prefijo; lo que se compara es lo de detrás.
+        $prefijo = "Ajuste de {$mes->etiqueta()}: ";
+        $detalle = $entregada->es_ajuste && str_starts_with($entregada->detalle, $prefijo)
+            ? substr($entregada->detalle, strlen($prefijo))
+            : $entregada->detalle;
 
-        if ($hoy === null && $cifras->isEmpty()) {
-            return null;
-        }
-
-        $resta = (float) ($hoy ?? 0) - (float) $cifras->sum(fn ($v) => (float) $v);
-
-        return $decimales === 0 ? (int) round($resta) : round($resta, $decimales);
+        return $actual['desde'] === $entregada->desde?->toDateString()
+            && $actual['hasta'] === $entregada->hasta?->toDateString()
+            && $actual['dias'] === $entregada->dias
+            && $actual['detalle'] === $detalle;
     }
 
     // ── El aviso ────────────────────────────────────────────────────
@@ -317,8 +308,6 @@ class NovedadesNominaService
             'desde'          => $fila->desde?->toDateString(),
             'hasta'          => $fila->hasta?->toDateString(),
             'dias'           => $fila->dias,
-            'base'           => $fila->base !== null ? (float) $fila->base : null,
-            'monto'          => $fila->monto !== null ? (float) $fila->monto : null,
             'detalle'        => $fila->detalle,
         ];
     }
@@ -334,10 +323,10 @@ class NovedadesNominaService
     }
 
     /**
-     * Cuántas hay de cada concepto, y lo que suman.
+     * Cuántas hay de cada concepto.
      *
      * @param  Collection<int, Novedad>  $novedades
-     * @return list<array{concepto: string, etiqueta: string, cantidad: int, monto: float}>
+     * @return list<array{concepto: string, etiqueta: string, cantidad: int}>
      */
     private function resumen(Collection $novedades): array
     {
@@ -346,7 +335,6 @@ class NovedadesNominaService
                 'concepto' => $c->value,
                 'etiqueta' => $c->etiqueta(),
                 'cantidad' => $novedades->where('concepto', $c)->count(),
-                'monto'    => round((float) $novedades->where('concepto', $c)->sum(fn (array $n) => (float) ($n['monto'] ?? 0)), 2),
             ])
             ->filter(fn (array $r) => $r['cantidad'] > 0)
             ->values()

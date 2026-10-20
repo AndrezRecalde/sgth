@@ -199,7 +199,7 @@ test('revertirla devuelve el grado y los vínculos, salvo que algo haya cambiado
 
 // ── La nómina ───────────────────────────────────────────────────
 
-test('la escala retroactiva lleva la diferencia a cada mes, hasta el de su registro', function () {
+test('la escala retroactiva va en el mes en que rige, y dice cuándo se registró', function () {
     $this->travelTo(Carbon::parse('2026-03-10 10:00'));
     $a = ($this->ocupante)(1000);
 
@@ -210,9 +210,10 @@ test('la escala retroactiva lleva la diferencia a cada mes, hasta el de su regis
     $cambio = fn (string $periodo) => collect($this->getJson("/api/v1/nomina/novedades?periodo={$periodo}")->assertOk()->json('datos.novedades'))
         ->where('servidor_id', $a->id)->where('concepto', 'cambio_remuneracion')->values();
 
-    expect($cambio('2026-01')->sole()['monto'])->toEqual(100)
-        ->and($cambio('2026-02')->sole()['monto'])->toEqual(100)
-        ->and($cambio('2026-02')->sole()['detalle'])->toContain('se registró el 10/03/2026')
-        ->and($cambio('2026-03')->sole()['dias'])->toBe(30)
-        ->and($cambio('2026-04'))->toBeEmpty();
+    // Sin montos (2026-10-20), ya no se repite cada mes hasta el del registro:
+    // si enero se hubiera entregado, llegaría como ajuste en la siguiente.
+    expect($cambio('2026-01')->sole()['detalle'])->toContain('cobra $1.100,00 (antes $1.000,00); se registró el 10/03/2026')
+        ->and($cambio('2026-01')->sole()['dias'])->toBe(30)
+        ->and($cambio('2026-02'))->toBeEmpty()
+        ->and($cambio('2026-03'))->toBeEmpty();
 });

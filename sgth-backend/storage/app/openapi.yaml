@@ -41339,16 +41339,12 @@
                                                             "cantidad": {
                                                                 "type": "integer",
                                                                 "minimum": 0
-                                                            },
-                                                            "monto": {
-                                                                "type": "number"
                                                             }
                                                         },
                                                         "required": [
                                                             "concepto",
                                                             "etiqueta",
-                                                            "cantidad",
-                                                            "monto"
+                                                            "cantidad"
                                                         ]
                                                     }
                                                 }
@@ -41601,16 +41597,12 @@
                                                             "cantidad": {
                                                                 "type": "integer",
                                                                 "minimum": 0
-                                                            },
-                                                            "monto": {
-                                                                "type": "number"
                                                             }
                                                         },
                                                         "required": [
                                                             "concepto",
                                                             "etiqueta",
-                                                            "cantidad",
-                                                            "monto"
+                                                            "cantidad"
                                                         ]
                                                     }
                                                 }

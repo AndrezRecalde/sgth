@@ -630,17 +630,16 @@
         @if(!empty($descuento))
             {{-- Multa o suspensión (2026-10-04): el servidor sigue en su puesto,
                  así que la columna dice lo que Financiero necesita para el rol
-                 de pagos. Valor de referencia: lo aplica Financiero. --}}
+                 de pagos. El valor lo calcula Financiero (2026-10-20). --}}
             <div class="campo"><span class="label">Sanción</span><span class="valor fuerte">{{ $descuento['sancion'] }}</span></div>
             <div class="campo"><span class="label">Detalle</span><span class="valor">{{ $descuento['detalle'] }}</span></div>
             @if($descuento['hasta'])
                 <div class="campo"><span class="label">Período</span><span class="valor">Del {{ $fmtFecha($descuento['desde']) }} al {{ $fmtFecha($descuento['hasta']) }}</span></div>
             @endif
-            <div class="campo"><span class="label">Base de cálculo (R.M.U.)</span><span class="valor">{!! $dato($fmtRmu($descuento['base'])) !!}</span></div>
-            <div class="campo"><span class="label">Descuento referencial</span><span class="valor fuerte">{!! $dato($fmtRmu($descuento['monto'])) !!}</span></div>
+            <div class="campo"><span class="label">R.M.U.</span><span class="valor">{!! $dato($fmtRmu($descuento['base'])) !!}</span></div>
             <div class="campo"><span class="valor vacio entero">
-                {{ $descuento['hasta'] ? 'R.M.U. ÷ 30 × días de suspensión.' : 'Porcentaje de la multa sobre la R.M.U.' }}
-                Valor de referencia: el descuento lo aplica Financiero en el rol de pagos.
+                {{ $descuento['hasta'] ? 'La remuneración de los días de suspensión' : 'El porcentaje de la multa sobre la R.M.U.' }}:
+                lo calcula y lo aplica Financiero en el rol de pagos.
             </span></div>
         @elseif($esTemporal)
             {{-- La comisión y la licencia no mueven al servidor: el documento

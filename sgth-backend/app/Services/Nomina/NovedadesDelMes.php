@@ -18,7 +18,6 @@ use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Subrogacion;
 use App\Services\Expediente\OcupantesDelPuesto;
-use App\Services\Expediente\TerminacionObreroService;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -30,10 +29,10 @@ use Illuminate\Support\Collection;
  * que nadie tenga que corregir una fila. Lo que se congela es la entrega
  * (`NovedadesNominaService`).
  *
- * Cada monto sale de las remuneraciones que el acto congeló al crearse, como el
- * descuento de la multa: el documento firmado y la novedad dicen la misma
- * cifra. La entrada y la salida, que no tienen acto que la congele, toman la
- * del vínculo de ese día.
+ * Dicen lo que pasó, no cuánto: el SGTH es informativo desde el 2026-10-20, y
+ * los valores los calcula Financiero en su sistema. Cuentan los días, en el mes
+ * de treinta, y lo que viene del acto —la remuneración que fija, el porcentaje
+ * de la multa, lo que ordena una sentencia— va en el detalle.
  *
  * Servicios Profesionales queda fuera: es un contrato civil, y sus honorarios
  * se pagan contra factura, no en el rol (TH N6).
@@ -41,8 +40,7 @@ use Illuminate\Support\Collection;
  * @phpstan-type Novedad array{
  *     clave: string, concepto: ConceptoNovedadNomina, mes_afectado: string, es_ajuste: bool, vigente: bool,
  *     servidor_id: int, servidor: string, cedula: ?string, contrato_id: ?int, movimiento_id: ?int,
- *     subrogacion_id: ?int, acto: ?string, desde: ?string, hasta: ?string, dias: ?int,
- *     base: ?float, monto: ?float, detalle: string
+ *     subrogacion_id: ?int, acto: ?string, desde: ?string, hasta: ?string, dias: ?int, detalle: string
  * }
  */
 class NovedadesDelMes
@@ -51,7 +49,6 @@ class NovedadesDelMes
     private const EMITIDAS = [EstadoAccionPersonal::REGISTRADA, EstadoAccionPersonal::NOTIFICADA];
 
     public function __construct(
-        private readonly TerminacionObreroService $terminaciones,
         private readonly RemuneracionDelVinculo $remuneracion,
     ) {
     }
@@ -135,7 +132,7 @@ class NovedadesDelMes
                 actoDeEntrada: $vinculo->movimientoOrigen,
                 actoDeSalida: $cierre ?? $vinculo->movimientoCierre,
                 motivoDeSalida: $vinculo->motivo_fin,
-                base: fn (bool $entra) => $this->remuneracion->al($vinculo, $entra ? $vinculo->fecha_inicio : $vinculo->fecha_fin),
+                remuneracion: fn () => $this->remuneracion->al($vinculo, $vinculo->fecha_inicio),
                 continuo: fn () => $this->vieneDeOtroVinculo($vinculo),
             );
 
@@ -166,7 +163,7 @@ class NovedadesDelMes
                 actoDeEntrada: $acto,
                 actoDeSalida: null,
                 motivoDeSalida: null,
-                base: fn () => $acto->remuneracion_propuesta !== null ? (float) $acto->remuneracion_propuesta : null,
+                remuneracion: fn () => $acto->remuneracion_propuesta !== null ? (float) $acto->remuneracion_propuesta : null,
                 continuo: fn () => false,
             );
 
@@ -180,9 +177,11 @@ class NovedadesDelMes
 
     /**
      * La fila de quien entra o sale en el mes. Si entra y sale en el mismo,
-     * es una sola: el ingreso, con los días que estuvo.
+     * es una sola: el ingreso, con los días que estuvo. A quien entra se le
+     * dice la remuneración con que entra: es la que Financiero tiene que
+     * cargar.
      *
-     * @param  \Closure(bool): ?float  $base
+     * @param  \Closure(): ?float  $remuneracion
      * @param  \Closure(): bool  $continuo
      * @return Novedad|null
      */
@@ -195,7 +194,7 @@ class NovedadesDelMes
         ?MovimientoPersonal $actoDeEntrada,
         ?MovimientoPersonal $actoDeSalida,
         ?string $motivoDeSalida,
-        \Closure $base,
+        \Closure $remuneracion,
         \Closure $continuo,
     ): ?array {
         $entra = $mes->contiene($desde);
@@ -206,7 +205,6 @@ class NovedadesDelMes
         }
 
         $dias = $mes->dias($entra ? $desde : $mes->inicio, $hasta);
-        $remuneracion = $base($entra);
         $motivo = $actoDeSalida?->causal()?->etiqueta() ?? (filled($motivoDeSalida) ? $this->sinPuntoFinal($motivoDeSalida) : null);
 
         $detalle = $entra
@@ -219,6 +217,12 @@ class NovedadesDelMes
             $detalle .= " ({$motivo})";
         }
 
+        $detalle .= ": {$this->diasEnTexto($dias)} del mes";
+
+        if ($entra && ($valor = $remuneracion()) !== null) {
+            $detalle .= ", con una remuneración de {$this->dinero($valor)}";
+        }
+
         $acto = $entra ? $actoDeEntrada : $actoDeSalida;
         $origen = $acto ? "movimiento:{$acto->id}" : "contrato:{$contratoId}";
 
@@ -227,14 +231,12 @@ class NovedadesDelMes
             clave: ($entra ? 'ingreso' : 'salida').":{$origen}",
             concepto: $entra ? ConceptoNovedadNomina::INGRESO : ConceptoNovedadNomina::SALIDA,
             servidor: $servidor,
-            detalle: "{$detalle}: {$this->diasEnTexto($dias)} del mes.",
+            detalle: "{$detalle}.",
             contratoId: $contratoId,
             movimiento: $acto,
             desde: $entra ? $desde : $mes->inicio,
             hasta: $sale ? $hasta : $mes->fin,
             dias: $dias,
-            base: $remuneracion,
-            monto: $remuneracion !== null ? round($remuneracion * $dias / MesDeNomina::DIAS, 2) : null,
         );
     }
 
@@ -251,22 +253,19 @@ class NovedadesDelMes
     // ── El cambio de remuneración ───────────────────────────────────
 
     /**
-     * El cambio de remuneración, en el mes en que rige. Si se registró en un
-     * mes posterior, cada mes hasta el de su registro lleva también la
-     * diferencia: el mes ya entregado recibe así su ajuste, y no solo el
-     * primero (fase 7.3b).
+     * El cambio de remuneración, en el mes en que rige. Si se registró después
+     * y ese mes ya se entregó, llega a Financiero como ajuste en la entrega
+     * siguiente: ya no se repite cada mes hasta el del registro, porque eso era
+     * para cobrar la diferencia de cada uno, y el SGTH no la calcula.
      *
      * @return list<Novedad>
      */
     private function cambiosDeRemuneracion(MesDeNomina $mes): array
     {
-        $inicio = $mes->inicio->toDateString();
-
         $actos = MovimientoPersonal::query()
             ->whereIn('tipo_movimiento', array_map(fn ($t) => $t->value, RemuneracionDelVinculo::CAMBIAN_LA_REMUNERACION))
             ->whereIn('estado', array_map(fn ($e) => $e->value, self::EMITIDAS))
-            ->whereDate('fecha_efectiva', '<=', $mes->fin->toDateString())
-            ->where(fn (Builder $q) => $q->whereDate('fecha_efectiva', '>=', $inicio)->orWhereDate('fecha_registro', '>=', $inicio))
+            ->whereBetween('fecha_efectiva', [$mes->inicio->toDateString(), $mes->fin->toDateString()])
             ->with(['servidor:id,nombre,segundo_nombre,apellido,segundo_apellido,cedula', 'movimientoRelacionado'])
             ->orderBy('fecha_efectiva')
             ->orderBy('id')
@@ -281,7 +280,7 @@ class NovedadesDelMes
                 continue;
             }
 
-            $novedades[] = $this->cambioEnElMes(
+            $novedad = $this->cambioEnElMes(
                 $mes,
                 clave: "cambio:movimiento:{$acto->id}",
                 servidor: $acto->servidor,
@@ -292,6 +291,10 @@ class NovedadesDelMes
                 nueva: $cambio['nueva'],
                 movimiento: $acto,
             );
+
+            if ($novedad) {
+                $novedades[] = $novedad;
+            }
         }
 
         return $novedades;
@@ -299,20 +302,17 @@ class NovedadesDelMes
 
     /**
      * La nueva escala de remuneraciones (fase 7.3b): un cambio de remuneración
-     * por vínculo, sin acción de personal. Como el de un acto, si se registró
-     * después del mes en que rige, cada mes hasta el de su registro.
+     * por vínculo, sin acción de personal. Como el de un acto, en el mes en que
+     * rige.
      *
      * @return list<Novedad>
      */
     private function escalas(MesDeNomina $mes): array
     {
-        $inicio = $mes->inicio->toDateString();
-
         $filas = EscalaRemuneracionVinculo::query()
             ->whereHas('escala', fn (Builder $q) => $q
                 ->whereNull('revertida_en')
-                ->whereDate('rige_desde', '<=', $mes->fin->toDateString())
-                ->where(fn (Builder $r) => $r->whereDate('rige_desde', '>=', $inicio)->orWhereDate('registrada_en', '>=', $inicio)))
+                ->whereBetween('rige_desde', [$mes->inicio->toDateString(), $mes->fin->toDateString()]))
             ->with([
                 'escala.grados',
                 'servidor:id,nombre,segundo_nombre,apellido,segundo_apellido,cedula',
@@ -354,9 +354,8 @@ class NovedadesDelMes
     }
 
     /**
-     * La diferencia de un cambio de remuneración en el mes: desde el día en
-     * que rige, si es este mes, o el mes entero si es uno posterior que todavía
-     * la debía.
+     * El cambio de remuneración en el mes en que rige: desde cuándo, la de
+     * antes y la nueva, y los días que quedan del mes con ella.
      *
      * @return Novedad|null
      */
@@ -375,13 +374,7 @@ class NovedadesDelMes
         ?CarbonInterface $inicioDelVinculo = null,
         ?CarbonInterface $finDelVinculo = null,
     ): ?array {
-        $enEsteMes = $mes->contiene($rige);
-        $desde = $enEsteMes ? $rige : $mes->inicio;
-
-        if ($inicioDelVinculo && $inicioDelVinculo->gt($desde)) {
-            $desde = $inicioDelVinculo;
-        }
-
+        $desde = $inicioDelVinculo && $inicioDelVinculo->gt($rige) ? $inicioDelVinculo : $rige;
         $dias = $mes->dias($desde, $finDelVinculo);
 
         if ($dias === 0) {
@@ -389,23 +382,24 @@ class NovedadesDelMes
         }
 
         $detalle = "{$que}: desde el {$rige->format('d/m/Y')} cobra {$this->dinero($nueva)} (antes {$this->dinero($anterior)})";
-        $detalle .= $enEsteMes
-            ? "; la diferencia de {$this->diasEnTexto($dias)}."
-            : '; se registró el '.($registro?->format('d/m/Y') ?? '—').", y este mes le debe la diferencia de {$this->diasEnTexto($dias)}.";
+
+        // Registrado después de su mes: Financiero tiene que saber que rige
+        // con efecto retroactivo.
+        if ($registro && $registro->gt($mes->fin)) {
+            $detalle .= '; se registró el '.$registro->format('d/m/Y');
+        }
 
         $novedad = $this->novedad(
             $mes,
             clave: $clave,
             concepto: ConceptoNovedadNomina::CAMBIO_REMUNERACION,
             servidor: $servidor,
-            detalle: $detalle,
+            detalle: "{$detalle}.",
             contratoId: $contratoId,
             movimiento: $movimiento,
             desde: $desde,
             hasta: $finDelVinculo && $finDelVinculo->lt($mes->fin) ? $finDelVinculo : $mes->fin,
             dias: $dias,
-            base: $nueva,
-            monto: round(($nueva - $anterior) * $dias / MesDeNomina::DIAS, 2),
         );
 
         if ($acto !== null) {
@@ -448,7 +442,6 @@ class NovedadesDelMes
             }
 
             $dias = $mes->dias($acto->fecha_inicio, $hasta);
-            $base = $acto->remuneracion_origen !== null ? (float) $acto->remuneracion_origen : null;
 
             $novedades[] = $this->novedad(
                 $mes,
@@ -462,8 +455,6 @@ class NovedadesDelMes
                 desde: $recorte[0],
                 hasta: $recorte[1],
                 dias: $dias,
-                base: $base,
-                monto: $base !== null ? -round($base * $dias / MesDeNomina::DIAS, 2) : null,
             );
         }
 
@@ -482,8 +473,8 @@ class NovedadesDelMes
 
     /**
      * La suspensión temporal sin goce de remuneración (LOSEP Art. 43 c): los
-     * días calendario desde que rige, como el descuento que ya se le avisa a
-     * Financiero (#344).
+     * días calendario desde que rige, como el aviso que ya recibe Financiero
+     * (#344).
      *
      * @return list<Novedad>
      */
@@ -510,7 +501,6 @@ class NovedadesDelMes
             }
 
             $dias = $mes->dias($desde, $hasta);
-            $base = $acto->remuneracion_origen !== null ? (float) $acto->remuneracion_origen : null;
 
             $novedades[] = $this->novedad(
                 $mes,
@@ -523,8 +513,6 @@ class NovedadesDelMes
                 desde: $recorte[0],
                 hasta: $recorte[1],
                 dias: $dias,
-                base: $base,
-                monto: $base !== null ? -round($base * $dias / MesDeNomina::DIAS, 2) : null,
             );
         }
 
@@ -534,10 +522,11 @@ class NovedadesDelMes
     // ── La subrogación y el encargo ─────────────────────────────────
 
     /**
-     * La diferencia entre la remuneración que el subrogante ya percibe y la del
-     * puesto que asume (LOSEP Arts. 126 y 127): las dos que el acto congeló, que
-     * son las que dice la acción de personal. También la del Viceprefecto, que
-     * es la misma fila (fase 4.1b).
+     * La subrogación y el encargo (LOSEP Arts. 126 y 127), con las dos
+     * remuneraciones que el acto congeló, que son las que dice la acción de
+     * personal: la del puesto que asume y la que ya percibe. También la del
+     * Viceprefecto, que es la misma fila (fase 4.1b). Si ya percibe lo mismo o
+     * más, no hay nada que pagarle y no va.
      *
      * Cuenta mientras surtió efecto: hasta su fin, o hasta la víspera del día en
      * que se canceló.
@@ -586,12 +575,10 @@ class NovedadesDelMes
             }
 
             $acto = $subrogacion->movimientoPersonal;
-            $diferencia = $acto->remuneracion_propuesta !== null && $acto->remuneracion_origen !== null
-                ? (float) $acto->remuneracion_propuesta - (float) $acto->remuneracion_origen
-                : null;
+            $delPuesto = $acto->remuneracion_propuesta !== null ? (float) $acto->remuneracion_propuesta : null;
+            $suya = $acto->remuneracion_origen !== null ? (float) $acto->remuneracion_origen : null;
 
-            // Si el subrogante ya cobra lo mismo o más, no hay diferencia que pagar.
-            if ($diferencia !== null && $diferencia < 0.005) {
+            if ($delPuesto !== null && $suya !== null && $delPuesto - $suya < 0.005) {
                 continue;
             }
 
@@ -608,14 +595,14 @@ class NovedadesDelMes
                     ? "Encargo de {$puesto}"
                     : 'Subroga a '.OcupantesDelPuesto::nombre($subrogacion->subrogado)." en {$puesto}")
                     .": del {$recorte[0]->format('d/m/Y')} al {$recorte[1]->format('d/m/Y')}, {$this->diasEnTexto($dias)}"
-                    .($diferencia !== null ? ", con una diferencia de {$this->dinero($diferencia)} al mes." : '; el acto no tiene las remuneraciones que se comparan.'),
+                    .($delPuesto !== null && $suya !== null
+                        ? ". El puesto tiene una remuneración de {$this->dinero($delPuesto)}, y la suya es de {$this->dinero($suya)}."
+                        : '; el acto no tiene las remuneraciones que se comparan.'),
                 movimiento: $acto,
                 subrogacionId: $subrogacion->id,
                 desde: $recorte[0],
                 hasta: $recorte[1],
                 dias: $dias,
-                base: $diferencia,
-                monto: $diferencia !== null ? round($diferencia * $dias / MesDeNomina::DIAS, 2) : null,
             );
         }
 
@@ -625,7 +612,7 @@ class NovedadesDelMes
     // ── La multa ────────────────────────────────────────────────────
 
     /**
-     * La sanción pecuniaria, en el mes en que rige: el porcentaje sobre la
+     * La sanción pecuniaria, en el mes en que rige: el porcentaje, sobre la
      * remuneración que la acción congeló, el mismo que se le avisa a Financiero
      * al registrarla (#344). También la del obrero, con su hoja de registro
      * interno (fase 4.4).
@@ -639,20 +626,17 @@ class NovedadesDelMes
         foreach ($this->sanciones(TipoSancion::MULTA, $mes->inicio, $mes->fin) as $sancion) {
             $acto = $sancion->movimientoPersonal;
             $base = $acto->remuneracion_origen !== null ? (float) $acto->remuneracion_origen : null;
-            $descuento = $sancion->descuentoReferencial($base);
+            $efecto = $sancion->descuentoReferencial($base);
 
             $novedades[] = $this->novedad(
                 $mes,
                 clave: "multa:movimiento:{$acto->id}",
                 concepto: ConceptoNovedadNomina::MULTA,
                 servidor: $acto->servidor,
-                detalle: 'Multa del '.($descuento['detalle'] ?? 'porcentaje de la remuneración').'.',
+                detalle: 'Multa del '.($efecto['detalle'] ?? 'porcentaje de la remuneración')
+                    .($base !== null ? ", que la acción fija en {$this->dinero($base)}" : '').'.',
                 movimiento: $acto,
                 desde: $sancion->fecha_efectiva ?? $acto->fecha_efectiva,
-                hasta: null,
-                dias: null,
-                base: $base,
-                monto: isset($descuento['monto']) ? -$descuento['monto'] : null,
             );
         }
 
@@ -682,10 +666,10 @@ class NovedadesDelMes
     // ── Lo que se debe por el tiempo fuera ──────────────────────────
 
     /**
-     * La restitución por sentencia paga las remuneraciones dejadas de percibir
-     * que fija el juez (LOSEP Art. 46; fase 2.6); el reintegro del obrero, las
-     * pendientes con el recargo del 10 % (CT 195.3; fase 4.5b), y solo si la
-     * sentencia declaró la ineficacia del despido.
+     * La restitución por sentencia, con las remuneraciones dejadas de percibir
+     * que fija el juez (LOSEP Art. 46; fase 2.6): es un dato de la sentencia, no
+     * un cálculo. El reintegro del obrero, las pendientes con el recargo del 10 %
+     * (CT 195.3; fase 4.5b), que Financiero calcula con la sentencia.
      *
      * @return list<Novedad>
      */
@@ -703,14 +687,15 @@ class NovedadesDelMes
 
         foreach ($actos as $acto) {
             if ($acto->esReintegroPorDespidoIneficaz()) {
-                $liquidacion = $this->terminaciones->liquidacion($acto);
-                $conSentencia = $acto->fecha_sentencia !== null;
-                $monto = $conSentencia && isset($liquidacion['total']) ? (float) $liquidacion['total'] : null;
                 $detalle = 'Remuneraciones pendientes y el recargo del 10 % (Código del Trabajo, Art. 195.3)'
-                    .($conSentencia ? '.' : ': lo ordenó la providencia, y se pagan si la sentencia declara la ineficacia del despido.');
+                    .($acto->fecha_sentencia !== null
+                        ? ': las calcula Financiero con la sentencia.'
+                        : ': lo ordenó la providencia, y se pagan si la sentencia declara la ineficacia del despido.');
             } else {
-                $monto = $acto->remuneraciones_dejadas_de_percibir !== null ? (float) $acto->remuneraciones_dejadas_de_percibir : null;
-                $detalle = 'Remuneraciones dejadas de percibir que fija la sentencia (LOSEP, Art. 46).';
+                $detalle = 'Remuneraciones dejadas de percibir que fija la sentencia (LOSEP, Art. 46)'
+                    .($acto->remuneraciones_dejadas_de_percibir !== null
+                        ? ': '.$this->dinero((float) $acto->remuneraciones_dejadas_de_percibir).'.'
+                        : ': el acto no registra el monto.');
             }
 
             $novedades[] = $this->novedad(
@@ -721,22 +706,19 @@ class NovedadesDelMes
                 detalle: $detalle,
                 movimiento: $acto,
                 desde: $acto->fecha_efectiva,
-                hasta: null,
-                dias: null,
-                base: null,
-                monto: $monto !== null ? round($monto, 2) : null,
             );
         }
 
         return $novedades;
     }
 
-    // ── Lo que paga la salida ───────────────────────────────────────
+    // ── Lo que trae la salida ───────────────────────────────────────
 
     /**
-     * La liquidación de vacaciones que confirmó el Director y la indemnización
-     * que registró (fase 7.4b), en el mes de la salida. Si se confirman después
-     * de entregar ese mes, llegan como ajuste en el siguiente.
+     * Las vacaciones no gozadas que confirmó el Director, en días, y la
+     * indemnización que registró (fase 7.4b), en el mes de la salida. Si se
+     * confirman después de entregar ese mes, llegan como ajuste en el
+     * siguiente.
      *
      * @return list<Novedad>
      */
@@ -760,14 +742,10 @@ class NovedadesDelMes
                     concepto: ConceptoNovedadNomina::VACACIONES_NO_GOZADAS,
                     servidor: $salida->servidor,
                     detalle: 'Vacaciones no gozadas al salir el '.$salida->fecha_salida->format('d/m/Y').': '
-                        .rtrim(rtrim(number_format((float) $salida->vacaciones_dias, 2, ',', '.'), '0'), ',').' días a '
-                        .$this->dinero((float) $salida->vacaciones_remuneracion).' ÷ 30.',
+                        .rtrim(rtrim(number_format((float) $salida->vacaciones_dias, 2, ',', '.'), '0'), ',').' días.',
                     contratoId: $salida->contrato_id,
                     movimiento: $salida->movimientoCierre,
                     desde: $salida->fecha_salida,
-                    dias: null,
-                    base: (float) $salida->vacaciones_remuneracion,
-                    monto: round((float) $salida->vacaciones_monto, 2),
                 );
             }
 
@@ -778,11 +756,10 @@ class NovedadesDelMes
                     concepto: ConceptoNovedadNomina::INDEMNIZACION,
                     servidor: $salida->servidor,
                     detalle: (\App\Services\Expediente\DesvinculacionService::CONCEPTOS_DE_INDEMNIZACION[$salida->indemnizacion_concepto] ?? 'Indemnización')
-                        .", {$salida->indemnizacion_resolucion}, dentro del tope del Mandato 2 ({$this->dinero((float) $salida->indemnizacion_tope)}).",
+                        .($salida->indemnizacion_resolucion ? ", {$salida->indemnizacion_resolucion}" : '').'.',
                     contratoId: $salida->contrato_id,
                     movimiento: $salida->movimientoCierre,
                     desde: $salida->fecha_salida,
-                    monto: round((float) $salida->indemnizacion_monto, 2),
                 );
             }
         }
@@ -805,8 +782,6 @@ class NovedadesDelMes
         ?CarbonInterface $desde = null,
         ?CarbonInterface $hasta = null,
         ?int $dias = null,
-        ?float $base = null,
-        ?float $monto = null,
     ): array {
         return [
             'clave'          => $clave,
@@ -824,8 +799,6 @@ class NovedadesDelMes
             'desde'          => $desde?->toDateString(),
             'hasta'          => $hasta?->toDateString(),
             'dias'           => $dias,
-            'base'           => $base !== null ? round($base, 2) : null,
-            'monto'          => $monto,
             'detalle'        => $detalle,
         ];
     }

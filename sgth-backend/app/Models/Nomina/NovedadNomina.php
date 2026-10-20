@@ -28,8 +28,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property ?\Illuminate\Support\Carbon $desde
  * @property ?\Illuminate\Support\Carbon $hasta
  * @property ?int $dias
- * @property ?string $base
- * @property ?string $monto
  * @property string $detalle
  */
 class NovedadNomina extends Model
@@ -38,7 +36,7 @@ class NovedadNomina extends Model
 
     protected $fillable = [
         'entrega_id', 'mes_afectado', 'es_ajuste', 'vigente', 'clave', 'concepto', 'servidor_id', 'contrato_id',
-        'movimiento_id', 'subrogacion_id', 'acto', 'desde', 'hasta', 'dias', 'base', 'monto', 'detalle',
+        'movimiento_id', 'subrogacion_id', 'acto', 'desde', 'hasta', 'dias', 'detalle',
     ];
 
     protected function casts(): array
@@ -50,8 +48,6 @@ class NovedadNomina extends Model
             'desde'     => 'date',
             'hasta'     => 'date',
             'dias'      => 'integer',
-            'base'      => 'decimal:2',
-            'monto'     => 'decimal:2',
         ];
     }
 

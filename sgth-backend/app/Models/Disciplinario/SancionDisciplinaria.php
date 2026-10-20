@@ -118,20 +118,20 @@ class SancionDisciplinaria extends Model
     }
 
     /**
-     * Lo que se descuenta, como referencia para Financiero, que es quien lo
-     * aplica en el rol de pagos con su propio sistema (decisión de TH,
-     * 2026-10-04):
+     * Lo que la sanción le quita a la remuneración, para Financiero, que es
+     * quien calcula el valor y lo aplica en el rol de pagos con su propio
+     * sistema (decisiones de TH, 2026-10-04 y 2026-10-20: el SGTH es
+     * informativo y no calcula montos):
      *
      * - Multa: el porcentaje sobre la remuneración mensual unificada.
-     * - Suspensión sin goce de remuneración: la remuneración del mes entre 30
-     *   por los días, contados como días calendario desde que surte efecto.
+     * - Suspensión sin goce de remuneración: los días, contados como días
+     *   calendario desde que surte efecto.
      *
-     * La remuneración es la que la acción de personal congeló al crearse
-     * (`remuneracion_origen`), no la de hoy: un documento reimpreso tiene que
-     * seguir diciendo la misma cifra.
+     * Con la remuneración sobre la que se aplica, la que la acción de personal
+     * congeló al crearse (`remuneracion_origen`), no la de hoy: un documento
+     * reimpreso tiene que seguir diciendo lo mismo.
      *
-     * @return array{sancion: string, detalle: string, desde: string, hasta: ?string,
-     *               base: ?float, monto: ?float}|null
+     * @return array{sancion: string, detalle: string, desde: string, hasta: ?string, base: ?float}|null
      */
     public function descuentoReferencial(?float $remuneracion): ?array
     {
@@ -152,7 +152,6 @@ class SancionDisciplinaria extends Model
                 'desde'   => $desde?->toDateString(),
                 'hasta'   => null,
                 'base'    => $base,
-                'monto'   => $base !== null ? round($base * $porcentaje / 100, 2) : null,
             ];
         }
 
@@ -164,7 +163,6 @@ class SancionDisciplinaria extends Model
             'desde'   => $desde?->toDateString(),
             'hasta'   => $desde?->copy()->addDays(max($dias - 1, 0))->toDateString(),
             'base'    => $base,
-            'monto'   => $base !== null ? round($base / 30 * $dias, 2) : null,
         ];
     }
 }

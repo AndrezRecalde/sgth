@@ -34677,7 +34677,6 @@ export interface operations {
                                 /** @enum {string} */
                                 etiqueta: "Ingreso" | "Salida" | "Cambio de remuneración" | "Días sin remuneración" | "Subrogación" | "Encargo" | "Multa" | "Remuneraciones pendientes" | "Vacaciones no gozadas" | "Indemnización";
                                 cantidad: number;
-                                monto: number;
                             }[];
                         };
                         meta: null;
@@ -34764,7 +34763,6 @@ export interface operations {
                                 /** @enum {string} */
                                 etiqueta: "Ingreso" | "Salida" | "Cambio de remuneración" | "Días sin remuneración" | "Subrogación" | "Encargo" | "Multa" | "Remuneraciones pendientes" | "Vacaciones no gozadas" | "Indemnización";
                                 cantidad: number;
-                                monto: number;
                             }[];
                         };
                         meta: {

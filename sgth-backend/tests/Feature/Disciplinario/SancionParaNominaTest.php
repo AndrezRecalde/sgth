@@ -91,13 +91,17 @@ beforeEach(function () {
     };
 });
 
-test('una multa crea su acción de personal en borrador con el descuento referencial', function () {
+test('una multa crea su acción de personal en borrador con su porcentaje, sin el valor', function () {
     $servidor = ($this->servidorCon)(TipoNombramiento::PERMANENTE);
 
-    ($this->resolver)($servidor, ['tipo_falta' => 'leve', 'tipo_sancion' => 'multa', 'porcentaje_multa' => 5])
+    $respuesta = ($this->resolver)($servidor, ['tipo_falta' => 'leve', 'tipo_sancion' => 'multa', 'porcentaje_multa' => 5])
         ->assertOk()
-        ->assertJsonPath('datos.sancion.movimiento_personal.estado', 'borrador')
-        ->assertJsonPath('datos.sancion.descuento_referencial.monto', 60.6);
+        ->assertJsonPath('datos.sancion.movimiento_personal.estado', 'borrador');
+
+    // El valor lo calcula Financiero: el SGTH es informativo (2026-10-20).
+    expect($respuesta->json('datos.sancion.descuento_referencial'))
+        ->toMatchArray(['detalle' => '5 % de la remuneración mensual unificada', 'base' => 1212])
+        ->not->toHaveKey('monto');
 
     $accion = MovimientoPersonal::where('servidor_id', $servidor->id)->sole();
 
@@ -111,13 +115,15 @@ test('una multa crea su acción de personal en borrador con el descuento referen
         ->and($accion->descripcion)->toContain('Arts. 42 literal a) y 43');
 });
 
-test('una suspensión descuenta la remuneración entre 30 por los días, en días calendario', function () {
+test('una suspensión dice sus días, en días calendario, sin el valor', function () {
     $servidor = ($this->servidorCon)(TipoNombramiento::PERMANENTE);
 
-    ($this->resolver)($servidor, ['tipo_falta' => 'grave', 'tipo_sancion' => 'suspension', 'dias_suspension' => 5])
+    $respuesta = ($this->resolver)($servidor, ['tipo_falta' => 'grave', 'tipo_sancion' => 'suspension', 'dias_suspension' => 5])
         ->assertOk()
-        ->assertJsonPath('datos.sancion.descuento_referencial.monto', 202)
+        ->assertJsonPath('datos.sancion.descuento_referencial.detalle', '5 días')
         ->assertJsonPath('datos.sancion.descuento_referencial.hasta', '2026-10-10');
+
+    expect($respuesta->json('datos.sancion.descuento_referencial'))->not->toHaveKey('monto');
 
     expect(MovimientoPersonal::where('servidor_id', $servidor->id)->sole()->descripcion)
         ->toContain('por 5 días, del 06/10/2026 al 10/10/2026')
@@ -146,7 +152,7 @@ test('a un obrero se le multa con acción de personal, pero no se le suspende', 
 
     ($this->resolver)($obrero, ['tipo_falta' => 'leve', 'tipo_sancion' => 'multa', 'porcentaje_multa' => 5])
         ->assertOk()
-        ->assertJsonPath('datos.sancion.descuento_referencial.monto', 60.6);
+        ->assertJsonPath('datos.sancion.descuento_referencial.detalle', '5 % de la remuneración mensual unificada');
 
     $accion = MovimientoPersonal::where('servidor_id', $obrero->id)->sole();
     expect($accion->subtipo_movimiento)->toBe(SubtipoMovimientoPersonal::SANCION_PECUNIARIA)
@@ -180,7 +186,8 @@ test('al registrarse sale por correo al jefe de Financiero, y su anulación tamb
 
     Mail::assertSent(SancionParaNominaMail::class, fn (SancionParaNominaMail $m) => $m->hasTo('jefe.financiero@gadpe.gob.ec')
         && ! $m->anulada
-        && $m->descuento['monto'] === 202.0
+        && $m->descuento['detalle'] === '5 días'
+        && ! array_key_exists('monto', $m->descuento)
         && count($m->attachments()) === 1);
 
     $this->putJson($url, ['estado' => 'anulada', 'motivo_anulacion' => 'La apelación revocó la sanción.'])

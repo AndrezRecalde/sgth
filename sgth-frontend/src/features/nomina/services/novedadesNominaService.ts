@@ -14,9 +14,9 @@ export type ConceptoNovedadNomina =
   | 'indemnizacion'
 
 /**
- * Una novedad para nómina (fase 7.3a): lo que Financiero aplica en su sistema,
- * con un monto de referencia. Positivo, lo que se paga; negativo, lo que se
- * descuenta.
+ * Una novedad para nómina (fase 7.3a): lo que pasó en el mes y Financiero
+ * aplica en su sistema. Sin montos desde el 2026-10-20: el SGTH es informativo,
+ * y lo que fija el acto va en el detalle.
  */
 export type NovedadNomina = {
   clave: string
@@ -38,8 +38,6 @@ export type NovedadNomina = {
   desde: string | null
   hasta: string | null
   dias: number | null
-  base: number | null
-  monto: number | null
   detalle: string
 }
 
@@ -63,7 +61,7 @@ export type NovedadesDelMes = {
   ajustes: NovedadNomina[]
   /** En un mes entregado, lo que cambió después: va como ajuste en el siguiente. */
   cambios_tras_la_entrega: NovedadNomina[]
-  resumen: { concepto: ConceptoNovedadNomina; etiqueta: string; cantidad: number; monto: number }[]
+  resumen: { concepto: ConceptoNovedadNomina; etiqueta: string; cantidad: number }[]
 }
 
 export const novedadesNominaService = {

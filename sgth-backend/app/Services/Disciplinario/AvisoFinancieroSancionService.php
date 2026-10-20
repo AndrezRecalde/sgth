@@ -17,8 +17,9 @@ use Illuminate\Support\Facades\Mail;
  * (decisión de TH, 2026-10-04).
  *
  * - Cuando Talento Humano la REGISTRA, sale por correo al jefe de la unidad
- *   marcada como financiera (o a quien lo subrogue ese día), con el PDF y el
- *   descuento referencial. Él dispone a quién corresponde aplicarlo.
+ *   marcada como financiera (o a quien lo subrogue ese día), con el PDF, el
+ *   porcentaje o los días y la remuneración. Él dispone a quién corresponde
+ *   calcularlo y aplicarlo.
  * - Si una acción ya enviada se ANULA, sale el aviso contrario, para que el
  *   descuento se revierta si llegó a aplicarse.
  *

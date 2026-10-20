@@ -100,7 +100,8 @@ test('la liquidación paga lo ganado del año de la salida, no el período enter
         ->assertJsonPath('datos.pasos.0.estado', 'hecho');
 
     expect((float) $desvinculacion->fresh()->vacaciones_monto)->toBe(966.67)
-        ->and(($this->novedad)('vacaciones_no_gozadas')['monto'])->toEqual(966.67);
+        // A Financiero le llegan los días: el valor lo calcula él (2026-10-20).
+        ->and(($this->novedad)('vacaciones_no_gozadas')['detalle'])->toBe('Vacaciones no gozadas al salir el 19/10/2026: 29 días.');
 });
 
 test('en la LOSEP no pasa de 60 días', function () {
@@ -133,7 +134,8 @@ test('la indemnización no pasa el tope del Mandato 2, y sin el salario básico 
     $registrar(50000)->assertStatus(422)->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'Pasa el tope'));
     $registrar(20000)->assertOk()->assertJsonPath('datos.pasos.1.estado', 'hecho');
 
-    expect(($this->novedad)('indemnizacion')['monto'])->toEqual(20000);
+    expect(($this->novedad)('indemnizacion')['detalle'])->toContain('Resolución GADPE-2026-210')
+        ->and(($this->novedad)('indemnizacion'))->not->toHaveKey('monto');
 });
 
 test('quien cobró una indemnización no reingresa hasta devolverla', function () {

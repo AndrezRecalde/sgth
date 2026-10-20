@@ -22,7 +22,6 @@ test('el pie de los correos sale en español', function () {
         'desde'    => '06/10/2026',
         'hasta'    => null,
         'base'     => '$1.000,00',
-        'monto'    => '$50,00',
         'motivo'   => null,
     ])->toHtml();
 
