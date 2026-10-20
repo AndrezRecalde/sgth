@@ -599,6 +599,7 @@ Así hay un solo historial, un solo motor de efectos y una sola bandeja, filtrab
 
 ### 9.4 Asistencia: vacaciones, licencias, permisos, certificados y Sirha7
 - **Vacaciones**: siguen como hoy, con su solicitud y sin acción de personal [TH N11].
+  - **Por partes** (TH, 2026-10-20; oficio MDT-DJTE-2017-0878-OF; `ConteoDeVacaciones`): el regreso lo calcula el sistema —el primer día laborable después del fin, sin sábados, domingos ni feriados institucionales— y se descuenta desde el inicio hasta su víspera. Si la parte termina justo antes de un descanso, se cuentan esos días; los de antes del inicio, no. De martes a viernes son seis días; de lunes a jueves, cuatro; un viernes suelto, tres. Para la LOSEP y el Código del Trabajo. El formulario pregunta los días al backend, que conoce los feriados, y avisa que un día suelto conviene pedirlo como permiso con cargo a vacaciones (Reglamento de la LOSEP, Art. 32), que descuenta solo ese día. Lo ya registrado no cambia.
 - **Licencias** [TH N12]:
   - **salen de los «motivos» de la solicitud de vacaciones** (maternidad, paternidad, matrimonio, calamidad, enfermedad, licencia sin goce, estudios, capacitación);
   - se registran como **licencias**, con su causa, su tope legal (4.4) y su certificado, **sin acción de personal**;

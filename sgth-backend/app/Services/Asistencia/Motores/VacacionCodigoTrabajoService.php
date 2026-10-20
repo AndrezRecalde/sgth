@@ -49,12 +49,14 @@ class VacacionCodigoTrabajoService implements VacacionMotorInterface
         return $respuesta;
     }
 
+    /**
+     * Días calendario, con el descanso que sigue a la parte hasta la víspera
+     * del regreso: el criterio del Ministerio del Trabajo para el Código
+     * (oficio MDT-DJTE-2017-0878-OF; `ConteoDeVacaciones`).
+     */
     public function calcularDiasDescuento(Carbon $fechaInicio, Carbon $fechaFin): float
     {
-        if ($fechaFin->lessThan($fechaInicio)) return 0;
-
-        // CT descuenta en días CALENDARIO (incluyendo fines de semana)
-        return $fechaInicio->diffInDays($fechaFin) + 1;
+        return app(\App\Services\Asistencia\ConteoDeVacaciones::class)->dias($fechaInicio, $fechaFin);
     }
 
     public function permiteCompensacionEfectivo(): bool

@@ -193,7 +193,9 @@ class VacacionService implements VacacionServiceInterface
                 'motivo'                   => $datos['motivo'] ?? null,
                 'fecha_inicio'             => $fechaInicio,
                 'fecha_fin'        => $fechaFin,
-                'fecha_retorno'    => $datos['fecha_retorno'] ?? null,
+                // El primer día laborable después del fin: lo calcula el
+                // sistema, con los feriados, y no quien la pide (2026-10-20).
+                'fecha_retorno'    => app(ConteoDeVacaciones::class)->retorno($fechaFin)->toDateString(),
                 'fecha_emision'    => $datos['fecha_emision'] ?? now()->toDateString(),
                 'dias_solicitados' => $diasADescontar,
                 'tipo_dias'        => $tipoDias,

@@ -6,6 +6,17 @@ import type {
   PaginatedResponse, ServidorSobreTope, VencimientoExcedente
 } from '@/types/api'
 
+/**
+ * Lo que descontarían unas fechas de vacaciones y el día del regreso
+ * (2026-10-20). Si los días pasan del rango, la parte termina antes de un
+ * descanso y se cuenta hasta la víspera del regreso.
+ */
+export type ConteoVacaciones = {
+  dias: number
+  fecha_retorno: string
+  dias_del_rango: number
+}
+
 export const asistenciaService = {
   marcaciones: {
     listar: (params: {
@@ -214,6 +225,12 @@ export const asistenciaService = {
     saldo: (servidorId: number) =>
       api.get<ApiResponse<{ saldo_dias: number }>>(
         `/asistencia/vacaciones/saldo/${servidorId}`
+      ).then(r => r.data.datos),
+
+    // Lo cuenta el backend porque conoce los feriados. No guarda nada.
+    conteo: (fecha_inicio: string, fecha_fin: string) =>
+      api.get<ApiResponse<ConteoVacaciones>>(
+        '/asistencia/vacaciones/conteo', { params: { fecha_inicio, fecha_fin } }
       ).then(r => r.data.datos),
 
     // Sin unidad: el backend guarda siempre la del servidor.

@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/useAuth'
 import { useVacacionMutations } from './useVacacionMutations'
 import { useExportarVacacion } from './useExportarVacacion'
 import { vacacionSchema, type VacacionFormData } from '../components/vacacion.schema'
-import { diasCalendario } from '../utils/fechas'
+import { asistenciaService } from '../services/asistenciaService'
 import type { Vacacion } from '@/types/api'
 
 /**
@@ -51,13 +52,23 @@ export function useVacacionForm(onClose: () => void, soloPropio = false) {
   const fechaInicio = useWatch({ control, name: 'fecha_inicio' })
   const fechaFin    = useWatch({ control, name: 'fecha_fin' })
 
-  // Días calendario, con ambos extremos, en los dos regímenes: la LOSEP
-  // (art. 29) y el Código del Trabajo (art. 69), confirmado con Talento
-  // Humano. Antes la LOSEP contaba solo de lunes a viernes.
+  // Días calendario en los dos regímenes, la LOSEP (art. 29) y el Código del
+  // Trabajo (art. 69), y desde el 2026-10-20 con el descanso que sigue a la
+  // parte, hasta la víspera del regreso (criterio del Ministerio del Trabajo).
+  // Los cuenta el backend, que conoce los feriados, y fija el regreso.
+  const rangoValido = !!fechaInicio && !!fechaFin && fechaFin >= fechaInicio
+  const { data: conteo = null } = useQuery({
+    queryKey: ['vacaciones', 'conteo', fechaInicio, fechaFin],
+    queryFn: () => asistenciaService.vacaciones.conteo(fechaInicio, fechaFin),
+    enabled: rangoValido,
+    staleTime: Infinity,
+  })
+
   useEffect(() => {
-    const dias = diasCalendario(fechaInicio, fechaFin)
-    if (dias !== null) setValue('dias_solicitados', dias, { shouldValidate: true })
-  }, [fechaInicio, fechaFin, setValue])
+    if (!conteo) return
+    setValue('dias_solicitados', conteo.dias, { shouldValidate: true })
+    setValue('fecha_retorno', conteo.fecha_retorno, { shouldValidate: true })
+  }, [conteo, setValue])
 
   const cerrar = () => {
     form.reset()
@@ -98,6 +109,7 @@ export function useVacacionForm(onClose: () => void, soloPropio = false) {
 
   return {
     form,
+    conteo: rangoValido ? conteo : null,
     propio,
     puedeRegistrar,
     unidadSelId,

@@ -9729,6 +9729,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/asistencia/vacaciones/conteo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lo que descontarían unas fechas y el día del regreso, para el formulario
+         *     (2026-10-20): los cuenta el backend porque conoce los feriados. No
+         *     guarda nada
+         */
+        get: operations["vacacion.conteo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/asistencia/vacaciones/{id}/exportar": {
         parameters: {
             query?: never;
@@ -43563,6 +43584,41 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "vacacion.conteo": {
+        parameters: {
+            query: {
+                fecha_inicio: string;
+                fecha_fin: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Días de la solicitud.";
+                        datos: {
+                            dias: number;
+                            fecha_retorno: string;
+                            /** @description Si los días pasan del rango, la parte termina antes de un descanso. */
+                            dias_del_rango: string;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "asistencia.vacaciones.exportar": {
