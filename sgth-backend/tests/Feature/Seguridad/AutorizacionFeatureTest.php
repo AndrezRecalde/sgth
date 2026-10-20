@@ -2,8 +2,6 @@
 
 use App\Enums\TipoPermiso;
 use App\Models\Asistencia\PermisoServidor;
-use App\Models\Nomina\Nomina;
-use App\Models\Nomina\RolPago;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Expediente\Servidor;
@@ -21,8 +19,6 @@ beforeEach(function () {
     Puesto::unguard();
     Servidor::unguard();
     PermisoServidor::unguard();
-    Nomina::unguard();
-    RolPago::unguard();
 
     Role::firstOrCreate(['name' => 'servidor', 'guard_name' => 'sanctum']);
 
@@ -83,34 +79,6 @@ beforeEach(function () {
     // B—, así que sin él la prueba no probaba nada.
     $this->userA->update(['servidor_id' => $this->servidorA->id]);
     $this->userB->update(['servidor_id' => $this->servidorB->id]);
-});
-
-test('servidor_no_accede_a_nomina_de_otro', function () {
-    $nomina = Nomina::create([
-        'periodo' => '2026-05',
-        'fecha_inicio' => '2026-05-01',
-        'fecha_fin' => '2026-05-31',
-        'estado' => 'cerrada',
-        'total_ingresos' => 1000,
-        'total_descuentos' => 100,
-        'total_neto' => 900,
-    ]);
-
-    RolPago::create([
-        'nomina_id' => $nomina->id,
-        'servidor_id' => $this->servidorB->id,
-        'total_ingresos' => 1000,
-        'total_descuentos' => 100,
-        'total_neto' => 900,
-    ]);
-
-    // A intenta ver el rol de pago de B
-    $response = $this->actingAs($this->userA, 'sanctum')
-        ->getJson("/api/v1/nomina/{$nomina->id}/rol-pago/{$this->servidorB->id}");
-
-    // Podría devolver 403 Forbidden o 404 (si el scope lo oculta completamente)
-    // Generalmente para control de acceso directo es 403. Laravel a veces lanza 404 si es Route Model Binding con Policy.
-    expect(in_array($response->status(), [403, 404]))->toBeTrue();
 });
 
 test('servidor_no_accede_a_expediente_de_otro', function () {

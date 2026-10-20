@@ -17,6 +17,8 @@ uses(Tests\TestCase::class, RefreshDatabase::class);
  * que se escribieron, y no se había notado porque ninguna pantalla las pide.
  * Las de actividades se retiraron el 2026-10-12: viven en el portal, en
  * `autoservicio/mis-actividades`, con su propio literal (`pdf`) que cuidar.
+ * Las de nómina, el 2026-10-20, con la nómina: de ella solo quedan las
+ * novedades para Financiero.
  *
  * Lo que se comprueba aquí no es que devuelvan datos, sino que llegan a su
  * controlador: que la ruta exista es la mitad del asunto, la otra mitad es que
@@ -48,19 +50,29 @@ function destinoDe(string $metodo, string $uri): string
     return class_basename($ruta->getController()) . '@' . $ruta->getActionMethod();
 }
 
-test('las_rutas_literales_de_nomina_no_las_traga_el_comodin', function () {
-    expect(destinoDe('GET', '/api/v1/nomina/conceptos'))
-        ->toBe('ConceptoNominaController@index');
+test('de_la_nomina_solo_quedan_las_novedades', function () {
+    // El SGTH no calcula la nómina desde el 2026-10-20: es informativo.
+    expect(destinoDe('GET', '/api/v1/nomina/novedades'))
+        ->toBe('NovedadNominaController@index');
 
-    expect(destinoDe('GET', '/api/v1/nomina/handoffs'))
-        ->toBe('HandoffErpController@index');
+    $this->usuario->givePermissionTo(\Spatie\Permission\Models\Permission::firstOrCreate(
+        ['name' => 'ver-novedades-nomina', 'guard_name' => 'sanctum']
+    ));
 
-    expect(destinoDe('GET', '/api/v1/nomina/descuentos-recurrentes'))
-        ->toBe('DescuentoRecurrenteController@index');
-
-    // Y el comodín sigue funcionando para lo suyo.
-    expect(destinoDe('GET', '/api/v1/nomina/7'))
-        ->toBe('NominaController@show');
+    foreach ([
+        ['GET', '/api/v1/nomina'],
+        ['POST', '/api/v1/nomina'],
+        ['GET', '/api/v1/nomina/7'],
+        ['GET', '/api/v1/nomina/conceptos'],
+        ['GET', '/api/v1/nomina/handoffs'],
+        ['GET', '/api/v1/nomina/descuentos-recurrentes'],
+        ['GET', '/api/v1/nomina/7/rol-pago/3'],
+        ['GET', '/api/v1/autoservicio/mis-roles-pago'],
+    ] as [$metodo, $uri]) {
+        $this->actingAs($this->usuario, 'sanctum')
+            ->json($metodo, $uri)
+            ->assertNotFound();
+    }
 });
 
 test('el_pdf_de_mis_actividades_no_lo_traga_el_comodin', function () {
@@ -69,31 +81,4 @@ test('el_pdf_de_mis_actividades_no_lo_traga_el_comodin', function () {
 
     expect(destinoDe('PUT', '/api/v1/autoservicio/mis-actividades/7'))
         ->toBe('MisActividadesController@update');
-});
-
-test('el_comodin_de_nomina_solo_acepta_numeros', function () {
-    // Sin la restricción, el orden de las líneas era lo único que sostenía
-    // esto: bastaba añadir una ruta literal más abajo para romperla otra vez.
-    $this->actingAs($this->usuario, 'sanctum')
-        ->getJson('/api/v1/nomina/loquesea')
-        ->assertNotFound();
-});
-
-test('las_rutas_de_nomina_que_estaban_rotas_ya_responden', function () {
-    // Desde la fase 7.3c piden los permisos de nómina, no el rol.
-    foreach (['ver-nomina-todas', 'procesar-nomina'] as $permiso) {
-        $this->usuario->givePermissionTo(\Spatie\Permission\Models\Permission::firstOrCreate(
-            ['name' => $permiso, 'guard_name' => 'sanctum']
-        ));
-    }
-
-    foreach ([
-        '/api/v1/nomina/conceptos',
-        '/api/v1/nomina/handoffs',
-        '/api/v1/nomina/descuentos-recurrentes',
-    ] as $uri) {
-        $this->actingAs($this->usuario, 'sanctum')
-            ->getJson($uri)
-            ->assertOk();
-    }
 });

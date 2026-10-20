@@ -52,14 +52,10 @@ use App\Contracts\Bienestar\BienestarServiceInterface;
 use App\Services\Bienestar\BienestarService;
 use App\Contracts\Reporteria\ReporteriaServiceInterface;
 use App\Services\Reporteria\ReporteriaService;
-use App\Contracts\Handoff\HandoffErpServiceInterface;
-use App\Services\Handoff\HandoffErpService;
 use App\Contracts\Asistencia\PermisoServiceInterface;
 use App\Services\Asistencia\PermisoService;
 use App\Contracts\Asistencia\VacacionServiceInterface;
 use App\Services\Asistencia\VacacionService;
-use App\Contracts\Nomina\NominaServiceInterface;
-use App\Services\Nomina\NominaService;
 use App\Contracts\Autoservicio\AutoservicioServiceInterface;
 use App\Services\Autoservicio\AutoservicioService;
 use App\Contracts\Disciplinario\DisciplinarioServiceInterface;
@@ -261,10 +257,6 @@ class AppServiceProvider extends ServiceProvider
             ReporteriaService::class
         );
         $this->app->bind(
-            HandoffErpServiceInterface::class,
-            HandoffErpService::class
-        );
-        $this->app->bind(
             PermisoServiceInterface::class,
             PermisoService::class
         );
@@ -275,10 +267,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             \App\Contracts\Viatico\ViaticoServiceInterface::class,
             \App\Services\Viatico\ViaticoService::class
-        );
-        $this->app->bind(
-            NominaServiceInterface::class,
-            NominaService::class
         );
         $this->app->bind(
             AutoservicioServiceInterface::class,

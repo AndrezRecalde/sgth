@@ -136,11 +136,6 @@ class RolPermisoSeeder extends Seeder
             Permiso::ANULAR_ACCION_PERSONAL,
             // Corregir a mano la fecha de ingreso (fase 1.5).
             Permiso::CORREGIR_DATOS_LABORALES,
-            Permiso::VER_NOMINA_UNIDAD,
-            Permiso::VER_NOMINA_TODAS,
-            Permiso::PROCESAR_NOMINA,
-            Permiso::CERRAR_NOMINA,
-            Permiso::GENERAR_HANDOFF_ERP,
             // Las novedades del mes, y su entrega a Financiero (fase 7.3a).
             Permiso::VER_NOVEDADES_NOMINA,
             Permiso::ENTREGAR_NOVEDADES_NOMINA,
@@ -201,9 +196,6 @@ class RolPermisoSeeder extends Seeder
             // director (TH 22).
             Permiso::PREPARAR_ACCION_PERSONAL,
             Permiso::NOTIFICAR_ACCION_PERSONAL,
-            Permiso::VER_NOMINA_UNIDAD,
-            Permiso::VER_NOMINA_TODAS,
-            Permiso::PROCESAR_NOMINA,
             // Las ve; entregarlas es del director (fase 7.3a).
             Permiso::VER_NOVEDADES_NOMINA,
             Permiso::VER_ASISTENCIA_UNIDAD,
@@ -249,9 +241,6 @@ class RolPermisoSeeder extends Seeder
             Permiso::GESTIONAR_DISTRIBUTIVO,
             Permiso::VER_EXPEDIENTE_UNIDAD,
             Permiso::VER_EXPEDIENTE_TODOS,
-            Permiso::VER_NOMINA_UNIDAD,
-            Permiso::VER_NOMINA_TODAS,
-            Permiso::CERRAR_NOMINA,
             Permiso::VER_ASISTENCIA_UNIDAD,
             Permiso::VER_ASISTENCIA_TODOS,
             Permiso::VER_PERMISOS_TODOS,
@@ -267,7 +256,6 @@ class RolPermisoSeeder extends Seeder
         $this->crearRol(Rol::DIRECTOR, array_merge($permisosBase, [
             Permiso::VER_ESTRUCTURA,
             Permiso::VER_EXPEDIENTE_UNIDAD,
-            Permiso::VER_NOMINA_UNIDAD,
             Permiso::VER_ASISTENCIA_UNIDAD,
             Permiso::VER_VACACIONES_UNIDAD,
             Permiso::VER_ACTIVIDADES_UNIDAD,
@@ -280,7 +268,6 @@ class RolPermisoSeeder extends Seeder
         $this->crearRol(Rol::JEFE_UNIDAD, array_merge($permisosBase, [
             Permiso::VER_ESTRUCTURA,
             Permiso::VER_EXPEDIENTE_UNIDAD,
-            Permiso::VER_NOMINA_UNIDAD,
             Permiso::VER_ASISTENCIA_UNIDAD,
             Permiso::VER_VACACIONES_UNIDAD,
             Permiso::VER_ACTIVIDADES_UNIDAD,
@@ -365,8 +352,6 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_ESTRUCTURA,
             Permiso::VER_EXPEDIENTE_UNIDAD,
             Permiso::VER_EXPEDIENTE_TODOS,
-            Permiso::VER_NOMINA_UNIDAD,
-            Permiso::VER_NOMINA_TODAS,
             Permiso::VER_NOVEDADES_NOMINA,
             Permiso::VER_ASISTENCIA_UNIDAD,
             Permiso::VER_ASISTENCIA_TODOS,

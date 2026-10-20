@@ -140,13 +140,13 @@ export const NAV_SGTH: NavGroup[] = [
         ],
       },
       {
-        label: 'Nómina',
+        label: 'Novedades para Financiero',
         href:  ROUTES.SGTH.NOMINA,
         icon:  'IconCash',
-        // Las novedades del mes (fase 7.3a) y el cálculo (7.3c), cada uno con
-        // su permiso. Sin esto salía en el menú de todos los roles, y quien no
-        // podía abrirla se encontraba un 403.
-        permisos: ['ver-novedades-nomina', 'ver-nomina-todas'],
+        // Las novedades del mes (fase 7.3a): de la nómina solo quedan ellas,
+        // porque el SGTH no la calcula desde el 2026-10-20. Con su permiso, o
+        // saldría en el menú de todos los roles y abrirla daría un 403.
+        permisos: ['ver-novedades-nomina'],
       },
       {
         label: 'Asistencia',

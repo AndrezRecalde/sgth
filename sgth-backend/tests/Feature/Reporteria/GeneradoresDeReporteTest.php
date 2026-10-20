@@ -88,48 +88,6 @@ test('el_distributivo_ya_no_se_corta_en_diez', function () {
         ->toHaveCount(13);
 });
 
-test('la_nomina_consolidada_suma_lo_pagado_en_el_periodo', function () {
-    $nomina = DB::table('nominas')->insertGetId([
-        'periodo' => '2026-08', 'fecha_inicio' => '2026-08-01',
-        'fecha_fin' => '2026-08-31', 'estado' => 'cerrada',
-        'total_ingresos' => 0, 'total_descuentos' => 0, 'total_neto' => 0,
-        'created_at' => now(), 'updated_at' => now(),
-    ]);
-    DB::table('roles_pago')->insert([
-        'nomina_id' => $nomina, 'servidor_id' => $this->servidor->id,
-        'total_ingresos' => 1000, 'total_descuentos' => 150, 'total_neto' => 850,
-        'created_at' => now(), 'updated_at' => now(),
-    ]);
-
-    $reporte = $this->servicio->generarNominaConsolidada(['periodo' => '2026-08']);
-
-    expect($reporte['datos'])->toHaveCount(1);
-    expect($reporte['metadata']['suma_ingresos'])->toBe(1000.0);
-    expect($reporte['metadata']['suma_neto'])->toBe(850.0);
-});
-
-test('la_nomina_consolidada_respeta_el_periodo_que_se_le_pide', function () {
-    foreach ([['2026-07', 500], ['2026-08', 900]] as [$periodo, $monto]) {
-        $nomina = DB::table('nominas')->insertGetId([
-            'periodo' => $periodo, 'fecha_inicio' => $periodo . '-01',
-            'fecha_fin' => $periodo . '-28', 'estado' => 'cerrada',
-            'total_ingresos' => 0, 'total_descuentos' => 0, 'total_neto' => 0,
-            'created_at' => now(), 'updated_at' => now(),
-        ]);
-        DB::table('roles_pago')->insert([
-            'nomina_id' => $nomina, 'servidor_id' => $this->servidor->id,
-            'total_ingresos' => $monto, 'total_descuentos' => 0,
-            'total_neto' => $monto,
-            'created_at' => now(), 'updated_at' => now(),
-        ]);
-    }
-
-    $reporte = $this->servicio->generarNominaConsolidada(['periodo' => '2026-07']);
-
-    expect($reporte['datos'])->toHaveCount(1);
-    expect($reporte['metadata']['suma_neto'])->toBe(500.0);
-});
-
 test('el_reporte_de_viaticos_suma_montos_y_deja_fuera_los_rechazados', function () {
     foreach ([['aprobado', 200], ['rechazado', 999]] as $i => [$estado, $monto]) {
         DB::table('viaticos')->insert([
@@ -179,10 +137,13 @@ test('los_reportes_que_no_se_pueden_armar_se_niegan_y_dicen_que_falta', function
     // Devolvían una lista vacía, que en una planilla del IESS se lee como
     // «este mes no hubo aportes». Estos se presentan ante organismos de
     // control: es mejor que no salgan a que salgan mal.
+    // Los tres del rol de pagos, desde el 2026-10-20: el SGTH no calcula la
+    // nómina, y lo pagado lo tiene Financiero.
     $casos = [
-        'generarPlanillaIess'  => 'detalle por rubro',
-        'generarFormulario107' => 'ingresos gravados',
-        'generarInformePac'    => 'compras públicas',
+        'generarNominaConsolidada' => 'no calcula la nómina',
+        'generarPlanillaIess'      => 'no calcula la nómina',
+        'generarFormulario107'     => 'no calcula la nómina',
+        'generarInformePac'        => 'compras públicas',
     ];
 
     foreach ($casos as $metodo => $loQueDebeDecir) {
@@ -209,7 +170,7 @@ test('el_reporte_en_segundo_plano_queda_en_error_con_el_motivo', function () {
     $estado = Cache::get("sgth:reporte_job:{$jobId}");
 
     expect($estado['estado'])->toBe('error');
-    expect($estado['error'])->toContain('detalle por rubro');
+    expect($estado['error'])->toContain('no calcula la nómina');
     expect($estado['url_descarga'])->toBeNull();
 });
 

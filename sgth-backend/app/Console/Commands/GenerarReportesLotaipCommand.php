@@ -52,12 +52,10 @@ class GenerarReportesLotaipCommand extends Command
             $distributivo = $reporteriaService->generarDistributivoSueldos(['mes' => $hoy->month, 'anio' => $hoy->year]);
             Excel::store(new ReporteGenericoExport($distributivo['datos']), "public/lotaip/distributivo_{$mesAnio}.xlsx");
 
-            // 2. Nómina Consolidada (Mensual)
-            $this->info('Generando Nómina Consolidada...');
-            $nomina = $reporteriaService->generarNominaConsolidada(['mes' => $hoy->month, 'anio' => $hoy->year]);
-            Excel::store(new ReporteGenericoExport($nomina['datos']), "public/lotaip/nomina_{$mesAnio}.xlsx");
+            // La nómina consolidada salió el 2026-10-20: el SGTH no calcula la
+            // nómina, y la remuneración por puesto ya va en el distributivo.
 
-            // 3. Estructura Orgánica Actualizada
+            // 2. Estructura Orgánica Actualizada
             $this->info('Generando Estructura Orgánica...');
             // Utilizamos el ad hoc del Módulo de Estructura (simulado)
             $estructura = $reporteriaService->generarReporteAdHoc(['modulo' => 'estructura_organica', 'parametros' => []]);

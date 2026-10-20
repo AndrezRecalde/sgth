@@ -635,9 +635,8 @@ Así hay un solo historial, un solo motor de efectos y una sola bandeja, filtrab
 - **Supresión de puestos**: aplazada; no se prevé por ahora [TH N16]. Mientras tanto, `eliminarPuesto` queda solo para puestos sin ocupantes ni historia. Si algún día se necesita, se diseña según el Art. 60: informe técnico, protecciones, indemnización y una partida que no se recrea en 2 años.
 
 ### 9.8 Nómina
-- **Financiero paga en su propio sistema** (decisión de TH, 2026-10-04, la de las multas). El SGTH le entrega cada mes las **novedades para nómina**, con su monto de referencia (fase 7.3a).
-- La nómina del SGTH toma la remuneración **del vínculo** (`contratos_servidor.remuneracion`), no la del puesto, y aplica las novedades. Es un cálculo paralelo, «referencial», para la corrida del mes de prueba (fase 7.3c).
-- Es un cambio de alto riesgo: se propone **una corrida en paralelo** de un mes antes de cambiar.
+- **Financiero paga en su propio sistema** (decisión de TH, 2026-10-04, la de las multas). El SGTH le entrega cada mes las **novedades para nómina** (fase 7.3a).
+- **El SGTH es informativo** (decisión de TH y Financiero, 2026-10-20): no calcula la nómina ni ningún rubro fuerte de ella; informa para los expedientes y las normas de contratación. La nómina del SGTH sobre el vínculo (fase 7.3c) se retiró, y las novedades dicen lo que pasó, sin montos.
 
 ### 9.9 Desvinculación (nuevo)
 Al registrarse una cesación o terminación se abre una lista de pasos con responsable y estado:
@@ -1204,6 +1203,7 @@ Cada fase se puede desplegar sola. Los PRs van **en serie**, cada uno verde en C
      - Arreglos de paso: la cuota de un préstamo se cuenta al cerrar, una vez —cada recálculo del borrador sumaba otra—, y los préstamos se filtran por las fechas del mes; el salario básico sale de `salarios_basicos` (sin él no hay décimo cuarto, y se dice); los permisos de nómina —ver, procesar, cerrar— reemplazan al rol admin-uath, en el backend y en la pantalla.
      - Excel por servidor, con los días, la remuneración y cada concepto, para compararla con la de Financiero.
      - **[Pendiente: Financiero]** Siguen como estaban: las tasas del IESS (el catálogo trae las del sector privado), los décimos de la LOSEP (hoy solo los del Código del Trabajo, mensualizados), el impuesto a la renta y los fondos de reserva. La base del IESS pasa a ser todo lo que se paga salvo los décimos.
+     - **Retirada el 2026-10-20**: el SGTH es informativo (9.8), así que la pregunta a Financiero quedó sin objeto. Se fueron el cálculo, el cierre, los roles de pago, el traspaso al ERP, los conceptos y los descuentos recurrentes, la ruta de los roles del portal, el indicador de costo de nómina del tablero, y los permisos ver, procesar y cerrar la nómina y generar el traspaso. Los reportes de nómina consolidada, planilla del IESS y formulario 107 dicen que no están disponibles, y LOTAIP ya no genera la nómina mensual: la remuneración por puesto va en el distributivo. De la pantalla queda «Novedades para Financiero». Las tablas se borran en un cambio aparte.
 4. Desvinculación (9.9). En dos PR: 4a, la desvinculación y los pasos que se leen de otros módulos; 4b, la liquidación de vacaciones y la indemnización, con el tope del Mandato 2, sus novedades para nómina y la prohibición de reingreso.
    - Hasta aquí el motor cerraba el vínculo y las subrogaciones del cesado, y nada más: los bienes, el usuario, el certificado y la declaración de fin de gestión quedaban a la memoria de cada uno.
    - **4a.** Se abre sola (`desvinculaciones`) cuando un acto cierra el vínculo y la persona no queda con otro: la renuncia, la destitución, la jubilación, el fin del período, la terminación del obrero, el fin del contrato civil. Quien pasa de un vínculo a otro sin interrupción no se desvincula. Una por cierre. Si el cese se anula, se cancela.
