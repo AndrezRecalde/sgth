@@ -26,6 +26,9 @@ export function AutoridadesElectasPanel() {
   const [subrogar, setSubrogar] = React.useState(false)
 
   const columns = getAutoridadElectaColumns({ puedePreparar, onFijarFin: setAFijar })
+  // Con Prefecto y sin nadie más en funciones, la Viceprefectura está vacante:
+  // tras la asunción o la renuncia, el Consejo designa al nuevo (2026-10-20).
+  const sinViceprefecto = autoridades.some((a) => a.es_prefecto) && autoridades.every((a) => a.es_prefecto)
 
   return (
     <Stack gap="md">
@@ -37,6 +40,14 @@ export function AutoridadesElectasPanel() {
         licencia del Prefecto de más de tres días prepara sola la subrogación por
         ley del Viceprefecto (COOTAD Art. 51).
       </Alert>
+
+      {sinViceprefecto && (
+        <Alert variant="light" color="amber" icon={<IconInfoCircle size={16} />} title="No hay Viceprefecto en funciones">
+          El Consejo Provincial lo designa por resolución, de una terna del Prefecto (COOTAD Art. 47 n). Regístrelo
+          desde «Nueva acción de personal» con el «Inicio del período», causal «Designación del Consejo Provincial»:
+          termina con el período del Prefecto y no lleva acta de posesión.
+        </Alert>
+      )}
 
       {puedePreparar(null) && (
         <Group justify="flex-end">

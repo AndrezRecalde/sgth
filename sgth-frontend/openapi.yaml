@@ -3418,6 +3418,13 @@
                                                     "credencial": {
                                                         "type": "string"
                                                     },
+                                                    "designacion": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ],
+                                                        "description": "Si el Consejo lo design\u00f3, su resoluci\u00f3n (2026-10-20)."
+                                                    },
                                                     "inicio": {
                                                         "type": [
                                                             "object",
@@ -3621,6 +3628,7 @@
                                                     "hasta",
                                                     "dias_restantes",
                                                     "credencial",
+                                                    "designacion",
                                                     "inicio",
                                                     "puede_fijar_fin",
                                                     "cese",
@@ -67268,6 +67276,8 @@
                             "Fin del per\u00edodo",
                             "Revocatoria del mandato",
                             "Remoci\u00f3n por el Consejo Provincial",
+                            "Elecci\u00f3n",
+                            "Designaci\u00f3n del Consejo Provincial",
                             "Terminaci\u00f3n por mutuo acuerdo",
                             "Terminaci\u00f3n anticipada seg\u00fan el contrato",
                             "Renuncia (desahucio)",
@@ -67331,6 +67341,7 @@
                             "LOSEP Art. 43 b",
                             "LOSEP Art. 43 c",
                             "LOSEP Art. 43 d",
+                            "COOTAD, Art. 47 literal n",
                             null
                         ]
                     },
@@ -67856,6 +67867,7 @@
                             "LOSEP Art. 43 b",
                             "LOSEP Art. 43 c",
                             "LOSEP Art. 43 d",
+                            "COOTAD, Art. 47 literal n",
                             null
                         ]
                     },
@@ -85615,6 +85627,8 @@
                     "fin_del_periodo",
                     "revocatoria_del_mandato",
                     "remocion_por_el_consejo",
+                    "eleccion",
+                    "designacion_del_consejo",
                     "terminacion_mutuo_acuerdo",
                     "terminacion_anticipada",
                     "desahucio",

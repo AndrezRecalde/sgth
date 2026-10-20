@@ -79,6 +79,8 @@ export function useGuardarAccionPersonal({
   return useMutation({
     mutationFn: (data: MovimientoFormData) => {
       const clase = buscarClase(catalogo, data.clase)
+      // El Viceprefecto que designa el Consejo (2026-10-20).
+      const designacion = !!clase?.pide_datos_del_periodo && data.causal === 'designacion_del_consejo'
       const limpio = {
         ...soloLoQueAplica(data, !!clase?.pide_contratacion, !!clase?.pide_acta_concurso, !!clase?.pide_adenda),
         // El consentimiento escrito, solo en el cambio de ocupación de un
@@ -93,7 +95,7 @@ export function useGuardarAccionPersonal({
         // La credencial, la posesión y el fin del período, solo en el inicio
         // del período de una autoridad (fase 4.1). El fin del período viaja
         // como el plazo del vínculo.
-        ...(clase?.pide_datos_del_periodo
+        ...(clase?.pide_datos_del_periodo && !designacion
           ? {
               credencial_cne_numero: data.credencial_cne_numero?.trim() || null,
               credencial_cne_fecha: data.credencial_cne_fecha,
@@ -138,7 +140,9 @@ export function useGuardarAccionPersonal({
           : { dias_para_presentarse: null, razon_dias_adicionales: null }),
         // Vacía, el documento imprime la de la clase (fase 6.1).
         base_legal: data.base_legal?.trim() || null,
-        acto_origen_tipo: data.acto_origen_tipo || null,
+        // La designación del Consejo tiene por acto de origen su resolución
+        // (2026-10-20); el fin del período lo pone el backend.
+        acto_origen_tipo: designacion ? 'resolucion' : (data.acto_origen_tipo || null),
         acto_origen_numero: data.acto_origen_numero?.trim() || null,
         acto_origen_fecha: data.acto_origen_fecha || null,
       }

@@ -19,6 +19,7 @@ use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
 use App\Models\Expediente\Subrogacion;
 use App\Models\User;
+use App\Services\Expediente\AutoridadElectaService;
 use App\Services\Expediente\FirmanteAccionPersonalService;
 use App\Services\Expediente\MovimientoPersonalService;
 use App\Services\Expediente\MovimientoPersonalStateService;
@@ -286,6 +287,112 @@ test('el fin del período no prepara asunción: termina también el del Vicepref
     $this->artisan('sgth:acciones:aplicar-vigentes')->assertSuccessful();
 
     expect(MovimientoPersonal::where('tipo_movimiento', TipoMovimientoPersonal::ASUNCION_DEFINITIVA->value)->exists())->toBeFalse();
+});
+
+// ── La designación del Consejo ──────────────────────────────────
+//
+// Cuando falta el Viceprefecto —asumió la Prefectura, renunció—, el Consejo
+// Provincial designa al nuevo por resolución, de una terna del Prefecto
+// (COOTAD Art. 47 n; TH, 2026-10-19). No firma acta de posesión.
+
+test('al Viceprefecto que designa el Consejo lo respalda la resolución, y termina con el Prefecto', function () {
+    // La Viceprefectura queda vacante.
+    $this->vice->contratoVigente->update(['estado' => 'terminado', 'fecha_fin' => now()->subDay()->toDateString()]);
+    $designado = Servidor::create([
+        'cedula' => '8699999999', 'nombre' => 'Designado', 'apellido' => 'Por el Consejo', 'regimen_laboral' => 'losep',
+    ]);
+
+    $designar = fn (array $extra = []) => $this->postJson("/api/v1/expediente/servidores/{$designado->id}/movimientos", [
+        'clase'             => 'inicio_periodo',
+        'causal'            => 'designacion_del_consejo',
+        'descripcion'       => 'Designación del Viceprefecto por el Consejo Provincial',
+        'fecha_efectiva'    => $this->hoy,
+        'unidad_destino_id' => $this->viceprefectura->id,
+        'puesto_destino_id' => $this->puestoVice->id,
+        ...$extra,
+    ]);
+
+    // Sin la resolución no empieza: la credencial del CNE no se le pide.
+    $designar()->assertStatus(422)
+        ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'resolución del Consejo Provincial'));
+
+    $id = $designar([
+        'acto_origen_tipo'    => 'resolucion',
+        'acto_origen_numero'  => 'RES-CP-2026-031',
+        'acto_origen_fecha'   => now()->subDays(3)->toDateString(),
+        'acta_posesion_numero' => 'ACTA-NO-VA',
+        // El fin que se mande no cuenta: termina con el período del Prefecto.
+        'fecha_fin_propuesta' => now()->addYears(3)->toDateString(),
+    ])->assertCreated()->json('datos.id');
+
+    $acto = MovimientoPersonal::findOrFail($id);
+    expect($acto->subtipoEfectivo())->toBe(SubtipoMovimientoPersonal::DESIGNACION_DEL_CONSEJO)
+        ->and($acto->instrumento)->toBe(InstrumentoActo::ACTO_AUTORIDAD)
+        ->and($acto->fecha_fin_propuesta->toDateString())->toBe('2027-05-13')
+        ->and($acto->credencial_cne_numero)->toBeNull()
+        ->and($acto->acta_posesion_numero)->toBeNull();
+
+    ($this->registrar)($id);
+
+    // Es una autoridad más: la subrogación por ley y la asunción lo encuentran.
+    $vinculo = $designado->fresh('contratoVigente')->contratoVigente;
+    expect($vinculo->tipo_nombramiento)->toBe(TipoNombramiento::ELECCION_POPULAR)
+        ->and($vinculo->numero_contrato)->toBe('RES-CP-2026-031')
+        ->and($vinculo->fecha_fin->toDateString())->toBe('2027-05-13')
+        ->and(app(AutoridadElectaService::class)->viceprefecto()?->id)->toBe($vinculo->id);
+
+    $fila = collect($this->getJson('/api/v1/expediente/autoridades-electas')->assertOk()->json('datos'))
+        ->firstWhere('servidor.id', $designado->id);
+    expect($fila['designacion'])->toBe('RES-CP-2026-031')
+        ->and($fila['credencial'])->toBeNull();
+
+    $html = view('pdf.expediente.constancia-autoridad', [
+        'movimiento'         => $acto->fresh(),
+        'anulada'            => false,
+        'servidor'           => $designado,
+        'firmaTalentoHumano' => ['rotulo' => RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO->rotuloDocumento(), 'nombre' => null, 'cargo' => 'Director/a de Talento Humano'],
+        'logo'               => public_path('images/logo-gadpe.png'),
+    ])->render();
+
+    expect($html)->toContain('Resolución del Consejo Provincial N.º RES-CP-2026-031')
+        ->toContain('COOTAD, Art. 47 literal n')
+        ->not->toContain('Credencial del CNE');
+});
+
+test('sin un Prefecto con el fin de su período, no hay con quién terminar', function () {
+    $this->prefecto->contratoVigente->update(['fecha_fin' => null]);
+    $designado = Servidor::create([
+        'cedula' => '8699999998', 'nombre' => 'Designado', 'apellido' => 'Sin Prefecto', 'regimen_laboral' => 'losep',
+    ]);
+
+    $this->postJson("/api/v1/expediente/servidores/{$designado->id}/movimientos", [
+        'clase'              => 'inicio_periodo',
+        'causal'             => 'designacion_del_consejo',
+        'descripcion'        => 'Designación del Viceprefecto por el Consejo Provincial',
+        'fecha_efectiva'     => $this->hoy,
+        'unidad_destino_id'  => $this->viceprefectura->id,
+        'puesto_destino_id'  => $this->puestoVice->id,
+        'acto_origen_tipo'   => 'resolucion',
+        'acto_origen_numero' => 'RES-CP-2026-032',
+        'acto_origen_fecha'  => $this->hoy,
+    ])->assertStatus(422)
+        ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'fin de su período'));
+});
+
+test('los inicios de antes quedaron como elección', function () {
+    $migracion = require database_path('migrations/2026_11_13_000000_causales_del_inicio_del_periodo.php');
+    $migracion->down();
+
+    $antiguo = MovimientoPersonal::create([
+        'servidor_id' => $this->vice->id, 'tipo_movimiento' => 'inicio_periodo', 'estado' => 'registrada',
+        'categoria' => \App\Enums\CategoriaEventoVinculo::ACCION_DE_PERSONAL,
+        'descripcion' => 'Posesión de antes de la causal', 'fecha_efectiva' => '2023-05-15',
+        'codigo_registro' => 'AU-2023-0001', 'autorizado_por' => $this->director->id,
+    ]);
+
+    $migracion->up();
+
+    expect($antiguo->fresh()->subtipoEfectivo())->toBe(SubtipoMovimientoPersonal::ELECCION);
 });
 
 // ── Constancia, pantalla y catálogo ─────────────────────────────

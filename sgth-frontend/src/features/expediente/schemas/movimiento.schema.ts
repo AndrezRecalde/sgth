@@ -155,8 +155,16 @@ export function crearMovimientoSchema(
 
     // La autoridad electa empieza con la credencial del CNE, y el período
     // termina en su fecha (fase 4.1). Que no pase de cuatro años lo dice el
-    // backend.
-    if (clase.pide_datos_del_periodo) {
+    // backend. La que designa el Consejo, con su resolución, y termina con el
+    // Prefecto: el fin lo pone el backend (2026-10-20).
+    if (clase.pide_datos_del_periodo && data.causal === 'designacion_del_consejo') {
+      if (!data.acto_origen_numero?.trim()) {
+        ctx.addIssue({ path: ['acto_origen_numero'], code: 'custom', message: 'Indique el número de la resolución del Consejo' })
+      }
+      if (!data.acto_origen_fecha) {
+        ctx.addIssue({ path: ['acto_origen_fecha'], code: 'custom', message: 'Indique la fecha de la resolución' })
+      }
+    } else if (clase.pide_datos_del_periodo) {
       if (!data.credencial_cne_numero?.trim()) {
         ctx.addIssue({ path: ['credencial_cne_numero'], code: 'custom', message: 'Indique el número de la credencial del CNE' })
       }
