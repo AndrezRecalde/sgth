@@ -16,6 +16,8 @@ export type AutoridadElecta = {
   hasta: string | null
   dias_restantes: number | null
   credencial: string | null
+  /** Si el Consejo lo designó (COOTAD Art. 47 n), el número de la resolución. */
+  designacion: string | null
   inicio: ActoDelPeriodo | null
   /** Sin acto que lo diga, Talento Humano fija el fin del período. */
   puede_fijar_fin: boolean

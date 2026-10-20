@@ -54,6 +54,11 @@ enum SubtipoMovimientoPersonal: string
     case FIN_DEL_PERIODO            = 'fin_del_periodo';
     case REVOCATORIA_DEL_MANDATO    = 'revocatoria_del_mandato';
     case REMOCION_POR_EL_CONSEJO    = 'remocion_por_el_consejo';
+    // Cómo empieza el período (2026-10-20): por elección, con la credencial
+    // del CNE, o por designación del Consejo Provincial, de una terna del
+    // Prefecto, cuando falta el Viceprefecto (COOTAD Art. 47 n).
+    case ELECCION                   = 'eleccion';
+    case DESIGNACION_DEL_CONSEJO    = 'designacion_del_consejo';
     // Las del contrato civil de Servicios Profesionales (diseño, 9.10; fase
     // 4.2), con base en el contrato y el Código Civil, no en la LOSEP. El
     // vencimiento del plazo es «Contrato finalizado».
@@ -126,6 +131,8 @@ enum SubtipoMovimientoPersonal: string
             self::FIN_DEL_PERIODO            => 'Fin del período',
             self::REVOCATORIA_DEL_MANDATO    => 'Revocatoria del mandato',
             self::REMOCION_POR_EL_CONSEJO    => 'Remoción por el Consejo Provincial',
+            self::ELECCION                   => 'Elección',
+            self::DESIGNACION_DEL_CONSEJO    => 'Designación del Consejo Provincial',
             self::TERMINACION_MUTUO_ACUERDO  => 'Terminación por mutuo acuerdo',
             self::TERMINACION_ANTICIPADA     => 'Terminación anticipada según el contrato',
             self::DESAHUCIO                  => 'Renuncia (desahucio)',
@@ -196,6 +203,7 @@ enum SubtipoMovimientoPersonal: string
             self::AMONESTACION_ESCRITA        => 'LOSEP Art. 43 b',
             self::SANCION_PECUNIARIA          => 'LOSEP Art. 43 c',
             self::SUSPENSION_SIN_REMUNERACION => 'LOSEP Art. 43 d',
+            self::DESIGNACION_DEL_CONSEJO     => 'COOTAD, Art. 47 literal n',
             default                          => null,
         };
     }
@@ -356,10 +364,14 @@ enum SubtipoMovimientoPersonal: string
                 ...$conSancionYCesacionLosep, TipoNombramiento::ELECCION_POPULAR, TipoNombramiento::SERVICIOS_PROFESIONALES,
             ],
 
-            // Las propias de la autoridad electa.
+            // Las propias de la autoridad electa. Las del inicio del período
+            // valen para la reelección: quien llega por primera vez no tiene
+            // vínculo que revisar.
             self::FIN_DEL_PERIODO,
             self::REVOCATORIA_DEL_MANDATO,
-            self::REMOCION_POR_EL_CONSEJO => [TipoNombramiento::ELECCION_POPULAR],
+            self::REMOCION_POR_EL_CONSEJO,
+            self::ELECCION,
+            self::DESIGNACION_DEL_CONSEJO => [TipoNombramiento::ELECCION_POPULAR],
 
             // La remoción es del provisional cuyo supuesto terminó y del de
             // libre nombramiento (LOSEP 47 e; Reg. 105; TH 8).

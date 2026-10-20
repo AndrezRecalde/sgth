@@ -7,6 +7,7 @@ use App\Enums\EstadoContrato;
 use App\Enums\EstadoSubrogacion;
 use App\Enums\MotivoSubrogacion;
 use App\Enums\SubtipoMovimientoPersonal;
+use App\Enums\TipoActoDeOrigen;
 use App\Enums\TipoEventoVinculo;
 use App\Enums\TipoMovimientoPersonal;
 use App\Enums\TipoNombramiento;
@@ -53,12 +54,20 @@ class AutoridadElectaService
      * la escala del puesto, sin marcación ni ficha médica [TH 5]. Al preparar y
      * al corregir el borrador.
      *
+     * El Viceprefecto que designa el Consejo Provincial (COOTAD Art. 47 n;
+     * TH, 2026-10-19) empieza con la resolución en lugar de la credencial, sin
+     * acta de posesión, y termina con el período del Prefecto en funciones: el
+     * fin lo pone el sistema. Queda con la modalidad de las autoridades, para
+     * que la subrogación por ley y una nueva asunción lo encuentren.
+     *
      * @param  array<string, mixed>  $datos
      * @return array<string, mixed>
      */
-    public function completarInicio(Servidor $servidor, array $datos): array
+    public function completarInicio(Servidor $servidor, array $datos, ?SubtipoMovimientoPersonal $causal = null): array
     {
-        if (blank($datos['credencial_cne_numero'] ?? null) || blank($datos['credencial_cne_fecha'] ?? null)) {
+        if ($causal === SubtipoMovimientoPersonal::DESIGNACION_DEL_CONSEJO) {
+            $datos = $this->completarDesignacion($datos);
+        } elseif (blank($datos['credencial_cne_numero'] ?? null) || blank($datos['credencial_cne_fecha'] ?? null)) {
             throw new ReglaNegocioException(
                 'Indique la credencial del CNE, número y fecha: con ella empieza el período de la autoridad.'
             );
@@ -83,8 +92,11 @@ class AutoridadElectaService
         return [
             ...$datos,
             'tipo_nombramiento_propuesto'    => TipoNombramiento::ELECCION_POPULAR->value,
-            // El número del vínculo es el de la credencial: no hay contrato.
-            'numero_contrato'                => trim((string) $datos['credencial_cne_numero']),
+            // El número del vínculo es el de la credencial, o el de la
+            // resolución del Consejo: no hay contrato.
+            'numero_contrato'                => trim((string) ($causal === SubtipoMovimientoPersonal::DESIGNACION_DEL_CONSEJO
+                ? $datos['acto_origen_numero']
+                : $datos['credencial_cne_numero'])),
             'remuneracion_propuesta'         => $datos['remuneracion_propuesta'] ?? $puesto?->rmu,
             'puede_marcar'                   => false,
             'requiere_dictamen_medico'       => false,
@@ -92,6 +104,42 @@ class AutoridadElectaService
             'acta_concurso_numero'           => null,
             'acta_concurso_fecha'            => null,
             'cubre_movimiento_id'            => null,
+        ];
+    }
+
+    /**
+     * La designación del Consejo: la resolución, número y fecha, como acto de
+     * origen; sin credencial ni acta de posesión; y el fin del período del
+     * Prefecto en funciones, que es el que completa.
+     *
+     * @param  array<string, mixed>  $datos
+     * @return array<string, mixed>
+     */
+    private function completarDesignacion(array $datos): array
+    {
+        if (blank($datos['acto_origen_numero'] ?? null) || blank($datos['acto_origen_fecha'] ?? null)) {
+            throw new ReglaNegocioException(
+                'Indique la resolución del Consejo Provincial, número y fecha: con ella empieza el período del '
+                    .'Viceprefecto designado (COOTAD Art. 47 n).'
+            );
+        }
+
+        $prefecto = $this->prefecto();
+
+        if (! $prefecto?->fecha_fin) {
+            throw new ReglaNegocioException(
+                'No hay un Prefecto en funciones con el fin de su período: el Viceprefecto designado termina con él. '
+                    .'Fíjelo antes en «Autoridades electas».'
+            );
+        }
+
+        return [
+            ...$datos,
+            'acto_origen_tipo'      => TipoActoDeOrigen::RESOLUCION->value,
+            'credencial_cne_numero' => null,
+            'credencial_cne_fecha'  => null,
+            'acta_posesion_numero'  => null,
+            'fecha_fin_propuesta'   => $prefecto->fecha_fin->toDateString(),
         ];
     }
 
@@ -320,6 +368,10 @@ class AutoridadElectaService
                     'hasta'           => $fin?->toDateString(),
                     'dias_restantes'  => $fin ? (int) $hoy->diffInDays($fin, false) : null,
                     'credencial'      => $inicio?->credencial_cne_numero,
+                    // Si el Consejo lo designó, su resolución (2026-10-20).
+                    'designacion'     => $inicio?->subtipoEfectivo() === SubtipoMovimientoPersonal::DESIGNACION_DEL_CONSEJO
+                        ? $inicio->acto_origen_numero
+                        : null,
                     'inicio'          => $this->resumen($inicio),
                     // El fin lo puede fijar Talento Humano si no lo dice un acto.
                     'puede_fijar_fin' => ! $inicio && ! $cese,

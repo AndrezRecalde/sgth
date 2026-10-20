@@ -86,6 +86,7 @@ beforeEach(function () {
         "/api/v1/expediente/servidores/{$s->id}/movimientos",
         [
             'clase'                 => 'inicio_periodo',
+            'causal'                => 'eleccion',
             'descripcion'           => 'Posesión del Prefecto Provincial electo',
             'fecha_efectiva'        => $this->hoy,
             'unidad_destino_id'     => $this->prefectura->id,

@@ -190,6 +190,8 @@ enum ClaseAccionPersonal: string
             ],
             // Revalorización, reclasificación y ubicación (fase 7.1b).
             self::REVISION_CLASIFICACION => TipoMovimientoPersonal::REVISION_CLASIFICACION->subtiposPermitidos(),
+            // Por elección o por designación del Consejo (2026-10-20).
+            self::INICIO_PERIODO => TipoMovimientoPersonal::INICIO_PERIODO->subtiposPermitidos(),
             default        => [],
         };
     }
@@ -308,7 +310,7 @@ enum ClaseAccionPersonal: string
             self::RESTITUCION => [TipoMovimientoPersonal::RESTITUCION, null],
             self::NOMBRAMIENTO_DEFINITIVO => [TipoMovimientoPersonal::NOMBRAMIENTO_DEFINITIVO, null],
             self::ASCENSO => [TipoMovimientoPersonal::ASCENSO, null],
-            self::INICIO_PERIODO => [TipoMovimientoPersonal::INICIO_PERIODO, null],
+            self::INICIO_PERIODO => [TipoMovimientoPersonal::INICIO_PERIODO, $causal],
             self::LICENCIA_CONSEJO => [TipoMovimientoPersonal::LICENCIA_CONSEJO, null],
             self::ASUNCION_DEFINITIVA => [TipoMovimientoPersonal::ASUNCION_DEFINITIVA, null],
             self::ADENDA => [TipoMovimientoPersonal::ADENDA, null],
@@ -348,6 +350,11 @@ enum ClaseAccionPersonal: string
 
         if (in_array($subtipo, TipoMovimientoPersonal::REVISION_CLASIFICACION->subtiposPermitidos(), true)) {
             return self::REVISION_CLASIFICACION;
+        }
+
+        // Por elección o por designación del Consejo (2026-10-20).
+        if (in_array($subtipo, TipoMovimientoPersonal::INICIO_PERIODO->subtiposPermitidos(), true)) {
+            return self::INICIO_PERIODO;
         }
 
         return match ($subtipo) {
@@ -671,8 +678,9 @@ enum ClaseAccionPersonal: string
             $this === self::INICIO_PERIODO =>
                 'Del Prefecto o el Viceprefecto electos: rige desde la posesión, con la credencial del CNE, y se '
                     .'cierra solo al terminar el período, de hasta cuatro años. Si fue reelegido, el período nuevo '
-                    .'empieza cuando termina el anterior, sin cortar su antigüedad. No lleva acción de personal ni '
-                    .'firmantes.',
+                    .'empieza cuando termina el anterior, sin cortar su antigüedad. Si falta el Viceprefecto, el '
+                    .'Consejo Provincial lo designa por resolución, de una terna del Prefecto (COOTAD Art. 47 n): '
+                    .'termina con el período del Prefecto. No lleva acción de personal ni firmantes.',
             $this === self::RESTITUCION =>
                 'Por sentencia ejecutoriada (LOSEP Art. 46): deja sin efecto la cesación que cerró '
                     .'su último nombramiento permanente y lo devuelve al mismo puesto, sin perder la '

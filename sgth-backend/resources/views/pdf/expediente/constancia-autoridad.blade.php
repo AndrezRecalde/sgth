@@ -145,7 +145,12 @@
     @endif
     @if($movimiento->tipo_movimiento === \App\Enums\TipoMovimientoPersonal::INICIO_PERIODO)
         <tr><td class="label">Fin del período</td><td>{{ $fmtFecha($movimiento->fecha_fin_propuesta) }}</td></tr>
-        <tr><td class="label">Credencial del CNE</td><td>N.º {{ $movimiento->credencial_cne_numero }}, del {{ $fmtFecha($movimiento->credencial_cne_fecha) }}</td></tr>
+        @if($movimiento->subtipoEfectivo() === \App\Enums\SubtipoMovimientoPersonal::DESIGNACION_DEL_CONSEJO)
+            {{-- Designado por el Consejo, de una terna del Prefecto (2026-10-20). --}}
+            <tr><td class="label">Designación</td><td>Resolución del Consejo Provincial N.º {{ $movimiento->acto_origen_numero }}, del {{ $fmtFecha($movimiento->acto_origen_fecha) }} (COOTAD, Art. 47 literal n)</td></tr>
+        @else
+            <tr><td class="label">Credencial del CNE</td><td>N.º {{ $movimiento->credencial_cne_numero }}, del {{ $fmtFecha($movimiento->credencial_cne_fecha) }}</td></tr>
+        @endif
         @if($movimiento->acta_posesion_numero)
             <tr><td class="label">Acta de posesión</td><td>N.º {{ $movimiento->acta_posesion_numero }}</td></tr>
         @endif

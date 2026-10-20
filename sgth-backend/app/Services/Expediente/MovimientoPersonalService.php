@@ -162,7 +162,7 @@ class MovimientoPersonalService
         // acción de personal; al ingreso no se le registra (diseño, 9.14; fase
         // 4.1).
         if ($tipoMovimiento === TipoMovimientoPersonal::INICIO_PERIODO) {
-            $datos = app(AutoridadElectaService::class)->completarInicio($servidor, $datos);
+            $datos = app(AutoridadElectaService::class)->completarInicio($servidor, $datos, $subtipo);
         }
         self::impedirIngresoDeAutoridad($tipoMovimiento, $datos['tipo_nombramiento_propuesto'] ?? null);
 
@@ -480,11 +480,14 @@ class MovimientoPersonalService
                 [
                     'credencial_cne_numero' => $movimiento->credencial_cne_numero,
                     'credencial_cne_fecha'  => $movimiento->credencial_cne_fecha?->toDateString(),
+                    'acto_origen_numero'    => $movimiento->acto_origen_numero,
+                    'acto_origen_fecha'     => $movimiento->acto_origen_fecha?->toDateString(),
                     'fecha_efectiva'        => $movimiento->fecha_efectiva?->toDateString(),
                     'fecha_fin_propuesta'   => $movimiento->fecha_fin_propuesta?->toDateString(),
                     'puesto_destino_id'     => $movimiento->puesto_destino_id,
                     ...$datos,
                 ],
+                $movimiento->subtipoEfectivo(),
             );
         }
 

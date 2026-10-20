@@ -106,6 +106,7 @@ export const getAutoridadElectaColumns = ({
       <div>
         <Text size="sm" ff="monospace">{a.inicio?.codigo_registro ?? '—'}</Text>
         {a.credencial && <Text size="xs" c="dimmed">Credencial {a.credencial}</Text>}
+        {a.designacion && <Text size="xs" c="dimmed">Designado por el Consejo: {a.designacion}</Text>}
       </div>
     ),
   },

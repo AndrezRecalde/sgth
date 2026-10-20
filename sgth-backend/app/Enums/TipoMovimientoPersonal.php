@@ -163,6 +163,11 @@ enum TipoMovimientoPersonal: string
                 SubtipoMovimientoPersonal::REMOCION_POR_EL_CONSEJO,
                 SubtipoMovimientoPersonal::FIN_DEL_PERIODO,
             ],
+            // Cómo empieza el período de una autoridad (2026-10-20).
+            self::INICIO_PERIODO => [
+                SubtipoMovimientoPersonal::ELECCION,
+                SubtipoMovimientoPersonal::DESIGNACION_DEL_CONSEJO,
+            ],
             // Las tres de la revisión de la clasificación (fase 7.1b).
             self::REVISION_CLASIFICACION => [
                 SubtipoMovimientoPersonal::REVALORIZACION,

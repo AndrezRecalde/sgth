@@ -89,6 +89,8 @@ test('los tipos paraguas exigen subtipo y el resto no lo admite', function () {
         TipoMovimientoPersonal::CESACION_FUNCIONES,
         TipoMovimientoPersonal::LICENCIA_SIN_REMUNERACION,
         TipoMovimientoPersonal::REVISION_CLASIFICACION,
+        // Por elección o por designación del Consejo (2026-10-20).
+        TipoMovimientoPersonal::INICIO_PERIODO,
     ];
 
     foreach (TipoMovimientoPersonal::cases() as $tipo) {
