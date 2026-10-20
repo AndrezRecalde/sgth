@@ -59,9 +59,9 @@ enum PasoDesvinculacion: string
     }
 
     /**
-     * ¿Lo decide el Director? La liquidación y la indemnización son dinero que
-     * va a Financiero, como registrar una acción [TH 22]: también su «no
-     * aplica».
+     * ¿Lo decide el Director? Los días de vacaciones y la indemnización son lo
+     * que se le informa a Financiero, como registrar una acción [TH 22]:
+     * también su «no aplica».
      */
     public function loMarcaElDirector(): bool
     {

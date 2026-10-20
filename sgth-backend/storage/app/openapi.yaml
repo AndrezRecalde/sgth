@@ -58306,12 +58306,6 @@
                                                     "fecha_efectiva": {
                                                         "type": "string"
                                                     },
-                                                    "total_referencial": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ]
-                                                    },
                                                     "acta": {
                                                         "$ref": "#/components/schemas/ActaFiniquito"
                                                     },
@@ -58348,7 +58342,6 @@
                                                     "causal",
                                                     "causal_etiqueta",
                                                     "fecha_efectiva",
-                                                    "total_referencial",
                                                     "acta",
                                                     "reintegro"
                                                 ]
@@ -75881,12 +75874,12 @@
                             "null"
                         ],
                         "format": "date-time",
-                        "description": "La terminaci\u00f3n de un obrero (fase 4.5): cu\u00e1ndo present\u00f3 la\nrenuncia, si el desahucio rige antes de los 15 d\u00edas de aviso, la\nliquidaci\u00f3n referencial y el acta de finiquito."
+                        "description": "La terminaci\u00f3n de un obrero (fase 4.5): cu\u00e1ndo present\u00f3 la\nrenuncia, si el desahucio rige antes de los 15 d\u00edas de aviso, lo\nque le corresponde seg\u00fan el C\u00f3digo \u2014sin montos, desde el\n2026-10-20\u2014 y el acta de finiquito."
                     },
                     "desahucio_sin_el_aviso": {
                         "type": "boolean"
                     },
-                    "liquidacion_referencial": {
+                    "lo_que_corresponde": {
                         "type": "string"
                     },
                     "acta_finiquito": {
@@ -76269,7 +76262,7 @@
                     "fecha_consentimiento",
                     "fecha_presentacion_renuncia",
                     "desahucio_sin_el_aviso",
-                    "liquidacion_referencial",
+                    "lo_que_corresponde",
                     "caucionado",
                     "caucion_numero",
                     "caucion_fecha",

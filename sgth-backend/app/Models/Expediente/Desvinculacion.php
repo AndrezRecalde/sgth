@@ -34,10 +34,10 @@ class Desvinculacion extends Model
         'servidor_id', 'contrato_id', 'movimiento_cierre_id', 'fecha_salida', 'estado',
         'cerrada_en', 'cancelada_en', 'motivo_cancelacion',
         // La liquidación de vacaciones, confirmada por el Director (fase 7.4b).
-        'vacaciones_dias', 'vacaciones_remuneracion', 'vacaciones_monto', 'vacaciones_detalle',
+        'vacaciones_dias', 'vacaciones_detalle',
         'vacaciones_confirmada_por', 'vacaciones_confirmada_en',
         // La indemnización, dentro del tope del Mandato 2, y su devolución.
-        'indemnizacion_concepto', 'indemnizacion_monto', 'indemnizacion_resolucion', 'indemnizacion_tope',
+        'indemnizacion_concepto', 'indemnizacion_monto', 'indemnizacion_resolucion',
         'indemnizacion_registrada_por', 'indemnizacion_registrada_en',
         'indemnizacion_devuelta_en', 'indemnizacion_devolucion_documento', 'indemnizacion_devolucion_registrada_por',
     ];
@@ -49,12 +49,9 @@ class Desvinculacion extends Model
             'cerrada_en'                  => 'datetime',
             'cancelada_en'                => 'datetime',
             'vacaciones_dias'             => 'decimal:2',
-            'vacaciones_remuneracion'     => 'decimal:2',
-            'vacaciones_monto'            => 'decimal:2',
             'vacaciones_detalle'          => 'array',
             'vacaciones_confirmada_en'    => 'datetime',
             'indemnizacion_monto'         => 'decimal:2',
-            'indemnizacion_tope'          => 'decimal:2',
             'indemnizacion_registrada_en' => 'datetime',
             'indemnizacion_devuelta_en'   => 'date',
         ];

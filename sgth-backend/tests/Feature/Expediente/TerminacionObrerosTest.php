@@ -118,10 +118,10 @@ test('la terminación cierra el vínculo con su hoja de registro interno', funct
     expect($registrada->codigo_registro)->toBe('RI-2026-0001')
         ->and(ContratoServidor::where('servidor_id', $obrero->id)->first()->estado->value)->toBe('terminado');
 
-    // Sin rubros que fije el Código: no hay liquidación referencial.
+    // Sin rubros que fije el Código: no le corresponde nada aquí.
     $this->getJson("/api/v1/expediente/movimientos/{$registrada->id}")
         ->assertOk()
-        ->assertJsonPath('datos.liquidacion_referencial', null);
+        ->assertJsonPath('datos.lo_que_corresponde', null);
 });
 
 test('el desahucio pide la fecha de la renuncia, y avisa si rige antes de los 15 días', function () {
@@ -164,34 +164,32 @@ test('el despido intempestivo de una obrera en lactancia no procede: es ineficaz
         ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'Art. 195.1'));
 });
 
-// ── La liquidación referencial ──────────────────────────────────
+// ── Lo que corresponde ──────────────────────────────────────────
 
-test('el desahucio liquida el 25 % de la remuneración por año de servicio', function () {
+test('al desahucio le corresponde el 25 % de la remuneración por año de servicio, sin el valor', function () {
     $id = ($this->terminar)(($this->obrero)(), 'desahucio', ['fecha_presentacion_renuncia' => '2026-05-25'])->json('datos.id');
 
     // Del 1 de junio de 2021 al 15 de junio de 2026: 1841 días, 5,04 años.
-    $liquidacion = app(TerminacionObreroService::class)->liquidacion(MovimientoPersonal::findOrFail($id));
+    $corresponde = app(TerminacionObreroService::class)->loQueCorresponde(MovimientoPersonal::findOrFail($id));
 
-    expect($liquidacion['anios_servicio'])->toBe(5.04)
-        ->and($liquidacion['rubros'])->toHaveCount(1)
-        ->and($liquidacion['rubros'][0]['monto'])->toBe(781.2)
-        ->and($liquidacion['total'])->toBe(781.2);
+    // La liquidación la calcula Financiero: el SGTH es informativo (2026-10-20).
+    expect($corresponde['anios_servicio'])->toBe(5.04)
+        ->and($corresponde['rubros'])->toHaveCount(1)
+        ->and($corresponde['rubros'][0])->toBe([
+            'concepto'   => 'Bonificación por desahucio',
+            'base_legal' => 'Código del Trabajo, Art. 185',
+            'detalle'    => 'El 25 % de la última remuneración por cada año de servicio',
+        ])
+        ->and($corresponde)->not->toHaveKey('total');
 });
 
-test('el despido intempestivo suma la indemnización: la fracción de año cuenta como año', function () {
+test('al despido intempestivo le corresponde también la indemnización, con su regla', function () {
     $id = ($this->terminar)(($this->obrero)(), 'despido_intempestivo')->assertCreated()->json('datos.id');
 
-    $liquidacion = app(TerminacionObreroService::class)->liquidacion(MovimientoPersonal::findOrFail($id));
+    $corresponde = app(TerminacionObreroService::class)->loQueCorresponde(MovimientoPersonal::findOrFail($id));
 
-    // 5,04 años: seis remuneraciones (Art. 188), más la bonificación.
-    expect($liquidacion['rubros'][0]['concepto'])->toBe('Indemnización por despido intempestivo')
-        ->and($liquidacion['rubros'][0]['monto'])->toBe(3720.0)
-        ->and($liquidacion['total'])->toBe(4501.2);
-
-    // Con menos de tres años, tres remuneraciones.
-    $nuevo = ($this->terminar)(($this->obrero)('2025-01-01'), 'despido_intempestivo')->json('datos.id');
-    expect(app(TerminacionObreroService::class)->liquidacion(MovimientoPersonal::findOrFail($nuevo))['rubros'][0]['monto'])
-        ->toBe(1860.0);
+    expect(array_column($corresponde['rubros'], 'concepto'))->toBe(['Indemnización por despido intempestivo', 'Bonificación por desahucio'])
+        ->and($corresponde['rubros'][0]['detalle'])->toContain('contando la fracción como año completo, hasta 25');
 });
 
 test('al registrarse, la liquidación sale por correo a Financiero', function () {
@@ -216,26 +214,29 @@ test('al registrarse, la liquidación sale por correo a Financiero', function ()
 
     Mail::assertSent(LiquidacionObreroMail::class, fn (LiquidacionObreroMail $m) => $m->hasTo('jefe.financiero@gadpe.gob.ec')
         && ! $m->anulada
-        && $m->liquidacion['total'] === 781.2);
+        && $m->liquidacion['rubros'][0]['concepto'] === 'Bonificación por desahucio'
+        && ! array_key_exists('total', $m->liquidacion)
+        && str_contains($m->envelope()->subject, 'para liquidar'));
 });
 
-test('la hoja de registro interno trae la liquidación', function () {
+test('la hoja de registro interno trae lo que corresponde, sin montos', function () {
     $registrada = ($this->registrar)(($this->terminar)(($this->obrero)(), 'despido_intempestivo')->json('datos.id'));
 
     $html = view('pdf.expediente.registro-interno', [
         'movimiento'         => $registrada->fresh(['unidadOrigen', 'puestoOrigen.cargo']),
         'descuento'          => null,
-        'liquidacion'        => app(TerminacionObreroService::class)->liquidacion($registrada),
+        'corresponde'        => app(TerminacionObreroService::class)->loQueCorresponde($registrada),
         'anulada'            => false,
         'servidor'           => $registrada->servidor,
         'firmaTalentoHumano' => ['rotulo' => RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO->rotuloDocumento(), 'nombre' => null, 'cargo' => 'Director/a de Talento Humano'],
         'logo'               => public_path('images/logo-gadpe.png'),
     ])->render();
 
-    expect($html)->toContain('Liquidación referencial')
+    expect($html)->toContain('Lo que corresponde a la terminación')
         ->toContain('Código del Trabajo, Art. 188')
         ->toContain('Código del Trabajo, Arts. 185 y 188')
-        ->toContain('$ 4,501.20');
+        ->toContain('5,04 años')
+        ->not->toContain('Total referencial');
 });
 
 // ── El acta de finiquito ────────────────────────────────────────

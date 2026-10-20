@@ -11,7 +11,6 @@ use App\Models\Expediente\ActaFiniquito;
 use App\Models\Expediente\ContratoColectivo;
 use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\MovimientoPersonal;
-use App\Models\Expediente\SalarioBasico;
 use App\Models\Expediente\Servidor;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
@@ -20,20 +19,21 @@ use Illuminate\Support\Facades\Storage;
 
 /**
  * La terminación del contrato de un obrero (diseño de Acciones de Personal,
- * 9.15; fase 4.5): sus causales del Código del Trabajo, la liquidación
- * referencial de lo que el Código fija y el acta de finiquito.
+ * 9.15; fase 4.5): sus causales del Código del Trabajo, lo que le corresponde
+ * según su causal y el acta de finiquito.
  *
- * La liquidación es una referencia, como el descuento de una multa: la calcula
- * el sistema con la remuneración y los años de servicio del acto, y la paga
- * Financiero con la suya. Lleva solo lo que fija el Código: la bonificación por
- * desahucio (Art. 185) y la indemnización por despido intempestivo (Art. 188).
- * La jubilación patronal y el retiro voluntario los fija el contrato colectivo
- * o la ordenanza (fase 4.6), y los haberes ordinarios —décimos, vacaciones no
- * gozadas— son de la desvinculación de todos (fase 7).
+ * Lo que corresponde son los rubros que fija el Código, con su base legal y los
+ * datos del acto —la remuneración que congeló y los años de servicio—, sin
+ * montos: el SGTH es informativo desde el 2026-10-20, y la liquidación la
+ * calcula y la paga Financiero. Lleva la bonificación por desahucio (Art. 185)
+ * y la indemnización por despido intempestivo (Art. 188). La jubilación
+ * patronal y el retiro voluntario los fija el contrato colectivo o la ordenanza
+ * (fase 4.6), y los haberes ordinarios —décimos, vacaciones no gozadas— son de
+ * la desvinculación de todos (fase 7).
  *
- * Desde la fase 4.5b, también lo que se paga por el reintegro del obrero cuyo
- * despido el juez declaró ineficaz (Art. 195.3): las remuneraciones pendientes
- * con el 10 % de recargo, por el mismo aviso a Financiero.
+ * Desde la fase 4.5b, también lo que corresponde por el reintegro del obrero
+ * cuyo despido el juez declaró ineficaz (Art. 195.3): las remuneraciones
+ * pendientes de los días fuera, con el 10 % de recargo.
  *
  * Y desde la 4.6, la bonificación por jubilación o por retiro voluntario que
  * pacte el contrato colectivo vigente, en salarios básicos por año de servicio
@@ -125,14 +125,14 @@ class TerminacionObreroService
     }
 
     /**
-     * La liquidación referencial de la terminación: los rubros que fija el
-     * Código del Trabajo para su causal, sobre la remuneración que el acto
-     * congeló y los años de servicio hasta el día en que rige. Null si la
-     * causal no tiene ninguno.
+     * Lo que corresponde a la terminación: los rubros que fija el Código del
+     * Trabajo para su causal, con la remuneración que el acto congeló y los
+     * años de servicio hasta el día en que rige. Sin montos: los calcula
+     * Financiero (2026-10-20). Null si la causal no tiene ninguno.
      *
      * Los años cuentan con su fracción en la bonificación (Art. 185: por cada
      * año); en la indemnización, la fracción de un año es un año completo (Art.
-     * 188).
+     * 188): la regla va en el detalle.
      *
      * El reintegro por despido ineficaz trae la suya (fase 4.5b): `tipo` dice
      * cuál es, y en el reintegro `desde` y `hasta` son los días que estuvo
@@ -140,13 +140,13 @@ class TerminacionObreroService
      *
      * @return array{tipo: 'terminacion'|'reintegro', remuneracion: ?float, desde: ?string, hasta: ?string,
      *               anios_servicio: ?float, dias_fuera: ?int,
-     *               rubros: list<array{concepto: string, base_legal: string, detalle: string, monto: ?float}>,
-     *               total: ?float, nota: string}|null
+     *               rubros: list<array{concepto: string, base_legal: string, detalle: string}>,
+     *               nota: string}|null
      */
-    public function liquidacion(MovimientoPersonal $movimiento): ?array
+    public function loQueCorresponde(MovimientoPersonal $movimiento): ?array
     {
         if ($movimiento->esReintegroPorDespidoIneficaz()) {
-            return $this->liquidacionDelReintegro($movimiento);
+            return $this->loQueCorrespondeAlReintegro($movimiento);
         }
 
         $causal = $movimiento->subtipoEfectivo();
@@ -158,7 +158,7 @@ class TerminacionObreroService
         }
 
         // La del contrato colectivo, si la pacta (fase 4.6). Sin ella, la
-        // jubilación y el retiro no tienen nada que el sistema calcule.
+        // jubilación y el retiro no tienen nada que decir aquí.
         $contrato = $causal->clausulaDelContratoColectivo()
             ? app(ContratoColectivoService::class)->vigente($movimiento->fecha_efectiva)
             : null;
@@ -183,13 +183,11 @@ class TerminacionObreroService
         $rubros = [];
 
         if ($causal === SubtipoMovimientoPersonal::DESPIDO_INTEMPESTIVO) {
-            $meses = $anios === null ? null : ($anios <= 3 ? 3 : min((int) ceil($anios), self::MESES_MAXIMOS_DE_INDEMNIZACION));
-
             $rubros[] = [
                 'concepto'   => 'Indemnización por despido intempestivo',
                 'base_legal' => 'Código del Trabajo, Art. 188',
-                'detalle'    => $meses === null ? 'Sin los años de servicio' : "{$meses} remuneraciones",
-                'monto'      => $meses !== null && $remuneracion !== null ? round($remuneracion * $meses, 2) : null,
+                'detalle'    => 'Hasta tres años de servicio, tres remuneraciones; desde el cuarto, una por año, '
+                    .'contando la fracción como año completo, hasta '.self::MESES_MAXIMOS_DE_INDEMNIZACION,
             ];
         }
 
@@ -197,18 +195,20 @@ class TerminacionObreroService
             $rubros[] = [
                 'concepto'   => 'Bonificación por desahucio',
                 'base_legal' => 'Código del Trabajo, Art. 185',
-                'detalle'    => $anios === null
-                    ? 'Sin los años de servicio'
-                    : '25 % de la última remuneración por '.number_format($anios, 2, ',', '.').' años de servicio',
-                'monto'      => $anios !== null && $remuneracion !== null ? round($remuneracion * 0.25 * $anios, 2) : null,
+                'detalle'    => 'El 25 % de la última remuneración por cada año de servicio',
             ];
         }
 
         if ($salariosPorAnio !== null) {
-            $rubros[] = $this->bonificacionDelContratoColectivo($causal, $contrato, (float) $salariosPorAnio, $anios, $hasta);
+            $rubros[] = [
+                'concepto'   => $causal->clausulaDelContratoColectivo() === 'jubilacion'
+                    ? 'Bonificación por jubilación'
+                    : 'Bonificación por retiro voluntario',
+                'base_legal' => "Contrato colectivo N.º {$contrato->numero}; Mandato Constituyente 2, Art. 8",
+                'detalle'    => number_format((float) $salariosPorAnio, 2, ',', '.').' salarios básicos por año de servicio, '
+                    .'hasta '.self::TOPE_DEL_MANDATO_2,
+            ];
         }
-
-        $montos = array_column($rubros, 'monto');
 
         return [
             'tipo'           => 'terminacion',
@@ -218,66 +218,25 @@ class TerminacionObreroService
             'anios_servicio' => $anios,
             'dias_fuera'     => null,
             'rubros'         => $rubros,
-            'total'          => in_array(null, $montos, true) ? null : round(array_sum($montos), 2),
-            // Lo del contrato colectivo que el sistema guarda ya va en los
-            // rubros (fase 4.6).
-            'nota'           => 'Referencial. No incluye los décimos, las vacaciones no gozadas ni las cláusulas del '
-                .'contrato colectivo que el sistema no guarda: el valor definitivo lo establece Financiero.',
+            'nota'           => 'Financiero calcula la liquidación con estos datos. No incluye los décimos ni las '
+                .'vacaciones no gozadas, que van en la desvinculación, ni las cláusulas del contrato colectivo que el '
+                .'sistema no guarda.',
         ];
     }
 
     /**
-     * La bonificación por jubilación o por retiro voluntario del contrato
-     * colectivo (fase 4.6): sus salarios básicos por año de servicio, con la
-     * fracción, hasta 210 (Mandato 2, Art. 8), al salario básico del año en
-     * que termina.
-     *
-     * @return array{concepto: string, base_legal: string, detalle: string, monto: ?float}
-     */
-    private function bonificacionDelContratoColectivo(
-        SubtipoMovimientoPersonal $causal,
-        ContratoColectivo $contrato,
-        float $salariosPorAnio,
-        ?float $anios,
-        ?Carbon $hasta,
-    ): array {
-        $salarios = $anios === null ? null : min(round($salariosPorAnio * $anios, 2), (float) self::TOPE_DEL_MANDATO_2);
-        $anio = $hasta?->year;
-        $basico = $anio ? SalarioBasico::delAnio($anio) : null;
-
-        $detalle = match (true) {
-            $salarios === null => 'Sin los años de servicio',
-            default            => number_format($salariosPorAnio, 2, ',', '.').' salarios básicos por '
-                .number_format($anios, 2, ',', '.').' años de servicio: '.number_format($salarios, 2, ',', '.')
-                .($salarios >= self::TOPE_DEL_MANDATO_2 ? ' (el tope)' : '')
-                .($basico === null
-                    ? ", sin el salario básico de {$anio} registrado"
-                    : ' de $'.number_format($basico, 2, ',', '.')),
-        };
-
-        return [
-            'concepto'   => $causal->clausulaDelContratoColectivo() === 'jubilacion'
-                ? 'Bonificación por jubilación'
-                : 'Bonificación por retiro voluntario',
-            'base_legal' => "Contrato colectivo N.º {$contrato->numero}; Mandato Constituyente 2, Art. 8",
-            'detalle'    => $detalle,
-            'monto'      => $salarios !== null && $basico !== null ? round($salarios * $basico, 2) : null,
-        ];
-    }
-
-    /**
-     * Lo que se paga por el reintegro del obrero cuyo despido el juez declaró
+     * Lo que corresponde al reintegro del obrero cuyo despido el juez declaró
      * ineficaz (Art. 195.3): las remuneraciones pendientes, desde el día
-     * siguiente a la terminación hasta la víspera del reintegro, con el 10 %
-     * de recargo. Las que fije la sentencia, si Talento Humano las registró;
-     * si no, la remuneración que tenía, a treinta días por mes.
+     * siguiente a la terminación hasta la víspera del reintegro, con el 10 % de
+     * recargo. Las que fije la sentencia, si Talento Humano las registró, son un
+     * dato del juez y van en el detalle.
      *
      * @return array{tipo: 'reintegro', remuneracion: ?float, desde: ?string, hasta: ?string,
      *               anios_servicio: null, dias_fuera: ?int,
-     *               rubros: list<array{concepto: string, base_legal: string, detalle: string, monto: ?float}>,
-     *               total: ?float, nota: string}
+     *               rubros: list<array{concepto: string, base_legal: string, detalle: string}>,
+     *               nota: string}
      */
-    private function liquidacionDelReintegro(MovimientoPersonal $reintegro): array
+    private function loQueCorrespondeAlReintegro(MovimientoPersonal $reintegro): array
     {
         $terminacion = $reintegro->movimientoRelacionado;
         $remuneracion = app(RestitucionService::class)->remuneracionQueTenia($reintegro);
@@ -289,20 +248,16 @@ class TerminacionObreroService
         $fijadas = $reintegro->remuneraciones_dejadas_de_percibir !== null
             ? (float) $reintegro->remuneraciones_dejadas_de_percibir
             : null;
-        $pendientes = $fijadas
-            ?? ($remuneracion !== null && $dias !== null ? round($remuneracion / 30 * $dias, 2) : null);
-        $recargo = $pendientes !== null ? round($pendientes * self::RECARGO_DEL_DESPIDO_INEFICAZ, 2) : null;
 
-        $nota = 'Referencial.';
+        $nota = 'Financiero calcula lo pendiente con estos datos.';
         if (! $reintegro->fecha_sentencia) {
             $nota .= ' Lo ordenó la providencia como medida cautelar: lo pendiente se paga si la sentencia declara '
                 .'la ineficacia del despido.';
         }
         if ($acta = $terminacion?->actaFiniquito) {
-            $nota .= ' En el finiquito de la terminación se pagaron $'.number_format((float) $acta->valor_pagado, 2)
-                .': se compensan según lo que disponga la sentencia.';
+            $nota .= ' En el finiquito de la terminación se pagaron $'.number_format((float) $acta->valor_pagado, 2, ',', '.')
+                .', según el acta: se compensan según lo que disponga la sentencia.';
         }
-        $nota .= ' El valor definitivo lo establece Financiero.';
 
         return [
             'tipo'           => 'reintegro',
@@ -316,25 +271,22 @@ class TerminacionObreroService
                     'concepto'   => 'Remuneraciones pendientes',
                     'base_legal' => 'Código del Trabajo, Art. 195.3',
                     'detalle'    => $fijadas !== null
-                        ? 'Las que fija la sentencia'
-                        : ($dias === null ? 'Sin los días fuera' : "{$dias} días fuera, a treinta por mes"),
-                    'monto'      => $pendientes,
+                        ? 'Las que fija la sentencia: $'.number_format($fijadas, 2, ',', '.')
+                        : ($dias === null ? 'Sin los días fuera' : "Las de los {$dias} días fuera"),
                 ],
                 [
-                    'concepto'   => 'Recargo del 10 %',
+                    'concepto'   => 'Recargo',
                     'base_legal' => 'Código del Trabajo, Art. 195.3',
-                    'detalle'    => '10 % de las remuneraciones pendientes',
-                    'monto'      => $recargo,
+                    'detalle'    => (self::RECARGO_DEL_DESPIDO_INEFICAZ * 100).' % de las remuneraciones pendientes',
                 ],
             ],
-            'total'          => $pendientes !== null ? round($pendientes + $recargo, 2) : null,
             'nota'           => $nota,
         ];
     }
 
     /**
-     * Las terminaciones de obreros ya registradas, con su liquidación y su
-     * acta de finiquito, de la más reciente a la más antigua.
+     * Las terminaciones de obreros ya registradas, con su acta de finiquito,
+     * de la más reciente a la más antigua.
      *
      * La que el juez dejó sin efecto con un reintegro ya registrado lo dice, y
      * no está pendiente de acta (fase 4.5b).
@@ -361,7 +313,6 @@ class TerminacionObreroService
                 'causal'          => $m->subtipoEfectivo()?->value,
                 'causal_etiqueta' => $m->subtipoEfectivo()?->etiqueta(),
                 'fecha_efectiva'  => $m->fecha_efectiva?->toDateString(),
-                'total_referencial' => $this->liquidacion($m)['total'] ?? null,
                 'acta'            => $m->actaFiniquito,
                 'reintegro'       => $m->restitucion ? [
                     'id'              => $m->restitucion->id,

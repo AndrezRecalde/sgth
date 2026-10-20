@@ -715,56 +715,36 @@ class NovedadesDelMes
     // ── Lo que trae la salida ───────────────────────────────────────
 
     /**
-     * Las vacaciones no gozadas que confirmó el Director, en días, y la
-     * indemnización que registró (fase 7.4b), en el mes de la salida. Si se
-     * confirman después de entregar ese mes, llegan como ajuste en el
-     * siguiente.
+     * Las vacaciones no gozadas que confirmó el Director, en días (fase 7.4b),
+     * en el mes de la salida. Si se confirman después de entregar ese mes,
+     * llegan como ajuste en el siguiente.
+     *
+     * La indemnización ya no va: se registra cuando Financiero ya la pagó, y
+     * avisarle de lo que él mismo pagó no le dice nada (2026-10-20).
      *
      * @return list<Novedad>
      */
     private function deLaSalida(MesDeNomina $mes): array
     {
-        $salidas = Desvinculacion::query()
+        return Desvinculacion::query()
             ->where('estado', '!=', Desvinculacion::CANCELADA)
             ->whereBetween('fecha_salida', [$mes->inicio->toDateString(), $mes->fin->toDateString()])
-            ->where(fn (Builder $q) => $q->whereNotNull('vacaciones_confirmada_en')->orWhereNotNull('indemnizacion_registrada_en'))
+            ->whereNotNull('vacaciones_confirmada_en')
             ->with(['servidor:id,nombre,segundo_nombre,apellido,segundo_apellido,cedula', 'movimientoCierre:id,codigo_registro'])
             ->orderBy('id')
-            ->get();
-
-        $novedades = [];
-
-        foreach ($salidas as $salida) {
-            if ($salida->vacaciones_confirmada_en !== null) {
-                $novedades[] = $this->novedad(
-                    $mes,
-                    clave: "vacaciones:desvinculacion:{$salida->id}",
-                    concepto: ConceptoNovedadNomina::VACACIONES_NO_GOZADAS,
-                    servidor: $salida->servidor,
-                    detalle: 'Vacaciones no gozadas al salir el '.$salida->fecha_salida->format('d/m/Y').': '
-                        .rtrim(rtrim(number_format((float) $salida->vacaciones_dias, 2, ',', '.'), '0'), ',').' días.',
-                    contratoId: $salida->contrato_id,
-                    movimiento: $salida->movimientoCierre,
-                    desde: $salida->fecha_salida,
-                );
-            }
-
-            if ($salida->indemnizacion_registrada_en !== null) {
-                $novedades[] = $this->novedad(
-                    $mes,
-                    clave: "indemnizacion:desvinculacion:{$salida->id}",
-                    concepto: ConceptoNovedadNomina::INDEMNIZACION,
-                    servidor: $salida->servidor,
-                    detalle: (\App\Services\Expediente\DesvinculacionService::CONCEPTOS_DE_INDEMNIZACION[$salida->indemnizacion_concepto] ?? 'Indemnización')
-                        .($salida->indemnizacion_resolucion ? ", {$salida->indemnizacion_resolucion}" : '').'.',
-                    contratoId: $salida->contrato_id,
-                    movimiento: $salida->movimientoCierre,
-                    desde: $salida->fecha_salida,
-                );
-            }
-        }
-
-        return $novedades;
+            ->get()
+            ->map(fn (Desvinculacion $salida) => $this->novedad(
+                $mes,
+                clave: "vacaciones:desvinculacion:{$salida->id}",
+                concepto: ConceptoNovedadNomina::VACACIONES_NO_GOZADAS,
+                servidor: $salida->servidor,
+                detalle: 'Vacaciones no gozadas al salir el '.$salida->fecha_salida->format('d/m/Y').': '
+                    .rtrim(rtrim(number_format((float) $salida->vacaciones_dias, 2, ',', '.'), '0'), ',').' días.',
+                contratoId: $salida->contrato_id,
+                movimiento: $salida->movimientoCierre,
+                desde: $salida->fecha_salida,
+            ))
+            ->all();
     }
 
     // ── La fila ─────────────────────────────────────────────────────

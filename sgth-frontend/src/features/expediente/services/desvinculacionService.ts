@@ -6,7 +6,7 @@ export type EstadoPasoDesvinculacion = 'pendiente' | 'hecho' | 'no_aplica'
 export type PasoDesvinculacion =
   | 'vacaciones' | 'indemnizacion' | 'bienes' | 'credencial' | 'usuario' | 'certificado' | 'declaracion' | 'reingreso'
 
-/** La liquidación de vacaciones, calculada o como se confirmó (fase 7.4b). */
+/** Los días de vacaciones no gozadas, contados o como se confirmaron (fase 7.4b). Sin valor: lo calcula Financiero. */
 export type LiquidacionVacaciones = {
   periodos: { anio: number; dias: number }[]
   proporcional: {
@@ -15,8 +15,6 @@ export type LiquidacionVacaciones = {
   total: number
   tope: number | null
   dias: number
-  remuneracion: number | null
-  monto: number | null
 }
 
 export type ConceptoIndemnizacion = 'jubilacion' | 'retiro_voluntario' | 'supresion' | 'despido' | 'otro'
@@ -58,14 +56,9 @@ export type PasoDeLaDesvinculacion = {
   /** En el de vacaciones (fase 7.4b). */
   liquidacion?: LiquidacionVacaciones
   confirmada?: boolean
-  /** En el de la indemnización: el tope del Mandato 2 y lo registrado. */
+  /** En el de la indemnización: lo registrado, que es lo que pagó Financiero. */
   indemnizacion?: {
     conceptos: Record<ConceptoIndemnizacion, string>
-    salario_basico: number | null
-    anios: number | null
-    tope: number | null
-    /** Al obrero, el total de su liquidación referencial (4.5). */
-    sugerido: number | null
     concepto: ConceptoIndemnizacion | null
     monto: number | null
     resolucion: string | null

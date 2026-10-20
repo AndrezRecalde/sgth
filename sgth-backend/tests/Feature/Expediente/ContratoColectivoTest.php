@@ -204,37 +204,26 @@ test('los días adicionales se suman a las vacaciones del obrero, no a las de la
         ->and($periodos->calcularDiasGenerados('codigo_trabajo', 6, 2024))->toBe(16.0);
 });
 
-test('la jubilación y el retiro pagan la bonificación pactada, con el tope del Mandato 2', function () {
-    $liquidacion = fn (MovimientoPersonal $m) => app(TerminacionObreroService::class)->liquidacion($m);
+test('a la jubilación y al retiro les corresponde la bonificación pactada, con el tope del Mandato 2', function () {
+    $corresponde = fn (MovimientoPersonal $m) => app(TerminacionObreroService::class)->loQueCorresponde($m);
 
     $jubilacion = ($this->terminacion)('jubilacion_ct', '2001-06-16');
     $retiro = ($this->terminacion)('retiro_voluntario_ct', '1986-06-16');
 
-    // Sin contrato colectivo, nada que el sistema calcule.
-    expect($liquidacion($jubilacion))->toBeNull();
+    // Sin contrato colectivo, nada que decir.
+    expect($corresponde($jubilacion))->toBeNull();
 
     ($this->contrato)()->assertCreated();
 
-    // Sin el salario básico del año, el monto queda pendiente.
-    expect($liquidacion($jubilacion)['rubros'][0]['monto'])->toBeNull()
-        ->and($liquidacion($jubilacion)['rubros'][0]['detalle'])->toContain('sin el salario básico de 2026');
-
-    SalarioBasico::create(['anio' => 2026, 'monto' => 482]);
-
-    // 25 años, con los bisiestos 25,02: 7 × 25,02 = 175,14 salarios básicos.
-    $deJubilacion = $liquidacion($jubilacion);
+    // 25 años, con los bisiestos 25,02. Lo multiplica Financiero (2026-10-20).
+    $deJubilacion = $corresponde($jubilacion);
     expect($deJubilacion['anios_servicio'])->toBe(25.02)
         ->and($deJubilacion['rubros'])->toHaveCount(1)
         ->and($deJubilacion['rubros'][0]['concepto'])->toBe('Bonificación por jubilación')
         ->and($deJubilacion['rubros'][0]['base_legal'])->toContain('CC-GADPE-2025')
-        ->and($deJubilacion['total'])->toBe(round(175.14 * 482, 2));
+        ->and($deJubilacion['rubros'][0]['detalle'])->toBe('7,00 salarios básicos por año de servicio, hasta 210')
+        ->and($deJubilacion)->not->toHaveKey('total');
 
-    // 40,03 años: 5 × 40,03 = 200,15, por debajo del tope; con 7 por año
-    // serían 280,21, y el Mandato 2 lo corta en 210.
-    expect($liquidacion($retiro)['anios_servicio'])->toBe(40.03)
-        ->and($liquidacion($retiro)['total'])->toBe(round(200.15 * 482, 2));
-
-    ContratoColectivo::query()->update(['bonificacion_retiro_sbu' => 7]);
-    expect($liquidacion($retiro)['rubros'][0]['detalle'])->toContain('(el tope)')
-        ->and($liquidacion($retiro)['total'])->toBe(210 * 482.0);
+    expect($corresponde($retiro)['anios_servicio'])->toBe(40.03)
+        ->and($corresponde($retiro)['rubros'][0]['detalle'])->toStartWith('5,00 salarios básicos por año de servicio');
 });

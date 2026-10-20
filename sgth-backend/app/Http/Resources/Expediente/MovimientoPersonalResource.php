@@ -204,11 +204,12 @@ class MovimientoPersonalResource extends JsonResource
             'lugar_trabajo_origen' => $this->lugar_trabajo_origen,
             'fecha_consentimiento' => $this->fecha_consentimiento,
             // La terminación de un obrero (fase 4.5): cuándo presentó la
-            // renuncia, si el desahucio rige antes de los 15 días de aviso, la
-            // liquidación referencial y el acta de finiquito.
+            // renuncia, si el desahucio rige antes de los 15 días de aviso, lo
+            // que le corresponde según el Código —sin montos, desde el
+            // 2026-10-20— y el acta de finiquito.
             'fecha_presentacion_renuncia' => $this->fecha_presentacion_renuncia,
             'desahucio_sin_el_aviso'      => TerminacionObreroService::desahucioSinElAviso($this->resource),
-            'liquidacion_referencial'     => app(TerminacionObreroService::class)->liquidacion($this->resource),
+            'lo_que_corresponde'          => app(TerminacionObreroService::class)->loQueCorresponde($this->resource),
             'acta_finiquito'              => $this->whenLoaded('actaFiniquito'),
             'caucionado'     => $this->caucionado,
             'caucion_numero' => $this->caucion_numero,

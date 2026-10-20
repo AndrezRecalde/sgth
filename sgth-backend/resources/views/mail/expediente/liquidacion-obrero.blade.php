@@ -4,7 +4,7 @@
 # {{ $reintegro ? 'Reintegro anulado' : 'Terminación anulada' }}
 
 Talento Humano **anuló** {{ $reintegro ? 'el reintegro' : 'la terminación' }} **N.º {{ $numero }}** de **{{ $servidor }}**
-(C.I. {{ $cedula }}), cuya liquidación se le envió para pago.
+(C.I. {{ $cedula }}), que se le envió para liquidar.
 
 @if($motivo)
 **Motivo de la anulación:** {{ $motivo }}
@@ -18,24 +18,27 @@ adjunta la hoja de registro interno con la marca de anulación.
 Talento Humano registró el reintegro **N.º {{ $numero }}** de **{{ $servidor }}**
 (C.I. {{ $cedula }}), cuyo despido el juez declaró ineficaz, que rige desde el
 {{ $rige }}. Lo ordena la {{ $orden ?? 'orden judicial' }}, en la causa **{{ $causa ?? '—' }}**
-({{ $unidadJudicial ?? '—' }}). Disponga a quien corresponda el pago de lo pendiente,
-con su recargo (Código del Trabajo, Art. 195.3).
+({{ $unidadJudicial ?? '—' }}). Disponga a quien corresponda el cálculo y el pago de
+lo pendiente, con su recargo (Código del Trabajo, Art. 195.3).
 @else
-# Liquidación de obrero para pago
+# Terminación de obrero para liquidar
 
 Talento Humano registró la terminación **N.º {{ $numero }}** del contrato de
 **{{ $servidor }}** (C.I. {{ $cedula }}), por **{{ $causal }}**, que rige desde el
 {{ $rige }}. Disponga a quien corresponda su liquidación.
 @endif
 
+Lo que le corresponde según el Código del Trabajo:
+
 <x-mail::table>
-| Rubro | Detalle | Valor |
-|:--|:--|--:|
+| Rubro | Base legal | Detalle |
+|:--|:--|:--|
 @foreach($rubros as $rubro)
-| {{ $rubro['concepto'] }} ({{ $rubro['base_legal'] }}) | {{ $rubro['detalle'] }} | {{ $rubro['monto'] }} |
+| {{ $rubro['concepto'] }} | {{ $rubro['base_legal'] }} | {{ $rubro['detalle'] }} |
 @endforeach
-| **Total referencial** | | **{{ $total }}** |
 </x-mail::table>
+
+{{ $datos }}
 
 {{ $nota }}
 

@@ -199,8 +199,8 @@ class AccionPersonalPdfService
                 'datos' => [
                     'movimiento'         => $movimiento,
                     'descuento'          => $descuento,
-                    // La liquidación referencial de su terminación (fase 4.5).
-                    'liquidacion'        => app(TerminacionObreroService::class)->liquidacion($movimiento),
+                    // Lo que corresponde a su terminación, sin montos (fase 4.5; 2026-10-20).
+                    'corresponde'        => app(TerminacionObreroService::class)->loQueCorresponde($movimiento),
                     'anulada'            => $movimiento->estado === EstadoAccionPersonal::ANULADA,
                     'servidor'           => $movimiento->servidor,
                     'firmaTalentoHumano' => $this->firma($movimiento, 'firmante_th', RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO, $vistaPrevia),

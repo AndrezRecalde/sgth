@@ -13099,12 +13099,13 @@ export interface components {
             /**
              * Format: date-time
              * @description La terminación de un obrero (fase 4.5): cuándo presentó la
-             *     renuncia, si el desahucio rige antes de los 15 días de aviso, la
-             *     liquidación referencial y el acta de finiquito.
+             *     renuncia, si el desahucio rige antes de los 15 días de aviso, lo
+             *     que le corresponde según el Código —sin montos, desde el
+             *     2026-10-20— y el acta de finiquito.
              */
             fecha_presentacion_renuncia: string | null;
             desahucio_sin_el_aviso: boolean;
-            liquidacion_referencial: string;
+            lo_que_corresponde: string;
             acta_finiquito?: components["schemas"]["ActaFiniquito"];
             caucionado: boolean | null;
             caucion_numero: string | null;
@@ -41828,7 +41829,6 @@ export interface operations {
                             causal: string;
                             causal_etiqueta: string;
                             fecha_efectiva: string;
-                            total_referencial: string | null;
                             acta: components["schemas"]["ActaFiniquito"];
                             reintegro: {
                                 id: number;

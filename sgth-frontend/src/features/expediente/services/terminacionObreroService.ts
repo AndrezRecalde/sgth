@@ -28,8 +28,6 @@ export type TerminacionObrero = {
   causal: string | null
   causal_etiqueta: string | null
   fecha_efectiva: string | null
-  /** El total de la liquidación referencial; null si la causal no tiene rubros del Código. */
-  total_referencial: number | null
   acta: ActaFiniquito | null
   /** El reintegro por despido ineficaz que la deja sin efecto, en trámite o emitido (fase 4.5b). */
   reintegro: { id: number; codigo_registro: string | null; estado: EstadoAccionPersonal } | null
