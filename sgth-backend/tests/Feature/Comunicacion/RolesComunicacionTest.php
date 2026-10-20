@@ -111,6 +111,9 @@ test('la migracion crea los roles y deja los permisos como el seeder', function 
 
     $migracion->up();
     $migracion->up(); // idempotente
+    // Su lista base todavía da el rol de pago propio: lo quita la migración
+    // que borra las tablas de la nómina (2026-10-20).
+    (require database_path('migrations/2026_11_14_000000_borrar_tablas_de_nomina.php'))->up();
     app(PermissionRegistrar::class)->forgetCachedPermissions();
 
     foreach ($delSeeder as $rol => $esperados) {
