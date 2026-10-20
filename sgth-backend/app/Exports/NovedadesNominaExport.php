@@ -16,8 +16,7 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 class NovedadesNominaExport implements FromCollection, WithHeadings, ShouldAutoSize, WithStyles
 {
     private const CABECERAS = [
-        'MES', 'TIPO', 'CÉDULA', 'SERVIDOR', 'NOVEDAD', 'DETALLE', 'DESDE', 'HASTA', 'DÍAS', 'BASE',
-        'MONTO REFERENCIAL', 'ACTO',
+        'MES', 'TIPO', 'CÉDULA', 'SERVIDOR', 'NOVEDAD', 'DETALLE', 'DESDE', 'HASTA', 'DÍAS', 'ACTO',
     ];
 
     /** @param  Collection<int, array<string, mixed>>  $filas */

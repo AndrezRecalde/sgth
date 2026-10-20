@@ -31,9 +31,10 @@ uses(TestCase::class, RefreshDatabase::class);
 /*
 | Fase 7.3a del diseño de Acciones de Personal: las novedades para nómina.
 | Financiero paga en su propio sistema (TH, 2026-10-04); el SGTH le entrega
-| cada mes lo que pasó, derivado de los actos, con su monto de referencia en
-| meses de treinta días. Lo que cambia en un mes ya entregado va como ajuste
-| en el siguiente.
+| cada mes lo que pasó, derivado de los actos, con los días en meses de
+| treinta. Sin montos desde el 2026-10-20: el SGTH es informativo, y lo que
+| fija el acto va en el detalle. Lo que cambia en un mes ya entregado va como
+| ajuste en el siguiente.
 |
 | Hoy es el martes 20 de octubre de 2026.
 */
@@ -106,7 +107,7 @@ test('el mes es de treinta días: el 31 no cuenta y el fin de febrero vale 30', 
 
 // ── La entrada y la salida ──────────────────────────────────────
 
-test('quien entra a mitad de mes cobra desde que entra, y Servicios Profesionales no va', function () {
+test('quien entra a mitad de mes cuenta desde que entra, con su remuneración, y Servicios Profesionales no va', function () {
     $nuevo = ($this->servidor)(['fecha_inicio' => '2026-10-16', 'remuneracion' => 1200]);
     ($this->servidor)(['fecha_inicio' => '2026-10-01', 'tipo_nombramiento' => TipoNombramiento::SERVICIOS_PROFESIONALES->value, 'fecha_fin' => '2026-12-31']);
     ($this->servidor)();
@@ -117,10 +118,14 @@ test('quien entra a mitad de mes cobra desde que entra, y Servicios Profesionale
         ->and($novedades[0]['servidor_id'])->toBe($nuevo->id)
         ->and($novedades[0]['concepto'])->toBe('ingreso')
         ->and($novedades[0]['dias'])->toBe(15)
-        ->and($novedades[0]['monto'])->toEqual(600);
+        ->and($novedades[0]['detalle'])->toBe('Ingresa el 16/10/2026: 15 días del mes, con una remuneración de $1.200,00.')
+        ->and($novedades[0])->not->toHaveKeys(['base', 'monto']);
+
+    $excel = app(\App\Services\Nomina\NovedadesNominaService::class)->filasDelExcel(MesDeNomina::de('2026-10'))->sole();
+    expect(array_keys($excel))->toBe(['MES', 'TIPO', 'CÉDULA', 'SERVIDOR', 'NOVEDAD', 'DETALLE', 'DESDE', 'HASTA', 'DÍAS', 'ACTO']);
 });
 
-test('quien sale cobra hasta el día en que sale', function () {
+test('quien sale cuenta hasta el día en que sale', function () {
     $sale = ($this->servidor)(['fecha_fin' => '2026-10-10', 'estado' => 'terminado', 'motivo_fin' => 'Renuncia voluntaria.']);
 
     $novedad = ($this->novedades)()->sole();
@@ -128,8 +133,7 @@ test('quien sale cobra hasta el día en que sale', function () {
     expect($novedad['servidor_id'])->toBe($sale->id)
         ->and($novedad['concepto'])->toBe('salida')
         ->and($novedad['dias'])->toBe(10)
-        ->and($novedad['monto'])->toEqual(333.33)
-        ->and($novedad['detalle'])->toContain('Renuncia voluntaria');
+        ->and($novedad['detalle'])->toBe('Sale el 10/10/2026 (Renuncia voluntaria): 10 días del mes.');
 });
 
 test('el ingreso registrado que todavía no rige ya cuenta en su mes', function () {
@@ -146,13 +150,13 @@ test('el ingreso registrado que todavía no rige ya cuenta en su mes', function 
 
     expect($novedad['clave'])->toBe("ingreso:movimiento:{$ingreso->id}")
         ->and($novedad['dias'])->toBe(6)
-        ->and($novedad['monto'])->toEqual(180)
+        ->and($novedad['detalle'])->toContain('con una remuneración de $900,00')
         ->and($novedad['acto'])->toBe($ingreso->codigo_registro);
 });
 
 // ── Lo que viene de los actos ───────────────────────────────────
 
-test('la licencia sin remuneración descuenta sus días, y el reintegro la acorta', function () {
+test('la licencia sin remuneración cuenta sus días, y el reintegro la acorta', function () {
     $servidor = ($this->servidor)();
     $licencia = ($this->acto)($servidor, [
         'tipo_movimiento' => 'licencia_sin_remuneracion', 'subtipo_movimiento' => 'asuntos_particulares',
@@ -162,36 +166,39 @@ test('la licencia sin remuneración descuenta sus días, y el reintegro la acort
 
     $antes = ($this->novedades)()->sole();
     expect($antes['concepto'])->toBe('dias_sin_remuneracion')
-        ->and($antes['dias'])->toBe(26)
-        ->and($antes['monto'])->toEqual(-866.67);
+        ->and($antes['dias'])->toBe(26);
 
     ($this->acto)($servidor, ['tipo_movimiento' => 'reintegro', 'fecha_efectiva' => '2026-10-15', 'movimiento_relacionado_id' => $licencia->id]);
 
     $despues = ($this->novedades)()->sole();
     expect($despues['dias'])->toBe(10)
-        ->and($despues['hasta'])->toBe('2026-10-14')
-        ->and($despues['monto'])->toEqual(-333.33);
+        ->and($despues['hasta'])->toBe('2026-10-14');
 });
 
-test('el cambio de remuneración registrado tarde lleva la diferencia a cada mes, hasta el de su registro', function () {
+test('el cambio de remuneración registrado tarde va en el mes en que rige, y si ya se entregó, como ajuste', function () {
     $servidor = ($this->servidor)(['remuneracion' => 1150]);
+    $this->postJson('/api/v1/nomina/novedades/entregar', ['periodo' => '2026-08'])->assertOk();
+
     ($this->acto)($servidor, [
         'tipo_movimiento' => 'revision_clasificacion', 'fecha_efectiva' => '2026-08-01', 'fecha_registro' => '2026-10-05',
         'remuneracion_origen' => 1000, 'remuneracion_propuesta' => 1150, 'efecto_aplicado_en' => now(),
     ]);
 
+    // Ya no se repite cada mes hasta el del registro: eso era para cobrar la
+    // diferencia de cada uno, y el SGTH no la calcula.
     $cambio = fn (string $periodo) => ($this->novedades)($periodo)->where('concepto', 'cambio_remuneracion')->values();
+    expect($cambio('2026-09'))->toBeEmpty()
+        ->and($cambio('2026-10'))->toBeEmpty();
 
-    // Hasta la fase 7.3b solo agosto lo llevaba: si septiembre ya se había
-    // entregado, su diferencia no llegaba nunca.
-    expect($cambio('2026-08')->sole()['monto'])->toEqual(150)
-        ->and($cambio('2026-09')->sole()['monto'])->toEqual(150)
-        ->and($cambio('2026-09')->sole()['detalle'])->toContain('se registró el 05/10/2026')
-        ->and($cambio('2026-10')->sole()['monto'])->toEqual(150)
-        ->and($cambio('2026-11'))->toBeEmpty();
+    $ajuste = collect($this->getJson('/api/v1/nomina/novedades?periodo=2026-10')->assertOk()->json('datos.ajustes'))->sole();
+    expect($ajuste['mes_afectado'])->toBe('2026-08')
+        ->and($ajuste['concepto'])->toBe('cambio_remuneracion')
+        ->and($ajuste['detalle'])->toStartWith('Ajuste de agosto de 2026: ')
+        ->and($ajuste['detalle'])->toEndWith(': desde el 01/08/2026 cobra $1.150,00 (antes $1.000,00); se registró el 05/10/2026.')
+        ->and($ajuste['dias'])->toBe(30);
 });
 
-test('la subrogación paga la diferencia que congeló su acción, hasta la víspera de cancelarse', function () {
+test('la subrogación dice las remuneraciones que congeló su acción, hasta la víspera de cancelarse', function () {
     $titular = ($this->servidor)();
     $subrogante = ($this->servidor)(['remuneracion' => 800]);
     $accion = ($this->acto)($subrogante, [
@@ -209,7 +216,7 @@ test('la subrogación paga la diferencia que congeló su acción, hasta la vísp
     expect($novedad['concepto'])->toBe('subrogacion')
         ->and($novedad['servidor_id'])->toBe($subrogante->id)
         ->and($novedad['dias'])->toBe(10)
-        ->and($novedad['monto'])->toEqual(200);
+        ->and($novedad['detalle'])->toContain('El puesto tiene una remuneración de $1.400,00, y la suya es de $800,00.');
 
     // Se cancela el 16: surtió efecto del 11 al 15.
     $this->travelTo(Carbon::parse('2026-10-16 09:00'));
@@ -218,11 +225,10 @@ test('la subrogación paga la diferencia que congeló su acción, hasta la vísp
     expect($subrogacion->fresh()->cancelada_en->toDateString())->toBe('2026-10-16');
 
     $cancelada = ($this->novedades)()->sole();
-    expect($cancelada['dias'])->toBe(5)
-        ->and($cancelada['monto'])->toEqual(100);
+    expect($cancelada['dias'])->toBe(5);
 });
 
-test('la multa se descuenta en su mes, y la suspensión, sus días en cada mes que toca', function () {
+test('la multa va en su mes, con su porcentaje, y la suspensión, sus días en cada mes que toca', function () {
     $servidor = ($this->servidor)();
     $sancion = function (string $tipo, string $desde, array $datos) use ($servidor) {
         $accion = ($this->acto)($servidor, [
@@ -242,9 +248,8 @@ test('la multa se descuenta en su mes, y la suspensión, sus días en cada mes q
     $sancion('suspension', '2026-10-28', ['dias_suspension' => 5, 'tipo_falta' => 'grave']);
 
     $octubre = ($this->novedades)()->keyBy('concepto');
-    expect($octubre['multa']['monto'])->toEqual(-100)
-        ->and($octubre['dias_sin_remuneracion']['dias'])->toBe(3)
-        ->and($octubre['dias_sin_remuneracion']['monto'])->toEqual(-100);
+    expect($octubre['multa']['detalle'])->toBe('Multa del 10 % de la remuneración mensual unificada, que la acción fija en $1.000,00.')
+        ->and($octubre['dias_sin_remuneracion']['dias'])->toBe(3);
 
     $noviembre = ($this->novedades)('2026-11')->sole();
     expect($noviembre['concepto'])->toBe('dias_sin_remuneracion')
@@ -252,7 +257,7 @@ test('la multa se descuenta en su mes, y la suspensión, sus días en cada mes q
         ->and($noviembre['hasta'])->toBe('2026-11-01');
 });
 
-test('la restitución paga las remuneraciones que fija la sentencia', function () {
+test('la restitución dice las remuneraciones que fija la sentencia', function () {
     $servidor = ($this->servidor)(['fecha_inicio' => '2026-10-19']);
     ($this->acto)($servidor, [
         'tipo_movimiento' => 'restitucion', 'fecha_efectiva' => '2026-10-19', 'remuneraciones_dejadas_de_percibir' => 8450.5,
@@ -261,8 +266,7 @@ test('la restitución paga las remuneraciones que fija la sentencia', function (
 
     $pendientes = ($this->novedades)()->firstWhere('concepto', 'remuneraciones_pendientes');
 
-    expect($pendientes['monto'])->toEqual(8450.5)
-        ->and($pendientes['detalle'])->toContain('LOSEP, Art. 46');
+    expect($pendientes['detalle'])->toBe('Remuneraciones dejadas de percibir que fija la sentencia (LOSEP, Art. 46): $8.450,50.');
 });
 
 // ── La entrega y los ajustes ────────────────────────────────────
@@ -308,16 +312,18 @@ test('lo que cambia en un mes entregado va como ajuste en el siguiente, y una so
     // Vuelve el 15: diez días sin sueldo en vez de veintiséis.
     ($this->acto)($servidor, ['tipo_movimiento' => 'reintegro', 'fecha_efectiva' => '2026-10-15', 'movimiento_relacionado_id' => $licencia->id]);
 
+    // Lo entregado no se reescribe; lo que cambió se ve aparte.
     $octubre = $this->getJson('/api/v1/nomina/novedades?periodo=2026-10')->assertOk();
     expect($octubre->json('datos.novedades.0.dias'))->toBe(26)
-        ->and($octubre->json('datos.cambios_tras_la_entrega.0.monto'))->toEqual(533.34);
+        ->and($octubre->json('datos.cambios_tras_la_entrega.0.dias'))->toBe(10);
 
+    // Sin montos, el ajuste no resta: dice cómo queda.
     $this->travelTo(Carbon::parse('2026-11-20 10:00'));
     $ajuste = $ajustes('2026-11')->sole();
     expect($ajuste['mes_afectado'])->toBe('2026-10')
-        ->and($ajuste['dias'])->toBe(-16)
-        ->and($ajuste['monto'])->toEqual(533.34)
-        ->and($ajuste['detalle'])->toStartWith('Ajuste de octubre de 2026');
+        ->and($ajuste['dias'])->toBe(10)
+        ->and($ajuste['hasta'])->toBe('2026-10-14')
+        ->and($ajuste['detalle'])->toStartWith('Ajuste de octubre de 2026: ');
 
     $entregar('2026-11');
 
@@ -325,11 +331,10 @@ test('lo que cambia en un mes entregado va como ajuste en el siguiente, y una so
     $this->travelTo(Carbon::parse('2026-12-20 10:00'));
     expect($ajustes('2026-12'))->toBeEmpty();
 
-    // Se anula la licencia: se devuelve lo que quedaba, y nada más.
+    // Se anula la licencia: el ajuste dice que ya no corresponde, una vez.
     $licencia->forceFill(['estado' => EstadoAccionPersonal::ANULADA])->saveQuietly();
     $reverso = $ajustes('2026-12')->sole();
-    expect($reverso['monto'])->toEqual(333.33)
-        ->and($reverso['vigente'])->toBeFalse()
+    expect($reverso['vigente'])->toBeFalse()
         ->and($reverso['detalle'])->toContain('ya no corresponde');
 
     $entregar('2026-12');

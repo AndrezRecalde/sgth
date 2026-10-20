@@ -1533,7 +1533,7 @@ export type SancionDisciplinaria = {
     estado: EstadoAccionPersonal
     remuneracion_origen?: string | number | null
   } | null
-  /** Lo que Financiero descuenta, como referencia; null si la sanción no toca la remuneración. */
+  /** Lo que la sanción le quita a la remuneración —el porcentaje o los días—; null si no la toca. El valor lo calcula Financiero. */
   descuento_referencial?: DescuentoReferencial | null
   /** Sin efecto: se anuló su acción de personal (fase 2.5). */
   anulada_en?: string | null
@@ -1546,8 +1546,8 @@ export type DescuentoReferencial = {
   detalle: string
   desde: string | null
   hasta: string | null
+  /** La remuneración que la acción congeló, sobre la que se aplica. */
   base: number | null
-  monto: number | null
 }
 
 export type Sumario = {

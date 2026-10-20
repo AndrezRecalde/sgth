@@ -11,10 +11,10 @@ el acto de cada una.
 Este mes no hay novedades.
 @else
 <x-mail::table>
-| Novedad | Cantidad | Monto referencial |
-|:--|--:|--:|
+| Novedad | Cantidad |
+|:--|--:|
 @foreach($resumen as $fila)
-| {{ $fila['etiqueta'] }} | {{ $fila['cantidad'] }} | {{ $fila['monto'] }} |
+| {{ $fila['etiqueta'] }} | {{ $fila['cantidad'] }} |
 @endforeach
 </x-mail::table>
 @endif
@@ -24,9 +24,8 @@ Incluye **{{ $ajustes }} {{ $ajustes === 1 ? 'ajuste' : 'ajustes' }}** de meses
 ya entregados: lo que cambió en ellos después de su entrega.
 @endif
 
-Los montos son una **referencia** calculada por el sistema de Talento Humano,
-en meses de treinta días. El valor definitivo lo establece Financiero en su
-sistema de nómina.
+El sistema de Talento Humano informa lo que pasó, con los días en meses de
+treinta; los **valores los calcula Financiero** en su sistema de nómina.
 
 Unidad de Administración del Talento Humano<br>
 GAD Provincial de Esmeraldas

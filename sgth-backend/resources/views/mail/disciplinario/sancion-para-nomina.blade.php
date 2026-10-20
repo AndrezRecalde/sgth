@@ -34,16 +34,14 @@ pagos.
 | Rige desde | {{ $desde }} |
 @endif
 | Remuneración mensual unificada | {{ $base }} |
-| **Descuento referencial** | **{{ $monto }}** |
 </x-mail::table>
 
-El descuento es una **referencia** calculada por el sistema de Talento Humano
+El valor del descuento lo **calcula Financiero** en su sistema de nómina
 @if($hasta)
-(remuneración ÷ 30 × días de suspensión).
+(la remuneración de los días de suspensión).
 @else
-(porcentaje de la multa sobre la remuneración).
+(el porcentaje de la multa sobre la remuneración).
 @endif
-El valor definitivo lo establece Financiero en su sistema de nómina.
 
 Unidad de Administración del Talento Humano<br>
 GAD Provincial de Esmeraldas

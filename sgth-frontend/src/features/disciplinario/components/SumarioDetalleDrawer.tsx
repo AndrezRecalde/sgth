@@ -139,10 +139,15 @@ function Contenido({ sumario }: { sumario: Sumario }) {
               }] : []),
               { label: 'Surte efecto desde', value: formatFecha(sancion.fecha_efectiva) },
               ...(descuento ? [{
-                label: 'Descuento referencial',
-                value: descuento.monto !== null
-                  ? `${dolares(descuento.monto)}${descuento.hasta ? ` · hasta el ${formatFecha(descuento.hasta)}` : ''}`
-                  : 'Sin remuneración registrada',
+                // El valor lo calcula Financiero: el SGTH es informativo (2026-10-20).
+                label: 'Efecto en la remuneración',
+                value: [
+                  descuento.detalle,
+                  descuento.hasta ? `del ${formatFecha(descuento.desde)} al ${formatFecha(descuento.hasta)}` : null,
+                  descuento.base !== null
+                    ? `sobre una remuneración de ${dolares(Number(descuento.base))}`
+                    : 'sin remuneración registrada',
+                ].filter(Boolean).join(', '),
               }] : []),
               ...(accion ? [{
                 label: sumario.procedimiento === 'reglamento_interno' ? 'Hoja de registro interno' : 'Acción de personal',
@@ -160,8 +165,7 @@ function Contenido({ sumario }: { sumario: Sumario }) {
           {descuento && (
             <Text size="xs" c="dimmed" mt="xs">
               Al registrarse la acción de personal se envía al jefe de Gestión
-              Financiera, que aplica el descuento en el rol de pagos. El valor es
-              una referencia.
+              Financiera, que calcula el valor y lo descuenta en el rol de pagos.
             </Text>
           )}
         </div>

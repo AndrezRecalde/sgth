@@ -98,8 +98,7 @@ export function NovedadesNominaPanel() {
       <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
         Lo que el rol de pagos del mes tiene que saber, sacado de los actos registrados: quién entra y quién sale,
         los cambios de remuneración, los días sin remuneración, las subrogaciones y los encargos, las multas y lo que
-        paga una restitución. Los montos son una referencia, en meses de treinta días: el valor definitivo lo
-        establece Financiero en su sistema.
+        fija una restitución. Los días van en meses de treinta; los valores los calcula Financiero en su sistema.
       </Alert>
 
       {data?.entrega && (
@@ -119,7 +118,6 @@ export function NovedadesNominaPanel() {
               label={r.etiqueta}
               value={r.cantidad}
               icon={IconListDetails}
-              hint={`${r.monto < 0 ? '− ' : ''}$ ${Math.abs(r.monto).toFixed(2)} de referencia`}
             />
           ))}
         </SimpleGrid>

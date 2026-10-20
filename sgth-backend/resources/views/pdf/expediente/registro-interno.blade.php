@@ -220,7 +220,8 @@
         <tr><td class="label">Consentimiento del trabajador</td><td>Por escrito, del {{ $fmtFecha($movimiento->fecha_consentimiento) }}</td></tr>
     @endif
     @if($descuento)
-        <tr><td class="label">Descuento referencial</td><td>{{ $descuento['detalle'] }}: {{ $dinero($descuento['monto']) }}</td></tr>
+        {{-- El valor lo calcula Financiero: el SGTH es informativo (2026-10-20). --}}
+        <tr><td class="label">Efecto en la remuneración</td><td>{{ $descuento['detalle'] }}{{ $descuento['base'] !== null ? ' ('.$dinero($descuento['base']).')' : '' }}; el valor lo calcula Financiero</td></tr>
     @endif
     @if($baseLegal)
         <tr><td class="label">Base legal</td><td>{{ $baseLegal }}</td></tr>
