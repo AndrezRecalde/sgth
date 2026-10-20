@@ -401,9 +401,11 @@ it('la migración crea el rol financiero y deja a Talento Humano en consulta', f
         ->and(Role::findByName('asistente-uath', 'sanctum')->hasPermissionTo('gestionar-viaticos'))->toBeFalse();
 
     // El rol que crea la migración tiene lo mismo que siembra el seeder, con
-    // lo que le suman las migraciones posteriores: las novedades para nómina
-    // (fase 7.3a).
+    // lo que le suman y le quitan las migraciones posteriores: las novedades
+    // para nómina (fase 7.3a) y el rol de pago propio, que se fue con las
+    // tablas de la nómina (2026-10-20).
     (require database_path('migrations/2026_10_13_000100_crear_permisos_novedades_nomina.php'))->up();
+    (require database_path('migrations/2026_11_14_000000_borrar_tablas_de_nomina.php'))->up();
     app(PermissionRegistrar::class)->forgetCachedPermissions();
 
     $permisos = fn () => Role::findByName('financiero', 'sanctum')->permissions()->pluck('name')->sort()->values();

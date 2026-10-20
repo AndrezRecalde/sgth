@@ -39,12 +39,9 @@ enum Permiso: string
     case CORREGIR_DATOS_LABORALES = 'corregir-datos-laborales';
 
     // ── MÓDULO 03: Nómina ────────────────────────────────────────
-    // El SGTH no calcula la nómina desde el 2026-10-20: ver, procesar y cerrar
-    // la nómina y el traspaso al ERP se retiraron. Este queda hasta que se
-    // borren las tablas, porque lo dan tres migraciones de roles.
-    case VER_ROL_PAGO_PROPIO = 'ver-rol-pago-propio';
-    // Las novedades para nómina del mes, que Financiero aplica en su sistema
-    // (fase 7.3a): verlas, y entregarlas, que congela el mes.
+    // El SGTH no calcula la nómina desde el 2026-10-20: de este módulo solo
+    // quedan las novedades del mes, que Financiero aplica en su sistema (fase
+    // 7.3a): verlas, y entregarlas, que congela el mes.
     case VER_NOVEDADES_NOMINA = 'ver-novedades-nomina';
     case ENTREGAR_NOVEDADES_NOMINA = 'entregar-novedades-nomina';
 

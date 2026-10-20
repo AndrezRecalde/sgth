@@ -226,6 +226,9 @@ test('la migracion crea el jefe de tic y deja los roles como el seeder', functio
 
     $migracion->up();
     $migracion->up(); // idempotente
+    // Su lista base todavía da el rol de pago propio: lo quita la migración
+    // que borra las tablas de la nómina (2026-10-20).
+    (require database_path('migrations/2026_11_14_000000_borrar_tablas_de_nomina.php'))->up();
     app(PermissionRegistrar::class)->forgetCachedPermissions();
 
     // Lo que dan las migraciones posteriores (gestionar-prestamos, 2.1) no lo

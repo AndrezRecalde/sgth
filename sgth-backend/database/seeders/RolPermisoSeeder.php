@@ -73,7 +73,6 @@ class RolPermisoSeeder extends Seeder
         // Permisos base para cualquier servidor público en la institución
         $permisosBase = [
             Permiso::VER_EXPEDIENTE_PROPIO,
-            Permiso::VER_ROL_PAGO_PROPIO,
             Permiso::VER_ASISTENCIA_PROPIA,
             Permiso::CREAR_PERMISO,
             Permiso::VER_PERMISOS,

@@ -93,11 +93,9 @@ class PermisoController extends Controller
     private function detectarModulo(string $permiso): string
     {
         return match(true) {
-            // Las tres excepciones van primero porque las ramas genéricas de
-            // abajo las capturaban por subcadena: 'rol' se comía
-            // 'ver-rol-pago-propio', 'contrasena' se comía 'cambiar-contrasena'
-            // y 'bien' se comía 'gestionar-bienestar'.
-            str_contains($permiso, 'rol-pago')          => 'Nómina',
+            // Las excepciones van primero porque las ramas genéricas de abajo
+            // las capturaban por subcadena: 'contrasena' se comía
+            // 'cambiar-contrasena' y 'bien' se comía 'gestionar-bienestar'.
             $permiso === 'cambiar-contrasena'           => 'Autoservicio',
             str_contains($permiso, 'bienestar')         => 'Actividades y Bienestar',
 
@@ -131,9 +129,8 @@ class PermisoController extends Controller
             str_contains($permiso, 'cargas')
                 => 'Expediente',
 
-            str_contains($permiso, 'nomina') ||
-            str_contains($permiso, 'handoff') ||
-            str_contains($permiso, 'rol-pago')
+            // De la nómina solo quedan las novedades (2026-10-20).
+            str_contains($permiso, 'nomina')
                 => 'Nómina',
 
             str_contains($permiso, 'asistencia') ||
