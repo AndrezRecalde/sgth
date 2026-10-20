@@ -273,18 +273,19 @@ test('si su puesto ya no tiene plaza, Talento Humano elige otro de obreros, sin 
 
 // ── Lo que se paga ──────────────────────────────────────────────
 
-test('se pagan las remuneraciones pendientes con el 10 % de recargo', function () {
-    // Fuera del 16 de mayo al 14 de junio: 30 días, una remuneración.
+test('al reintegro le corresponden las pendientes con el 10 % de recargo, sin montos', function () {
+    // Fuera del 16 de mayo al 14 de junio: 30 días.
     $id = ($this->reintegrar)(($this->despedido)())->json('datos.id');
-    $liquidacion = app(TerminacionObreroService::class)->liquidacion(MovimientoPersonal::findOrFail($id));
+    $liquidacion = app(TerminacionObreroService::class)->loQueCorresponde(MovimientoPersonal::findOrFail($id));
 
+    // Lo calcula Financiero: el SGTH es informativo (2026-10-20).
     expect($liquidacion['tipo'])->toBe('reintegro')
         ->and($liquidacion['dias_fuera'])->toBe(30)
         ->and($liquidacion['desde'])->toBe('2026-05-16')
         ->and($liquidacion['hasta'])->toBe('2026-06-14')
-        ->and($liquidacion['rubros'][0]['monto'])->toBe(620.0)
-        ->and($liquidacion['rubros'][1]['monto'])->toBe(62.0)
-        ->and($liquidacion['total'])->toBe(682.0)
+        ->and($liquidacion['rubros'][0]['detalle'])->toBe('Las de los 30 días fuera')
+        ->and($liquidacion['rubros'][1]['detalle'])->toBe('10 % de las remuneraciones pendientes')
+        ->and($liquidacion)->not->toHaveKey('total')
         ->and($liquidacion['nota'])->toContain('medida cautelar');
 
     // Las que fija la sentencia mandan, y lo pagado en el finiquito se recuerda.
@@ -301,12 +302,11 @@ test('se pagan las remuneraciones pendientes con el 10 % de recargo', function (
         'fecha_ejecutoria' => '2026-06-12',
         'remuneraciones_dejadas_de_percibir' => 1000,
     ])->json('datos.id');
-    $liquidacion = app(TerminacionObreroService::class)->liquidacion(MovimientoPersonal::findOrFail($id));
+    $liquidacion = app(TerminacionObreroService::class)->loQueCorresponde(MovimientoPersonal::findOrFail($id));
 
-    expect($liquidacion['rubros'][0]['detalle'])->toBe('Las que fija la sentencia')
-        ->and($liquidacion['total'])->toBe(1100.0)
+    expect($liquidacion['rubros'][0]['detalle'])->toBe('Las que fija la sentencia: $1.000,00')
         ->and($liquidacion['nota'])->not->toContain('medida cautelar')
-        ->and($liquidacion['nota'])->toContain('se pagaron $3,500.00');
+        ->and($liquidacion['nota'])->toContain('se pagaron $3.500,00');
 });
 
 test('al registrarse sale por correo a Financiero, y al anularse el aviso contrario', function () {
@@ -331,12 +331,12 @@ test('al registrarse sale por correo a Financiero, y al anularse el aviso contra
         ->assertJsonPath('meta.aviso_financiero', 'enviado');
 
     Mail::assertSent(LiquidacionObreroMail::class, fn (LiquidacionObreroMail $m) => ! $m->anulada
-        && $m->liquidacion['total'] === 682.0
+        && $m->liquidacion['dias_fuera'] === 30
         && str_contains($m->envelope()->subject, 'Reintegro de obrero'));
     Mail::assertSent(LiquidacionObreroMail::class, fn (LiquidacionObreroMail $m) => $m->anulada);
 
     $html = (new LiquidacionObreroMail(
-        MovimientoPersonal::findOrFail($id)->fresh(), app(TerminacionObreroService::class)->liquidacion(MovimientoPersonal::findOrFail($id)),
+        MovimientoPersonal::findOrFail($id)->fresh(), app(TerminacionObreroService::class)->loQueCorresponde(MovimientoPersonal::findOrFail($id)),
         false, '%PDF', 'hoja.pdf',
     ))->render();
     expect($html)->toContain('despido el juez declaró ineficaz')
@@ -376,7 +376,7 @@ test('el catálogo dice que es del registro interno, y el servidor, su último n
         ->assertJsonPath('datos.ultimo_nombramiento', 'codigo_trabajo');
 });
 
-test('la hoja de registro interno dice qué deja sin efecto, la orden y lo que se paga', function () {
+test('la hoja de registro interno dice qué deja sin efecto, la orden y lo que corresponde', function () {
     $obrero = ($this->despedido)();
     $terminacion = MovimientoPersonal::where('servidor_id', $obrero->id)->sole();
     $reintegro = ($this->registrar)(($this->reintegrar)($obrero)->json('datos.id'));
@@ -384,7 +384,7 @@ test('la hoja de registro interno dice qué deja sin efecto, la orden y lo que s
     $html = view('pdf.expediente.registro-interno', [
         'movimiento'         => $reintegro->fresh(['unidadDestino', 'puestoDestino.cargo']),
         'descuento'          => null,
-        'liquidacion'        => app(TerminacionObreroService::class)->liquidacion($reintegro),
+        'corresponde'        => app(TerminacionObreroService::class)->loQueCorresponde($reintegro),
         'anulada'            => false,
         'servidor'           => $obrero,
         'firmaTalentoHumano' => ['rotulo' => RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO->rotuloDocumento(), 'nombre' => null, 'cargo' => 'Director/a de Talento Humano'],
@@ -396,7 +396,7 @@ test('la hoja de registro interno dice qué deja sin efecto, la orden y lo que s
         ->toContain('08371-2026-00456')
         ->toContain('providencia del 10/06/2026')
         ->toContain('Código del Trabajo, Arts. 195.1 a 195.3')
-        ->toContain('Remuneraciones pendientes (referencial)')
+        ->toContain('Lo que corresponde al reintegro')
         ->toContain('30 días fuera')
-        ->toContain('$ 682.00');
+        ->not->toContain('$ 682.00');
 });

@@ -27,7 +27,10 @@ enum ConceptoNovedadNomina: string
     case REMUNERACIONES_PENDIENTES = 'remuneraciones_pendientes';
     /** Los días de vacaciones no gozadas, al salir (fase 7.4b). */
     case VACACIONES_NO_GOZADAS = 'vacaciones_no_gozadas';
-    /** La indemnización o compensación por la salida, con su resolución. */
+    /**
+     * La indemnización o compensación por la salida. Ya no se deriva: se
+     * registra cuando Financiero la pagó (2026-10-20). Queda por lo entregado.
+     */
     case INDEMNIZACION = 'indemnizacion';
 
     public function etiqueta(): string

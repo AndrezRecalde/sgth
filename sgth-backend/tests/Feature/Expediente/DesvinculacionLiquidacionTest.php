@@ -93,14 +93,14 @@ test('la liquidación paga lo ganado del año de la salida, no el período enter
         ->and($liquidacion['proporcional']['ganados'])->toEqual(24)
         ->and($liquidacion['proporcional']['dias'])->toEqual(19)
         ->and($liquidacion['dias'])->toEqual(29)
-        ->and($liquidacion['monto'])->toEqual(966.67);
+        // Son días: el valor lo calcula Financiero (2026-10-20).
+        ->and($liquidacion)->not->toHaveKey('monto');
 
     $this->postJson("/api/v1/expediente/desvinculaciones/{$desvinculacion->id}/vacaciones/confirmar")
         ->assertOk()
         ->assertJsonPath('datos.pasos.0.estado', 'hecho');
 
-    expect((float) $desvinculacion->fresh()->vacaciones_monto)->toBe(966.67)
-        // A Financiero le llegan los días: el valor lo calcula él (2026-10-20).
+    expect((float) $desvinculacion->fresh()->vacaciones_dias)->toBe(29.0)
         ->and(($this->novedad)('vacaciones_no_gozadas')['detalle'])->toBe('Vacaciones no gozadas al salir el 19/10/2026: 29 días.');
 });
 
@@ -113,29 +113,24 @@ test('en la LOSEP no pasa de 60 días', function () {
 
     expect($liquidacion['total'])->toBeGreaterThan(60)
         ->and($liquidacion['tope'])->toEqual(60)
-        ->and($liquidacion['dias'])->toEqual(60)
-        ->and($liquidacion['monto'])->toEqual(2000);
+        ->and($liquidacion['dias'])->toEqual(60);
 });
 
 // ── La indemnización y el reingreso ─────────────────────────────
 
-test('la indemnización no pasa el tope del Mandato 2, y sin el salario básico no hay tope', function () {
+test('la indemnización se registra como lo que pagó Financiero: el SGTH no calcula el tope', function () {
     $desvinculacion = ($this->salir)();
-    $registrar = fn (float $monto) => $this->postJson("/api/v1/expediente/desvinculaciones/{$desvinculacion->id}/indemnizacion", [
-        'concepto' => 'retiro_voluntario', 'monto' => $monto, 'resolucion' => 'Resolución GADPE-2026-210',
-    ]);
 
-    $registrar(10000)->assertStatus(422)->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'salario básico'));
+    // El tope del Mandato 2 lo aplica quien la calcula (2026-10-20).
+    expect(($this->paso)($desvinculacion, 'indemnizacion')['indemnizacion'])->not->toHaveKeys(['tope', 'salario_basico', 'sugerido']);
 
-    SalarioBasico::create(['anio' => 2026, 'monto' => 482]);
-    $tope = ($this->paso)($desvinculacion, 'indemnizacion')['indemnizacion']['tope'];
-    expect($tope)->toBeGreaterThan(29000)->toBeLessThan(30000);
+    $this->postJson("/api/v1/expediente/desvinculaciones/{$desvinculacion->id}/indemnizacion", [
+        'concepto' => 'retiro_voluntario', 'monto' => 50000, 'resolucion' => 'Resolución GADPE-2026-210',
+    ])->assertOk()->assertJsonPath('datos.pasos.1.estado', 'hecho');
 
-    $registrar(50000)->assertStatus(422)->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'Pasa el tope'));
-    $registrar(20000)->assertOk()->assertJsonPath('datos.pasos.1.estado', 'hecho');
-
-    expect(($this->novedad)('indemnizacion')['detalle'])->toContain('Resolución GADPE-2026-210')
-        ->and(($this->novedad)('indemnizacion'))->not->toHaveKey('monto');
+    expect((float) $desvinculacion->fresh()->indemnizacion_monto)->toBe(50000.0)
+        // Ya la pagó Financiero: no va como novedad.
+        ->and(($this->novedad)('indemnizacion'))->toBeNull();
 });
 
 test('quien cobró una indemnización no reingresa hasta devolverla', function () {

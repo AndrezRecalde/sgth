@@ -83,12 +83,6 @@ export function TerminacionesObrerosPanel() {
       ),
     },
     {
-      accessor: 'total_referencial',
-      title: 'Liquidación referencial',
-      width: 170,
-      render: (t) => (t.total_referencial != null ? dinero(t.total_referencial) : '—'),
-    },
-    {
       accessor: 'acta',
       title: 'Acta de finiquito',
       width: 220,

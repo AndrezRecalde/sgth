@@ -99,7 +99,7 @@
     // por despido ineficaz (fase 4.5b); las demás no la traen.
     // La vista previa de lo que todavía no se registra (fase 6.2).
     $vistaPrevia ??= false;
-    $liquidacion ??= null;
+    $corresponde ??= null;
     $reintegro = $movimiento->esReintegroPorDespidoIneficaz();
     $terminacion = $reintegro ? $movimiento->movimientoRelacionado : null;
     $fmtFecha = fn ($f) => $f ? \Carbon\Carbon::parse($f)->format('d/m/Y') : '—';
@@ -228,39 +228,34 @@
     @endif
 </table>
 
-@if($liquidacion)
-    <div class="bloque-titulo">{{ $liquidacion['tipo'] === 'reintegro' ? 'Remuneraciones pendientes (referencial)' : 'Liquidación referencial' }}</div>
+@if($corresponde)
+    {{-- Sin montos: la liquidación la calcula Financiero (2026-10-20). --}}
+    <div class="bloque-titulo">{{ $corresponde['tipo'] === 'reintegro' ? 'Lo que corresponde al reintegro' : 'Lo que corresponde a la terminación' }}</div>
     <table class="datos">
         <tr>
             <th>Rubro</th>
             <th>Detalle</th>
-            <th style="width: 18%; text-align: right;">Valor</th>
         </tr>
-        @foreach($liquidacion['rubros'] as $rubro)
+        @foreach($corresponde['rubros'] as $rubro)
             <tr>
                 <td>{{ $rubro['concepto'] }}<br><span style="font-size: 8.5px; color: #5b6b63;">{{ $rubro['base_legal'] }}</span></td>
                 <td>{{ $rubro['detalle'] }}</td>
-                <td style="text-align: right;">{{ $dinero($rubro['monto']) }}</td>
             </tr>
         @endforeach
-        <tr>
-            <td colspan="2" class="label">Total referencial</td>
-            <td style="text-align: right; font-weight: bold;">{{ $dinero($liquidacion['total']) }}</td>
-        </tr>
     </table>
     <div class="nota">
-        @if($liquidacion['tipo'] === 'reintegro')
-            Con una remuneración de {{ $dinero($liquidacion['remuneracion']) }}
-            @if($liquidacion['dias_fuera'])
-                y {{ $liquidacion['dias_fuera'] }} días fuera, del {{ $fmtFecha($liquidacion['desde']) }} al {{ $fmtFecha($liquidacion['hasta']) }}.
+        @if($corresponde['tipo'] === 'reintegro')
+            Con una remuneración de {{ $dinero($corresponde['remuneracion']) }}
+            @if($corresponde['dias_fuera'])
+                y {{ $corresponde['dias_fuera'] }} días fuera, del {{ $fmtFecha($corresponde['desde']) }} al {{ $fmtFecha($corresponde['hasta']) }}.
             @else
                 y sin días fuera.
             @endif
         @else
-            Sobre una remuneración de {{ $dinero($liquidacion['remuneracion']) }} y servicio desde el
-            {{ $fmtFecha($liquidacion['desde']) }}.
+            Con una remuneración de {{ $dinero($corresponde['remuneracion']) }} y servicio desde el
+            {{ $fmtFecha($corresponde['desde']) }}{{ $corresponde['anios_servicio'] !== null ? ': '.number_format($corresponde['anios_servicio'], 2, ',', '.').' años' : '' }}.
         @endif
-        {{ $liquidacion['nota'] }}
+        {{ $corresponde['nota'] }}
     </div>
 @endif
 

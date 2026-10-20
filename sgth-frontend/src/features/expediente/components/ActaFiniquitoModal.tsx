@@ -41,7 +41,7 @@ function FormularioActa({ terminacion, onClose }: { terminacion: TerminacionObre
     defaultValues: {
       numero: acta?.numero ?? '',
       fecha: acta?.fecha?.split('T')[0] ?? fromDateValue(new Date()),
-      valor_pagado: acta ? Number(acta.valor_pagado) : terminacion.total_referencial ?? undefined,
+      valor_pagado: acta ? Number(acta.valor_pagado) : undefined,
       observacion: acta?.observacion ?? '',
       archivo: null,
     },
@@ -117,9 +117,7 @@ function FormularioActa({ terminacion, onClose }: { terminacion: TerminacionObre
               render={({ field }) => (
                 <NumberInput
                   label="Valor pagado"
-                  description={terminacion.total_referencial != null
-                    ? `La liquidación referencial era de $ ${terminacion.total_referencial.toFixed(2)}.`
-                    : undefined}
+                  description="El que dice el acta: la liquidación la calcula Financiero."
                   withAsterisk
                   min={0}
                   decimalScale={2}

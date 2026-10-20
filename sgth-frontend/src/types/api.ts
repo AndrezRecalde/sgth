@@ -724,10 +724,11 @@ export type AnotacionAccion = Omit<
 > & { registrado_por?: string | null }
 
 /**
- * La liquidación referencial de la terminación de un obrero (fase 4.5).
- * Espeja `TerminacionObreroService::liquidacion()`.
+ * Lo que corresponde a la terminación de un obrero (fase 4.5), sin montos: la
+ * liquidación la calcula Financiero (2026-10-20). Espeja
+ * `TerminacionObreroService::loQueCorresponde()`.
  */
-export type LiquidacionReferencial = {
+export type LoQueCorresponde = {
   /** La de la terminación (fase 4.5) o la del reintegro por despido ineficaz (fase 4.5b). */
   tipo: 'terminacion' | 'reintegro'
   remuneracion: number | null
@@ -737,8 +738,7 @@ export type LiquidacionReferencial = {
   hasta: string | null
   anios_servicio: number | null
   dias_fuera: number | null
-  rubros: { concepto: string; base_legal: string; detalle: string; monto: number | null }[]
-  total: number | null
+  rubros: { concepto: string; base_legal: string; detalle: string }[]
   nota: string
 }
 
@@ -942,10 +942,10 @@ export type MovimientoPersonal = {
   lugar_trabajo_origen?: string | null
   fecha_consentimiento?: string | null
   // La terminación de un obrero (fase 4.5): cuándo presentó la renuncia, si el
-  // desahucio rige antes de los 15 días de aviso, y la liquidación referencial.
+  // desahucio rige antes de los 15 días de aviso, y lo que le corresponde.
   fecha_presentacion_renuncia?: string | null
   desahucio_sin_el_aviso?: boolean
-  liquidacion_referencial?: LiquidacionReferencial | null
+  lo_que_corresponde?: LoQueCorresponde | null
   caucionado?: boolean | null
   caucion_numero?: string | null
   caucion_fecha?: string | null

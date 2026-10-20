@@ -10,7 +10,7 @@ import { IconAlertTriangle, IconFileOff, IconStack2, IconUserOff } from '@tabler
 import { useMovimiento } from '../hooks/useMovimientoMutations'
 import { AccionAnotaciones } from './AccionAnotaciones'
 import { ActosDelLoteModal } from './ActosDelLoteModal'
-import { AccionLiquidacionReferencial } from './AccionLiquidacionReferencial'
+import { AccionLoQueCorresponde } from './AccionLoQueCorresponde'
 import { EstadoAccionBadge } from './EstadoAccionBadge'
 import { AccionBotonEditar } from './AccionBotonEditar'
 import { AccionPersonalPie } from './AccionPersonalPie'
@@ -108,7 +108,7 @@ export function AccionPersonalDetalleDrawer({ opened, onClose, movimientoId }: P
         <AccionSituacionBloques m={m} botonEditar={<AccionBotonEditar m={m} onEditar={abrirEditar} />} />
 
         {/* La terminación de un obrero: su liquidación referencial (fase 4.5). */}
-        <AccionLiquidacionReferencial m={m} />
+        <AccionLoQueCorresponde m={m} />
 
         <AccionRespaldos m={m} />
 

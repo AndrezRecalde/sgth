@@ -11,10 +11,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 /**
- * Lleva a Financiero la liquidación referencial de la terminación de un obrero
- * (diseño de Acciones de Personal, 9.15; fase 4.5), como la multa: al
- * registrarse sale por correo al jefe de la unidad financiera con la hoja de
- * registro interno, y si se anula después, el aviso contrario.
+ * Le avisa a Financiero la terminación de un obrero para que la liquide (diseño
+ * de Acciones de Personal, 9.15; fase 4.5), como la multa: al registrarse sale
+ * por correo al jefe de la unidad financiera con la hoja de registro interno y
+ * lo que corresponde según el Código, sin montos (2026-10-20), y si se anula
+ * después, el aviso contrario.
  *
  * Solo las causales con algo que pagar según el Código: el desahucio, el
  * acuerdo de las partes y el despido intempestivo. Y el reintegro por despido
@@ -43,7 +44,7 @@ class AvisoLiquidacionObreroService
             return null;
         }
 
-        $liquidacion = $this->terminaciones->liquidacion($movimiento);
+        $liquidacion = $this->terminaciones->loQueCorresponde($movimiento);
 
         if ($liquidacion === null) {
             return null;

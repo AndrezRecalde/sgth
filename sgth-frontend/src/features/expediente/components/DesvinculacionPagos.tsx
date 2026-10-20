@@ -11,11 +11,10 @@ import { usePagosDeLaSalida } from '../hooks/useDesvinculaciones'
 import type { ConceptoIndemnizacion, PasoDeLaDesvinculacion } from '../services/desvinculacionService'
 
 /**
- * Lo que paga la salida, en su paso de la desvinculación (fase 7.4b): el
- * cálculo de las vacaciones y su confirmación, el formulario de la
- * indemnización con el tope del Mandato 2, y la devolución que levanta la
- * prohibición de reingreso. Montos de referencia: el definitivo lo establece
- * Financiero.
+ * Lo que trae la salida, en su paso de la desvinculación (fase 7.4b): los días
+ * de vacaciones no gozadas y su confirmación, el registro de la indemnización
+ * que pagó Financiero y la devolución que levanta la prohibición de reingreso.
+ * Sin montos calculados (2026-10-20): los valores los calcula Financiero.
  */
 export function PagoDeLaSalida({
   desvinculacionId, paso, esDirector, abierta,
@@ -53,7 +52,7 @@ function Vacaciones({ desvinculacionId, paso, puede }: { desvinculacionId: numbe
       </Text>
       <Text size="xs">
         Total {numero(l.total)} días{l.tope !== null && l.total > l.tope ? `, con el tope de ${numero(l.tope)}` : ''}:
-        {' '}<b>{numero(l.dias)} días × {dinero(l.remuneracion)} ÷ 30 = {dinero(l.monto)}</b>
+        {' '}<b>{numero(l.dias)} días</b>. Su valor lo calcula Financiero.
       </Text>
       {!paso.confirmada && paso.estado === 'pendiente' && (
         <Group mt={4}>
@@ -61,17 +60,17 @@ function Vacaciones({ desvinculacionId, paso, puede }: { desvinculacionId: numbe
             size="compact-xs"
             variant="light"
             leftSection={<IconCheck size={14} />}
-            disabled={!puede || l.monto === null}
+            disabled={!puede}
             title={puede ? undefined : 'La confirma el Director de Talento Humano'}
             loading={confirmarLiquidacion.isPending}
             onClick={() => confirmar({
-              title: 'Confirmar la liquidación',
-              message: `Se confirman ${numero(l.dias)} días, ${dinero(l.monto)} de referencia: quedan congelados y llegan a Financiero en las novedades del mes de la salida.`,
+              title: 'Confirmar los días',
+              message: `Se confirman ${numero(l.dias)} días: quedan congelados y llegan a Financiero en las novedades del mes de la salida.`,
               confirmLabel: 'Confirmar',
               onConfirm: () => confirmarLiquidacion.mutate(),
             })}
           >
-            Confirmar la liquidación
+            Confirmar los días
           </Button>
         </Group>
       )}
@@ -83,7 +82,7 @@ function Indemnizacion({ desvinculacionId, paso, puede }: { desvinculacionId: nu
   const { indemnizacion: registrar } = usePagosDeLaSalida(desvinculacionId)
   const i = paso.indemnizacion!
   const [concepto, setConcepto] = useState<ConceptoIndemnizacion | null>(null)
-  const [monto, setMonto] = useState<number | ''>(i.sugerido ?? '')
+  const [monto, setMonto] = useState<number | ''>('')
   const [resolucion, setResolucion] = useState('')
 
   if (!puede) {
@@ -93,10 +92,7 @@ function Indemnizacion({ desvinculacionId, paso, puede }: { desvinculacionId: nu
   return (
     <Stack gap={6} mt={4}>
       <Text size="xs" c="dimmed">
-        {i.tope !== null
-          ? `Tope del Mandato 2: ${dinero(i.tope)} (7 salarios básicos de ${dinero(i.salario_basico)} por ${numero(i.anios ?? 0)} años, hasta 210).`
-          : 'Sin el salario básico del año de la salida no hay tope: cárguelo en «Contrato colectivo».'}
-        {i.sugerido !== null ? ` Su liquidación referencial suma ${dinero(i.sugerido)}.` : ''}
+        Lo que pagó Financiero, con la resolución que la dispuso: el valor y su tope los calcula él.
       </Text>
       <Group grow align="flex-end" gap="xs">
         <Select
@@ -106,7 +102,7 @@ function Indemnizacion({ desvinculacionId, paso, puede }: { desvinculacionId: nu
           value={concepto}
           onChange={(v) => setConcepto(v as ConceptoIndemnizacion | null)}
         />
-        <NumberInput size="xs" label="Monto" min={0} decimalScale={2} prefix="$ " hideControls value={monto} onChange={(v) => setMonto(typeof v === 'number' ? v : '')} />
+        <NumberInput size="xs" label="Monto pagado" min={0} decimalScale={2} prefix="$ " hideControls value={monto} onChange={(v) => setMonto(typeof v === 'number' ? v : '')} />
         <TextInput size="xs" label="Resolución" value={resolucion} onChange={(e) => setResolucion(e.currentTarget.value)} />
       </Group>
       <Group>
@@ -118,7 +114,7 @@ function Indemnizacion({ desvinculacionId, paso, puede }: { desvinculacionId: nu
           loading={registrar.isPending}
           onClick={() => confirmar({
             title: 'Registrar la indemnización',
-            message: `Se registran ${dinero(Number(monto))}: llegan a Financiero en las novedades del mes de la salida, y quien la cobra no reingresa al sector público mientras no la devuelva (Mandato Constituyente 2, art. 8).`,
+            message: `Se registran ${dinero(Number(monto))} pagados por Financiero: quien la cobra no reingresa al sector público mientras no la devuelva (Mandato Constituyente 2, art. 8).`,
             confirmLabel: 'Registrar',
             onConfirm: () => concepto && registrar.mutate({ concepto, monto: Number(monto), resolucion: resolucion.trim() }),
           })}
