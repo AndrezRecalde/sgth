@@ -780,22 +780,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/autoservicio/mis-roles-pago": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["autoservicio.misRolesPago"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/autoservicio/mi-expediente": {
         parameters: {
             query?: never;
@@ -2028,22 +2012,6 @@ export interface paths {
         patch: operations["comunicado.actualizarPublicacion"];
         trace?: never;
     };
-    "/v1/nomina/conceptos": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["conceptoNomina.index"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/asistencia/consolidado-permisos": {
         parameters: {
             query?: never;
@@ -3064,38 +3032,6 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/nomina/descuentos-recurrentes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["descuentos-recurrentes.index"];
-        put?: never;
-        post: operations["descuentos-recurrentes.store"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/nomina/descuentos-recurrentes/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["descuentos-recurrentes.show"];
-        put: operations["descuentos-recurrentes.update"];
-        post?: never;
-        delete: operations["descuentos-recurrentes.destroy"];
         options?: never;
         head?: never;
         patch?: never;
@@ -4400,22 +4336,6 @@ export interface paths {
          *     Opcionalmente filtra por régimen laboral
          */
         get: operations["estructura.grupos-ocupacionales"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/nomina/handoffs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["handoffErp.index"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6418,74 +6338,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/nomina": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["nomina.index"];
-        put?: never;
-        post: operations["nomina.calcular"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/nomina/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["nomina.show"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/nomina/{id}/excel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * La nómina por servidor, en Excel, para compararla con la de Financiero
-         *     en la corrida en paralelo (fase 7.3c)
-         */
-        get: operations["nomina.excel"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/nomina/{id}/cerrar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["nomina.cerrar"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/sso/normativa-legal": {
         parameters: {
             query?: never;
@@ -8428,22 +8280,6 @@ export interface paths {
         put: operations["riesgos.update"];
         post?: never;
         delete: operations["riesgos.destroy"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/nomina/{nominaId}/rol-pago/{servidorId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["rolPago.show"];
-        put?: never;
-        post?: never;
-        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -11339,22 +11175,6 @@ export interface components {
             creado_en: string;
             actualizado_en: string;
         };
-        /** ConceptoNomina */
-        ConceptoNomina: {
-            id: number;
-            codigo: string;
-            nombre: string;
-            tipo: components["schemas"]["TipoConcepto"];
-            formula: string | null;
-            porcentaje: number | null;
-            activo: boolean;
-            /** Format: date-time */
-            created_at: string | null;
-            /** Format: date-time */
-            updated_at: string | null;
-            /** Format: date-time */
-            deleted_at: string | null;
-        };
         /**
          * CondicionFisicaBien
          * @description Cómo está físicamente un equipo informático, independiente de dónde esté (ver `EstadoBien`). Son los tres valores de la columna «ESTADO EQUIPO» del Excel de TIC y de la pestaña de impresoras.
@@ -11691,29 +11511,6 @@ export interface components {
         DeclararGanadorRequest: {
             postulante_ganador_id?: number;
             postulante_ganador_ids?: number[];
-        };
-        /** DescuentoRecurrente */
-        DescuentoRecurrente: {
-            id: number;
-            servidor_id: number;
-            concepto_nomina_id: number;
-            valor_cuota: number;
-            numero_cuotas_total: number;
-            numero_cuotas_pagadas: number;
-            /** Format: date-time */
-            fecha_inicio: string;
-            /** Format: date-time */
-            fecha_fin: string | null;
-            referencia_externa: string | null;
-            estado: components["schemas"]["EstadoDescuentoRecurrente"];
-            observacion: string | null;
-            registrado_por: number;
-            /** Format: date-time */
-            created_at: string | null;
-            /** Format: date-time */
-            updated_at: string | null;
-            /** Format: date-time */
-            deleted_at: string | null;
         };
         /** DiagnosticoCie10 */
         DiagnosticoCie10: {
@@ -12095,21 +11892,11 @@ export interface components {
          */
         EstadoCumplimientoNormativa: "cumple" | "no_cumple" | "en_proceso";
         /**
-         * EstadoDescuentoRecurrente
-         * @enum {string}
-         */
-        EstadoDescuentoRecurrente: "activo" | "completado" | "suspendido";
-        /**
          * EstadoFormacion
          * @description Dónde está un título o curso del historial académico. Lo que registra Talento Humano entra validado; lo que registra el servidor desde el portal, por validar.
          * @enum {string}
          */
         EstadoFormacion: "validado" | "por_validar" | "rechazado";
-        /**
-         * EstadoNomina
-         * @enum {string}
-         */
-        EstadoNomina: "borrador" | "en_proceso" | "cerrada" | "contabilizada" | "pagada";
         /**
          * EstadoPermiso
          * @enum {string}
@@ -12518,24 +12305,6 @@ export interface components {
             anio: number;
             monto: number;
             acuerdo?: string | null;
-        };
-        /** HandoffErp */
-        HandoffErp: {
-            id: number;
-            tipo: string;
-            referencia_id: number;
-            archivo_nombre: string;
-            archivo_ruta: string;
-            hash_integridad: string;
-            generado_por: number;
-            /** Format: date-time */
-            generado_en: string;
-            /** Format: date-time */
-            importado_erp_en: string | null;
-            /** Format: date-time */
-            created_at: string | null;
-            /** Format: date-time */
-            updated_at: string | null;
         };
         /** HistoriaClinica */
         HistoriaClinica: {
@@ -13460,29 +13229,6 @@ export interface components {
          * @enum {string}
          */
         NivelIntervencionRiesgo: "i" | "ii" | "iii" | "iv";
-        /** Nomina */
-        Nomina: {
-            id: number;
-            periodo: string;
-            /** Format: date-time */
-            fecha_inicio: string;
-            /** Format: date-time */
-            fecha_fin: string;
-            estado: components["schemas"]["EstadoNomina"];
-            total_ingresos: string;
-            total_descuentos: string;
-            total_neto: string;
-            cerrado_por: number | null;
-            /** Format: date-time */
-            cerrado_en: string | null;
-            /** Format: date-time */
-            created_at: string | null;
-            /** Format: date-time */
-            updated_at: string | null;
-            /** Format: date-time */
-            deleted_at: string | null;
-            referencial: boolean;
-        };
         /** NormativaLegalSso */
         NormativaLegalSso: {
             id: number;
@@ -14514,26 +14260,6 @@ export interface components {
             /** Format: date-time */
             deleted_at: string | null;
         };
-        /** RolPago */
-        RolPago: {
-            id: number;
-            nomina_id: number;
-            servidor_id: number;
-            total_ingresos: string;
-            total_descuentos: string;
-            total_neto: string;
-            enviado_por_correo: boolean;
-            /** Format: date-time */
-            enviado_en: string | null;
-            /** Format: date-time */
-            created_at: string | null;
-            /** Format: date-time */
-            updated_at: string | null;
-            /** Format: date-time */
-            deleted_at: string | null;
-            dias: number | null;
-            remuneracion: string | null;
-        };
         /**
          * RolPuesto
          * @enum {string}
@@ -15145,17 +14871,6 @@ export interface components {
             /** Format: binary */
             documento?: string | null;
         };
-        /** StoreDescuentoRecurrenteRequest */
-        StoreDescuentoRecurrenteRequest: {
-            servidor_id: number;
-            concepto_nomina_id: number;
-            valor_cuota: number;
-            numero_cuotas_total: number;
-            /** Format: date-time */
-            fecha_inicio: string;
-            referencia_externa?: string | null;
-            observacion?: string | null;
-        };
         /** StoreDiscapacidadServidorRequest */
         StoreDiscapacidadServidorRequest: {
             tipo_discapacidad: components["schemas"]["TipoDiscapacidad"];
@@ -15622,10 +15337,6 @@ export interface components {
             caucion_numero?: string | null;
             /** Format: date-time */
             caucion_fecha?: string | null;
-        };
-        /** StoreNominaRequest */
-        StoreNominaRequest: {
-            periodo: string;
         };
         /** StoreOdontogramaProcedimientoRequest */
         StoreOdontogramaProcedimientoRequest: {
@@ -16288,11 +15999,6 @@ export interface components {
          */
         TipoComunicado: "noticia" | "comunicado";
         /**
-         * TipoConcepto
-         * @enum {string}
-         */
-        TipoConcepto: "ingreso" | "descuento" | "aporte";
-        /**
          * TipoConsumible
          * @description Qué es un consumible del catálogo de TIC (fase 5.4a) [P9]. Los de impresión van a un equipo compatible; el repuesto informático (un teclado, un cable, la pasta térmica) puede ir a cualquier equipo o a ninguno.
          *     | |
@@ -16739,14 +16445,6 @@ export interface components {
                 fecha_hasta: string;
                 descripcion?: string | null;
             }[];
-        };
-        /** UpdateDescuentoRecurrenteRequest */
-        UpdateDescuentoRecurrenteRequest: {
-            valor_cuota?: number;
-            numero_cuotas_total?: number;
-            /** @enum {string} */
-            estado?: "activo" | "completado" | "suspendido";
-            observacion?: string | null;
         };
         /** UpdateDiscapacidadServidorRequest */
         UpdateDiscapacidadServidorRequest: {
@@ -19322,32 +19020,6 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Mis vacaciones obtenidas.";
-                        datos: unknown[];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-        };
-    };
-    "autoservicio.misRolesPago": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Mis roles de pago obtenidos.";
                         datos: unknown[];
                         meta: null;
                     };
@@ -22909,46 +22581,6 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
-    "conceptoNomina.index": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Listado de conceptos de nómina";
-                        datos: components["schemas"]["ConceptoNomina"][];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "No tiene autorización para realizar esta acción.";
-                        datos: null;
-                        errores: null;
-                    };
-                };
-            };
-        };
-    };
     "asistencia.consolidado": {
         parameters: {
             query?: never;
@@ -26076,153 +25708,6 @@ export interface operations {
                     };
                 };
             };
-        };
-    };
-    "descuentos-recurrentes.index": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Listado de descuentos recurrentes";
-                        datos: components["schemas"]["DescuentoRecurrente"][];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-        };
-    };
-    "descuentos-recurrentes.store": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StoreDescuentoRecurrenteRequest"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Descuento recurrente creado exitosamente";
-                        datos: components["schemas"]["DescuentoRecurrente"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
-    "descuentos-recurrentes.show": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Detalle de descuento recurrente";
-                        datos: string;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            404: components["responses"]["ModelNotFoundException"];
-        };
-    };
-    "descuentos-recurrentes.update": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["UpdateDescuentoRecurrenteRequest"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Descuento recurrente actualizado exitosamente";
-                        datos: string;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
-    "descuentos-recurrentes.destroy": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Descuento recurrente eliminado exitosamente";
-                        datos: null;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
         };
     };
     "desvinculacion.index": {
@@ -30047,46 +29532,6 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
-        };
-    };
-    "handoffErp.index": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Listado de archivos Handoff ERP";
-                        datos: components["schemas"]["HandoffErp"][];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "No tiene autorización para realizar esta acción.";
-                        datos: null;
-                        errores: null;
-                    };
-                };
-            };
         };
     };
     "historiaClinica.index": {
@@ -35043,148 +34488,6 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
             404: components["responses"]["ModelNotFoundException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
-    "nomina.index": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Listado de nóminas";
-                        datos: components["schemas"]["Nomina"][];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            403: components["responses"]["AuthorizationException"];
-        };
-    };
-    "nomina.calcular": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StoreNominaRequest"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @enum {string} */
-                        mensaje: "Nómina calculada en borrador. Es referencial: sirve para compararla con la de Financiero." | "Nómina calculada exitosamente en borrador.";
-                        datos: components["schemas"]["Nomina"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            403: components["responses"]["AuthorizationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
-    "nomina.show": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Detalle de nómina";
-                        datos: string;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            403: components["responses"]["AuthorizationException"];
-            404: components["responses"]["ModelNotFoundException"];
-        };
-    };
-    "nomina.excel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            403: components["responses"]["AuthorizationException"];
-        };
-    };
-    "nomina.cerrar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @enum {string} */
-                        mensaje: "La nómina quedó cerrada para compararla con la de Financiero. Es referencial: no sale al ERP ni a los servidores." | "La nómina ha sido cerrada y los procesos de ERP y correos se están ejecutando en segundo plano.";
-                        datos: components["schemas"]["Nomina"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
         };
     };
@@ -40539,36 +39842,6 @@ export interface operations {
                         /** @constant */
                         mensaje: "Riesgo laboral eliminado exitosamente.";
                         datos: null;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            403: components["responses"]["AuthorizationException"];
-        };
-    };
-    "rolPago.show": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                nominaId: number;
-                servidorId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Detalle de Rol de Pago";
-                        datos: components["schemas"]["RolPago"];
                         meta: null;
                     };
                 };

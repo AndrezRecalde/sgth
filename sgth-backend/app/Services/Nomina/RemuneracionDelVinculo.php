@@ -13,13 +13,13 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 /**
- * La remuneración de un vínculo a lo largo del tiempo (fases 7.3a a 7.3c): la
+ * La remuneración de un vínculo a lo largo del tiempo (fases 7.3a y 7.3b): la
  * que tiene hoy, y la que tenía antes de cada cambio, según la fecha en que
  * rige. La cambian los actos —revisión, ascenso, reintegro del ascenso,
  * asunción, adenda del obrero— y la nueva escala, que no tiene acto.
  *
- * La comparten las novedades para nómina y la nómina del SGTH, que antes
- * pagaba la RMU del puesto el mes entero.
+ * La leen las novedades para Financiero. La nómina del SGTH, que pagaba con
+ * ella por tramos, se retiró el 2026-10-20.
  */
 class RemuneracionDelVinculo
 {
@@ -138,71 +138,6 @@ class RemuneracionDelVinculo
         $posterior = $this->cambios($vinculo)->first(fn (array $c) => $c['fecha']->gt($fecha));
 
         return $posterior ? ($posterior['anterior'] ?? $actual) : $actual;
-    }
-
-    /**
-     * Los tramos del vínculo en el mes: desde que entra o desde el primero,
-     * hasta que sale o hasta el fin, partidos en cada cambio de remuneración.
-     *
-     * @return list<array{desde: CarbonImmutable, hasta: CarbonImmutable, dias: int, remuneracion: ?float}>
-     */
-    public function tramos(ContratoServidor $vinculo, MesDeNomina $mes): array
-    {
-        $recorte = $mes->recorte($vinculo->fecha_inicio, $vinculo->fecha_fin);
-
-        if (! $recorte) {
-            return [];
-        }
-
-        [$desde, $hasta] = $recorte;
-
-        $cortes = $this->cambios($vinculo)
-            ->map(fn (array $c) => $c['fecha'])
-            ->filter(fn (CarbonImmutable $f) => $f->gt($desde) && $f->lte($hasta))
-            ->unique(fn (CarbonImmutable $f) => $f->toDateString())
-            ->values();
-
-        $tramos = [];
-        $inicio = $desde;
-
-        foreach ([...$cortes->all(), null] as $corte) {
-            $fin = $corte ? $corte->subDay() : $hasta;
-            $tramos[] = [
-                'desde'        => $inicio,
-                'hasta'        => $fin,
-                'dias'         => $mes->dias($inicio, $fin),
-                'remuneracion' => $this->al($vinculo, $inicio),
-            ];
-            $inicio = $corte ?? $inicio;
-        }
-
-        return array_values(array_filter($tramos, fn (array $t) => $t['dias'] > 0));
-    }
-
-    /**
-     * Lo que este mes le debe de los anteriores: los cambios que se
-     * registraron en él y rigen desde antes. La diferencia de cada mes desde el
-     * que rige, por los días que el vínculo estuvo en él.
-     */
-    public function retroactivo(ContratoServidor $vinculo, MesDeNomina $mes): float
-    {
-        $total = 0.0;
-
-        foreach ($this->cambios($vinculo) as $cambio) {
-            if (! $cambio['registro'] || ! $mes->contiene($cambio['registro']) || ! $cambio['fecha']->lt($mes->inicio)) {
-                continue;
-            }
-
-            $anterior = $cambio['anterior'] ?? (float) $vinculo->remuneracion;
-            $diferencia = $cambio['nueva'] - $anterior;
-
-            for ($e = MesDeNomina::de($cambio['fecha']->format('Y-m')); $e->periodo < $mes->periodo; $e = MesDeNomina::de($e->inicio->addMonth()->format('Y-m'))) {
-                $desde = $cambio['fecha']->gt($vinculo->fecha_inicio) ? $cambio['fecha'] : $vinculo->fecha_inicio;
-                $total += $diferencia * $e->dias($desde, $vinculo->fecha_fin) / MesDeNomina::DIAS;
-            }
-        }
-
-        return round($total, 2);
     }
 
     /** @return Collection<int, MovimientoPersonal> */

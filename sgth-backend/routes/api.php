@@ -141,12 +141,7 @@ use App\Http\Controllers\InventarioTi\PrestamoEquipoController;
 use App\Http\Controllers\InventarioTi\ReglasPrestamoController;
 use App\Http\Controllers\InventarioTi\ReporteUsoPrestamoController;
 use App\Http\Controllers\InventarioTi\UbicacionesBienController;
-use App\Http\Controllers\Nomina\ConceptoNominaController;
-use App\Http\Controllers\Nomina\DescuentoRecurrenteController;
-use App\Http\Controllers\Nomina\HandoffErpController;
-use App\Http\Controllers\Nomina\NominaController;
 use App\Http\Controllers\Nomina\NovedadNominaController;
-use App\Http\Controllers\Nomina\RolPagoController;
 use App\Http\Controllers\Reporte\ReporteSiithSutController;
 use App\Http\Controllers\Reporteria\DashboardController;
 use App\Http\Controllers\Reporteria\ReporteController;
@@ -774,41 +769,18 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         });
     });
 
-    // Módulo 03: Nómina y Remuneraciones
+    // Módulo 03: de la nómina solo quedan las novedades. Desde el 2026-10-20
+    // el SGTH es informativo: no calcula roles ni rubros, eso lo hace
+    // Financiero en su sistema, y el SGTH le dice lo que pasó en el mes.
     Route::prefix('nomina')->group(function () {
-        Route::get('/', [NominaController::class, 'index']);
-        Route::post('/', [NominaController::class, 'calcular']);
-
-        // Los segmentos literales, antes del comodín. `GET nomina/conceptos`
-        // encajaba en `nomina/{id}` y acababa en `NominaController::show()`
-        // con la palabra «conceptos» por id: las tres rutas de aquí abajo eran
-        // inalcanzables y devolvían un 500 desde que se escribieron.
-        Route::get('conceptos', [ConceptoNominaController::class, 'index']);
-        Route::get('handoffs', [HandoffErpController::class, 'index']);
-
-        // Las novedades del mes, que Financiero aplica en su sistema (fase
-        // 7.3a): verlas y descargarlas, y entregarlas, que congela el mes.
+        // Las novedades del mes (fase 7.3a): verlas y descargarlas, y
+        // entregarlas, que congela el mes.
         Route::get('novedades', [NovedadNominaController::class, 'index'])
             ->middleware('permission:ver-novedades-nomina');
         Route::get('novedades/excel', [NovedadNominaController::class, 'excel'])
             ->middleware('permission:ver-novedades-nomina');
         Route::post('novedades/entregar', [NovedadNominaController::class, 'entregar'])
             ->middleware('permission:entregar-novedades-nomina');
-
-        // Quien procesa la nómina, no un rol (fase 7.3c).
-        Route::apiResource('descuentos-recurrentes', DescuentoRecurrenteController::class)
-            ->middleware('permission:procesar-nomina');
-
-        // Y el comodín solo acepta números, para que el orden deje de ser lo
-        // único que sostiene esto cuando alguien añada otra ruta literal.
-        Route::get('{id}', [NominaController::class, 'show'])->whereNumber('id');
-        // Por servidor, para compararla con la de Financiero (fase 7.3c).
-        Route::get('{id}/excel', [NominaController::class, 'excel'])->whereNumber('id');
-        Route::post('{id}/cerrar', [NominaController::class, 'cerrar'])
-            ->whereNumber('id');
-
-        Route::get('{nominaId}/rol-pago/{servidorId}', [RolPagoController::class, 'show'])
-            ->whereNumber(['nominaId', 'servidorId']);
     });
 
     // Módulo 04: Asistencia, Permisos y Vacaciones
@@ -1035,7 +1007,6 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // desde el portal: el listado de expedientes está cerrado a Talento Humano.
         Route::get('companeros-de-unidad', [AutoservicioController::class, 'companerosDeUnidad']);
         Route::get('mis-vacaciones', [AutoservicioController::class, 'misVacaciones']);
-        Route::get('mis-roles-pago', [AutoservicioController::class, 'misRolesPago']);
         Route::get('mi-expediente', [AutoservicioController::class, 'miExpediente']);
         // Las actividades laborales que anota el servidor: las suyas, nadie
         // más las ve. Se corrigen solo las del mes en curso.

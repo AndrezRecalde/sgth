@@ -1,8 +1,8 @@
 <?php
 
-use App\Models\Nomina\ConceptoNomina;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -43,18 +43,23 @@ return new class extends Migration
             $table->foreignId('indemnizacion_devolucion_registrada_por')->nullable()->constrained('users')->nullOnDelete();
         });
 
-        // Los conceptos de la nómina del SGTH para lo que paga la salida.
-        ConceptoNomina::firstOrCreate(['codigo' => 'VACACIONES_PAGADAS'], [
-            'nombre' => 'Vacaciones Compensadas al Retiro', 'tipo' => 'ingreso', 'activo' => true,
-        ]);
-        ConceptoNomina::firstOrCreate(['codigo' => 'INDEMNIZACION'], [
-            'nombre' => 'Indemnización o compensación por la salida', 'tipo' => 'ingreso', 'activo' => true,
-        ]);
+        // Los conceptos de la nómina del SGTH para lo que paga la salida. En la
+        // tabla y no por el modelo, que se retiró con la nómina (2026-10-20).
+        foreach ([
+            ['codigo' => 'VACACIONES_PAGADAS', 'nombre' => 'Vacaciones Compensadas al Retiro'],
+            ['codigo' => 'INDEMNIZACION', 'nombre' => 'Indemnización o compensación por la salida'],
+        ] as $concepto) {
+            if (! DB::table('conceptos_nomina')->where('codigo', $concepto['codigo'])->exists()) {
+                DB::table('conceptos_nomina')->insert([
+                    ...$concepto, 'tipo' => 'ingreso', 'activo' => true, 'created_at' => now(), 'updated_at' => now(),
+                ]);
+            }
+        }
     }
 
     public function down(): void
     {
-        ConceptoNomina::where('codigo', 'INDEMNIZACION')->forceDelete();
+        DB::table('conceptos_nomina')->where('codigo', 'INDEMNIZACION')->delete();
 
         Schema::table('desvinculaciones', function (Blueprint $table) {
             $table->dropConstrainedForeignId('indemnizacion_devolucion_registrada_por');

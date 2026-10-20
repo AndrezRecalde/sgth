@@ -12,7 +12,6 @@ interface AutoservicioServiceInterface
 
     public function obtenerMisVacaciones(int $servidorId): array;
 
-    public function obtenerMisRolesPago(int $servidorId): array;
 
     public function obtenerMiExpediente(int $servidorId): array;
 

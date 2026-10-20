@@ -44,12 +44,6 @@ class AutoservicioController extends Controller
         return ApiResponse::ok($vacaciones, 'Mis vacaciones obtenidas.');
     }
 
-    public function misRolesPago(Request $request): JsonResponse
-    {
-        $roles = $this->autoservicioService->obtenerMisRolesPago($this->getServidorId($request));
-        return ApiResponse::ok($roles, 'Mis roles de pago obtenidos.');
-    }
-
     public function miExpediente(Request $request): JsonResponse
     {
         $expediente = $this->autoservicioService->obtenerMiExpediente($this->getServidorId($request));

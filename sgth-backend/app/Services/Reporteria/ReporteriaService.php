@@ -21,7 +21,6 @@ class ReporteriaService implements ReporteriaServiceInterface
         return Cache::remember('sgth:dashboard:kpis', 300, function () {
             return [
                 'personal' => $this->calcularKpisPersonal(),
-                'nomina' => $this->calcularKpisNomina(),
                 'asistencia' => $this->calcularKpisAsistencia(),
                 'helpdesk' => $this->calcularKpisHelpdesk(),
                 'dispensario' => $this->calcularKpisDispensario()
@@ -59,24 +58,6 @@ class ReporteriaService implements ReporteriaServiceInterface
                 ->where('tipo_movimiento', 'ingreso')
                 ->whereMonth('fecha_efectiva', now()->month)
                 ->whereYear('fecha_efectiva', now()->year)
-                ->count()
-        ];
-    }
-
-    private function calcularKpisNomina(): array
-    {
-        // En un entorno real se extraería de la tabla nominas del mes actual
-        return [
-            'costo_nomina_mes_actual' => DB::table('nominas')
-                ->where('periodo', now()->format('Y-m'))
-                ->sum('total_neto'),
-            'variacion_nomina' => 2.5, // Porcentaje mock simulado
-            'descuentos_iess_mes' => DB::table('roles_pago')
-                ->join('nominas', 'roles_pago.nomina_id', '=', 'nominas.id')
-                ->where('nominas.periodo', now()->format('Y-m'))
-                ->sum('roles_pago.total_descuentos'), // Simplificado
-            'handoffs_pendientes' => DB::table('handoffs_erp')
-                ->whereNull('importado_erp_en')
                 ->count()
         ];
     }
@@ -228,98 +209,34 @@ class ReporteriaService implements ReporteriaServiceInterface
     }
 
     /**
-     * Lo pagado en un periodo, servidor por servidor.
-     *
-     * Sale de `roles_pago`, que guarda los totales de cada servidor en cada
-     * nómina. El periodo se acota por la nómina y no por la fecha del rol:
-     * una nómina de agosto liquidada en septiembre pertenece a agosto.
+     * Los tres reportes que salían del rol de pagos, que el SGTH ya no calcula
+     * (2026-10-20): es informativo, y lo pagado, lo aportado al IESS y lo
+     * retenido los tiene Financiero en su sistema. Se niegan diciendo por qué,
+     * en vez de caer en el reporte ad hoc de ejemplo.
      */
+    private const SIN_NOMINA = 'el SGTH no calcula la nómina: ';
+
     public function generarNominaConsolidada(array $filtros): array
     {
-        return $this->cacheReporte('nomina_consolidada', $filtros, function () use ($filtros) {
-            $consulta = DB::table('roles_pago')
-                ->join('nominas', 'roles_pago.nomina_id', '=', 'nominas.id')
-                ->join('servidores', 'roles_pago.servidor_id', '=', 'servidores.id')
-                ->leftJoin('unidades_administrativas', 'servidores.unidad_administrativa_id', '=', 'unidades_administrativas.id')
-                ->whereNull('roles_pago.deleted_at')
-                ->whereNull('nominas.deleted_at');
-
-            if (! empty($filtros['periodo'])) {
-                $consulta->where('nominas.periodo', $filtros['periodo']);
-            }
-
-            if (! empty($filtros['anio'])) {
-                $consulta->whereYear('nominas.fecha_inicio', $filtros['anio']);
-            }
-
-            if (! empty($filtros['mes'])) {
-                $consulta->whereMonth('nominas.fecha_inicio', $filtros['mes']);
-            }
-
-            $datos = $consulta
-                ->select(
-                    'nominas.periodo',
-                    'servidores.cedula',
-                    'servidores.nombre',
-                    'servidores.apellido',
-                    'unidades_administrativas.nombre as unidad',
-                    'roles_pago.total_ingresos',
-                    'roles_pago.total_descuentos',
-                    'roles_pago.total_neto',
-                )
-                ->orderBy('nominas.periodo')
-                ->orderBy('servidores.apellido')
-                ->get();
-
-            return [
-                'metadata' => [
-                    'reporte' => 'Nómina Consolidada',
-                    'periodo' => $filtros['periodo'] ?? ($filtros['mes'] ?? now()->month),
-                    'total_roles'     => $datos->count(),
-                    'suma_ingresos'   => round((float) $datos->sum('total_ingresos'), 2),
-                    'suma_descuentos' => round((float) $datos->sum('total_descuentos'), 2),
-                    'suma_neto'       => round((float) $datos->sum('total_neto'), 2),
-                ],
-                'datos' => $datos->toArray(),
-            ];
-        });
+        throw new ReporteNoDisponibleException(
+            'Nómina consolidada',
+            self::SIN_NOMINA.'lo que se pagó a cada servidor está en el sistema de Financiero.'
+        );
     }
 
-    /**
-     * La planilla del IESS no se puede armar con lo que hay.
-     *
-     * Necesita la materia gravada de cada servidor, y `roles_pago` solo guarda
-     * los totales del rol: no hay tabla de detalle que diga qué rubros aportan
-     * al IESS y cuáles no. Aplicar el 9,45 % y el 11,15 % sobre el total de
-     * ingresos sería un supuesto, y produciría una planilla presentable ante el
-     * IESS con cifras que nadie ha calculado.
-     *
-     * Antes devolvía una lista vacía, que se lee como «este mes no hubo
-     * aportes».
-     */
     public function generarPlanillaIess(array $filtros): array
     {
         throw new ReporteNoDisponibleException(
             'Planilla IESS',
-            'hace falta el detalle por rubro del rol de pago para conocer la '
-            . 'materia gravada de cada servidor; hoy solo se guardan los totales.'
+            self::SIN_NOMINA.'la planilla la presenta Financiero desde su sistema.'
         );
     }
 
-    /**
-     * El formulario 107 tampoco.
-     *
-     * Necesita los ingresos gravados acumulados del año y las retenciones
-     * practicadas a cada servidor. Es el mismo hueco que la planilla del IESS:
-     * sin el detalle por rubro, del rol de pago solo se sabe cuánto se pagó, no
-     * qué parte era gravada ni cuánto se retuvo.
-     */
     public function generarFormulario107(array $filtros): array
     {
         throw new ReporteNoDisponibleException(
             'Formulario 107 SRI',
-            'hacen falta los ingresos gravados y las retenciones del año por '
-            . 'servidor; el rol de pago solo guarda totales, sin desglose.'
+            self::SIN_NOMINA.'los ingresos gravados y las retenciones los tiene Financiero.'
         );
     }
 

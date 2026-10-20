@@ -391,18 +391,6 @@ export type AlergiaPaciente    = components['schemas']['AlergiaPaciente']
 export type AntecedentePaciente = components['schemas']['AntecedentePaciente']
 export type InventarioMedicina = components['schemas']['InventarioMedicina']
 
-// ── Nómina ───────────────────────────────────
-// export type RolPago      = components['schemas']['RolPago']
-export type DetalleNomina = {
-  id: number
-  nomina_id: number
-  servidor_id: number
-  concepto_id: number
-  tipo: string
-  monto: number
-  observacion?: string | null
-}
-
 // ── Asistencia ───────────────────────────────
 // export type Permiso  = components['schemas']['PermisoServidor']
 // export type Vacacion = components['schemas']['Vacacion']
@@ -1705,87 +1693,6 @@ export type EnfermedadDetalle = {
   created_at?:         string
 }
 
-
-// ── Nómina ───────────────────────────────────────
-export type EstadoNomina =
-  'borrador' | 'en_proceso' | 'cerrada' | 'contabilizada' | 'pagada'
-
-export type Nomina = {
-  id:                number
-  periodo:           string
-  fecha_inicio:      string
-  fecha_fin:         string
-  estado:            EstadoNomina
-  /** Calculada en paralelo con la de Financiero: no sale al ERP ni a los servidores (fase 7.3c). */
-  referencial?:      boolean
-  roles_pago?: {
-    id:                number
-    servidor_id:       number
-    /** Los días del mes y la remuneración con que se pagó (fase 7.3c). */
-    dias?:             number | null
-    remuneracion?:     number | string | null
-    total_ingresos?:   number | string | null
-    total_descuentos?: number | string | null
-    total_neto?:       number | string | null
-    servidor?: {
-      cedula?:   string
-      nombre?:   string
-      apellido?: string
-    }
-  }[]
-  total_ingresos?:   number | string | null
-  total_descuentos?: number | string | null
-  total_neto?:       number | string | null
-  cerrado_por?:      number | null
-  cerrado_en?:       string | null
-  created_at?:       string
-}
-
-export type ConceptoNomina = {
-  id:          number
-  codigo:      string
-  nombre:      string
-  tipo:        'ingreso' | 'descuento'
-  formula?:    string | null
-  porcentaje?: number | null
-  activo:      boolean
-}
-
-export type RolPago = {
-  id:                  number
-  nomina_id:           number
-  servidor_id:         number
-  total_ingresos?:     number | string | null
-  total_descuentos?:   number | string | null
-  total_neto?:         number | string | null
-  enviado_por_correo?: boolean
-  enviado_en?:         string | null
-  servidor?:           ServidorConRelaciones
-  nomina?:             Nomina & {
-    detalles?: {
-      id:          number
-      servidor_id: number
-      concepto?:   ConceptoNomina
-      valor?:      number | string
-    }[]
-  }
-}
-
-export type DescuentoRecurrente = {
-  id:                     number
-  servidor_id:            number
-  concepto_nomina_id:     number
-  valor_cuota:            number | string
-  numero_cuotas_total:    number
-  numero_cuotas_pagadas:  number
-  fecha_inicio:           string
-  fecha_fin?:             string | null
-  referencia_externa?:    string | null
-  estado:                 'activo' | 'completado' | 'suspendido'
-  observacion?:           string | null
-  concepto?:              ConceptoNomina
-  servidor?:              ServidorConRelaciones
-}
 
 // ── Asistencia ───────────────────────────────────
 // Una fila por día de sp_SGTH_MarcacionesPorCedula (Sirha7). Las horas llegan

@@ -1,8 +1,8 @@
 <?php
 
-use App\Models\Nomina\ConceptoNomina;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -45,14 +45,18 @@ return new class extends Migration
             $table->decimal('remuneracion', 12, 2)->nullable()->after('dias');
         });
 
+        // En la tabla y no por el modelo, que se retiró con la nómina
+        // (2026-10-20).
         foreach (self::CONCEPTOS as $concepto) {
-            ConceptoNomina::firstOrCreate(['codigo' => $concepto['codigo']], [...$concepto, 'activo' => true]);
+            if (! DB::table('conceptos_nomina')->where('codigo', $concepto['codigo'])->exists()) {
+                DB::table('conceptos_nomina')->insert([...$concepto, 'activo' => true, 'created_at' => now(), 'updated_at' => now()]);
+            }
         }
     }
 
     public function down(): void
     {
-        ConceptoNomina::whereIn('codigo', array_column(self::CONCEPTOS, 'codigo'))->forceDelete();
+        DB::table('conceptos_nomina')->whereIn('codigo', array_column(self::CONCEPTOS, 'codigo'))->delete();
 
         Schema::table('roles_pago', function (Blueprint $table) {
             $table->dropColumn(['dias', 'remuneracion']);
