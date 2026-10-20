@@ -77,7 +77,7 @@ export function VacacionModal({ opened, onClose, soloPropio = false, nombrePropi
               />
             )}
 
-            <VacacionFechasCampos form={solicitud.form} />
+            <VacacionFechasCampos form={solicitud.form} conteo={solicitud.conteo} />
 
           </Stack>
 

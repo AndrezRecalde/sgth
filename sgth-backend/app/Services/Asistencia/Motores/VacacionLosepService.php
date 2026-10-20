@@ -4,6 +4,7 @@ namespace App\Services\Asistencia\Motores;
 
 use App\Contracts\Asistencia\VacacionMotorInterface;
 use App\Models\Expediente\Servidor;
+use App\Services\Asistencia\ConteoDeVacaciones;
 use App\Services\Asistencia\EscalaVacaciones;
 use Carbon\Carbon;
 
@@ -38,17 +39,15 @@ class VacacionLosepService implements VacacionMotorInterface
     }
 
     /**
-     * Días calendario, incluidos ambos extremos: igual que el Código del Trabajo.
-     *
-     * Descontaba solo de lunes a viernes y sin feriados. Los treinta días del
-     * art. 29 son calendario —confirmado con Talento Humano—, así que unas
-     * vacaciones que abarcan un fin de semana lo consumen.
+     * Días calendario, igual que el Código del Trabajo: los treinta del art. 29
+     * son calendario —confirmado con Talento Humano—, así que unas vacaciones
+     * que abarcan un fin de semana lo consumen. Y desde el 2026-10-20, también
+     * el descanso que sigue a la parte, hasta la víspera del regreso
+     * (`ConteoDeVacaciones`).
      */
     public function calcularDiasDescuento(Carbon $fechaInicio, Carbon $fechaFin): float
     {
-        if ($fechaFin->lessThan($fechaInicio)) return 0;
-
-        return $fechaInicio->diffInDays($fechaFin) + 1;
+        return app(ConteoDeVacaciones::class)->dias($fechaInicio, $fechaFin);
     }
 
     public function permiteCompensacionEfectivo(): bool

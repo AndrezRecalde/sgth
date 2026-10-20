@@ -809,6 +809,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::get('/', [VacacionController::class, 'index']);
             Route::post('/', [VacacionController::class, 'store']);
             Route::get('saldo/{servidorId}', [VacacionController::class, 'saldo']);
+            // Lo que descontarían unas fechas, con el descanso que sigue (2026-10-20).
+            Route::get('conteo', [VacacionController::class, 'conteo']);
             Route::get('{id}/exportar', [VacacionController::class, 'exportar'])
                 ->name('asistencia.vacaciones.exportar');
             Route::put('{id}', [VacacionController::class, 'update']);

@@ -10,6 +10,8 @@ use App\Http\Responses\ApiResponse;
 use App\Models\Asistencia\Vacacion;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
+use App\Services\Asistencia\ConteoDeVacaciones;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
@@ -80,6 +82,29 @@ class VacacionController extends Controller
 
         $saldo = $this->vacacionService->calcularSaldoActual($servidorId);
         return ApiResponse::ok(['saldo_dias' => $saldo], 'Saldo de vacaciones calculado.');
+    }
+
+    /**
+     * Lo que descontarían unas fechas y el día del regreso, para el formulario
+     * (2026-10-20): los cuenta el backend porque conoce los feriados. No
+     * guarda nada.
+     */
+    public function conteo(Request $request, ConteoDeVacaciones $conteo)
+    {
+        $fechas = $request->validate([
+            'fecha_inicio' => 'required|date',
+            'fecha_fin'    => 'required|date|after_or_equal:fecha_inicio',
+        ], [], ['fecha_inicio' => 'fecha de inicio', 'fecha_fin' => 'fecha de fin']);
+
+        $inicio = Carbon::parse($fechas['fecha_inicio']);
+        $fin = Carbon::parse($fechas['fecha_fin']);
+
+        return ApiResponse::ok([
+            'dias'           => $conteo->dias($inicio, $fin),
+            'fecha_retorno'  => $conteo->retorno($fin)->toDateString(),
+            // Si los días pasan del rango, la parte termina antes de un descanso.
+            'dias_del_rango' => (int) $inicio->diffInDays($fin) + 1,
+        ], 'Días de la solicitud.');
     }
 
     public function store(StoreVacacionRequest $request)

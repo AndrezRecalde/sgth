@@ -62174,6 +62174,91 @@
                 }
             }
         },
+        "/v1/asistencia/vacaciones/conteo": {
+            "get": {
+                "operationId": "vacacion.conteo",
+                "summary": "Lo que descontar\u00edan unas fechas y el d\u00eda del regreso, para el formulario\n(2026-10-20): los cuenta el backend porque conoce los feriados. No\nguarda nada",
+                "tags": [
+                    "Vacacion"
+                ],
+                "parameters": [
+                    {
+                        "name": "fecha_inicio",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "fecha_fin",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "D\u00edas de la solicitud."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "dias": {
+                                                    "type": "integer"
+                                                },
+                                                "fecha_retorno": {
+                                                    "type": "string"
+                                                },
+                                                "dias_del_rango": {
+                                                    "type": "string",
+                                                    "description": "Si los d\u00edas pasan del rango, la parte termina antes de un descanso."
+                                                }
+                                            },
+                                            "required": [
+                                                "dias",
+                                                "fecha_retorno",
+                                                "dias_del_rango"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/asistencia/vacaciones/{id}/exportar": {
             "get": {
                 "operationId": "asistencia.vacaciones.exportar",
