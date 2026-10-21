@@ -128,5 +128,15 @@ export function useAccionesTurno() {
     onError: notificar.alFallar('No se pudo pasar el turno a consulta'),
   })
 
-  return { noPresentado, reactivar, enConsulta }
+  const devolverALaCola = useMutation({
+    mutationFn: (id: number) =>
+      agendaService.devolverALaCola(id),
+    onSuccess: () => {
+      notificar.exito('Turno devuelto a la cola', 'El paciente sigue esperando para ser atendido.')
+      invalidar()
+    },
+    onError: notificar.alFallar('No se pudo devolver el turno a la cola'),
+  })
+
+  return { noPresentado, reactivar, enConsulta, devolverALaCola }
 }

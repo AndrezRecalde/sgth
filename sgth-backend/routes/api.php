@@ -1775,6 +1775,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 Route::patch('agenda/{agenda}/en-consulta',
                     [AgendaController::class, 'marcarEnConsulta']
                 )->name('agenda.enConsulta');
+                // «Finalizar» sin consulta: el turno vuelve a la cola en vez
+                // de quedarse en consulta para siempre. Es de quien atiende.
+                Route::patch('agenda/{agenda}/devolver-a-la-cola',
+                    [AgendaController::class, 'devolverALaCola']
+                )->middleware('role:medico|odontologo')
+                 ->name('agenda.devolverALaCola');
                 Route::get('agenda/por-folio/{folio}',
                     [AgendaController::class, 'porFolio']
                 )->name('agenda.porFolio');

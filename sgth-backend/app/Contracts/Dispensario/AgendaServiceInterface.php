@@ -28,6 +28,7 @@ interface AgendaServiceInterface
     public function reactivar(int $id, int $usuarioId): AgendaMedica;
 
     public function marcarEnConsulta(int $id): AgendaMedica;
+    public function devolverALaCola(int $id, int $medicoId): AgendaMedica;
 
     /** @return array{cerrados: int, fecha: string} */
     public function cerrarVencidos(?string $fecha = null): array;

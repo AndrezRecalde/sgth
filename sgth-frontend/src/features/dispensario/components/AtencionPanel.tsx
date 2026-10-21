@@ -8,10 +8,11 @@ import {
 } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useConsultaMedicaDetalle } from '../hooks/useConsultaMedica'
+import { useAccionesTurno } from '../hooks/useAgenda'
 import { CabeceraPacienteAtencion } from './CabeceraPacienteAtencion'
 import { PanelContextoPaciente } from './PanelContextoPaciente'
 import { TabConsulta } from './TabConsulta'
-import { DataState } from '@/components/ui'
+import { confirmar, DataState } from '@/components/ui'
 import { TabReceta } from './TabReceta'
 import { TabCertificado } from './TabCertificado'
 import { TabHistorial } from './TabHistorial'
@@ -81,6 +82,24 @@ export function AtencionPanel({
   // estuviera en «Receta» o «Resultados» era devuelto a «Consulta» sin tocar
   // nada. La pestaña ya arranca en 'consulta' por el useState de arriba.
 
+  // «Finalizar» sin consulta guardada dejaba el turno «en consulta» para
+  // siempre: el cierre nocturno no toca esos turnos. Ahora lo dice y lo
+  // devuelve a la cola, para atenderlo después o marcar que no se presentó.
+  const { devolverALaCola } = useAccionesTurno()
+  const finalizar = () => {
+    if (consultaActiva) {
+      onFinalizar()
+      return
+    }
+
+    confirmar({
+      title:        'Finalizar sin registrar la consulta',
+      message:      'No se guardó ninguna consulta para este turno. El paciente vuelve a la cola para atenderlo después.',
+      confirmLabel: 'Devolver a la cola',
+      onConfirm:    () => devolverALaCola.mutate(turno.id, { onSuccess: onFinalizar }),
+    })
+  }
+
   const handleGuardada = (consulta: ConsultaMedica) => {
     setConsultaGuardada(consulta)
     setActiveTab('receta')
@@ -92,7 +111,7 @@ export function AtencionPanel({
         <CabeceraPacienteAtencion
           turno={turno}
           totalEnEspera={totalEnEspera}
-          onFinalizar={onFinalizar}
+          onFinalizar={finalizar}
         />
 
         <Grid>
