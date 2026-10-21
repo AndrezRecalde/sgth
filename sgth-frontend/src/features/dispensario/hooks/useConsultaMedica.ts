@@ -16,6 +16,9 @@ export function useRegistrarConsulta() {
       )
       qc.invalidateQueries({ queryKey: ['consultas'] })
       qc.invalidateQueries({ queryKey: ['agenda'] })
+      // Registrarla cierra el turno: «Mi jornada» cuenta un atendido más y un
+      // pendiente menos, y sin invalidarla iba hasta un minuto por detrás.
+      qc.invalidateQueries({ queryKey: ['dispensario', 'mi-jornada'] })
     },
     onError: notificar.alFallar('No se pudo registrar la consulta'),
   })
