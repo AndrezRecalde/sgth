@@ -19881,6 +19881,20 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "La consulta de este turno ya está registrada: no se guarda borrador.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
             422: components["responses"]["ValidationException"];
         };
     };
