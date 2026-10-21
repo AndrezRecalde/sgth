@@ -40,9 +40,15 @@ export function VacacionFechasCampos({ form, conteo = null }: Props) {
     <>
       <SectionHeading title="Fechas" />
 
+      {/*
+        Lo que se elige va arriba, a dos columnas, y lo que se calcula con ello,
+        debajo, a tres. Así cada fila queda completa. Antes eran cinco campos en
+        una rejilla de tres: a la segunda fila le sobraba un hueco, y solo el
+        retorno tenía ayuda en la primera.
+      */}
       <Grid>
         {FECHAS.map(({ name, label }) => (
-          <Grid.Col key={name} span={{ base: 12, sm: 4 }}>
+          <Grid.Col key={name} span={{ base: 12, sm: 6 }}>
             <Controller
               name={name}
               control={control}
