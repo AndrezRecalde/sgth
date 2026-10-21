@@ -10,6 +10,11 @@ import type { ItemReceta } from '../services/recetaService'
 interface Acciones {
   /** `false` esconde la columna de acciones: la receta ya no se retoca. */
   puedeRetocar: boolean
+  /**
+   * `false` con un solo medicamento: el servidor no deja una receta vacía, y
+   * ofrecer «Quitar» llevaba a confirmar algo que acababa en un error.
+   */
+  puedeQuitar:  boolean
   onEditar:  (item: ItemReceta) => void
   onQuitar:  (item: ItemReceta) => void
 }
@@ -21,7 +26,7 @@ interface Acciones {
  * detalle: mismas cinco columnas, más la de acciones.
  */
 export function getItemsRecetaEditablesColumns({
-  puedeRetocar, onEditar, onQuitar,
+  puedeRetocar, puedeQuitar, onEditar, onQuitar,
 }: Acciones): DataTableColumn<ItemReceta>[] {
   return [
     {
@@ -87,7 +92,7 @@ export function getItemsRecetaEditablesColumns({
             icon:    <IconEdit size={14} />,
             onClick: () => onEditar(item),
           },
-          {
+          ...(puedeQuitar ? [{
             label:   'Quitar',
             icon:    <IconTrash size={14} />,
             color:   'red',
@@ -98,7 +103,7 @@ export function getItemsRecetaEditablesColumns({
               confirmLabel: 'Quitar',
               onConfirm: () => onQuitar(item),
             }),
-          },
+          }] : []),
         ]} />
       ),
     }] : []),
