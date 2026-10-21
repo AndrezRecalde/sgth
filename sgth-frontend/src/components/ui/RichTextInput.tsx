@@ -64,9 +64,23 @@ export function RichTextInput({
     },
   })
 
+  // `content` solo se lee al crear el editor. Lo que llega después desde fuera
+  // —un `reset` del formulario, un borrador recuperado, unos valores que
+  // cargan tarde— no se veía: solo se sincronizaba el vacío. Al recuperar el
+  // borrador de una consulta, el diagnóstico y el plan se enseñaban en blanco
+  // mientras el formulario los tenía, y se enviaba un texto que nadie veía.
+  //
+  // Cuando el cambio sale del propio editor, `value` ya es su HTML y aquí no
+  // se hace nada: escribir no mueve el cursor. Sin emitir actualización, para
+  // no devolver al formulario lo que acaba de llegar de él.
   useEffect(() => {
-    if (editor && value === '' && editor.getHTML() !== '<p></p>') {
-      editor.commands.setContent('')
+    if (!editor) return
+
+    const html = editor.getHTML()
+    const enEditor = html === '<p></p>' ? '' : html
+
+    if ((value ?? '') !== enEditor) {
+      editor.commands.setContent(value || '', { emitUpdate: false })
     }
   }, [value, editor])
 
