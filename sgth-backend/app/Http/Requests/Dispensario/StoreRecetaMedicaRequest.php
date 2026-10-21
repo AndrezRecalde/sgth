@@ -36,8 +36,11 @@ class StoreRecetaMedicaRequest extends FormRequest
             // delataría el diagnóstico del paciente.
             'omitir_alergias'                => ['sometimes', 'boolean'],
             'items'                          => ['required', 'array', 'min:1'],
-            'items.*.inventario_medicina_id' => ['nullable', 'integer', 'exists:inventario_medicinas,id'],
-            'items.*.medicamento_externo'    => ['nullable', 'string', 'max:255'],
+            // El mismo medicamento dos veces son dos líneas que el despacho
+            // entrega por separado, cada una con su dosis: o es un error, o
+            // es una sola línea con más cantidad.
+            'items.*.inventario_medicina_id' => ['nullable', 'integer', 'distinct', 'exists:inventario_medicinas,id'],
+            'items.*.medicamento_externo'    => ['nullable', 'string', 'max:255', 'distinct:ignore_case'],
             'items.*.cantidad_prescrita'     => ['required', 'integer', 'min:1'],
             'items.*.dosis'                  => ['required', 'string', 'max:100'],
             'items.*.frecuencia'             => ['required', 'string', 'max:100'],
@@ -74,6 +77,8 @@ class StoreRecetaMedicaRequest extends FormRequest
             'items.required' => 'La receta debe llevar al menos un medicamento.',
             'items.min'      => 'La receta debe llevar al menos un medicamento.',
             'exists'         => 'El valor seleccionado para :attribute no es válido.',
+            'items.*.inventario_medicina_id.distinct' => 'Ese medicamento está dos veces en la receta: déjelo en una sola línea.',
+            'items.*.medicamento_externo.distinct'    => 'Ese medicamento externo está dos veces en la receta: déjelo en una sola línea.',
         ];
     }
 }

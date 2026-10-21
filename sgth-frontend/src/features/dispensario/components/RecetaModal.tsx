@@ -8,7 +8,7 @@ import {
   Alert,
   Checkbox,
 } from "@mantine/core";
-import { FormModal } from "@/components/ui";
+import { FormModal, notificar } from "@/components/ui";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IconInfoCircle } from "@tabler/icons-react";
@@ -66,7 +66,20 @@ export function RecetaModal({
     name: "items",
   });
 
+  // El mismo medicamento en dos líneas son dos entregas con dosis distintas:
+  // se avisa y se deja la que ya está, para ajustar su cantidad.
+  const yaRecetado = (nombre: string) =>
+    notificar.aviso(
+      "Ya está en la receta",
+      `${nombre} ya figura en la receta: ajuste la cantidad de esa línea.`,
+    );
+
   const handleSeleccionarMedicina = async (id: number, nombre: string) => {
+    if (fields.some((f) => f.inventario_medicina_id === id)) {
+      yaRecetado(nombre);
+      return;
+    }
+
     try {
       const medicina = await inventarioMedicinaService.obtener(id);
       setMedicinaMeta((prev) => ({
@@ -101,6 +114,18 @@ export function RecetaModal({
    * que tampoco hay stock que consultar: el paciente lo adquiere fuera.
    */
   const handleMedicamentoExterno = (nombre: string) => {
+    const clave = nombre.trim().toLocaleLowerCase("es");
+    if (
+      fields.some(
+        (f) =>
+          f.inventario_medicina_id === null &&
+          f.medicamento_externo?.trim().toLocaleLowerCase("es") === clave,
+      )
+    ) {
+      yaRecetado(nombre);
+      return;
+    }
+
     append({
       inventario_medicina_id: null,
       medicamento_externo: nombre,

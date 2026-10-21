@@ -166,8 +166,10 @@ export function BuscarMedicinaSelect({
 
           {/* Lo que la farmacia no maneja también se receta: el paciente lo
               adquiere fuera. Solo con algo escrito, que es el nombre que se
-              va a guardar. */}
-          {onMedicamentoExterno && termino.trim().length >= 2 && (
+              va a guardar, y no mientras se busca: aparecía antes que los
+              resultados, y elegirla con prisa recetaba como externo algo que
+              la farmacia sí tiene. */}
+          {onMedicamentoExterno && termino.trim().length >= 2 && !buscando && (
             <Combobox.Option value="__externa__">
               <Group gap={6} c="primario" wrap="nowrap">
                 <IconPencilPlus size={13} />

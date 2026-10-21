@@ -84824,7 +84824,8 @@
                                     "type": [
                                         "integer",
                                         "null"
-                                    ]
+                                    ],
+                                    "description": "El mismo medicamento dos veces son dos l\u00edneas que el despacho\nentrega por separado, cada una con su dosis: o es un error, o\nes una sola l\u00ednea con m\u00e1s cantidad."
                                 },
                                 "medicamento_externo": {
                                     "type": [
