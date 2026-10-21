@@ -177,6 +177,20 @@ export function ConsultaCampos({
           />
         )}
       />
+
+      {/* Estaba en el panel del paciente, en un área de texto que no se
+          conectaba a nada: lo escrito se perdía al salir. Aquí se guarda con
+          la consulta, entra en el borrador y en las correcciones, y la
+          consulta guardada ya lo enseñaba. */}
+      <Textarea
+        label="Notas del médico (opcional)"
+        placeholder="Notas internas de la consulta"
+        autosize
+        minRows={2}
+        {...contained}
+        {...register('notas_medico')}
+        error={errors.notas_medico?.message}
+      />
     </>
   )
 }
