@@ -16,6 +16,10 @@ import { useSubirResultado } from "../hooks/useResultadoMedico";
 import { TIPO_RESULTADO_OPTIONS } from "../services/resultadoMedicoService";
 import type { ConsultaMedica } from "../services/consultaMedicaService";
 
+/** Los topes del servidor (`ResultadoMedicoController::store`). */
+const ARCHIVO_MAX_MB = 10;
+const DESCRIPCION_MAX = 500;
+
 interface Props {
   opened: boolean;
   onClose: () => void;
@@ -62,6 +66,15 @@ export function SubirResultadoModal({
       setError("Seleccione un archivo.");
       return;
     }
+    // Se comprueba antes de enviarlo: subir 30 MB para que el servidor los
+    // rechace al final hacía esperar toda la subida para nada.
+    if (archivo.size > ARCHIVO_MAX_MB * 1024 * 1024) {
+      setError(
+        `El archivo pesa ${(archivo.size / 1024 / 1024).toFixed(1)} MB; ` +
+          `el máximo es ${ARCHIVO_MAX_MB} MB.`,
+      );
+      return;
+    }
     if (!fecha) {
       setError("Ingrese la fecha del resultado.");
       return;
@@ -75,10 +88,10 @@ export function SubirResultadoModal({
     fd.append("fecha_resultado", fromDateValue(fecha));
     fd.append("archivo", archivo);
 
-    subir.mutate(fd, {
-      onSuccess: handleClose,
-      onError: () => setError("Error al subir el archivo. Intente de nuevo."),
-    });
+    // El fallo lo avisa el hook con el motivo del servidor. Aquí se pintaba
+    // además «Error al subir el archivo. Intente de nuevo.», que tapaba ese
+    // motivo y pedía repetir algo que iba a fallar igual.
+    subir.mutate(fd, { onSuccess: handleClose });
   };
 
   return (
@@ -106,6 +119,7 @@ export function SubirResultadoModal({
           placeholder="Ej: Hemograma completo, Radiografía de tórax AP..."
           autosize
           minRows={2}
+          maxLength={DESCRIPCION_MAX}
           {...contained}
           value={descripcion}
           onChange={(e) => {
@@ -124,7 +138,7 @@ export function SubirResultadoModal({
 
         <FileInput
           label="Archivo"
-          description="PDF, JPG o PNG — máximo 10 MB"
+          description={`PDF, JPG o PNG — máximo ${ARCHIVO_MAX_MB} MB`}
           placeholder="Seleccionar archivo..."
           accept="application/pdf,image/jpeg,image/png"
           {...contained}
