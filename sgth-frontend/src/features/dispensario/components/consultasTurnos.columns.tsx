@@ -114,7 +114,7 @@ export function getConsultasTurnosColumns(
     {
       accessor: 'triaje',
       title:    'Triaje',
-      width:    190,
+      width:    160,
       render: celdaTriaje,
     },
     {
