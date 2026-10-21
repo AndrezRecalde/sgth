@@ -10,6 +10,7 @@ import { useConsultaMedicaDetalle } from '../hooks/useConsultaMedica'
 import { CabeceraPacienteAtencion } from './CabeceraPacienteAtencion'
 import { PanelContextoPaciente } from './PanelContextoPaciente'
 import { TabConsulta } from './TabConsulta'
+import { DataState } from '@/components/ui'
 import { TabReceta } from './TabReceta'
 import { TabCertificado } from './TabCertificado'
 import { TabHistorial } from './TabHistorial'
@@ -43,9 +44,10 @@ export function AtencionMedicaPanel({
   totalEnEspera, onFinalizar,
 }: Props) {
   const consultaExistenteId = turno.consulta_medica?.id ?? null
-  const { data: consultaCargada } = useConsultaMedicaDetalle(
-    consultaExistenteId
-  )
+  const {
+    data: consultaCargada, isLoading: cargandoConsulta,
+    error: errorConsulta, refetch: reintentarConsulta,
+  } = useConsultaMedicaDetalle(consultaExistenteId)
 
   const [consultaGuardada, setConsultaGuardada] =
     useState<ConsultaMedica | null>(null)
@@ -130,12 +132,25 @@ export function AtencionMedicaPanel({
                 </Tabs.List>
 
                 <Tabs.Panel value="consulta">
-                  <TabConsulta
-                    turno={turno}
-                    historiaClinicaId={historiaClinicaId}
-                    consultaPrevia={consultaActiva}
-                    onGuardada={handleGuardada}
-                  />
+                  {/* Si el turno ya tiene consulta, el formulario espera a leerla. Antes
+                      mientras cargaba —o si fallaba— se ofrecía el de alta, con «Guardar
+                      consulta» activo, y se podía registrar una segunda sobre el mismo
+                      turno. */}
+                  <DataState
+                    loading={cargandoConsulta}
+                    error={consultaActiva ? undefined : errorConsulta}
+                    errorTitle="No se pudo cargar la consulta de este turno"
+                    errorHint="El turno ya tiene una consulta registrada: hasta leerla no se ofrece el formulario, para no registrarla dos veces."
+                    onRetry={() => reintentarConsulta()}
+                    skeletonRows={4}
+                  >
+                    <TabConsulta
+                      turno={turno}
+                      historiaClinicaId={historiaClinicaId}
+                      consultaPrevia={consultaActiva}
+                      onGuardada={handleGuardada}
+                    />
+                  </DataState>
                 </Tabs.Panel>
 
                 <Tabs.Panel value="receta">

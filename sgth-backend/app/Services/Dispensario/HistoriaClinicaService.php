@@ -288,6 +288,14 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
     public function registrarConsulta(array $datos): ConsultaMedica
     {
         return DB::transaction(function () use ($datos) {
+            if (!empty($datos['agenda_medica_id'])) {
+                $this->exigirTurnoAtendible(
+                    (int) $datos['agenda_medica_id'],
+                    (int) $datos['medico_id'],
+                    (int) $datos['historia_clinica_id'],
+                );
+            }
+
             $secundarios = $datos['diagnosticos_secundarios'] ?? [];
             $datosConsulta = Arr::except(
                 $datos, ['diagnosticos_secundarios']
@@ -328,6 +336,67 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
                 'diagnosticosSecundarios.diagnostico',
             ]);
         });
+    }
+
+    /**
+     * El turno sobre el que se registra una consulta, comprobado y bloqueado.
+     *
+     * No se comprobaba nada: cualquier `agenda_medica_id` valía. Se podía
+     * registrar una segunda consulta en un turno ya atendido —un doble clic, dos
+     * pestañas, o el formulario de alta que la ficha enseñaba mientras cargaba
+     * la consulta existente—, cerrar el turno de otro profesional, devolver a
+     * «atendido» uno cancelado o no presentado, o colgar la consulta de la
+     * historia de otro paciente.
+     *
+     * El bloqueo dura hasta el final de la transacción: de dos envíos a la vez,
+     * el segundo espera y ve el turno ya atendido.
+     */
+    private function exigirTurnoAtendible(
+        int $agendaId,
+        int $medicoId,
+        int $historiaId
+    ): void {
+        $turno = AgendaMedica::with(['servidor:id,cedula', 'cargaFamiliar:id,cedula'])
+            ->lockForUpdate()
+            ->findOrFail($agendaId);
+
+        if ((int) $turno->medico_id !== $medicoId) {
+            throw new ReglaNegocioException(
+                'Este turno está asignado a otro profesional: la consulta la ' .
+                'registra quien atiende.'
+            );
+        }
+
+        $yaTieneConsulta = ConsultaMedica::where('agenda_medica_id', $agendaId)->exists();
+
+        if ($yaTieneConsulta || $turno->estado === 'atendido') {
+            throw new ReglaNegocioException(
+                'Este turno ya tiene su consulta registrada. Para corregirla, ' .
+                'ábrala y use «Editar».'
+            );
+        }
+
+        if (!in_array($turno->estado, ['en_espera', 'en_sala', 'en_consulta'], true)) {
+            throw new ReglaNegocioException(
+                'No se puede registrar una consulta en un turno ' .
+                str_replace('_', ' ', $turno->estado) . '.'
+            );
+        }
+
+        // La historia es la del paciente del turno: por su dueño, o por la
+        // cédula cuando es la del preocupacional y aún no tiene dueño.
+        $historia = HistoriaClinica::findOrFail($historiaId);
+        $cedula   = $turno->servidor?->cedula ?? $turno->cargaFamiliar?->cedula;
+
+        $esDelPaciente = $turno->servidor_id
+            ? (int) $historia->servidor_id === (int) $turno->servidor_id
+            : (int) $historia->carga_familiar_id === (int) $turno->carga_familiar_id;
+
+        if (!$esDelPaciente && !($cedula && $historia->cedula_paciente === $cedula)) {
+            throw new ReglaNegocioException(
+                'La historia clínica no es la del paciente de este turno.'
+            );
+        }
     }
 
     /**
