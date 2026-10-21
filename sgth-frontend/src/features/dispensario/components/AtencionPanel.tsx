@@ -3,7 +3,8 @@
 import { Box, Card, Grid, Stack, Tabs, Text } from '@mantine/core'
 import classes from './PanelContextoPaciente.module.css'
 import {
-  IconCertificate, IconHistory, IconMicroscope, IconPill, IconStethoscope,
+  IconCertificate, IconDental, IconHistory, IconMicroscope, IconPill,
+  IconStethoscope,
 } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useConsultaMedicaDetalle } from '../hooks/useConsultaMedica'
@@ -15,6 +16,7 @@ import { TabReceta } from './TabReceta'
 import { TabCertificado } from './TabCertificado'
 import { TabHistorial } from './TabHistorial'
 import { TabResultados } from './TabResultados'
+import { TabOdontograma } from './TabOdontograma'
 import type { AgendaMedica } from '../services/agendaService'
 import type { ConsultaMedica } from '../services/consultaMedicaService'
 
@@ -39,10 +41,24 @@ function RequiereConsulta({ para }: { para: string }) {
   )
 }
 
-export function AtencionMedicaPanel({
+/**
+ * La ficha de atención de un turno, de Medicina general o de Odontología.
+ *
+ * Eran dos paneles: el de Odontología era una copia de este, con su propia
+ * cabecera y sus propios avisos, más la pestaña del odontograma. Las copias se
+ * separaron: Odontología conservaba el efecto que devolvía a «Consulta» sin que
+ * nadie la pulsara, que Medicina ya había quitado, y dejaba registrar
+ * procedimientos antes de guardar la consulta. Ahora es uno solo, y el
+ * odontograma lo decide el turno, no la dirección: a quien atiende las dos
+ * especialidades, un turno de odontología abierto desde «Consultas» le salía
+ * sin odontograma.
+ */
+export function AtencionPanel({
   turno, historiaClinicaId,
   totalEnEspera, onFinalizar,
 }: Props) {
+  const conOdontograma = turno.tipo_atencion === 'odontologia'
+
   const consultaExistenteId = turno.consulta_medica?.id ?? null
   const {
     data: consultaCargada, isLoading: cargandoConsulta,
@@ -102,6 +118,14 @@ export function AtencionMedicaPanel({
                   >
                     Consulta
                   </Tabs.Tab>
+                  {conOdontograma && (
+                    <Tabs.Tab
+                      value="odontograma"
+                      leftSection={<IconDental size={13} />}
+                    >
+                      Odontograma
+                    </Tabs.Tab>
+                  )}
                   <Tabs.Tab
                     value="receta"
                     leftSection={<IconPill size={13} />}
@@ -152,6 +176,15 @@ export function AtencionMedicaPanel({
                     />
                   </DataState>
                 </Tabs.Panel>
+
+                {conOdontograma && (
+                  <Tabs.Panel value="odontograma">
+                    <TabOdontograma
+                      historiaClinicaId={historiaClinicaId}
+                      consultaMedicaId={consultaActiva?.id ?? null}
+                    />
+                  </Tabs.Panel>
+                )}
 
                 <Tabs.Panel value="receta">
                   {consultaActiva ? (

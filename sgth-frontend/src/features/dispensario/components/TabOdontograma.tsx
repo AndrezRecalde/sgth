@@ -97,7 +97,14 @@ export function TabOdontograma({ historiaClinicaId, consultaMedicaId }: Props) {
   const [itemParaAnular, setItemParaAnular] =
     useState<HistorialItem | null>(null)
 
+  // Sin consulta guardada el odontograma se consulta, pero no se registra en
+  // él: el procedimiento quedaba sin consulta, colgando del día y no de la
+  // visita. Es la misma regla que ya tenían la receta, el certificado y los
+  // resultados.
+  const puedeRegistrar = consultaMedicaId != null
+
   const handleSeleccionarPieza = (pieza: OdontogramaPieza) => {
+    if (!puedeRegistrar) return
     setPiezaSeleccionada(pieza)
     openModal()
   }
@@ -182,6 +189,13 @@ export function TabOdontograma({ historiaClinicaId, consultaMedicaId }: Props) {
 
   return (
     <Stack gap="md" p="md">
+      {!puedeRegistrar && (
+        <Text size="sm" c="dimmed">
+          Guarde la consulta primero para registrar procedimientos. Mientras
+          tanto, el odontograma se puede consultar.
+        </Text>
+      )}
+
       <OdontogramaChart
         piezas={odontograma.piezas}
         mostrarTemporal={mostrarTemporal}
@@ -194,7 +208,9 @@ export function TabOdontograma({ historiaClinicaId, consultaMedicaId }: Props) {
         <EmptyState
           icon={IconDental}
           title="Sin procedimientos registrados"
-          description="Haga clic en una pieza del odontograma para registrar un procedimiento."
+          description={puedeRegistrar
+            ? 'Haga clic en una pieza del odontograma para registrar un procedimiento.'
+            : 'Guarde la consulta para registrar el primero.'}
         />
       ) : (
         <SgthTable

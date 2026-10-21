@@ -6,8 +6,7 @@ import { isAxiosError } from 'axios'
 import { IconCalendarOff } from '@tabler/icons-react'
 import { agendaService } from '../services/agendaService'
 import { useTurnosDelDia } from '../hooks/useAgenda'
-import { AtencionMedicaPanel } from './AtencionMedicaPanel'
-import { AtencionOdontologicaPanel } from './AtencionOdontologicaPanel'
+import { AtencionPanel } from './AtencionPanel'
 import { SinHistoriaClinica } from './SinHistoriaClinica'
 import { DataState, PageHeader, PageShell } from '@/components/ui'
 import { ROUTES } from '@/config/routes'
@@ -17,11 +16,6 @@ type Especialidad = 'medica' | 'odontologica'
 interface Props {
   folio: string
   especialidad: Especialidad
-}
-
-const PANEL = {
-  medica: AtencionMedicaPanel,
-  odontologica: AtencionOdontologicaPanel,
 }
 
 const TITULO: Record<Especialidad, string> = {
@@ -35,9 +29,9 @@ const RUTA_VUELTA: Record<Especialidad, string> = {
 }
 
 /**
- * Ficha de atención de un turno. Consulta y odontología comparten pantalla:
- * solo cambian el panel que se monta y la lista a la que se vuelve al
- * finalizar.
+ * Ficha de atención de un turno. Consulta y odontología comparten pantalla y
+ * panel: la dirección decide el título y la lista a la que se vuelve al
+ * finalizar; el odontograma lo pone el propio turno.
  */
 export function AtencionTurnoView({ folio, especialidad }: Props) {
   const router = useRouter()
@@ -60,8 +54,6 @@ export function AtencionTurnoView({ folio, especialidad }: Props) {
   // mostraban todos como «turno no encontrado», que despistaba.
   const noEncontrado = isAxiosError(error) && error.response?.status === 404
 
-  const Panel = PANEL[especialidad]
-
   // Lienzo completo: el panel reparte el ancho entre el contexto del paciente
   // y las pestañas de la atención, y con el ancho de lectura no caben.
   return (
@@ -83,7 +75,7 @@ export function AtencionTurnoView({ folio, especialidad }: Props) {
         skeletonRows={4}
       >
         {turno && (turno.historia_clinica_id ? (
-          <Panel
+          <AtencionPanel
             turno={turno}
             historiaClinicaId={turno.historia_clinica_id}
             totalEnEspera={totalEnEspera}
