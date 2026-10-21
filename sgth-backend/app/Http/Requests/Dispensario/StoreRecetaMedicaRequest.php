@@ -43,8 +43,10 @@ class StoreRecetaMedicaRequest extends FormRequest
             'items'                          => ['required', 'array', 'min:1'],
             // El mismo medicamento dos veces son dos líneas que el despacho
             // entrega por separado, cada una con su dosis: o es un error, o
-            // es una sola línea con más cantidad.
-            'items.*.inventario_medicina_id' => ['nullable', 'integer', 'distinct', 'exists:inventario_medicinas,id'],
+            // es una sola línea con más cantidad. Y solo del catálogo activo:
+            // una medicina retirada no sale en el buscador, pero el API la
+            // aceptaba y la receta mandaba a Farmacia algo que ya no maneja.
+            'items.*.inventario_medicina_id' => ['nullable', 'integer', 'distinct', 'exists:inventario_medicinas,id,estado,true'],
             'items.*.medicamento_externo'    => ['nullable', 'string', 'max:255', 'distinct:ignore_case'],
             'items.*.cantidad_prescrita'     => ['required', 'integer', 'min:1'],
             'items.*.dosis'                  => ['required', 'string', 'max:100'],
@@ -99,6 +101,7 @@ class StoreRecetaMedicaRequest extends FormRequest
             'exists'         => 'El valor seleccionado para :attribute no es válido.',
             'items.*.inventario_medicina_id.distinct' => 'Ese medicamento está dos veces en la receta: déjelo en una sola línea.',
             'items.*.medicamento_externo.distinct'    => 'Ese medicamento externo está dos veces en la receta: déjelo en una sola línea.',
+            'items.*.inventario_medicina_id.exists'   => 'Esa medicina no está en el catálogo activo de la farmacia: récetela como medicamento externo.',
         ];
     }
 }
