@@ -71,6 +71,9 @@ export const MOTIVOS_ANULAR_RECETA: MotivoOption[] = [
   { value: 'otro',             label: 'Otro'                    },
 ]
 
+/** Lo que admite `motivo_anulacion` en todos los endpoints que anulan. */
+const MOTIVO_MAX = 255
+
 export function AnularRegistroModal({
   opened, onClose, titulo, descripcion,
   onConfirmar, loading,
@@ -79,6 +82,18 @@ export function AnularRegistroModal({
   const contained = useContainedInput()
   const [motivoSel, setMotivoSel] = useState<string>('')
   const [motivoLibre, setMotivoLibre] = useState('')
+
+  // Cada apertura empieza en blanco. Solo se limpiaba al pulsar «Cancelar»:
+  // cuando quien lo abrió lo cerraba tras anular con éxito, la siguiente
+  // anulación aparecía con el motivo de la anterior ya elegido.
+  const [abiertoPrevio, setAbiertoPrevio] = useState(opened)
+  if (opened !== abiertoPrevio) {
+    setAbiertoPrevio(opened)
+    if (opened) {
+      setMotivoSel('')
+      setMotivoLibre('')
+    }
+  }
 
   const motivoFinal = motivoSel === 'otro'
     ? motivoLibre.trim()
@@ -92,16 +107,10 @@ export function AnularRegistroModal({
     onConfirmar(motivoFinal)
   }
 
-  const handleClose = () => {
-    setMotivoSel('')
-    setMotivoLibre('')
-    onClose()
-  }
-
   return (
     <SgthModal
       opened={opened}
-      onClose={handleClose}
+      onClose={onClose}
       title={titulo}
       size="sm"
       // A pantalla completa en móvil: centrado, con el aviso, el select y el
@@ -137,6 +146,8 @@ export function AnularRegistroModal({
           <Textarea
             label="Especifique el motivo"
             placeholder="Mínimo 5 caracteres"
+            // El tope del servidor: pasarlo devolvía un 422 tras escribirlo.
+            maxLength={MOTIVO_MAX}
             autosize
             minRows={2}
             {...contained}
@@ -146,7 +157,7 @@ export function AnularRegistroModal({
         )}
       </Stack>
       <ModalFooter
-        onCancel={handleClose}
+        onCancel={onClose}
         submitLabel="Confirmar anulación"
         submitting={loading}
         submitDisabled={!puedeConfirmar}
