@@ -15514,6 +15514,11 @@ export interface components {
              */
             omitir_alergias?: boolean;
             items: {
+                /**
+                 * @description El mismo medicamento dos veces son dos líneas que el despacho
+                 *     entrega por separado, cada una con su dosis: o es un error, o
+                 *     es una sola línea con más cantidad.
+                 */
                 inventario_medicina_id?: number | null;
                 medicamento_externo?: string | null;
                 cantidad_prescrita: number;
