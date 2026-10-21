@@ -51,7 +51,11 @@ export function AtencionMedicaPanel({
     useState<ConsultaMedica | null>(null)
   const [activeTab, setActiveTab] = useState<string>('consulta')
 
-  const consultaActiva = consultaGuardada ?? consultaCargada ?? null
+  // Manda lo leído del servidor, que se refresca al corregir; la respuesta del
+  // alta solo cubre el rato hasta que llega. Al revés, tras corregir en la
+  // misma visita seguía mandando el alta: se enseñaba el texto anterior y la
+  // siguiente corrección partía de él.
+  const consultaActiva = consultaCargada ?? consultaGuardada ?? null
 
   // Antes había aquí un efecto que devolvía la pestaña a «Consulta» cuando
   // llegaba `consultaCargada`. Como es el resultado de React Query, cada
