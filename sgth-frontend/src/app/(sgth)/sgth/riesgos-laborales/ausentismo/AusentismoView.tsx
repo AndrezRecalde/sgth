@@ -105,7 +105,7 @@ export function AusentismoView() {
         <DatePickerInput
           label="Fecha inicio"
           placeholder="Desde"
-          valueFormat="YYYY-MM-DD"
+          valueFormat="DD/MM/YYYY"
           {...compacto}
           value={fechaInicio}
           onChange={(v) => setFechaInicio(v)}
@@ -113,7 +113,7 @@ export function AusentismoView() {
         <DatePickerInput
           label="Fecha fin"
           placeholder="Hasta"
-          valueFormat="YYYY-MM-DD"
+          valueFormat="DD/MM/YYYY"
           {...compacto}
           value={fechaFin}
           onChange={(v) => setFechaFin(v)}

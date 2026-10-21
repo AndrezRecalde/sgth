@@ -72,7 +72,7 @@ export function BandejaFiltros({ filtros, unidades, onCambiar }: Props) {
         <DatePickerInput
           label="Salida desde"
           placeholder="Sin límite"
-          valueFormat="YYYY-MM-DD"
+          valueFormat="DD/MM/YYYY"
           clearable
           {...contained}
           value={toDateValue(filtros.desde)}
@@ -82,7 +82,7 @@ export function BandejaFiltros({ filtros, unidades, onCambiar }: Props) {
         <DatePickerInput
           label="Hasta"
           placeholder="Sin límite"
-          valueFormat="YYYY-MM-DD"
+          valueFormat="DD/MM/YYYY"
           clearable
           minDate={toDateValue(filtros.desde) ?? undefined}
           {...contained}

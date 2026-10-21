@@ -50,7 +50,7 @@ export function VacacionFechasCampos({ form, conteo = null }: Props) {
                 <DatePickerInput
                   label={label}
                   placeholder="Seleccionar"
-                  valueFormat="YYYY-MM-DD"
+                  valueFormat="DD/MM/YYYY"
                   {...contained}
                   value={toDateValue(field.value)}
                   onChange={(d) => field.onChange(fromDateValue(d ?? null))}
@@ -70,7 +70,7 @@ export function VacacionFechasCampos({ form, conteo = null }: Props) {
                 <DatePickerInput
                   label="Fecha de retorno"
                   placeholder="Se calcula"
-                  valueFormat="YYYY-MM-DD"
+                  valueFormat="DD/MM/YYYY"
                   readOnly
                   className={classes.calculado}
                   {...contained}

@@ -144,7 +144,7 @@ export function PermisosFiltros({ filtros, onCambiar, onNuevo }: Props) {
         <DatePickerInput
           label="Desde"
           placeholder="Sin límite"
-          valueFormat="YYYY-MM-DD"
+          valueFormat="DD/MM/YYYY"
           clearable
           {...contained}
           value={toDateValue(filtros.fechaDesde)}
@@ -155,7 +155,7 @@ export function PermisosFiltros({ filtros, onCambiar, onNuevo }: Props) {
         <DatePickerInput
           label="Hasta"
           placeholder="Sin límite"
-          valueFormat="YYYY-MM-DD"
+          valueFormat="DD/MM/YYYY"
           clearable
           minDate={toDateValue(filtros.fechaDesde) ?? undefined}
           {...contained}

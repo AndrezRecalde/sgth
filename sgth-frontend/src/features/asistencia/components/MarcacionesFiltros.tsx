@@ -91,7 +91,7 @@ export function MarcacionesFiltros({
         <DatePickerInput
           label="Fecha inicio"
           placeholder="Desde"
-          valueFormat="YYYY-MM-DD"
+          valueFormat="DD/MM/YYYY"
           {...contained}
           value={toDateValue(filtros.fechaInicio)}
           onChange={(d) => onCambiar({ fechaInicio: fromDateValueOrNull(d ?? null) })}
@@ -100,7 +100,7 @@ export function MarcacionesFiltros({
         <DatePickerInput
           label="Fecha fin"
           placeholder="Hasta"
-          valueFormat="YYYY-MM-DD"
+          valueFormat="DD/MM/YYYY"
           minDate={toDateValue(filtros.fechaInicio) ?? undefined}
           {...contained}
           value={toDateValue(filtros.fechaFin)}
