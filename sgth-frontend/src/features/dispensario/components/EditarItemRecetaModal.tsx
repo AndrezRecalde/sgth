@@ -103,8 +103,11 @@ export function EditarItemRecetaModal({
               allowDecimal={false}
               required
               {...contained}
-              value={field.value}
-              onChange={(v) => field.onChange(Number(v) || 1)}
+              ref={field.ref}
+              value={field.value ?? ''}
+              // Vacío se queda vacío y el esquema lo dice: antes volvía a 1.
+              onChange={(v) => field.onChange(typeof v === 'number' ? v : undefined)}
+              onBlur={field.onBlur}
               error={errors.cantidad_prescrita?.message}
             />
           )}
@@ -139,6 +142,7 @@ export function EditarItemRecetaModal({
           minRows={2}
           {...contained}
           {...register('observaciones')}
+          error={errors.observaciones?.message}
         />
       </Stack>
     </FormModal>

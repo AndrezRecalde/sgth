@@ -5,7 +5,7 @@ import {
   ActionIcon, Text, Group, Stack,
 } from '@mantine/core'
 import { IconTrash } from '@tabler/icons-react'
-import { Controller, type Control } from 'react-hook-form'
+import { Controller, useFormState, type Control } from 'react-hook-form'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { StatusBadge } from '@/components/ui'
 import type { RecetaFormData } from '../schemas/receta.schema'
@@ -27,6 +27,12 @@ export function ItemRecetaRow({
   concentracion, presentacion, onEliminar,
 }: Props) {
   const contained = useContainedInput()
+
+  // Lo que no tiene campo propio: el nombre del externo (viene del buscador)
+  // y el «del catálogo o externo» del esquema. Se dice bajo el nombre.
+  const { errors } = useFormState({ control, name: `items.${index}` })
+  const errorDelItem = errors.items?.[index]?.medicamento_externo?.message
+    ?? errors.items?.[index]?.inventario_medicina_id?.message
 
   return (
     <Card
@@ -59,6 +65,9 @@ export function ItemRecetaRow({
                       : `Stock: ${stock} unid.`,
                   ].filter(Boolean).join(' · ')}
             </Text>
+            {errorDelItem && (
+              <Text size="xs" c="red">{errorDelItem}</Text>
+            )}
           </Stack>
           <ActionIcon
             size="sm"
@@ -76,7 +85,7 @@ export function ItemRecetaRow({
             <Controller
               name={`items.${index}.cantidad_prescrita`}
               control={control}
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <NumberInput
                   label="Cantidad"
                   // Unidades recetadas: enteras, como las exige el servidor.
@@ -84,8 +93,13 @@ export function ItemRecetaRow({
                   size="xs"
                   min={1}
                   {...contained}
-                  value={field.value}
-                  onChange={(v) => field.onChange(Number(v) || 1)}
+                  ref={field.ref}
+                  value={field.value ?? ''}
+                  // Vacío se queda vacío y el esquema lo dice. Antes volvía a 1
+                  // al borrar, y escribir «5» dejaba «15».
+                  onChange={(v) => field.onChange(typeof v === 'number' ? v : undefined)}
+                  onBlur={field.onBlur}
+                  error={fieldState.error?.message}
                 />
               )}
             />
@@ -94,7 +108,7 @@ export function ItemRecetaRow({
             <Controller
               name={`items.${index}.dosis`}
               control={control}
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <TextInput
                   label="Dosis"
                   size="xs"
@@ -102,6 +116,9 @@ export function ItemRecetaRow({
                   {...contained}
                   value={field.value}
                   onChange={(e) => field.onChange(e.currentTarget.value)}
+                  ref={field.ref}
+                  onBlur={field.onBlur}
+                  error={fieldState.error?.message}
                 />
               )}
             />
@@ -110,7 +127,7 @@ export function ItemRecetaRow({
             <Controller
               name={`items.${index}.frecuencia`}
               control={control}
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <TextInput
                   label="Frecuencia"
                   size="xs"
@@ -118,6 +135,9 @@ export function ItemRecetaRow({
                   {...contained}
                   value={field.value}
                   onChange={(e) => field.onChange(e.currentTarget.value)}
+                  ref={field.ref}
+                  onBlur={field.onBlur}
+                  error={fieldState.error?.message}
                 />
               )}
             />
@@ -126,7 +146,7 @@ export function ItemRecetaRow({
             <Controller
               name={`items.${index}.duracion`}
               control={control}
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <TextInput
                   label="Duración"
                   size="xs"
@@ -134,6 +154,9 @@ export function ItemRecetaRow({
                   {...contained}
                   value={field.value}
                   onChange={(e) => field.onChange(e.currentTarget.value)}
+                  ref={field.ref}
+                  onBlur={field.onBlur}
+                  error={fieldState.error?.message}
                 />
               )}
             />
@@ -142,7 +165,7 @@ export function ItemRecetaRow({
             <Controller
               name={`items.${index}.observaciones`}
               control={control}
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <TextInput
                   label="Observaciones"
                   size="xs"
@@ -150,6 +173,9 @@ export function ItemRecetaRow({
                   {...contained}
                   value={field.value ?? ''}
                   onChange={(e) => field.onChange(e.currentTarget.value)}
+                  ref={field.ref}
+                  onBlur={field.onBlur}
+                  error={fieldState.error?.message}
                 />
               )}
             />
