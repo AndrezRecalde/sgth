@@ -59,6 +59,8 @@ beforeEach(function () {
             'servidor_id' => $servidor->id, 'tipo_nombramiento' => $nombramiento,
             'unidad_administrativa_id' => $en->unidad_administrativa_id, 'puesto_id' => $en->id,
             'fecha_inicio' => '2018-01-02', 'estado' => 'vigente',
+            // La autoridad electa, con el fin de su período.
+            'fecha_fin' => $nombramiento === 'eleccion_popular' ? now()->addYear()->toDateString() : null,
         ]);
 
         return $servidor->fresh();

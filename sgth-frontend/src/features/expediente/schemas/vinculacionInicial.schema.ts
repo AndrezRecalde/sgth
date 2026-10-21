@@ -116,6 +116,14 @@ export const vinculacionInicialSchema = z.object({
     })
   }
 
+  // Sin fin, el período de la autoridad nunca se cerraría (2026-10-21).
+  if (data.vinculo.tipo_nombramiento === 'eleccion_popular' && !data.vinculo.fecha_fin) {
+    ctx.addIssue({
+      path: ['vinculo', 'fecha_fin'], code: 'custom',
+      message: 'Indique el fin del período, el de la credencial del CNE',
+    })
+  }
+
   // La carga inicial es para vínculos que YA existen.
   if (data.vinculo.fecha_inicio && data.vinculo.fecha_inicio > new Date().toISOString().slice(0, 10)) {
     ctx.addIssue({

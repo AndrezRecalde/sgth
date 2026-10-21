@@ -87,11 +87,22 @@ class VinculacionInicialService
      * Servicios Profesionales queda fuera: si no se indica, el contrato toma
      * el 31 de diciembre de su año de inicio, que es su plazo por defecto.
      *
+     * La autoridad electa, en cambio, entra con el fin de su período: sin él
+     * nunca se cerraría, y lo exige la base desde el 2026-10-21. No se deduce:
+     * el inicio cargado puede ser el de un período anterior.
+     *
      * @param  array<string, mixed>  $datos
      */
     private function validarPlazo(array $datos): void
     {
         $nombramiento = TipoNombramiento::tryFrom((string) ($datos['tipo_nombramiento'] ?? ''));
+
+        if ($nombramiento === TipoNombramiento::ELECCION_POPULAR && blank($datos['fecha_fin'] ?? null)) {
+            throw new ReglaNegocioException(
+                'La autoridad electa necesita el fin de su período, el de su credencial del CNE: ese día el '
+                    .'vínculo se cierra solo.'
+            );
+        }
 
         if ($nombramiento !== TipoNombramiento::SERVICIOS_OCASIONALES) {
             return;

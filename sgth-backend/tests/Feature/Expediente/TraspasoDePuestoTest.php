@@ -53,8 +53,13 @@ beforeEach(function () {
             'servidor_id' => $servidor->id, 'tipo_nombramiento' => $nombramiento,
             'unidad_administrativa_id' => $puesto->unidad_administrativa_id, 'puesto_id' => $puesto->id,
             'fecha_inicio' => '2018-01-02', 'estado' => 'vigente', 'remuneracion' => 1000,
-            // El contrato civil tiene su vencimiento.
-            'fecha_fin' => $nombramiento === 'servicios_profesionales' ? '2026-12-31' : null,
+            // El contrato civil tiene su vencimiento, y la autoridad electa, el
+            // fin de su período.
+            'fecha_fin' => match ($nombramiento) {
+                'servicios_profesionales' => '2026-12-31',
+                'eleccion_popular'        => now()->addYear()->toDateString(),
+                default                   => null,
+            },
         ]);
         $servidor->update(['puesto_id' => $puesto->id, 'unidad_administrativa_id' => $puesto->unidad_administrativa_id]);
 

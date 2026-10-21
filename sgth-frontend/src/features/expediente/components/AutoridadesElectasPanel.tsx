@@ -17,8 +17,9 @@ import { SubrogacionPorLeyModal } from './SubrogacionPorLeyModal'
  * 1–7; fases 4.1 y 4.1b). Su inicio, su cese y la licencia del Consejo se
  * registran desde «Nueva acción de personal», sin acción ni firmantes; aquí se
  * ve cuándo termina cada período, la ausencia en curso, quién subroga y lo que
- * sigue. Se fija el fin del período de quien ya estaba sin él, y se registra la
- * subrogación por ley de una ausencia que no nació de una licencia.
+ * sigue. Se corrige el fin del período que el sistema le fijó a quien ya
+ * estaba, y se registra la subrogación por ley de una ausencia que no nació de
+ * una licencia.
  *
  * Debajo, las que entran (2026-10-21): su período todavía no rige, y si el de
  * la autoridad que sale no termina a tiempo, el aviso va arriba de todo.

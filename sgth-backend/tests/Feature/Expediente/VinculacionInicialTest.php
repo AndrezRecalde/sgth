@@ -226,6 +226,24 @@ test('un contrato de servicios ocasionales exige su fecha de término', function
     ))->toThrow(ReglaNegocioException::class, 'necesita fecha de término');
 });
 
+test('una autoridad electa exige el fin de su período', function () {
+    $datos = ($this->payload)([], [
+        'tipo_nombramiento' => TipoNombramiento::ELECCION_POPULAR->value,
+        'fecha_inicio'      => '2023-05-14',
+        'fecha_fin'         => null,
+    ]);
+
+    expect(fn () => $this->service->registrar(
+        collect($datos)->except('vinculo')->all(),
+        $datos['vinculo'],
+    ))->toThrow(ReglaNegocioException::class, 'fin de su período');
+
+    $datos['vinculo']['fecha_fin'] = '2027-05-13';
+    $servidor = $this->service->registrar(collect($datos)->except('vinculo')->all(), $datos['vinculo']);
+
+    expect($servidor->fresh('contratoVigente')->contratoVigente->fecha_fin->toDateString())->toBe('2027-05-13');
+});
+
 test('nada se guarda si el vínculo falla: la ficha no queda huérfana', function () {
     $datos = ($this->payload)([], [
         'tipo_nombramiento' => TipoNombramiento::SERVICIOS_OCASIONALES->value,

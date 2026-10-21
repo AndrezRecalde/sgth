@@ -13,7 +13,7 @@ import type { VinculacionInicialFormData } from '../schemas/vinculacionInicial.s
 import type { UnidadConRelaciones } from '@/types/api'
 import { toDateValue, fromDateValue, fromDateValueOrNull } from '@/lib/fecha'
 
-const CON_PLAZO = ['servicios_ocasionales', 'servicios_profesionales']
+const CON_PLAZO = ['servicios_ocasionales', 'servicios_profesionales', 'eleccion_popular']
 
 /**
  * Contrato vigente del servidor que se está migrando. Es el paso que distingue
@@ -39,6 +39,7 @@ export function VinculacionInicialFormVinculo() {
   const rmuPuesto = puestoSel?.rmu ? Number(puestoSel.rmu) : null
   const rmuHeredada = remuneracionEsHeredada(nombramiento, rmuPuesto)
   const llevaPlazo = CON_PLAZO.includes(nombramiento ?? '')
+  const esAutoridad = nombramiento === 'eleccion_popular'
 
   const errVinculo = errors.vinculo
 
@@ -175,10 +176,13 @@ export function VinculacionInicialFormVinculo() {
             control={control}
             render={({ field }) => (
               <DatePickerInput
-                label="Término del contrato"
-                description="Servicios Profesionales toma el 31 de diciembre de su año si se deja vacío."
+                label={esAutoridad ? 'Fin del período' : 'Término del contrato'}
+                description={esAutoridad
+                  ? 'El de la credencial del CNE: ese día el vínculo se cierra solo.'
+                  : 'Servicios Profesionales toma el 31 de diciembre de su año si se deja vacío.'}
+                required={esAutoridad}
                 valueFormat="DD/MM/YYYY"
-                clearable
+                clearable={!esAutoridad}
                 value={toDateValue(field.value)}
                 onChange={(d) => field.onChange(fromDateValueOrNull(d))}
                 error={errVinculo?.fecha_fin?.message}

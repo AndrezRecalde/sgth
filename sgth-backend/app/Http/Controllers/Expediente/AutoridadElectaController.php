@@ -46,7 +46,7 @@ class AutoridadElectaController extends Controller
         );
     }
 
-    /** Fija el fin del período de una autoridad que no lo tiene. */
+    /** Corrige el fin del período de la autoridad que entró sin su acto de inicio. */
     public function fijarFinDelPeriodo(FijarFinDelPeriodoRequest $request, ContratoServidor $contrato): JsonResponse
     {
         $this->authorize('actualizar', $contrato->servidor);
@@ -55,7 +55,7 @@ class AutoridadElectaController extends Controller
 
         return ApiResponse::ok(
             ['contrato_id' => $contrato->id, 'fecha_fin' => $contrato->fecha_fin?->toDateString()],
-            'Fin del período fijado: ese día el vínculo se cierra solo.'
+            'Fin del período corregido: ese día el vínculo se cierra solo.'
         );
     }
 }

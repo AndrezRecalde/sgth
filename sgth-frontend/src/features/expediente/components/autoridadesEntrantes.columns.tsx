@@ -9,18 +9,14 @@ function SucedeA({ e }: { e: AutoridadEntrante }) {
   if (!e.sucede_a) return <Text size="sm" c="dimmed">Nadie: el puesto está sin autoridad</Text>
 
   // Las fechas llegan en ISO: se comparan como texto.
-  const aTiempo = !!e.sucede_a.hasta && !!e.desde && e.sucede_a.hasta <= e.desde
+  const aTiempo = !!e.desde && e.sucede_a.hasta <= e.desde
 
   return (
     <div>
       <Text size="sm">{e.sucede_a.nombre}</Text>
-      {!e.sucede_a.hasta ? (
-        <StatusBadge tone="danger">Sin fin del período</StatusBadge>
-      ) : (
-        <Text size="xs" c={aTiempo ? 'dimmed' : 'red'}>
-          Su período termina el {formatFecha(e.sucede_a.hasta)}
-        </Text>
-      )}
+      <Text size="xs" c={aTiempo ? 'dimmed' : 'red'}>
+        Su período termina el {formatFecha(e.sucede_a.hasta)}
+      </Text>
     </div>
   )
 }

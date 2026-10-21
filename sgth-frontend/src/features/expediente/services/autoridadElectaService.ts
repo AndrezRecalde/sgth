@@ -12,14 +12,17 @@ export type AutoridadElecta = {
   dignidad: string | null
   unidad: string | null
   desde: string | null
-  /** El último día del período; ese día el vínculo se cierra solo. */
-  hasta: string | null
-  dias_restantes: number | null
+  /**
+   * El último día del período; ese día el vínculo se cierra solo. Siempre lo
+   * hay: lo exige la base desde el 2026-10-21.
+   */
+  hasta: string
+  dias_restantes: number
   credencial: string | null
   /** Si el Consejo lo designó (COOTAD Art. 47 n), el número de la resolución. */
   designacion: string | null
   inicio: ActoDelPeriodo | null
-  /** Sin acto que lo diga, Talento Humano fija el fin del período. */
+  /** Sin acto que lo diga, Talento Humano corrige el fin que fijó el sistema. */
   puede_fijar_fin: boolean
   cese: (ActoDelPeriodo & { causal: string | null }) | null
   /** El período siguiente de la autoridad reelegida. */
@@ -50,8 +53,8 @@ export type AutoridadEntrante = {
   designacion: string | null
   inicio: ActoDelPeriodo
   /** La autoridad en funciones en ese puesto, y su último día. */
-  sucede_a: { contrato_id: number; nombre: string; hasta: string | null } | null
-  /** Por qué el relevo no cuadra: la saliente sin fin, o que termina tarde. */
+  sucede_a: { contrato_id: number; nombre: string; hasta: string } | null
+  /** Por qué el relevo no cuadra: la saliente termina después de que entra. */
   aviso: string | null
 }
 

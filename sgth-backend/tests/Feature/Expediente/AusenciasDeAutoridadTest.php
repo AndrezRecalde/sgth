@@ -359,8 +359,8 @@ test('al Viceprefecto que designa el Consejo lo respalda la resolución, y termi
         ->not->toContain('Credencial del CNE');
 });
 
-test('sin un Prefecto con el fin de su período, no hay con quién terminar', function () {
-    $this->prefecto->contratoVigente->update(['fecha_fin' => null]);
+test('sin un Prefecto en funciones, no hay con quién terminar', function () {
+    $this->prefecto->contratoVigente->update(['estado' => 'terminado']);
     $designado = Servidor::create([
         'cedula' => '8699999998', 'nombre' => 'Designado', 'apellido' => 'Sin Prefecto', 'regimen_laboral' => 'losep',
     ]);
@@ -376,7 +376,7 @@ test('sin un Prefecto con el fin de su período, no hay con quién terminar', fu
         'acto_origen_numero' => 'RES-CP-2026-032',
         'acto_origen_fecha'  => $this->hoy,
     ])->assertStatus(422)
-        ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'fin de su período'));
+        ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'No hay un Prefecto en funciones'));
 });
 
 test('los inicios de antes quedaron como elección', function () {
