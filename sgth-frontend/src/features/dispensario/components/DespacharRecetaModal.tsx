@@ -22,6 +22,8 @@ interface Props {
   opened:  boolean
   onClose: () => void
   receta:  RecetaMedica | null
+  /** Quien no tiene el rol de despacho la ve igual que una receta cerrada. */
+  soloLectura?: boolean
 }
 
 function getNombrePaciente(receta: RecetaMedica): string {
@@ -57,7 +59,7 @@ const ESTADO_ITEM: Record<string, { label: string; tone: SemanticTone }> = {
 }
 
 export function DespacharRecetaModal({
-  opened, onClose, receta,
+  opened, onClose, receta, soloLectura: sinPermiso = false,
 }: Props) {
   const contained  = useContainedInput()
   const despachar  = useDespacharReceta()
@@ -101,7 +103,7 @@ export function DespacharRecetaModal({
   // cantidades editables y «Confirmar despacho» activo: sobre una anulada
   // proponía entregar lo que faltaba, y era el servidor el que lo rechazaba.
   // Cerrada, se enseña entera y sin nada que despachar.
-  const soloLectura = ! admiteDespacho(receta)
+  const soloLectura = sinPermiso || ! admiteDespacho(receta)
   const itemsALaVista = soloLectura ? itemsFarmacia : itemsPendientes
 
   const handleDespachar = () => {
