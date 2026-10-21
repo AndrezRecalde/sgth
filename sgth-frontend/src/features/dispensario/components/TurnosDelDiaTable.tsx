@@ -10,6 +10,7 @@ import { useTurnosDelDia, useAccionesTurno } from '../hooks/useAgenda'
 import { getConsultasTurnosColumns } from './consultasTurnos.columns'
 import { fromDateValueOrUndefined } from '@/lib/fecha'
 import type { AgendaMedica } from '../services/agendaService'
+import { TURNO_PENDIENTE } from '../constants/turnos'
 
 interface Props {
   onAtender:     (turno: AgendaMedica) => void
@@ -26,9 +27,10 @@ export function TurnosDelDiaTable({ onAtender, onVerConsulta }: Props) {
   const { noPresentado, reactivar } = useAccionesTurno()
 
   const atendidos = turnos.filter(t => t.estado === 'atendido').length
-  const enEspera  = turnos.filter(t =>
-    ['en_espera', 'en_sala', 'en_consulta'].includes(t.estado)
-  ).length
+  // Los que esperan, no el que está en consulta: es la misma cuenta que
+  // enseña la ficha («N en espera»), y antes una contaba al paciente que
+  // ya estaba dentro y la otra no.
+  const enEspera  = turnos.filter(t => TURNO_PENDIENTE.includes(t.estado)).length
 
   const filtrar = () => {
     const [inicio, fin] = rango

@@ -10,6 +10,7 @@ import { AtencionPanel } from './AtencionPanel'
 import { SinHistoriaClinica } from './SinHistoriaClinica'
 import { DataState, PageHeader, PageShell } from '@/components/ui'
 import { ROUTES } from '@/config/routes'
+import { TURNO_PENDIENTE } from '../constants/turnos'
 
 type Especialidad = 'medica' | 'odontologica'
 
@@ -38,9 +39,7 @@ export function AtencionTurnoView({ folio, especialidad }: Props) {
 
   // El contador de la sala de espera alimenta la cabecera del panel.
   const { data: turnos = [] } = useTurnosDelDia()
-  const totalEnEspera = turnos.filter(t =>
-    ['en_espera', 'en_sala'].includes(t.estado)
-  ).length
+  const totalEnEspera = turnos.filter(t => TURNO_PENDIENTE.includes(t.estado)).length
 
   const { data: turno, isLoading, error } = useQuery({
     queryKey: ['agenda', 'por-folio', folio],
