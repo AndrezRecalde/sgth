@@ -1,4 +1,5 @@
 import type { SemanticTone } from '@/config/design.tokens'
+import { hoyIso } from '@/lib/fecha'
 
 /**
  * Los seis valores que el backend llega a escribir en `agenda_medica.estado`,
@@ -80,4 +81,24 @@ export function tiempoDeEspera(ms: number): string {
   const minutos = Math.max(0, Math.floor(ms / 60_000))
   if (minutos < 60) return `${minutos} min`
   return `${Math.floor(minutos / 60)} h ${String(minutos % 60).padStart(2, '0')} min`
+}
+
+/** Horas durante las que se deshace un «no se presentó» (`AgendaService::HORAS_PARA_REACTIVAR`). */
+export const HORAS_PARA_REACTIVAR = 6
+
+/**
+ * Si el servidor aceptará reactivar el turno: de hoy, y marcado como no
+ * presentado hace menos de seis horas. La cola ofrecía «Reactivar turno» en
+ * cualquiera, también en los de días anteriores que trae el filtro de fechas
+ * o en los que cerró solo el cierre nocturno, y el servidor respondía 422.
+ */
+export function puedeReactivarse(
+  turno: { estado: string, fecha: string, marcado_no_presentado_en?: string | null },
+  ahora: Date = new Date(),
+): boolean {
+  if (turno.estado !== 'no_presentado' || !turno.marcado_no_presentado_en) return false
+  if (turno.fecha.slice(0, 10) !== hoyIso()) return false
+
+  const horas = (ahora.getTime() - new Date(turno.marcado_no_presentado_en).getTime()) / 3_600_000
+  return horas <= HORAS_PARA_REACTIVAR
 }

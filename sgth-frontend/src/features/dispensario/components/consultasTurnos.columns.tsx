@@ -5,7 +5,7 @@ import {
   IconAlertTriangle, IconEye, IconRefresh, IconStethoscope, IconUserOff,
 } from '@tabler/icons-react'
 import { confirmar, StatusBadge, TableActions } from '@/components/ui'
-import { ESTADO_TURNO_LABELS, TONO_TURNO } from '../constants/turnos'
+import { ESTADO_TURNO_LABELS, TONO_TURNO, puedeReactivarse } from '../constants/turnos'
 import { NIVEL_ALERTA } from '../constants/signosVitales'
 import { formatFecha } from '@/lib/fecha'
 import type { DataTableColumn } from 'mantine-datatable'
@@ -135,7 +135,7 @@ export function getConsultasTurnosColumns(
         const esPendiente    = ['en_espera', 'en_sala'].includes(t.estado)
         const enConsulta     = t.estado === 'en_consulta'
         const esAtendido     = t.estado === 'atendido'
-        const esNoPresentado = t.estado === 'no_presentado'
+        const reactivable    = puedeReactivarse(t)
         const tieneTriaje    = !!t.triaje
         const puedeAtender   = (esPendiente || enConsulta) &&
           (tieneTriaje || !t.requiere_triaje)
@@ -157,12 +157,12 @@ export function getConsultasTurnosColumns(
               icon:    <IconUserOff size={14} />,
               onClick: () => confirmar({
                 title:   'Marcar como no presentado',
-                message: 'El turno quedará marcado como no presentado. Podrás reactivarlo después.',
+                message: 'El turno quedará marcado como no presentado. Podrá reactivarlo hoy, durante las próximas 6 horas.',
                 confirmLabel: 'Marcar',
                 onConfirm: () => acciones.onNoPresentado(t.id),
               }),
             }] : []),
-            ...(esNoPresentado ? [{
+            ...(reactivable ? [{
               label:   'Reactivar turno',
               icon:    <IconRefresh size={14} />,
               onClick: () => confirmar({
