@@ -9,6 +9,7 @@ use App\Models\Dispensario\InventarioMedicina;
 use App\Models\Dispensario\MovimientoInventarioMed;
 use App\Models\Dispensario\ConsultaMedica;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use App\Exceptions\ReglaNegocioException;
 
 final class RecetaService implements RecetaServiceInterface
@@ -39,20 +40,26 @@ final class RecetaService implements RecetaServiceInterface
                 // StoreRecetaMedicaRequest garantizan que sea exactamente uno.
                 $esExterno = empty($item['inventario_medicina_id']);
 
-                // Lo que hay que contrastar con las alergias es el nombre del
-                // fármaco, venga de la ficha del inventario o escrito a mano:
-                // la alergia del paciente no distingue de dónde salió.
-                $nombre = $esExterno
-                    ? trim((string) $item['medicamento_externo'])
-                    : InventarioMedicina::findOrFail(
+                // Lo que hay que contrastar con las alergias es el fármaco,
+                // venga de la ficha del inventario o escrito a mano: la alergia
+                // del paciente no distingue de dónde salió. Del catálogo cuenta
+                // también el principio activo, porque el nombre suele ser el
+                // comercial: con solo el nombre, «Dolex» no avisaba a quien es
+                // alérgico al paracetamol.
+                if ($esExterno) {
+                    $nombres = [(string) $item['medicamento_externo']];
+                } else {
+                    $ficha = InventarioMedicina::findOrFail(
                         $item['inventario_medicina_id']
-                    )->nombre;
+                    );
+                    $nombres = [$ficha->nombre, (string) $ficha->principio_activo];
+                }
 
                 $todosExternos = $todosExternos && $esExterno;
 
                 // Validar alergias (informativo)
                 foreach ($alergiasMedicamento as $alergia) {
-                    if (stripos($nombre, $alergia->descripcion) !== false || stripos($alergia->descripcion, $nombre) !== false) {
+                    if ($this->coincideConAlergia($nombres, (string) $alergia->descripcion)) {
                         $alertasAlergias[] = "Advertencia: El paciente tiene alergia registrada a {$alergia->descripcion} con severidad {$alergia->severidad}";
                     }
                 }
@@ -81,6 +88,38 @@ final class RecetaService implements RecetaServiceInterface
                 'alertas_alergias' => array_values(array_unique($alertasAlergias))
             ];
         });
+    }
+
+    /**
+     * Si alguno de los nombres del fármaco coincide con la alergia.
+     *
+     * En los dos sentidos —«amoxicilina» contiene «amoxi», y «penicilina G
+     * benzatínica» contiene «penicilina»—, sin distinguir mayúsculas ni
+     * tildes: «Ácido acetilsalicílico» en la alergia y «acido
+     * acetilsalicilico» en la ficha son lo mismo. Una alergia sin descripción
+     * no coincide con nada; antes, la cadena vacía coincidía con todo.
+     *
+     * @param  list<string>  $nombres
+     */
+    private function coincideConAlergia(array $nombres, string $alergia): bool
+    {
+        $normalizar = fn (string $texto) => trim(Str::lower(Str::ascii($texto)));
+
+        $alergia = $normalizar($alergia);
+
+        if ($alergia === '') {
+            return false;
+        }
+
+        foreach ($nombres as $nombre) {
+            $nombre = $normalizar($nombre);
+
+            if ($nombre !== '' && (str_contains($nombre, $alergia) || str_contains($alergia, $nombre))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
