@@ -55,6 +55,16 @@ export const resultadoMedicoService = {
       { headers: { 'Content-Type': 'multipart/form-data' } }
     ).then(r => r.data.datos),
 
+  /**
+   * El archivo, por la API y con la sesión. Vive en el disco privado: ya no
+   * hay una dirección de `/storage` que lo sirva a quien la tenga.
+   */
+  descargar: (id: number) =>
+    api.get<Blob>(
+      `/dispensario/resultados-medicos/${id}/archivo`,
+      { responseType: 'blob' }
+    ).then(r => r.data),
+
   eliminar: (id: number) =>
     api.delete<ApiResponse<unknown>>(
       `/dispensario/resultados-medicos/${id}`

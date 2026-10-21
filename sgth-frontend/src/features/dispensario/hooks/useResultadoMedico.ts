@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { resultadoMedicoService } from '../services/resultadoMedicoService'
+import type { ResultadoMedico } from '../services/resultadoMedicoService'
 import { notificar } from '@/components/ui'
+import { abrirOGuardarArchivo } from '@/lib/archivo'
 
 export function useResultadosPorConsulta(
   historiaClinicaId: number,
@@ -17,14 +19,20 @@ export function useResultadosPorConsulta(
   })
 }
 
-export function useResultadosPorHistoria(historiaClinicaId: number) {
-  return useQuery({
-    queryKey: ['resultados', 'historia', historiaClinicaId],
-    queryFn:  () => resultadoMedicoService.listar({
-      historia_clinica_id: historiaClinicaId,
-    }),
-    enabled:  !!historiaClinicaId,
-    staleTime: 1000 * 60,
+/**
+ * Abre el archivo de un resultado. Se pide por la API porque vive en el disco
+ * privado; si el navegador bloquea la pestaña —se abre al volver del servidor,
+ * ya fuera del clic— se descarga en su lugar.
+ */
+export function useVerResultado() {
+  return useMutation({
+    mutationFn: (resultado: ResultadoMedico) =>
+      resultadoMedicoService.descargar(resultado.id),
+    onSuccess: (blob, resultado) => {
+      const extension = resultado.archivo.split('.').pop() ?? 'pdf'
+      abrirOGuardarArchivo(blob, `resultado-${resultado.id}.${extension}`)
+    },
+    onError: notificar.alFallar('No se pudo abrir el resultado'),
   })
 }
 
@@ -51,11 +59,11 @@ export function useEliminarResultado(consultaId: number) {
     mutationFn: (id: number) =>
       resultadoMedicoService.eliminar(id),
     onSuccess: () => {
-      notificar.exito('Resultado eliminado', 'El archivo fue removido correctamente.')
+      notificar.exito('Resultado retirado', 'Ya no aparece en la consulta.')
       qc.invalidateQueries({
         queryKey: ['resultados', 'consulta', consultaId],
       })
     },
-    onError: notificar.alFallar('No se pudo eliminar el resultado'),
+    onError: notificar.alFallar('No se pudo retirar el resultado'),
   })
 }

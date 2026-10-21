@@ -22,7 +22,8 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       { source: "/api/v1/:ruta*", destination: `${BACKEND_URL}/api/v1/:ruta*` },
-      // Los adjuntos públicos (resultados de laboratorio, fotos).
+      // Los adjuntos públicos. Los resultados médicos ya no: viven en el disco
+      // privado y salen por /api/v1/dispensario/resultados-medicos/{id}/archivo.
       { source: "/storage/:ruta*", destination: `${BACKEND_URL}/storage/:ruta*` },
     ];
   },
