@@ -1,13 +1,10 @@
 'use client'
 
-import {
-  ActionIcon, Avatar, Card, Collapse, Group, Skeleton, Stack, Text, Textarea,
-} from '@mantine/core'
-import { IconChevronDown, IconChevronUp, IconUser, IconUsers } from '@tabler/icons-react'
+import { Avatar, Card, Group, Skeleton, Stack, Text } from '@mantine/core'
+import { IconUser, IconUsers } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useDisclosure } from '@mantine/hooks'
-import { DataState, SectionHeading } from '@/components/ui'
-import { useContainedInput } from '@/hooks/useContainedInput'
+import { DataState } from '@/components/ui'
 import { AgregarAlergiaModal } from './AgregarAlergiaModal'
 import { AgregarAntecedenteModal } from './AgregarAntecedenteModal'
 import { AnularRegistroModal } from './AnularRegistroModal'
@@ -33,11 +30,9 @@ type RegistroAAnular = {
 }
 
 export function PanelContextoPaciente({ turno, historiaClinicaId }: Props) {
-  const contained = useContainedInput()
   const { data: contexto, isLoading, error, refetch } = useContextoConsulta(
     historiaClinicaId, turno.id
   )
-  const [notasAbiertas, setNotasAbiertas] = useState(false)
 
   const [alergiaOpened, alergiaModal]   = useDisclosure(false)
   const [personalOpened, personalModal] = useDisclosure(false)
@@ -140,37 +135,6 @@ export function PanelContextoPaciente({ turno, historiaClinicaId }: Props) {
             id: a.id, tipo: 'antecedente', desc: a.descripcion,
           })}
         />
-
-        {/* El desplegable era un `div` con `cursor: pointer` y un `onClick`:
-            con el ratón funcionaba y con el teclado no existía, porque nada
-            en la página podía recibir el foco para abrirlo. */}
-        <SectionHeading
-          title="Notas del médico"
-          action={
-            <ActionIcon
-              size="xs"
-              variant="subtle"
-              aria-expanded={notasAbiertas}
-              aria-label={notasAbiertas
-                ? 'Ocultar notas del médico'
-                : 'Mostrar notas del médico'}
-              onClick={() => setNotasAbiertas(v => !v)}
-            >
-              {notasAbiertas
-                ? <IconChevronUp size={10} />
-                : <IconChevronDown size={10} />}
-            </ActionIcon>
-          }
-        />
-        <Collapse expanded={notasAbiertas}>
-          <Textarea
-            placeholder="Notas adicionales durante la consulta..."
-            autosize
-            minRows={2}
-            maxRows={4}
-            {...contained}
-          />
-        </Collapse>
       </Stack>
 
       <AnularRegistroModal

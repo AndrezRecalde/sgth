@@ -21,7 +21,7 @@ export const consultaMedicaSchema = z.object({
   diagnosticos_secundarios: z.array(z.number()).optional().nullable(),
   diagnostico_detallado:  z.string().min(3, 'Mínimo 3 caracteres'),
   plan_tratamiento:       z.string().optional().nullable(),
-  notas_medico:           z.string().optional().nullable(),
+  notas_medico:           z.string().max(2000, 'Máximo 2000 caracteres').optional().nullable(),
 })
 
 export type ConsultaMedicaFormData = z.infer<typeof consultaMedicaSchema>
