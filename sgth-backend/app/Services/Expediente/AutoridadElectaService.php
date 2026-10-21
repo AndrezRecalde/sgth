@@ -40,7 +40,9 @@ use Illuminate\Support\Facades\DB;
  *
  * Y el relevo (2026-10-21): quien entra a un puesto de autoridad sucede a
  * quien lo ocupa, cuyo período tiene que terminar a más tardar ese día. Las
- * autoridades que entran se ven antes de que rija su período.
+ * autoridades que entran se ven antes de que rija su período. Desde ese día
+ * todo período tiene fin: lo exige la base, y a las de la carga inicial se les
+ * fijó con el período legal (2026_11_15_000000).
  */
 class AutoridadElectaService
 {
@@ -136,10 +138,9 @@ class AutoridadElectaService
 
         $prefecto = $this->prefecto();
 
-        if (! $prefecto?->fecha_fin) {
+        if (! $prefecto) {
             throw new ReglaNegocioException(
-                'No hay un Prefecto en funciones con el fin de su período: el Viceprefecto designado termina con él. '
-                    .'Fíjelo antes en «Autoridades electas».'
+                'No hay un Prefecto en funciones: el Viceprefecto designado termina con su período.'
             );
         }
 
@@ -190,13 +191,6 @@ class AutoridadElectaService
             );
         }
 
-        if (! $vigente->fecha_fin) {
-            throw new ReglaNegocioException(
-                'Su período actual no tiene fecha de fin: fíjela antes en «Autoridades electas» para que el nuevo '
-                    .'empiece cuando ese termine.'
-            );
-        }
-
         if ($vigente->fecha_fin->toDateString() >= $inicio->toDateString()) {
             throw new ReglaNegocioException(
                 'El período actual termina el '.$vigente->fecha_fin->format('d/m/Y').': el nuevo empieza después.'
@@ -212,36 +206,27 @@ class AutoridadElectaService
     {
         return $inicio->tipo_movimiento === TipoMovimientoPersonal::INICIO_PERIODO
             && $vigente?->tipo_nombramiento === TipoNombramiento::ELECCION_POPULAR
-            && $vigente->fecha_fin !== null
             && $inicio->fecha_efectiva !== null
             && $vigente->fecha_fin->toDateString() < $inicio->fecha_efectiva->toDateString();
     }
 
     /**
      * Quien entra al puesto de una autoridad la sucede: el período de quien lo
-     * ocupa tiene que tener fin, y terminar a más tardar el día en que empieza
-     * el nuevo. Sin fin nadie lo cierra, y el sistema tendría dos Prefectos
-     * (2026-10-21). Ese día pueden coincidir, porque no ocupan plaza; desde la
-     * posesión firma el entrante. Al preparar el inicio y al registrarlo.
+     * ocupa tiene que terminar a más tardar el día en que empieza el nuevo, o
+     * el sistema tendría dos Prefectos (2026-10-21). Ese día pueden coincidir,
+     * porque no ocupan plaza; desde la posesión firma el entrante. Al preparar
+     * el inicio y al registrarlo.
      */
     public function validarQueTerminaElSaliente(int $servidorId, ?int $puestoId, Carbon $inicio): void
     {
         foreach ($this->salientes($servidorId, $puestoId) as $saliente) {
-            $nombre = $this->nombreDe($saliente->servidor);
             $fin = $this->finDelSaliente($saliente);
-
-            if (! $fin) {
-                throw new ReglaNegocioException(
-                    "El período de {$nombre}, que ocupa ese puesto, no tiene fecha de fin: fíjela antes en "
-                        .'«Autoridades electas», a más tardar el '.$inicio->format('d/m/Y').', para que el nuevo '
-                        .'empiece cuando ese termine.'
-                );
-            }
 
             if ($fin->toDateString() > $inicio->toDateString()) {
                 throw new ReglaNegocioException(
-                    "El período de {$nombre} termina el ".$fin->format('d/m/Y').': el de quien lo sucede empieza '
-                        .'ese día o después.'
+                    'El período de '.$this->nombreDe($saliente->servidor).' termina el '.$fin->format('d/m/Y')
+                        .': el de quien lo sucede empieza ese día o después. Si su período termina antes, '
+                        .'corríjalo en «Autoridades electas».'
                 );
             }
         }
@@ -272,13 +257,13 @@ class AutoridadElectaService
      * El último día de la autoridad que sale: el de su cesación registrada, si
      * renunció o la removieron, o el fin de su período.
      */
-    private function finDelSaliente(ContratoServidor $contrato): ?Carbon
+    private function finDelSaliente(ContratoServidor $contrato): Carbon
     {
         $cese = $this->ceseEnCurso($contrato);
 
         return $cese?->pendienteDeVigencia() && $cese->fecha_efectiva
             ? $cese->fecha_efectiva->copy()
-            : $contrato->fecha_fin?->copy();
+            : $contrato->fecha_fin->copy();
     }
 
     /**
@@ -310,7 +295,6 @@ class AutoridadElectaService
     {
         $contratos = ContratoServidor::where('estado', EstadoContrato::VIGENTE->value)
             ->where('tipo_nombramiento', TipoNombramiento::ELECCION_POPULAR->value)
-            ->whereNotNull('fecha_fin')
             ->whereDate('fecha_fin', '<', $fecha)
             ->when($servidorId, fn ($q) => $q->where('servidor_id', $servidorId))
             ->orderBy('fecha_fin')
@@ -358,10 +342,12 @@ class AutoridadElectaService
     }
 
     /**
-     * Fija el fin del período de una autoridad que no lo tiene: la que ya
-     * estaba cuando el sistema empezó a contarlo, o la que entró por la carga
-     * inicial. Queda en la bitácora del vínculo. El de un período que empezó
-     * con su acto no se toca aquí: lo dice la credencial, y se corrige anulando.
+     * Corrige el fin del período de la autoridad que entró sin su acto de
+     * inicio: la que ya estaba cuando el sistema empezó a contarlo, o la de la
+     * carga inicial. El sistema se lo fijó con el período legal (2026-10-21), y
+     * Talento Humano lo ajusta a la credencial. Queda en la bitácora del
+     * vínculo. El de un período que empezó con su acto no se toca aquí: lo dice
+     * la credencial, y se corrige anulando.
      */
     public function fijarFinDelPeriodo(ContratoServidor $contrato, string $fecha): ContratoServidor
     {
@@ -381,7 +367,7 @@ class AutoridadElectaService
         }
 
         $fin = Carbon::parse($fecha);
-        $this->validarDuracion($contrato->fecha_inicio->copy(), $fin);
+        $this->validarDuracion($this->inicioDelPeriodoEnCurso($contrato->fecha_inicio->copy()), $fin);
 
         // Si ya se registró quien la sucede, termina a más tardar el día en
         // que ese empieza (2026-10-21).
@@ -412,6 +398,22 @@ class AutoridadElectaService
         });
 
         return $contrato->fresh();
+    }
+
+    /**
+     * El inicio del período de cuatro años que corre hoy. El de la carga
+     * inicial puede ser de uno anterior —la reelegida cargada con el primero—,
+     * y contra él no cabría el fin del período en curso.
+     */
+    private function inicioDelPeriodoEnCurso(Carbon $inicio): Carbon
+    {
+        $hoy = now()->startOfDay();
+
+        while ($inicio->copy()->addYearsNoOverflow(self::AÑOS_DEL_PERIODO)->lte($hoy)) {
+            $inicio = $inicio->addYearsNoOverflow(self::AÑOS_DEL_PERIODO);
+        }
+
+        return $inicio;
     }
 
     /**
@@ -452,15 +454,15 @@ class AutoridadElectaService
                     'dignidad'        => $contrato->puesto?->cargo?->nombre,
                     'unidad'          => $contrato->unidadAdministrativa?->nombre,
                     'desde'           => $contrato->fecha_inicio?->toDateString(),
-                    'hasta'           => $fin?->toDateString(),
-                    'dias_restantes'  => $fin ? (int) $hoy->diffInDays($fin, false) : null,
+                    'hasta'           => $fin->toDateString(),
+                    'dias_restantes'  => (int) $hoy->diffInDays($fin, false),
                     'credencial'      => $inicio?->credencial_cne_numero,
                     // Si el Consejo lo designó, su resolución (2026-10-20).
                     'designacion'     => $inicio?->subtipoEfectivo() === SubtipoMovimientoPersonal::DESIGNACION_DEL_CONSEJO
                         ? $inicio->acto_origen_numero
                         : null,
                     'inicio'          => $this->resumen($inicio),
-                    // El fin lo puede fijar Talento Humano si no lo dice un acto.
+                    // El fin lo corrige Talento Humano si no lo dice un acto.
                     'puede_fijar_fin' => ! $inicio && ! $cese,
                     'cese'            => $cese ? [...$this->resumen($cese), 'causal' => $cese->subtipoEfectivo()?->etiqueta()] : null,
                     'siguiente'       => $this->resumen($siguiente),
@@ -497,8 +499,8 @@ class AutoridadElectaService
                 $puestoId = $inicio->puesto_destino_id ? (int) $inicio->puesto_destino_id : null;
                 $saliente = $this->salientes((int) $inicio->servidor_id, $puestoId)->first();
 
-                // Lo que ya registrado antes de la regla, o en trámite: la
-                // misma regla que lo detendría al registrarlo, como aviso.
+                // Lo registrado antes de la regla, o en trámite: la misma
+                // regla que lo detendría al registrarlo, como aviso.
                 $aviso = null;
 
                 if ($inicio->fecha_efectiva) {
@@ -528,7 +530,7 @@ class AutoridadElectaService
                     'sucede_a'      => $saliente ? [
                         'contrato_id' => $saliente->id,
                         'nombre'      => $this->nombreDe($saliente->servidor),
-                        'hasta'       => $this->finDelSaliente($saliente)?->toDateString(),
+                        'hasta'       => $this->finDelSaliente($saliente)->toDateString(),
                     ] : null,
                     'aviso'         => $aviso,
                 ];

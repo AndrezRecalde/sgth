@@ -168,11 +168,6 @@ test('no ocupa plaza: el entrante y el saliente coinciden el día del cambio', f
 });
 
 test('a quien sigue en funciones no se le abre otro período encima', function () {
-    [$sinFin] = ($this->enFunciones)('2023-05-15', null);
-    ($this->iniciar)($sinFin)
-        ->assertStatus(422)
-        ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'fíjela'));
-
     [$abierto] = ($this->enFunciones)('2023-05-15', now()->addMonth()->toDateString());
     ($this->iniciar)($abierto)
         ->assertStatus(422)
@@ -294,8 +289,9 @@ test('la licencia de la autoridad también es acto de autoridad', function () {
 
 // ── El fin del período de quien ya estaba ───────────────────────
 
-test('a la autoridad que ya estaba se le fija el fin del período', function () {
-    [$servidor, $contrato] = ($this->enFunciones)('2023-05-15', null);
+test('a la autoridad que ya estaba se le corrige el fin del período', function () {
+    // El que el sistema le fijó con el período legal (2026-10-21).
+    [$servidor, $contrato] = ($this->enFunciones)('2023-05-15', '2027-05-14');
     $url = "/api/v1/expediente/contratos/{$contrato->id}/fin-del-periodo";
 
     $this->postJson($url, ['fecha_fin' => '2027-06-30'])
@@ -306,7 +302,8 @@ test('a la autoridad que ya estaba se le fija el fin del período', function () 
 
     expect($contrato->fresh()->fecha_fin->toDateString())->toBe('2027-05-13')
         ->and(EventoVinculo::where('contrato_servidor_id', $contrato->id)
-            ->where('tipo', TipoEventoVinculo::FIN_DEL_PERIODO_FIJADO->value)->exists())->toBeTrue();
+            ->where('tipo', TipoEventoVinculo::FIN_DEL_PERIODO_FIJADO->value)
+            ->value('descripcion'))->toContain('antes decía 14/05/2027');
 });
 
 test('el fin del período que empezó con su acto no se fija aquí', function () {
@@ -323,14 +320,14 @@ test('el fin del período que empezó con su acto no se fija aquí', function ()
 // ── Pantalla, catálogo y documento ──────────────────────────────
 
 test('la pantalla enseña a las autoridades en funciones y su período', function () {
-    [$servidor, $contrato] = ($this->enFunciones)('2023-05-15', null);
+    [$servidor, $contrato] = ($this->enFunciones)('2023-05-15', '2027-05-14');
 
     $fila = collect($this->getJson('/api/v1/expediente/autoridades-electas')->assertOk()->json('datos'))
         ->firstWhere('contrato_id', $contrato->id);
 
     expect($fila['servidor']['id'])->toBe($servidor->id)
         ->and($fila['desde'])->toBe('2023-05-15')
-        ->and($fila['hasta'])->toBeNull()
+        ->and($fila['hasta'])->toBe('2027-05-14')
         ->and($fila['puede_fijar_fin'])->toBeTrue()
         ->and($fila['cese'])->toBeNull();
 });

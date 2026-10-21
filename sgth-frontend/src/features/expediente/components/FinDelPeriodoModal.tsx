@@ -20,13 +20,15 @@ interface Props {
 }
 
 /**
- * La autoridad que ya estaba cuando el sistema empezó a contar su período no
- * tiene fecha de fin (fase 4.1). Talento Humano la fija aquí; queda en la
- * bitácora del vínculo, y ese día el período se cierra solo.
+ * La autoridad que ya estaba cuando el sistema empezó a contar su período
+ * entró sin fecha de fin (fase 4.1). El sistema se la fijó con el período
+ * legal de cuatro años (2026-10-21), y Talento Humano la corrige aquí si no
+ * coincide con la credencial; queda en la bitácora del vínculo, y ese día el
+ * período se cierra solo.
  */
 export function FinDelPeriodoModal({ opened, onClose, autoridad }: Props) {
   if (!autoridad) {
-    return <SgthModal opened={opened} onClose={onClose} title="Fijar el fin del período" />
+    return <SgthModal opened={opened} onClose={onClose} title="Corregir el fin del período" />
   }
 
   return <FormularioFinDelPeriodo key={autoridad.contrato_id} opened={opened} onClose={onClose} autoridad={autoridad} />
@@ -51,7 +53,7 @@ function FormularioFinDelPeriodo({
     formState: { errors },
   } = useForm<FinDelPeriodoFormData>({
     resolver: zodResolver(finDelPeriodoSchema),
-    defaultValues: { fecha_fin: '' },
+    defaultValues: { fecha_fin: autoridad.hasta },
   })
 
   const guardar = async (valores: FinDelPeriodoFormData) => {
@@ -68,9 +70,9 @@ function FormularioFinDelPeriodo({
     <FormModal
       opened={opened}
       onClose={onClose}
-      title="Fijar el fin del período"
+      title="Corregir el fin del período"
       onSubmit={handleSubmit(guardar)}
-      submitLabel="Fijar"
+      submitLabel="Corregir"
       submitting={fijar.isPending}
       size="md"
     >
@@ -83,7 +85,8 @@ function FormularioFinDelPeriodo({
         </div>
 
         <Alert color="ocean" variant="light" icon={<IconInfoCircle size={16} />}>
-          El período dura hasta cuatro años. Ese día el vínculo se cierra solo, y
+          El sistema lo fijó con el período legal de cuatro años: corríjalo si no
+          coincide con la credencial del CNE. Ese día el vínculo se cierra solo, y
           si la autoridad fue reelegida, el período nuevo empieza al día siguiente.
         </Alert>
 

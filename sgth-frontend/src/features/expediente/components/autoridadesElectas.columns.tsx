@@ -5,10 +5,8 @@ import { StatusBadge, TableActions } from '@/components/ui'
 import { formatFecha } from '@/lib/fecha'
 import type { AutoridadElecta } from '../services/autoridadElectaService'
 
-/** Lo que le queda al período, o que no tiene fin fijado. */
+/** Lo que le queda al período. */
 function Restante({ a }: { a: AutoridadElecta }) {
-  if (!a.hasta) return <StatusBadge tone="warning">Sin fin del período</StatusBadge>
-  if (a.dias_restantes === null) return null
   if (a.dias_restantes < 0) return <StatusBadge tone="info">Terminado</StatusBadge>
 
   return (
@@ -109,7 +107,7 @@ export const getAutoridadElectaColumns = ({
     width: 210,
     render: (a) => (
       <div>
-        <Text size="sm">{formatFecha(a.desde)} – {a.hasta ? formatFecha(a.hasta) : '…'}</Text>
+        <Text size="sm">{formatFecha(a.desde)} – {formatFecha(a.hasta)}</Text>
         <Restante a={a} />
       </div>
     ),
@@ -143,7 +141,7 @@ export const getAutoridadElectaColumns = ({
       <TableActions
         actions={[
           {
-            label: 'Fijar el fin del período',
+            label: 'Corregir el fin del período',
             icon: <IconCalendarEvent size={14} />,
             onClick: () => onFijarFin(a),
             hidden: !a.puede_fijar_fin || !puedePreparar(a.servidor.id),

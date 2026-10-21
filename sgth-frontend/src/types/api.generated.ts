@@ -652,7 +652,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Fija el fin del período de una autoridad que no lo tiene */
+        /** Corrige el fin del período de la autoridad que entró sin su acto de inicio */
         post: operations["autoridadElecta.fijarFinDelPeriodo"];
         delete?: never;
         options?: never;
@@ -18753,7 +18753,7 @@ export interface operations {
                             unidad: string;
                             desde: string;
                             hasta: string;
-                            dias_restantes: number | null;
+                            dias_restantes: number;
                             credencial: string;
                             /** @description Si el Consejo lo designó, su resolución (2026-10-20). */
                             designacion: string | null;
@@ -18763,7 +18763,7 @@ export interface operations {
                                 codigo_registro: string | null;
                                 fecha_efectiva: string;
                             } | null;
-                            /** @description El fin lo puede fijar Talento Humano si no lo dice un acto. */
+                            /** @description El fin lo corrige Talento Humano si no lo dice un acto. */
                             puede_fijar_fin: string;
                             cese: {
                                 ""?: {
@@ -18894,7 +18894,7 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Fin del período fijado: ese día el vínculo se cierra solo.";
+                        mensaje: "Fin del período corregido: ese día el vínculo se cierra solo.";
                         datos: {
                             contrato_id: number;
                             fecha_fin: string;

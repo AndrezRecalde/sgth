@@ -156,7 +156,7 @@ test('Servicios Profesionales y las autoridades no la tienen, y nadie registra l
         ->assertStatus(422)
         ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'contrato civil'));
 
-    $prefecto = servidorLicencia($this->unidad, '0802704173', TipoNombramiento::ELECCION_POPULAR);
+    $prefecto = servidorLicencia($this->unidad, '0802704173', TipoNombramiento::ELECCION_POPULAR, now()->addYear()->toDateString());
     ($this->registrar)(['servidor_id' => $prefecto->id])
         ->assertStatus(422)
         ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'Consejo Provincial'));

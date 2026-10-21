@@ -317,6 +317,7 @@ test('cambiar de autoridad después no reescribe lo ya firmado', function () {
         'unidad_administrativa_id' => $uPrefectura->id,
         'puesto_id' => $puesto->id,
         'fecha_inicio' => now()->toDateString(),
+        'fecha_fin' => now()->addYearsNoOverflow(4)->subDay()->toDateString(),
         'estado' => 'vigente',
     ]);
 
@@ -354,6 +355,7 @@ test('el PDF imprime al firmante sellado y no al titular de hoy', function () {
         'unidad_administrativa_id' => $uPrefectura->id,
         'puesto_id' => $puesto->id,
         'fecha_inicio' => now()->toDateString(),
+        'fecha_fin' => now()->addYearsNoOverflow(4)->subDay()->toDateString(),
         'estado' => 'vigente',
     ]);
 

@@ -69,6 +69,8 @@ beforeEach(function () {
             'servidor_id' => $servidor->id, 'tipo_nombramiento' => $nombramiento,
             'unidad_administrativa_id' => $puesto->unidad_administrativa_id, 'puesto_id' => $puesto->id,
             'fecha_inicio' => '2018-01-02', 'estado' => 'vigente', 'remuneracion' => $remuneracion,
+            // La autoridad electa, con el fin de su período.
+            'fecha_fin' => $nombramiento === 'eleccion_popular' ? now()->addYear()->toDateString() : null,
         ]);
         $servidor->update(['puesto_id' => $puesto->id, 'unidad_administrativa_id' => $puesto->unidad_administrativa_id]);
 

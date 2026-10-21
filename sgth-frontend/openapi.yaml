@@ -3410,10 +3410,7 @@
                                                         "type": "string"
                                                     },
                                                     "dias_restantes": {
-                                                        "type": [
-                                                            "integer",
-                                                            "null"
-                                                        ]
+                                                        "type": "integer"
                                                     },
                                                     "credencial": {
                                                         "type": "string"
@@ -3456,7 +3453,7 @@
                                                     },
                                                     "puede_fijar_fin": {
                                                         "type": "string",
-                                                        "description": "El fin lo puede fijar Talento Humano si no lo dice un acto."
+                                                        "description": "El fin lo corrige Talento Humano si no lo dice un acto."
                                                     },
                                                     "cese": {
                                                         "type": [
@@ -3878,7 +3875,7 @@
         "/v1/expediente/contratos/{contrato}/fin-del-periodo": {
             "post": {
                 "operationId": "autoridadElecta.fijarFinDelPeriodo",
-                "summary": "Fija el fin del per\u00edodo de una autoridad que no lo tiene",
+                "summary": "Corrige el fin del per\u00edodo de la autoridad que entr\u00f3 sin su acto de inicio",
                 "tags": [
                     "AutoridadElecta"
                 ],
@@ -3916,7 +3913,7 @@
                                         },
                                         "mensaje": {
                                             "type": "string",
-                                            "const": "Fin del per\u00edodo fijado: ese d\u00eda el v\u00ednculo se cierra solo."
+                                            "const": "Fin del per\u00edodo corregido: ese d\u00eda el v\u00ednculo se cierra solo."
                                         },
                                         "datos": {
                                             "type": "object",

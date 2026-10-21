@@ -106,17 +106,17 @@ beforeEach(function () {
     };
 });
 
-test('a quien entra al puesto de una autoridad sin fin del período no se le prepara el inicio', function () {
-    $saliente = ($this->enFunciones)($this->puestoPrefecto, null);
+test('con el fin de la saliente corregido a la víspera, la entrante se prepara', function () {
+    $saliente = ($this->enFunciones)($this->puestoPrefecto, now()->addMonths(2)->toDateString());
     $entrante = ($this->persona)();
     $posesion = now()->addMonth()->toDateString();
 
     ($this->iniciar)($entrante, $posesion)
         ->assertStatus(422)
-        ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'no tiene fecha de fin')
+        ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'ese día o después')
             && str_contains($m, 'Relevo1'));
 
-    // Con el fin fijado en la víspera de la posesión, sí.
+    // Con el fin corregido a la víspera de la posesión, sí.
     $this->postJson("/api/v1/expediente/contratos/{$saliente->id}/fin-del-periodo", [
         'fecha_fin' => now()->addMonth()->subDay()->toDateString(),
     ])->assertOk();
@@ -191,10 +191,11 @@ test('las autoridades que entran se ven antes de que rija su período, con a qui
     expect($suya['sucesor']['id'])->toBe($inicio->id)
         ->and($suya['sucesor']['nombre'])->toBe('Relevo2 Autoridad');
 
-    // Lo registrado antes de la regla, con la saliente sin fin: lo dice el aviso.
-    $saliente->update(['fecha_fin' => null]);
+    // Lo registrado antes de la regla, con la saliente terminando después: lo
+    // dice el aviso.
+    $saliente->update(['fecha_fin' => $posesion->copy()->addDays(3)->toDateString()]);
     expect($this->getJson('/api/v1/expediente/autoridades-electas/entrantes')->json('datos.0.aviso'))
-        ->toContain('no tiene fecha de fin');
+        ->toContain('ese día o después');
 
     // Cuando rige, ya está en funciones y deja de ser entrante.
     $saliente->update(['fecha_fin' => $posesion->copy()->subDay()->toDateString()]);
