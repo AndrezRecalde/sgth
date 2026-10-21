@@ -20,6 +20,7 @@ use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
 use App\Models\Expediente\Subrogacion;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -36,6 +37,10 @@ use Illuminate\Support\Facades\DB;
  * Desde la 4.1b, también sus ausencias y su reemplazo: la licencia que concede
  * el Consejo, la subrogación por ley del Viceprefecto y su asunción definitiva.
  * Las vacaciones siguen en Asistencia, como las de todos [TH N11].
+ *
+ * Y el relevo (2026-10-21): quien entra a un puesto de autoridad sucede a
+ * quien lo ocupa, cuyo período tiene que terminar a más tardar ese día. Las
+ * autoridades que entran se ven antes de que rija su período.
  */
 class AutoridadElectaService
 {
@@ -83,6 +88,11 @@ class AutoridadElectaService
         if ($inicio) {
             $this->validarDuracion($inicio, $fin);
             $this->validarQueCabeElPeriodo($servidor, $inicio);
+            $this->validarQueTerminaElSaliente(
+                $servidor->id,
+                filled($datos['puesto_destino_id'] ?? null) ? (int) $datos['puesto_destino_id'] : null,
+                $inicio,
+            );
         }
 
         $puesto = filled($datos['puesto_destino_id'] ?? null)
@@ -208,6 +218,70 @@ class AutoridadElectaService
     }
 
     /**
+     * Quien entra al puesto de una autoridad la sucede: el período de quien lo
+     * ocupa tiene que tener fin, y terminar a más tardar el día en que empieza
+     * el nuevo. Sin fin nadie lo cierra, y el sistema tendría dos Prefectos
+     * (2026-10-21). Ese día pueden coincidir, porque no ocupan plaza; desde la
+     * posesión firma el entrante. Al preparar el inicio y al registrarlo.
+     */
+    public function validarQueTerminaElSaliente(int $servidorId, ?int $puestoId, Carbon $inicio): void
+    {
+        foreach ($this->salientes($servidorId, $puestoId) as $saliente) {
+            $nombre = $this->nombreDe($saliente->servidor);
+            $fin = $this->finDelSaliente($saliente);
+
+            if (! $fin) {
+                throw new ReglaNegocioException(
+                    "El período de {$nombre}, que ocupa ese puesto, no tiene fecha de fin: fíjela antes en "
+                        .'«Autoridades electas», a más tardar el '.$inicio->format('d/m/Y').', para que el nuevo '
+                        .'empiece cuando ese termine.'
+                );
+            }
+
+            if ($fin->toDateString() > $inicio->toDateString()) {
+                throw new ReglaNegocioException(
+                    "El período de {$nombre} termina el ".$fin->format('d/m/Y').': el de quien lo sucede empieza '
+                        .'ese día o después.'
+                );
+            }
+        }
+    }
+
+    /**
+     * Las autoridades en funciones en ese puesto, salvo la que entra: la
+     * reelegida sigue a su propio período (validarQueCabeElPeriodo).
+     *
+     * @return Collection<int, ContratoServidor>
+     */
+    private function salientes(int $servidorId, ?int $puestoId): Collection
+    {
+        if (! $puestoId) {
+            return collect();
+        }
+
+        return ContratoServidor::where('estado', EstadoContrato::VIGENTE->value)
+            ->where('tipo_nombramiento', TipoNombramiento::ELECCION_POPULAR->value)
+            ->where('puesto_id', $puestoId)
+            ->where('servidor_id', '!=', $servidorId)
+            ->with('servidor:id,nombre,apellido')
+            ->orderBy('id')
+            ->get();
+    }
+
+    /**
+     * El último día de la autoridad que sale: el de su cesación registrada, si
+     * renunció o la removieron, o el fin de su período.
+     */
+    private function finDelSaliente(ContratoServidor $contrato): ?Carbon
+    {
+        $cese = $this->ceseEnCurso($contrato);
+
+        return $cese?->pendienteDeVigencia() && $cese->fecha_efectiva
+            ? $cese->fecha_efectiva->copy()
+            : $contrato->fecha_fin?->copy();
+    }
+
+    /**
      * El cese de una autoridad lleva su documento de origen: el resultado del
      * CNE, la resolución del Consejo, la renuncia aceptada o la partida de
      * defunción. El fin del período no: lo marca la fecha.
@@ -309,6 +383,17 @@ class AutoridadElectaService
         $fin = Carbon::parse($fecha);
         $this->validarDuracion($contrato->fecha_inicio->copy(), $fin);
 
+        // Si ya se registró quien la sucede, termina a más tardar el día en
+        // que ese empieza (2026-10-21).
+        $sucesor = $this->sucesorDe($contrato);
+
+        if ($sucesor?->fecha_efectiva && $fin->toDateString() > $sucesor->fecha_efectiva->toDateString()) {
+            throw new ReglaNegocioException(
+                $this->nombreDe($sucesor->servidor).' empieza su período en este puesto el '
+                    .$sucesor->fecha_efectiva->format('d/m/Y').': el de esta autoridad termina a más tardar ese día.'
+            );
+        }
+
         $antes = $contrato->fecha_fin;
 
         DB::transaction(function () use ($contrato, $fin, $antes) {
@@ -338,6 +423,7 @@ class AutoridadElectaService
     public function listar(): array
     {
         $hoy = now()->startOfDay();
+        $inicios = $this->iniciosPorVenir();
 
         return ContratoServidor::where('estado', EstadoContrato::VIGENTE->value)
             ->where('tipo_nombramiento', TipoNombramiento::ELECCION_POPULAR->value)
@@ -345,13 +431,14 @@ class AutoridadElectaService
             ->orderBy('fecha_inicio')
             ->orderBy('id')
             ->get()
-            ->map(function (ContratoServidor $contrato) use ($hoy) {
+            ->map(function (ContratoServidor $contrato) use ($hoy, $inicios) {
                 $fin = $contrato->fecha_fin;
                 $inicio = $contrato->movimientoOrigen?->tipo_movimiento === TipoMovimientoPersonal::INICIO_PERIODO
                     ? $contrato->movimientoOrigen
                     : null;
                 $cese = $this->ceseEnCurso($contrato);
                 $siguiente = $this->siguientePeriodo($contrato);
+                $sucesor = $this->sucesorDe($contrato, $inicios);
                 $ausencia = $this->ausenciaEnCurso($contrato);
                 $subrogacion = $this->subrogacionEnCurso($contrato);
 
@@ -377,6 +464,10 @@ class AutoridadElectaService
                     'puede_fijar_fin' => ! $inicio && ! $cese,
                     'cese'            => $cese ? [...$this->resumen($cese), 'causal' => $cese->subtipoEfectivo()?->etiqueta()] : null,
                     'siguiente'       => $this->resumen($siguiente),
+                    // Quien entra a su puesto cuando termina (2026-10-21).
+                    'sucesor'         => $sucesor
+                        ? [...$this->resumen($sucesor), 'nombre' => $this->nombreDe($sucesor->servidor)]
+                        : null,
                     // La licencia del Consejo en curso o por venir (4.1b).
                     'ausencia'        => $ausencia ? [
                         ...$this->resumen($ausencia),
@@ -390,6 +481,94 @@ class AutoridadElectaService
             })
             ->values()
             ->all();
+    }
+
+    /**
+     * Las autoridades que entran (2026-10-21): su período por empezar, a quién
+     * suceden y, si el relevo no cuadra, por qué. Antes de que rija no tienen
+     * vínculo, así que no salen en listar().
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function entrantes(): array
+    {
+        return $this->iniciosPorVenir()
+            ->map(function (MovimientoPersonal $inicio) {
+                $puestoId = $inicio->puesto_destino_id ? (int) $inicio->puesto_destino_id : null;
+                $saliente = $this->salientes((int) $inicio->servidor_id, $puestoId)->first();
+
+                // Lo que ya registrado antes de la regla, o en trámite: la
+                // misma regla que lo detendría al registrarlo, como aviso.
+                $aviso = null;
+
+                if ($inicio->fecha_efectiva) {
+                    try {
+                        $this->validarQueTerminaElSaliente((int) $inicio->servidor_id, $puestoId, $inicio->fecha_efectiva->copy());
+                    } catch (ReglaNegocioException $e) {
+                        $aviso = $e->getMessage();
+                    }
+                }
+
+                return [
+                    'movimiento_id' => $inicio->id,
+                    'servidor'      => [
+                        'id'     => $inicio->servidor?->id,
+                        'nombre' => $this->nombreDe($inicio->servidor),
+                        'cedula' => $inicio->servidor?->cedula,
+                    ],
+                    'dignidad'      => $inicio->puestoDestino?->cargo?->nombre,
+                    'unidad'        => $inicio->unidadDestino?->nombre,
+                    'desde'         => $inicio->fecha_efectiva?->toDateString(),
+                    'hasta'         => $inicio->fecha_fin_propuesta?->toDateString(),
+                    'credencial'    => $inicio->credencial_cne_numero,
+                    'designacion'   => $inicio->subtipoEfectivo() === SubtipoMovimientoPersonal::DESIGNACION_DEL_CONSEJO
+                        ? $inicio->acto_origen_numero
+                        : null,
+                    'inicio'        => $this->resumen($inicio),
+                    'sucede_a'      => $saliente ? [
+                        'contrato_id' => $saliente->id,
+                        'nombre'      => $this->nombreDe($saliente->servidor),
+                        'hasta'       => $this->finDelSaliente($saliente)?->toDateString(),
+                    ] : null,
+                    'aviso'         => $aviso,
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Los inicios de período de quien todavía no está en funciones como
+     * autoridad: en trámite, o registrados y esperando su fecha. El de la
+     * reelegida no: se ve en su fila (siguientePeriodo).
+     *
+     * @return Collection<int, MovimientoPersonal>
+     */
+    private function iniciosPorVenir(): Collection
+    {
+        return MovimientoPersonal::where('tipo_movimiento', TipoMovimientoPersonal::INICIO_PERIODO->value)
+            ->where('estado', '!=', EstadoAccionPersonal::ANULADA->value)
+            ->whereNull('efecto_aplicado_en')
+            ->whereDoesntHave('servidor.contratos', fn ($q) => $q->where('estado', EstadoContrato::VIGENTE->value)
+                ->where('tipo_nombramiento', TipoNombramiento::ELECCION_POPULAR->value))
+            ->with(['servidor:id,nombre,apellido,cedula', 'puestoDestino.cargo:id,nombre', 'unidadDestino:id,nombre'])
+            ->orderBy('fecha_efectiva')
+            ->orderBy('id')
+            ->get();
+    }
+
+    /** Quien entra al puesto de esta autoridad: el inicio por venir de otra persona en él. */
+    private function sucesorDe(ContratoServidor $contrato, ?Collection $inicios = null): ?MovimientoPersonal
+    {
+        return ($inicios ?? $this->iniciosPorVenir())->first(
+            fn (MovimientoPersonal $m) => (int) $m->puesto_destino_id === (int) $contrato->puesto_id
+                && (int) $m->servidor_id !== (int) $contrato->servidor_id
+        );
+    }
+
+    private function nombreDe(?Servidor $servidor): string
+    {
+        return trim(($servidor?->apellido ?? '').' '.($servidor?->nombre ?? ''));
     }
 
     // ── Fase 4.1b: las ausencias de la autoridad y su reemplazo ─────
@@ -463,7 +642,8 @@ class AutoridadElectaService
     /**
      * El vínculo vigente del Prefecto: la autoridad electa en la jefatura de la
      * unidad de máxima autoridad, que es la que firma como autoridad
-     * nominadora.
+     * nominadora. El día del cambio están el saliente y el entrante: desde la
+     * posesión manda el que entra, el de inicio más reciente (2026-10-21).
      */
     public function prefecto(): ?ContratoServidor
     {
@@ -471,13 +651,16 @@ class AutoridadElectaService
             ->where('tipo_nombramiento', TipoNombramiento::ELECCION_POPULAR->value)
             ->whereHas('puesto', fn ($p) => $p->where('es_jefe', true)
                 ->whereHas('unidadAdministrativa', fn ($u) => $u->where('es_maxima_autoridad', true)))
-            ->orderBy('id')
+            ->orderByDesc('fecha_inicio')
+            ->orderByDesc('id')
             ->first();
     }
 
     /**
      * El vínculo vigente del Viceprefecto: la otra autoridad electa en
-     * funciones. Si no hay exactamente una, no se adivina.
+     * funciones. Si no hay exactamente una, no se adivina. El día del cambio
+     * no cuentan los salientes: el del puesto del Prefecto queda fuera, y en
+     * cada puesto cuenta el que entra (2026-10-21).
      */
     public function viceprefecto(): ?ContratoServidor
     {
@@ -485,8 +668,12 @@ class AutoridadElectaService
 
         $otras = ContratoServidor::where('estado', EstadoContrato::VIGENTE->value)
             ->where('tipo_nombramiento', TipoNombramiento::ELECCION_POPULAR->value)
-            ->when($prefecto, fn ($q) => $q->where('id', '!=', $prefecto->id))
-            ->get();
+            ->when($prefecto, fn ($q) => $q->where('id', '!=', $prefecto->id)
+                ->where(fn ($p) => $p->whereNull('puesto_id')->orWhere('puesto_id', '!=', $prefecto->puesto_id)))
+            ->orderByDesc('fecha_inicio')
+            ->orderByDesc('id')
+            ->get()
+            ->unique(fn (ContratoServidor $c) => $c->puesto_id ?? 'sin-puesto-'.$c->id);
 
         return $otras->count() === 1 ? $otras->first() : null;
     }

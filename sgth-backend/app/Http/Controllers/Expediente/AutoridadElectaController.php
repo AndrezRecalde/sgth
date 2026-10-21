@@ -25,6 +25,12 @@ class AutoridadElectaController extends Controller
         return ApiResponse::ok($this->autoridades->listar(), 'Autoridades electas en funciones.');
     }
 
+    /** Las que entran: su período por empezar y a quién suceden (2026-10-21). */
+    public function entrantes(): JsonResponse
+    {
+        return ApiResponse::ok($this->autoridades->entrantes(), 'Autoridades electas que entran.');
+    }
+
     /**
      * Registra la subrogación por ley del Viceprefecto (COOTAD Art. 51; fase
      * 4.1b): nace en borrador con su acto de autoridad, que sigue el trámite

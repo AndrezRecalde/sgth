@@ -339,6 +339,17 @@ class MovimientoPersonalStateService
             app(AutoridadElectaService::class)->cerrarPeriodosTerminados(now()->toDateString(), $movimiento->servidor_id);
         }
 
+        // Y quien sucede a otra autoridad: el período de esa termina a más
+        // tardar el día en que empieza este. Se vio al preparar el borrador,
+        // pero el saliente pudo cambiar desde entonces (2026-10-21).
+        if ($movimiento->tipo_movimiento === TipoMovimientoPersonal::INICIO_PERIODO && $movimiento->fecha_efectiva) {
+            app(AutoridadElectaService::class)->validarQueTerminaElSaliente(
+                (int) $movimiento->servidor_id,
+                $movimiento->puesto_destino_id ? (int) $movimiento->puesto_destino_id : null,
+                $movimiento->fecha_efectiva->copy(),
+            );
+        }
+
         $this->validarDatosPropuestos($movimiento);
         $this->validarDictamenMedico($movimiento);
 

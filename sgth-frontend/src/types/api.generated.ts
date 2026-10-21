@@ -626,6 +626,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/expediente/autoridades-electas/entrantes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Las que entran: su período por empezar y a quién suceden (2026-10-21) */
+        get: operations["autoridadElecta.entrantes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/expediente/contratos/{contrato}/fin-del-periodo": {
         parameters: {
             query?: never;
@@ -18737,6 +18754,16 @@ export interface operations {
                                 codigo_registro: string | null;
                                 fecha_efectiva: string;
                             } | null;
+                            /** @description Quien entra a su puesto cuando termina (2026-10-21). */
+                            sucesor: {
+                                ""?: {
+                                    id: number;
+                                    estado: string;
+                                    codigo_registro: string | null;
+                                    fecha_efectiva: string;
+                                } | null;
+                                nombre: string;
+                            } | null;
                             /** @description La licencia del Consejo en curso o por venir (4.1b). */
                             ausencia: {
                                 ""?: {
@@ -18758,6 +18785,57 @@ export interface operations {
                                 estado: string;
                             } | null;
                             es_prefecto: boolean;
+                        }[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "autoridadElecta.entrantes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Autoridades electas que entran.";
+                        datos: {
+                            movimiento_id: number;
+                            servidor: {
+                                id: string;
+                                nombre: string;
+                                cedula: string;
+                            };
+                            dignidad: string;
+                            unidad: string;
+                            desde: string;
+                            hasta: string;
+                            credencial: string | null;
+                            designacion: string | null;
+                            inicio: {
+                                id: number;
+                                estado: string;
+                                codigo_registro: string | null;
+                                fecha_efectiva: string;
+                            } | null;
+                            sucede_a: {
+                                contrato_id: number | string;
+                                nombre: string;
+                                hasta: string;
+                            } | null;
+                            aviso: string;
                         }[];
                         meta: null;
                     };
@@ -35763,7 +35841,7 @@ export interface operations {
                             id: number;
                             nombre: string;
                             /** @enum {string} */
-                            modulo: "Nómina" | "Autoservicio" | "Actividades y Bienestar" | "Comunicación" | "Noticias y comunicados" | "Sistema" | "Estructura" | "Expediente" | "Asistencia" | "Viáticos" | "Dispensario y SSO" | "Evaluación" | "Capacitación" | "TI y Helpdesk" | "Reportería" | "Disciplinario" | "Selección" | "General";
+                            modulo: "Autoservicio" | "Actividades y Bienestar" | "Comunicación" | "Noticias y comunicados" | "Sistema" | "Estructura" | "Expediente" | "Nómina" | "Asistencia" | "Viáticos" | "Dispensario y SSO" | "Evaluación" | "Capacitación" | "TI y Helpdesk" | "Reportería" | "Disciplinario" | "Selección" | "General";
                         }[];
                         meta: null;
                     };

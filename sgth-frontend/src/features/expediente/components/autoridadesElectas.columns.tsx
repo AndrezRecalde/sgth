@@ -41,7 +41,10 @@ function Ausencia({ a }: { a: AutoridadElecta }) {
   )
 }
 
-/** Lo que sigue: el cese en curso, o el período nuevo de la autoridad reelegida. */
+/**
+ * Lo que sigue: el cese en curso, el período nuevo de la autoridad reelegida,
+ * o quien entra a su puesto cuando termina (2026-10-21).
+ */
 function Siguiente({ a }: { a: AutoridadElecta }) {
   if (a.cese) {
     return (
@@ -60,6 +63,18 @@ function Siguiente({ a }: { a: AutoridadElecta }) {
         <StatusBadge tone="info">Reelección</StatusBadge>
         <Text size="xs" c="dimmed">
           {a.siguiente.codigo_registro ?? 'En trámite'} · desde el {formatFecha(a.siguiente.fecha_efectiva)}
+        </Text>
+      </div>
+    )
+  }
+
+  if (a.sucesor) {
+    return (
+      <div>
+        <StatusBadge tone="info">Relevo</StatusBadge>
+        <Text size="xs">Le sucede {a.sucesor.nombre}</Text>
+        <Text size="xs" c="dimmed">
+          {a.sucesor.codigo_registro ?? 'En trámite'} · desde el {formatFecha(a.sucesor.fecha_efectiva)}
         </Text>
       </div>
     )
