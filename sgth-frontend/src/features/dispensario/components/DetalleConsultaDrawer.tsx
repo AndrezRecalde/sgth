@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { consultaMedicaService } from '../services/consultaMedicaService'
 import { SectionHeading, SgthDrawer, SgthTable, StatusBadge } from '@/components/ui'
 import { columnasItemsReceta } from './itemsReceta.columns'
+import { TextoClinico } from './TextoClinico'
 import { formatFechaMes } from '@/lib/fecha'
 
 interface Props {
@@ -15,29 +16,19 @@ interface Props {
 }
 
 function Campo({
-  label, valor,
+  label, valor, enriquecido,
 }: {
   label: string
   valor?: string | null
+  enriquecido?: boolean
 }) {
   if (!valor) return null
-  // El HTML llega saneado del servidor: se limpia al guardar con lista blanca
-  // de las etiquetas que produce el editor, y lo que ya estaba guardado se
-  // saneó en una migración. Ver App\Support\HtmlClinico.
-  const esHtml = valor.startsWith('<')
   return (
     <Stack gap={2}>
       <Text size="xs" fw={600} tt="uppercase" c="dimmed">
         {label}
       </Text>
-      {esHtml ? (
-        <div
-          style={{ fontSize: 'var(--mantine-font-size-sm)' }}
-          dangerouslySetInnerHTML={{ __html: valor }}
-        />
-      ) : (
-        <Text size="sm">{valor}</Text>
-      )}
+      <TextoClinico valor={valor} enriquecido={enriquecido} />
     </Stack>
   )
 }
@@ -100,10 +91,12 @@ export function DetalleConsultaDrawer({
           <Campo
             label="Diagnóstico detallado"
             valor={consulta.diagnostico_detallado}
+            enriquecido
           />
           <Campo
             label="Plan de tratamiento"
             valor={consulta.plan_tratamiento}
+            enriquecido
           />
           <Campo
             label="Notas del médico"

@@ -1,0 +1,11 @@
+/* Lo que guardó el editor, con sus párrafos y listas. */
+.enriquecido {
+  line-height: 1.6;
+  color: var(--sgth-text);
+}
+
+/* Un área de texto: se respetan los saltos de línea que escribió el médico. */
+.texto {
+  white-space: pre-line;
+  line-height: 1.6;
+}

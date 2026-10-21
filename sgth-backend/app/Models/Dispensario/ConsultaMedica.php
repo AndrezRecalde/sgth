@@ -46,10 +46,16 @@ class ConsultaMedica extends Model
      * Los campos que el médico escribe con el editor enriquecido y que, por
      * tanto, llegan como HTML.
      *
+     * Son los dos de `ConsultaCampos` que usan `RichTextInput`. La lista decía
+     * `enfermedad_actual`, que siempre fue un área de texto: el diagnóstico,
+     * que sí es HTML y se pinta como tal, se guardaba sin limpiar, y la
+     * anamnesis, que es texto, salía mutilada («TA < 140» quedaba «TA 140»).
+     * La pantalla pinta como HTML exactamente estos dos y ninguno más.
+     *
      * @var list<string>
      */
     public const CAMPOS_HTML = [
-        'enfermedad_actual', 'plan_tratamiento',
+        'diagnostico_detallado', 'plan_tratamiento',
     ];
 
     /**
@@ -79,11 +85,31 @@ class ConsultaMedica extends Model
 
         foreach (self::CAMPOS_HTML as $campo) {
             if (array_key_exists($campo, $datos) && is_string($datos[$campo])) {
-                $limpios[$campo] = HtmlClinico::limpiar($datos[$campo]);
+                $limpios[$campo] = self::comoHtml($datos[$campo]);
             }
         }
 
         return $limpios;
+    }
+
+    /**
+     * Lo que se guarda en un campo enriquecido: HTML seguro siempre.
+     *
+     * El editor manda HTML (`<p>…</p>`), y eso pasa por el saneador. Un texto
+     * sin etiquetas —una consulta de antes del editor, o la API llamada a
+     * mano— no es HTML: se escapa en vez de sanearse, porque el saneador lo
+     * leería como marcado y se comería lo que parezca una etiqueta, como el
+     * `<` de «TA < 140».
+     */
+    public static function comoHtml(string $valor): string
+    {
+        if (trim($valor) === '') {
+            return $valor;
+        }
+
+        return str_starts_with(ltrim($valor), '<')
+            ? (string) HtmlClinico::limpiar($valor)
+            : e($valor);
     }
 
     public function historiaClinica(): BelongsTo

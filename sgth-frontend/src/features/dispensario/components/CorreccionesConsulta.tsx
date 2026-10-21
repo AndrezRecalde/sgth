@@ -5,32 +5,30 @@ import { Alert, Button, Card, Group, Stack, Text } from "@mantine/core";
 import { IconHistory } from "@tabler/icons-react";
 import { useVersionesConsulta } from "../hooks/useConsultaMedica";
 import type { VersionConsulta } from "../services/consultaMedicaService";
+import { TextoClinico } from "./TextoClinico";
 import { formatFechaMesHora } from '@/lib/fecha';
 
 interface Props {
   consultaId: number;
 }
 
-function Campo({ label, valor }: { label: string; valor?: string | null }) {
+function Campo({
+  label,
+  valor,
+  enriquecido,
+}: {
+  label: string;
+  valor?: string | null;
+  enriquecido?: boolean;
+}) {
   if (!valor) return null;
-
-  // El HTML llega saneado del servidor: se limpia al guardar, con lista blanca
-  // de las etiquetas que produce el editor. Ver `App\Support\HtmlClinico`.
-  const esHtml = valor.startsWith("<");
 
   return (
     <Stack gap={2}>
       <Text size="xs" c="dimmed" fw={500}>
         {label}
       </Text>
-      {esHtml ? (
-        <div
-          style={{ fontSize: "var(--mantine-font-size-xs)", lineHeight: 1.5 }}
-          dangerouslySetInnerHTML={{ __html: valor }}
-        />
-      ) : (
-        <Text size="xs">{valor}</Text>
-      )}
+      <TextoClinico valor={valor} enriquecido={enriquecido} size="xs" />
     </Stack>
   );
 }
@@ -108,8 +106,13 @@ export function CorreccionesConsulta({ consultaId }: Props) {
                   <Campo
                     label="Diagnóstico detallado"
                     valor={version.diagnostico_detallado}
+                    enriquecido
                   />
-                  <Campo label="Plan" valor={version.plan_tratamiento} />
+                  <Campo
+                    label="Plan"
+                    valor={version.plan_tratamiento}
+                    enriquecido
+                  />
                   <Campo label="Notas" valor={version.notas_medico} />
                 </Stack>
               </Card>

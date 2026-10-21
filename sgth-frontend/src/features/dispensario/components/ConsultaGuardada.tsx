@@ -4,6 +4,7 @@ import { Button, Card, Group, Stack, Text, Tooltip } from '@mantine/core'
 import { IconEdit } from '@tabler/icons-react'
 import { StatusBadge } from '@/components/ui'
 import { CorreccionesConsulta } from './CorreccionesConsulta'
+import { TextoClinico } from './TextoClinico'
 import { motivoParaNoEditar } from '../utils/consultaMedica'
 import type { ConsultaMedica } from '../services/consultaMedicaService'
 import classes from './ConsultaGuardada.module.css'
@@ -17,32 +18,20 @@ interface Props {
 function SeccionVista({
   label,
   valor,
+  enriquecido,
 }: {
   label: string
   valor?: string | null
+  enriquecido?: boolean
 }) {
   if (!valor) return null
-
-  // El HTML llega saneado del servidor: se limpia al guardar con lista blanca
-  // de las etiquetas que produce el editor, y lo que ya estaba guardado se
-  // saneó en una migración. Ver App\Support\HtmlClinico.
-  const esHtml = valor.startsWith('<')
 
   return (
     <Stack gap={4} py="sm" className={classes.seccion}>
       <Text size="xs" fw={500} c="dimmed" tt="uppercase" className={classes.etiqueta}>
         {label}
       </Text>
-      {esHtml ? (
-        <div
-          className={classes.contenido}
-          dangerouslySetInnerHTML={{ __html: valor }}
-        />
-      ) : (
-        <Text size="sm" className={classes.contenido}>
-          {valor}
-        </Text>
-      )}
+      <TextoClinico valor={valor} enriquecido={enriquecido} />
     </Stack>
   )
 }
@@ -152,10 +141,12 @@ export function ConsultaGuardada({ consulta, usuarioId, onEditar }: Props) {
         <SeccionVista
           label="Diagnóstico detallado"
           valor={consulta.diagnostico_detallado}
+          enriquecido
         />
         <SeccionVista
           label="Plan de tratamiento"
           valor={consulta.plan_tratamiento}
+          enriquecido
         />
         <SeccionVista
           label="Notas del médico"
