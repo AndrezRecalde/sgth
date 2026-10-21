@@ -7,11 +7,28 @@ import { IconCubePlus, IconPencilPlus } from "@tabler/icons-react";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import { useQuery } from "@tanstack/react-query";
 import { inventarioMedicinaService } from "../services/inventarioMedicinaService";
+import type { InventarioMedicina } from "../services/inventarioMedicinaService";
 
 // El término escrito entraba directo en la clave de consulta, así que cada
 // tecla a partir de la segunda pedía una lista de medicinas y solo importaba
 // la última.
 const RETARDO_BUSQUEDA_MS = 300;
+
+/**
+ * Lo que se dice de las existencias de cada opción.
+ *
+ * Contaba `stock_actual`, que incluye lo vencido: con todos los lotes
+ * caducados decía «Stock: 40», el médico la recetaba creyendo que el paciente
+ * se la llevaba de aquí, y el despacho no podía entregar ni una. Cuenta lo
+ * entregable, como el despacho.
+ */
+function existencias(m: InventarioMedicina): { texto: string; falta: boolean } {
+  const entregable = m.stock_despachable ?? m.stock_actual;
+  if (entregable > 0) return { texto: `Stock: ${entregable}`, falta: false };
+  return (m.stock_caducado ?? 0) > 0
+    ? { texto: "Solo caducadas", falta: true }
+    : { texto: "Agotada", falta: true };
+}
 
 interface Props {
   onSeleccionar: (id: number, nombre: string) => void;
@@ -113,29 +130,27 @@ export function BuscarMedicinaSelect({
           ) : resultados.length === 0 ? (
             <Combobox.Empty>Sin resultados</Combobox.Empty>
           ) : (
-            resultados.map((m) => (
-              <Combobox.Option value={String(m.id)} key={m.id}>
-                <Group gap={6} justify="space-between">
-                  <Text size="sm">
-                    {m.nombre}
-                    {m.concentracion && (
-                      <Text span c="dimmed">
-                        {" "}
-                        — {m.concentracion}
-                      </Text>
-                    )}
-                  </Text>
-                  <Text
-                    size="xs"
-                    c={m.stock_actual === 0 ? "amber" : "dimmed"}
-                  >
-                    {m.stock_actual === 0
-                      ? "Agotada"
-                      : `Stock: ${m.stock_actual}`}
-                  </Text>
-                </Group>
-              </Combobox.Option>
-            ))
+            resultados.map((m) => {
+              const stock = existencias(m);
+              return (
+                <Combobox.Option value={String(m.id)} key={m.id}>
+                  <Group gap={6} justify="space-between">
+                    <Text size="sm">
+                      {m.nombre}
+                      {m.concentracion && (
+                        <Text span c="dimmed">
+                          {" "}
+                          — {m.concentracion}
+                        </Text>
+                      )}
+                    </Text>
+                    <Text size="xs" c={stock.falta ? "amber" : "dimmed"}>
+                      {stock.texto}
+                    </Text>
+                  </Group>
+                </Combobox.Option>
+              );
+            })
           )}
 
           {onCrearNueva && (
