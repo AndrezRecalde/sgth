@@ -5,6 +5,7 @@ import { IconCheck, IconEye, IconBan, IconPrinter } from '@tabler/icons-react'
 import { StatusBadge, TableActions } from '@/components/ui'
 import type { SemanticTone } from '@/config/design.tokens'
 import type { DataTableColumn } from 'mantine-datatable'
+import { admiteDespacho } from '../services/recetaService'
 import type { RecetaMedica } from '../services/recetaService'
 import { formatFechaMes } from '@/lib/fecha'
 
@@ -24,12 +25,6 @@ const ESTADO_LABELS: Record<string, string> = {
   anulada:             'Anulada',
   externa:             'Externa',
 }
-
-/**
- * Estados en los que no queda nada que despachar. `externa` entra desde que se
- * emite: todo lo recetado se adquiere fuera del dispensario.
- */
-const SIN_DESPACHO = ['despachada_completa', 'anulada', 'externa']
 
 /**
  * Anular cierra lo que falta por entregar, así que no procede sobre una receta
@@ -130,7 +125,7 @@ export function getRecetasColumns(
       title:    '',
       width:    50,
       render: (r) => {
-        const cerrada = SIN_DESPACHO.includes(r.estado)
+        const cerrada = !admiteDespacho(r)
         return (
           <TableActions actions={[
             {

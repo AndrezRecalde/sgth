@@ -7,12 +7,14 @@ import {
 } from '@mantine/core'
 import { ModalFooter, SgthModal, StatusBadge } from '@/components/ui'
 import {
-  IconPill, IconAlertTriangle,
+  IconPill, IconAlertTriangle, IconBan,
 } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useDespacharReceta } from '../hooks/useReceta'
-import { esItemExterno, nombreDeItem } from '../services/recetaService'
+import {
+  admiteDespacho, esItemExterno, nombreDeItem,
+} from '../services/recetaService'
 import type { RecetaMedica, ItemReceta } from '../services/recetaService'
 import { formatFechaMes } from '@/lib/fecha'
 
@@ -90,9 +92,17 @@ export function DespacharRecetaModal({
   // justamente lo que hay que decirle al paciente que compre fuera.
   const itemsExternos = receta.items.filter(esItemExterno)
 
-  const itemsPendientes = receta.items.filter(
-    item => ! esItemExterno(item) && item.estado !== 'despachado_completo'
+  const itemsFarmacia = receta.items.filter(item => ! esItemExterno(item))
+  const itemsPendientes = itemsFarmacia.filter(
+    item => item.estado !== 'despachado_completo'
   )
+
+  // «Ver detalle» de una receta cerrada abría este mismo modal con las
+  // cantidades editables y «Confirmar despacho» activo: sobre una anulada
+  // proponía entregar lo que faltaba, y era el servidor el que lo rechazaba.
+  // Cerrada, se enseña entera y sin nada que despachar.
+  const soloLectura = ! admiteDespacho(receta)
+  const itemsALaVista = soloLectura ? itemsFarmacia : itemsPendientes
 
   const handleDespachar = () => {
     const items = itemsPendientes
@@ -125,7 +135,7 @@ export function DespacharRecetaModal({
     <SgthModal
       opened={opened}
       onClose={handleClose}
-      title="Despachar receta médica"
+      title={soloLectura ? 'Detalle de la receta' : 'Despachar receta médica'}
       size="lg"
     >
       <Stack gap="sm">
@@ -148,6 +158,20 @@ export function DespacharRecetaModal({
             </Text>
           )}
         </Card>
+
+        {receta.estado === 'anulada' && (
+          <Alert
+            icon={<IconBan size={14} />}
+            color="red"
+            variant="light"
+            title="Receta anulada"
+          >
+            <Text size="xs">
+              Lo que faltaba por entregar ya no se despacha.
+              {receta.motivo_anulacion && ` Motivo: ${receta.motivo_anulacion}.`}
+            </Text>
+          </Alert>
+        )}
 
         {/* Antes que la lista de entrega: quien atiende el mostrador tiene que
             poder decirle al paciente, de entrada, qué no va a llevarse de
@@ -184,10 +208,10 @@ export function DespacharRecetaModal({
         )}
 
         <Text size="sm" fw={500}>
-          Medicamentos a despachar
+          {soloLectura ? 'Medicamentos de la farmacia' : 'Medicamentos a despachar'}
         </Text>
 
-        {itemsPendientes.length === 0 ? (
+        {itemsALaVista.length === 0 ? (
           <Alert color="emerald" variant="light">
             <Text size="sm">
               {itemsExternos.length === receta.items.length
@@ -197,7 +221,7 @@ export function DespacharRecetaModal({
           </Alert>
         ) : (
           <Stack gap="sm">
-            {itemsPendientes.map((item) => {
+            {itemsALaVista.map((item) => {
               const faltante = item.cantidad_prescrita -
                 (item.cantidad_despachada ?? 0)
               const estadoItem = ESTADO_ITEM[item.estado ?? 'pendiente']
@@ -208,7 +232,7 @@ export function DespacharRecetaModal({
               return (
                 <Card key={item.id} withBorder radius="md" p="sm">
                   <Stack gap="xs">
-                    {hayEntregable === 0 ? (
+                    {soloLectura ? null : hayEntregable === 0 ? (
                       <Alert
                         icon={<IconAlertTriangle size={14} />}
                         color="red"
@@ -287,24 +311,26 @@ export function DespacharRecetaModal({
                           {faltante}
                         </Text>
                       </Grid.Col>
-                      <Grid.Col span={{ base: 12, sm: 4 }}>
-                        <NumberInput
-                          label="Cantidad a despachar"
-                          // Unidades entregadas: enteras, como las exige el
-                          // servidor. Mantine deja decimales por defecto.
-                          allowDecimal={false}
-                          size="xs"
-                          min={0}
-                          max={tope}
-                          disabled={hayEntregable === 0}
-                          {...contained}
-                          value={cantidades[item.id!] ?? 0}
-                          onChange={(v) => setCantidades(prev => ({
-                            ...prev,
-                            [item.id!]: Math.min(Number(v) || 0, tope),
-                          }))}
-                        />
-                      </Grid.Col>
+                      {!soloLectura && (
+                        <Grid.Col span={{ base: 12, sm: 4 }}>
+                          <NumberInput
+                            label="Cantidad a despachar"
+                            // Unidades entregadas: enteras, como las exige el
+                            // servidor. Mantine deja decimales por defecto.
+                            allowDecimal={false}
+                            size="xs"
+                            min={0}
+                            max={tope}
+                            disabled={hayEntregable === 0}
+                            {...contained}
+                            value={cantidades[item.id!] ?? 0}
+                            onChange={(v) => setCantidades(prev => ({
+                              ...prev,
+                              [item.id!]: Math.min(Number(v) || 0, tope),
+                            }))}
+                          />
+                        </Grid.Col>
+                      )}
                     </Grid>
                   </Stack>
                 </Card>
@@ -313,18 +339,22 @@ export function DespacharRecetaModal({
           </Stack>
         )}
       </Stack>
-      <ModalFooter
-        onCancel={handleClose}
-        submitLabel="Confirmar despacho"
-        submitting={despachar.isPending}
-        submitDisabled={
-          itemsPendientes.length === 0 ||
-          itemsPendientes.every(
-            item => (cantidades[item.id!] ?? 0) === 0
-          )
-        }
-        onSubmit={handleDespachar}
-      />
+      {soloLectura ? (
+        <ModalFooter onCancel={handleClose} cancelLabel="Cerrar" sinPrincipal />
+      ) : (
+        <ModalFooter
+          onCancel={handleClose}
+          submitLabel="Confirmar despacho"
+          submitting={despachar.isPending}
+          submitDisabled={
+            itemsPendientes.length === 0 ||
+            itemsPendientes.every(
+              item => (cantidades[item.id!] ?? 0) === 0
+            )
+          }
+          onSubmit={handleDespachar}
+        />
+      )}
     </SgthModal>
   )
 }

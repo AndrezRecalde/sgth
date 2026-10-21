@@ -49,6 +49,7 @@ export interface RecetaMedica {
   fecha_emision:           string
   estado:                  string
   indicaciones_generales?: string | null
+  motivo_anulacion?:       string | null
   items:                   ItemReceta[]
   alertas_alergias?:       string[]
   consulta_medica?: {
@@ -106,6 +107,17 @@ export function nombreDeItem(item: ItemReceta): string {
 /** Si la farmacia no maneja este medicamento y no hay nada que despachar. */
 export function esItemExterno(item: ItemReceta): boolean {
   return item.inventario_medicina_id === null
+}
+
+/**
+ * Estados en los que no queda nada que despachar. `externa` entra desde que se
+ * emite: todo lo recetado se adquiere fuera del dispensario.
+ */
+const ESTADOS_SIN_DESPACHO = ['despachada_completa', 'anulada', 'externa']
+
+/** Si a la receta le queda algo que la farmacia pueda entregar. */
+export function admiteDespacho(receta: Pick<RecetaMedica, 'estado'>): boolean {
+  return !ESTADOS_SIN_DESPACHO.includes(receta.estado)
 }
 
 export const recetaService = {
