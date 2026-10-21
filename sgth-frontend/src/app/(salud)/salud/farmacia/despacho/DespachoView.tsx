@@ -41,13 +41,20 @@ function rangoHoy(): [Date, Date] {
   return [hoy, hoy]
 }
 
+/**
+ * De lunes a domingo de la semana en curso.
+ *
+ * Contaba `getDay() - 1` días hacia atrás, y `getDay()` es 0 el domingo: ese
+ * día el lunes caía en el futuro y «Esta semana» enseñaba la semana próxima,
+ * vacía. Y terminaba el viernes, así que el sábado dejaba fuera lo de hoy.
+ */
 function rangoSemana(): [Date, Date] {
   const hoy = new Date()
   const lunes = new Date(hoy)
-  lunes.setDate(hoy.getDate() - hoy.getDay() + 1)
-  const viernes = new Date(lunes)
-  viernes.setDate(lunes.getDate() + 4)
-  return [lunes, viernes]
+  lunes.setDate(hoy.getDate() - ((hoy.getDay() + 6) % 7))
+  const domingo = new Date(lunes)
+  domingo.setDate(lunes.getDate() + 6)
+  return [lunes, domingo]
 }
 
 function rangoMes(): [Date, Date] {
