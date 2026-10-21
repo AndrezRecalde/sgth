@@ -157,7 +157,16 @@ final class RecetaService implements RecetaServiceInterface
     public function despacharReceta(int $recetaId, array $itemsDespachados, int $despachadoPor): RecetaMedica
     {
         return DB::transaction(function () use ($recetaId, $itemsDespachados, $despachadoPor) {
-            $receta = RecetaMedica::with('items')->findOrFail($recetaId);
+            // La receta se bloquea antes de leer lo que falta por entregar.
+            // Sin el bloqueo, dos despachos a la vez —dos personas, o dos
+            // pestañas— leían los dos «10 recetadas, 0 entregadas», pasaban los
+            // dos el control y sacaban 20 unidades del estante para 10
+            // recetadas; el ítem decía 10 y el kardex dos egresos. Y un anular
+            // simultáneo quedaba pisado por el estado que escribe el despacho.
+            // Con el bloqueo el segundo espera, y al entrar ve lo que dejó el
+            // primero. Los ítems se cargan después, ya bajo el bloqueo.
+            $receta = RecetaMedica::lockForUpdate()->findOrFail($recetaId);
+            $receta->load('items');
 
             if (in_array($receta->estado, [
                 EstadoReceta::DESPACHADA_COMPLETA->value,
