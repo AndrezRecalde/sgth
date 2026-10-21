@@ -9,7 +9,7 @@ import { z } from 'zod/v4'
  * llegaba del servidor sin señalar qué campo lo causaba.
  */
 export const itemRecetaSchema = z.object({
-  cantidad_prescrita: z.number()
+  cantidad_prescrita: z.number({ error: 'Indique la cantidad' })
     .int('Las unidades no se parten por la mitad')
     .min(1, 'Debe ser al menos 1'),
   dosis:        z.string().min(1, 'Indique la dosis')

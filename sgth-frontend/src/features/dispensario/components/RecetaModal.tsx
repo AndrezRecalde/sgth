@@ -181,6 +181,7 @@ export function RecetaModal({
           minRows={2}
           {...contained}
           {...register("indicaciones_generales")}
+          error={errors.indicaciones_generales?.message}
         />
 
         {/* Decide qué se imprime, no qué se registra: las alergias siguen en

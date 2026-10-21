@@ -9,16 +9,23 @@ import { z } from 'zod/v4'
  *
  * `nombre` es solo para pintar la ficha mientras se llena el formulario; no
  * viaja al servidor.
+ *
+ * Los topes son los de `StoreRecetaMedicaRequest`. Faltaban —solo los tenía el
+ * esquema de editar— y una posología larga volvía como un 422 en un aviso
+ * suelto, sin señalar el campo.
  */
 export const itemRecetaSchema = z.object({
   inventario_medicina_id: z.number().nullable(),
-  medicamento_externo:    z.string().nullable(),
+  medicamento_externo:    z.string().max(255, 'El nombre admite hasta 255 caracteres').nullable(),
   nombre:                 z.string(),
-  cantidad_prescrita:     z.number().min(1, 'Mínimo 1'),
-  dosis:                  z.string().min(1, 'Requerido'),
-  frecuencia:             z.string().min(1, 'Requerido'),
-  duracion:               z.string().min(1, 'Requerido'),
-  observaciones:          z.string().optional().nullable(),
+  // Vacía mientras se reescribe: el campo se puede borrar, y entonces lo dice.
+  cantidad_prescrita:     z.number({ error: 'Indique la cantidad' })
+    .int('Las unidades no se parten por la mitad')
+    .min(1, 'Debe ser al menos 1'),
+  dosis:                  z.string().min(1, 'Indique la dosis').max(100, 'Máximo 100 caracteres'),
+  frecuencia:             z.string().min(1, 'Indique la frecuencia').max(100, 'Máximo 100 caracteres'),
+  duracion:               z.string().min(1, 'Indique la duración').max(100, 'Máximo 100 caracteres'),
+  observaciones:          z.string().max(500, 'Máximo 500 caracteres').optional().nullable(),
 }).refine(
   (item) =>
     (item.inventario_medicina_id !== null) !==
@@ -30,7 +37,7 @@ export const itemRecetaSchema = z.object({
 )
 
 export const recetaSchema = z.object({
-  indicaciones_generales: z.string().optional().nullable(),
+  indicaciones_generales: z.string().max(1000, 'Máximo 1000 caracteres').optional().nullable(),
   /**
    * Solo afecta al impreso; las alergias siguen en la historia clínica y a la
    * vista del dispensario. Viene en `true`: la receta pasa por manos de
@@ -44,4 +51,3 @@ export const recetaSchema = z.object({
 })
 
 export type RecetaFormData = z.infer<typeof recetaSchema>
-export type ItemRecetaFormData = z.infer<typeof itemRecetaSchema>
