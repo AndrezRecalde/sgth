@@ -92,7 +92,7 @@ export function getRecetasColumns(
     },
     {
       accessor: 'medico',
-      title:    'Médico',
+      title:    'Profesional',
       width:    160,
       render: (r) => {
         const medico = r.consulta_medica?.medico?.servidor

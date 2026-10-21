@@ -82,7 +82,13 @@ export function DespachoView() {
   const anular = useAnularReceta()
   const { abrir: abrirPdf } = useRecetaPdf()
 
-  const { data: medicos = [] } = usePersonalMedico('medico')
+  // Recetan los médicos y los odontólogos. Con solo `medico`, las recetas de
+  // Odontología no se podían filtrar por quien las emitió. Se pide todo el
+  // personal clínico y se deja fuera a Enfermería, que no receta.
+  const { data: personal = [] } = usePersonalMedico()
+  const prescriptores = personal
+    .filter(p => p.roles.includes('medico') || p.roles.includes('odontologo'))
+    .sort((a, b) => a.nombre_completo.localeCompare(b.nombre_completo, 'es'))
 
   const { data, isLoading, error } = useRecetasFarmacia({
     medico_id:   medicoId ? Number(medicoId) : undefined,
@@ -170,11 +176,11 @@ export function DespachoView() {
         }
       >
         <Select
-          label="Médico"
-          placeholder="Todos los médicos"
-          data={medicos.map(m => ({
+          label="Profesional"
+          placeholder="Todos los profesionales"
+          data={prescriptores.map(m => ({
             value: String(m.id),
-            label: m.nombre_completo ?? `Médico ${m.id}`,
+            label: m.nombre_completo || `Profesional ${m.id}`,
           }))}
           searchable
           clearable
