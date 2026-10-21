@@ -3,6 +3,7 @@
 namespace App\Services\Dispensario;
 
 use App\Contracts\Dispensario\AgendaServiceInterface;
+use App\Enums\NivelAlertaTriaje;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Dispensario\AgendaMedica;
 use App\Models\Dispensario\HistoriaClinica;
@@ -190,15 +191,45 @@ final class AgendaService implements AgendaServiceInterface
                     WHEN 'no_presentado'  THEN 4
                     WHEN 'atendido'       THEN 5
                     ELSE 6
-                END,
-                fecha ASC,
-                registrado_en ASC
+                END
             ")
+            ->orderByRaw($this->prioridadDelTriaje())
+            ->orderBy('fecha')
+            ->orderBy('registrado_en')
+            // Dos turnos registrados en el mismo segundo cambiaban de sitio
+            // entre una recarga y otra.
+            ->orderBy('id')
             ->get();
 
         $this->adjuntarHistoria($turnos);
 
         return $turnos;
+    }
+
+    /**
+     * Entre los que esperan, primero lo que más corre según su último triaje.
+     *
+     * La cola del médico ordenaba solo por llegada: un paciente que llegó con
+     * 168/104 iba detrás de un resfriado que llegó antes, y la columna «Triaje»
+     * lo resumía en «Listo». El orden sale de NivelAlertaTriaje::prioridad(),
+     * que estaba escrito para esto y nadie usaba. Solo dentro de «en sala» y
+     * «en espera»: a lo atendido o en curso no le cambia nada.
+     */
+    private function prioridadDelTriaje(): string
+    {
+        $porNivel = collect(NivelAlertaTriaje::cases())
+            ->map(fn (NivelAlertaTriaje $n) => "WHEN '{$n->value}' THEN {$n->prioridad()}")
+            ->implode(' ');
+
+        return "
+            CASE WHEN estado IN ('en_sala', 'en_espera') THEN
+                CASE (
+                    SELECT t.nivel_alerta FROM triajes t
+                     WHERE t.agenda_medica_id = agendas_medicas.id
+                     ORDER BY t.id DESC LIMIT 1
+                ) {$porNivel} ELSE 9 END
+            ELSE 9 END
+        ";
     }
 
     public function marcarNoPresentado(

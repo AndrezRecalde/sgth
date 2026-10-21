@@ -2,10 +2,11 @@
 
 import { Stack, Text } from '@mantine/core'
 import {
-  IconEye, IconRefresh, IconStethoscope, IconUserOff,
+  IconAlertTriangle, IconEye, IconRefresh, IconStethoscope, IconUserOff,
 } from '@tabler/icons-react'
 import { confirmar, StatusBadge, TableActions } from '@/components/ui'
 import { ESTADO_TURNO_LABELS, TONO_TURNO } from '../constants/turnos'
+import { NIVEL_ALERTA } from '../constants/signosVitales'
 import { formatFecha } from '@/lib/fecha'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { AgendaMedica } from '../services/agendaService'
@@ -25,6 +26,49 @@ function nombrePaciente(turno: AgendaMedica): string {
     return `${turno.carga_familiar.nombres} ${turno.carga_familiar.apellidos}`
   }
   return '—'
+}
+
+/**
+ * El triaje tal como llegó: el nivel con su color y, si algo se sale de rango,
+ * qué constante y con qué valor.
+ *
+ * Decía «Listo» y nada más, aunque la respuesta ya traía el nivel y los
+ * hallazgos: que el paciente llegó con 168/104 llegaba hasta la pantalla y la
+ * pantalla lo callaba. La cola de Enfermería ya lo enseñaba; quien decide el
+ * orden de atención, no.
+ */
+function celdaTriaje(t: AgendaMedica) {
+  if (!t.triaje) {
+    return (
+      <Text size="xs" c={t.requiere_triaje ? 'amber' : 'dimmed'}>
+        {t.requiere_triaje ? 'Pendiente' : '—'}
+      </Text>
+    )
+  }
+
+  const nivel = t.triaje.nivel_alerta
+  // Una toma anterior a la valoración automática no trae nivel.
+  if (!nivel) return <Text size="xs" c="emerald">Listo</Text>
+
+  const urgente = nivel === 'critico' || nivel === 'atencion'
+
+  return (
+    <Stack gap={2}>
+      <StatusBadge
+        tone={NIVEL_ALERTA[nivel].tono}
+        size="xs"
+        variant={urgente ? 'filled' : 'light'}
+        leftSection={urgente ? <IconAlertTriangle size={10} /> : undefined}
+      >
+        {NIVEL_ALERTA[nivel].etiqueta}
+      </StatusBadge>
+      {(t.triaje.hallazgos_alerta ?? []).map((h) => (
+        <Text key={h.constante} size="xs" c="dimmed">
+          {h.etiqueta}: {h.valor}
+        </Text>
+      ))}
+    </Stack>
+  )
 }
 
 export function getConsultasTurnosColumns(
@@ -70,15 +114,8 @@ export function getConsultasTurnosColumns(
     {
       accessor: 'triaje',
       title:    'Triaje',
-      width:    90,
-      render: (t) => (
-        <Text
-          size="xs"
-          c={t.triaje ? 'emerald' : t.requiere_triaje ? 'amber' : 'dimmed'}
-        >
-          {t.triaje ? 'Listo' : t.requiere_triaje ? 'Pendiente' : '—'}
-        </Text>
-      ),
+      width:    190,
+      render: celdaTriaje,
     },
     {
       accessor: 'estado',
