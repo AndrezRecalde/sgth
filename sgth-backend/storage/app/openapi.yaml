@@ -49474,6 +49474,8 @@
             },
             "post": {
                 "operationId": "receta.store",
+                "description": "Bastaba con que la consulta existiera: un m\u00e9dico pod\u00eda emitir una receta\nen la consulta de un colega, y el impreso sal\u00eda con el nombre, la c\u00e9dula\ny el c\u00f3digo ACESS del colega, que es lo que toma el PDF de la consulta.\nAdem\u00e1s, quien la emit\u00eda no pod\u00eda luego corregirla ni anularla, porque\n\u00abla emiti\u00f3\u00bb el otro. Corregir y anular ya exig\u00edan ser el autor.",
+                "summary": "Emite una receta en una consulta de quien la emite",
                 "tags": [
                     "Receta"
                 ],
@@ -49515,6 +49517,36 @@
                                         "mensaje",
                                         "datos",
                                         "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string"
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "errores": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "errores"
                                     ]
                                 }
                             }

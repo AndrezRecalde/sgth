@@ -7721,6 +7721,14 @@ export interface paths {
         };
         get: operations["receta.index"];
         put?: never;
+        /**
+         * Emite una receta en una consulta de quien la emite
+         * @description Bastaba con que la consulta existiera: un médico podía emitir una receta
+         *     en la consulta de un colega, y el impreso salía con el nombre, la cédula
+         *     y el código ACESS del colega, que es lo que toma el PDF de la consulta.
+         *     Además, quien la emitía no podía luego corregirla ni anularla, porque
+         *     «la emitió» el otro. Corregir y anular ya exigían ser el autor.
+         */
         post: operations["receta.store"];
         delete?: never;
         options?: never;
@@ -38265,6 +38273,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
             422: components["responses"]["ValidationException"];
         };
     };
