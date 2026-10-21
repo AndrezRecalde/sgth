@@ -10,6 +10,7 @@ use App\Enums\EstadoReceta;
 use App\Exceptions\ReglaNegocioException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 final class ItemRecetaController extends Controller
 {
@@ -44,6 +45,26 @@ final class ItemRecetaController extends Controller
         return $receta->consultaMedica?->medico_id === $request->user()->id;
     }
 
+    /**
+     * Bloquea la receta y comprueba, ya bajo el bloqueo, que se puede tocar.
+     *
+     * Es el mismo bloqueo que toma el despacho. Sin él, una edición que leyó
+     * «pendiente» podía escribir después de que el mostrador entregara: la
+     * receta quedaba con 5 recetadas y 10 entregadas.
+     */
+    private function bloquearEditable(int $recetaId, string $accion): RecetaMedica
+    {
+        $receta = RecetaMedica::lockForUpdate()->findOrFail($recetaId);
+
+        if (! in_array($receta->estado, self::EDITABLES, true)) {
+            throw new ReglaNegocioException(
+                "Solo se pueden {$accion} ítems de recetas pendientes."
+            );
+        }
+
+        return $receta;
+    }
+
     public function update(
         Request $request,
         int $recetaId,
@@ -72,16 +93,16 @@ final class ItemRecetaController extends Controller
             );
         }
 
-        if (! in_array($receta->estado, self::EDITABLES, true)) {
-            throw new ReglaNegocioException(
-                'Solo se pueden editar ítems de recetas pendientes.'
-            );
-        }
+        $item = DB::transaction(function () use ($recetaId, $itemId, $datos) {
+            $this->bloquearEditable($recetaId, 'editar');
 
-        $item = ItemReceta::where('receta_medica_id', $recetaId)
-            ->findOrFail($itemId);
+            $item = ItemReceta::where('receta_medica_id', $recetaId)
+                ->findOrFail($itemId);
 
-        $item->update($datos);
+            $item->update($datos);
+
+            return $item;
+        });
 
         return ApiResponse::ok(
             $item, 'Ítem actualizado correctamente.'
@@ -93,8 +114,8 @@ final class ItemRecetaController extends Controller
         int $recetaId,
         int $itemId
     ): JsonResponse {
-        $receta = RecetaMedica::with(['items', 'consultaMedica'])
-            ->findOrFail($recetaId);
+        // Los ítems se leen después, bajo el bloqueo.
+        $receta = RecetaMedica::with('consultaMedica')->findOrFail($recetaId);
 
         if (! $this->laEmitio($receta, $request)) {
             return ApiResponse::error(
@@ -104,34 +125,33 @@ final class ItemRecetaController extends Controller
             );
         }
 
-        if (! in_array($receta->estado, self::EDITABLES, true)) {
-            throw new ReglaNegocioException(
-                'Solo se pueden quitar ítems de recetas pendientes.'
-            );
-        }
+        DB::transaction(function () use ($recetaId, $itemId) {
+            $receta = $this->bloquearEditable($recetaId, 'quitar');
+            $receta->load('items');
 
-        if ($receta->items->count() <= 1) {
-            throw new ReglaNegocioException(
-                'La receta debe tener al menos un medicamento.'
-            );
-        }
+            if ($receta->items->count() <= 1) {
+                throw new ReglaNegocioException(
+                    'La receta debe tener al menos un medicamento.'
+                );
+            }
 
-        $item = ItemReceta::where('receta_medica_id', $recetaId)
-            ->findOrFail($itemId);
+            $item = ItemReceta::where('receta_medica_id', $recetaId)
+                ->findOrFail($itemId);
 
-        $item->delete();
+            $item->delete();
 
-        // Quitar el último medicamento del catálogo deja una receta que la
-        // farmacia ya no puede tocar. Sin esto se quedaría «pendiente» en la
-        // cola del mostrador esperando una entrega que nadie puede hacer.
-        $quedaAlgoQueEntregar = $receta->items
-            ->where('id', '!=', $item->id)
-            ->reject->esExterno()
-            ->isNotEmpty();
+            // Quitar el último medicamento del catálogo deja una receta que la
+            // farmacia ya no puede tocar. Sin esto se quedaría «pendiente» en
+            // la cola del mostrador esperando una entrega que nadie puede hacer.
+            $quedaAlgoQueEntregar = $receta->items
+                ->where('id', '!=', $item->id)
+                ->reject->esExterno()
+                ->isNotEmpty();
 
-        if (! $quedaAlgoQueEntregar) {
-            $receta->update(['estado' => EstadoReceta::EXTERNA->value]);
-        }
+            if (! $quedaAlgoQueEntregar) {
+                $receta->update(['estado' => EstadoReceta::EXTERNA->value]);
+            }
+        });
 
         return ApiResponse::ok(
             [], 'Ítem eliminado correctamente.'
