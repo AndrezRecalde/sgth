@@ -113,6 +113,12 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
                 userId:       $datos['created_by'] ?? null,
             );
 
+            // Si ya existía por la cédula —la del preocupacional de quien hoy
+            // es servidor— se devolvía tal cual, sin dueño: la recepción la
+            // seguía viendo «sin historia» y el turno llegaba al médico sin
+            // ella.
+            $this->vincularSiNoTieneDueno($historia, $servidorId, $cargaId);
+
             return $this->completarDatosClinicos($historia, $datos);
         }
 
@@ -241,17 +247,40 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
             cargaId:      $esServidor ? null : $paciente->id,
         );
 
-        // Si la historia venía de un preocupacional existe a nombre de la
-        // cédula y sin dueño, como 'candidato'. Al atenderse ya como servidor o
-        // familiar se le engancha, en vez de abrirle una segunda que además
-        // chocaría contra el único por cédula.
-        if (!$historia->servidor_id && !$historia->carga_familiar_id) {
-            $historia->update([
-                'tipo_paciente'     => $esServidor ? 'servidor' : 'familiar',
-                'servidor_id'       => $esServidor ? $paciente->id : null,
-                'carga_familiar_id' => $esServidor ? null : $paciente->id,
-            ]);
+        return $this->vincularSiNoTieneDueno(
+            $historia,
+            $esServidor ? $paciente->id : null,
+            $esServidor ? null : $paciente->id,
+        );
+    }
+
+    /**
+     * Engancha a su dueño una historia que existe solo a nombre de la cédula.
+     *
+     * Es la que abre el preocupacional: nace como 'candidato', sin servidor ni
+     * familiar. Cuando la persona vuelve como servidor o como familiar se le
+     * asigna, en vez de abrirle una segunda —que además chocaría contra el
+     * único por cédula—, porque la recepción, la cola del médico y el portal
+     * la buscan por su dueño. Una historia que ya tiene dueño no se toca.
+     */
+    private function vincularSiNoTieneDueno(
+        HistoriaClinica $historia,
+        ?int $servidorId,
+        ?int $cargaId
+    ): HistoriaClinica {
+        if (
+            $historia->servidor_id
+            || $historia->carga_familiar_id
+            || (!$servidorId && !$cargaId)
+        ) {
+            return $historia;
         }
+
+        $historia->update([
+            'tipo_paciente'     => $servidorId ? 'servidor' : 'familiar',
+            'servidor_id'       => $servidorId,
+            'carga_familiar_id' => $servidorId ? null : $cargaId,
+        ]);
 
         return $historia;
     }

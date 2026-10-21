@@ -1254,6 +1254,75 @@ test('triaje_de_paciente_sin_historia_clinica_le_abre_una', function () {
     expect($triaje->historia_clinica_id)->toBe($historia->id);
 });
 
+/** La historia que abre el preocupacional: a nombre de la cédula, sin dueño. */
+function historiaDeCandidato(string $cedula): HistoriaClinica
+{
+    return HistoriaClinica::create([
+        'numero_historia' => $cedula,
+        'cedula_paciente' => $cedula,
+        'tipo_paciente'   => 'candidato',
+        'estado'          => true,
+    ]);
+}
+
+test('crear_historia_engancha_la_del_preocupacional', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'medico', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $preocupacional = historiaDeCandidato($this->paciente->cedula);
+
+    // La recepción la ve «sin historia» y pulsa crear: antes le devolvía la
+    // del preocupacional tal cual, sin dueño, y seguía sin verla.
+    $this->postJson('/api/v1/dispensario/historias-clinicas', [
+        'servidor_id' => $this->paciente->id,
+    ])->assertCreated()->assertJsonPath('datos.id', $preocupacional->id);
+
+    $historia = $preocupacional->fresh();
+    expect($historia->servidor_id)->toBe($this->paciente->id)
+        ->and($historia->tipo_paciente)->toBe('servidor')
+        ->and(HistoriaClinica::count())->toBe(1);
+});
+
+test('el_turno_llega_al_medico_con_la_historia_que_esta_a_nombre_de_su_cedula', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'odontologo', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $preocupacional = historiaDeCandidato($this->paciente->cedula);
+
+    // Odontología no pide triaje: nadie enganchaba la historia y la ficha
+    // recibía un 0 en su lugar.
+    AgendaMedica::create([
+        'folio' => 'TUR-2026-99001', 'tipo_atencion' => 'odontologia',
+        'servidor_id' => $this->paciente->id, 'medico_id' => $this->medico->id,
+        'fecha' => now()->format('Y-m-d'), 'estado' => 'en_espera',
+        'requiere_triaje' => false, 'registrado_en' => now(),
+    ]);
+
+    $this->getJson('/api/v1/dispensario/agenda/por-folio/TUR-2026-99001')
+        ->assertOk()
+        ->assertJsonPath('datos.historia_clinica_id', $preocupacional->id);
+});
+
+test('la_migracion_engancha_las_historias_sueltas_de_quienes_ya_son_servidores', function () {
+    $suelta = historiaDeCandidato($this->paciente->cedula);
+    $deOtro = historiaDeCandidato('0999999999');
+
+    $migracion = require database_path(
+        'migrations/2026_11_15_000100_vincular_historias_de_excandidatos.php'
+    );
+    $migracion->up();
+
+    expect($suelta->fresh()->servidor_id)->toBe($this->paciente->id)
+        ->and($suelta->fresh()->tipo_paciente)->toBe('servidor')
+        // Una cédula que no es de ningún servidor sigue siendo de candidato.
+        ->and($deOtro->fresh()->servidor_id)->toBeNull()
+        ->and($deOtro->fresh()->tipo_paciente)->toBe('candidato');
+});
+
 test('abrir_la_historia_en_el_triaje_no_duplica_la_que_ya_existe', function () {
     $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
         ['name' => 'enfermera', 'guard_name' => 'sanctum']
