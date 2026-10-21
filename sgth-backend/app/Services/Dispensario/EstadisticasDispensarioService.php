@@ -86,14 +86,24 @@ final class EstadisticasDispensarioService implements EstadisticasDispensarioSer
             ->limit(5)
             ->get();
 
-        // 4. Medicamentos más despachados (mes actual)
-        $medicamentosDespachados = DB::table('items_receta')
-            ->join('inventario_medicinas', 'items_receta.inventario_medicina_id', '=', 'inventario_medicinas.id')
-            ->whereBetween('items_receta.created_at', [$inicio, $fin])
-            ->select('inventario_medicinas.nombre', DB::raw('SUM(items_receta.cantidad_despachada) as total_despachado'))
+        // 4. Medicamentos más despachados en el período, por la fecha en que
+        // salieron del estante.
+        //
+        // Se leía de `items_receta` filtrando por cuándo se RECETÓ y sumando
+        // todo lo despachado del ítem: una receta de fin de mes entregada el
+        // día 2 contaba en el mes anterior, y un despacho parcial repartido en
+        // dos meses caía entero en el primero. El kardex tiene cada salida con
+        // su fecha; las del despacho llevan la receta de referencia.
+        $medicamentosDespachados = DB::table('movimientos_inventario_med')
+            ->join('inventario_medicinas', 'movimientos_inventario_med.inventario_medicina_id', '=', 'inventario_medicinas.id')
+            ->where('movimientos_inventario_med.tipo_movimiento', 'egreso')
+            ->whereNotNull('movimientos_inventario_med.referencia_receta_id')
+            ->whereBetween('movimientos_inventario_med.created_at', [$inicio, $fin])
+            // Los egresos se guardan en negativo; ABS por si alguno antiguo no.
+            ->select('inventario_medicinas.nombre', DB::raw('SUM(ABS(movimientos_inventario_med.cantidad)) as total_despachado'))
             ->groupBy('inventario_medicinas.id', 'inventario_medicinas.nombre')
-            ->having(DB::raw('SUM(items_receta.cantidad_despachada)'), '>', 0)
             ->orderByDesc('total_despachado')
+            ->orderBy('inventario_medicinas.nombre')
             ->limit(10)
             ->get();
 
