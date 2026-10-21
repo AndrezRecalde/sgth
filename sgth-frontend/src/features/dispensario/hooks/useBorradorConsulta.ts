@@ -8,6 +8,14 @@ const ESPERA_MS = 2_500
 export type EstadoBorrador = 'inactivo' | 'guardando' | 'guardado' | 'error'
 
 /**
+ * El guardado que sigue viajando, por turno. Vive fuera del componente porque
+ * el que importa es el que se manda al cerrar la ficha: si se vuelve a abrir
+ * antes de que llegue, la lectura lo espera en vez de traer la versión de
+ * antes.
+ */
+const enVuelo = new Map<number, Promise<unknown>>()
+
+/**
  * Guarda solo lo que se lleva escrito, sin que nadie tenga que acordarse.
  *
  * No usa `useMutation` porque no es una acción del médico: es un latido que se
@@ -26,12 +34,23 @@ export function useBorradorConsulta(agendaMedicaId: number, activo: boolean) {
 
   const { data: borrador, isLoading } = useQuery({
     queryKey: ['consulta-borrador', agendaMedicaId],
-    queryFn:  () => borradorService.obtener(agendaMedicaId),
+    queryFn:  async () => {
+      await enVuelo.get(agendaMedicaId)?.catch(() => undefined)
+      return borradorService.obtener(agendaMedicaId)
+    },
     enabled:  activo && !!agendaMedicaId,
     staleTime: Infinity,
     // Recuperar lo escrito es cosa de la primera carga: refrescarlo al volver a
     // la pestaña pisaría con una copia vieja lo que se está escribiendo ahora.
     refetchOnWindowFocus: false,
+    // Pero cada vez que se abre la ficha, del servidor y no de la caché. Lo que
+    // se escribe se guarda allí y la caché no se entera: con la retención de
+    // cinco minutos por defecto, volver a la cola y entrar otra vez al rato
+    // recuperaba la foto de la primera carga —un vacío, o un borrador ya
+    // viejo— y el guardado automático la escribía encima del bueno. Sin
+    // retención, al cerrar la ficha se suelta y la siguiente apertura espera
+    // al servidor antes de recuperar nada.
+    gcTime: 0,
   })
 
   const enviar = useCallback(async () => {
@@ -41,14 +60,19 @@ export function useBorradorConsulta(agendaMedicaId: number, activo: boolean) {
     pendiente.current = null
     setEstado('guardando')
 
+    const guardado = borradorService.guardar(agendaMedicaId, contenido)
+    enVuelo.set(agendaMedicaId, guardado)
+
     try {
-      await borradorService.guardar(agendaMedicaId, contenido)
+      await guardado
       setEstado('guardado')
       setGuardadoEn(new Date())
     } catch {
       // Sin aviso emergente: es un guardado de fondo y el médico está
       // escribiendo. El estado se ve en la línea de la cabecera.
       setEstado('error')
+    } finally {
+      if (enVuelo.get(agendaMedicaId) === guardado) enVuelo.delete(agendaMedicaId)
     }
   }, [agendaMedicaId])
 
