@@ -11,7 +11,7 @@ import {
 } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { useDespacharReceta } from '../hooks/useReceta'
+import { useDespacharReceta, useRecetaParaDespacho } from '../hooks/useReceta'
 import {
   admiteDespacho, esItemExterno, nombreDeItem,
 } from '../services/recetaService'
@@ -59,23 +59,35 @@ const ESTADO_ITEM: Record<string, { label: string; tone: SemanticTone }> = {
 }
 
 export function DespacharRecetaModal({
-  opened, onClose, receta, soloLectura: sinPermiso = false,
+  opened, onClose, receta: fila, soloLectura: sinPermiso = false,
 }: Props) {
   const contained  = useContainedInput()
   const despachar  = useDespacharReceta()
 
+  const {
+    data: fresca, isPlaceholderData, isFetching, dataUpdatedAt,
+  } = useRecetaParaDespacho(fila, opened)
+  const receta = fresca ?? fila
+  // También mientras se refresca una que ya estaba en caché: lo escrito en
+  // ese rato se perdería al llegar la nueva.
+  const actualizando = isPlaceholderData || isFetching
+
   const [cantidades, setCantidades] = useState<Record<number, number>>({})
 
   // Las cantidades arrancan en lo que falta por despachar y a partir de ahí
-  // las edita quien despacha. Se resiembran al abrir el modal sobre otra
-  // receta, ajustando el estado durante el render en vez de en un efecto.
-  const semilla = receta && opened ? String(receta.id) : null
+  // las edita quien despacha. Se siembran con la receta fresca, no con la
+  // fila, y se resiembran cada vez que llega una nueva —al abrir el modal o
+  // tras un despacho rechazado—, ajustando el estado durante el render en vez
+  // de en un efecto.
+  const semilla = receta && opened && !actualizando
+    ? `${receta.id}:${dataUpdatedAt}`
+    : null
   const [semillaAplicada, setSemillaAplicada] = useState<string | null>(null)
 
   if (semilla !== semillaAplicada) {
     setSemillaAplicada(semilla)
     const init: Record<number, number> = {}
-    receta?.items.filter(item => ! esItemExterno(item)).forEach(item => {
+    if (semilla) receta?.items.filter(item => ! esItemExterno(item)).forEach(item => {
       const faltante = item.cantidad_prescrita -
         (item.cantidad_despachada ?? 0)
       // Arranca en lo que falta, pero sin pasarse de lo que hay entregable:
@@ -323,7 +335,7 @@ export function DespacharRecetaModal({
                             size="xs"
                             min={0}
                             max={tope}
-                            disabled={hayEntregable === 0}
+                            disabled={hayEntregable === 0 || actualizando}
                             {...contained}
                             value={cantidades[item.id!] ?? 0}
                             onChange={(v) => setCantidades(prev => ({
@@ -349,6 +361,7 @@ export function DespacharRecetaModal({
           submitLabel="Confirmar despacho"
           submitting={despachar.isPending}
           submitDisabled={
+            actualizando ||
             itemsPendientes.length === 0 ||
             itemsPendientes.every(
               item => (cantidades[item.id!] ?? 0) === 0

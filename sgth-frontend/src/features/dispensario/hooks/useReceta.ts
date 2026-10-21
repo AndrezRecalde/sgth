@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import React from 'react'
 import { recetaService } from '../services/recetaService'
 import { getApiErrorMessage } from '@/types/api'
-import type { EmitirRecetaData } from '../services/recetaService'
+import type { EmitirRecetaData, RecetaMedica } from '../services/recetaService'
 import { notificar } from '@/components/ui'
 
 export function useEmitirReceta(consultaId?: number) {
@@ -90,6 +90,27 @@ export function useRecetasFarmacia(params?: {
 }
 
 /**
+ * La receta tal como está ahora, para despacharla.
+ *
+ * El modal trabajaba con la fila del listado, que puede tener hasta medio
+ * minuto: si otra persona había despachado entretanto, proponía entregar otra
+ * vez lo que ya salió, y el servidor lo rechazaba sin que la pantalla cambiara.
+ * La fila se enseña mientras llega la fresca (`placeholderData`), y no se
+ * despacha hasta tenerla.
+ */
+export function useRecetaParaDespacho(fila: RecetaMedica | null, abierto: boolean) {
+  return useQuery({
+    queryKey: ['recetas', 'detalle', fila?.id],
+    queryFn:  () => recetaService.obtener(fila!.id),
+    enabled:  abierto && !!fila,
+    staleTime: 0,
+    // Volver a la pestaña reiniciaría las cantidades que se están escribiendo.
+    refetchOnWindowFocus: false,
+    placeholderData: fila ?? undefined,
+  })
+}
+
+/**
  * Abre el impreso de la receta.
  *
  * Se abre en una pestaña en vez de descargarse, al contrario que el
@@ -167,6 +188,12 @@ export function useDespacharReceta() {
       // Y lo que se agotó al despachar ya no debe ofrecerse al recetar.
       qc.invalidateQueries({ queryKey: ['medicinas-buscar'] })
     },
-    onError: notificar.alFallar('No se pudo despachar la receta'),
+    onError: (error) => {
+      notificar.alFallar('No se pudo despachar la receta')(error)
+      // Lo normal es que la receta o el stock cambiaran mientras el modal
+      // estaba abierto. Se recarga para que lo que se ve sea lo que hay, y no
+      // repetir el mismo envío contra datos que ya no valen.
+      qc.invalidateQueries({ queryKey: ['recetas'] })
+    },
   })
 }
