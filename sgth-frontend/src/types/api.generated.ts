@@ -15505,7 +15505,12 @@ export interface components {
          */
         StoreRecetaMedicaRequest: {
             consulta_medica_id: number;
-            /** Format: date-time */
+            /**
+             * Format: date-time
+             * @description La pantalla manda hoy, pero el servidor aceptaba cualquier fecha:
+             *     una receta fechada la semana próxima, o anterior a la consulta
+             *     que la origina.
+             */
             fecha_emision: string;
             indicaciones_generales?: string | null;
             /**
