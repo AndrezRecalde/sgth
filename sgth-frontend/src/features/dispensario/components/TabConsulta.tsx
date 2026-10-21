@@ -14,6 +14,7 @@ import { BorradorConsultaAviso } from './BorradorConsultaAviso'
 import { ConsultaCampos } from './ConsultaCampos'
 import { ConsultaGuardada } from './ConsultaGuardada'
 import { useAuthStore } from '@/store/auth.store'
+import { notificar } from '@/components/ui'
 import {
   consultaMedicaSchema,
   type ConsultaMedicaFormData,
@@ -138,6 +139,13 @@ export function TabConsulta({
   const valores = useWatch({ control })
   const huella = JSON.stringify([valores, cie10Principal, cie10Secundarios])
 
+  // Si en esta visita se llegó a anotar algo y luego se borra todo, el borrador
+  // se descarta. Antes el efecto salía sin más: el temporizador pendiente
+  // guardaba el último estado a medias, y al volver se ofrecía recuperar un
+  // texto que el médico había borrado. Solo tras haber anotado: al recuperar,
+  // el formulario está vacío un instante y eso no es «borrar todo».
+  const anotado = useRef(false)
+
   useEffect(() => {
     if (!esConsultaNueva) return
     // Hasta que no se recupere lo guardado no se anota nada: si no, el
@@ -146,9 +154,14 @@ export function TabConsulta({
     if (!hayAlgoEscrito(
       valores, motivoInicial, cie10Principal, cie10Secundarios
     )) {
+      if (anotado.current) {
+        anotado.current = false
+        borradorCtl.descartar().catch(() => undefined)
+      }
       return
     }
 
+    anotado.current = true
     borradorCtl.anotar({
       ...valores,
       cie10_principal: cie10Principal,
@@ -198,7 +211,8 @@ export function TabConsulta({
     setCie10Principal(null)
     setCie10Secundarios([])
     setRecuperado(false)
-    void borradorCtl.descartar()
+    anotado.current = false
+    borradorCtl.descartar().catch(notificar.alFallar('No se pudo descartar el borrador'))
   }
 
   /** Lo que el formulario manda al servidor, igual al registrar que al corregir. */
