@@ -7,6 +7,7 @@ import { consultaMedicaService } from '../services/consultaMedicaService'
 import { SectionHeading, SgthDrawer, SgthTable, StatusBadge } from '@/components/ui'
 import { columnasItemsReceta } from './itemsReceta.columns'
 import { TextoClinico } from './TextoClinico'
+import { DiagnosticosCie10 } from './DiagnosticosCie10'
 import { formatFechaMes } from '@/lib/fecha'
 
 interface Props {
@@ -88,6 +89,15 @@ export function DetalleConsultaDrawer({
             label="Examen físico"
             valor={consulta.examen_fisico}
           />
+          {(consulta.diagnostico_cie10_principal
+            || (consulta.diagnosticos_secundarios?.length ?? 0) > 0) && (
+            <Stack gap={2}>
+              <Text size="xs" fw={600} tt="uppercase" c="dimmed">
+                Diagnóstico (CIE-10)
+              </Text>
+              <DiagnosticosCie10 consulta={consulta} />
+            </Stack>
+          )}
           <Campo
             label="Diagnóstico detallado"
             valor={consulta.diagnostico_detallado}
