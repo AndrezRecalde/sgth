@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Dispensario\StoreRecetaMedicaRequest;
 use App\Http\Responses\ApiResponse;
 use App\Contracts\Dispensario\RecetaServiceInterface;
+use App\Models\Dispensario\ConsultaMedica;
 use App\Models\Dispensario\RecetaMedica;
 use App\Services\Dispensario\PdfRecetaService;
 use Illuminate\Support\Arr;
@@ -175,11 +176,36 @@ final class RecetaController extends Controller
         }
     }
 
+    /**
+     * Emite una receta en una consulta de quien la emite.
+     *
+     * Bastaba con que la consulta existiera: un médico podía emitir una receta
+     * en la consulta de un colega, y el impreso salía con el nombre, la cédula
+     * y el código ACESS del colega, que es lo que toma el PDF de la consulta.
+     * Además, quien la emitía no podía luego corregirla ni anularla, porque
+     * «la emitió» el otro. Corregir y anular ya exigían ser el autor.
+     */
     public function store(StoreRecetaMedicaRequest $request): JsonResponse
     {
-        $datos       = $request->validated();
+        $datos = $request->validated();
+
+        $consulta = ConsultaMedica::findOrFail($datos['consulta_medica_id']);
+
+        if ($consulta->medico_id !== $request->user()->id) {
+            return ApiResponse::error(
+                'Solo quien atendió la consulta puede emitir recetas en ella: ' .
+                'el impreso sale con su firma.',
+                null,
+                403
+            );
+        }
+
         $items       = $datos['items'];
-        $datosReceta = Arr::except($datos, ['items']);
+        $datosReceta = [
+            ...Arr::except($datos, ['items']),
+            // La columna existía y el alta no la escribía.
+            'created_by' => $request->user()->id,
+        ];
 
         $result = $this->recetaService->emitirReceta(
             $datosReceta, $items
