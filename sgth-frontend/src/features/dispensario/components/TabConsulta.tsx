@@ -159,24 +159,39 @@ export function TabConsulta({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [huella, esConsultaNueva, borradorCtl.cargando])
 
-  useEffect(() => {
-    if (consultaPrevia) {
-      reset({
-        tipo_atencion:
-          (consultaPrevia.tipo_atencion as ConsultaMedicaFormData['tipo_atencion']) ??
-          'primera_vez',
-        tipo_diagnostico:
-          (consultaPrevia.tipo_diagnostico as ConsultaMedicaFormData['tipo_diagnostico']) ??
-          'presuntivo',
-        motivo_consulta: consultaPrevia.motivo_consulta ?? '',
-        enfermedad_actual: consultaPrevia.enfermedad_actual ?? '',
-        examen_fisico: consultaPrevia.examen_fisico ?? '',
-        diagnostico_detallado: consultaPrevia.diagnostico_detallado ?? '',
-        plan_tratamiento: consultaPrevia.plan_tratamiento ?? '',
-        notas_medico: consultaPrevia.notas_medico ?? '',
-      })
-    }
-  }, [consultaPrevia, reset])
+  /**
+   * Entra a corregir partiendo de lo guardado: los textos y también los CIE-10.
+   *
+   * Los diagnósticos codificados viven fuera del formulario y nadie los
+   * cargaba desde la consulta: la corrección salía con el principal en `null`
+   * y los secundarios vacíos, y el servidor los borraba al guardar una simple
+   * errata. Se siembra al pulsar «Editar», y no en un efecto sobre la consulta,
+   * para que cada corrección empiece de lo vigente —lo que se canceló no se
+   * arrastra— y un refresco a mitad de la edición no pise lo que se escribe.
+   */
+  const editarDesde = (consulta: ConsultaMedica) => {
+    reset({
+      tipo_atencion:
+        (consulta.tipo_atencion as ConsultaMedicaFormData['tipo_atencion']) ??
+        'primera_vez',
+      tipo_diagnostico:
+        (consulta.tipo_diagnostico as ConsultaMedicaFormData['tipo_diagnostico']) ??
+        'presuntivo',
+      motivo_consulta: consulta.motivo_consulta ?? '',
+      enfermedad_actual: consulta.enfermedad_actual ?? '',
+      examen_fisico: consulta.examen_fisico ?? '',
+      diagnostico_detallado: consulta.diagnostico_detallado ?? '',
+      plan_tratamiento: consulta.plan_tratamiento ?? '',
+      notas_medico: consulta.notas_medico ?? '',
+    })
+    setCie10Principal(consulta.diagnostico_cie10_principal ?? null)
+    setCie10Secundarios(
+      (consulta.diagnosticos_secundarios ?? []).flatMap((ds) =>
+        ds.diagnostico ? [ds.diagnostico] : [],
+      ),
+    )
+    setModoEdicion(true)
+  }
 
   const descartarBorrador = () => {
     reset(valoresIniciales(turno))
@@ -234,7 +249,7 @@ export function TabConsulta({
       <ConsultaGuardada
         consulta={consultaPrevia}
         usuarioId={usuario?.id}
-        onEditar={() => setModoEdicion(true)}
+        onEditar={() => editarDesde(consultaPrevia)}
       />
     )
   }

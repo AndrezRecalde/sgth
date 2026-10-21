@@ -293,6 +293,9 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
                 'historiaClinica.servidor',
                 'historiaClinica.cargaFamiliar',
                 'medico',
+                // La pantalla parte de esta respuesta para corregir: sin el
+                // principal, la corrección lo mandaba vacío y se borraba.
+                'diagnosticoCie10Principal',
                 'diagnosticosSecundarios.diagnostico',
             ]);
         });
@@ -391,6 +394,9 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
                 'historiaClinica.servidor',
                 'historiaClinica.cargaFamiliar',
                 'medico',
+                // La pantalla parte de esta respuesta para corregir: sin el
+                // principal, la corrección lo mandaba vacío y se borraba.
+                'diagnosticoCie10Principal',
                 'diagnosticosSecundarios.diagnostico',
             ]);
         });

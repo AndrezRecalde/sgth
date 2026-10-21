@@ -111,6 +111,45 @@ test('agendar_cita_deja_el_turno_en_espera', function () {
         ->toBeFalse();
 });
 
+test('guardar_y_corregir_devuelven_el_diagnostico_cie10_principal', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'medico', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $historia = historiaDePrueba($this->paciente->id, $this->paciente->cedula);
+    $principal = App\Models\Dispensario\DiagnosticoCie10::create([
+        'codigo' => 'K29X', 'descripcion' => 'GASTRITIS', 'categoria' => 'K29', 'activo' => true,
+    ]);
+    $secundario = App\Models\Dispensario\DiagnosticoCie10::create([
+        'codigo' => 'R10X', 'descripcion' => 'DOLOR ABDOMINAL', 'categoria' => 'R10', 'activo' => true,
+    ]);
+
+    // La pantalla corrige partiendo de esta respuesta. Sin el principal, la
+    // corrección lo mandaba en null y el servidor lo borraba.
+    $consulta = $this->postJson('/api/v1/dispensario/consultas', datosDeConsulta($historia->id, [
+        'diagnostico_cie10_id'     => $principal->id,
+        'diagnosticos_secundarios' => [$secundario->id],
+    ]))->assertCreated()->json('datos');
+
+    expect($consulta['diagnostico_cie10_principal']['codigo'])->toBe('K29X')
+        ->and($consulta['diagnosticos_secundarios'][0]['diagnostico']['codigo'])->toBe('R10X');
+
+    // Lo que manda la pantalla al corregir una errata, ya con los CIE-10
+    // sembrados desde la consulta: se conservan.
+    $corregida = $this->patchJson("/api/v1/dispensario/consultas/{$consulta['id']}", [
+        'tipo_atencion'            => 'primera_vez',
+        'tipo_diagnostico'         => 'presuntivo',
+        'motivo_consulta'          => 'Dolor abdominal',
+        'diagnostico_detallado'    => '<p>Gastritis aguda, corregida</p>',
+        'diagnostico_cie10_id'     => $consulta['diagnostico_cie10_principal']['id'],
+        'diagnosticos_secundarios' => array_column($consulta['diagnosticos_secundarios'], 'diagnostico_cie10_id'),
+    ])->assertOk()->json('datos');
+
+    expect($corregida['diagnostico_cie10_principal']['codigo'])->toBe('K29X')
+        ->and($corregida['diagnosticos_secundarios'])->toHaveCount(1);
+});
+
 test('registrar_consulta_actualiza_estado_de_agenda_a_atendida', function () {
     $historia = HistoriaClinica::create([
         'servidor_id' => $this->paciente->id,

@@ -44,7 +44,9 @@ export function AtencionOdontologicaPanel({
     useState<ConsultaMedica | null>(null)
   const [activeTab, setActiveTab] = useState<string>('consulta')
 
-  const consultaActiva = consultaGuardada ?? consultaCargada ?? null
+  // Manda lo leído del servidor, que se refresca al corregir; la respuesta del
+  // alta solo cubre el rato hasta que llega (igual que en Medicina general).
+  const consultaActiva = consultaCargada ?? consultaGuardada ?? null
 
   useEffect(() => {
     if (consultaCargada && !consultaGuardada) {
