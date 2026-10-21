@@ -57,15 +57,11 @@ export const certificadoService = {
       '/dispensario/certificados-medicos', data
     ).then(r => r.data.datos),
 
-  obtener: (id: number) =>
-    api.get<ApiResponse<CertificadoMedico>>(
-      `/dispensario/certificados-medicos/${id}`
-    ).then(r => r.data.datos),
-
   /**
-   * Anula el certificado y, con él, el permiso de asistencia que creó: el
-   * permiso existe por el certificado, y sin esto quedaba justificando una
-   * ausencia sin papel detrás.
+   * Anula el certificado y, si ya se registró en Sirha7, lo retira de allí:
+   * los días de reposo no pueden quedar justificando una ausencia. Si Sirha7
+   * no responde, no se anula. Desde el 2026-10-08 el certificado no crea un
+   * permiso de asistencia, así que no hay permiso que anular con él.
    */
   anular: (id: number, motivo: string) =>
     api.patch<ApiResponse<CertificadoMedico>>(

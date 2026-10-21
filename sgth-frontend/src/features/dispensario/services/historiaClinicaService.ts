@@ -1,7 +1,5 @@
 import api from '@/lib/axios'
-import type {
-  ApiResponse, PaginatedResponse,
-} from '@/types/api'
+import type { ApiResponse } from '@/types/api'
 import type {
   Alergia, Antecedente,
 } from './contextoConsultaService'
@@ -101,16 +99,6 @@ export const historiaClinicaService = {
       { motivo_anulacion: motivo }
     ).then(r => r.data.datos),
 
-  listar: (params?: Record<string, unknown>) =>
-    api.get<ApiResponse<PaginatedResponse<HistoriaClinica>>>(
-      '/dispensario/historias-clinicas', { params }
-    ).then(r => r.data.datos),
-
-  obtener: (id: number) =>
-    api.get<ApiResponse<HistoriaClinica>>(
-      `/dispensario/historias-clinicas/${id}`
-    ).then(r => r.data.datos),
-
   // `carga_familiar_id`, no `beneficiario_id`: la columna se renombró y el
   // backend nunca aceptó el nombre viejo. Mandarlo dejaba la petición sin
   // paciente y moría en validación, así que un familiar no podía tener
@@ -122,12 +110,6 @@ export const historiaClinicaService = {
   }) =>
     api.post<ApiResponse<HistoriaClinica>>(
       '/dispensario/historias-clinicas', data
-    ).then(r => r.data.datos),
-
-  buscarPorCedula: (cedula: string) =>
-    api.get<ApiResponse<HistoriaClinica | null>>(
-      '/dispensario/historias-clinicas/buscar-por-cedula',
-      { params: { cedula } }
     ).then(r => r.data.datos),
 
   crearPorCedula: (data: {

@@ -2,13 +2,6 @@ import api from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
 import type { Triaje } from './triajeService'
 
-export interface ConsultaResumen {
-  id:               number
-  fecha_consulta:   string
-  diagnostico_detallado: string
-  medico?: { nombre_completo?: string }
-}
-
 export interface Alergia {
   id:           number
   tipo:         string
@@ -55,7 +48,6 @@ export interface ContextoConsulta {
     antecedentes: Antecedente[]
   }
   triaje_actual:        Triaje | null
-  consultas_anteriores: ConsultaResumen[]
   condicion_declarada:  CondicionDeclarada | null
 }
 

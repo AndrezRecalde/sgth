@@ -52,7 +52,7 @@ export function BloqueTriaje({ triaje }: { triaje?: Triaje | null }) {
         />
         <CampoTriaje
           label="Sat. O2"
-          valor={triaje.saturacion_oxigeno ? `${triaje.saturacion_oxigeno}%` : null}
+          valor={triaje.saturacion_oxigeno != null ? `${triaje.saturacion_oxigeno}%` : null}
         />
       </Stack>
     </>

@@ -14,7 +14,7 @@ import { z } from 'zod/v4'
  * esquema de editar— y una posología larga volvía como un 422 en un aviso
  * suelto, sin señalar el campo.
  */
-export const itemRecetaSchema = z.object({
+const lineaRecetaSchema = z.object({
   inventario_medicina_id: z.number().nullable(),
   medicamento_externo:    z.string().max(255, 'El nombre admite hasta 255 caracteres').nullable(),
   nombre:                 z.string(),
@@ -47,7 +47,7 @@ export const recetaSchema = z.object({
    * otro modo—.
    */
   omitir_alergias:        z.boolean(),
-  items: z.array(itemRecetaSchema).min(1, 'Agregue al menos un medicamento'),
+  items: z.array(lineaRecetaSchema).min(1, 'Agregue al menos un medicamento'),
 })
 
 export type RecetaFormData = z.infer<typeof recetaSchema>

@@ -17,8 +17,6 @@ export const consultaMedicaSchema = z.object({
   motivo_consulta:        z.string().min(3, 'Mínimo 3 caracteres'),
   enfermedad_actual:      z.string().optional().nullable(),
   examen_fisico:          z.string().optional().nullable(),
-  diagnostico_cie10:      z.number().optional().nullable(),
-  diagnosticos_secundarios: z.array(z.number()).optional().nullable(),
   diagnostico_detallado:  z.string().min(3, 'Mínimo 3 caracteres'),
   plan_tratamiento:       z.string().optional().nullable(),
   notas_medico:           z.string().max(2000, 'Máximo 2000 caracteres').optional().nullable(),

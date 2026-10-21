@@ -1760,9 +1760,6 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // a un paciente como no presentado.
         Route::middleware('role:medico|odontologo|enfermera|admin-dispensario')
             ->group(function () {
-                Route::get('agenda/listos-para-consulta',
-                    [AgendaController::class, 'listosParaConsulta']
-                )->name('agenda.listosParaConsulta');
                 Route::get('agenda/turnos-del-dia',
                     [AgendaController::class, 'turnosDelDia']
                 )->name('agenda.turnosDelDia');

@@ -15,8 +15,6 @@ interface AgendaServiceInterface
 
     public function cancelar(int $id): AgendaMedica;
 
-    public function listosParaConsulta(int $medicoId): \Illuminate\Database\Eloquent\Collection;
-
     public function turnosDelDia(
         int $medicoId,
         ?string $fechaDesde = null,

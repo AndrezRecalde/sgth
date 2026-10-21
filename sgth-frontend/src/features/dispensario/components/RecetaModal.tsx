@@ -27,7 +27,6 @@ interface Props {
   onClose: () => void;
   turno: AgendaMedica | null;
   consulta: ConsultaMedica | null;
-  onEmitida: () => void;
 }
 
 export function RecetaModal({
@@ -35,7 +34,6 @@ export function RecetaModal({
   onClose,
   turno,
   consulta,
-  onEmitida,
 }: Props) {
   const contained = useContainedInput();
   const emitir = useEmitirReceta(consulta?.id);
@@ -136,7 +134,6 @@ export function RecetaModal({
         onSuccess: () => {
           reset();
           setMedicinaMeta({});
-          onEmitida();
           onClose();
         },
       },

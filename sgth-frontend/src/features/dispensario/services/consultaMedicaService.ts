@@ -111,11 +111,6 @@ export interface CrearConsultaData {
 }
 
 export const consultaMedicaService = {
-  listar: (params?: Record<string, unknown>) =>
-    api.get<ApiResponse<PaginatedResponse<ConsultaMedica>>>(
-      '/dispensario/consultas', { params }
-    ).then(r => r.data.datos),
-
   crear: (data: CrearConsultaData) =>
     api.post<ApiResponse<ConsultaMedica>>(
       '/dispensario/consultas', data
