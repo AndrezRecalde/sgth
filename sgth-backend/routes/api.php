@@ -1931,7 +1931,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->middleware('role:medico|odontologo|enfermera|admin-dispensario')
             ->group(function () {
                 Route::get('/', [ConsultaMedicaController::class, 'index']);
-                Route::post('/', [ConsultaMedicaController::class, 'store']);
+                // Registrarla es de quien atiende. El comentario de arriba lo
+                // decía, pero el alta solo heredaba el rol del grupo, y una
+                // enfermera o la administración podían crear una consulta
+                // firmada con su usuario.
+                Route::post('/', [ConsultaMedicaController::class, 'store'])
+                    ->middleware('role:medico|odontologo');
 
                 // Lo que se lleva escrito y aún no se ha guardado. Antes del
                 // comodín {id}, o «borrador» se leería como un id.

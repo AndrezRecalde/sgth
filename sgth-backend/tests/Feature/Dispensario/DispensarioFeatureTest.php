@@ -163,7 +163,9 @@ test('registrar_consulta_actualiza_estado_de_agenda_a_atendida', function () {
         'hora_inicio' => '10:00:00',
         'hora_fin' => '10:30:00',
         'motivo_solicitud' => 'Chequeo',
-        'estado' => 'agendada',
+        // Un estado que existe: «agendada» no lo usa nada, y registrar una
+        // consulta ahora exige un turno abierto.
+        'estado' => 'en_espera',
     ], $this->medico->id);
 
     $service = app(HistoriaClinicaService::class);
