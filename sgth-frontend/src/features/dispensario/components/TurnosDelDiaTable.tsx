@@ -4,7 +4,7 @@ import { ActionIcon, Button, Stack } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { IconStethoscope, IconX } from '@tabler/icons-react'
 import { useState } from 'react'
-import { EmptyState, SgthTable, StatusBadge, Toolbar } from '@/components/ui'
+import { DataState, SgthTable, StatusBadge, Toolbar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useTurnosDelDia, useAccionesTurno } from '../hooks/useAgenda'
 import { getConsultasTurnosColumns } from './consultasTurnos.columns'
@@ -22,7 +22,7 @@ export function TurnosDelDiaTable({ onAtender, onVerConsulta }: Props) {
   const [filtroActivo, setFiltroActivo] =
     useState<{ fecha_desde?: string; fecha_hasta?: string } | undefined>(undefined)
 
-  const { data: turnos = [], isLoading } = useTurnosDelDia(filtroActivo)
+  const { data: turnos = [], isLoading, error, refetch } = useTurnosDelDia(filtroActivo)
   const { noPresentado, reactivar } = useAccionesTurno()
 
   const atendidos = turnos.filter(t => t.estado === 'atendido').length
@@ -93,22 +93,26 @@ export function TurnosDelDiaTable({ onAtender, onVerConsulta }: Props) {
         )}
       </Toolbar>
 
-      {turnos.length === 0 && !isLoading ? (
-        <EmptyState
-          icon={IconStethoscope}
-          title="Sin turnos"
-          description={filtroActivo
-            ? "No hay turnos en el rango seleccionado."
-            : "No tiene pacientes asignados para hoy."}
-        />
-      ) : (
-        <SgthTable
-          records={turnos}
-          columns={columns}
-          fetching={isLoading}
-          minHeight={200}
-        />
-      )}
+      {/* Si la cola no carga, lo dice. Antes un fallo dejaba la lista vacía y
+          la pantalla afirmaba «No tiene pacientes asignados para hoy». */}
+      <DataState
+        loading={isLoading}
+        error={error}
+        errorTitle="No se pudo cargar la cola"
+        errorHint="No quiere decir que no tenga pacientes: no se pudo consultar."
+        onRetry={() => refetch()}
+        empty={turnos.length === 0}
+        emptyProps={{
+          icon: IconStethoscope,
+          title: 'Sin turnos',
+          description: filtroActivo
+            ? 'No hay turnos en el rango seleccionado.'
+            : 'No tiene pacientes asignados para hoy.',
+        }}
+        skeletonRows={4}
+      >
+        <SgthTable records={turnos} columns={columns} minHeight={200} />
+      </DataState>
     </Stack>
   )
 }
