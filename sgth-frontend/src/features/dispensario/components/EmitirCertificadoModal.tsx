@@ -24,6 +24,9 @@ interface Props {
 
 const DIAS_MAX = 3
 
+/** El tope de `observaciones` en el servidor. */
+const OBSERVACIONES_MAX = 1000
+
 function calcularDias(
   inicio: Date | null,
   fin: Date | null
@@ -46,6 +49,20 @@ export function EmitirCertificadoModal({
     useState<DiagnosticoCie10 | null>(null)
   const [observaciones, setObservaciones] = useState('')
   const [errorRango, setErrorRango] = useState<string | null>(null)
+
+  // Cada apertura empieza en blanco. Solo se limpiaba con «Cancelar» y al
+  // emitir: cerrar con la X o con Escape dejaba el rango, el diagnóstico y
+  // las observaciones para el siguiente certificado de otra consulta.
+  const [abiertoPrevio, setAbiertoPrevio] = useState(opened)
+  if (opened !== abiertoPrevio) {
+    setAbiertoPrevio(opened)
+    if (opened) {
+      setRango([null, null])
+      setCie10Sel(null)
+      setObservaciones('')
+      setErrorRango(null)
+    }
+  }
 
   const [fechaInicio, fechaFin] = rango
   const dias = calcularDias(fechaInicio, fechaFin)
@@ -92,15 +109,7 @@ export function EmitirCertificadoModal({
         diagnostico_cie10_id: cie10Sel?.id ?? null,
         observaciones:        observaciones || null,
       },
-      {
-        onSuccess: () => {
-          setRango([null, null])
-          setCie10Sel(null)
-          setObservaciones('')
-          setErrorRango(null)
-          onClose()
-        },
-      }
+      { onSuccess: onClose }
     )
   }
 
@@ -133,6 +142,10 @@ export function EmitirCertificadoModal({
             label="Rango de reposo"
             placeholder="Seleccione la fecha de inicio y la de fin"
             valueFormat="DD/MM/YYYY"
+            // Con el inicio elegido, el tope de abajo bloquea los días que
+            // quedan fuera de su ventana: sin poder borrarlo, mover el reposo
+            // más adelante obligaba a cerrar el modal y empezar de nuevo.
+            clearable
             maxDate={
               fechaInicio instanceof Date
                 ? new Date(
@@ -168,19 +181,14 @@ export function EmitirCertificadoModal({
           placeholder="Indicaciones adicionales del reposo"
           autosize
           minRows={2}
+          maxLength={OBSERVACIONES_MAX}
           {...contained}
           value={observaciones}
           onChange={(e) => setObservaciones(e.currentTarget.value)}
         />
       </Stack>
       <ModalFooter
-        onCancel={() => {
-          setRango([null, null])
-          setCie10Sel(null)
-          setObservaciones('')
-          setErrorRango(null)
-          onClose()
-        }}
+        onCancel={onClose}
         submitLabel="Emitir certificado"
         submitting={emitir.isPending}
         submitDisabled={!fechaInicio || !fechaFin || rangoExcede}
