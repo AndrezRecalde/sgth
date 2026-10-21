@@ -15,6 +15,7 @@ use App\Models\Expediente\MovimientoPersonal;
 use App\Models\Expediente\Servidor;
 use App\Services\Expediente\MovimientoPersonalService;
 use App\Services\Expediente\MovimientoPersonalStateService;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -26,7 +27,9 @@ use Illuminate\Support\Facades\DB;
  *     php artisan db:seed --class=DatosPruebaAccionesPersonalSeeder
  *
  * Cada vínculo nace de una acción de personal de tipo ingreso llevada hasta
- * 'registrada', igual que en la operación real. La versión anterior creaba los
+ * 'registrada', igual que en la operación real. La Prefecta, del «Inicio del
+ * período» con su credencial del CNE: la autoridad electa no ingresa con
+ * acción de personal (fase 4.1). La versión anterior creaba los
  * contratos directamente y eso, además de saltarse la regla, dejaba contratos
  * sin remuneración y un 'novedad_contrato' fantasma por cada uno — la bitácora
  * de emergencia que genera ContratoServidorService cuando un vínculo aparece
@@ -79,13 +82,23 @@ class DatosPruebaAccionesPersonalSeeder extends Seeder
 
         $anioPasado = now()->subYear()->year;
 
+        // Las dos jefaturas que firman. Ningún seeder de la base las crea, así
+        // que en una base recién sembrada no existían, y sin ellas tampoco hay
+        // a quién anclar las firmas: se crean si faltan y se anclan antes de
+        // vincular a nadie. El anclaje no toca lo que ya esté anclado.
+        $puestoPrefecto = $this->puestoDeJefatura('Prefecto/a Provincial', 'Prefectura Provincial', 'NJS-10', 'dignatario');
+        $puestoDirectorTh = $this->puestoDeJefatura(
+            'Director/a de Talento Humano', 'Gestión de Talento Humano y Riesgos Laborales', 'NJS-5', 'ejecucion_coordinacion'
+        );
+        $this->call(AnclajeFirmantesSeeder::class);
+
         // El orden importa: los dos primeros ocupan las jefaturas ancladas, así
         // que las acciones siguientes ya sellan sus nombres como firmantes.
         $this->vincular('1', 'Marcela', 'Quiñónez', 'femenino', TipoNombramiento::ELECCION_POPULAR,
-            $this->puestoDeJefatura('Prefecto/a Provincial'), '2023-05-15', 4200.00);
+            $puestoPrefecto, '2023-05-15', 4200.00);
 
         $this->vincular('2', 'Rodrigo', 'Valencia', 'masculino', TipoNombramiento::PERMANENTE,
-            $this->puestoDeJefatura('Director/a de Talento Humano'), '2019-03-01', 2034.00);
+            $puestoDirectorTh, '2019-03-01', 2034.00);
 
         // Obrero: única vía para probar el visto bueno. Su remuneración es la
         // pactada, no la del puesto — el puesto ni siquiera tiene RMU.
@@ -102,7 +115,7 @@ class DatosPruebaAccionesPersonalSeeder extends Seeder
             $puestoConsultor, now()->startOfYear()->toDateString(), 1750.00,
             now()->startOfYear()->toDateString());
 
-        // Permanente con antigüedad: comisión de servicios (exige 2 años o más)
+        // Permanente con antigüedad: comisión de servicios (exige un año, fase 2.3)
         // y traspasos, sin tocar al usuario real.
         $this->vincular('6', 'Gabriela', 'Ortiz', 'femenino', TipoNombramiento::PERMANENTE,
             $puestoAsistente, '2018-02-01', 986.00);
@@ -116,7 +129,7 @@ class DatosPruebaAccionesPersonalSeeder extends Seeder
         $this->comisionar($ausente, $puestoAsistente);
 
         $this->command?->newLine();
-        $this->command?->info('Datos de prueba listos — cada vínculo nació de una acción de ingreso registrada.');
+        $this->command?->info('Datos de prueba listos — cada vínculo nació de su acto registrado: el ingreso, o el inicio del período de la Prefecta.');
         $this->command?->line("  · Un contrato de Servicios Profesionales vencido en {$anioPasado} → detección de vencidos.");
         $this->command?->line('  · El obrero (Código del Trabajo) tiene RMU pactada; su puesto no define ninguna.');
         $this->command?->line('  · Arroyo Nelson está en comisión de servicios y su plaza espera reemplazo.');
@@ -167,17 +180,33 @@ class DatosPruebaAccionesPersonalSeeder extends Seeder
         return $unidad;
     }
 
-    private function puestoDeJefatura(string $nombreCargo): Puesto
+    /**
+     * La jefatura con ese cargo, o la de su unidad si nadie la creó todavía:
+     * en una base recién sembrada no existía, y el seeder se detenía aquí.
+     */
+    private function puestoDeJefatura(string $nombreCargo, string $nombreUnidad, string $grado, string $rol): Puesto
     {
-        $puesto = Puesto::whereHas('cargo', fn ($q) => $q->where('nombre', $nombreCargo))
+        $existente = Puesto::whereHas('cargo', fn ($q) => $q->where('nombre', $nombreCargo))
             ->where('es_jefe', true)
             ->first();
 
-        if (! $puesto) {
-            throw new \RuntimeException("No existe el puesto de jefatura '{$nombreCargo}'.");
+        if ($existente) {
+            return $existente;
         }
 
-        return $puesto;
+        $unidad = $this->unidad($nombreUnidad);
+
+        return Puesto::create([
+            'cargo_id'                  => Cargo::firstOrCreate(['nombre' => $nombreCargo])->id,
+            'unidad_administrativa_id'  => $unidad->id,
+            'grupo_ocupacional_id'      => DB::table('grupos_ocupacionales')->where('grado_codigo', $grado)->value('id'),
+            'partida_presupuestaria_id' => PartidaPresupuestaria::where('codigo', '510105')->value('id'),
+            'plazas'                    => 1,
+            'regimen_laboral'           => 'losep',
+            'rol_puesto'                => $rol,
+            'es_jefe'                   => true,
+            'activo'                    => true,
+        ]);
     }
 
     /** @param  array<string, mixed>  $atributos */
@@ -235,15 +264,34 @@ class DatosPruebaAccionesPersonalSeeder extends Seeder
             'estado' => true,
         ]);
 
+        $esAutoridad = $nombramiento === TipoNombramiento::ELECCION_POPULAR;
+
+        // La autoridad electa no ingresa con acción de personal: su período
+        // empieza con la credencial del CNE y termina en su fecha, la del
+        // período legal de cuatro años (fase 4.1).
+        $delActo = $esAutoridad
+            ? [
+                'tipo_movimiento'       => TipoMovimientoPersonal::INICIO_PERIODO->value,
+                'subtipo_movimiento'    => SubtipoMovimientoPersonal::ELECCION->value,
+                'descripcion'           => 'Inicio del período de prueba, con la credencial del CNE.',
+                'credencial_cne_numero' => 'CNE-PRUEBA-'.$sufijo,
+                'credencial_cne_fecha'  => Carbon::parse($fechaIngreso)->subDays(20)->toDateString(),
+                'fecha_fin_propuesta'   => Carbon::parse($fechaIngreso)->addYearsNoOverflow(4)->subDay()->toDateString(),
+            ]
+            : [
+                'tipo_movimiento'             => TipoMovimientoPersonal::INGRESO->value,
+                'tipo_nombramiento_propuesto' => $nombramiento->value,
+                // Los datos de prueba no pasan por el dispensario: de lo
+                // contrario el ingreso quedaría bloqueado esperando un
+                // dictamen médico.
+                'requiere_dictamen_medico'    => false,
+                'descripcion'                 => "Ingreso de prueba — {$nombramiento->etiqueta()}.",
+            ];
+
         $movimiento = $this->movimientoService->registrar($servidor->id, [
-            'tipo_movimiento' => TipoMovimientoPersonal::INGRESO->value,
-            'tipo_nombramiento_propuesto' => $nombramiento->value,
+            ...$delActo,
             'puesto_destino_id' => $puesto->id,
             'unidad_destino_id' => $puesto->unidad_administrativa_id,
-            // Los datos de prueba no pasan por el dispensario: de lo contrario
-            // el ingreso quedaría bloqueado esperando un dictamen médico.
-            'requiere_dictamen_medico' => false,
-            'descripcion' => "Ingreso de prueba — {$nombramiento->etiqueta()}.",
             'fecha_efectiva' => $fechaEfectiva ?? $fechaIngreso,
         ]);
 
@@ -252,7 +300,8 @@ class DatosPruebaAccionesPersonalSeeder extends Seeder
         // La remuneración y el número de contrato se aportan al aprobar, que es
         // como funciona en la operación real.
         $this->stateService->transicionar($movimiento->fresh(), EstadoAccionPersonal::REGISTRADA, [
-            'numero_contrato' => 'CT-PRUEBA-'.$sufijo,
+            // El de la autoridad es el de su credencial, que ya trae el acto.
+            'numero_contrato' => $esAutoridad ? null : 'CT-PRUEBA-'.$sufijo,
             'remuneracion_propuesta' => $remuneracion,
             'resolucion_numero' => 'RES-PRUEBA-'.$sufijo,
             'partida_presupuestaria_id' => $puesto->partida_presupuestaria_id,
@@ -280,6 +329,8 @@ class DatosPruebaAccionesPersonalSeeder extends Seeder
             'tipo_movimiento'    => TipoMovimientoPersonal::CAMBIO_ADMINISTRATIVO->value,
             'subtipo_movimiento' => SubtipoMovimientoPersonal::COMISION_CON_REMUNERACION->value,
             'descripcion'        => 'Comisión de servicios con remuneración en el Ministerio de Trabajo.',
+            // A qué entidad va: la comisión es servir en otra (fase 2.3).
+            'institucion_destino' => 'Ministerio del Trabajo',
             'fecha_efectiva'     => $inicio->toDateString(),
             'fecha_inicio'       => $inicio->toDateString(),
             'fecha_fin'          => $fin->toDateString(),
