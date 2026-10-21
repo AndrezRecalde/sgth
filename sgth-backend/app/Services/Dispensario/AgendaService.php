@@ -353,6 +353,36 @@ final class AgendaService implements AgendaServiceInterface
                 ? $porServidor->get($turno->servidor_id)
                 : $porCarga->get($turno->carga_familiar_id);
         });
+
+        $this->adjuntarHistoriaPorCedula(
+            $turnos->filter(fn (AgendaMedica $t) => $t->historia_clinica_id === null)
+        );
+    }
+
+    /**
+     * La historia de quien no la tiene a su nombre, buscada por su cédula.
+     *
+     * Pasa con la del preocupacional de un excandidato (existe a nombre de la
+     * cédula, sin dueño) y con un familiar registrado dos veces, por cada uno
+     * de sus padres. Sin esto el turno llegaba al médico sin historia: la ficha
+     * recibía un 0, el contexto no cargaba y la consulta no se podía guardar.
+     */
+    private function adjuntarHistoriaPorCedula(Collection $turnos): void
+    {
+        $cedulaDe = fn (AgendaMedica $t) => $t->servidor?->cedula ?? $t->cargaFamiliar?->cedula;
+
+        $cedulas = $turnos->map($cedulaDe)->filter()->unique()->values();
+
+        if ($cedulas->isEmpty()) {
+            return;
+        }
+
+        $porCedula = HistoriaClinica::whereIn('cedula_paciente', $cedulas)
+            ->pluck('id', 'cedula_paciente');
+
+        $turnos->each(function (AgendaMedica $turno) use ($porCedula, $cedulaDe) {
+            $turno->historia_clinica_id = $porCedula->get($cedulaDe($turno));
+        });
     }
 
     /**

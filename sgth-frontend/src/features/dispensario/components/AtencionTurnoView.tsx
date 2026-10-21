@@ -8,6 +8,7 @@ import { agendaService } from '../services/agendaService'
 import { useTurnosDelDia } from '../hooks/useAgenda'
 import { AtencionMedicaPanel } from './AtencionMedicaPanel'
 import { AtencionOdontologicaPanel } from './AtencionOdontologicaPanel'
+import { SinHistoriaClinica } from './SinHistoriaClinica'
 import { DataState, PageHeader, PageShell } from '@/components/ui'
 import { ROUTES } from '@/config/routes'
 
@@ -81,14 +82,16 @@ export function AtencionTurnoView({ folio, especialidad }: Props) {
         }}
         skeletonRows={4}
       >
-        {turno && (
+        {turno && (turno.historia_clinica_id ? (
           <Panel
             turno={turno}
-            historiaClinicaId={turno.historia_clinica_id ?? 0}
+            historiaClinicaId={turno.historia_clinica_id}
             totalEnEspera={totalEnEspera}
             onFinalizar={() => router.push(RUTA_VUELTA[especialidad])}
           />
-        )}
+        ) : (
+          <SinHistoriaClinica turno={turno} />
+        ))}
       </DataState>
     </PageShell>
   )
