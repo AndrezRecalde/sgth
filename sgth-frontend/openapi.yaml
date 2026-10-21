@@ -875,50 +875,6 @@
                 }
             }
         },
-        "/v1/dispensario/agenda/listos-para-consulta": {
-            "get": {
-                "operationId": "agenda.listosParaConsulta",
-                "tags": [
-                    "Agenda"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Operaci\u00f3n exitosa."
-                                        },
-                                        "datos": {
-                                            "type": "object"
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
         "/v1/dispensario/agenda/turnos-del-dia": {
             "get": {
                 "operationId": "agenda.turnosDelDia",

@@ -562,16 +562,12 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
             )->latest('id')->first();
         }
 
-        $consultasAnteriores = ConsultaMedica::with('medico')
-            ->where('historia_clinica_id', $historiaClinicaId)
-            ->orderBy('fecha_consulta', 'desc')
-            ->limit(3)
-            ->get();
-
+        // Sin `consultas_anteriores`: cargaba y descifraba las tres últimas
+        // consultas en cada apertura del panel, y ninguna pantalla las leía (el
+        // historial tiene su propia pestaña, paginada).
         return [
             'historia_clinica'      => $historia,
             'triaje_actual'         => $triajeActual,
-            'consultas_anteriores'  => $consultasAnteriores,
             // Discapacidad y enfermedad catastrófica del Expediente, en solo
             // lectura: el médico no las veía en ninguna parte.
             'condicion_declarada'   => $this->condicionDeclarada->de($historia),

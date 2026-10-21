@@ -149,26 +149,6 @@ final class AgendaService implements AgendaServiceInterface
         }
     }
 
-    public function listosParaConsulta(
-        int $medicoId
-    ): Collection {
-        $turnos = AgendaMedica::with([
-            'servidor', 'cargaFamiliar.servidor', 'triaje',
-        ])
-            ->where('medico_id', $medicoId)
-            ->whereIn('estado', ['en_espera', 'en_sala'])
-            ->where(function ($q) {
-                $q->where('requiere_triaje', false)
-                  ->orWhereHas('triaje');
-            })
-            ->orderBy('registrado_en', 'asc')
-            ->get();
-
-        $this->adjuntarHistoria($turnos);
-
-        return $turnos;
-    }
-
     public function turnosDelDia(
         int $medicoId,
         ?string $fechaDesde = null,

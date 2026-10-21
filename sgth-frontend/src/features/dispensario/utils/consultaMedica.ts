@@ -3,7 +3,7 @@ import type { ConsultaMedicaFormData } from '../schemas/consultaMedica.schema'
 import type { DiagnosticoCie10 } from '../services/cie10Service'
 
 /** El texto de un campo del editor, sin las etiquetas que deja vacío. */
-export function limpiarHtml(valor?: string | null): string {
+function limpiarHtml(valor?: string | null): string {
   return (valor ?? '').replace(/<[^>]*>/g, '').trim()
 }
 

@@ -55,15 +55,6 @@ final class AgendaController extends Controller
         return ApiResponse::ok($cita, 'Cita cancelada.');
     }
 
-    public function listosParaConsulta(Request $request): JsonResponse
-    {
-        $turnos = $this->agendaService->listosParaConsulta(
-            $request->user()->id
-        );
-
-        return ApiResponse::ok($turnos);
-    }
-
     public function turnosDelDia(Request $request): JsonResponse
     {
         $request->validate([

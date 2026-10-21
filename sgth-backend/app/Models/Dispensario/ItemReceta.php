@@ -30,8 +30,9 @@ class ItemReceta extends Model
      * Si lo recetado está fuera del catálogo de la farmacia.
      *
      * Se pregunta por la FK y no por el estado: el estado describe cómo va la
-     * entrega, y esto es qué clase de ítem es. El CHECK de la tabla garantiza
-     * que una cosa implica la otra.
+     * entrega, y esto es qué clase de ítem es. Que un externo nazca
+     * `no_disponible` lo pone el servicio al emitirlo; el CHECK de la tabla
+     * solo garantiza que haya FK o nombre, exactamente uno.
      */
     public function esExterno(): bool
     {

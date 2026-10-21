@@ -183,7 +183,9 @@ export function useDespacharReceta() {
       // el contador de stock bajo del menú cuelgan de esta clave y quedaban
       // mostrando el stock de antes de la entrega.
       qc.invalidateQueries({ queryKey: ['inventario-medicinas'] })
-      // Y lo que se agotó al despachar ya no debe ofrecerse al recetar.
+      // Y el buscador de recetar tiene que enseñar agotado lo que se acabó.
+      // Lo sigue ofreciendo —se receta según el tratamiento, no según el
+      // estante—, pero con el stock que hay.
       qc.invalidateQueries({ queryKey: ['medicinas-buscar'] })
     },
     onError: (error) => {

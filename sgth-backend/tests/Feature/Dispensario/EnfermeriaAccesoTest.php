@@ -36,7 +36,6 @@ dataset('rutas_de_enfermeria', [
     'anular atención'       => ['patch', '/api/v1/dispensario/atenciones-enfermeria/1/anular'],
     'catálogo de servicios' => ['get',   '/api/v1/dispensario/catalogo-servicios-enfermeria'],
     'pendientes de triaje'  => ['get',   '/api/v1/dispensario/triaje/pendientes'],
-    'listos para consulta'  => ['get',   '/api/v1/dispensario/agenda/listos-para-consulta'],
     'turnos del día'        => ['get',   '/api/v1/dispensario/agenda/turnos-del-dia'],
     'turno por folio'       => ['get',   '/api/v1/dispensario/agenda/por-folio/TUR-2026-00001'],
     'no presentado'         => ['patch', '/api/v1/dispensario/agenda/1/no-presentado'],

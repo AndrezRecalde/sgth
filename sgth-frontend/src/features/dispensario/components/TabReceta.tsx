@@ -11,7 +11,7 @@ import { useQuery } from '@tanstack/react-query'
 import { recetaService } from '../services/recetaService'
 import { RecetaModal } from './RecetaModal'
 import { ItemsRecetaTable } from './ItemsRecetaTable'
-import { useEmitirReceta, useRecetaPdf } from '../hooks/useReceta'
+import { useRecetaPdf } from '../hooks/useReceta'
 import type { AgendaMedica } from '../services/agendaService'
 import type { ConsultaMedica } from '../services/consultaMedicaService'
 import type { SemanticTone } from '@/config/design.tokens'
@@ -35,7 +35,6 @@ const ESTADO_RECETA: Record<string, { label: string; tone: SemanticTone }> = {
 export function TabReceta({ turno, consulta }: Props) {
   const [modalOpened,
     { open: abrirModal, close: cerrarModal }] = useDisclosure(false)
-  const emitir = useEmitirReceta(consulta.id)
   const { abrir: abrirPdf, abriendo } = useRecetaPdf()
 
   const { data: recetas = [], isLoading, error, refetch } = useQuery({
@@ -59,7 +58,6 @@ export function TabReceta({ turno, consulta }: Props) {
           size="xs"
           leftSection={<IconPlus size={13} />}
           onClick={abrirModal}
-          loading={emitir.isPending}
         >
           Nueva receta
         </Button>
@@ -140,7 +138,6 @@ export function TabReceta({ turno, consulta }: Props) {
         onClose={cerrarModal}
         turno={turno}
         consulta={consulta}
-        onEmitida={cerrarModal}
       />
     </Stack>
   )

@@ -5,9 +5,13 @@ import type {
 } from '../services/historiaClinicaService'
 import { notificar } from '@/components/ui'
 
+/**
+ * Crea la historia clínica de un paciente. Lo que hay que refrescar depende de
+ * quién la crea —el turno sin historia, la búsqueda de paciente—, así que lo
+ * hace cada pantalla en su `onSuccess`. Invalidaba `['historias-clinicas']`,
+ * una clave que ninguna consulta usa.
+ */
 export function useCrearHistoriaClinica() {
-  const qc = useQueryClient()
-
   return useMutation({
     mutationFn: historiaClinicaService.crear,
     onSuccess: () => {
@@ -15,7 +19,6 @@ export function useCrearHistoriaClinica() {
         'Historia clínica creada',
         'Se registró la historia clínica del paciente.',
       )
-      qc.invalidateQueries({ queryKey: ['historias-clinicas'] })
     },
     onError: notificar.alFallar('No se pudo crear la historia clínica'),
   })

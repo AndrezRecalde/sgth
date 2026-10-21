@@ -143,22 +143,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/dispensario/agenda/listos-para-consulta": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["agenda.listosParaConsulta"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/dispensario/agenda/turnos-del-dia": {
         parameters: {
             query?: never;
@@ -17577,32 +17561,6 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             422: components["responses"]["ValidationException"];
-        };
-    };
-    "agenda.listosParaConsulta": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Operación exitosa.";
-                        datos: Record<string, never>;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
         };
     };
     "agenda.turnosDelDia": {

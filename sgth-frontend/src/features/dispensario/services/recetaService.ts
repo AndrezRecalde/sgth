@@ -1,6 +1,5 @@
 import api from '@/lib/axios'
 import type { ApiResponse, PaginatedResponse } from '@/types/api'
-import type {} from './inventarioMedicinaService'
 
 export interface ItemReceta {
   id?:                     number
@@ -29,12 +28,6 @@ export interface ItemReceta {
     stock_despachable?: number
     /** Lo inmovilizado por vencido, que hay que dar de baja. */
     stock_caducado?:    number
-    /**
-     * Caducidad de la ficha, anterior al control por lotes. Ya no decide nada
-     * —lo hace el stock despachable, que sale de los lotes—.
-     * @deprecated
-     */
-    fecha_caducidad?:  string | null
   } | null
 }
 
@@ -51,7 +44,6 @@ export interface RecetaMedica {
   indicaciones_generales?: string | null
   motivo_anulacion?:       string | null
   items:                   ItemReceta[]
-  alertas_alergias?:       string[]
   consulta_medica?: {
     id: number
     /** Quien la emitió: el único médico que puede anularla. */
