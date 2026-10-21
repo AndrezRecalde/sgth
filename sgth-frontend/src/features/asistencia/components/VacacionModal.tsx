@@ -60,7 +60,12 @@ export function VacacionModal({ opened, onClose, soloPropio = false, nombrePropi
 
       {solicitud.paso === 0 && solicitud.puedeRegistrar && (
         <form onSubmit={solicitud.enviar} noValidate>
-          <Stack gap="sm">
+          {/*
+            `md`, la misma distancia que hay entre las filas de las rejillas.
+            Con `sm` había 8 px entre bloques y 16 px entre filas, y la unidad
+            o la observación quedaban más pegadas que el resto.
+          */}
+          <Stack gap="md">
             {solicitud.propio ? (
               <VacacionSolicitantePropio
                 form={solicitud.form}

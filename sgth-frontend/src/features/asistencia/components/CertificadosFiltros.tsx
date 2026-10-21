@@ -71,7 +71,7 @@ export function CertificadosFiltros({ filtros, onCambiar }: Props) {
         <DatePickerInput
           label="Reposo desde"
           placeholder="Sin límite"
-          valueFormat="YYYY-MM-DD"
+          valueFormat="DD/MM/YYYY"
           clearable
           {...contained}
           value={toDateValue(filtros.fechaDesde)}
@@ -81,7 +81,7 @@ export function CertificadosFiltros({ filtros, onCambiar }: Props) {
         <DatePickerInput
           label="Hasta"
           placeholder="Sin límite"
-          valueFormat="YYYY-MM-DD"
+          valueFormat="DD/MM/YYYY"
           clearable
           minDate={toDateValue(filtros.fechaDesde) ?? undefined}
           {...contained}

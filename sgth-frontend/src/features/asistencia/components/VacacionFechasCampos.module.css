@@ -5,9 +5,14 @@
  * `.calculado input` le gana a la clase `.input` del patrón contained, que
  * también pinta el fondo del `<input>`: tiene más especificidad, así que no
  * depende del orden en que carguen las hojas.
+ *
+ * La fecha de retorno necesita su propio selector, porque `DatePickerInput`
+ * no pinta un `<input>` sino un `<button data-dates-input>`. Sin él, el
+ * retorno salía en blanco junto a los días y el tipo, ya en gris.
  */
 
-.calculado input {
+.calculado input,
+.calculado [data-dates-input] {
   background-color: var(--sgth-surface-sunken);
   cursor: not-allowed;
 }

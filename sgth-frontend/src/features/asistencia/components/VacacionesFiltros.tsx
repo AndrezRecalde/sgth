@@ -132,7 +132,7 @@ export function VacacionesFiltros({ filtros, onCambiar, onNueva }: Props) {
         <DatePickerInput
           label="Desde"
           placeholder="Sin límite"
-          valueFormat="YYYY-MM-DD"
+          valueFormat="DD/MM/YYYY"
           clearable
           {...contained}
           value={toDateValue(filtros.fechaDesde)}
@@ -143,7 +143,7 @@ export function VacacionesFiltros({ filtros, onCambiar, onNueva }: Props) {
         <DatePickerInput
           label="Hasta"
           placeholder="Sin límite"
-          valueFormat="YYYY-MM-DD"
+          valueFormat="DD/MM/YYYY"
           clearable
           minDate={toDateValue(filtros.fechaDesde) ?? undefined}
           {...contained}

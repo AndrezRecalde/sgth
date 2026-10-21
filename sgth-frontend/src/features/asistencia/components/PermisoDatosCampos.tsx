@@ -96,7 +96,7 @@ export function PermisoDatosCampos({ form }: Props) {
               <DatePickerInput
                 label="Fecha del permiso"
                 placeholder="Seleccionar fecha"
-                valueFormat="YYYY-MM-DD"
+                valueFormat="DD/MM/YYYY"
                 // Igual que en el backend: ningún tipo admite una fecha cuyo
                 // plazo de respaldo ya venció (dos días hábiles atrás como
                 // mucho), y enfermedad y calamidad además nunca a futuro.
