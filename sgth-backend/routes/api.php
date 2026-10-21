@@ -2142,6 +2142,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->group(function () {
                 Route::get('/', [ResultadoMedicoController::class, 'index']);
                 Route::post('/', [ResultadoMedicoController::class, 'store']);
+                // El archivo ya no se sirve desde /storage: sale por aquí.
+                Route::get('{id}/archivo', [ResultadoMedicoController::class, 'archivo'])
+                    ->whereNumber('id');
                 Route::delete('{id}', [ResultadoMedicoController::class, 'destroy'])
                     ->middleware('role:medico|odontologo|admin-dispensario');
             });

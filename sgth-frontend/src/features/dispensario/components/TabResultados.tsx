@@ -2,7 +2,7 @@
 
 import { confirmar, DataState, StatusBadge } from '@/components/ui'
 import {
-  Stack, Text, Button, Group, Card, ThemeIcon, Anchor,
+  Stack, Text, Button, Group, Card, ThemeIcon,
   ActionIcon, Tooltip,
 } from '@mantine/core'
 import {
@@ -15,13 +15,16 @@ import { SubirResultadoModal } from './SubirResultadoModal'
 import {
   useResultadosPorConsulta,
   useEliminarResultado,
+  useVerResultado,
 } from '../hooks/useResultadoMedico'
 import {
   TIPO_RESULTADO_OPTIONS,
   TIPO_RESULTADO_ICONS,
 } from '../services/resultadoMedicoService'
 import type { ConsultaMedica } from '../services/consultaMedicaService'
+import type { ResultadoMedico } from '../services/resultadoMedicoService'
 import { formatFechaMes } from '@/lib/fecha'
+import { useAuthStore } from '@/store/auth.store'
 
 interface Props {
   consulta:          ConsultaMedica
@@ -30,11 +33,6 @@ interface Props {
 
 function getLabelTipo(tipo: string): string {
   return TIPO_RESULTADO_OPTIONS.find(o => o.value === tipo)?.label ?? tipo
-}
-
-// En el mismo dominio, como el API: `next.config.ts` lo reenvía a Laravel.
-function getArchivoUrl(ruta: string): string {
-  return `/storage/${ruta}`
 }
 
 export function TabResultados({
@@ -47,6 +45,13 @@ export function TabResultados({
     useResultadosPorConsulta(historiaClinicaId, consulta.id)
 
   const eliminar = useEliminarResultado(consulta.id)
+  const ver = useVerResultado()
+  const { usuario, hasRole } = useAuthStore()
+
+  // Lo retira quien lo subió o la administración, igual que exige el
+  // servidor: un botón que siempre responde 403 es peor que no enseñarlo.
+  const puedeRetirar = (r: ResultadoMedico) =>
+    r.subido_por?.id === usuario?.id || hasRole('admin-dispensario')
 
   return (
     <Stack gap="md" p="md">
@@ -113,34 +118,35 @@ export function TabResultados({
 
                 <Group gap="xs" wrap="nowrap">
                   <Tooltip label="Ver archivo" withArrow>
-                    <Anchor
-                      href={getArchivoUrl(r.archivo)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <ActionIcon
-                        size="sm"
-                        variant="light"
-                      >
-                        <IconExternalLink size={13} />
-                      </ActionIcon>
-                    </Anchor>
-                  </Tooltip>
-                  <Tooltip label="Eliminar" withArrow>
                     <ActionIcon
                       size="sm"
                       variant="light"
-                      color="red"
-                      onClick={() => confirmar({
-                        title:   'Eliminar resultado',
-                        message: 'Se eliminará este resultado de laboratorio. No se puede deshacer.',
-                        destructiva: true,
-                        onConfirm: () => eliminar.mutate(r.id),
-                      })}
+                      aria-label={`Ver el archivo de ${r.descripcion}`}
+                      loading={ver.isPending && ver.variables?.id === r.id}
+                      onClick={() => ver.mutate(r)}
                     >
-                      <IconTrash size={13} />
+                      <IconExternalLink size={13} />
                     </ActionIcon>
                   </Tooltip>
+                  {puedeRetirar(r) && (
+                    <Tooltip label="Retirar" withArrow>
+                      <ActionIcon
+                        size="sm"
+                        variant="light"
+                        color="red"
+                        aria-label={`Retirar ${r.descripcion}`}
+                        onClick={() => confirmar({
+                          title:   'Retirar resultado',
+                          message: 'Dejará de aparecer en la consulta. El archivo se conserva en el registro del Dispensario.',
+                          confirmLabel: 'Retirar',
+                          destructiva: true,
+                          onConfirm: () => eliminar.mutate(r.id),
+                        })}
+                      >
+                        <IconTrash size={13} />
+                      </ActionIcon>
+                    </Tooltip>
+                  )}
                 </Group>
               </Group>
             </Card>

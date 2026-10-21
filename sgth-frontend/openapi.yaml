@@ -43881,7 +43881,6 @@
                                                     "modulo": {
                                                         "type": "string",
                                                         "enum": [
-                                                            "N\u00f3mina",
                                                             "Autoservicio",
                                                             "Actividades y Bienestar",
                                                             "Comunicaci\u00f3n",
@@ -43889,6 +43888,7 @@
                                                             "Sistema",
                                                             "Estructura",
                                                             "Expediente",
+                                                            "N\u00f3mina",
                                                             "Asistencia",
                                                             "Vi\u00e1ticos",
                                                             "Dispensario y SSO",
@@ -53211,9 +53211,83 @@
                 }
             }
         },
+        "/v1/dispensario/resultados-medicos/{id}/archivo": {
+            "get": {
+                "operationId": "resultadoMedico.archivo",
+                "summary": "El archivo, para verlo. Solo con la sesi\u00f3n y el rol de la ruta",
+                "tags": [
+                    "ResultadoMedico"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "El archivo de este resultado ya no est\u00e1 disponible."
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "errores": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "errores"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/dispensario/resultados-medicos/{id}": {
             "delete": {
                 "operationId": "resultadoMedico.destroy",
+                "description": "Lo retira quien lo subi\u00f3 \u2014se equivoc\u00f3 de archivo o de paciente\u2014 o la\nadministraci\u00f3n del Dispensario; antes pod\u00eda cualquier profesional, sobre\nel resultado de cualquiera. Y ya no se borra el archivo: el registro se\nretira en blando y el archivo se queda en el disco privado, porque un\ndocumento de la historia cl\u00ednica no desaparece sin rastro. Antes la fila\nquedaba borrada en blando apuntando a un archivo que ya no exist\u00eda.",
+                "summary": "Retira un resultado de la consulta",
                 "tags": [
                     "ResultadoMedico"
                 ],
@@ -53240,7 +53314,7 @@
                                         },
                                         "mensaje": {
                                             "type": "string",
-                                            "const": "Resultado eliminado correctamente."
+                                            "const": "Resultado retirado de la consulta."
                                         },
                                         "datos": {
                                             "type": "array",
@@ -53260,6 +53334,36 @@
                                         "mensaje",
                                         "datos",
                                         "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string"
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "errores": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "errores"
                                     ]
                                 }
                             }

@@ -2772,3 +2772,95 @@ test('el_listado_de_consultas_se_puede_pedir_por_especialidad', function () {
     expect($respuesta->json('datos.data'))->toHaveCount(1);
     expect($respuesta->json('datos.data.0.especialidad'))->toBe('odontologia');
 });
+
+test('el_resultado_medico_va_al_disco_privado_y_sale_solo_por_el_dispensario', function () {
+    Illuminate\Support\Facades\Storage::fake('local');
+    Illuminate\Support\Facades\Storage::fake('public');
+
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'medico', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $historia = historiaDePrueba($this->paciente->id, $this->paciente->cedula);
+
+    $resultado = $this->post('/api/v1/dispensario/resultados-medicos', [
+        'historia_clinica_id' => $historia->id,
+        'tipo'                => 'laboratorio',
+        'descripcion'         => 'Biometría hemática',
+        'fecha_resultado'     => now()->toDateString(),
+        'archivo'             => Illuminate\Http\UploadedFile::fake()
+            ->create('biometria.pdf', 50, 'application/pdf'),
+    ], ['Accept' => 'application/json'])->assertCreated()->json('datos');
+
+    // En el disco público se servía en /storage/… a cualquiera, sin sesión.
+    Illuminate\Support\Facades\Storage::disk('local')->assertExists($resultado['archivo']);
+    Illuminate\Support\Facades\Storage::disk('public')->assertMissing($resultado['archivo']);
+
+    $this->get("/api/v1/dispensario/resultados-medicos/{$resultado['id']}/archivo")
+        ->assertOk()
+        ->assertHeader('Content-Type', 'application/pdf');
+
+    // Quien no es del Dispensario no lo abre, aunque tenga sesión.
+    $this->actingAs($this->pacienteUser, 'sanctum')
+        ->getJson("/api/v1/dispensario/resultados-medicos/{$resultado['id']}/archivo")
+        ->assertForbidden();
+});
+
+test('retirar_un_resultado_es_de_quien_lo_subio_y_conserva_el_archivo', function () {
+    Illuminate\Support\Facades\Storage::fake('local');
+
+    $rolMedico = Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'medico', 'guard_name' => 'sanctum']
+    );
+    $this->medico->assignRole($rolMedico);
+    $colega = User::create([
+        'email' => 'wilson@example.com', 'usuario_ti' => 'wilson',
+        'password' => bcrypt('123456'), 'primer_login' => false,
+    ]);
+    $colega->assignRole($rolMedico);
+
+    $historia = historiaDePrueba($this->paciente->id, $this->paciente->cedula);
+    Illuminate\Support\Facades\Storage::disk('local')->put('resultados-medicos/rx.png', 'png');
+    $resultado = App\Models\Dispensario\ResultadoMedico::create([
+        'historia_clinica_id' => $historia->id,
+        'subido_por'          => $this->medico->id,
+        'tipo'                => 'rayos_x',
+        'descripcion'         => 'Rx de tórax',
+        'fecha_resultado'     => now()->toDateString(),
+        'archivo'             => 'resultados-medicos/rx.png',
+    ]);
+
+    // Antes cualquier profesional borraba el resultado de cualquiera.
+    $this->actingAs($colega, 'sanctum')
+        ->deleteJson("/api/v1/dispensario/resultados-medicos/{$resultado->id}")
+        ->assertForbidden();
+
+    $this->actingAs($this->medico, 'sanctum')
+        ->deleteJson("/api/v1/dispensario/resultados-medicos/{$resultado->id}")
+        ->assertOk();
+
+    // Se retira en blando y el archivo se queda: antes se borraba del disco
+    // y la fila quedaba apuntando a un archivo que ya no existía.
+    expect(App\Models\Dispensario\ResultadoMedico::withTrashed()->find($resultado->id)->trashed())
+        ->toBeTrue();
+    Illuminate\Support\Facades\Storage::disk('local')->assertExists('resultados-medicos/rx.png');
+});
+
+test('la_migracion_saca_los_resultados_del_disco_publico', function () {
+    Illuminate\Support\Facades\Storage::fake('local');
+    Illuminate\Support\Facades\Storage::fake('public');
+
+    Illuminate\Support\Facades\Storage::disk('public')->put('resultados-medicos/lab.pdf', 'pdf');
+    Illuminate\Support\Facades\Storage::disk('public')->put('fotografias/foto.jpg', 'jpg');
+
+    $migracion = require database_path(
+        'migrations/2026_11_15_000200_mover_resultados_medicos_al_disco_privado.php'
+    );
+    $migracion->up();
+
+    Illuminate\Support\Facades\Storage::disk('local')->assertExists('resultados-medicos/lab.pdf');
+    Illuminate\Support\Facades\Storage::disk('public')->assertMissing('resultados-medicos/lab.pdf');
+    // Lo demás del disco público no se toca.
+    Illuminate\Support\Facades\Storage::disk('public')->assertExists('fotografias/foto.jpg');
+});

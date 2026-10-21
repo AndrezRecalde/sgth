@@ -10,9 +10,20 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 final class ResultadoMedicoController extends Controller
 {
+    /**
+     * Dónde viven los archivos: el disco privado.
+     *
+     * Estaban en el público, servidos en `/storage/resultados-medicos/…` a
+     * cualquiera que tuviera la dirección, sin sesión: un laboratorio o una
+     * radiografía son datos de salud. Ahora solo salen por `archivo()`, con la
+     * sesión y el rol del Dispensario, como el respaldo de una adquisición.
+     */
+    private const DISCO = 'local';
+
     public function index(Request $request): JsonResponse
     {
         $query = ResultadoMedico::with([
@@ -56,7 +67,7 @@ final class ResultadoMedicoController extends Controller
         ]);
 
         $ruta = $request->file('archivo')->store(
-            'resultados-medicos', 'public'
+            'resultados-medicos', self::DISCO
         );
 
         $resultado = ResultadoMedico::create([
@@ -78,12 +89,56 @@ final class ResultadoMedicoController extends Controller
         );
     }
 
-    public function destroy(int $id): JsonResponse
+    /** El archivo, para verlo. Solo con la sesión y el rol de la ruta. */
+    public function archivo(int $id): SymfonyResponse
     {
         $resultado = ResultadoMedico::findOrFail($id);
-        Storage::disk('public')->delete($resultado->archivo);
+        $disco     = Storage::disk(self::DISCO);
+
+        if (! $disco->exists($resultado->archivo)) {
+            return ApiResponse::error(
+                'El archivo de este resultado ya no está disponible.', null, 404
+            );
+        }
+
+        $extension = pathinfo($resultado->archivo, PATHINFO_EXTENSION);
+
+        return response($disco->get($resultado->archivo), 200, [
+            'Content-Type'        => $disco->mimeType($resultado->archivo),
+            'Content-Disposition' => 'inline; filename="resultado-'
+                . $resultado->id . '.' . $extension . '"',
+        ]);
+    }
+
+    /**
+     * Retira un resultado de la consulta.
+     *
+     * Lo retira quien lo subió —se equivocó de archivo o de paciente— o la
+     * administración del Dispensario; antes podía cualquier profesional, sobre
+     * el resultado de cualquiera. Y ya no se borra el archivo: el registro se
+     * retira en blando y el archivo se queda en el disco privado, porque un
+     * documento de la historia clínica no desaparece sin rastro. Antes la fila
+     * quedaba borrada en blando apuntando a un archivo que ya no existía.
+     */
+    public function destroy(Request $request, int $id): JsonResponse
+    {
+        $resultado = ResultadoMedico::findOrFail($id);
+        $usuario   = $request->user();
+
+        if (
+            $resultado->subido_por !== $usuario->id
+            && ! $usuario->hasRole('admin-dispensario')
+        ) {
+            return ApiResponse::error(
+                'Solo quien subió el resultado o la administración del ' .
+                'Dispensario pueden retirarlo.',
+                null,
+                403
+            );
+        }
+
         $resultado->delete();
 
-        return ApiResponse::ok([], 'Resultado eliminado correctamente.');
+        return ApiResponse::ok([], 'Resultado retirado de la consulta.');
     }
 }

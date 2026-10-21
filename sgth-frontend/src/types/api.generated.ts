@@ -8237,6 +8237,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/dispensario/resultados-medicos/{id}/archivo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** El archivo, para verlo. Solo con la sesión y el rol de la ruta */
+        get: operations["resultadoMedico.archivo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/dispensario/resultados-medicos/{id}": {
         parameters: {
             query?: never;
@@ -8247,6 +8264,15 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
+        /**
+         * Retira un resultado de la consulta
+         * @description Lo retira quien lo subió —se equivocó de archivo o de paciente— o la
+         *     administración del Dispensario; antes podía cualquier profesional, sobre
+         *     el resultado de cualquiera. Y ya no se borra el archivo: el registro se
+         *     retira en blando y el archivo se queda en el disco privado, porque un
+         *     documento de la historia clínica no desaparece sin rastro. Antes la fila
+         *     quedaba borrada en blando apuntando a un archivo que ya no existía.
+         */
         delete: operations["resultadoMedico.destroy"];
         options?: never;
         head?: never;
@@ -35763,7 +35789,7 @@ export interface operations {
                             id: number;
                             nombre: string;
                             /** @enum {string} */
-                            modulo: "Nómina" | "Autoservicio" | "Actividades y Bienestar" | "Comunicación" | "Noticias y comunicados" | "Sistema" | "Estructura" | "Expediente" | "Asistencia" | "Viáticos" | "Dispensario y SSO" | "Evaluación" | "Capacitación" | "TI y Helpdesk" | "Reportería" | "Disciplinario" | "Selección" | "General";
+                            modulo: "Autoservicio" | "Actividades y Bienestar" | "Comunicación" | "Noticias y comunicados" | "Sistema" | "Estructura" | "Expediente" | "Nómina" | "Asistencia" | "Viáticos" | "Dispensario y SSO" | "Evaluación" | "Capacitación" | "TI y Helpdesk" | "Reportería" | "Disciplinario" | "Selección" | "General";
                         }[];
                         meta: null;
                     };
@@ -39674,6 +39700,43 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "resultadoMedico.archivo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "El archivo de este resultado ya no está disponible.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
+        };
+    };
     "resultadoMedico.destroy": {
         parameters: {
             query?: never;
@@ -39693,13 +39756,26 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Resultado eliminado correctamente.";
+                        mensaje: "Resultado retirado de la consulta.";
                         datos: string[];
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
         };
     };
     "riesgos.index": {
