@@ -84802,7 +84802,8 @@
                     },
                     "fecha_emision": {
                         "type": "string",
-                        "format": "date-time"
+                        "format": "date-time",
+                        "description": "La pantalla manda hoy, pero el servidor aceptaba cualquier fecha:\nuna receta fechada la semana pr\u00f3xima, o anterior a la consulta\nque la origina."
                     },
                     "indicaciones_generales": {
                         "type": [
