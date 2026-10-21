@@ -343,6 +343,46 @@ final class AgendaService implements AgendaServiceInterface
         });
     }
 
+    /**
+     * Devuelve a la cola un turno que se abrió y se cerró sin consulta.
+     *
+     * Abrir la ficha pasa el turno a «en consulta», y de ahí solo salía al
+     * guardar la consulta: un «Finalizar» sin consulta —el paciente no estaba,
+     * se abrió el turno equivocado— lo dejaba en consulta para siempre, porque
+     * el cierre nocturno no toca esos turnos. Vuelve a la sala si ya tiene
+     * triaje y a la espera si no, que es donde estaba antes de abrirlo.
+     */
+    public function devolverALaCola(int $id, int $medicoId): AgendaMedica
+    {
+        return DB::transaction(function () use ($id, $medicoId) {
+            $turno = AgendaMedica::lockForUpdate()->findOrFail($id);
+
+            if ((int) $turno->medico_id !== $medicoId) {
+                throw new ReglaNegocioException(
+                    'Solo quien atiende el turno puede devolverlo a la cola.'
+                );
+            }
+
+            if ($turno->estado !== 'en_consulta') {
+                throw new ReglaNegocioException(
+                    'Solo se devuelve a la cola un turno que está en consulta.'
+                );
+            }
+
+            if ($turno->consultaMedica()->exists()) {
+                throw new ReglaNegocioException(
+                    'Este turno ya tiene su consulta registrada: no vuelve a la cola.'
+                );
+            }
+
+            $turno->update([
+                'estado' => $turno->triajes()->exists() ? 'en_sala' : 'en_espera',
+            ]);
+
+            return $turno;
+        });
+    }
+
     public function marcarAtendido(int $id): AgendaMedica
     {
         $turno = AgendaMedica::findOrFail($id);

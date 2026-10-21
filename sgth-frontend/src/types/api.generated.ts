@@ -223,6 +223,22 @@ export interface paths {
         patch: operations["agenda.enConsulta"];
         trace?: never;
     };
+    "/v1/dispensario/agenda/{agenda}/devolver-a-la-cola": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["agenda.devolverALaCola"];
+        trace?: never;
+    };
     "/v1/dispensario/agenda/por-folio/{folio}": {
         parameters: {
             query?: never;
@@ -17683,6 +17699,34 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Turno en consulta.";
+                        datos: components["schemas"]["AgendaMedica"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "agenda.devolverALaCola": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                agenda: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "El turno volvió a la cola.";
                         datos: components["schemas"]["AgendaMedica"];
                         meta: null;
                     };

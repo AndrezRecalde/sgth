@@ -1152,6 +1152,60 @@
                 }
             }
         },
+        "/v1/dispensario/agenda/{agenda}/devolver-a-la-cola": {
+            "patch": {
+                "operationId": "agenda.devolverALaCola",
+                "tags": [
+                    "Agenda"
+                ],
+                "parameters": [
+                    {
+                        "name": "agenda",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "El turno volvi\u00f3 a la cola."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/AgendaMedica"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/dispensario/agenda/por-folio/{folio}": {
             "get": {
                 "operationId": "agenda.porFolio",

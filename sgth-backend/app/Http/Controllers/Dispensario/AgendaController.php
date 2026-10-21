@@ -120,4 +120,13 @@ final class AgendaController extends Controller
 
         return ApiResponse::ok($turno, 'Turno en consulta.');
     }
+
+    public function devolverALaCola(Request $request, int $agenda): JsonResponse
+    {
+        $turno = $this->agendaService->devolverALaCola(
+            $agenda, $request->user()->id
+        );
+
+        return ApiResponse::ok($turno, 'El turno volvió a la cola.');
+    }
 }

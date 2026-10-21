@@ -44,6 +44,12 @@ export const agendaService = {
       `/dispensario/agenda/${id}/en-consulta`
     ).then(r => r.data.datos),
 
+  /** «Finalizar» sin consulta: el turno vuelve a la espera o a la sala. */
+  devolverALaCola: (id: number) =>
+    api.patch<ApiResponse<AgendaMedica>>(
+      `/dispensario/agenda/${id}/devolver-a-la-cola`
+    ).then(r => r.data.datos),
+
   obtenerPorFolio: (folio: string) =>
     api.get<ApiResponse<AgendaMedica>>(
       `/dispensario/agenda/por-folio/${folio}`
