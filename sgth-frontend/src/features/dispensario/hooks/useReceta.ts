@@ -4,6 +4,7 @@ import { recetaService } from '../services/recetaService'
 import { getApiErrorMessage } from '@/types/api'
 import type { EmitirRecetaData, RecetaMedica } from '../services/recetaService'
 import { notificar } from '@/components/ui'
+import { abrirOGuardarArchivo } from '@/lib/archivo'
 
 export function useEmitirReceta(consultaId?: number) {
   const qc = useQueryClient()
@@ -117,6 +118,12 @@ export function useRecetaParaDespacho(fila: RecetaMedica | null, abierto: boolea
  * certificado: lo que se hace con una receta es imprimirla ahí mismo para
  * dársela al paciente, y bajarla al disco añade un paso y deja el documento
  * clínico tirado en Descargas.
+ *
+ * Pero la pestaña se abre después de esperar al servidor, ya fuera del gesto
+ * del clic, y el navegador puede bloquearla. Antes eso se avisaba en verde,
+ * como un éxito, y la receta no llegaba a ninguna parte: ahora se descarga,
+ * como hace el resto de la aplicación (`abrirOGuardarArchivo`), y se dice
+ * dónde quedó.
  */
 export function useRecetaPdf() {
   const [abriendo, setAbriendo] = React.useState<number | null>(null)
@@ -125,22 +132,13 @@ export function useRecetaPdf() {
     setAbriendo(id)
     try {
       const blob = await recetaService.descargarPdf(id)
-      const url  = URL.createObjectURL(blob)
 
-      // La ventana se abre dentro del gesto del clic, si no el navegador la
-      // toma por emergente y la bloquea.
-      const ventana = window.open(url, '_blank')
-
-      if (!ventana) {
-        notificar.exito(
-          'Permite las ventanas emergentes',
-          'El navegador bloqueó la pestaña con la receta.',
+      if (!abrirOGuardarArchivo(blob, `receta-${id}.pdf`)) {
+        notificar.aviso(
+          'La receta se descargó',
+          'El navegador bloqueó la pestaña; la encontrará en Descargas.',
         )
       }
-
-      // Se revoca tarde: antes la pestaña recién abierta se quedaba sin nada
-      // que mostrar.
-      setTimeout(() => URL.revokeObjectURL(url), 60_000)
     } catch (error: unknown) {
       notificar.error('No se pudo generar la receta', getApiErrorMessage(error))
     } finally {
