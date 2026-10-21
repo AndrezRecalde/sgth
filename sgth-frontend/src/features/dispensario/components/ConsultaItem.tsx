@@ -5,6 +5,7 @@ import { IconDental, IconStethoscope } from '@tabler/icons-react'
 import { StatusBadge } from '@/components/ui'
 import { formatFechaMes } from '@/lib/fecha'
 import type { ConsultaMedica } from '../services/consultaMedicaService'
+import { DiagnosticosCie10 } from './DiagnosticosCie10'
 
 /** Una consulta en la lista del historial clínico. */
 export function ConsultaItem({
@@ -61,6 +62,8 @@ export function ConsultaItem({
             Ver detalle
           </Button>
         </Group>
+
+        <DiagnosticosCie10 consulta={consulta} compacto />
 
         <Text size="xs" c="dimmed">
           Dr. {consulta.medico?.nombre_completo ?? "—"}
