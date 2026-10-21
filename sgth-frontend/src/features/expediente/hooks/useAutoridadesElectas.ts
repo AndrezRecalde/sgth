@@ -10,6 +10,18 @@ export function useAutoridadesElectas() {
   })
 }
 
+/**
+ * Las que entran (2026-10-21). Cuelga de la misma llave, así que lo que
+ * refresca a las autoridades en funciones la refresca a ella.
+ */
+export function useAutoridadesEntrantes() {
+  return useQuery({
+    queryKey: ['autoridades-electas', 'entrantes'],
+    queryFn: autoridadElectaService.entrantes,
+    staleTime: 1000 * 60,
+  })
+}
+
 /** La subrogación por ley del Viceprefecto (fase 4.1b). */
 export function useRegistrarSubrogacionPorLey() {
   const qc = useQueryClient()

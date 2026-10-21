@@ -307,8 +307,11 @@ test('a la autoridad que ya estaba se le fija el fin del período', function () 
     expect($contrato->fresh()->fecha_fin->toDateString())->toBe('2027-05-13')
         ->and(EventoVinculo::where('contrato_servidor_id', $contrato->id)
             ->where('tipo', TipoEventoVinculo::FIN_DEL_PERIODO_FIJADO->value)->exists())->toBeTrue();
+});
 
-    // El de un período que empezó con su acto lo dice la credencial.
+test('el fin del período que empezó con su acto no se fija aquí', function () {
+    // Lo dice la credencial. Sin nadie más en el puesto: quien entra sucede a
+    // quien lo ocupa (2026-10-21).
     $nuevo = ($this->persona)();
     ($this->registrar)(($this->iniciar)($nuevo)->json('datos.id'));
     $this->postJson('/api/v1/expediente/contratos/'.$nuevo->fresh('contratoVigente')->contratoVigente->id.'/fin-del-periodo', [

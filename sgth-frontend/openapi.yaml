@@ -3531,6 +3531,51 @@
                                                             "fecha_efectiva"
                                                         ]
                                                     },
+                                                    "sucesor": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "description": "Quien entra a su puesto cuando termina (2026-10-21).",
+                                                        "properties": {
+                                                            "": {
+                                                                "type": [
+                                                                    "object",
+                                                                    "null"
+                                                                ],
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "estado": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "codigo_registro": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "fecha_efectiva": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "id",
+                                                                    "estado",
+                                                                    "codigo_registro",
+                                                                    "fecha_efectiva"
+                                                                ]
+                                                            },
+                                                            "nombre": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            null,
+                                                            "nombre"
+                                                        ]
+                                                    },
                                                     "ausencia": {
                                                         "type": [
                                                             "object",
@@ -3633,9 +3678,180 @@
                                                     "puede_fijar_fin",
                                                     "cese",
                                                     "siguiente",
+                                                    "sucesor",
                                                     "ausencia",
                                                     "subrogacion",
                                                     "es_prefecto"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/autoridades-electas/entrantes": {
+            "get": {
+                "operationId": "autoridadElecta.entrantes",
+                "summary": "Las que entran: su per\u00edodo por empezar y a qui\u00e9n suceden (2026-10-21)",
+                "tags": [
+                    "AutoridadElecta"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Autoridades electas que entran."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "movimiento_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "servidor": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "nombre": {
+                                                                "type": "string"
+                                                            },
+                                                            "cedula": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "nombre",
+                                                            "cedula"
+                                                        ]
+                                                    },
+                                                    "dignidad": {
+                                                        "type": "string"
+                                                    },
+                                                    "unidad": {
+                                                        "type": "string"
+                                                    },
+                                                    "desde": {
+                                                        "type": "string"
+                                                    },
+                                                    "hasta": {
+                                                        "type": "string"
+                                                    },
+                                                    "credencial": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "designacion": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "inicio": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "estado": {
+                                                                "type": "string"
+                                                            },
+                                                            "codigo_registro": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "fecha_efectiva": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "estado",
+                                                            "codigo_registro",
+                                                            "fecha_efectiva"
+                                                        ]
+                                                    },
+                                                    "sucede_a": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "properties": {
+                                                            "contrato_id": {
+                                                                "anyOf": [
+                                                                    {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    {
+                                                                        "type": "string"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "nombre": {
+                                                                "type": "string"
+                                                            },
+                                                            "hasta": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "contrato_id",
+                                                            "nombre",
+                                                            "hasta"
+                                                        ]
+                                                    },
+                                                    "aviso": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "movimiento_id",
+                                                    "servidor",
+                                                    "dignidad",
+                                                    "unidad",
+                                                    "desde",
+                                                    "hasta",
+                                                    "credencial",
+                                                    "designacion",
+                                                    "inicio",
+                                                    "sucede_a",
+                                                    "aviso"
                                                 ]
                                             }
                                         },
@@ -43881,7 +44097,6 @@
                                                     "modulo": {
                                                         "type": "string",
                                                         "enum": [
-                                                            "N\u00f3mina",
                                                             "Autoservicio",
                                                             "Actividades y Bienestar",
                                                             "Comunicaci\u00f3n",
@@ -43889,6 +44104,7 @@
                                                             "Sistema",
                                                             "Estructura",
                                                             "Expediente",
+                                                            "N\u00f3mina",
                                                             "Asistencia",
                                                             "Vi\u00e1ticos",
                                                             "Dispensario y SSO",

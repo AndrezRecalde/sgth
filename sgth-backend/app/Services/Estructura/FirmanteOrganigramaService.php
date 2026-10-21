@@ -4,6 +4,7 @@ namespace App\Services\Estructura;
 
 use App\Enums\TipoSubrogacion;
 use App\Models\Estructura\UnidadAdministrativa;
+use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\Servidor;
 use App\Models\Expediente\Subrogacion;
 
@@ -65,13 +66,21 @@ class FirmanteOrganigramaService
      * Titular del puesto: el servidor con contrato vigente sobre él. Si el
      * puesto está vacante devuelve null y el documento sale con el cargo pero
      * sin nombre — es preferible a atribuirle la firma a alguien que no la dio.
+     *
+     * Dos a la vez solo los hay el día del relevo de una autoridad electa, que
+     * no ocupa plaza: desde la posesión firma el que entra, el de inicio más
+     * reciente (2026-10-21). Antes salía el primero que devolviera la base.
      */
     public function titularDe(int $puestoId): ?Servidor
     {
-        return Servidor::whereHas(
-            'contratos',
-            fn ($q) => $q->where('puesto_id', $puestoId)->where('estado', 'vigente')
-        )->first();
+        return ContratoServidor::where('puesto_id', $puestoId)
+            ->where('estado', 'vigente')
+            ->whereHas('servidor')
+            ->with('servidor')
+            ->orderByDesc('fecha_inicio')
+            ->orderByDesc('id')
+            ->first()
+            ?->servidor;
     }
 
     public function subroganteDe(int $puestoId, string $fecha): ?Servidor

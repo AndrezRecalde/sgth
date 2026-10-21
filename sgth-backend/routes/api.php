@@ -477,6 +477,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // Las autoridades electas en funciones y el fin de su período (fase 4.1).
         Route::get('autoridades-electas', [AutoridadElectaController::class, 'index'])
             ->middleware('role:admin-uath|asistente-uath');
+        Route::get('autoridades-electas/entrantes', [AutoridadElectaController::class, 'entrantes'])
+            ->middleware('role:admin-uath|asistente-uath');
         Route::post('contratos/{contrato}/fin-del-periodo', [AutoridadElectaController::class, 'fijarFinDelPeriodo'])
             ->middleware('permission:preparar-accion-personal');
         // La subrogación por ley del Viceprefecto (fase 4.1b).
