@@ -15517,7 +15517,9 @@ export interface components {
                 /**
                  * @description El mismo medicamento dos veces son dos líneas que el despacho
                  *     entrega por separado, cada una con su dosis: o es un error, o
-                 *     es una sola línea con más cantidad.
+                 *     es una sola línea con más cantidad. Y solo del catálogo activo:
+                 *     una medicina retirada no sale en el buscador, pero el API la
+                 *     aceptaba y la receta mandaba a Farmacia algo que ya no maneja.
                  */
                 inventario_medicina_id?: number | null;
                 medicamento_externo?: string | null;
