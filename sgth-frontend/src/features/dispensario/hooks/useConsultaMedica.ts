@@ -57,6 +57,9 @@ export function useActualizarConsulta() {
       // El panel lee la consulta por su propia clave: sin invalidarla, tras
       // corregir seguía enseñando el texto anterior como si fuera el vigente.
       qc.invalidateQueries({ queryKey: ['consulta-detalle-panel'] })
+      // Y lo mismo el detalle que se abre desde el historial (otra pestaña
+      // del mismo panel): durante un minuto enseñaba la versión ya corregida.
+      qc.invalidateQueries({ queryKey: ['consulta-detalle'] })
       // Corregir archiva la versión anterior: el historial cambió.
       qc.invalidateQueries({ queryKey: ['consulta-versiones'] })
     },
