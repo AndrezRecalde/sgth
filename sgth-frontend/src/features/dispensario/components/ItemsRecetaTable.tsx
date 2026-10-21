@@ -43,6 +43,7 @@ export function ItemsRecetaTable({ receta, consulta }: Props) {
         records={receta.items}
         columns={getItemsRecetaEditablesColumns({
           puedeRetocar,
+          puedeQuitar: receta.items.length > 1,
           onEditar: (item) => { setItemSel(item); abrirEdit() },
           onQuitar: (item) => quitarItem.mutate({
             recetaId: receta.id,
