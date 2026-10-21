@@ -1355,6 +1355,41 @@ test('abrir_la_historia_en_el_triaje_no_duplica_la_que_ya_existe', function () {
         ->toBe(1);
 });
 
+test('el_contexto_de_la_consulta_trae_la_toma_de_triaje_vigente', function () {
+    $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
+        ['name' => 'enfermera', 'guard_name' => 'sanctum']
+    ));
+    $this->actingAs($this->medico, 'sanctum');
+
+    $agenda = AgendaMedica::create([
+        'servidor_id' => $this->paciente->id, 'medico_id' => $this->medico->id,
+        'fecha' => now()->format('Y-m-d'), 'estado' => 'en_espera',
+        'requiere_triaje' => true, 'registrado_en' => now(),
+    ]);
+
+    $tomar = fn (int $sistolica) => $this->postJson(
+        "/api/v1/dispensario/agenda/{$agenda->id}/triaje",
+        [
+            'presion_sistolica' => $sistolica, 'presion_diastolica' => 80,
+            'frecuencia_cardiaca' => 72, 'frecuencia_respiratoria' => 16,
+            'temperatura_c' => 36.6, 'saturacion_oxigeno' => 98,
+            'peso_kg' => 70, 'talla_cm' => 170,
+        ]
+    )->assertCreated();
+
+    // Enfermería repite la toma porque la primera salió mal: la vigente es la
+    // segunda, y es la que tiene que ver el médico.
+    $tomar(168);
+    $tomar(122);
+
+    $historia = HistoriaClinica::where('servidor_id', $this->paciente->id)->firstOrFail();
+
+    $this->getJson(
+        "/api/v1/dispensario/historias-clinicas/{$historia->id}/contexto-consulta"
+        . "?agenda_medica_id={$agenda->id}"
+    )->assertOk()->assertJsonPath('datos.triaje_actual.presion_sistolica', 122);
+});
+
 test('el_triaje_engancha_la_historia_que_quedo_del_preocupacional', function () {
     $this->medico->assignRole(Spatie\Permission\Models\Role::firstOrCreate(
         ['name' => 'enfermera', 'guard_name' => 'sanctum']

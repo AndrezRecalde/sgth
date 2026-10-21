@@ -476,11 +476,16 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
             'antecedentes' => fn($q) => $q->whereNull('anulado_en'),
         ])->findOrFail($historiaClinicaId);
 
+        // La toma vigente es la última: rehacer el triaje añade una fila nueva
+        // y no pisa la anterior. Con un `first()` sin orden el médico veía la
+        // primera, que casi siempre es justo la que Enfermería repitió por
+        // estar mal tomada. Mismo criterio que `TriajeController::show` y que
+        // la relación `AgendaMedica::triaje`.
         $triajeActual = null;
         if ($agendaMedicaId) {
             $triajeActual = \App\Models\Dispensario\Triaje::where(
                 'agenda_medica_id', $agendaMedicaId
-            )->first();
+            )->latest('id')->first();
         }
 
         $consultasAnteriores = ConsultaMedica::with('medico')
