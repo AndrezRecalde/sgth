@@ -85,6 +85,12 @@ export interface VersionConsulta {
     codigo:      string
     descripcion: string
   } | null
+  /** Los secundarios que tenía, ya traducidos: se archivan como ids. */
+  diagnosticos_secundarios_cie10?: {
+    id:          number
+    codigo:      string
+    descripcion: string
+  }[]
   created_at:             string
   autor_del_cambio?: {
     id: number

@@ -104,6 +104,12 @@ export function CorreccionesConsulta({ consultaId }: Props) {
                     }
                   />
                   <Campo
+                    label="Diagnósticos secundarios"
+                    valor={(version.diagnosticos_secundarios_cie10 ?? [])
+                      .map((d) => `${d.codigo} — ${d.descripcion}`)
+                      .join("\n")}
+                  />
+                  <Campo
                     label="Diagnóstico detallado"
                     valor={version.diagnostico_detallado}
                     enriquecido

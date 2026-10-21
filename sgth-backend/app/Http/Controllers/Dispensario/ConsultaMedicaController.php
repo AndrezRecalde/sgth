@@ -9,6 +9,7 @@ use App\Http\Requests\Dispensario\StoreConsultaMedicaRequest;
 use App\Http\Requests\Dispensario\UpdateConsultaMedicaRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\Dispensario\ConsultaMedica;
+use App\Models\Dispensario\DiagnosticoCie10;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -202,6 +203,30 @@ final class ConsultaMedicaController extends Controller
             'versiones.autorDelCambio.servidor:id,nombre,apellido',
             'versiones.diagnosticoCie10',
         ])->findOrFail($id);
+
+        // Los secundarios se archivan como una lista de ids (una foto de la
+        // nota, no una relación viva), y la pantalla no tenía con qué
+        // traducirlos: una corrección que solo tocaba los secundarios no
+        // dejaba ver qué decían antes. Se resuelven aquí, en una consulta.
+        $ids = $consulta->versiones
+            ->pluck('diagnosticos_secundarios')
+            ->flatten()
+            ->filter()
+            ->unique();
+
+        $catalogo = DiagnosticoCie10::whereIn('id', $ids)
+            ->get(['id', 'codigo', 'descripcion'])
+            ->keyBy('id');
+
+        foreach ($consulta->versiones as $version) {
+            $version->setAttribute(
+                'diagnosticos_secundarios_cie10',
+                collect($version->diagnosticos_secundarios ?? [])
+                    ->map(fn ($idCie10) => $catalogo->get($idCie10))
+                    ->filter()
+                    ->values()
+            );
+        }
 
         return ApiResponse::ok($consulta->versiones);
     }
