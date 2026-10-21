@@ -396,8 +396,16 @@
 </table>
 
 <div class="pie">
+    {{-- La fecha de emisión es la de la cabecera. El pie decía la del registro,
+         así que una receta emitida otro día llevaba dos fechas distintas en
+         el mismo papel; si no coinciden, se dicen las dos. --}}
     Receta {{ $receta->folio ?? $receta->id }} ·
-    emitida el {{ $receta->created_at->format('d/m/Y \a \l\a\s H:i') }} ·
+    @if ($receta->created_at->isSameDay($receta->fecha_emision))
+        emitida el {{ $receta->created_at->format('d/m/Y \a \l\a\s H:i') }} ·
+    @else
+        emitida el {{ $receta->fecha_emision->format('d/m/Y') }}
+        (registrada el {{ $receta->created_at->format('d/m/Y \a \l\a\s H:i') }}) ·
+    @endif
     {{ $institucion['establecimiento'] }}.
     Documento generado por el Sistema de Gestión de Talento Humano del GAD
     Provincial de Esmeraldas; su validez puede verificarse en el Dispensario

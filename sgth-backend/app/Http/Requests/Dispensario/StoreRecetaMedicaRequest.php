@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Dispensario;
 
+use App\Models\Dispensario\ConsultaMedica;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Carbon;
 
 /**
  * Lo que hace falta para emitir una receta.
@@ -30,7 +32,10 @@ class StoreRecetaMedicaRequest extends FormRequest
     {
         return [
             'consulta_medica_id'             => ['required', 'integer', 'exists:consultas_medicas,id'],
-            'fecha_emision'                  => ['required', 'date'],
+            // La pantalla manda hoy, pero el servidor aceptaba cualquier fecha:
+            // una receta fechada la semana próxima, o anterior a la consulta
+            // que la origina.
+            'fecha_emision'                  => ['required', 'date', 'before_or_equal:today'],
             'indicaciones_generales'         => ['nullable', 'string', 'max:1000'],
             // Solo afecta al impreso; lo decide el médico cuando el alérgeno
             // delataría el diagnóstico del paciente.
@@ -50,6 +55,20 @@ class StoreRecetaMedicaRequest extends FormRequest
     public function after(): array
     {
         return [
+            function (Validator $validator) {
+                if ($validator->errors()->hasAny(['consulta_medica_id', 'fecha_emision'])) {
+                    return;
+                }
+
+                $consulta = ConsultaMedica::find($this->integer('consulta_medica_id'));
+                if ($consulta && Carbon::parse($this->input('fecha_emision'))
+                    ->lt($consulta->fecha_consulta->copy()->startOfDay())) {
+                    $validator->errors()->add(
+                        'fecha_emision',
+                        'La receta no puede ser anterior a la consulta que la origina.'
+                    );
+                }
+            },
             function (Validator $validator) {
                 foreach ((array) $this->input('items', []) as $i => $item) {
                     $delCatalogo = ! empty($item['inventario_medicina_id']);
@@ -71,6 +90,7 @@ class StoreRecetaMedicaRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'fecha_emision.before_or_equal' => 'La receta no puede tener fecha futura.',
             'items.required' => 'La receta debe llevar al menos un medicamento.',
             'items.min'      => 'La receta debe llevar al menos un medicamento.',
             'exists'         => 'El valor seleccionado para :attribute no es válido.',
