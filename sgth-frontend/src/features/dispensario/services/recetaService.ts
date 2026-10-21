@@ -54,6 +54,8 @@ export interface RecetaMedica {
   alertas_alergias?:       string[]
   consulta_medica?: {
     id: number
+    /** Quien la emitió: el único médico que puede anularla. */
+    medico_id?: number
     historia_clinica?: {
       servidor?: {
         nombre:   string

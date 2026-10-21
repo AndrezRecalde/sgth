@@ -50,10 +50,13 @@ interface ColumnActions {
   onAnular: (receta: RecetaMedica) => void
   /** Abre el impreso para entregárselo al paciente. */
   onImprimir: (receta: RecetaMedica) => void
+  /** Sin el rol de despacho, toda receta se abre como detalle. */
+  puedeDespachar: boolean
+  puedeAnular: (receta: RecetaMedica) => boolean
 }
 
 export function getRecetasColumns(
-  { onAbrir, onAnular, onImprimir }: ColumnActions
+  { onAbrir, onAnular, onImprimir, puedeDespachar, puedeAnular }: ColumnActions
 ): DataTableColumn<RecetaMedica>[] {
   return [
     {
@@ -125,7 +128,7 @@ export function getRecetasColumns(
       title:    '',
       width:    50,
       render: (r) => {
-        const cerrada = !admiteDespacho(r)
+        const cerrada = !puedeDespachar || !admiteDespacho(r)
         return (
           <TableActions actions={[
             {
@@ -140,7 +143,7 @@ export function getRecetasColumns(
               icon:    <IconPrinter size={14} />,
               onClick: () => onImprimir(r),
             },
-            ...(NO_ANULABLES.includes(r.estado) ? [] : [{
+            ...(NO_ANULABLES.includes(r.estado) || !puedeAnular(r) ? [] : [{
               label:   'Anular receta',
               icon:    <IconBan size={14} />,
               color:   'red',

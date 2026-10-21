@@ -11,6 +11,7 @@ import { DespacharRecetaModal } from
 import { getRecetasColumns } from
   '@/features/dispensario/components/recetas.columns'
 import { usePersonalMedico } from '@/features/dispensario/hooks/useAgenda'
+import { usePermisosDespacho } from '@/features/dispensario/hooks/usePermisosDespacho'
 import {
   useRecetasFarmacia, useAnularReceta, useRecetaPdf,
 } from '@/features/dispensario/hooks/useReceta'
@@ -102,10 +103,14 @@ export function DespachoView() {
     setPage(1)
   }
 
+  const { puedeDespachar, puedeAnular } = usePermisosDespacho()
+
   const columns = getRecetasColumns({
     onAbrir:    (r) => { setRecetaSel(r); abrirModal() },
     onAnular:   (r) => { setRecetaSel(r); abrirAnular() },
     onImprimir: (r) => abrirPdf(r.id),
+    puedeDespachar,
+    puedeAnular,
   })
 
   return (
@@ -222,6 +227,7 @@ export function DespachoView() {
         opened={modalOpened}
         onClose={() => { cerrarModal(); setRecetaSel(null) }}
         receta={recetaSel}
+        soloLectura={!puedeDespachar}
       />
 
       <AnularRegistroModal
