@@ -278,3 +278,21 @@ test('el_borrador_no_es_para_quien_no_atiende', function () {
         ])
         ->assertStatus(403);
 });
+
+test('un_guardado_tardio_no_resucita_el_borrador_de_una_consulta_registrada', function () {
+    // La consulta ya está registrada: el guardado que salió antes llega ahora.
+    ConsultaMedica::create([
+        'especialidad' => 'medicina_general', 'historia_clinica_id' => $this->historia->id,
+        'agenda_medica_id' => $this->turno->id, 'medico_id' => $this->medico->id,
+        'fecha_consulta' => now(), 'hora_consulta' => '09:00', 'motivo_consulta' => 'Dolor abdominal',
+    ]);
+
+    $this->actingAs($this->medico, 'sanctum')
+        ->putJson('/api/v1/dispensario/consultas/borrador', [
+            'agenda_medica_id' => $this->turno->id,
+            'contenido'        => contenidoDeBorrador(),
+        ])
+        ->assertStatus(409);
+
+    expect(BorradorConsulta::where('agenda_medica_id', $this->turno->id)->exists())->toBeFalse();
+});

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dispensario;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\Dispensario\BorradorConsulta;
+use App\Models\Dispensario\ConsultaMedica;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -43,6 +44,18 @@ final class BorradorConsultaController extends Controller
             ],
             'contenido' => ['required', 'array'],
         ]);
+
+        // Un guardado que llega tarde —salió antes de registrar la consulta y
+        // aterriza después— volvía a crear el borrador que el registro acababa
+        // de borrar, y al reabrir el turno se ofrecía recuperar una nota que ya
+        // está en la historia clínica.
+        if (ConsultaMedica::where('agenda_medica_id', $datos['agenda_medica_id'])->exists()) {
+            return ApiResponse::error(
+                'La consulta de este turno ya está registrada: no se guarda borrador.',
+                null,
+                409
+            );
+        }
 
         // El formulario tiene sus propios topes por campo cuando se guarda de
         // verdad; aquí basta con que un borrador no pueda crecer sin medida.

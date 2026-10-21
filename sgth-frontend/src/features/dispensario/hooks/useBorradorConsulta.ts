@@ -89,6 +89,9 @@ export function useBorradorConsulta(agendaMedicaId: number, activo: boolean) {
     if (temporizador.current) clearTimeout(temporizador.current)
     pendiente.current = null
 
+    // Un guardado que siga viajando llegaría después del borrado y volvería a
+    // crear el borrador: se espera a que llegue y se borra después.
+    await enVuelo.get(agendaMedicaId)?.catch(() => undefined)
     await borradorService.descartar(agendaMedicaId)
 
     qc.setQueryData(['consulta-borrador', agendaMedicaId], null)
