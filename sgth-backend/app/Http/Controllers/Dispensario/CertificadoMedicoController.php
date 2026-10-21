@@ -45,8 +45,11 @@ class CertificadoMedicoController extends Controller
             );
         }
 
+        // Con techo y suelo, como el listado de consultas: `limit()` ignora los
+        // negativos, así que `?per_page=-1` devolvía todos los certificados, con
+        // el diagnóstico de cada paciente, en una sola respuesta.
         $certificados = $query->paginate(
-            $request->integer('per_page', 20)
+            min(max($request->integer('per_page', 20), 1), 100)
         );
 
         return ApiResponse::ok(

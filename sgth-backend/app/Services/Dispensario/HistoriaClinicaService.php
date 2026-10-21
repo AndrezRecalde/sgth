@@ -63,7 +63,12 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
             });
         }
 
-        return $query->paginate($filtros['per_page'] ?? 20);
+        // Con techo y suelo, como el listado de consultas: `limit()` ignora los
+        // negativos, así que `?per_page=-1` devolvía todas las historias del
+        // dispensario de una vez, y `?per_page=100000` lo mismo.
+        return $query->paginate(
+            min(max((int) ($filtros['per_page'] ?? 20), 1), 100)
+        );
     }
 
     public function obtener(int $id): HistoriaClinica
