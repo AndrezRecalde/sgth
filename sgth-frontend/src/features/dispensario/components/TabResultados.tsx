@@ -63,6 +63,9 @@ export function TabResultados({
   const origen = (r: ResultadoMedico): string => {
     if (r.consulta_medica_id === consulta.id) return 'Esta consulta'
     if (r.consulta_medica) return `Consulta del ${formatFechaMes(r.consulta_medica.fecha_consulta)}`
+    // Tiene consulta pero no llegó con ella (una consulta borrada no se
+    // carga): decir «Sin consulta» sería falso.
+    if (r.consulta_medica_id) return 'Otra consulta'
     return 'Sin consulta'
   }
 
