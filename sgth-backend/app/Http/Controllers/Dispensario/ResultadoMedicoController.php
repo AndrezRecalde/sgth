@@ -66,13 +66,16 @@ final class ResultadoMedicoController extends Controller
                 'rayos_x', 'electrocardiograma', 'otro',
             ])],
             'descripcion'         => ['required', 'string', 'max:500'],
-            'fecha_resultado'     => ['required', 'date'],
+            'fecha_resultado'     => ['required', 'date', 'before_or_equal:today'],
             'archivo'             => ['required', 'file',
                 'mimes:pdf,jpg,jpeg,png',
                 'max:10240',
             ],
         ], [
             'consulta_medica_id.exists' => 'La consulta indicada no es de este paciente.',
+            // Un resultado es de algo que ya pasó. Se admitía cualquier fecha,
+            // y uno fechado el mes próximo quedaba primero en el listado.
+            'fecha_resultado.before_or_equal' => 'El resultado no puede tener fecha futura.',
         ]);
 
         $ruta = $request->file('archivo')->store(
