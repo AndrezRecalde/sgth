@@ -10,15 +10,20 @@ import {
 import { ModalFooter, SgthModal } from "@/components/ui";
 import { DatePickerInput } from "@mantine/dates";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useContainedInput } from "@/hooks/useContainedInput";
-import { fromDateValue } from "@/lib/fecha";
+import { formatFechaMes, fromDateValue } from "@/lib/fecha";
 import { useSubirResultado } from "../hooks/useResultadoMedico";
 import { TIPO_RESULTADO_OPTIONS } from "../services/resultadoMedicoService";
+import { consultaMedicaService } from "../services/consultaMedicaService";
 import type { ConsultaMedica } from "../services/consultaMedicaService";
 
 /** Los topes del servidor (`ResultadoMedicoController::store`). */
 const ARCHIVO_MAX_MB = 10;
 const DESCRIPCION_MAX = 500;
+
+/** Valor del selector de consulta para un resultado que no es de ninguna. */
+const SIN_CONSULTA = "ninguna";
 
 interface Props {
   opened: boolean;
@@ -34,7 +39,29 @@ export function SubirResultadoModal({
   historiaClinicaId,
 }: Props) {
   const contained = useContainedInput();
-  const subir = useSubirResultado(consulta.id);
+  const subir = useSubirResultado();
+
+  // A qué consulta pertenece. Por defecto, la abierta; pero un laboratorio
+  // que llega una semana después es de la consulta que lo pidió, y antes
+  // solo se podía colgar de esa abriendo su panel. Se ofrecen las últimas
+  // del paciente, o ninguna.
+  const { data: delPaciente } = useQuery({
+    queryKey: ["consultas", "para-resultado", historiaClinicaId],
+    queryFn: () =>
+      consultaMedicaService.listarPorHistoria(historiaClinicaId, { per_page: 20 }),
+    enabled: opened && !!historiaClinicaId,
+    staleTime: 1000 * 60,
+  });
+  const anteriores = (delPaciente?.consultas ?? []).filter((c) => c.id !== consulta.id);
+  const opcionesConsulta = [
+    { value: String(consulta.id), label: `Esta consulta (${formatFechaMes(consulta.fecha_consulta)})` },
+    ...anteriores.map((c) => ({
+      value: String(c.id),
+      label: `Consulta del ${formatFechaMes(c.fecha_consulta)}`,
+    })),
+    { value: SIN_CONSULTA, label: "Sin consulta" },
+  ];
+  const [consultaSel, setConsultaSel] = useState(String(consulta.id));
 
   const [tipo, setTipo] = useState("");
   const [descripcion, setDescripcion] = useState("");
@@ -45,6 +72,7 @@ export function SubirResultadoModal({
   const [error, setError] = useState<string | null>(null);
 
   const handleClose = () => {
+    setConsultaSel(String(consulta.id));
     setTipo("");
     setDescripcion("");
     setFecha(new Date());
@@ -82,7 +110,7 @@ export function SubirResultadoModal({
 
     const fd = new FormData();
     fd.append("historia_clinica_id", String(historiaClinicaId));
-    fd.append("consulta_medica_id", String(consulta.id));
+    if (consultaSel !== SIN_CONSULTA) fd.append("consulta_medica_id", consultaSel);
     fd.append("tipo", tipo);
     fd.append("descripcion", descripcion.trim());
     fd.append("fecha_resultado", fromDateValue(fecha));
@@ -102,6 +130,16 @@ export function SubirResultadoModal({
       size="md"
     >
       <Stack gap="sm">
+        <Select
+          label="Consulta"
+          description="Si es de lo que se pidió en otra consulta, elíjala: así aparece en ella."
+          data={opcionesConsulta}
+          allowDeselect={false}
+          {...contained}
+          value={consultaSel}
+          onChange={(v) => setConsultaSel(v ?? String(consulta.id))}
+        />
+
         <Select
           label="Tipo de resultado"
           placeholder="Seleccione"
