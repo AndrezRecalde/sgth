@@ -53,7 +53,14 @@ final class ResultadoMedicoController extends Controller
     {
         $request->validate([
             'historia_clinica_id' => ['required', 'integer', 'exists:historias_clinicas,id'],
-            'consulta_medica_id'  => ['nullable', 'integer', 'exists:consultas_medicas,id'],
+            // La consulta, de ese mismo paciente. Solo se comprobaba que
+            // existiera: el resultado de un paciente quedaba colgado de la
+            // consulta de otro, y se enseñaba en el panel de este.
+            'consulta_medica_id'  => ['nullable', 'integer',
+                Rule::exists('consultas_medicas', 'id')
+                    ->where('historia_clinica_id', $request->integer('historia_clinica_id'))
+                    ->whereNull('deleted_at'),
+            ],
             'tipo'                => ['required', Rule::in([
                 'laboratorio', 'imagen', 'ecografia',
                 'rayos_x', 'electrocardiograma', 'otro',
@@ -64,6 +71,8 @@ final class ResultadoMedicoController extends Controller
                 'mimes:pdf,jpg,jpeg,png',
                 'max:10240',
             ],
+        ], [
+            'consulta_medica_id.exists' => 'La consulta indicada no es de este paciente.',
         ]);
 
         $ruta = $request->file('archivo')->store(
