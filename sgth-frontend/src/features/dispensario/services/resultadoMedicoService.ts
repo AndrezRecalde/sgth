@@ -39,8 +39,9 @@ export const TIPO_RESULTADO_ICONS: Record<string, string> = {
 }
 
 export const resultadoMedicoService = {
+  /** Siempre de un paciente: el servidor rechaza el listado sin él. */
   listar: (params: {
-    historia_clinica_id?: number
+    historia_clinica_id:  number
     consulta_medica_id?:  number
   }) =>
     api.get<ApiResponse<ResultadoMedico[]>>(
