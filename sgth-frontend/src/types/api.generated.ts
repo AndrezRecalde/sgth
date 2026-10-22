@@ -8253,6 +8253,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * Los resultados de UN paciente, y de una consulta suya si se pide
+         * @description El paciente era un filtro opcional y el listado no paginaba: sin él
+         *     salían de una vez los resultados de todos los pacientes del
+         *     Dispensario. La pantalla siempre lo mandaba, pero el API no lo exigía.
+         *     Ahora es obligatorio; acotado a un paciente, el listado es corto y no
+         *     hace falta paginarlo.
+         */
         get: operations["resultadoMedico.index"];
         put?: never;
         post: operations["resultadoMedico.store"];
@@ -39759,9 +39767,9 @@ export interface operations {
     };
     "resultadoMedico.index": {
         parameters: {
-            query?: {
-                historia_clinica_id?: number;
-                consulta_medica_id?: number;
+            query: {
+                historia_clinica_id: number;
+                consulta_medica_id?: number | null;
             };
             header?: never;
             path?: never;
@@ -39784,6 +39792,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "resultadoMedico.store": {

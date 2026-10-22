@@ -24,20 +24,33 @@ final class ResultadoMedicoController extends Controller
      */
     private const DISCO = 'local';
 
+    /**
+     * Los resultados de UN paciente, y de una consulta suya si se pide.
+     *
+     * El paciente era un filtro opcional y el listado no paginaba: sin él
+     * salían de una vez los resultados de todos los pacientes del
+     * Dispensario. La pantalla siempre lo mandaba, pero el API no lo exigía.
+     * Ahora es obligatorio; acotado a un paciente, el listado es corto y no
+     * hace falta paginarlo.
+     */
     public function index(Request $request): JsonResponse
     {
+        $request->validate([
+            'historia_clinica_id' => ['required', 'integer'],
+            'consulta_medica_id'  => ['nullable', 'integer'],
+        ], [
+            'historia_clinica_id.required' => 'Indique de qué paciente son los resultados.',
+        ]);
+
         $query = ResultadoMedico::with([
             'subidoPor:id,usuario_ti,email,servidor_id',
             'subidoPor.servidor:id,nombre,apellido',
         ])
-            ->orderBy('fecha_resultado', 'desc');
-
-        if ($request->filled('historia_clinica_id')) {
-            $query->where(
-                'historia_clinica_id',
-                $request->integer('historia_clinica_id')
-            );
-        }
+            ->where('historia_clinica_id', $request->integer('historia_clinica_id'))
+            ->orderBy('fecha_resultado', 'desc')
+            // Varios resultados del mismo día: sin desempate, el orden cambia
+            // entre una carga y otra.
+            ->orderBy('id', 'desc');
 
         if ($request->filled('consulta_medica_id')) {
             $query->where(

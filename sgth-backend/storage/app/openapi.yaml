@@ -53337,6 +53337,8 @@
         "/v1/dispensario/resultados-medicos": {
             "get": {
                 "operationId": "resultadoMedico.index",
+                "description": "El paciente era un filtro opcional y el listado no paginaba: sin \u00e9l\nsal\u00edan de una vez los resultados de todos los pacientes del\nDispensario. La pantalla siempre lo mandaba, pero el API no lo exig\u00eda.\nAhora es obligatorio; acotado a un paciente, el listado es corto y no\nhace falta paginarlo.",
+                "summary": "Los resultados de UN paciente, y de una consulta suya si se pide",
                 "tags": [
                     "ResultadoMedico"
                 ],
@@ -53344,17 +53346,19 @@
                     {
                         "name": "historia_clinica_id",
                         "in": "query",
+                        "required": true,
                         "schema": {
-                            "type": "integer",
-                            "default": 0
+                            "type": "integer"
                         }
                     },
                     {
                         "name": "consulta_medica_id",
                         "in": "query",
                         "schema": {
-                            "type": "integer",
-                            "default": 0
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
                         }
                     }
                 ],
@@ -53392,6 +53396,9 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
