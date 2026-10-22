@@ -39797,6 +39797,11 @@ export interface operations {
             content: {
                 "multipart/form-data": {
                     historia_clinica_id: number;
+                    /**
+                     * @description La consulta, de ese mismo paciente. Solo se comprobaba que
+                     *     existiera: el resultado de un paciente quedaba colgado de la
+                     *     consulta de otro, y se enseñaba en el panel de este.
+                     */
                     consulta_medica_id?: number | null;
                     /** @enum {string} */
                     tipo: "laboratorio" | "imagen" | "ecografia" | "rayos_x" | "electrocardiograma" | "otro";

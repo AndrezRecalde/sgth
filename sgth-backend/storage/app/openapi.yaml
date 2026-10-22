@@ -53417,7 +53417,8 @@
                                         "type": [
                                             "integer",
                                             "null"
-                                        ]
+                                        ],
+                                        "description": "La consulta, de ese mismo paciente. Solo se comprobaba que\nexistiera: el resultado de un paciente quedaba colgado de la\nconsulta de otro, y se ense\u00f1aba en el panel de este."
                                     },
                                     "tipo": {
                                         "type": "string",
