@@ -131,6 +131,8 @@ export function SubirResultadoModal({
         <DatePickerInput
           label="Fecha del resultado"
           valueFormat="DD/MM/YYYY"
+          // Como el servidor: un resultado no tiene fecha futura.
+          maxDate={new Date()}
           {...contained}
           value={fecha}
           onChange={(v) => setFecha(v)}
