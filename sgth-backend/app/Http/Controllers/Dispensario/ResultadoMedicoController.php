@@ -29,6 +29,9 @@ final class ResultadoMedicoController extends Controller
         $query = ResultadoMedico::with([
             'subidoPor:id,usuario_ti,email,servidor_id',
             'subidoPor.servidor:id,nombre,apellido',
+            // Para decir de qué consulta es cada uno cuando se listan todos
+            // los del paciente.
+            'consultaMedica:id,fecha_consulta',
         ])
             ->orderBy('fecha_resultado', 'desc');
 

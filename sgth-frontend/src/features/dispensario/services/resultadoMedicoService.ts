@@ -5,6 +5,11 @@ export interface ResultadoMedico {
   id:                   number
   historia_clinica_id:  number
   consulta_medica_id?:  number | null
+  /** La consulta a la que pertenece, si la tiene: solo su fecha. */
+  consulta_medica?: {
+    id:             number
+    fecha_consulta: string
+  } | null
   tipo:                 string
   descripcion:          string
   archivo:              string

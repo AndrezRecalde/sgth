@@ -3,8 +3,9 @@
 import { confirmar, DataState, StatusBadge } from '@/components/ui'
 import {
   Stack, Text, Button, Group, Card, ThemeIcon,
-  ActionIcon, Tooltip,
+  ActionIcon, Tooltip, SegmentedControl,
 } from '@mantine/core'
+import { useState } from 'react'
 import {
   IconPlus, IconFileText, IconTrash,
   IconExternalLink,
@@ -14,6 +15,7 @@ import { getIcon } from '@/lib/tablerIcons'
 import { SubirResultadoModal } from './SubirResultadoModal'
 import {
   useResultadosPorConsulta,
+  useResultadosPorPaciente,
   useEliminarResultado,
   useVerResultado,
 } from '../hooks/useResultadoMedico'
@@ -35,16 +37,36 @@ function getLabelTipo(tipo: string): string {
   return TIPO_RESULTADO_OPTIONS.find(o => o.value === tipo)?.label ?? tipo
 }
 
+type Alcance = 'consulta' | 'paciente'
+
+const ALCANCES = [
+  { value: 'consulta', label: 'Esta consulta' },
+  { value: 'paciente', label: 'Todo el paciente' },
+]
+
 export function TabResultados({
   consulta, historiaClinicaId,
 }: Props) {
   const [modalOpened,
     { open: abrirModal, close: cerrarModal }] = useDisclosure(false)
 
+  // Por defecto, los de esta consulta. «Todo el paciente» enseña también los
+  // de consultas anteriores y los que no son de ninguna: un laboratorio que
+  // llega una semana después ya no obliga a abrir el panel de aquella.
+  const [alcance, setAlcance] = useState<Alcance>('consulta')
+  const deConsulta = useResultadosPorConsulta(historiaClinicaId, consulta.id)
+  const delPaciente = useResultadosPorPaciente(historiaClinicaId, alcance === 'paciente')
   const { data: resultados = [], isLoading, error, refetch } =
-    useResultadosPorConsulta(historiaClinicaId, consulta.id)
+    alcance === 'consulta' ? deConsulta : delPaciente
 
-  const eliminar = useEliminarResultado(consulta.id)
+  // De qué consulta es cada uno, cuando se ven todos los del paciente.
+  const origen = (r: ResultadoMedico): string => {
+    if (r.consulta_medica_id === consulta.id) return 'Esta consulta'
+    if (r.consulta_medica) return `Consulta del ${formatFechaMes(r.consulta_medica.fecha_consulta)}`
+    return 'Sin consulta'
+  }
+
+  const eliminar = useEliminarResultado()
   const ver = useVerResultado()
   const { usuario, hasRole } = useAuthStore()
 
@@ -56,14 +78,22 @@ export function TabResultados({
   return (
     <Stack gap="md" p="md">
       <Group justify="space-between">
-        <Text size="sm" fw={500}>
-          Resultados de esta consulta
-          {resultados.length > 0 && (
-            <Text span c="dimmed" ml={4}>
-              ({resultados.length})
-            </Text>
-          )}
-        </Text>
+        <Group gap="sm">
+          <Text size="sm" fw={500}>
+            Resultados
+            {resultados.length > 0 && (
+              <Text span c="dimmed" ml={4}>
+                ({resultados.length})
+              </Text>
+            )}
+          </Text>
+          <SegmentedControl
+            size="xs"
+            data={ALCANCES}
+            value={alcance}
+            onChange={(v) => setAlcance(v as Alcance)}
+          />
+        </Group>
         <Button
           size="xs"
           leftSection={<IconPlus size={13} />}
@@ -83,7 +113,9 @@ export function TabResultados({
         emptyProps={{
           icon: IconFileText,
           title: 'Sin resultados',
-          description: 'No se han subido resultados médicos para esta consulta.',
+          description: alcance === 'consulta'
+            ? 'No se han subido resultados médicos para esta consulta.'
+            : 'Este paciente no tiene resultados médicos.',
         }}
         skeletonRows={2}
       >
@@ -107,6 +139,9 @@ export function TabResultados({
                       </Text>
                     </Group>
                     <Text size="sm">{r.descripcion}</Text>
+                    {alcance === 'paciente' && (
+                      <Text size="xs" c="dimmed">{origen(r)}</Text>
+                    )}
                     {r.subido_por?.servidor && (
                       <Text size="xs" c="dimmed">
                         Dr. {r.subido_por.servidor.nombre}{' '}
