@@ -99,6 +99,21 @@ test('un_resultado_nace_por_revisar_y_el_medico_lo_lee', function () {
         ->and($datos['historia_clinica']['servidor_id'])->toBe($this->historia->servidor_id);
 });
 
+test('subido_por_el_api_responde_por_revisar', function () {
+    Illuminate\Support\Facades\Storage::fake('local');
+
+    $this->actingAs($this->solicitante, 'sanctum')
+        ->post('/api/v1/dispensario/resultados-medicos', [
+            'historia_clinica_id' => $this->historia->id,
+            'tipo'                => 'laboratorio',
+            'descripcion'         => 'Glucosa',
+            'fecha_resultado'     => now()->toDateString(),
+            'archivo'             => Illuminate\Http\UploadedFile::fake()->create('glucosa.pdf', 40, 'application/pdf'),
+        ], ['Accept' => 'application/json'])
+        ->assertCreated()
+        ->assertJsonPath('datos.estado_revision', 'por_revisar');
+});
+
 test('un_alterado_o_un_critico_piden_comentario_y_se_guarda_cifrado', function () {
     $r = resultadoParaRevisar();
 
