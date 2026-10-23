@@ -27,8 +27,13 @@ class StoreOrdenExamenRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'consulta_medica_id'           => ['required', 'integer',
+            // De una consulta o de una ficha ocupacional (fase 5), una de dos.
+            'consulta_medica_id'           => ['required_without:ficha_salud_ocupacional_id', 'nullable', 'integer',
+                'prohibits:ficha_salud_ocupacional_id',
                 Rule::exists('consultas_medicas', 'id')->whereNull('deleted_at'),
+            ],
+            'ficha_salud_ocupacional_id'   => ['nullable', 'integer',
+                Rule::exists('fichas_salud_ocupacional', 'id')->whereNull('deleted_at'),
             ],
             'fecha_solicitud'              => ['required', 'date', 'before_or_equal:today'],
             'diagnostico_cie10_id'         => ['nullable', 'integer', 'exists:diagnosticos_cie10,id'],
@@ -49,7 +54,7 @@ class StoreOrdenExamenRequest extends FormRequest
     {
         return [
             function (Validator $v) {
-                if ($v->errors()->hasAny(['consulta_medica_id', 'fecha_solicitud'])) {
+                if ($v->errors()->hasAny(['consulta_medica_id', 'fecha_solicitud']) || ! $this->filled('consulta_medica_id')) {
                     return;
                 }
 
@@ -82,6 +87,20 @@ class StoreOrdenExamenRequest extends FormRequest
                 }
 
                 $sensibles = $examenes->where('sensible', true)->pluck('nombre');
+
+                // La de una ficha ocupacional es para trabajar, y un examen
+                // sensible no se exige para obtener o conservar el empleo (D8,
+                // MDT-2024-198). Si hace falta, va en una consulta.
+                if ($sensibles->isNotEmpty() && $this->filled('ficha_salud_ocupacional_id')) {
+                    $v->errors()->add(
+                        'items',
+                        'Una orden de la ficha ocupacional no lleva exámenes sensibles: quite '
+                            . $sensibles->sort()->implode(', ') . '.'
+                    );
+
+                    return;
+                }
+
                 if ($sensibles->isNotEmpty() && ! $this->boolean('consentimiento_firmado')) {
                     $v->errors()->add(
                         'consentimiento_firmado',
@@ -97,6 +116,8 @@ class StoreOrdenExamenRequest extends FormRequest
     {
         return [
             'fecha_solicitud.before_or_equal'   => 'La orden no puede tener fecha futura.',
+            'consulta_medica_id.required_without' => 'La orden sale de una consulta o de una ficha ocupacional.',
+            'consulta_medica_id.prohibits'      => 'La orden sale de una consulta o de una ficha ocupacional, no de las dos.',
             'items.required'                    => 'La orden lleva al menos un examen.',
             'items.min'                         => 'La orden lleva al menos un examen.',
             'items.*.catalogo_examen_id.distinct' => 'Ese examen ya está en la orden.',

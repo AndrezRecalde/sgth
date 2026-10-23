@@ -43304,13 +43304,26 @@
                     {
                         "name": "historia_clinica_id",
                         "in": "query",
-                        "required": true,
+                        "description": "De un paciente, o de una ficha ocupacional (fase 5).",
                         "schema": {
-                            "type": "integer"
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
                         }
                     },
                     {
                         "name": "consulta_medica_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "ficha_salud_ocupacional_id",
                         "in": "query",
                         "schema": {
                             "type": [
@@ -43405,36 +43418,6 @@
                                         "mensaje",
                                         "datos",
                                         "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string"
-                                        },
-                                        "datos": {
-                                            "type": "null"
-                                        },
-                                        "errores": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "errores"
                                     ]
                                 }
                             }
@@ -79130,6 +79113,12 @@
                         ],
                         "format": "date-time"
                     },
+                    "ficha_salud_ocupacional_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
                     "vencida": {
                         "type": "string"
                     }
@@ -79152,6 +79141,7 @@
                     "motivo_anulacion",
                     "created_at",
                     "updated_at",
+                    "ficha_salud_ocupacional_id",
                     "vencida"
                 ],
                 "title": "OrdenExamen"
@@ -86892,7 +86882,17 @@
                 "description": "Lo que hace falta para emitir una orden de ex\u00e1menes.\n\nSolo ex\u00e1menes del cat\u00e1logo activo (D4), sin repetir. La nota va solo en los\nque la llevan, y un examen sensible exige la constancia de que el paciente\nfirm\u00f3 el consentimiento (D8).",
                 "properties": {
                     "consulta_medica_id": {
-                        "type": "integer"
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "De una consulta o de una ficha ocupacional (fase 5), una de dos."
+                    },
+                    "ficha_salud_ocupacional_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     },
                     "fecha_solicitud": {
                         "type": "string",
@@ -86953,7 +86953,6 @@
                     }
                 },
                 "required": [
-                    "consulta_medica_id",
                     "fecha_solicitud",
                     "items"
                 ],

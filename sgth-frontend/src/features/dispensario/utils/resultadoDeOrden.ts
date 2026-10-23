@@ -1,4 +1,13 @@
+import type { SemanticTone } from '@/config/design.tokens'
 import type { ItemOrdenExamen, OrdenExamen } from '../services/examenService'
+
+/** Etiqueta y tono del estado de una orden: los mismos en la consulta, la ficha y la bandeja. */
+export const ESTADO_ORDEN: Record<OrdenExamen['estado'], { label: string; tone: SemanticTone }> = {
+  emitida:  { label: 'Emitida',  tone: 'info'    },
+  parcial:  { label: 'Parcial',  tone: 'warning' },
+  completa: { label: 'Completa', tone: 'success' },
+  anulada:  { label: 'Anulada',  tone: 'danger'  },
+}
 
 export const ordenAbierta = (o: OrdenExamen) => o.estado === 'emitida' || o.estado === 'parcial'
 

@@ -14,9 +14,10 @@ import { useDisclosure } from '@mantine/hooks'
 import { IconFileImport, IconPaperclip, IconPlus, IconTrash } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { type FichaBaseForm } from '../../schemas/femo.schema'
-import { type ExamenForm, type DiagnosticoFemoForm } from '../../schemas/femoEvaluacion.schema'
+import { type ExamenForm, type DiagnosticoFemoForm, type FactorRiesgoForm } from '../../schemas/femoEvaluacion.schema'
 import { FemoExamenModal } from './FemoExamenModal'
 import { ResultadosParaFemoModal } from './ResultadosParaFemoModal'
+import { OrdenesDeLaFicha } from './OrdenesDeLaFicha'
 import { FemoDiagnosticosCie10 } from './FemoDiagnosticosCie10'
 import { FemoAptitudSelector } from './FemoAptitudSelector'
 import { FemoRetiroSection } from './FemoRetiroSection'
@@ -27,6 +28,9 @@ import { formatFechaMes } from '@/lib/fecha'
 interface Props {
   /** El paciente, para traer sus resultados del Dispensario a la sección J. */
   cedula?:          string
+  /** La ficha guardada y los riesgos de G: para pedir los exámenes de la evaluación. */
+  fichaId?:         number | null
+  factoresRiesgo:   FactorRiesgoForm[]
   fichaData:        Partial<FichaBaseForm>
   examenes:         ExamenForm[]
   diagnosticos:     DiagnosticoFemoForm[]
@@ -42,7 +46,7 @@ const TIPO_EXAMEN_LABELS: Record<string, string> = {
 }
 
 export function FemoPaso3({
-  cedula, fichaData, examenes, diagnosticos,
+  cedula, fichaId = null, factoresRiesgo, fichaData, examenes, diagnosticos,
   onFichaChange, onExamenesChange, onDiagnosticosChange,
 }: Props) {
   const contained = useContainedInput()
@@ -131,6 +135,8 @@ export function FemoPaso3({
             ))}
           </Stack>
         )}
+
+        <OrdenesDeLaFicha fichaId={fichaId} factores={factoresRiesgo} />
 
         <Textarea
           label="Observaciones"

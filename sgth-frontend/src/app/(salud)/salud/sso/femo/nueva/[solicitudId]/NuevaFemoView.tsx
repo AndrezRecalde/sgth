@@ -151,6 +151,7 @@ export function NuevaFemoView({ solicitudId }: Props) {
         tipoSangre={persona?.tipo_sangre ?? null}
         cedula={solicitud.cedula_paciente}
         puestoId={puestoId}
+        fichaId={guardado.fichaId}
         onSalir={volver}
         etiquetaSalir="Volver a la bandeja"
         accionesSecundarias={

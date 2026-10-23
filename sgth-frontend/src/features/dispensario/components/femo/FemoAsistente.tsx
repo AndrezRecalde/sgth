@@ -20,6 +20,8 @@ interface Props {
   tipoSangre?: string | null
   cedula?:     string
   puestoId:    number | null
+  /** La ficha ya guardada como borrador; sin ella no se piden exámenes. */
+  fichaId?:    number | null
   /** Qué hace el botón de la izquierda en el primer paso. */
   onSalir:       () => void
   etiquetaSalir: string
@@ -45,7 +47,7 @@ const ULTIMO = PASOS.length - 1
  * detalle tenía su propia copia del asistente, que se había quedado atrás.
  */
 export function FemoAsistente({
-  wizard, sexo, tipoSangre, cedula, puestoId,
+  wizard, sexo, tipoSangre, cedula, puestoId, fichaId = null,
   onSalir, etiquetaSalir, accionesSecundarias, accionFinal,
 }: Props) {
   const { active, setActive, fichaData } = wizard
@@ -115,6 +117,8 @@ export function FemoAsistente({
         {active === ULTIMO && (
           <FemoPaso3
             cedula={cedula}
+            fichaId={fichaId}
+            factoresRiesgo={wizard.factoresRiesgo}
             fichaData={wizard.fichaData}
             examenes={wizard.examenes}
             diagnosticos={wizard.diagnosticos}

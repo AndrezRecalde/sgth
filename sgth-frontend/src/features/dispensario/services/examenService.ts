@@ -45,6 +45,7 @@ export interface OrdenExamen {
   folio:                  string
   historia_clinica_id:    number
   consulta_medica_id:     number | null
+  ficha_salud_ocupacional_id?: number | null
   solicitado_por:         number
   fecha_solicitud:        string
   prioridad:              'rutina' | 'urgente'
@@ -60,7 +61,9 @@ export interface OrdenExamen {
 }
 
 export interface EmitirOrdenExamenData {
-  consulta_medica_id:     number
+  /** De una consulta o de una ficha ocupacional (fase 5), una de dos. */
+  consulta_medica_id?:         number | null
+  ficha_salud_ocupacional_id?: number | null
   fecha_solicitud:        string
   diagnostico_cie10_id:   number | null
   prioridad:              'rutina' | 'urgente'
@@ -89,6 +92,12 @@ export const examenService = {
   ordenes: (historiaClinicaId: number, consultaId?: number) =>
     api.get<ApiResponse<OrdenExamen[]>>('/dispensario/ordenes-examen', {
       params: { historia_clinica_id: historiaClinicaId, consulta_medica_id: consultaId },
+    }).then(r => r.data.datos ?? []),
+
+  /** Las que pidió una ficha ocupacional. */
+  ordenesDeFicha: (fichaId: number) =>
+    api.get<ApiResponse<OrdenExamen[]>>('/dispensario/ordenes-examen', {
+      params: { ficha_salud_ocupacional_id: fichaId },
     }).then(r => r.data.datos ?? []),
 
   emitir: (data: EmitirOrdenExamenData) =>
