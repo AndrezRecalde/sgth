@@ -45,6 +45,7 @@ use App\Http\Controllers\Dispensario\AlergiaPacienteController;
 use App\Http\Controllers\Dispensario\AntecedentePacienteController;
 use App\Http\Controllers\Dispensario\AtencionEnfermeriaController;
 use App\Http\Controllers\Dispensario\CatalogoExamenController;
+use App\Http\Controllers\Dispensario\PerfilExamenController;
 use App\Http\Controllers\Dispensario\CertificadoMedicoController;
 use App\Http\Controllers\Dispensario\BorradorConsultaController;
 use App\Http\Controllers\Dispensario\ConsultaMedicaController;
@@ -2170,6 +2171,18 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::patch('{examen}', [CatalogoExamenController::class, 'update'])
                 ->middleware('role:admin-dispensario')
                 ->whereNumber('examen');
+        });
+
+        // Perfiles de exámenes: los arman el médico, el odontólogo (los de su
+        // especialidad) y la administración (D6, D12).
+        Route::prefix('perfiles-examen')->group(function () {
+            Route::get('/', [PerfilExamenController::class, 'index'])
+                ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
+            Route::post('/', [PerfilExamenController::class, 'store'])
+                ->middleware('role:medico|odontologo|admin-dispensario');
+            Route::patch('{perfil}', [PerfilExamenController::class, 'update'])
+                ->middleware('role:medico|odontologo|admin-dispensario')
+                ->whereNumber('perfil');
         });
     });
 
