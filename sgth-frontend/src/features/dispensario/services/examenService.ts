@@ -95,6 +95,11 @@ export const examenService = {
     api.post<ApiResponse<OrdenExamen>>('/dispensario/ordenes-examen', data)
       .then(r => r.data.datos),
 
+  /** Por axios y no por `window.open`: el endpoint pide el token. */
+  pdf: (id: number) =>
+    api.get<Blob>(`/dispensario/ordenes-examen/${id}/pdf`, { responseType: 'blob' })
+      .then(r => r.data),
+
   anular: (id: number, motivo: string) =>
     api.patch<ApiResponse<OrdenExamen>>(`/dispensario/ordenes-examen/${id}/anular`, {
       motivo_anulacion: motivo,
