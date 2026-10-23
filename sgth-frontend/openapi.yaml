@@ -40288,6 +40288,300 @@
                 }
             }
         },
+        "/v1/autoservicio/mis-examenes": {
+            "get": {
+                "operationId": "misExamenes.index",
+                "summary": "Las suyas, de la m\u00e1s reciente a la m\u00e1s antigua. Lo retirado no sale",
+                "tags": [
+                    "MisExamenes"
+                ],
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Mis \u00f3rdenes de ex\u00e1menes."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/MiOrdenExamenResource"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "pagina_actual": {
+                                                    "type": "integer"
+                                                },
+                                                "por_pagina": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "ultima_pagina": {
+                                                    "type": "integer"
+                                                },
+                                                "desde": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "hasta": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "pagina_actual",
+                                                "por_pagina",
+                                                "total",
+                                                "ultima_pagina",
+                                                "desde",
+                                                "hasta"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/autoservicio/mis-examenes/ordenes/{orden}/pdf": {
+            "get": {
+                "operationId": "misExamenes.pdf",
+                "summary": "El impreso que se lleva al laboratorio. El de una anulada ya no sirve",
+                "tags": [
+                    "MisExamenes"
+                ],
+                "parameters": [
+                    {
+                        "name": "orden",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/autoservicio/mis-examenes/ordenes/{orden}/envios": {
+            "post": {
+                "operationId": "misExamenes.enviar",
+                "tags": [
+                    "MisExamenes"
+                ],
+                "parameters": [
+                    {
+                        "name": "orden",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EnviarResultadoRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Resultado enviado. Un m\u00e9dico del Dispensario lo revisar\u00e1 antes de agregarlo a su historia cl\u00ednica."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/MiEnvioResultadoResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/autoservicio/mis-examenes/envios/{envio}/retirar": {
+            "post": {
+                "operationId": "misExamenes.retirar",
+                "tags": [
+                    "MisExamenes"
+                ],
+                "parameters": [
+                    {
+                        "name": "envio",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Env\u00edo retirado."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/MiEnvioResultadoResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/autoservicio/mis-examenes/envios/{envio}/archivo": {
+            "get": {
+                "operationId": "misExamenes.archivo",
+                "summary": "El archivo que envi\u00f3",
+                "tags": [
+                    "MisExamenes"
+                ],
+                "parameters": [
+                    {
+                        "name": "envio",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/autoservicio/mis-prestamos": {
             "get": {
                 "operationId": "misPrestamos.index",
@@ -73155,6 +73449,43 @@
                 ],
                 "title": "EntregarPrestamoRequest"
             },
+            "EnviarResultadoRequest": {
+                "type": "object",
+                "description": "El resultado que el servidor env\u00eda desde el Portal contra su orden. Aqu\u00ed, la\nforma; que la orden sea suya y que sus ex\u00e1menes sigan esperando lo mira el\nservicio, con la orden bloqueada.",
+                "properties": {
+                    "fecha_resultado": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "comentario": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 300
+                    },
+                    "archivo": {
+                        "type": "string",
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "description": "Los mismos que acepta el Dispensario: el PDF del laboratorio o\nla foto de la hoja.",
+                        "maxLength": 10240
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "minItems": 1
+                    }
+                },
+                "required": [
+                    "fecha_resultado",
+                    "archivo",
+                    "items"
+                ],
+                "title": "EnviarResultadoRequest"
+            },
             "EppEntrega": {
                 "type": "object",
                 "properties": {
@@ -73636,6 +73967,17 @@
                 ],
                 "title": "EstadoCumplimientoNormativa"
             },
+            "EstadoEnvioResultado": {
+                "type": "string",
+                "description": "En qu\u00e9 qued\u00f3 un resultado que el servidor envi\u00f3 desde el Portal.\n| |\n|---|\n| `por_validar` <br/> Espera a que un m\u00e9dico lo mire (D2). |\n| `validado` <br/> Un m\u00e9dico lo acept\u00f3: ya es un resultado de la historia cl\u00ednica. |\n| `rechazado` <br/> Un m\u00e9dico no lo acept\u00f3, con motivo. |\n| `retirado` <br/> El servidor lo retir\u00f3 antes de que lo miraran. |",
+                "enum": [
+                    "por_validar",
+                    "validado",
+                    "rechazado",
+                    "retirado"
+                ],
+                "title": "EstadoEnvioResultado"
+            },
             "EstadoFormacion": {
                 "type": "string",
                 "description": "D\u00f3nde est\u00e1 un t\u00edtulo o curso del historial acad\u00e9mico. Lo que registra Talento Humano entra validado; lo que registra el servidor desde el portal, por validar.\n",
@@ -73645,6 +73987,16 @@
                     "rechazado"
                 ],
                 "title": "EstadoFormacion"
+            },
+            "EstadoItemOrdenExamen": {
+                "type": "string",
+                "description": "C\u00f3mo va cada examen de una orden.\n| |\n|---|\n| `pendiente` <br/>  |\n| `recibido` <br/> Tiene un resultado adjunto. |\n| `no_realizado` <br/> El paciente no se lo hizo o el laboratorio no lo hace, con motivo. |",
+                "enum": [
+                    "pendiente",
+                    "recibido",
+                    "no_realizado"
+                ],
+                "title": "EstadoItemOrdenExamen"
             },
             "EstadoOrdenExamen": {
                 "type": "string",
@@ -76775,6 +77127,157 @@
                     "url_verificacion"
                 ],
                 "title": "MiCredencialResource"
+            },
+            "MiEnvioResultadoResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "items": {
+                        "type": "array",
+                        "description": "Los ex\u00e1menes de la orden que dijo que cubre.",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "fecha_resultado": {
+                        "type": "string"
+                    },
+                    "comentario": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "estado": {
+                        "$ref": "#/components/schemas/EstadoEnvioResultado"
+                    },
+                    "motivo_rechazo": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "enviado_en": {
+                        "type": "string"
+                    },
+                    "atendido_en": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "items",
+                    "fecha_resultado",
+                    "comentario",
+                    "estado",
+                    "motivo_rechazo",
+                    "enviado_en",
+                    "atendido_en"
+                ],
+                "title": "MiEnvioResultadoResource"
+            },
+            "MiExamenDeOrdenResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "nombre": {
+                        "type": "string"
+                    },
+                    "nota": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "estado": {
+                        "$ref": "#/components/schemas/EstadoItemOrdenExamen"
+                    },
+                    "motivo_no_realizado": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "nombre",
+                    "nota",
+                    "estado",
+                    "motivo_no_realizado"
+                ],
+                "title": "MiExamenDeOrdenResource"
+            },
+            "MiOrdenExamenResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "folio": {
+                        "type": "string"
+                    },
+                    "fecha_solicitud": {
+                        "type": "string"
+                    },
+                    "estado": {
+                        "$ref": "#/components/schemas/EstadoOrdenExamen"
+                    },
+                    "vencida": {
+                        "type": "boolean"
+                    },
+                    "prioridad": {
+                        "$ref": "#/components/schemas/PrioridadOrdenExamen"
+                    },
+                    "laboratorio_destino": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "indicaciones": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "ocupacional": {
+                        "type": "boolean",
+                        "description": "Si la pidi\u00f3 la evaluaci\u00f3n ocupacional y no una consulta."
+                    },
+                    "solicitante": {
+                        "type": "string"
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/MiExamenDeOrdenResource"
+                        }
+                    },
+                    "envios": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/MiEnvioResultadoResource"
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "folio",
+                    "fecha_solicitud",
+                    "estado",
+                    "vencida",
+                    "prioridad",
+                    "laboratorio_destino",
+                    "indicaciones",
+                    "ocupacional",
+                    "solicitante"
+                ],
+                "title": "MiOrdenExamenResource"
             },
             "MotivoAjusteConsumible": {
                 "type": "string",
