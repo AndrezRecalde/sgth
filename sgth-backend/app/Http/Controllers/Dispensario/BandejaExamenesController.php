@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Dispensario;
 
 use App\Enums\EstadoOrdenExamen;
+use App\Enums\EstadoRevisionResultado;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\Dispensario\OrdenExamen;
+use App\Models\Dispensario\ResultadoMedico;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -56,32 +58,88 @@ final class BandejaExamenesController extends Controller
         $resumen = [
             'pendientes' => $this->abiertas($request)->where('fecha_solicitud', '>=', $limite)->count(),
             'vencidas'   => $this->abiertas($request)->where('fecha_solicitud', '<', $limite)->count(),
+            'por_revisar' => $this->sinRevisar($request)->count(),
         ];
 
         return ApiResponse::ok($ordenes, 'Bandeja de exámenes.', 200, ['resumen' => $resumen]);
     }
 
+    /**
+     * Los resultados que nadie ha leído todavía (D3), los más antiguos primero.
+     * `solicitante` deja los de un médico: los de sus órdenes y, sin orden,
+     * los de sus consultas. Es el enlace de su «Mi jornada».
+     */
+    public function porRevisar(Request $request): JsonResponse
+    {
+        $request->validate([
+            'solicitante' => ['nullable', 'integer'],
+            'buscar'      => ['nullable', 'string', 'max:100'],
+            'per_page'    => ['sometimes', 'integer', 'min:1'],
+        ]);
+
+        $resultados = $this->sinRevisar($request)
+            ->when($request->filled('solicitante'), fn (Builder $q) => $q->deResponsable($request->integer('solicitante')))
+            ->with([
+                ...ResultadoMedicoController::RELACIONES,
+                'historiaClinica.servidor:id,nombre,apellido,cedula',
+                'historiaClinica.cargaFamiliar:id,nombres,apellidos,cedula',
+                'ordenExamen.solicitante:id,usuario_ti,email,servidor_id',
+                'ordenExamen.solicitante.servidor:id,nombre,apellido',
+                'consultaMedica:id,medico_id,fecha_consulta',
+                'consultaMedica.medico:id,usuario_ti,email,servidor_id',
+                'consultaMedica.medico.servidor:id,nombre,apellido',
+            ])
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->paginate(min($request->integer('per_page', 15), self::PER_PAGE_MAX));
+
+        return ApiResponse::ok($resultados, 'Resultados por revisar.');
+    }
+
     /** Emitidas o parciales, con la búsqueda por folio, cédula o nombre del paciente. */
     private function abiertas(Request $request): Builder
     {
-        $buscar = trim((string) $request->input('buscar', ''));
+        $like = $this->patron($request);
 
         return OrdenExamen::query()
             ->whereIn('estado', [EstadoOrdenExamen::EMITIDA, EstadoOrdenExamen::PARCIAL])
-            ->when($buscar !== '', function (Builder $q) use ($buscar) {
-                $like = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\%', '\_'], $buscar) . '%';
+            ->when($like !== null, fn (Builder $q) => $q->where(fn (Builder $w) => $this
+                ->delPaciente($w->where('folio', 'ilike', $like), $like)));
+    }
 
-                $q->where(fn (Builder $w) => $w
-                    ->where('folio', 'ilike', $like)
-                    ->orWhereHas('historiaClinica.servidor', fn (Builder $s) => $s
-                        ->where('cedula', 'ilike', $like)
-                        ->orWhereRaw("concat_ws(' ', nombre, apellido) ilike ?", [$like])
-                        ->orWhereRaw("concat_ws(' ', apellido, nombre) ilike ?", [$like]))
-                    ->orWhereHas('historiaClinica.cargaFamiliar', fn (Builder $c) => $c
-                        ->where('cedula', 'ilike', $like)
-                        ->orWhereRaw("concat_ws(' ', nombres, apellidos) ilike ?", [$like])
-                        ->orWhereRaw("concat_ws(' ', apellidos, nombres) ilike ?", [$like])));
-            });
+    /** Por revisar, con la misma búsqueda: el folio de su orden, la cédula o el nombre. */
+    private function sinRevisar(Request $request): Builder
+    {
+        $like = $this->patron($request);
+
+        return ResultadoMedico::query()
+            ->where('estado_revision', EstadoRevisionResultado::POR_REVISAR)
+            ->when($like !== null, fn (Builder $q) => $q->where(fn (Builder $w) => $this
+                ->delPaciente($w->whereHas('ordenExamen', fn (Builder $o) => $o->where('folio', 'ilike', $like)), $like)));
+    }
+
+    /** La búsqueda como patrón de `ilike`, con los comodines escritos tomados tal cual. */
+    private function patron(Request $request): ?string
+    {
+        $buscar = trim((string) $request->input('buscar', ''));
+
+        return $buscar === ''
+            ? null
+            : '%' . str_replace(['\\', '%', '_'], ['\\\\', '\%', '\_'], $buscar) . '%';
+    }
+
+    /** O la cédula o el nombre del paciente, servidor o carga familiar, en cualquier orden. */
+    private function delPaciente(Builder $q, string $like): Builder
+    {
+        return $q
+            ->orWhereHas('historiaClinica.servidor', fn (Builder $s) => $s
+                ->where('cedula', 'ilike', $like)
+                ->orWhereRaw("concat_ws(' ', nombre, apellido) ilike ?", [$like])
+                ->orWhereRaw("concat_ws(' ', apellido, nombre) ilike ?", [$like]))
+            ->orWhereHas('historiaClinica.cargaFamiliar', fn (Builder $c) => $c
+                ->where('cedula', 'ilike', $like)
+                ->orWhereRaw("concat_ws(' ', nombres, apellidos) ilike ?", [$like])
+                ->orWhereRaw("concat_ws(' ', apellidos, nombres) ilike ?", [$like]));
     }
 
     /** Desde aquí hacia atrás, una orden abierta está vencida. */

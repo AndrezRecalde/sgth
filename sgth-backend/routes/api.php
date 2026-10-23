@@ -2203,6 +2203,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // para el seguimiento.
         Route::get('examenes/bandeja', [BandejaExamenesController::class, 'index'])
             ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
+        Route::get('examenes/bandeja/por-revisar', [BandejaExamenesController::class, 'porRevisar'])
+            ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
 
         // Órdenes de exámenes: las emite el médico o el odontólogo en su
         // consulta; las anula quien las emitió o la administración.

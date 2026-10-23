@@ -93,7 +93,7 @@ test('pendientes_las_abiertas_mas_antiguas_primero_y_las_vencidas_aparte', funct
     $pendientes = bandeja()->assertOk();
     expect(collect($pendientes->json('datos.data'))->pluck('folio')->all())
         ->toBe([$limite->folio, $antigua->folio, $parcial->folio, $reciente->folio])
-        ->and($pendientes->json('meta.resumen'))->toBe(['pendientes' => 4, 'vencidas' => 1])
+        ->and($pendientes->json('meta.resumen'))->toBe(['pendientes' => 4, 'vencidas' => 1, 'por_revisar' => 0])
         // Con lo que la fila necesita: el paciente, quién la pidió y los exámenes.
         ->and($pendientes->json('datos.data.0.historia_clinica.servidor.cedula'))->toBe('0812470001')
         ->and($pendientes->json('datos.data.0.items.0.examen.nombre'))->toBe('Glucosa')
@@ -119,7 +119,7 @@ test('busca_por_folio_cedula_o_nombre_del_paciente', function () {
         // Un comodín escrito se busca tal cual, no como «cualquier cosa».
         ->and($folios('%'))->toBe([]);
 
-    expect(bandeja('buscar=arteaga')->json('meta.resumen'))->toBe(['pendientes' => 1, 'vencidas' => 0]);
+    expect(bandeja('buscar=arteaga')->json('meta.resumen'))->toBe(['pendientes' => 1, 'vencidas' => 0, 'por_revisar' => 0]);
 });
 
 test('la_ve_el_personal_clinico_y_nadie_mas', function () {
