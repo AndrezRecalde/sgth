@@ -6572,6 +6572,59 @@ export interface paths {
         patch: operations["onboarding.update"];
         trace?: never;
     };
+    "/v1/dispensario/ordenes-examen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Las órdenes de UN paciente, y de una consulta suya si se pide. Como el
+         *     listado de resultados: sin paciente no hay listado
+         */
+        get: operations["ordenExamen.index"];
+        put?: never;
+        post: operations["ordenExamen.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/dispensario/ordenes-examen/{orden}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ordenExamen.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/dispensario/ordenes-examen/{orden}/anular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** La anula quien la emitió o la administración del Dispensario */
+        patch: operations["ordenExamen.anular"];
+        trace?: never;
+    };
     "/v1/estructura/organigrama": {
         parameters: {
             query?: never;
@@ -12079,6 +12132,18 @@ export interface components {
          */
         EstadoFormacion: "validado" | "por_validar" | "rechazado";
         /**
+         * EstadoOrdenExamen
+         * @description Los estados de una orden de exámenes. `vencida` no está aquí a propósito: es una orden `emitida` o `parcial` que pasó su plazo (D5, 90 días), y se calcula al leerla en vez de escribirse.
+         *     | |
+         *     |---|
+         *     | `emitida` <br/> Recién emitida: ningún resultado todavía. |
+         *     | `parcial` <br/> Algún examen tiene resultado y otro no. |
+         *     | `completa` <br/> Todos tienen resultado o se marcaron como no realizados. |
+         *     | `anulada` <br/>  |
+         * @enum {string}
+         */
+        EstadoOrdenExamen: "emitida" | "parcial" | "completa" | "anulada";
+        /**
          * EstadoPermiso
          * @enum {string}
          */
@@ -13460,6 +13525,31 @@ export interface components {
             anulado_por: number | null;
             motivo_anulacion: string | null;
         };
+        /** OrdenExamen */
+        OrdenExamen: {
+            id: number;
+            folio: string;
+            historia_clinica_id: number;
+            consulta_medica_id: number | null;
+            solicitado_por: number;
+            /** Format: date-time */
+            fecha_solicitud: string;
+            diagnostico_cie10_id: number | null;
+            prioridad: components["schemas"]["PrioridadOrdenExamen"];
+            indicaciones: string | null;
+            laboratorio_destino: string | null;
+            consentimiento_firmado: boolean;
+            estado: components["schemas"]["EstadoOrdenExamen"];
+            /** Format: date-time */
+            anulado_en: string | null;
+            anulado_por: number | null;
+            motivo_anulacion: string | null;
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+            vencida: string;
+        };
         /**
          * OrigenVinculo
          * @description | |
@@ -13804,6 +13894,12 @@ export interface components {
                 fecha: string;
             }[];
         };
+        /**
+         * PrioridadOrdenExamen
+         * @description Con qué urgencia se piden los exámenes; va impresa en la orden.
+         * @enum {string}
+         */
+        PrioridadOrdenExamen: "rutina" | "urgente";
         /**
          * PrioridadTicket
          * @description La prioridad del ticket. La pone TIC al asignar; con la categoría decide el SLA (fase 3.2).
@@ -15555,6 +15651,29 @@ export interface components {
             observaciones?: string | null;
             /** Format: date-time */
             fecha?: string | null;
+        };
+        /**
+         * StoreOrdenExamenRequest
+         * @description Lo que hace falta para emitir una orden de exámenes.
+         *
+         *     Solo exámenes del catálogo activo (D4), sin repetir. La nota va solo en los
+         *     que la llevan, y un examen sensible exige la constancia de que el paciente
+         *     firmó el consentimiento (D8).
+         */
+        StoreOrdenExamenRequest: {
+            consulta_medica_id: number;
+            /** Format: date-time */
+            fecha_solicitud: string;
+            diagnostico_cie10_id?: number | null;
+            /** @enum {string} */
+            prioridad?: "rutina" | "urgente";
+            indicaciones?: string | null;
+            laboratorio_destino?: string | null;
+            consentimiento_firmado?: boolean;
+            items: {
+                catalogo_examen_id: number;
+                nota?: string | null;
+            }[];
         };
         /** StorePartidaPresupuestariaRequest */
         StorePartidaPresupuestariaRequest: {
@@ -35382,6 +35501,158 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "ordenExamen.index": {
+        parameters: {
+            query: {
+                historia_clinica_id: number;
+                consulta_medica_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Órdenes de exámenes.";
+                        datos: components["schemas"]["OrdenExamen"][];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "ordenExamen.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreOrdenExamenRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Orden de exámenes emitida.";
+                        datos: components["schemas"]["OrdenExamen"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "ordenExamen.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orden: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Operación exitosa.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "ordenExamen.anular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orden: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    motivo_anulacion: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Orden de exámenes anulada.";
+                        datos: components["schemas"]["OrdenExamen"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Solo quien emitió la orden o la administración del Dispensario pueden anularla.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
             422: components["responses"]["ValidationException"];
         };
     };
