@@ -943,6 +943,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/dispensario/examenes/bandeja": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["bandejaExamenes.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/viaticos/bandeja": {
         parameters: {
             query?: never;
@@ -19874,6 +19890,73 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "bandejaExamenes.index": {
+        parameters: {
+            query?: {
+                vista?: "pendientes" | "vencidas";
+                buscar?: string | null;
+                per_page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Bandeja de exámenes.";
+                        datos: {
+                            current_page: number;
+                            data: components["schemas"]["OrdenExamen"][];
+                            first_page_url: string | null;
+                            from: number | null;
+                            last_page_url: string | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            next_page_url: string | null;
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            prev_page_url: string | null;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
+                        meta: {
+                            resumen: {
+                                /**
+                                 * @description Llegan solas del cese: si se acumulan, alguien sale sin su
+                                 *     evaluación de retiro.
+                                 */
+                                pendientes: number;
+                                /**
+                                 * @description Llegan solas del cese: si se acumulan, alguien sale sin su
+                                 *     evaluación de retiro.
+                                 */
+                                vencidas: number;
+                            };
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
             422: components["responses"]["ValidationException"];
         };
     };
