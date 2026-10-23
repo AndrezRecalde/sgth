@@ -22,7 +22,7 @@ class OrdenExamen extends Model
     protected $table = 'ordenes_examen';
 
     protected $fillable = [
-        'folio', 'historia_clinica_id', 'consulta_medica_id', 'solicitado_por',
+        'folio', 'historia_clinica_id', 'consulta_medica_id', 'ficha_salud_ocupacional_id', 'solicitado_por',
         'fecha_solicitud', 'diagnostico_cie10_id', 'prioridad', 'indicaciones',
         'laboratorio_destino', 'consentimiento_firmado', 'estado',
         'anulado_en', 'anulado_por', 'motivo_anulacion',
@@ -71,6 +71,12 @@ class OrdenExamen extends Model
     public function consultaMedica(): BelongsTo
     {
         return $this->belongsTo(ConsultaMedica::class);
+    }
+
+    /** La ficha ocupacional que la pidió, si no salió de una consulta (fase 5). */
+    public function fichaSaludOcupacional(): BelongsTo
+    {
+        return $this->belongsTo(FichaSaludOcupacional::class);
     }
 
     public function solicitante(): BelongsTo

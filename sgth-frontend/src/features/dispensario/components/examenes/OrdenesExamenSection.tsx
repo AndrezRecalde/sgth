@@ -5,13 +5,12 @@ import { Button, Card, Group, Stack, Text } from '@mantine/core'
 import { IconBan, IconCircleX, IconFlask, IconPlus, IconPrinter, IconUpload } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
 import { DataState, StatusBadge, TableActions } from '@/components/ui'
-import type { SemanticTone } from '@/config/design.tokens'
 import { useAuthStore } from '@/store/auth.store'
 import { formatFechaMes } from '@/lib/fecha'
 import { useAnularOrdenExamen, useOrdenesExamen, useOrdenExamenPdf } from '../../hooks/useExamenes'
 import { AnularRegistroModal, MOTIVOS_ANULAR_ORDEN_EXAMEN } from '../AnularRegistroModal'
 import { SubirResultadoModal } from '../SubirResultadoModal'
-import { ordenAbierta } from '../../utils/resultadoDeOrden'
+import { ESTADO_ORDEN, ordenAbierta } from '../../utils/resultadoDeOrden'
 import { ItemsDeOrden } from './ItemsDeOrden'
 import { NoRealizadoModal } from './NoRealizadoModal'
 import { SolicitarExamenesModal } from './SolicitarExamenesModal'
@@ -21,13 +20,6 @@ import type { ConsultaMedica } from '../../services/consultaMedicaService'
 interface Props {
   consulta:          ConsultaMedica
   historiaClinicaId: number
-}
-
-const ESTADO: Record<OrdenExamen['estado'], { label: string; tone: SemanticTone }> = {
-  emitida:  { label: 'Emitida',  tone: 'info'    },
-  parcial:  { label: 'Parcial',  tone: 'warning' },
-  completa: { label: 'Completa', tone: 'success' },
-  anulada:  { label: 'Anulada',  tone: 'danger'  },
 }
 
 /** Las órdenes de exámenes de esta consulta, y el botón para pedir otra. */
@@ -75,7 +67,7 @@ export function OrdenesExamenSection({ consulta, historiaClinicaId }: Props) {
                 <Stack gap={4}>
                   <Group gap="xs">
                     <Text size="sm" fw={600} ff="monospace">{o.folio}</Text>
-                    <StatusBadge size="xs" tone={ESTADO[o.estado].tone}>{ESTADO[o.estado].label}</StatusBadge>
+                    <StatusBadge size="xs" tone={ESTADO_ORDEN[o.estado].tone}>{ESTADO_ORDEN[o.estado].label}</StatusBadge>
                     {o.vencida && <StatusBadge size="xs" tone="danger">Vencida</StatusBadge>}
                     {o.prioridad === 'urgente' && <StatusBadge size="xs" tone="warning">Urgente</StatusBadge>}
                     <Text size="xs" c="dimmed">{formatFechaMes(o.fecha_solicitud)}</Text>
@@ -114,7 +106,7 @@ export function OrdenesExamenSection({ consulta, historiaClinicaId }: Props) {
         </Stack>
       </DataState>
 
-      <SolicitarExamenesModal opened={solicitarOpened} onClose={cerrarSolicitar} consulta={consulta} />
+      <SolicitarExamenesModal opened={solicitarOpened} onClose={cerrarSolicitar} origen={{ tipo: 'consulta', consulta }} />
       <SubirResultadoModal opened={registrando !== null} onClose={() => setRegistrando(null)}
         historiaClinicaId={historiaClinicaId} consulta={consulta} ordenInicial={registrando} />
       <NoRealizadoModal orden={sinRealizar} onClose={() => setSinRealizar(null)} />

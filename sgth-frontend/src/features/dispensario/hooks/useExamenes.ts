@@ -38,6 +38,16 @@ export function useOrdenesExamen(historiaClinicaId: number, consultaId?: number)
   })
 }
 
+/** Las órdenes de una ficha ocupacional; cuelga de la misma raíz que las de la consulta. */
+export function useOrdenesDeFicha(fichaId: number | null) {
+  return useQuery({
+    queryKey: ['examenes', 'ordenes', 'ficha', fichaId],
+    queryFn:  () => examenService.ordenesDeFicha(fichaId ?? 0),
+    enabled:  !!fichaId,
+    staleTime: 1000 * 30,
+  })
+}
+
 /**
  * Emite la orden. El fallo no se notifica aquí: el modal lleva cada error a su
  * campo y notifica solo lo que no tenga dónde ir.

@@ -6,8 +6,12 @@ use App\Contracts\Dispensario\OrdenExamenServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dispensario\StoreOrdenExamenRequest;
 use App\Http\Responses\ApiResponse;
+use App\Exceptions\ReglaNegocioException;
 use App\Models\Dispensario\ConsultaMedica;
+use App\Models\Dispensario\FichaSaludOcupacional;
+use App\Models\Dispensario\HistoriaClinica;
 use App\Models\Dispensario\OrdenExamen;
+use App\Models\User;
 use App\Services\Dispensario\PdfOrdenExamenService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -41,14 +45,21 @@ final class OrdenExamenController extends Controller
     public function index(Request $request): JsonResponse
     {
         $request->validate([
-            'historia_clinica_id' => ['required', 'integer'],
-            'consulta_medica_id'  => ['nullable', 'integer'],
+            // De un paciente, o de una ficha ocupacional (fase 5).
+            'historia_clinica_id'        => ['required_without:ficha_salud_ocupacional_id', 'nullable', 'integer'],
+            'consulta_medica_id'         => ['nullable', 'integer'],
+            'ficha_salud_ocupacional_id' => ['nullable', 'integer'],
         ], [
-            'historia_clinica_id.required' => 'Indique de qué paciente son las órdenes.',
+            'historia_clinica_id.required_without' => 'Indique de qué paciente son las órdenes.',
         ]);
 
         $ordenes = OrdenExamen::with(self::RELACIONES)
-            ->where('historia_clinica_id', $request->integer('historia_clinica_id'))
+            ->when($request->filled('historia_clinica_id'), fn ($q) => $q->where(
+                'historia_clinica_id', $request->integer('historia_clinica_id')
+            ))
+            ->when($request->filled('ficha_salud_ocupacional_id'), fn ($q) => $q->where(
+                'ficha_salud_ocupacional_id', $request->integer('ficha_salud_ocupacional_id')
+            ))
             ->when($request->filled('consulta_medica_id'), fn ($q) => $q->where(
                 'consulta_medica_id', $request->integer('consulta_medica_id')
             ))
@@ -62,31 +73,65 @@ final class OrdenExamenController extends Controller
     public function store(StoreOrdenExamenRequest $request): JsonResponse
     {
         $datos = $request->validated();
-        $consulta = ConsultaMedica::findOrFail($datos['consulta_medica_id']);
+        $usuario = $request->user();
 
-        if ($consulta->medico_id !== $request->user()->id) {
-            return ApiResponse::error(
-                'Solo quien atendió la consulta puede pedir exámenes en ella: ' .
-                'la orden sale con su firma.',
-                null,
-                403
-            );
-        }
+        // Del paciente de la consulta o de la ficha, no de lo que mande la pantalla.
+        $historiaId = isset($datos['ficha_salud_ocupacional_id'])
+            ? $this->historiaDeLaFicha((int) $datos['ficha_salud_ocupacional_id'], $usuario)
+            : $this->historiaDeLaConsulta((int) $datos['consulta_medica_id'], $usuario);
 
         $orden = $this->ordenes->emitir(
-            [
-                ...Arr::except($datos, ['items']),
-                // Del paciente de la consulta, no de lo que mande la pantalla.
-                'historia_clinica_id' => $consulta->historia_clinica_id,
-            ],
+            [...Arr::except($datos, ['items']), 'historia_clinica_id' => $historiaId],
             $datos['items'],
-            $request->user()->id,
+            $usuario->id,
         );
 
         return ApiResponse::created(
             $orden->refresh()->load(self::RELACIONES),
             'Orden de exámenes emitida.'
         );
+    }
+
+    /** La de una consulta la pide quien la atendió: la orden sale con su firma. */
+    private function historiaDeLaConsulta(int $consultaId, User $usuario): int
+    {
+        $consulta = ConsultaMedica::findOrFail($consultaId);
+
+        abort_if(
+            $consulta->medico_id !== $usuario->id,
+            403,
+            'Solo quien atendió la consulta puede pedir exámenes en ella: la orden sale con su firma.'
+        );
+
+        return $consulta->historia_clinica_id;
+    }
+
+    /**
+     * La de una ficha ocupacional (fase 5) la pide quien la evalúa, mientras la
+     * evaluación está en curso. La historia es la del paciente por su cédula: un
+     * aspirante que todavía no la tiene la estrena aquí, como en la consulta.
+     */
+    private function historiaDeLaFicha(int $fichaId, User $usuario): int
+    {
+        $ficha = FichaSaludOcupacional::with(['servidor', 'postulante', 'solicitud'])->findOrFail($fichaId);
+
+        abort_if(
+            $ficha->evaluador_id !== $usuario->id,
+            403,
+            'Solo el médico que evalúa la ficha pide sus exámenes: la orden sale con su firma.'
+        );
+
+        if ($ficha->solicitud?->estado !== 'en_proceso') {
+            throw new ReglaNegocioException('La evaluación de esta ficha ya no está en curso: no se le piden exámenes.');
+        }
+
+        return HistoriaClinica::buscarOCrearPorCedula(
+            (string) ($ficha->servidor?->cedula ?? $ficha->postulante?->cedula),
+            $ficha->servidor ? 'servidor' : 'candidato',
+            $ficha->servidor_id,
+            null,
+            $usuario->id,
+        )->id;
     }
 
     public function show(int $orden): JsonResponse

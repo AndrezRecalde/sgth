@@ -54,6 +54,7 @@ final class PdfOrdenExamenService
             'historiaClinica.servidor',
             'historiaClinica.cargaFamiliar',
             'consultaMedica:id,especialidad',
+            'fichaSaludOcupacional:id,tipo_ficha',
             'solicitante.servidor',
             'diagnosticoCie10:id,codigo,descripcion',
             'anulador.servidor',
@@ -69,7 +70,10 @@ final class PdfOrdenExamenService
                 'nombre' => $membrete['identidad']['nombre_oficial'],
                 'ruc'    => $membrete['identidad']['ruc'],
             ],
-            'servicio'    => $orden->consultaMedica?->especialidad?->etiqueta(),
+            // La de una ficha ocupacional dice qué evaluación la pide.
+            'servicio'    => $orden->fichaSaludOcupacional
+                ? trim('Salud ocupacional · ' . $orden->fichaSaludOcupacional->tipo_ficha?->etiqueta(), ' ·')
+                : $orden->consultaMedica?->especialidad?->etiqueta(),
             'paciente'    => $this->datosDelPaciente($orden->historiaClinica),
             'profesional' => $this->datosDelProfesional($orden),
             'grupos'      => $this->porArea($orden->items),
