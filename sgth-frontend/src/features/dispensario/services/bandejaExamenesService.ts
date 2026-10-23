@@ -3,7 +3,7 @@ import type { ApiResponse, PaginatedResponse } from '@/types/api'
 import type { OrdenExamen } from './examenService'
 import type { PersonaResultado, ResultadoMedico } from './resultadoMedicoService'
 
-export type VistaBandeja = 'pendientes' | 'vencidas' | 'por-revisar'
+export type VistaBandeja = 'pendientes' | 'vencidas' | 'por-revisar' | 'por-validar'
 
 /** El paciente tal como llega a la bandeja: servidor o carga familiar. */
 interface PacienteBandeja {
@@ -30,6 +30,8 @@ export interface ResumenBandeja {
   pendientes:  number
   vencidas:    number
   por_revisar: number
+  /** Lo enviado desde el Portal que espera que un médico lo valide (fase 6). */
+  por_validar: number
 }
 
 export interface FiltrosBandeja {
