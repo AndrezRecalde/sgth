@@ -1,13 +1,9 @@
 import { Group, Stack, Text } from '@mantine/core'
 import type { DataTableColumn } from 'mantine-datatable'
 import { StatusBadge, TableActions, type TableAction } from '@/components/ui'
-import { formatFechaMes, hoyIso } from '@/lib/fecha'
+import { formatFechaMes } from '@/lib/fecha'
 import { pacienteDeOrden, type OrdenBandeja } from '../../services/bandejaExamenesService'
-
-/** Días desde que se pidió, contra el día de hoy en la hora local: lo que lleva esperando. */
-function diasDesde(fecha: string): number {
-  return Math.round((Date.parse(`${hoyIso()}T00:00:00Z`) - Date.parse(`${fecha.slice(0, 10)}T00:00:00Z`)) / 86_400_000)
-}
+import { diasDesde, textoEspera } from '../../utils/espera'
 
 export const columnasBandejaExamenes = (
   accionesDe: (o: OrdenBandeja) => TableAction[],
@@ -69,7 +65,7 @@ export const columnasBandejaExamenes = (
       const dias = diasDesde(o.fecha_solicitud)
       return o.vencida
         ? <StatusBadge tone="danger">Vencida · {dias} d</StatusBadge>
-        : <Text size="sm">{dias === 0 ? 'Hoy' : `${dias} ${dias === 1 ? 'día' : 'días'}`}</Text>
+        : <Text size="sm">{textoEspera(dias)}</Text>
     },
   },
   {

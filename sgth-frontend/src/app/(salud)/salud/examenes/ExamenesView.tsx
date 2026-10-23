@@ -7,6 +7,7 @@ import { PageHeader, PageShell } from '@/components/ui'
 import { useAuth } from '@/hooks/useAuth'
 import { BandejaExamenesPanel } from '@/features/dispensario/components/examenes/BandejaExamenesPanel'
 import { CatalogoExamenesPanel } from '@/features/dispensario/components/examenes/CatalogoExamenesPanel'
+import type { VistaBandeja } from '@/features/dispensario/services/bandejaExamenesService'
 import { PerfilesExamenPanel } from '@/features/dispensario/components/examenes/PerfilesExamenPanel'
 
 /**
@@ -15,7 +16,13 @@ import { PerfilesExamenPanel } from '@/features/dispensario/components/examenes/
  * Los perfiles los arma cada profesional para su especialidad; el catálogo,
  * solo la administración (P2).
  */
-export function ExamenesView() {
+interface Props {
+  /** La vista de la bandeja con la que abre, y el médico de «Por revisar». */
+  vista?:       VistaBandeja
+  solicitante?: number | null
+}
+
+export function ExamenesView({ vista, solicitante = null }: Props) {
   const { hasRole } = useAuth()
   const catalogo = hasRole('admin-dispensario')
   const [pestana, setPestana] = useState<string | null>('pendientes')
@@ -28,11 +35,13 @@ export function ExamenesView() {
       />
       <Tabs value={pestana} onChange={setPestana} keepMounted={false}>
         <Tabs.List>
-          <Tabs.Tab value="pendientes" leftSection={<IconClockHour4 size={14} />}>Pendientes</Tabs.Tab>
+          <Tabs.Tab value="pendientes" leftSection={<IconClockHour4 size={14} />}>Bandeja</Tabs.Tab>
           <Tabs.Tab value="perfiles" leftSection={<IconListCheck size={14} />}>Perfiles</Tabs.Tab>
           {catalogo && <Tabs.Tab value="catalogo" leftSection={<IconFlask size={14} />}>Catálogo</Tabs.Tab>}
         </Tabs.List>
-        <Tabs.Panel value="pendientes" pt="lg"><BandejaExamenesPanel /></Tabs.Panel>
+        <Tabs.Panel value="pendientes" pt="lg">
+          <BandejaExamenesPanel vistaInicial={vista} solicitanteInicial={solicitante} />
+        </Tabs.Panel>
         <Tabs.Panel value="perfiles" pt="lg"><PerfilesExamenPanel /></Tabs.Panel>
         {catalogo && <Tabs.Panel value="catalogo" pt="lg"><CatalogoExamenesPanel /></Tabs.Panel>}
       </Tabs>

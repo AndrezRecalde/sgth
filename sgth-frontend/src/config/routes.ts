@@ -114,6 +114,9 @@ export const ROUTES = {
       `/salud/odontologia/${encodeURIComponent(folio)}`,
     /** Perfiles y catálogo de exámenes; se piden desde la atención. */
     EXAMENES:     '/salud/examenes',
+    /** La bandeja en «Por revisar», con los de un médico si se indica. */
+    EXAMENES_POR_REVISAR: (solicitante?: number) =>
+      `/salud/examenes?vista=por-revisar${solicitante ? `&solicitante=${solicitante}` : ''}`,
     ENFERMERIA:      '/salud/enfermeria',
     ENFERMERIA_COLA: '/salud/enfermeria/cola',
     ENFERMERIA_SSO:  '/salud/enfermeria/sso',

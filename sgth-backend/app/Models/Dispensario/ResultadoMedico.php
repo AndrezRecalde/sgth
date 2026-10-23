@@ -5,6 +5,7 @@ namespace App\Models\Dispensario;
 use App\Enums\EstadoRevisionResultado;
 use App\Enums\InterpretacionResultado;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -70,6 +71,20 @@ class ResultadoMedico extends Model
     public function subidoPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'subido_por');
+    }
+
+    /**
+     * Los que responden a un médico, como `responsableId()` pero en la
+     * consulta: los de las órdenes que pidió y, sin orden, los de sus
+     * consultas.
+     */
+    public function scopeDeResponsable(Builder $query, int $usuarioId): Builder
+    {
+        return $query->where(fn (Builder $q) => $q
+            ->whereHas('ordenExamen', fn (Builder $o) => $o->where('solicitado_por', $usuarioId))
+            ->orWhere(fn (Builder $s) => $s
+                ->whereNull('orden_examen_id')
+                ->whereHas('consultaMedica', fn (Builder $c) => $c->where('medico_id', $usuarioId))));
     }
 
     public function revisor(): BelongsTo

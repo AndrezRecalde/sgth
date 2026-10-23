@@ -959,6 +959,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/dispensario/examenes/bandeja/por-revisar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Los resultados que nadie ha leído todavía (D3), los más antiguos primero.
+         *     `solicitante` deja los de un médico: los de sus órdenes y, sin orden,
+         *     los de sus consultas. Es el enlace de su «Mi jornada»
+         */
+        get: operations["bandejaExamenes.porRevisar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/viaticos/bandeja": {
         parameters: {
             query?: never;
@@ -20016,8 +20037,67 @@ export interface operations {
                                  *     evaluación de retiro.
                                  */
                                 vencidas: number;
+                                /**
+                                 * @description Llegan solas del cese: si se acumulan, alguien sale sin su
+                                 *     evaluación de retiro.
+                                 */
+                                por_revisar: number;
                             };
                         };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "bandejaExamenes.porRevisar": {
+        parameters: {
+            query?: {
+                solicitante?: number | null;
+                buscar?: string | null;
+                per_page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Resultados por revisar.";
+                        datos: {
+                            current_page: number;
+                            data: components["schemas"]["ResultadoMedico"][];
+                            first_page_url: string | null;
+                            from: number | null;
+                            last_page_url: string | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            next_page_url: string | null;
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            prev_page_url: string | null;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        } | components["schemas"]["LengthAwarePaginator"];
+                        meta: null;
                     };
                 };
             };
