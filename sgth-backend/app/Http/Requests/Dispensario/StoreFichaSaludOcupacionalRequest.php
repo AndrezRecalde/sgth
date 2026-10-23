@@ -107,6 +107,8 @@ class StoreFichaSaludOcupacionalRequest extends FormRequest
             'examenes.*.tipo' => ['required', Rule::enum(TipoExamenFemo::class)],
             'examenes.*.resultado' => ['nullable', 'string'],
             'examenes.*.fecha_examen' => ['nullable', 'date'],
+            // De qué resultado del Dispensario se copió la fila, si salió de uno.
+            'examenes.*.resultado_medico_id' => ['nullable', 'integer', 'exists:resultados_medicos,id'],
 
             'empleos_anteriores' => ['nullable', 'array'],
             'empleos_anteriores.*.centro_trabajo' => ['required', 'string', 'max:200'],

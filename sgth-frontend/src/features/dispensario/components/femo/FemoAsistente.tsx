@@ -114,6 +114,7 @@ export function FemoAsistente({
         )}
         {active === ULTIMO && (
           <FemoPaso3
+            cedula={cedula}
             fichaData={wizard.fichaData}
             examenes={wizard.examenes}
             diagnosticos={wizard.diagnosticos}
