@@ -1,5 +1,8 @@
+import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { notificar } from '@/components/ui'
+import { abrirOGuardarArchivo } from '@/lib/archivo'
+import { getApiErrorMessage } from '@/types/api'
 import { examenService } from '../services/examenService'
 import type { EmitirOrdenExamenData } from '../services/examenService'
 
@@ -63,4 +66,29 @@ export function useAnularOrdenExamen() {
     },
     onError: notificar.alFallar('No se pudo anular la orden'),
   })
+}
+
+/**
+ * Abre el impreso de la orden para dárselo al paciente, como la receta. Si el
+ * navegador bloquea la pestaña —se abre al volver del servidor, fuera del
+ * clic—, se descarga y se dice dónde quedó.
+ */
+export function useOrdenExamenPdf() {
+  const [abriendo, setAbriendo] = useState<number | null>(null)
+
+  const abrir = async (id: number, folio: string) => {
+    setAbriendo(id)
+    try {
+      const blob = await examenService.pdf(id)
+      if (!abrirOGuardarArchivo(blob, `orden-examenes-${folio}.pdf`)) {
+        notificar.aviso('La orden se descargó', 'El navegador bloqueó la pestaña; la encontrará en Descargas.')
+      }
+    } catch (error: unknown) {
+      notificar.error('No se pudo generar la orden', getApiErrorMessage(error))
+    } finally {
+      setAbriendo(null)
+    }
+  }
+
+  return { abrir, abriendo }
 }

@@ -8,8 +8,10 @@ use App\Http\Requests\Dispensario\StoreOrdenExamenRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\Dispensario\ConsultaMedica;
 use App\Models\Dispensario\OrdenExamen;
+use App\Services\Dispensario\PdfOrdenExamenService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
 
 /**
@@ -28,7 +30,8 @@ final class OrdenExamenController extends Controller
     ];
 
     public function __construct(
-        private readonly OrdenExamenServiceInterface $ordenes
+        private readonly OrdenExamenServiceInterface $ordenes,
+        private readonly PdfOrdenExamenService $pdfService,
     ) {}
 
     /**
@@ -96,6 +99,17 @@ final class OrdenExamenController extends Controller
         ])->findOrFail($orden);
 
         return ApiResponse::ok($orden);
+    }
+
+    /** El impreso que el paciente lleva al laboratorio, también el de una anulada. */
+    public function pdf(int $orden): Response
+    {
+        $resultado = $this->pdfService->generarContent($orden);
+
+        return response($resultado['content'], 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $resultado['filename'] . '"',
+        ]);
     }
 
     /** La anula quien la emitió o la administración del Dispensario. */

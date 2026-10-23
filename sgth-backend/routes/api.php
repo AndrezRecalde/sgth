@@ -2196,6 +2196,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::get('{orden}', [OrdenExamenController::class, 'show'])
                 ->middleware('role:medico|odontologo|enfermera|admin-dispensario')
                 ->whereNumber('orden');
+            Route::get('{orden}/pdf', [OrdenExamenController::class, 'pdf'])
+                ->middleware('role:medico|odontologo|enfermera|admin-dispensario')
+                ->whereNumber('orden')
+                ->name('dispensario.ordenes-examen.pdf');
             Route::patch('{orden}/anular', [OrdenExamenController::class, 'anular'])
                 ->middleware('role:medico|odontologo|admin-dispensario')
                 ->whereNumber('orden');

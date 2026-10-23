@@ -2,13 +2,13 @@
 
 import { useState } from 'react'
 import { Button, Card, Group, Stack, Text } from '@mantine/core'
-import { IconBan, IconFlask, IconPlus } from '@tabler/icons-react'
+import { IconBan, IconFlask, IconPlus, IconPrinter } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
 import { DataState, StatusBadge, TableActions } from '@/components/ui'
 import type { SemanticTone } from '@/config/design.tokens'
 import { useAuthStore } from '@/store/auth.store'
 import { formatFechaMes } from '@/lib/fecha'
-import { useAnularOrdenExamen, useOrdenesExamen } from '../../hooks/useExamenes'
+import { useAnularOrdenExamen, useOrdenesExamen, useOrdenExamenPdf } from '../../hooks/useExamenes'
 import { AnularRegistroModal, MOTIVOS_ANULAR_ORDEN_EXAMEN } from '../AnularRegistroModal'
 import { SolicitarExamenesModal } from './SolicitarExamenesModal'
 import type { OrdenExamen } from '../../services/examenService'
@@ -34,6 +34,7 @@ export function OrdenesExamenSection({ consulta, historiaClinicaId }: Props) {
   const [anulando, setAnulando] = useState<OrdenExamen | null>(null)
   const { data: ordenes = [], isLoading, error, refetch } = useOrdenesExamen(historiaClinicaId, consulta.id)
   const anular = useAnularOrdenExamen()
+  const { abrir: abrirPdf, abriendo } = useOrdenExamenPdf()
   const { usuario, hasRole } = useAuthStore()
 
   // Como el servidor: pide quien atendió la consulta (la orden sale con su
@@ -83,12 +84,16 @@ export function OrdenesExamenSection({ consulta, historiaClinicaId }: Props) {
                     <Text size="xs" c="dimmed">Anulada: {o.motivo_anulacion}</Text>
                   )}
                 </Stack>
-                {puedeAnular(o) && (
+                <Group gap={4} wrap="nowrap">
+                  <Button size="compact-xs" variant="light" leftSection={<IconPrinter size={13} />}
+                    loading={abriendo === o.id} onClick={() => abrirPdf(o.id, o.folio)}>
+                    Imprimir
+                  </Button>
                   <TableActions actions={[{
                     label: 'Anular orden', icon: <IconBan size={14} />, color: 'red',
-                    onClick: () => setAnulando(o),
+                    onClick: () => setAnulando(o), hidden: !puedeAnular(o),
                   }]} />
-                )}
+                </Group>
               </Group>
             </Card>
           ))}
