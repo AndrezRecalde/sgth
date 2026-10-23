@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dispensario;
 
 use App\Contracts\Dispensario\OrdenExamenServiceInterface;
+use App\Enums\EstadoRevisionResultado;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dispensario\StoreResultadoMedicoRequest;
 use App\Http\Responses\ApiResponse;
@@ -103,6 +104,9 @@ final class ResultadoMedicoController extends Controller
                     'descripcion'         => $request->input('descripcion'),
                     'fecha_resultado'     => $request->input('fecha_resultado'),
                     'archivo'             => $ruta,
+                    // Explícito y no por el valor por defecto de la tabla: el
+                    // modelo recién creado no lo lee, y la respuesta salía en null.
+                    'estado_revision'     => EstadoRevisionResultado::POR_REVISAR,
                 ]);
 
                 if ($resultado->orden_examen_id !== null) {
