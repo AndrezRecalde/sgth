@@ -78,6 +78,9 @@ export function TabResultados({
   const puedeRetirar = (r: ResultadoMedico) =>
     r.subido_por?.id === usuario?.id || hasRole('admin-dispensario')
 
+  // Los registran el médico y el odontólogo (D2, P1); Enfermería solo los ve.
+  const puedeSubir = hasRole('medico') || hasRole('odontologo')
+
   return (
     <Stack gap="md" p="md">
       <Group justify="space-between">
@@ -97,13 +100,15 @@ export function TabResultados({
             onChange={(v) => setAlcance(v as Alcance)}
           />
         </Group>
-        <Button
-          size="xs"
-          leftSection={<IconPlus size={13} />}
-          onClick={abrirModal}
-        >
-          Subir resultado
-        </Button>
+        {puedeSubir && (
+          <Button
+            size="xs"
+            leftSection={<IconPlus size={13} />}
+            onClick={abrirModal}
+          >
+            Subir resultado
+          </Button>
+        )}
       </Group>
 
       <DataState

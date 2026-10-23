@@ -24,11 +24,11 @@ beforeEach(function () {
     Model::unguard();
     Storage::fake('local');
 
-    $this->enfermera = User::create([
+    $this->medico = User::create([
         'email' => 'resultado-paciente@example.com', 'usuario_ti' => 'resultado-paciente',
         'password' => bcrypt('123456'), 'primer_login' => false,
     ]);
-    $this->enfermera->assignRole(Role::firstOrCreate(['name' => 'enfermera', 'guard_name' => 'sanctum']));
+    $this->medico->assignRole(Role::firstOrCreate(['name' => 'medico', 'guard_name' => 'sanctum']));
 
     $unidad = unidadDePrueba(['nombre' => 'Direccion de Resultados por Paciente']);
     $puesto = puestoDePrueba($unidad, 'Analista de Resultados por Paciente');
@@ -44,7 +44,7 @@ beforeEach(function () {
     };
     $consulta = fn (HistoriaClinica $h) => ConsultaMedica::create([
         'especialidad' => 'medicina_general', 'historia_clinica_id' => $h->id,
-        'medico_id' => $this->enfermera->id, 'fecha_consulta' => now(),
+        'medico_id' => $this->medico->id, 'fecha_consulta' => now(),
         'hora_consulta' => '09:00:00', 'motivo_consulta' => 'Control',
     ]);
 
@@ -66,7 +66,7 @@ function subirResultado(int $historiaId, ?int $consultaId): Illuminate\Testing\T
 }
 
 test('no_se_cuelga_un_resultado_de_la_consulta_de_otro_paciente', function () {
-    $this->actingAs($this->enfermera, 'sanctum');
+    $this->actingAs($this->medico, 'sanctum');
 
     $errores = subirResultado($this->historia->id, $this->consultaAjena->id)
         ->assertStatus(422)
@@ -78,7 +78,7 @@ test('no_se_cuelga_un_resultado_de_la_consulta_de_otro_paciente', function () {
 });
 
 test('se_sube_a_una_consulta_del_mismo_paciente', function () {
-    $this->actingAs($this->enfermera, 'sanctum');
+    $this->actingAs($this->medico, 'sanctum');
 
     subirResultado($this->historia->id, $this->consulta->id)->assertCreated();
 
@@ -86,7 +86,7 @@ test('se_sube_a_una_consulta_del_mismo_paciente', function () {
 });
 
 test('se_sube_sin_consulta', function () {
-    $this->actingAs($this->enfermera, 'sanctum');
+    $this->actingAs($this->medico, 'sanctum');
 
     subirResultado($this->historia->id, null)->assertCreated();
 
@@ -94,7 +94,7 @@ test('se_sube_sin_consulta', function () {
 });
 
 test('no_se_cuelga_de_una_consulta_borrada', function () {
-    $this->actingAs($this->enfermera, 'sanctum');
+    $this->actingAs($this->medico, 'sanctum');
     $this->consulta->delete();
 
     subirResultado($this->historia->id, $this->consulta->id)->assertStatus(422);
