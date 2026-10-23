@@ -5,6 +5,7 @@ namespace App\Models\Dispensario;
 use App\Enums\EstadoItemOrdenExamen;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /** Un examen de una orden, con el dato que completó el médico si lo lleva. */
 class ItemOrdenExamen extends Model
@@ -31,5 +32,13 @@ class ItemOrdenExamen extends Model
     public function examen(): BelongsTo
     {
         return $this->belongsTo(CatalogoExamen::class, 'catalogo_examen_id');
+    }
+
+    /** Los resultados que lo cubren; los retirados no cuentan. */
+    public function resultados(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            ResultadoMedico::class, 'resultado_orden_items', 'orden_examen_item_id', 'resultado_medico_id'
+        );
     }
 }

@@ -112,6 +112,31 @@ final class OrdenExamenController extends Controller
         ]);
     }
 
+    /**
+     * Un examen que no va a volver: el paciente no se lo hizo o el
+     * laboratorio no lo hace. Deja de esperarse, con su motivo, y la orden se
+     * recalcula. Lo marca quien registra resultados (D2, P1).
+     */
+    public function noRealizado(Request $request, int $orden, int $item): JsonResponse
+    {
+        $request->validate([
+            'motivo_no_realizado' => ['required', 'string', 'max:255'],
+        ], [
+            'motivo_no_realizado.required' => 'Indique por qué no se realizó.',
+        ]);
+
+        $this->ordenes->marcarNoRealizado(
+            $orden,
+            $item,
+            trim($request->string('motivo_no_realizado')->value()),
+        );
+
+        return ApiResponse::ok(
+            OrdenExamen::with(self::RELACIONES)->findOrFail($orden),
+            'Examen marcado como no realizado.'
+        );
+    }
+
     /** La anula quien la emitió o la administración del Dispensario. */
     public function anular(Request $request, int $orden): JsonResponse
     {

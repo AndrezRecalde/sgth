@@ -2206,6 +2206,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::patch('{orden}/anular', [OrdenExamenController::class, 'anular'])
                 ->middleware('role:medico|odontologo|admin-dispensario')
                 ->whereNumber('orden');
+            // Lo marca quien registra resultados (D2, P1).
+            Route::patch('{orden}/items/{item}/no-realizado', [OrdenExamenController::class, 'noRealizado'])
+                ->middleware('role:medico|odontologo')
+                ->whereNumber(['orden', 'item']);
         });
     });
 

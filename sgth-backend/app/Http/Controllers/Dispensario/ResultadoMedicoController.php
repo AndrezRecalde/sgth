@@ -2,15 +2,17 @@
 
 namespace App\Http\Controllers\Dispensario;
 
+use App\Contracts\Dispensario\OrdenExamenServiceInterface;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Dispensario\StoreResultadoMedicoRequest;
 use App\Http\Responses\ApiResponse;
-use App\Models\Dispensario\HistoriaClinica;
 use App\Models\Dispensario\ResultadoMedico;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
+use Throwable;
 
 final class ResultadoMedicoController extends Controller
 {
@@ -23,6 +25,19 @@ final class ResultadoMedicoController extends Controller
      * sesión y el rol del Dispensario, como el respaldo de una adquisición.
      */
     private const DISCO = 'local';
+
+    /** Quién lo subió y, si vino de una orden, cuál y qué exámenes cubre. */
+    private const RELACIONES = [
+        'subidoPor:id,usuario_ti,email,servidor_id',
+        'subidoPor.servidor:id,nombre,apellido',
+        'ordenExamen:id,folio,estado',
+        'itemsOrden:id,orden_examen_id,catalogo_examen_id',
+        'itemsOrden.examen:id,nombre',
+    ];
+
+    public function __construct(
+        private readonly OrdenExamenServiceInterface $ordenes
+    ) {}
 
     /**
      * Los resultados de UN paciente, y de una consulta suya si se pide.
@@ -43,8 +58,7 @@ final class ResultadoMedicoController extends Controller
         ]);
 
         $query = ResultadoMedico::with([
-            'subidoPor:id,usuario_ti,email,servidor_id',
-            'subidoPor.servidor:id,nombre,apellido',
+            ...self::RELACIONES,
             // Para decir de qué consulta es cada uno cuando se listan todos
             // los del paciente.
             'consultaMedica:id,fecha_consulta',
@@ -65,54 +79,43 @@ final class ResultadoMedicoController extends Controller
         return ApiResponse::ok($query->get());
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreResultadoMedicoRequest $request): JsonResponse
     {
-        $request->validate([
-            'historia_clinica_id' => ['required', 'integer', 'exists:historias_clinicas,id'],
-            // La consulta, de ese mismo paciente. Solo se comprobaba que
-            // existiera: el resultado de un paciente quedaba colgado de la
-            // consulta de otro, y se enseñaba en el panel de este.
-            'consulta_medica_id'  => ['nullable', 'integer',
-                Rule::exists('consultas_medicas', 'id')
-                    ->where('historia_clinica_id', $request->integer('historia_clinica_id'))
-                    ->whereNull('deleted_at'),
-            ],
-            'tipo'                => ['required', Rule::in([
-                'laboratorio', 'imagen', 'ecografia',
-                'rayos_x', 'electrocardiograma', 'otro',
-            ])],
-            'descripcion'         => ['required', 'string', 'max:500'],
-            'fecha_resultado'     => ['required', 'date', 'before_or_equal:today'],
-            'archivo'             => ['required', 'file',
-                'mimes:pdf,jpg,jpeg,png',
-                'max:10240',
-            ],
-        ], [
-            'consulta_medica_id.exists' => 'La consulta indicada no es de este paciente.',
-            // Un resultado es de algo que ya pasó. Se admitía cualquier fecha,
-            // y uno fechado el mes próximo quedaba primero en el listado.
-            'fecha_resultado.before_or_equal' => 'El resultado no puede tener fecha futura.',
-        ]);
-
         $ruta = $request->file('archivo')->store(
             'resultados-medicos', self::DISCO
         );
 
-        $resultado = ResultadoMedico::create([
-            'historia_clinica_id' => $request->integer('historia_clinica_id'),
-            'consulta_medica_id'  => $request->integer('consulta_medica_id') ?: null,
-            'subido_por'          => $request->user()->id,
-            'tipo'                => $request->input('tipo'),
-            'descripcion'         => $request->input('descripcion'),
-            'fecha_resultado'     => $request->input('fecha_resultado'),
-            'archivo'             => $ruta,
-        ]);
+        try {
+            $resultado = DB::transaction(function () use ($request, $ruta) {
+                $resultado = ResultadoMedico::create([
+                    'historia_clinica_id' => $request->integer('historia_clinica_id'),
+                    'consulta_medica_id'  => $request->integer('consulta_medica_id') ?: null,
+                    'orden_examen_id'     => $request->integer('orden_examen_id') ?: null,
+                    'subido_por'          => $request->user()->id,
+                    'tipo'                => $request->input('tipo'),
+                    'descripcion'         => $request->input('descripcion'),
+                    'fecha_resultado'     => $request->input('fecha_resultado'),
+                    'archivo'             => $ruta,
+                ]);
+
+                if ($resultado->orden_examen_id !== null) {
+                    $this->ordenes->adjuntarResultado(
+                        $resultado,
+                        array_map('intval', (array) $request->input('items'))
+                    );
+                }
+
+                return $resultado;
+            });
+        } catch (Throwable $e) {
+            // Sin registro, el archivo no lo encontraría nadie.
+            Storage::disk(self::DISCO)->delete($ruta);
+
+            throw $e;
+        }
 
         return ApiResponse::created(
-            $resultado->load([
-                'subidoPor:id,usuario_ti,email,servidor_id',
-                'subidoPor.servidor:id,nombre,apellido',
-            ]),
+            $resultado->load(self::RELACIONES),
             'Resultado médico registrado correctamente.'
         );
     }
@@ -165,7 +168,12 @@ final class ResultadoMedicoController extends Controller
             );
         }
 
-        $resultado->delete();
+        // Lo que cubría de su orden vuelve a pendiente si nada más lo cubre
+        // (regla 4 del diseño).
+        DB::transaction(function () use ($resultado) {
+            $resultado->delete();
+            $this->ordenes->liberarResultado($resultado);
+        });
 
         return ApiResponse::ok([], 'Resultado retirado de la consulta.');
     }
