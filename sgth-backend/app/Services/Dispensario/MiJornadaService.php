@@ -2,6 +2,9 @@
 
 namespace App\Services\Dispensario;
 
+use App\Enums\EstadoRevisionResultado;
+use App\Enums\InterpretacionResultado;
+use App\Models\Dispensario\ResultadoMedico;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -109,6 +112,13 @@ final class MiJornadaService
                         ->whereNull('f.deleted_at')
                         ->count()
                     : 0,
+                // Los resultados de lo que pidió (o de sus consultas, si
+                // vinieron sin orden) que nadie ha leído todavía (D3).
+                'resultados_por_revisar' => ResultadoMedico::query()
+                    ->where('estado_revision', EstadoRevisionResultado::POR_REVISAR)
+                    ->deResponsable($usuario->id)
+                    ->count(),
+                'criticos' => $this->criticosSinVer($usuario),
                 // Evaluaciones ocupacionales con el triaje hecho, listas para
                 // que cualquier médico las inicie.
                 'evaluaciones_listas' => $perfil === 'medico'
@@ -134,6 +144,41 @@ final class MiJornadaService
                 'diagnosticos' => $diagnosticos,
             ],
         ];
+    }
+
+    /**
+     * Los críticos que revisó otro médico sobre lo que pidió este, y que este
+     * todavía no ha visto: quedan fijos en su jornada hasta que los vea (D3).
+     * Con lo justo para reconocerlos y el comentario de quien los leyó.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function criticosSinVer(User $usuario): array
+    {
+        return ResultadoMedico::query()
+            ->where('interpretacion', InterpretacionResultado::CRITICO)
+            ->whereNull('critico_visto_en')
+            ->deResponsable($usuario->id)
+            ->with([
+                'historiaClinica:id,servidor_id,carga_familiar_id,cedula_paciente',
+                'historiaClinica.servidor:id,nombre,apellido',
+                'historiaClinica.cargaFamiliar:id,nombres,apellidos',
+                'revisor:id,usuario_ti,email,servidor_id',
+                'revisor.servidor:id,nombre,apellido',
+            ])
+            ->orderBy('revisado_en')
+            ->orderBy('id')
+            ->limit(10)
+            ->get()
+            ->map(fn (ResultadoMedico $r) => [
+                'id'          => $r->id,
+                'descripcion' => $r->descripcion,
+                'paciente'    => $r->historiaClinica?->nombre_paciente,
+                'comentario'  => $r->comentario_medico,
+                'revisor'     => $r->revisor?->nombre_completo,
+                'revisado_en' => $r->revisado_en?->toIso8601String(),
+            ])
+            ->all();
     }
 
     private function enfermeria(User $usuario): array

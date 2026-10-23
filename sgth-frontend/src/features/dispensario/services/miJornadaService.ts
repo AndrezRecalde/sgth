@@ -1,6 +1,15 @@
 import api from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
 
+export interface CriticoJornada {
+  id:          number
+  descripcion: string
+  paciente:    string | null
+  comentario:  string | null
+  revisor:     string | null
+  revisado_en: string | null
+}
+
 interface JornadaClinica {
   perfil: 'medico' | 'odontologo'
   hoy: {
@@ -16,6 +25,10 @@ interface JornadaClinica {
     borradores:          number
     fichas_femo:         number
     evaluaciones_listas: number
+    /** De lo que pidió (o de sus consultas, sin orden), lo que nadie ha leído. */
+    resultados_por_revisar: number
+    /** Críticos que revisó otro médico y él no ha visto: fijos hasta que los vea (D3). */
+    criticos: CriticoJornada[]
   }
   mes: {
     consultas:      number

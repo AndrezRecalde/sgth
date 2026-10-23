@@ -33777,6 +33777,21 @@ export interface operations {
                                  */
                                 fichas_femo: string | 0;
                                 /**
+                                 * @description Los resultados de lo que pidió (o de sus consultas, si
+                                 *     vinieron sin orden) que nadie ha leído todavía (D3).
+                                 *     Llegan solas del cese: si se acumulan, alguien sale sin su
+                                 *     evaluación de retiro.
+                                 */
+                                resultados_por_revisar: number;
+                                criticos: {
+                                    id: number;
+                                    descripcion: string;
+                                    paciente: string;
+                                    comentario: string | null;
+                                    revisor: string;
+                                    revisado_en: string;
+                                }[];
+                                /**
                                  * @description Evaluaciones ocupacionales con el triaje hecho, listas para
                                  *     que cualquier médico las inicie.
                                  */
