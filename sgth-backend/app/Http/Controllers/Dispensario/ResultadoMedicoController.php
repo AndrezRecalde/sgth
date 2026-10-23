@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dispensario;
 
 use App\Contracts\Dispensario\OrdenExamenServiceInterface;
+use App\Enums\EstadoRevisionResultado;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dispensario\StoreResultadoMedicoRequest;
 use App\Http\Responses\ApiResponse;
@@ -26,11 +27,18 @@ final class ResultadoMedicoController extends Controller
      */
     private const DISCO = 'local';
 
-    /** Quién lo subió y, si vino de una orden, cuál y qué exámenes cubre. */
-    private const RELACIONES = [
+    /**
+     * Quién lo subió y quién lo revisó; si vino de una orden, cuál, quién la
+     * pidió y qué exámenes cubre. Y el paciente, para darle un turno de
+     * control desde un resultado alterado.
+     */
+    public const RELACIONES = [
+        'historiaClinica:id,servidor_id,carga_familiar_id',
         'subidoPor:id,usuario_ti,email,servidor_id',
         'subidoPor.servidor:id,nombre,apellido',
-        'ordenExamen:id,folio,estado',
+        'revisor:id,usuario_ti,email,servidor_id',
+        'revisor.servidor:id,nombre,apellido',
+        'ordenExamen:id,folio,estado,solicitado_por',
         'itemsOrden:id,orden_examen_id,catalogo_examen_id',
         'itemsOrden.examen:id,nombre',
     ];
@@ -96,6 +104,9 @@ final class ResultadoMedicoController extends Controller
                     'descripcion'         => $request->input('descripcion'),
                     'fecha_resultado'     => $request->input('fecha_resultado'),
                     'archivo'             => $ruta,
+                    // Explícito y no por el valor por defecto de la tabla: el
+                    // modelo recién creado no lo lee, y la respuesta salía en null.
+                    'estado_revision'     => EstadoRevisionResultado::POR_REVISAR,
                 ]);
 
                 if ($resultado->orden_examen_id !== null) {

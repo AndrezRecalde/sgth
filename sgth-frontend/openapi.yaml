@@ -54748,6 +54748,172 @@
                 }
             }
         },
+        "/v1/dispensario/resultados-medicos/{id}/revisar": {
+            "patch": {
+                "operationId": "revisionResultado.revisar",
+                "tags": [
+                    "RevisionResultado"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "interpretacion": {
+                                        "type": "string",
+                                        "enum": [
+                                            "normal",
+                                            "alterado",
+                                            "critico"
+                                        ]
+                                    },
+                                    "comentario_medico": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "description": "Un alterado o un cr\u00edtico sin decir qu\u00e9 se vio no le sirve a quien\nlo lea despu\u00e9s.",
+                                        "maxLength": 2000
+                                    }
+                                },
+                                "required": [
+                                    "interpretacion"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Resultado revisado."
+                                        },
+                                        "datos": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/dispensario/resultados-medicos/{id}/enterado": {
+            "patch": {
+                "operationId": "revisionResultado.enterado",
+                "summary": "Quien pidi\u00f3 el examen da por visto un cr\u00edtico que revis\u00f3 otro m\u00e9dico:\ndeja de estar fijo en su \u00abMi jornada\u00bb",
+                "tags": [
+                    "RevisionResultado"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Resultado cr\u00edtico visto."
+                                        },
+                                        "datos": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "example": "Solo quien pidi\u00f3 el examen da por visto su resultado cr\u00edtico."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/sso/riesgos": {
             "get": {
                 "operationId": "riesgos.index",
@@ -72918,6 +73084,15 @@
                 ],
                 "title": "EstadoPostulante"
             },
+            "EstadoRevisionResultado": {
+                "type": "string",
+                "description": "Si un m\u00e9dico ya ley\u00f3 el resultado.\n| |\n|---|\n| `por_revisar` <br/> Reci\u00e9n subido: aparece en \u00abPor revisar\u00bb. |\n| `revisado` <br/>  |",
+                "enum": [
+                    "por_revisar",
+                    "revisado"
+                ],
+                "title": "EstadoRevisionResultado"
+            },
             "EstadoSolicitudAccion": {
                 "type": "string",
                 "description": "En qu\u00e9 qued\u00f3 una solicitud del portal (fase 6.3b): pendiente hasta que Talento Humano prepara su acci\u00f3n \u2014atendida\u2014 o la rechaza con el motivo; el servidor la puede retirar mientras est\u00e1 pendiente.\n",
@@ -75102,6 +75277,16 @@
                     "etiqueta"
                 ],
                 "title": "InstrumentoActoResource"
+            },
+            "InterpretacionResultado": {
+                "type": "string",
+                "description": "La lectura del m\u00e9dico al revisar un resultado (D3).\n| |\n|---|\n| `normal` <br/>  |\n| `alterado` <br/>  |\n| `critico` <br/> Queda fijo en \u00abMi jornada\u00bb de quien pidi\u00f3 el examen hasta que lo ve. |",
+                "enum": [
+                    "normal",
+                    "alterado",
+                    "critico"
+                ],
+                "title": "InterpretacionResultado"
             },
             "InventarioMedicina": {
                 "type": "object",
@@ -81559,6 +81744,45 @@
                             "integer",
                             "null"
                         ]
+                    },
+                    "estado_revision": {
+                        "$ref": "#/components/schemas/EstadoRevisionResultado"
+                    },
+                    "interpretacion": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/InterpretacionResultado"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "comentario_medico": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "revisado_por": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "revisado_en": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "critico_visto_en": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
                     }
                 },
                 "required": [
@@ -81573,7 +81797,13 @@
                     "created_at",
                     "updated_at",
                     "deleted_at",
-                    "orden_examen_id"
+                    "orden_examen_id",
+                    "estado_revision",
+                    "interpretacion",
+                    "comentario_medico",
+                    "revisado_por",
+                    "revisado_en",
+                    "critico_visto_en"
                 ],
                 "title": "ResultadoMedico"
             },

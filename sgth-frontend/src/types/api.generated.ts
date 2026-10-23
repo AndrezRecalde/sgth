@@ -8499,6 +8499,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/dispensario/resultados-medicos/{id}/revisar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["revisionResultado.revisar"];
+        trace?: never;
+    };
+    "/v1/dispensario/resultados-medicos/{id}/enterado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Quien pidió el examen da por visto un crítico que revisó otro médico:
+         *     deja de estar fijo en su «Mi jornada»
+         */
+        patch: operations["revisionResultado.enterado"];
+        trace?: never;
+    };
     "/v1/sso/riesgos": {
         parameters: {
             query?: never;
@@ -12208,6 +12244,16 @@ export interface components {
          */
         EstadoPostulante: "inscrito" | "en_evaluacion" | "aprobado" | "reprobado" | "descalificado" | "seleccionado" | "ganador_potencial" | "no_seleccionado" | "lista_espera" | "incorporado";
         /**
+         * EstadoRevisionResultado
+         * @description Si un médico ya leyó el resultado.
+         *     | |
+         *     |---|
+         *     | `por_revisar` <br/> Recién subido: aparece en «Por revisar». |
+         *     | `revisado` <br/>  |
+         * @enum {string}
+         */
+        EstadoRevisionResultado: "por_revisar" | "revisado";
+        /**
          * EstadoSolicitudAccion
          * @description En qué quedó una solicitud del portal (fase 6.3b): pendiente hasta que Talento Humano prepara su acción —atendida— o la rechaza con el motivo; el servidor la puede retirar mientras está pendiente.
          * @enum {string}
@@ -12793,6 +12839,17 @@ export interface components {
             /** @enum {string} */
             etiqueta: "Acción de personal" | "Registro del contrato" | "Acto de autoridad electa" | "Contrato civil" | "Registro interno (Código del Trabajo)";
         };
+        /**
+         * InterpretacionResultado
+         * @description La lectura del médico al revisar un resultado (D3).
+         *     | |
+         *     |---|
+         *     | `normal` <br/>  |
+         *     | `alterado` <br/>  |
+         *     | `critico` <br/> Queda fijo en «Mi jornada» de quien pidió el examen hasta que lo ve. |
+         * @enum {string}
+         */
+        InterpretacionResultado: "normal" | "alterado" | "critico";
         /** InventarioMedicina */
         InventarioMedicina: {
             id: number;
@@ -14514,6 +14571,14 @@ export interface components {
             /** Format: date-time */
             deleted_at: string | null;
             orden_examen_id: number | null;
+            estado_revision: components["schemas"]["EstadoRevisionResultado"];
+            interpretacion: components["schemas"]["InterpretacionResultado"] | null;
+            comentario_medico: string | null;
+            revisado_por: number | null;
+            /** Format: date-time */
+            revisado_en: string | null;
+            /** Format: date-time */
+            critico_visto_en: string | null;
         };
         /**
          * ResultadoNotificacion
@@ -40770,6 +40835,91 @@ export interface operations {
                     };
                 };
             };
+        };
+    };
+    "revisionResultado.revisar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    interpretacion: "normal" | "alterado" | "critico";
+                    /**
+                     * @description Un alterado o un crítico sin decir qué se vio no le sirve a quien
+                     *     lo lea después.
+                     */
+                    comentario_medico?: string | null;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Resultado revisado.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "revisionResultado.enterado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Resultado crítico visto.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            /** @description An error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Error overview.
+                         * @example Solo quien pidió el examen da por visto su resultado crítico.
+                         */
+                        message: string;
+                    };
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
         };
     };
     "riesgos.index": {
