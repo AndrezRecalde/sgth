@@ -13714,6 +13714,7 @@ export interface components {
             created_at: string | null;
             /** Format: date-time */
             updated_at: string | null;
+            ficha_salud_ocupacional_id: number | null;
             vencida: string;
         };
         /**
@@ -15838,7 +15839,9 @@ export interface components {
          *     firmó el consentimiento (D8).
          */
         StoreOrdenExamenRequest: {
-            consulta_medica_id: number;
+            /** @description De una consulta o de una ficha ocupacional (fase 5), una de dos. */
+            consulta_medica_id?: number | null;
+            ficha_salud_ocupacional_id?: number | null;
             /** Format: date-time */
             fecha_solicitud: string;
             diagnostico_cie10_id?: number | null;
@@ -35982,9 +35985,11 @@ export interface operations {
     };
     "ordenExamen.index": {
         parameters: {
-            query: {
-                historia_clinica_id: number;
+            query?: {
+                /** @description De un paciente, o de una ficha ocupacional (fase 5). */
+                historia_clinica_id?: number | null;
                 consulta_medica_id?: number | null;
+                ficha_salud_ocupacional_id?: number | null;
             };
             header?: never;
             path?: never;
@@ -36038,19 +36043,6 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        mensaje: string;
-                        datos: null;
-                        errores: null;
-                    };
-                };
-            };
             422: components["responses"]["ValidationException"];
         };
     };
