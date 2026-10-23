@@ -42821,6 +42821,94 @@
                 }
             }
         },
+        "/v1/dispensario/ordenes-examen/{orden}/items/{item}/no-realizado": {
+            "patch": {
+                "operationId": "ordenExamen.noRealizado",
+                "summary": "Un examen que no va a volver: el paciente no se lo hizo o el\nlaboratorio no lo hace. Deja de esperarse, con su motivo, y la orden se\nrecalcula. Lo marca quien registra resultados (D2, P1)",
+                "tags": [
+                    "OrdenExamen"
+                ],
+                "parameters": [
+                    {
+                        "name": "orden",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "item",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "motivo_no_realizado": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    }
+                                },
+                                "required": [
+                                    "motivo_no_realizado"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Examen marcado como no realizado."
+                                        },
+                                        "datos": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/estructura/organigrama": {
             "get": {
                 "operationId": "estructura.organigrama",
@@ -54234,51 +54322,7 @@
                     "content": {
                         "multipart/form-data": {
                             "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "historia_clinica_id": {
-                                        "type": "integer"
-                                    },
-                                    "consulta_medica_id": {
-                                        "type": [
-                                            "integer",
-                                            "null"
-                                        ],
-                                        "description": "La consulta, de ese mismo paciente. Solo se comprobaba que\nexistiera: el resultado de un paciente quedaba colgado de la\nconsulta de otro, y se ense\u00f1aba en el panel de este."
-                                    },
-                                    "tipo": {
-                                        "type": "string",
-                                        "enum": [
-                                            "laboratorio",
-                                            "imagen",
-                                            "ecografia",
-                                            "rayos_x",
-                                            "electrocardiograma",
-                                            "otro"
-                                        ]
-                                    },
-                                    "descripcion": {
-                                        "type": "string",
-                                        "maxLength": 500
-                                    },
-                                    "fecha_resultado": {
-                                        "type": "string",
-                                        "format": "date-time"
-                                    },
-                                    "archivo": {
-                                        "type": "string",
-                                        "format": "binary",
-                                        "contentMediaType": "application/octet-stream",
-                                        "maxLength": 10240
-                                    }
-                                },
-                                "required": [
-                                    "historia_clinica_id",
-                                    "tipo",
-                                    "descripcion",
-                                    "fecha_resultado",
-                                    "archivo"
-                                ]
+                                "$ref": "#/components/schemas/StoreResultadoMedicoRequest"
                             }
                         }
                     }
@@ -54299,7 +54343,7 @@
                                             "const": "Resultado m\u00e9dico registrado correctamente."
                                         },
                                         "datos": {
-                                            "$ref": "#/components/schemas/ResultadoMedico"
+                                            "type": "string"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -54315,11 +54359,11 @@
                             }
                         }
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -81293,6 +81337,12 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "orden_examen_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -81306,7 +81356,8 @@
                     "fecha_resultado",
                     "created_at",
                     "updated_at",
-                    "deleted_at"
+                    "deleted_at",
+                    "orden_examen_id"
                 ],
                 "title": "ResultadoMedico"
             },
@@ -86102,6 +86153,69 @@
                     "items"
                 ],
                 "title": "StoreRecetaMedicaRequest"
+            },
+            "StoreResultadoMedicoRequest": {
+                "type": "object",
+                "description": "Subir un resultado: suelto, como siempre, o contra una orden, marcando qu\u00e9\nex\u00e1menes de ella cubre el archivo (fase 3 de docs/diseno-examenes-medicos.md).\n\nLa consulta y la orden, del mismo paciente. La orden, abierta: a una\ncompleta o anulada no se le cuelga nada (regla 2 del dise\u00f1o).",
+                "properties": {
+                    "historia_clinica_id": {
+                        "type": "integer"
+                    },
+                    "consulta_medica_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "La consulta, de ese mismo paciente. Solo se comprobaba que\nexistiera: el resultado de un paciente quedaba colgado de la\nconsulta de otro, y se ense\u00f1aba en el panel de este."
+                    },
+                    "orden_examen_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "tipo": {
+                        "type": "string",
+                        "enum": [
+                            "laboratorio",
+                            "imagen",
+                            "ecografia",
+                            "rayos_x",
+                            "electrocardiograma",
+                            "otro"
+                        ]
+                    },
+                    "descripcion": {
+                        "type": "string",
+                        "maxLength": 500
+                    },
+                    "fecha_resultado": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "archivo": {
+                        "type": "string",
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "maxLength": 10240
+                    },
+                    "items": {
+                        "type": "array",
+                        "description": "Sin orden no hay ex\u00e1menes que marcar; con ella, al menos uno.",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "minItems": 1
+                    }
+                },
+                "required": [
+                    "historia_clinica_id",
+                    "tipo",
+                    "descripcion",
+                    "fecha_resultado",
+                    "archivo"
+                ],
+                "title": "StoreResultadoMedicoRequest"
             },
             "StoreRiesgoLaboralRequest": {
                 "type": "object",

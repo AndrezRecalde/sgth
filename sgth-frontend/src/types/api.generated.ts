@@ -6642,6 +6642,27 @@ export interface paths {
         patch: operations["ordenExamen.anular"];
         trace?: never;
     };
+    "/v1/dispensario/ordenes-examen/{orden}/items/{item}/no-realizado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Un examen que no va a volver: el paciente no se lo hizo o el
+         *     laboratorio no lo hace. Deja de esperarse, con su motivo, y la orden se
+         *     recalcula. Lo marca quien registra resultados (D2, P1)
+         */
+        patch: operations["ordenExamen.noRealizado"];
+        trace?: never;
+    };
     "/v1/estructura/organigrama": {
         parameters: {
             query?: never;
@@ -14476,6 +14497,7 @@ export interface components {
             updated_at: string | null;
             /** Format: date-time */
             deleted_at: string | null;
+            orden_examen_id: number | null;
         };
         /**
          * ResultadoNotificacion
@@ -15817,6 +15839,33 @@ export interface components {
                 duracion: string;
                 observaciones?: string | null;
             }[];
+        };
+        /**
+         * StoreResultadoMedicoRequest
+         * @description Subir un resultado: suelto, como siempre, o contra una orden, marcando qué
+         *     exámenes de ella cubre el archivo (fase 3 de docs/diseno-examenes-medicos.md).
+         *
+         *     La consulta y la orden, del mismo paciente. La orden, abierta: a una
+         *     completa o anulada no se le cuelga nada (regla 2 del diseño).
+         */
+        StoreResultadoMedicoRequest: {
+            historia_clinica_id: number;
+            /**
+             * @description La consulta, de ese mismo paciente. Solo se comprobaba que
+             *     existiera: el resultado de un paciente quedaba colgado de la
+             *     consulta de otro, y se enseñaba en el panel de este.
+             */
+            consulta_medica_id?: number | null;
+            orden_examen_id?: number | null;
+            /** @enum {string} */
+            tipo: "laboratorio" | "imagen" | "ecografia" | "rayos_x" | "electrocardiograma" | "otro";
+            descripcion: string;
+            /** Format: date-time */
+            fecha_resultado: string;
+            /** Format: binary */
+            archivo: string;
+            /** @description Sin orden no hay exámenes que marcar; con ella, al menos uno. */
+            items?: number[];
         };
         /** StoreRiesgoLaboralRequest */
         StoreRiesgoLaboralRequest: {
@@ -35696,6 +35745,43 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "ordenExamen.noRealizado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orden: number;
+                item: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    motivo_no_realizado: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Examen marcado como no realizado.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "estructura.organigrama": {
         parameters: {
             query?: never;
@@ -40503,22 +40589,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "multipart/form-data": {
-                    historia_clinica_id: number;
-                    /**
-                     * @description La consulta, de ese mismo paciente. Solo se comprobaba que
-                     *     existiera: el resultado de un paciente quedaba colgado de la
-                     *     consulta de otro, y se enseñaba en el panel de este.
-                     */
-                    consulta_medica_id?: number | null;
-                    /** @enum {string} */
-                    tipo: "laboratorio" | "imagen" | "ecografia" | "rayos_x" | "electrocardiograma" | "otro";
-                    descripcion: string;
-                    /** Format: date-time */
-                    fecha_resultado: string;
-                    /** Format: binary */
-                    archivo: string;
-                };
+                "multipart/form-data": components["schemas"]["StoreResultadoMedicoRequest"];
             };
         };
         responses: {
@@ -40531,7 +40602,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Resultado médico registrado correctamente.";
-                        datos: components["schemas"]["ResultadoMedico"];
+                        datos: string;
                         meta: null;
                     };
                 };
