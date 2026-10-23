@@ -26,11 +26,16 @@ final class ResultadoMedicoController extends Controller
      */
     private const DISCO = 'local';
 
-    /** Quién lo subió y, si vino de una orden, cuál y qué exámenes cubre. */
-    private const RELACIONES = [
+    /**
+     * Quién lo subió y quién lo revisó; si vino de una orden, cuál, quién la
+     * pidió y qué exámenes cubre.
+     */
+    public const RELACIONES = [
         'subidoPor:id,usuario_ti,email,servidor_id',
         'subidoPor.servidor:id,nombre,apellido',
-        'ordenExamen:id,folio,estado',
+        'revisor:id,usuario_ti,email,servidor_id',
+        'revisor.servidor:id,nombre,apellido',
+        'ordenExamen:id,folio,estado,solicitado_por',
         'itemsOrden:id,orden_examen_id,catalogo_examen_id',
         'itemsOrden.examen:id,nombre',
     ];

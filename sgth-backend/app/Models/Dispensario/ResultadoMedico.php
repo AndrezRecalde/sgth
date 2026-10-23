@@ -2,6 +2,8 @@
 
 namespace App\Models\Dispensario;
 
+use App\Enums\EstadoRevisionResultado;
+use App\Enums\InterpretacionResultado;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -24,13 +26,35 @@ class ResultadoMedico extends Model
         'descripcion',
         'archivo',
         'fecha_resultado',
+        'estado_revision',
+        'interpretacion',
+        'comentario_medico',
+        'revisado_por',
+        'revisado_en',
+        'critico_visto_en',
     ];
 
     protected function casts(): array
     {
         return [
-            'fecha_resultado' => 'date',
+            'fecha_resultado'   => 'date',
+            'estado_revision'   => EstadoRevisionResultado::class,
+            'interpretacion'    => InterpretacionResultado::class,
+            // Como las notas de la consulta: es lectura clínica del paciente.
+            'comentario_medico' => 'encrypted',
+            'revisado_en'       => 'datetime',
+            'critico_visto_en'  => 'datetime',
         ];
+    }
+
+    /**
+     * Quién responde por este resultado: quien pidió la orden o, si vino
+     * suelto, quien atendió la consulta. Es a quien se le queda fijo un
+     * crítico en «Mi jornada» (D3). Necesita cargadas la orden y la consulta.
+     */
+    public function responsableId(): ?int
+    {
+        return $this->ordenExamen?->solicitado_por ?? $this->consultaMedica?->medico_id;
     }
 
     public function historiaClinica(): BelongsTo
@@ -46,6 +70,11 @@ class ResultadoMedico extends Model
     public function subidoPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'subido_por');
+    }
+
+    public function revisor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'revisado_por');
     }
 
     /** La orden de la que vino, si vino de una. */

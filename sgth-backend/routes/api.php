@@ -66,6 +66,7 @@ use App\Http\Controllers\Dispensario\PacienteController;
 use App\Http\Controllers\Dispensario\PersonalMedicoController;
 use App\Http\Controllers\Dispensario\RecetaController;
 use App\Http\Controllers\Dispensario\ResultadoMedicoController;
+use App\Http\Controllers\Dispensario\RevisionResultadoController;
 use App\Http\Controllers\Dispensario\SolicitudCertificacionController;
 use App\Http\Controllers\Dispensario\TriajeController;
 use App\Http\Controllers\Estructura\CargoController;
@@ -2164,6 +2165,14 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                     ->whereNumber('id');
                 Route::delete('{id}', [ResultadoMedicoController::class, 'destroy'])
                     ->middleware('role:medico|odontologo|admin-dispensario');
+                // La lectura del médico (D3): normal, alterado o crítico; y
+                // quien pidió el examen da por visto un crítico ajeno.
+                Route::patch('{id}/revisar', [RevisionResultadoController::class, 'revisar'])
+                    ->middleware('role:medico|odontologo')
+                    ->whereNumber('id');
+                Route::patch('{id}/enterado', [RevisionResultadoController::class, 'enterado'])
+                    ->middleware('role:medico|odontologo')
+                    ->whereNumber('id');
             });
 
         // Catálogo de exámenes (docs/diseno-examenes-medicos.md, fase 1): lo
