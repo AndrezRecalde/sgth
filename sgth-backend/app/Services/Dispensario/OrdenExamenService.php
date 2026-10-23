@@ -6,12 +6,15 @@ use App\Contracts\Dispensario\OrdenExamenServiceInterface;
 use App\Enums\EstadoItemOrdenExamen;
 use App\Enums\EstadoOrdenExamen;
 use App\Exceptions\ReglaNegocioException;
+use App\Models\Dispensario\ItemOrdenExamen;
 use App\Models\Dispensario\OrdenExamen;
+use App\Models\Dispensario\ResultadoMedico;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Emitir y anular órdenes de exámenes. El molde es la receta: folio del año
- * con bloqueo, anulación con motivo y sin borrado.
+ * El ciclo de una orden de exámenes: emitirla, anularla y colgarle lo que
+ * vuelve del laboratorio. El molde es la receta: folio del año con bloqueo,
+ * anulación con motivo y sin borrado.
  */
 final class OrdenExamenService implements OrdenExamenServiceInterface
 {
@@ -69,6 +72,129 @@ final class OrdenExamenService implements OrdenExamenServiceInterface
 
             return $orden;
         });
+    }
+
+    /**
+     * Cuelga el resultado de los exámenes que cubre: cada uno pasa a recibido
+     * y la orden recalcula su estado.
+     *
+     * Con la orden bloqueada (la lección de la #506): dos resultados subidos a
+     * la vez no se pisan el recálculo. El request ya comprobó lo mismo, pero
+     * entre su lectura y esta escritura pudo llegar otro.
+     */
+    public function adjuntarResultado(ResultadoMedico $resultado, array $itemIds): void
+    {
+        DB::transaction(function () use ($resultado, $itemIds) {
+            $orden = OrdenExamen::lockForUpdate()->findOrFail($resultado->orden_examen_id);
+            $this->exigirAbierta($orden, 'el resultado se sube sin orden o contra una orden nueva');
+
+            $itemIds = array_values(array_unique($itemIds));
+            $items = $orden->items()->with('examen:id,nombre')->whereKey($itemIds)->get();
+
+            if ($items->count() !== count($itemIds)) {
+                throw new ReglaNegocioException("Hay exámenes que no son de la orden {$orden->folio}.");
+            }
+
+            $recibidos = $items->where('estado', EstadoItemOrdenExamen::RECIBIDO);
+            if ($recibidos->isNotEmpty()) {
+                throw new ReglaNegocioException(
+                    "Ya tienen resultado en la orden {$orden->folio}: "
+                    . $recibidos->map(fn (ItemOrdenExamen $i) => $i->examen?->nombre)->implode(', ')
+                    . '. Si se subió el archivo equivocado, retírelo antes.'
+                );
+            }
+
+            // Uno marcado como no realizado también se cubre: el paciente se lo
+            // hizo después de todo.
+            $resultado->itemsOrden()->attach($itemIds);
+            ItemOrdenExamen::whereKey($itemIds)->update([
+                'estado'              => EstadoItemOrdenExamen::RECIBIDO,
+                'motivo_no_realizado' => null,
+            ]);
+
+            $this->recalcularEstado($orden);
+        });
+    }
+
+    /** El paciente no se lo hizo o el laboratorio no lo hace: deja de esperarse. */
+    public function marcarNoRealizado(int $ordenId, int $itemId, string $motivo): ItemOrdenExamen
+    {
+        return DB::transaction(function () use ($ordenId, $itemId, $motivo) {
+            $orden = OrdenExamen::lockForUpdate()->findOrFail($ordenId);
+            $this->exigirAbierta($orden, 'ya no espera resultados');
+
+            $item = $orden->items()->with('examen:id,nombre')->findOrFail($itemId);
+
+            if ($item->estado !== EstadoItemOrdenExamen::PENDIENTE) {
+                throw new ReglaNegocioException(
+                    "{$item->examen?->nombre} ya no está pendiente en la orden {$orden->folio}."
+                );
+            }
+
+            $item->update([
+                'estado'              => EstadoItemOrdenExamen::NO_REALIZADO,
+                'motivo_no_realizado' => $motivo,
+            ]);
+
+            $this->recalcularEstado($orden);
+
+            return $item;
+        });
+    }
+
+    /**
+     * Al retirar un resultado, los exámenes que cubría y que ningún otro
+     * cubre vuelven a pendiente, y la orden se recalcula: una completa puede
+     * reabrirse (regla 4 del diseño). Se llama después de retirarlo, para que
+     * ya no cuente entre los que cubren.
+     */
+    public function liberarResultado(ResultadoMedico $resultado): void
+    {
+        if ($resultado->orden_examen_id === null) {
+            return;
+        }
+
+        DB::transaction(function () use ($resultado) {
+            $orden = OrdenExamen::lockForUpdate()->findOrFail($resultado->orden_examen_id);
+
+            $resultado->itemsOrden()
+                ->where('orden_examen_items.estado', EstadoItemOrdenExamen::RECIBIDO)
+                ->get()
+                ->reject(fn (ItemOrdenExamen $item) => $item->resultados()->exists())
+                ->each(fn (ItemOrdenExamen $item) => $item->update(['estado' => EstadoItemOrdenExamen::PENDIENTE]));
+
+            $this->recalcularEstado($orden);
+        });
+    }
+
+    /**
+     * El estado de la orden sale de sus exámenes: ninguno resuelto, emitida;
+     * todos recibidos o no realizados, completa; si no, parcial. Una anulada
+     * se queda anulada aunque le lleguen o le quiten resultados.
+     */
+    private function recalcularEstado(OrdenExamen $orden): void
+    {
+        if ($orden->estado === EstadoOrdenExamen::ANULADA) {
+            return;
+        }
+
+        $estados = $orden->items()->pluck('estado');
+        $pendientes = $estados->filter(fn ($e) => $e === EstadoItemOrdenExamen::PENDIENTE)->count();
+
+        $orden->update(['estado' => match (true) {
+            $pendientes === $estados->count() => EstadoOrdenExamen::EMITIDA,
+            $pendientes === 0                 => EstadoOrdenExamen::COMPLETA,
+            default                           => EstadoOrdenExamen::PARCIAL,
+        }]);
+    }
+
+    private function exigirAbierta(OrdenExamen $orden, string $consecuencia): void
+    {
+        if (! $orden->estado->abierta()) {
+            throw new ReglaNegocioException(
+                "La orden {$orden->folio} está {$orden->estado->value}: {$consecuencia}."
+            );
+        }
     }
 
     /**

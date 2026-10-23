@@ -57,6 +57,12 @@ class OrdenExamen extends Model
         return $this->hasMany(ItemOrdenExamen::class)->orderBy('id');
     }
 
+    /** Lo que volvió del laboratorio contra esta orden. */
+    public function resultados(): HasMany
+    {
+        return $this->hasMany(ResultadoMedico::class);
+    }
+
     public function historiaClinica(): BelongsTo
     {
         return $this->belongsTo(HistoriaClinica::class);
