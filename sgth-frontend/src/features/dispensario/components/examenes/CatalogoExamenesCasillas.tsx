@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Card, Checkbox, Group, SimpleGrid, Stack, Text, TextInput } from '@mantine/core'
 import { StatusBadge } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
+import { filtrarPorNombre } from '../../utils/buscarExamen'
 import type { AreaExamen, CatalogoExamen } from '../../services/examenService'
 
 interface Props {
@@ -11,11 +12,6 @@ interface Props {
   areas:      AreaExamen[]
   marcados:   ReadonlySet<number>
   onAlternar: (examen: CatalogoExamen) => void
-}
-
-/** Sin tildes ni mayúsculas: «glucosa» encuentra «Glucosa» y «acido» a «Ácido úrico». */
-function normalizar(texto: string): string {
-  return texto.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
 }
 
 /**
@@ -27,10 +23,7 @@ export function CatalogoExamenesCasillas({ examenes, areas, marcados, onAlternar
   const contained = useContainedInput()
   const [filtro, setFiltro] = useState('')
 
-  const buscado = normalizar(filtro.trim())
-  const visibles = buscado
-    ? examenes.filter((e) => normalizar(e.nombre).includes(buscado))
-    : examenes
+  const visibles = filtrarPorNombre(examenes, filtro)
   const grupos = areas
     .map((area) => ({ area, examenes: visibles.filter((e) => e.area === area.value) }))
     .filter((g) => g.examenes.length > 0)

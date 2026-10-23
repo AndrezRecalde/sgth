@@ -112,6 +112,8 @@ export const ROUTES = {
       `/salud/consultas/${encodeURIComponent(folio)}`,
     ODONTOLOGIA_TURNO: (folio: string) =>
       `/salud/odontologia/${encodeURIComponent(folio)}`,
+    /** Perfiles y catálogo de exámenes; se piden desde la atención. */
+    EXAMENES:     '/salud/examenes',
     ENFERMERIA:      '/salud/enfermeria',
     ENFERMERIA_COLA: '/salud/enfermeria/cola',
     ENFERMERIA_SSO:  '/salud/enfermeria/sso',
