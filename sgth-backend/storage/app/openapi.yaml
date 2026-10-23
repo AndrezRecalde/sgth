@@ -27439,6 +27439,155 @@
                 }
             }
         },
+        "/v1/dispensario/fichas-sso/examenes-por-riesgo": {
+            "get": {
+                "operationId": "examenesPorRiesgo.index",
+                "summary": "Los factores que tienen ex\u00e1menes, cada uno con los suyos en el orden de la hoja",
+                "tags": [
+                    "ExamenesPorRiesgo"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Ex\u00e1menes por factor de riesgo."
+                                        },
+                                        "datos": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "examenesPorRiesgo.update",
+                "summary": "Los ex\u00e1menes de un factor: reemplaza los que ten\u00eda. Una lista vac\u00eda lo deja sin ninguno",
+                "tags": [
+                    "ExamenesPorRiesgo"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "categoria": {
+                                        "type": "string",
+                                        "enum": [
+                                            "fisico",
+                                            "seguridad",
+                                            "quimico",
+                                            "biologico",
+                                            "ergonomico",
+                                            "psicosocial"
+                                        ]
+                                    },
+                                    "factor": {
+                                        "type": "string",
+                                        "maxLength": 150
+                                    },
+                                    "examenes": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "maxItems": 30
+                                    }
+                                },
+                                "required": [
+                                    "categoria",
+                                    "factor",
+                                    "examenes"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Ex\u00e1menes del factor guardados."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "categoria": {
+                                                    "type": "string"
+                                                },
+                                                "factor": {
+                                                    "type": "string"
+                                                },
+                                                "examenes": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/CatalogoExamen"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "categoria",
+                                                "factor",
+                                                "examenes"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/expediente/servidores-export/excel": {
             "get": {
                 "operationId": "exportServidores.excel",
