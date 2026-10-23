@@ -4102,6 +4102,24 @@ export interface paths {
         patch: operations["evaluacionPsicosocial.cerrar"];
         trace?: never;
     };
+    "/v1/dispensario/fichas-sso/examenes-por-riesgo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Los factores que tienen exámenes, cada uno con los suyos en el orden de la hoja */
+        get: operations["examenesPorRiesgo.index"];
+        /** Los exámenes de un factor: reemplaza los que tenía. Una lista vacía lo deja sin ninguno */
+        put: operations["examenesPorRiesgo.update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/expediente/servidores-export/excel": {
         parameters: {
             query?: never;
@@ -29373,6 +29391,72 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "examenesPorRiesgo.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Exámenes por factor de riesgo.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "examenesPorRiesgo.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    categoria: "fisico" | "seguridad" | "quimico" | "biologico" | "ergonomico" | "psicosocial";
+                    factor: string;
+                    examenes: number[];
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Exámenes del factor guardados.";
+                        datos: {
+                            categoria: string;
+                            factor: string;
+                            examenes: components["schemas"]["CatalogoExamen"][];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "exportServidores.excel": {

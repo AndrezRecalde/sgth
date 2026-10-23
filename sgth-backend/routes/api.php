@@ -57,6 +57,7 @@ use App\Http\Controllers\Dispensario\DisponibilidadController;
 use App\Http\Controllers\Dispensario\CertificadoAptitudController;
 use App\Http\Controllers\Dispensario\CoberturaCertificacionController;
 use App\Http\Controllers\Dispensario\FemoPdfController;
+use App\Http\Controllers\Dispensario\ExamenesPorRiesgoController;
 use App\Http\Controllers\Dispensario\FemoResultadosController;
 use App\Http\Controllers\Dispensario\FichaSaludOcupacionalController;
 use App\Http\Controllers\Dispensario\HistoriaClinicaController;
@@ -2147,6 +2148,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 Route::get('catalogo-riesgos', [FichaSaludOcupacionalController::class, 'catalogoRiesgos']);
                 // Lo que la sección J puede traer de los resultados del paciente.
                 Route::get('resultados-del-paciente', [FemoResultadosController::class, 'index']);
+                // Qué exámenes pide cada factor de riesgo del puesto (D6).
+                Route::get('examenes-por-riesgo', [ExamenesPorRiesgoController::class, 'index']);
+                Route::put('examenes-por-riesgo', [ExamenesPorRiesgoController::class, 'update']);
                 Route::get('/', [FichaSaludOcupacionalController::class, 'index']);
                 Route::post('/', [FichaSaludOcupacionalController::class, 'store']);
                 Route::get('{id}', [FichaSaludOcupacionalController::class, 'show']);
