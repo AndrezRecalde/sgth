@@ -38192,6 +38192,48 @@
                                                                         }
                                                                     ]
                                                                 },
+                                                                "resultados_por_revisar": {
+                                                                    "type": "integer",
+                                                                    "description": "Los resultados de lo que pidi\u00f3 (o de sus consultas, si\nvinieron sin orden) que nadie ha le\u00eddo todav\u00eda (D3).\nLlegan solas del cese: si se acumulan, alguien sale sin su\nevaluaci\u00f3n de retiro.",
+                                                                    "minimum": 0
+                                                                },
+                                                                "criticos": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "id": {
+                                                                                "type": "integer"
+                                                                            },
+                                                                            "descripcion": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "paciente": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "comentario": {
+                                                                                "type": [
+                                                                                    "string",
+                                                                                    "null"
+                                                                                ]
+                                                                            },
+                                                                            "revisor": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "revisado_en": {
+                                                                                "type": "string"
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "id",
+                                                                            "descripcion",
+                                                                            "paciente",
+                                                                            "comentario",
+                                                                            "revisor",
+                                                                            "revisado_en"
+                                                                        ]
+                                                                    }
+                                                                },
                                                                 "evaluaciones_listas": {
                                                                     "description": "Evaluaciones ocupacionales con el triaje hecho, listas para\nque cualquier m\u00e9dico las inicie.",
                                                                     "anyOf": [
@@ -38210,6 +38252,8 @@
                                                             "required": [
                                                                 "borradores",
                                                                 "fichas_femo",
+                                                                "resultados_por_revisar",
+                                                                "criticos",
                                                                 "evaluaciones_listas"
                                                             ]
                                                         },
