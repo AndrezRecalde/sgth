@@ -43252,6 +43252,266 @@
                 }
             }
         },
+        "/v1/dispensario/perfiles-examen": {
+            "get": {
+                "operationId": "perfilExamen.index",
+                "tags": [
+                    "PerfilExamen"
+                ],
+                "parameters": [
+                    {
+                        "name": "especialidad",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "medicina_general",
+                                "odontologia"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "incluir_inactivos",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "boolean",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Perfiles de ex\u00e1menes."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/PerfilExamen"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "perfilExamen.store",
+                "tags": [
+                    "PerfilExamen"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StorePerfilExamenRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Perfil creado."
+                                        },
+                                        "datos": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Solo puede armar perfiles de su especialidad."
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "errores": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "errores"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/dispensario/perfiles-examen/{perfil}": {
+            "patch": {
+                "operationId": "perfilExamen.update",
+                "summary": "Corrige un perfil o lo retira. No hay borrado: retirarlo basta para que\ndeje de ofrecerse, y las \u00f3rdenes nunca lo nombran (copian sus ex\u00e1menes)",
+                "tags": [
+                    "PerfilExamen"
+                ],
+                "parameters": [
+                    {
+                        "name": "perfil",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdatePerfilExamenRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Perfil actualizado."
+                                        },
+                                        "datos": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Solo puede armar perfiles de su especialidad."
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "errores": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "errores"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/v1/expediente/periodos-de-prueba": {
             "get": {
                 "operationId": "periodoDePrueba.index",
@@ -77406,6 +77666,64 @@
                 ],
                 "title": "PartidaPresupuestaria"
             },
+            "PerfilExamen": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "nombre": {
+                        "type": "string"
+                    },
+                    "descripcion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "especialidad": {
+                        "$ref": "#/components/schemas/EspecialidadAtencion"
+                    },
+                    "ocupacional": {
+                        "type": "boolean"
+                    },
+                    "activo": {
+                        "type": "boolean"
+                    },
+                    "created_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "nombre",
+                    "descripcion",
+                    "especialidad",
+                    "ocupacional",
+                    "activo",
+                    "created_by",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "PerfilExamen"
+            },
             "PeriodoVacacion": {
                 "type": "object",
                 "properties": {
@@ -84986,6 +85304,47 @@
                 ],
                 "title": "StorePartidaPresupuestariaRequest"
             },
+            "StorePerfilExamenRequest": {
+                "type": "object",
+                "description": "Un perfil de ex\u00e1menes nuevo.",
+                "properties": {
+                    "especialidad": {
+                        "type": "string",
+                        "enum": [
+                            "medicina_general",
+                            "odontologia"
+                        ]
+                    },
+                    "nombre": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "descripcion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 300
+                    },
+                    "ocupacional": {
+                        "type": "boolean"
+                    },
+                    "examenes": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "minItems": 1,
+                        "maxItems": 100
+                    }
+                },
+                "required": [
+                    "especialidad",
+                    "nombre",
+                    "examenes"
+                ],
+                "title": "StorePerfilExamenRequest"
+            },
             "StorePermisoServidorRequest": {
                 "type": "object",
                 "description": "Forma de los datos, no reglas de negocio.\n\nAqu\u00ed viv\u00edan adem\u00e1s el tope de 4 horas y la observaci\u00f3n obligatoria del\npermiso oficial, repetidos en `PermisoService`. Dos copias de la misma regla\nya hab\u00edan divergido: esta med\u00eda con `diffInHours()`, que redondea, y la del\nservicio contaba minutos. Y ninguna de las dos pod\u00eda expresar las reglas que\nde verdad hacen falta \u2014el tope es por d\u00eda y no por solicitud, y la fecha\nadmitida depende del tipo\u2014, porque para eso hay que consultar la base.\n\nSe quedan las comprobaciones que solo miran lo que lleg\u00f3 en la petici\u00f3n. El\nresto est\u00e1 en el servicio, en un solo sitio.",
@@ -90000,6 +90359,45 @@
                     }
                 },
                 "title": "UpdatePartidaPresupuestariaRequest"
+            },
+            "UpdatePerfilExamenRequest": {
+                "type": "object",
+                "description": "Corrige un perfil, lo retira (`activo: false`) o lo devuelve. Todo es\nopcional; si vienen los ex\u00e1menes, reemplazan a los que ten\u00eda.",
+                "properties": {
+                    "especialidad": {
+                        "type": "string",
+                        "enum": [
+                            "medicina_general",
+                            "odontologia"
+                        ]
+                    },
+                    "nombre": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "descripcion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 300
+                    },
+                    "ocupacional": {
+                        "type": "boolean"
+                    },
+                    "activo": {
+                        "type": "boolean"
+                    },
+                    "examenes": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "minItems": 1,
+                        "maxItems": 100
+                    }
+                },
+                "title": "UpdatePerfilExamenRequest"
             },
             "UpdatePuestoRequest": {
                 "type": "object",

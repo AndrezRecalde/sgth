@@ -6703,6 +6703,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/dispensario/perfiles-examen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["perfilExamen.index"];
+        put?: never;
+        post: operations["perfilExamen.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/dispensario/perfiles-examen/{perfil}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Corrige un perfil o lo retira. No hay borrado: retirarlo basta para que
+         *     deje de ofrecerse, y las órdenes nunca lo nombran (copian sus exámenes)
+         */
+        patch: operations["perfilExamen.update"];
+        trace?: never;
+    };
     "/v1/expediente/periodos-de-prueba": {
         parameters: {
             query?: never;
@@ -13446,6 +13482,20 @@ export interface components {
             updated_at: string | null;
             disponible: boolean;
         };
+        /** PerfilExamen */
+        PerfilExamen: {
+            id: number;
+            nombre: string;
+            descripcion: string | null;
+            especialidad: components["schemas"]["EspecialidadAtencion"];
+            ocupacional: boolean;
+            activo: boolean;
+            created_by: number | null;
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
         /** PeriodoVacacion */
         PeriodoVacacion: {
             id: number;
@@ -15519,6 +15569,18 @@ export interface components {
             disponible?: boolean;
         };
         /**
+         * StorePerfilExamenRequest
+         * @description Un perfil de exámenes nuevo.
+         */
+        StorePerfilExamenRequest: {
+            /** @enum {string} */
+            especialidad: "medicina_general" | "odontologia";
+            nombre: string;
+            descripcion?: string | null;
+            ocupacional?: boolean;
+            examenes: number[];
+        };
+        /**
          * StorePermisoServidorRequest
          * @description Forma de los datos, no reglas de negocio.
          *
@@ -16934,6 +16996,20 @@ export interface components {
             grupo_gasto?: string | null;
             activo?: boolean;
             disponible?: boolean;
+        };
+        /**
+         * UpdatePerfilExamenRequest
+         * @description Corrige un perfil, lo retira (`activo: false`) o lo devuelve. Todo es
+         *     opcional; si vienen los exámenes, reemplazan a los que tenía.
+         */
+        UpdatePerfilExamenRequest: {
+            /** @enum {string} */
+            especialidad?: "medicina_general" | "odontologia";
+            nombre?: string;
+            descripcion?: string | null;
+            ocupacional?: boolean;
+            activo?: boolean;
+            examenes?: number[];
         };
         /** UpdatePuestoRequest */
         UpdatePuestoRequest: {
@@ -35651,6 +35727,128 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "perfilExamen.index": {
+        parameters: {
+            query?: {
+                especialidad?: "medicina_general" | "odontologia" | null;
+                incluir_inactivos?: boolean | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Perfiles de exámenes.";
+                        datos: components["schemas"]["PerfilExamen"][];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "perfilExamen.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StorePerfilExamenRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Perfil creado.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Solo puede armar perfiles de su especialidad.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "perfilExamen.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                perfil: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["UpdatePerfilExamenRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Perfil actualizado.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Solo puede armar perfiles de su especialidad.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
             422: components["responses"]["ValidationException"];
         };
     };
