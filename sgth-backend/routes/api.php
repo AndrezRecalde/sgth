@@ -46,6 +46,7 @@ use App\Http\Controllers\Dispensario\AntecedentePacienteController;
 use App\Http\Controllers\Dispensario\AtencionEnfermeriaController;
 use App\Http\Controllers\Dispensario\CatalogoExamenController;
 use App\Http\Controllers\Dispensario\PerfilExamenController;
+use App\Http\Controllers\Dispensario\OrdenExamenController;
 use App\Http\Controllers\Dispensario\CertificadoMedicoController;
 use App\Http\Controllers\Dispensario\BorradorConsultaController;
 use App\Http\Controllers\Dispensario\ConsultaMedicaController;
@@ -2183,6 +2184,21 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::patch('{perfil}', [PerfilExamenController::class, 'update'])
                 ->middleware('role:medico|odontologo|admin-dispensario')
                 ->whereNumber('perfil');
+        });
+
+        // Órdenes de exámenes: las emite el médico o el odontólogo en su
+        // consulta; las anula quien las emitió o la administración.
+        Route::prefix('ordenes-examen')->group(function () {
+            Route::get('/', [OrdenExamenController::class, 'index'])
+                ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
+            Route::post('/', [OrdenExamenController::class, 'store'])
+                ->middleware('role:medico|odontologo');
+            Route::get('{orden}', [OrdenExamenController::class, 'show'])
+                ->middleware('role:medico|odontologo|enfermera|admin-dispensario')
+                ->whereNumber('orden');
+            Route::patch('{orden}/anular', [OrdenExamenController::class, 'anular'])
+                ->middleware('role:medico|odontologo|admin-dispensario')
+                ->whereNumber('orden');
         });
     });
 

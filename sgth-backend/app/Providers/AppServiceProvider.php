@@ -28,6 +28,8 @@ use App\Contracts\Dispensario\HistoriaClinicaServiceInterface;
 use App\Services\Dispensario\HistoriaClinicaService;
 use App\Contracts\Dispensario\RecetaServiceInterface;
 use App\Services\Dispensario\RecetaService;
+use App\Contracts\Dispensario\OrdenExamenServiceInterface;
+use App\Services\Dispensario\OrdenExamenService;
 use App\Contracts\Dispensario\EstadisticasDispensarioServiceInterface;
 use App\Services\Dispensario\EstadisticasDispensarioService;
 use App\Contracts\Dispensario\AgendaServiceInterface;
@@ -109,6 +111,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             RecetaServiceInterface::class,
             RecetaService::class
+        );
+        $this->app->bind(
+            OrdenExamenServiceInterface::class,
+            OrdenExamenService::class
         );
         $this->app->bind(
             EstadisticasDispensarioServiceInterface::class,
