@@ -42672,6 +42672,47 @@
                 }
             }
         },
+        "/v1/dispensario/ordenes-examen/{orden}/pdf": {
+            "get": {
+                "operationId": "dispensario.ordenes-examen.pdf",
+                "summary": "El impreso que el paciente lleva al laboratorio, tambi\u00e9n el de una anulada",
+                "tags": [
+                    "OrdenExamen"
+                ],
+                "parameters": [
+                    {
+                        "name": "orden",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/dispensario/ordenes-examen/{orden}/anular": {
             "patch": {
                 "operationId": "ordenExamen.anular",

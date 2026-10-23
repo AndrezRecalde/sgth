@@ -6608,6 +6608,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/dispensario/ordenes-examen/{orden}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** El impreso que el paciente lleva al laboratorio, también el de una anulada */
+        get: operations["dispensario.ordenes-examen.pdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/dispensario/ordenes-examen/{orden}/anular": {
         parameters: {
             query?: never;
@@ -35605,6 +35622,29 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "dispensario.ordenes-examen.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orden: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
         };
     };
     "ordenExamen.anular": {
