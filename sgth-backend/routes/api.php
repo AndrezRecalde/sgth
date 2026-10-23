@@ -46,6 +46,7 @@ use App\Http\Controllers\Dispensario\AntecedentePacienteController;
 use App\Http\Controllers\Dispensario\AtencionEnfermeriaController;
 use App\Http\Controllers\Dispensario\CatalogoExamenController;
 use App\Http\Controllers\Dispensario\PerfilExamenController;
+use App\Http\Controllers\Dispensario\BandejaExamenesController;
 use App\Http\Controllers\Dispensario\OrdenExamenController;
 use App\Http\Controllers\Dispensario\CertificadoMedicoController;
 use App\Http\Controllers\Dispensario\BorradorConsultaController;
@@ -2188,6 +2189,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 ->middleware('role:medico|odontologo|admin-dispensario')
                 ->whereNumber('perfil');
         });
+
+        // La bandeja: las órdenes que esperan resultados. Enfermería la ve
+        // para el seguimiento.
+        Route::get('examenes/bandeja', [BandejaExamenesController::class, 'index'])
+            ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
 
         // Órdenes de exámenes: las emite el médico o el odontólogo en su
         // consulta; las anula quien las emitió o la administración.
