@@ -3,7 +3,7 @@ import { ExamenesView } from './ExamenesView'
 
 export const metadata: Metadata = {
   title: 'Exámenes',
-  description: 'Perfiles y catálogo de exámenes del Dispensario',
+  description: 'Órdenes que esperan resultados, perfiles y catálogo de exámenes del Dispensario',
 }
 
 export default function ExamenesPage() {

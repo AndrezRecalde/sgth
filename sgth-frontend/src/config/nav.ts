@@ -363,12 +363,12 @@ export const NAV_SALUD: NavGroup[] = [
         icon:  'IconDental',
       },
       {
-        // Perfiles para quien pide exámenes y el catálogo para la
-        // administración; el API no deja armar perfiles a Enfermería.
+        // La bandeja de lo que espera resultados —Enfermería la mira para el
+        // seguimiento—, los perfiles y, para la administración, el catálogo.
         label: 'Exámenes',
         href:  ROUTES.SALUD.EXAMENES,
         icon:  'IconFlask',
-        roles: ['medico', 'odontologo', 'admin-dispensario'],
+        roles: ['medico', 'odontologo', 'enfermera', 'admin-dispensario'],
       },
       {
         label:    'Enfermería',
