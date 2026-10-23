@@ -41,6 +41,8 @@ final class ResultadoMedicoController extends Controller
         'ordenExamen:id,folio,estado,solicitado_por',
         'itemsOrden:id,orden_examen_id,catalogo_examen_id',
         'itemsOrden.examen:id,nombre',
+        // Si lo envió el paciente desde el Portal (fase 6): la tarjeta lo dice.
+        'envioPortal:id,resultado_medico_id,comentario,created_at',
     ];
 
     public function __construct(
