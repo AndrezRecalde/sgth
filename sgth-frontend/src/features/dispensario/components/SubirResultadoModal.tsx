@@ -1,206 +1,158 @@
-"use client";
+'use client'
 
+import { FileInput, Select, Stack, Textarea } from '@mantine/core'
+import { DatePickerInput } from '@mantine/dates'
+import { useQuery } from '@tanstack/react-query'
+import { Controller, useForm, useWatch } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { FormModal } from '@/components/ui'
+import { useContainedInput } from '@/hooks/useContainedInput'
+import { erroresAlFormulario } from '@/lib/erroresAlFormulario'
+import { formatFechaMes, hoyIso } from '@/lib/fecha'
+import { useSubirResultado } from '../hooks/useResultadoMedico'
+import { useOrdenesExamen } from '../hooks/useExamenes'
 import {
-  Stack,
-  Select,
-  Textarea,
-  Text,
-  FileInput,
-} from "@mantine/core";
-import { ModalFooter, SgthModal } from "@/components/ui";
-import { DatePickerInput } from "@mantine/dates";
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useContainedInput } from "@/hooks/useContainedInput";
-import { formatFechaMes, fromDateValue } from "@/lib/fecha";
-import { useSubirResultado } from "../hooks/useResultadoMedico";
-import { TIPO_RESULTADO_OPTIONS } from "../services/resultadoMedicoService";
-import { consultaMedicaService } from "../services/consultaMedicaService";
-import type { ConsultaMedica } from "../services/consultaMedicaService";
-
-/** Los topes del servidor (`ResultadoMedicoController::store`). */
-const ARCHIVO_MAX_MB = 10;
-const DESCRIPCION_MAX = 500;
-
-/** Valor del selector de consulta para un resultado que no es de ninguna. */
-const SIN_CONSULTA = "ninguna";
+  ARCHIVO_MAX_MB, NINGUNA, resultadoMedicoSchema, type ResultadoMedicoFormData,
+} from '../schemas/resultadoMedico.schema'
+import { TIPO_RESULTADO_OPTIONS } from '../services/resultadoMedicoService'
+import { consultaMedicaService } from '../services/consultaMedicaService'
+import { descripcionSugerida, ordenAbierta, pendientesDe, tipoSugerido } from '../utils/resultadoDeOrden'
+import { OrdenDelResultado } from './examenes/OrdenDelResultado'
+import type { ConsultaMedica } from '../services/consultaMedicaService'
+import type { OrdenExamen } from '../services/examenService'
 
 interface Props {
-  opened: boolean;
-  onClose: () => void;
-  consulta: ConsultaMedica;
-  historiaClinicaId: number;
+  opened:            boolean
+  onClose:           () => void
+  historiaClinicaId: number
+  /** La consulta abierta, si se sube desde el panel de atención. */
+  consulta?:         ConsultaMedica | null
+  /** La orden de la que viene, si se abrió desde ella. */
+  ordenInicial?:     OrdenExamen | null
 }
 
-export function SubirResultadoModal({
-  opened,
-  onClose,
-  consulta,
-  historiaClinicaId,
-}: Props) {
-  const contained = useContainedInput();
-  const subir = useSubirResultado();
+/** Subir un resultado: suelto, como siempre, o contra una orden abierta del paciente. */
+export function SubirResultadoModal({ opened, ...props }: Props) {
+  return opened ? <Formulario {...props} /> : null
+}
 
-  // A qué consulta pertenece. Por defecto, la abierta; pero un laboratorio
-  // que llega una semana después es de la consulta que lo pidió, y antes
-  // solo se podía colgar de esa abriendo su panel. Se ofrecen las últimas
-  // del paciente, o ninguna.
+function Formulario({ onClose, historiaClinicaId, consulta = null, ordenInicial = null }: Omit<Props, 'opened'>) {
+  const contained = useContainedInput()
+  const subir = useSubirResultado()
+  const { data: ordenes = [] } = useOrdenesExamen(historiaClinicaId)
+  const abiertas = ordenes.filter(ordenAbierta)
+
+  // A qué consulta pertenece: la abierta, la que pidió la orden u otra de las
+  // últimas del paciente; un laboratorio que llega una semana después es de
+  // la consulta que lo pidió.
   const { data: delPaciente } = useQuery({
-    queryKey: ["consultas", "para-resultado", historiaClinicaId],
-    queryFn: () =>
-      consultaMedicaService.listarPorHistoria(historiaClinicaId, { per_page: 20 }),
-    enabled: opened && !!historiaClinicaId,
+    queryKey: ['consultas', 'para-resultado', historiaClinicaId],
+    queryFn:  () => consultaMedicaService.listarPorHistoria(historiaClinicaId, { per_page: 20 }),
     staleTime: 1000 * 60,
-  });
-  const anteriores = (delPaciente?.consultas ?? []).filter((c) => c.id !== consulta.id);
+  })
   const opcionesConsulta = [
-    { value: String(consulta.id), label: `Esta consulta (${formatFechaMes(consulta.fecha_consulta)})` },
-    ...anteriores.map((c) => ({
-      value: String(c.id),
-      label: `Consulta del ${formatFechaMes(c.fecha_consulta)}`,
-    })),
-    { value: SIN_CONSULTA, label: "Sin consulta" },
-  ];
-  const [consultaSel, setConsultaSel] = useState(String(consulta.id));
+    ...(consulta ? [{ value: String(consulta.id), label: `Esta consulta (${formatFechaMes(consulta.fecha_consulta)})` }] : []),
+    ...(delPaciente?.consultas ?? [])
+      .filter((c) => c.id !== consulta?.id)
+      .map((c) => ({ value: String(c.id), label: `Consulta del ${formatFechaMes(c.fecha_consulta)}` })),
+    { value: NINGUNA, label: 'Sin consulta' },
+  ]
 
-  const [tipo, setTipo] = useState("");
-  const [descripcion, setDescripcion] = useState("");
-  // El selector de Mantine v9 devuelve una CADENA `YYYY-MM-DD` en cuanto se
-  // elige una fecha; solo el valor inicial es un `Date`.
-  const [fecha, setFecha] = useState<Date | string | null>(new Date());
-  const [archivo, setArchivo] = useState<File | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const inicialesDe = (o: OrdenExamen | null) => o?.items.filter((i) => i.estado === 'pendiente') ?? []
+  const { control, register, handleSubmit, setValue, setError, formState: { errors, dirtyFields } } =
+    useForm<ResultadoMedicoFormData>({
+      resolver: zodResolver(resultadoMedicoSchema),
+      defaultValues: {
+        consulta_medica_id: String(ordenInicial?.consulta_medica_id ?? consulta?.id ?? NINGUNA),
+        orden_examen_id:    ordenInicial ? String(ordenInicial.id) : NINGUNA,
+        items:              ordenInicial ? pendientesDe(ordenInicial) : [],
+        tipo:               tipoSugerido(inicialesDe(ordenInicial)),
+        descripcion:        descripcionSugerida(inicialesDe(ordenInicial)),
+        fecha_resultado:    hoyIso(),
+        archivo:            null,
+      },
+    })
+  const [ordenId, items] = useWatch({ control, name: ['orden_examen_id', 'items'] })
 
-  const handleClose = () => {
-    setConsultaSel(String(consulta.id));
-    setTipo("");
-    setDescripcion("");
-    setFecha(new Date());
-    setArchivo(null);
-    setError(null);
-    onClose();
-  };
+  // Con orden, el tipo y la descripción se proponen a partir de lo marcado,
+  // hasta que se escriban a mano.
+  const proponer = (orden: OrdenExamen | undefined, ids: number[]) => {
+    const marcados = orden?.items.filter((i) => ids.includes(i.id)) ?? []
+    if (!dirtyFields.tipo) setValue('tipo', tipoSugerido(marcados))
+    if (!dirtyFields.descripcion) setValue('descripcion', descripcionSugerida(marcados))
+  }
+  const elegirOrden = (id: string) => {
+    const orden = abiertas.find((o) => String(o.id) === id)
+    const ids = orden ? pendientesDe(orden) : []
+    setValue('orden_examen_id', id)
+    setValue('items', ids, { shouldValidate: errors.items !== undefined })
+    if (orden?.consulta_medica_id && opcionesConsulta.some((c) => c.value === String(orden.consulta_medica_id))) {
+      setValue('consulta_medica_id', String(orden.consulta_medica_id))
+    }
+    proponer(orden, ids)
+  }
+  const elegirItems = (ids: number[]) => {
+    setValue('items', ids, { shouldValidate: errors.items !== undefined })
+    proponer(abiertas.find((o) => String(o.id) === ordenId), ids)
+  }
 
-  const handleSubmit = () => {
-    if (!tipo) {
-      setError("Seleccione el tipo de resultado.");
-      return;
+  const enviar = (v: ResultadoMedicoFormData) => {
+    const fd = new FormData()
+    fd.append('historia_clinica_id', String(historiaClinicaId))
+    if (v.consulta_medica_id !== NINGUNA) fd.append('consulta_medica_id', v.consulta_medica_id)
+    if (v.orden_examen_id !== NINGUNA) {
+      fd.append('orden_examen_id', v.orden_examen_id)
+      v.items.forEach((id) => fd.append('items[]', String(id)))
     }
-    if (!descripcion.trim()) {
-      setError("Ingrese una descripción.");
-      return;
-    }
-    if (!archivo) {
-      setError("Seleccione un archivo.");
-      return;
-    }
-    // Se comprueba antes de enviarlo: subir 30 MB para que el servidor los
-    // rechace al final hacía esperar toda la subida para nada.
-    if (archivo.size > ARCHIVO_MAX_MB * 1024 * 1024) {
-      setError(
-        `El archivo pesa ${(archivo.size / 1024 / 1024).toFixed(1)} MB; ` +
-          `el máximo es ${ARCHIVO_MAX_MB} MB.`,
-      );
-      return;
-    }
-    if (!fecha) {
-      setError("Ingrese la fecha del resultado.");
-      return;
-    }
+    fd.append('tipo', v.tipo)
+    fd.append('descripcion', v.descripcion.trim())
+    fd.append('fecha_resultado', v.fecha_resultado)
+    if (v.archivo) fd.append('archivo', v.archivo)
 
-    const fd = new FormData();
-    fd.append("historia_clinica_id", String(historiaClinicaId));
-    if (consultaSel !== SIN_CONSULTA) fd.append("consulta_medica_id", consultaSel);
-    fd.append("tipo", tipo);
-    fd.append("descripcion", descripcion.trim());
-    fd.append("fecha_resultado", fromDateValue(fecha));
-    fd.append("archivo", archivo);
-
-    // El fallo lo avisa el hook con el motivo del servidor. Aquí se pintaba
-    // además «Error al subir el archivo. Intente de nuevo.», que tapaba ese
-    // motivo y pedía repetir algo que iba a fallar igual.
-    subir.mutate(fd, { onSuccess: handleClose });
-  };
+    subir.mutateAsync(fd).then(onClose).catch((e) => erroresAlFormulario(
+      e, setError, Object.keys(resultadoMedicoSchema.shape), 'No se pudo subir el resultado',
+    ))
+  }
 
   return (
-    <SgthModal
-      opened={opened}
-      onClose={handleClose}
-      title="Subir resultado médico"
-      size="md"
-    >
+    <FormModal opened onClose={onClose} title="Subir resultado médico" size="lg"
+      onSubmit={handleSubmit(enviar)} submitLabel="Subir resultado" submitting={subir.isPending}>
       <Stack gap="sm">
-        <Select
-          label="Consulta"
-          description="Si es de lo que se pidió en otra consulta, elíjala: así aparece en ella."
-          data={opcionesConsulta}
-          allowDeselect={false}
-          {...contained}
-          value={consultaSel}
-          onChange={(v) => setConsultaSel(v ?? String(consulta.id))}
-        />
+        <OrdenDelResultado ordenes={abiertas} ordenId={ordenId} onOrden={elegirOrden}
+          items={items} onItems={elegirItems}
+          errorOrden={errors.orden_examen_id?.message} errorItems={errors.items?.message} />
 
-        <Select
-          label="Tipo de resultado"
-          placeholder="Seleccione"
-          data={TIPO_RESULTADO_OPTIONS}
-          {...contained}
-          value={tipo}
-          onChange={(v) => {
-            setTipo(v ?? "");
-            setError(null);
-          }}
-        />
+        <Controller name="consulta_medica_id" control={control} render={({ field }) => (
+          <Select label="Consulta" allowDeselect={false} {...contained}
+            description="Si es de lo que se pidió en otra consulta, elíjala: así aparece en ella."
+            data={opcionesConsulta} value={field.value} onChange={(v) => field.onChange(v ?? NINGUNA)}
+            error={errors.consulta_medica_id?.message} />
+        )} />
 
-        <Textarea
-          label="Descripción"
-          placeholder="Ej: Hemograma completo, Radiografía de tórax AP..."
-          autosize
-          minRows={2}
-          maxLength={DESCRIPCION_MAX}
-          {...contained}
-          value={descripcion}
-          onChange={(e) => {
-            setDescripcion(e.currentTarget.value);
-            setError(null);
-          }}
-        />
+        <Controller name="tipo" control={control} render={({ field }) => (
+          <Select label="Tipo de resultado" placeholder="Seleccione" withAsterisk {...contained}
+            data={TIPO_RESULTADO_OPTIONS} value={field.value || null}
+            onChange={(v) => field.onChange(v ?? '')} error={errors.tipo?.message} />
+        )} />
 
-        <DatePickerInput
-          label="Fecha del resultado"
-          valueFormat="DD/MM/YYYY"
+        <Textarea label="Descripción" placeholder="Ej.: Hemograma completo, radiografía de tórax AP…" withAsterisk
+          autosize minRows={2} maxLength={500} {...contained} {...register('descripcion')}
+          error={errors.descripcion?.message} />
+
+        <Controller name="fecha_resultado" control={control} render={({ field }) => (
           // Como el servidor: un resultado no tiene fecha futura.
-          maxDate={new Date()}
-          {...contained}
-          value={fecha}
-          onChange={(v) => setFecha(v)}
-        />
+          <DatePickerInput label="Fecha del resultado" valueFormat="DD/MM/YYYY" maxDate={new Date()} withAsterisk
+            {...contained} value={field.value || null} onChange={(v) => field.onChange(v ?? '')}
+            error={errors.fecha_resultado?.message} />
+        )} />
 
-        <FileInput
-          label="Archivo"
-          description={`PDF, JPG o PNG — máximo ${ARCHIVO_MAX_MB} MB`}
-          placeholder="Seleccionar archivo..."
-          accept="application/pdf,image/jpeg,image/png"
-          {...contained}
-          value={archivo}
-          onChange={(f) => {
-            setArchivo(f);
-            setError(null);
-          }}
-        />
-
-        {error && (
-          <Text size="xs" c="red">
-            {error}
-          </Text>
-        )}
+        <Controller name="archivo" control={control} render={({ field }) => (
+          <FileInput label="Archivo" placeholder="Seleccionar archivo…" withAsterisk
+            description={`PDF, JPG o PNG — máximo ${ARCHIVO_MAX_MB} MB`}
+            accept="application/pdf,image/jpeg,image/png" {...contained}
+            value={field.value} onChange={field.onChange} error={errors.archivo?.message} />
+        )} />
       </Stack>
-      <ModalFooter
-        onCancel={handleClose}
-        submitLabel="Subir resultado"
-        submitting={subir.isPending}
-        onSubmit={handleSubmit}
-      />
-    </SgthModal>
-  );
+    </FormModal>
+  )
 }

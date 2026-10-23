@@ -147,6 +147,14 @@ export function TabResultados({
                       </Text>
                     </Group>
                     <Text size="sm">{r.descripcion}</Text>
+                    {r.orden_examen && (
+                      <Text size="xs" c="dimmed">
+                        Orden <Text span ff="monospace" inherit>{r.orden_examen.folio}</Text>
+                        {r.items_orden?.length
+                          ? ` · ${r.items_orden.map((i) => i.examen?.nombre).filter(Boolean).join(', ')}`
+                          : ''}
+                      </Text>
+                    )}
                     {alcance === 'paciente' && (
                       <Text size="xs" c="dimmed">{origen(r)}</Text>
                     )}
