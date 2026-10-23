@@ -8,6 +8,7 @@ import {
 import { StatCard } from '@/components/ui'
 import { ROUTES } from '@/config/routes'
 import { useMiJornada } from '../hooks/useMiJornada'
+import { ExamenesEnJornada } from './examenes/ExamenesEnJornada'
 import type { ContextoJornada } from '../services/miJornadaService'
 
 const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`
@@ -64,6 +65,7 @@ export function MiJornadaFranja({ contexto }: Props) {
             ? `${plural(mes.pacientes, 'paciente', 'pacientes')} · ${plural(mes.procedimientos, 'procedimiento', 'procedimientos')}`
             : `${plural(mes.pacientes, 'paciente', 'pacientes')} · ${plural(mes.reposos, 'reposo', 'reposos')} (${plural(mes.dias_reposo, 'día', 'días')})`} />
       </SimpleGrid>
+      <ExamenesEnJornada porRevisar={pendientes.resultados_por_revisar} criticos={pendientes.criticos} />
       {data.perfil === 'medico' && (pendientes.fichas_femo > 0 || pendientes.evaluaciones_listas > 0) && (
         <Group gap="xs">
           <Text size="xs" c="dimmed">
