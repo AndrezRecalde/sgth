@@ -28273,6 +28273,226 @@
                 }
             }
         },
+        "/v1/dispensario/fichas-sso/resultados-del-paciente": {
+            "get": {
+                "operationId": "femoResultados.index",
+                "tags": [
+                    "FemoResultados"
+                ],
+                "parameters": [
+                    {
+                        "name": "cedula",
+                        "in": "query",
+                        "required": true,
+                        "description": "La ficha conoce al paciente por su c\u00e9dula: servidor o aspirante.",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 20
+                        }
+                    },
+                    {
+                        "name": "hasta",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date-time"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Resultados del paciente para la secci\u00f3n J."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "historia_clinica_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "consulta_medica_id": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "subido_por": {
+                                                        "type": "integer"
+                                                    },
+                                                    "tipo": {
+                                                        "type": "string"
+                                                    },
+                                                    "descripcion": {
+                                                        "type": "string"
+                                                    },
+                                                    "archivo": {
+                                                        "type": "string"
+                                                    },
+                                                    "fecha_resultado": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "created_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ],
+                                                        "format": "date-time"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ],
+                                                        "format": "date-time"
+                                                    },
+                                                    "deleted_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ],
+                                                        "format": "date-time"
+                                                    },
+                                                    "orden_examen_id": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "estado_revision": {
+                                                        "$ref": "#/components/schemas/EstadoRevisionResultado"
+                                                    },
+                                                    "interpretacion": {
+                                                        "anyOf": [
+                                                            {
+                                                                "$ref": "#/components/schemas/InterpretacionResultado"
+                                                            },
+                                                            {
+                                                                "type": "null"
+                                                            }
+                                                        ]
+                                                    },
+                                                    "comentario_medico": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "revisado_por": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "revisado_en": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ],
+                                                        "format": "date-time"
+                                                    },
+                                                    "critico_visto_en": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ],
+                                                        "format": "date-time"
+                                                    },
+                                                    "para_femo": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "nombre_examen": {
+                                                                "type": "string"
+                                                            },
+                                                            "fecha_examen": {
+                                                                "type": "string"
+                                                            },
+                                                            "tipo": {
+                                                                "type": "string"
+                                                            },
+                                                            "resultado": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "resultado_medico_id": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "nombre_examen",
+                                                            "fecha_examen",
+                                                            "tipo",
+                                                            "resultado",
+                                                            "resultado_medico_id"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "historia_clinica_id",
+                                                    "consulta_medica_id",
+                                                    "subido_por",
+                                                    "tipo",
+                                                    "descripcion",
+                                                    "archivo",
+                                                    "fecha_resultado",
+                                                    "created_at",
+                                                    "updated_at",
+                                                    "deleted_at",
+                                                    "orden_examen_id",
+                                                    "estado_revision",
+                                                    "interpretacion",
+                                                    "comentario_medico",
+                                                    "revisado_por",
+                                                    "revisado_en",
+                                                    "critico_visto_en",
+                                                    "para_femo"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/dispensario/fichas-sso/catalogo-riesgos": {
             "get": {
                 "operationId": "fichaSaludOcupacional.catalogoRiesgos",
@@ -85564,6 +85784,13 @@
                                         "null"
                                     ],
                                     "format": "date-time"
+                                },
+                                "resultado_medico_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ],
+                                    "description": "De qu\u00e9 resultado del Dispensario se copi\u00f3 la fila, si sali\u00f3 de uno."
                                 }
                             },
                             "required": [
@@ -91120,6 +91347,13 @@
                                         "null"
                                     ],
                                     "format": "date-time"
+                                },
+                                "resultado_medico_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ],
+                                    "description": "De qu\u00e9 resultado del Dispensario se copi\u00f3 la fila, si sali\u00f3 de uno."
                                 }
                             },
                             "required": [

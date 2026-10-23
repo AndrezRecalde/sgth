@@ -4263,6 +4263,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/dispensario/fichas-sso/resultados-del-paciente": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["femoResultados.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/dispensario/fichas-sso/catalogo-riesgos": {
         parameters: {
             query?: never;
@@ -15491,6 +15507,8 @@ export interface components {
                 resultado?: string | null;
                 /** Format: date-time */
                 fecha_examen?: string | null;
+                /** @description De qué resultado del Dispensario se copió la fila, si salió de uno. */
+                resultado_medico_id?: number | null;
             }[] | null;
             empleos_anteriores?: {
                 centro_trabajo: string;
@@ -17117,6 +17135,8 @@ export interface components {
                 resultado?: string | null;
                 /** Format: date-time */
                 fecha_examen?: string | null;
+                /** @description De qué resultado del Dispensario se copió la fila, si salió de uno. */
+                resultado_medico_id?: number | null;
             }[] | null;
             empleos_anteriores?: {
                 centro_trabajo: string;
@@ -29775,6 +29795,69 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "femoResultados.index": {
+        parameters: {
+            query: {
+                /** @description La ficha conoce al paciente por su cédula: servidor o aspirante. */
+                cedula: string;
+                hasta?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Resultados del paciente para la sección J.";
+                        datos: {
+                            id: number;
+                            historia_clinica_id: number;
+                            consulta_medica_id: number | null;
+                            subido_por: number;
+                            tipo: string;
+                            descripcion: string;
+                            archivo: string;
+                            /** Format: date-time */
+                            fecha_resultado: string;
+                            /** Format: date-time */
+                            created_at: string | null;
+                            /** Format: date-time */
+                            updated_at: string | null;
+                            /** Format: date-time */
+                            deleted_at: string | null;
+                            orden_examen_id: number | null;
+                            estado_revision: components["schemas"]["EstadoRevisionResultado"];
+                            interpretacion: components["schemas"]["InterpretacionResultado"] | null;
+                            comentario_medico: string | null;
+                            revisado_por: number | null;
+                            /** Format: date-time */
+                            revisado_en: string | null;
+                            /** Format: date-time */
+                            critico_visto_en: string | null;
+                            para_femo: {
+                                nombre_examen: string;
+                                fecha_examen: string;
+                                tipo: string;
+                                resultado: string | null;
+                                resultado_medico_id: number;
+                            };
+                        }[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "fichaSaludOcupacional.catalogoRiesgos": {
