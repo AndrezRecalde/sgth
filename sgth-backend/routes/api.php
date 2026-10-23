@@ -57,6 +57,7 @@ use App\Http\Controllers\Dispensario\DisponibilidadController;
 use App\Http\Controllers\Dispensario\CertificadoAptitudController;
 use App\Http\Controllers\Dispensario\CoberturaCertificacionController;
 use App\Http\Controllers\Dispensario\FemoPdfController;
+use App\Http\Controllers\Dispensario\FemoResultadosController;
 use App\Http\Controllers\Dispensario\FichaSaludOcupacionalController;
 use App\Http\Controllers\Dispensario\HistoriaClinicaController;
 use App\Http\Controllers\Dispensario\InventarioMedicinasController;
@@ -2144,6 +2145,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 // Catálogo oficial de factores de riesgo del MSP (sección G).
                 // Va antes de '{id}' para que 'catalogo-riesgos' no se lea como id.
                 Route::get('catalogo-riesgos', [FichaSaludOcupacionalController::class, 'catalogoRiesgos']);
+                // Lo que la sección J puede traer de los resultados del paciente.
+                Route::get('resultados-del-paciente', [FemoResultadosController::class, 'index']);
                 Route::get('/', [FichaSaludOcupacionalController::class, 'index']);
                 Route::post('/', [FichaSaludOcupacionalController::class, 'store']);
                 Route::get('{id}', [FichaSaludOcupacionalController::class, 'show']);

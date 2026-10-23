@@ -8,13 +8,15 @@ import {
   Button,
   Card,
   ActionIcon,
+  Tooltip,
   } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconPlus, IconTrash } from '@tabler/icons-react'
+import { IconFileImport, IconPaperclip, IconPlus, IconTrash } from '@tabler/icons-react'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { type FichaBaseForm } from '../../schemas/femo.schema'
 import { type ExamenForm, type DiagnosticoFemoForm } from '../../schemas/femoEvaluacion.schema'
 import { FemoExamenModal } from './FemoExamenModal'
+import { ResultadosParaFemoModal } from './ResultadosParaFemoModal'
 import { FemoDiagnosticosCie10 } from './FemoDiagnosticosCie10'
 import { FemoAptitudSelector } from './FemoAptitudSelector'
 import { FemoRetiroSection } from './FemoRetiroSection'
@@ -23,6 +25,8 @@ import { confirmar, StatusBadge } from '@/components/ui'
 import { formatFechaMes } from '@/lib/fecha'
 
 interface Props {
+  /** El paciente, para traer sus resultados del Dispensario a la sección J. */
+  cedula?:          string
   fichaData:        Partial<FichaBaseForm>
   examenes:         ExamenForm[]
   diagnosticos:     DiagnosticoFemoForm[]
@@ -38,12 +42,14 @@ const TIPO_EXAMEN_LABELS: Record<string, string> = {
 }
 
 export function FemoPaso3({
-  fichaData, examenes, diagnosticos,
+  cedula, fichaData, examenes, diagnosticos,
   onFichaChange, onExamenesChange, onDiagnosticosChange,
 }: Props) {
   const contained = useContainedInput()
   const [examenModalOpened,
     { open: abrirExamen, close: cerrarExamen }] = useDisclosure(false)
+  const [resultadosOpened,
+    { open: abrirResultados, close: cerrarResultados }] = useDisclosure(false)
 
   const handleEliminarExamen = (idx: number) => {
     confirmar({
@@ -61,14 +67,21 @@ export function FemoPaso3({
         letra="J"
         titulo="Exámenes complementarios"
         accion={
-          <Button
-            size="xs"
-            variant="light"
-            leftSection={<IconPlus size={14} />}
-            onClick={abrirExamen}
-          >
-            Agregar examen
-          </Button>
+          <Group gap="xs">
+            {cedula && (
+              <Button size="xs" variant="light" leftSection={<IconFileImport size={14} />} onClick={abrirResultados}>
+                Traer de resultados
+              </Button>
+            )}
+            <Button
+              size="xs"
+              variant="light"
+              leftSection={<IconPlus size={14} />}
+              onClick={abrirExamen}
+            >
+              Agregar examen
+            </Button>
+          </Group>
         }
       >
 
@@ -89,6 +102,11 @@ export function FemoPaso3({
                       <Text size="sm" fw={500}>
                         {ex.nombre_examen}
                       </Text>
+                      {ex.resultado_medico_id && (
+                        <Tooltip label="Copiado de un resultado del Dispensario" withArrow>
+                          <Text span c="dimmed" lh={0}><IconPaperclip size={13} /></Text>
+                        </Tooltip>
+                      )}
                     </Group>
                     {ex.resultado && (
                       <Text size="xs" c="dimmed">{ex.resultado}</Text>
@@ -164,6 +182,15 @@ export function FemoPaso3({
           <FemoRetiroSection fichaData={fichaData} onFichaChange={onFichaChange} />
         </>
       )}
+
+      <ResultadosParaFemoModal
+        opened={resultadosOpened}
+        onClose={cerrarResultados}
+        cedula={cedula}
+        hasta={fichaData.fecha_evaluacion}
+        yaCopiados={examenes.map((e) => e.resultado_medico_id).filter((id): id is number => !!id)}
+        onAgregar={(filas) => onExamenesChange([...examenes, ...filas])}
+      />
 
       <FemoExamenModal
         opened={examenModalOpened}

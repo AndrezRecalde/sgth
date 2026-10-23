@@ -29,6 +29,8 @@ export const examenSchema = z.object({
   resultado:     z.string().optional().nullable(),
   fecha_examen:  z.string().optional().nullable(),
   tipo:          z.enum(['laboratorio','imagen','otro']),
+  /** De qué resultado del Dispensario se copió la fila, si salió de uno. */
+  resultado_medico_id: z.number().optional().nullable(),
 })
 
 export const diagnosticoFemoSchema = z.object({

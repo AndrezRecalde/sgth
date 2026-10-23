@@ -62,6 +62,8 @@ export interface FemoExamen {
   resultado?:     string | null
   fecha_examen?:  string | null
   tipo:           'laboratorio' | 'imagen' | 'otro'
+  /** De qué resultado del Dispensario se copió, si salió de uno. */
+  resultado_medico_id?: number | null
 }
 
 export interface FemoEmpleoAnterior {

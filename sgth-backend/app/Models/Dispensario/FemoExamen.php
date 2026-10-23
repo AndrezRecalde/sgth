@@ -11,7 +11,7 @@ class FemoExamen extends Model
     protected $table = 'femo_examenes';
 
     protected $fillable = [
-        'ficha_id', 'nombre_examen', 'resultado',
+        'ficha_id', 'resultado_medico_id', 'nombre_examen', 'resultado',
         'fecha_examen', 'tipo',
     ];
 
@@ -26,5 +26,11 @@ class FemoExamen extends Model
     public function ficha(): BelongsTo
     {
         return $this->belongsTo(FichaSaludOcupacional::class, 'ficha_id');
+    }
+
+    /** El resultado del Dispensario del que se copió, si salió de uno. */
+    public function resultadoMedico(): BelongsTo
+    {
+        return $this->belongsTo(ResultadoMedico::class);
     }
 }
