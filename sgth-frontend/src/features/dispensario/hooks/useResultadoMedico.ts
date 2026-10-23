@@ -67,8 +67,11 @@ export function useSubirResultado() {
     onSuccess: () => {
       notificar.exito('Resultado subido', 'El archivo fue registrado correctamente.')
       qc.invalidateQueries({ queryKey: ['resultados'] })
+      // Si cubre exámenes de una orden, la orden cambia de estado.
+      qc.invalidateQueries({ queryKey: ['examenes', 'ordenes'] })
     },
-    onError: notificar.alFallar('No se pudo subir el resultado'),
+    // Lo que tiene campo lo pinta el modal; aquí, el resto.
+    onError: notificar.alFallarSalvoCampos('No se pudo subir el resultado'),
   })
 }
 
@@ -81,6 +84,8 @@ export function useEliminarResultado() {
     onSuccess: () => {
       notificar.exito('Resultado retirado', 'Ya no aparece en la consulta.')
       qc.invalidateQueries({ queryKey: ['resultados'] })
+      // Lo que cubría de su orden vuelve a pendiente.
+      qc.invalidateQueries({ queryKey: ['examenes', 'ordenes'] })
     },
     onError: notificar.alFallar('No se pudo retirar el resultado'),
   })

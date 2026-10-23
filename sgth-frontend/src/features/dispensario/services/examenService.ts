@@ -100,6 +100,13 @@ export const examenService = {
     api.get<Blob>(`/dispensario/ordenes-examen/${id}/pdf`, { responseType: 'blob' })
       .then(r => r.data),
 
+  /** El paciente no se lo hizo o el laboratorio no lo hace: deja de esperarse. */
+  noRealizado: (ordenId: number, itemId: number, motivo: string) =>
+    api.patch<ApiResponse<OrdenExamen>>(
+      `/dispensario/ordenes-examen/${ordenId}/items/${itemId}/no-realizado`,
+      { motivo_no_realizado: motivo },
+    ).then(r => r.data.datos),
+
   anular: (id: number, motivo: string) =>
     api.patch<ApiResponse<OrdenExamen>>(`/dispensario/ordenes-examen/${id}/anular`, {
       motivo_anulacion: motivo,

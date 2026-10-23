@@ -10,6 +10,18 @@ export interface ResultadoMedico {
     id:             number
     fecha_consulta: string
   } | null
+  orden_examen_id?:     number | null
+  /** La orden de la que vino, si vino de una. */
+  orden_examen?: {
+    id:     number
+    folio:  string
+    estado: string
+  } | null
+  /** Los exámenes de esa orden que cubre el archivo. */
+  items_orden?: {
+    id:      number
+    examen?: { id: number; nombre: string } | null
+  }[]
   tipo:                 string
   descripcion:          string
   archivo:              string

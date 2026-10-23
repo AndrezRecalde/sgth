@@ -68,6 +68,20 @@ export function useAnularOrdenExamen() {
   })
 }
 
+export function useMarcarNoRealizado() {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ ordenId, itemId, motivo }: { ordenId: number; itemId: number; motivo: string }) =>
+      examenService.noRealizado(ordenId, itemId, motivo),
+    onSuccess: () => {
+      notificar.exito('Examen marcado', 'Ya no se espera su resultado.')
+      qc.invalidateQueries({ queryKey: ['examenes', 'ordenes'] })
+    },
+    onError: notificar.alFallarSalvoCampos('No se pudo marcar el examen'),
+  })
+}
+
 /**
  * Abre el impreso de la orden para dárselo al paciente, como la receta. Si el
  * navegador bloquea la pestaña —se abre al volver del servidor, fuera del
