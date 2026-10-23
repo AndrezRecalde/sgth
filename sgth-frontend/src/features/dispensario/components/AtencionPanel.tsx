@@ -16,7 +16,7 @@ import { confirmar, DataState } from '@/components/ui'
 import { TabReceta } from './TabReceta'
 import { TabCertificado } from './TabCertificado'
 import { TabHistorial } from './TabHistorial'
-import { TabResultados } from './TabResultados'
+import { TabExamenes } from './TabExamenes'
 import { TabOdontograma } from './TabOdontograma'
 import type { AgendaMedica } from '../services/agendaService'
 import type { ConsultaMedica } from '../services/consultaMedicaService'
@@ -166,11 +166,11 @@ export function AtencionPanel({
                     Certificado
                   </Tabs.Tab>
                   <Tabs.Tab
-                    value="resultados"
+                    value="examenes"
                     leftSection={<IconMicroscope size={13} />}
                     disabled={!consultaActiva}
                   >
-                    Resultados
+                    Exámenes
                   </Tabs.Tab>
                 </Tabs.List>
 
@@ -229,13 +229,13 @@ export function AtencionPanel({
                   ) : <RequiereConsulta para="emitir certificados" />}
                 </Tabs.Panel>
 
-                <Tabs.Panel value="resultados">
+                <Tabs.Panel value="examenes">
                   {consultaActiva ? (
-                    <TabResultados
+                    <TabExamenes
                       consulta={consultaActiva}
                       historiaClinicaId={historiaClinicaId}
                     />
-                  ) : <RequiereConsulta para="subir resultados" />}
+                  ) : <RequiereConsulta para="pedir exámenes o subir resultados" />}
                 </Tabs.Panel>
               </Tabs>
             </Card>

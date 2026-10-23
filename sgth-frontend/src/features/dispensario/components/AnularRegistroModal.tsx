@@ -71,6 +71,15 @@ export const MOTIVOS_ANULAR_RECETA: MotivoOption[] = [
   { value: 'otro',             label: 'Otro'                    },
 ]
 
+export const MOTIVOS_ANULAR_ORDEN_EXAMEN: MotivoOption[] = [
+  { value: 'no_se_realizara',    label: 'El paciente no se los hará' },
+  { value: 'examen_equivocado',  label: 'Examen equivocado'          },
+  { value: 'error_digitacion',   label: 'Error de digitación'        },
+  { value: 'paciente_incorrecto', label: 'Paciente incorrecto'       },
+  { value: 'duplicado',          label: 'Orden duplicada'            },
+  { value: 'otro',               label: 'Otro'                       },
+]
+
 /** Lo que admite `motivo_anulacion` en todos los endpoints que anulan. */
 const MOTIVO_MAX = 255
 
