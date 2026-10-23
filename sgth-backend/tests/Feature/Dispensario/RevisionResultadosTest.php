@@ -94,7 +94,9 @@ test('un_resultado_nace_por_revisar_y_el_medico_lo_lee', function () {
         ->and($datos['interpretacion'])->toBe('normal')
         ->and($datos['comentario_medico'])->toBeNull()
         ->and($datos['revisor']['id'])->toBe($this->solicitante->id)
-        ->and($datos['revisado_en'])->not->toBeNull();
+        ->and($datos['revisado_en'])->not->toBeNull()
+        // El paciente, para darle un turno de control desde la revisión.
+        ->and($datos['historia_clinica']['servidor_id'])->toBe($this->historia->servidor_id);
 });
 
 test('un_alterado_o_un_critico_piden_comentario_y_se_guarda_cifrado', function () {

@@ -28,9 +28,11 @@ final class ResultadoMedicoController extends Controller
 
     /**
      * Quién lo subió y quién lo revisó; si vino de una orden, cuál, quién la
-     * pidió y qué exámenes cubre.
+     * pidió y qué exámenes cubre. Y el paciente, para darle un turno de
+     * control desde un resultado alterado.
      */
     public const RELACIONES = [
+        'historiaClinica:id,servidor_id,carga_familiar_id',
         'subidoPor:id,usuario_ti,email,servidor_id',
         'subidoPor.servidor:id,nombre,apellido',
         'revisor:id,usuario_ti,email,servidor_id',
