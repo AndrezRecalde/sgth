@@ -26,3 +26,10 @@ export const perfilExamenSchema = z.object({
 })
 
 export type PerfilExamenFormData = z.infer<typeof perfilExamenSchema>
+
+/** Los exámenes de un factor de riesgo (D6), con el tope del servidor. */
+export const examenesDeRiesgoSchema = z.object({
+  examenes: z.array(z.number()).max(30, 'Máximo 30 exámenes'),
+})
+
+export type ExamenesDeRiesgoFormData = z.infer<typeof examenesDeRiesgoSchema>
