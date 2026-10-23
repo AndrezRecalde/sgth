@@ -57,7 +57,12 @@ export function ResultadosParaFemoModal({ opened, onClose, cedula, hasta, yaCopi
                   <Checkbox
                     disabled={copiado}
                     checked={copiado || marcados.includes(r.id)}
-                    onChange={(e) => setMarcados((m) => e.currentTarget.checked ? [...m, r.id] : m.filter((id) => id !== r.id))}
+                    onChange={(e) => {
+                      // Se lee antes: React corre el actualizador después,
+                      // cuando el evento ya no tiene currentTarget.
+                      const marcado = e.currentTarget.checked
+                      setMarcados((m) => marcado ? [...m, r.id] : m.filter((id) => id !== r.id))
+                    }}
                     label={
                       <Stack gap={2}>
                         <Group gap="xs">
