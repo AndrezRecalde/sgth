@@ -1392,6 +1392,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/dispensario/catalogo-examenes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * El catálogo entero, en el orden de la hoja, con las áreas en `meta`
+         * @description No pagina a propósito: son unos doscientos exámenes y el modal de
+         *     solicitud los enseña todos a la vez, como casillas por área. Los
+         *     inactivos solo los ve la administración, que es quien los reactiva.
+         */
+        get: operations["catalogoExamen.index"];
+        put?: never;
+        /** Un examen nuevo va al final de su área */
+        post: operations["catalogoExamen.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/dispensario/catalogo-examenes/{examen}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Corrige un examen, lo retira (`activo: false`) o lo devuelve
+         * @description No hay borrado: las órdenes que ya lo pidieron lo siguen nombrando. Si
+         *     cambia de área, pasa al final de la nueva.
+         */
+        patch: operations["catalogoExamen.update"];
+        trace?: never;
+    };
     "/v1/inventario/catalogos": {
         parameters: {
             query?: never;
@@ -10462,6 +10506,12 @@ export interface components {
          * @enum {string}
          */
         AptitudMedica: "apto" | "en_observacion" | "apto_con_restricciones" | "no_apto";
+        /**
+         * AreaExamen
+         * @description Las áreas del catálogo de exámenes. Son las de la hoja de pedido del laboratorio privado con la que trabajaban los médicos del Dispensario (decisión D7, 23-10-2026), en su mismo orden: el modal de solicitud y el impreso agrupan los exámenes así para que el médico y el laboratorio los lean igual que hoy.
+         * @enum {string}
+         */
+        AreaExamen: "bioquimica" | "infecciosas" | "microbiologia" | "inmunologia" | "drogas" | "hemostasia" | "enzimas" | "hematologia" | "endocrinos" | "marcadores_tumorales" | "electrolitos" | "orina" | "heces" | "serologia" | "marcadores_cardiacos" | "radiografias" | "ecografias" | "ocupacionales";
         /** AsignacionBienResource */
         AsignacionBienResource: {
             id: number;
@@ -10889,6 +10939,21 @@ export interface components {
             /** Format: date-time */
             deleted_at: string | null;
             codigo_ciuo: string | null;
+        };
+        /** CatalogoExamen */
+        CatalogoExamen: {
+            id: number;
+            nombre: string;
+            area: components["schemas"]["AreaExamen"];
+            orden: number;
+            etiqueta_nota: string | null;
+            indicaciones: string | null;
+            sensible: boolean;
+            activo: boolean;
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
         };
         /** CatalogoServicioEnfermeria */
         CatalogoServicioEnfermeria: {
@@ -14835,6 +14900,18 @@ export interface components {
              */
             observaciones?: string | null;
         };
+        /**
+         * StoreCatalogoExamenRequest
+         * @description Un examen nuevo para el catálogo.
+         */
+        StoreCatalogoExamenRequest: {
+            /** @enum {string} */
+            area: "bioquimica" | "infecciosas" | "microbiologia" | "inmunologia" | "drogas" | "hemostasia" | "enzimas" | "hematologia" | "endocrinos" | "marcadores_tumorales" | "electrolitos" | "orina" | "heces" | "serologia" | "marcadores_cardiacos" | "radiografias" | "ecografias" | "ocupacionales";
+            nombre: string;
+            etiqueta_nota?: string | null;
+            indicaciones?: string | null;
+            sensible?: boolean;
+        };
         /** StoreConsultaMedicaRequest */
         StoreConsultaMedicaRequest: {
             historia_clinica_id: number;
@@ -16501,6 +16578,20 @@ export interface components {
             instructor?: string;
             lugar?: string | null;
             estado?: boolean;
+        };
+        /**
+         * UpdateCatalogoExamenRequest
+         * @description Corrige un examen del catálogo o lo retira. Todo es opcional: se cambia lo
+         *     que viene.
+         */
+        UpdateCatalogoExamenRequest: {
+            /** @enum {string} */
+            area?: "bioquimica" | "infecciosas" | "microbiologia" | "inmunologia" | "drogas" | "hemostasia" | "enzimas" | "hematologia" | "endocrinos" | "marcadores_tumorales" | "electrolitos" | "orina" | "heces" | "serologia" | "marcadores_cardiacos" | "radiografias" | "ecografias" | "ocupacionales";
+            nombre?: string;
+            etiqueta_nota?: string | null;
+            indicaciones?: string | null;
+            sensible?: boolean;
+            activo?: boolean;
         };
         /** UpdateConsultaMedicaRequest */
         UpdateConsultaMedicaRequest: {
@@ -21130,6 +21221,105 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "catalogoExamen.index": {
+        parameters: {
+            query?: {
+                incluir_inactivos?: boolean | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Catálogo de exámenes.";
+                        datos: components["schemas"]["CatalogoExamen"][];
+                        meta: {
+                            areas: unknown[];
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "catalogoExamen.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreCatalogoExamenRequest"];
+            };
+        };
+        responses: {
+            /**
+             * @description Recargado: `activo` y `sensible` los pone la base por defecto, y sin
+             *     esto la respuesta no los traía.
+             */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Examen agregado al catálogo.";
+                        datos: components["schemas"]["CatalogoExamen"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "catalogoExamen.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                examen: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["UpdateCatalogoExamenRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Examen actualizado.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "catalogoInventario.formularios": {

@@ -44,6 +44,7 @@ use App\Http\Controllers\Dispensario\AgendaController;
 use App\Http\Controllers\Dispensario\AlergiaPacienteController;
 use App\Http\Controllers\Dispensario\AntecedentePacienteController;
 use App\Http\Controllers\Dispensario\AtencionEnfermeriaController;
+use App\Http\Controllers\Dispensario\CatalogoExamenController;
 use App\Http\Controllers\Dispensario\CertificadoMedicoController;
 use App\Http\Controllers\Dispensario\BorradorConsultaController;
 use App\Http\Controllers\Dispensario\ConsultaMedicaController;
@@ -2158,6 +2159,18 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 Route::delete('{id}', [ResultadoMedicoController::class, 'destroy'])
                     ->middleware('role:medico|odontologo|admin-dispensario');
             });
+
+        // Catálogo de exámenes (docs/diseno-examenes-medicos.md, fase 1): lo
+        // lee el personal clínico para pedir; lo mantiene la administración.
+        Route::prefix('catalogo-examenes')->group(function () {
+            Route::get('/', [CatalogoExamenController::class, 'index'])
+                ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
+            Route::post('/', [CatalogoExamenController::class, 'store'])
+                ->middleware('role:admin-dispensario');
+            Route::patch('{examen}', [CatalogoExamenController::class, 'update'])
+                ->middleware('role:admin-dispensario')
+                ->whereNumber('examen');
+        });
     });
 
     // Admin TI

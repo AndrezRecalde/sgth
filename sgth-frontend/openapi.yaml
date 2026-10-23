@@ -9046,6 +9046,203 @@
                 }
             }
         },
+        "/v1/dispensario/catalogo-examenes": {
+            "get": {
+                "operationId": "catalogoExamen.index",
+                "description": "No pagina a prop\u00f3sito: son unos doscientos ex\u00e1menes y el modal de\nsolicitud los ense\u00f1a todos a la vez, como casillas por \u00e1rea. Los\ninactivos solo los ve la administraci\u00f3n, que es quien los reactiva.",
+                "summary": "El cat\u00e1logo entero, en el orden de la hoja, con las \u00e1reas en `meta`",
+                "tags": [
+                    "CatalogoExamen"
+                ],
+                "parameters": [
+                    {
+                        "name": "incluir_inactivos",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "boolean",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Cat\u00e1logo de ex\u00e1menes."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/CatalogoExamen"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "areas": {
+                                                    "type": "array",
+                                                    "items": {}
+                                                }
+                                            },
+                                            "required": [
+                                                "areas"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "catalogoExamen.store",
+                "summary": "Un examen nuevo va al final de su \u00e1rea",
+                "tags": [
+                    "CatalogoExamen"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreCatalogoExamenRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Recargado: `activo` y `sensible` los pone la base por defecto, y sin\nesto la respuesta no los tra\u00eda.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Examen agregado al cat\u00e1logo."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/CatalogoExamen"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/dispensario/catalogo-examenes/{examen}": {
+            "patch": {
+                "operationId": "catalogoExamen.update",
+                "description": "No hay borrado: las \u00f3rdenes que ya lo pidieron lo siguen nombrando. Si\ncambia de \u00e1rea, pasa al final de la nueva.",
+                "summary": "Corrige un examen, lo retira (`activo: false`) o lo devuelve",
+                "tags": [
+                    "CatalogoExamen"
+                ],
+                "parameters": [
+                    {
+                        "name": "examen",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateCatalogoExamenRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Examen actualizado."
+                                        },
+                                        "datos": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/v1/inventario/catalogos": {
             "get": {
                 "operationId": "catalogoInventario.formularios",
@@ -65679,6 +65876,31 @@
                 ],
                 "title": "AptitudMedica"
             },
+            "AreaExamen": {
+                "type": "string",
+                "description": "Las \u00e1reas del cat\u00e1logo de ex\u00e1menes. Son las de la hoja de pedido del laboratorio privado con la que trabajaban los m\u00e9dicos del Dispensario (decisi\u00f3n D7, 23-10-2026), en su mismo orden: el modal de solicitud y el impreso agrupan los ex\u00e1menes as\u00ed para que el m\u00e9dico y el laboratorio los lean igual que hoy.\n",
+                "enum": [
+                    "bioquimica",
+                    "infecciosas",
+                    "microbiologia",
+                    "inmunologia",
+                    "drogas",
+                    "hemostasia",
+                    "enzimas",
+                    "hematologia",
+                    "endocrinos",
+                    "marcadores_tumorales",
+                    "electrolitos",
+                    "orina",
+                    "heces",
+                    "serologia",
+                    "marcadores_cardiacos",
+                    "radiografias",
+                    "ecografias",
+                    "ocupacionales"
+                ],
+                "title": "AreaExamen"
+            },
             "AsignacionBienResource": {
                 "type": "object",
                 "properties": {
@@ -67434,6 +67656,68 @@
                     "codigo_ciuo"
                 ],
                 "title": "Cargo"
+            },
+            "CatalogoExamen": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "nombre": {
+                        "type": "string"
+                    },
+                    "area": {
+                        "$ref": "#/components/schemas/AreaExamen"
+                    },
+                    "orden": {
+                        "type": "integer"
+                    },
+                    "etiqueta_nota": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "indicaciones": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "sensible": {
+                        "type": "boolean"
+                    },
+                    "activo": {
+                        "type": "boolean"
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "nombre",
+                    "area",
+                    "orden",
+                    "etiqueta_nota",
+                    "indicaciones",
+                    "sensible",
+                    "activo",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "CatalogoExamen"
             },
             "CatalogoServicioEnfermeria": {
                 "type": "object",
@@ -82472,6 +82756,61 @@
                 ],
                 "title": "StoreCargaFamiliarRequest"
             },
+            "StoreCatalogoExamenRequest": {
+                "type": "object",
+                "description": "Un examen nuevo para el cat\u00e1logo.",
+                "properties": {
+                    "area": {
+                        "type": "string",
+                        "enum": [
+                            "bioquimica",
+                            "infecciosas",
+                            "microbiologia",
+                            "inmunologia",
+                            "drogas",
+                            "hemostasia",
+                            "enzimas",
+                            "hematologia",
+                            "endocrinos",
+                            "marcadores_tumorales",
+                            "electrolitos",
+                            "orina",
+                            "heces",
+                            "serologia",
+                            "marcadores_cardiacos",
+                            "radiografias",
+                            "ecografias",
+                            "ocupacionales"
+                        ]
+                    },
+                    "nombre": {
+                        "type": "string",
+                        "maxLength": 150
+                    },
+                    "etiqueta_nota": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 40
+                    },
+                    "indicaciones": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 1000
+                    },
+                    "sensible": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "area",
+                    "nombre"
+                ],
+                "title": "StoreCatalogoExamenRequest"
+            },
             "StoreConsultaMedicaRequest": {
                 "type": "object",
                 "properties": {
@@ -88159,6 +88498,60 @@
                     }
                 },
                 "title": "UpdateCapacitacionSsoRequest"
+            },
+            "UpdateCatalogoExamenRequest": {
+                "type": "object",
+                "description": "Corrige un examen del cat\u00e1logo o lo retira. Todo es opcional: se cambia lo\nque viene.",
+                "properties": {
+                    "area": {
+                        "type": "string",
+                        "enum": [
+                            "bioquimica",
+                            "infecciosas",
+                            "microbiologia",
+                            "inmunologia",
+                            "drogas",
+                            "hemostasia",
+                            "enzimas",
+                            "hematologia",
+                            "endocrinos",
+                            "marcadores_tumorales",
+                            "electrolitos",
+                            "orina",
+                            "heces",
+                            "serologia",
+                            "marcadores_cardiacos",
+                            "radiografias",
+                            "ecografias",
+                            "ocupacionales"
+                        ]
+                    },
+                    "nombre": {
+                        "type": "string",
+                        "maxLength": 150
+                    },
+                    "etiqueta_nota": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 40
+                    },
+                    "indicaciones": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 1000
+                    },
+                    "sensible": {
+                        "type": "boolean"
+                    },
+                    "activo": {
+                        "type": "boolean"
+                    }
+                },
+                "title": "UpdateCatalogoExamenRequest"
             },
             "UpdateConsultaMedicaRequest": {
                 "type": "object",
