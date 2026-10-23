@@ -42459,6 +42459,327 @@
                 }
             }
         },
+        "/v1/dispensario/ordenes-examen": {
+            "get": {
+                "operationId": "ordenExamen.index",
+                "summary": "Las \u00f3rdenes de UN paciente, y de una consulta suya si se pide. Como el\nlistado de resultados: sin paciente no hay listado",
+                "tags": [
+                    "OrdenExamen"
+                ],
+                "parameters": [
+                    {
+                        "name": "historia_clinica_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "consulta_medica_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "\u00d3rdenes de ex\u00e1menes."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/OrdenExamen"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "ordenExamen.store",
+                "tags": [
+                    "OrdenExamen"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreOrdenExamenRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Orden de ex\u00e1menes emitida."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/OrdenExamen"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string"
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "errores": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "errores"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/dispensario/ordenes-examen/{orden}": {
+            "get": {
+                "operationId": "ordenExamen.show",
+                "tags": [
+                    "OrdenExamen"
+                ],
+                "parameters": [
+                    {
+                        "name": "orden",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Operaci\u00f3n exitosa."
+                                        },
+                                        "datos": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/dispensario/ordenes-examen/{orden}/anular": {
+            "patch": {
+                "operationId": "ordenExamen.anular",
+                "summary": "La anula quien la emiti\u00f3 o la administraci\u00f3n del Dispensario",
+                "tags": [
+                    "OrdenExamen"
+                ],
+                "parameters": [
+                    {
+                        "name": "orden",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "motivo_anulacion": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    }
+                                },
+                                "required": [
+                                    "motivo_anulacion"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Orden de ex\u00e1menes anulada."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/OrdenExamen"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Solo quien emiti\u00f3 la orden o la administraci\u00f3n del Dispensario pueden anularla."
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "errores": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "errores"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/estructura/organigrama": {
             "get": {
                 "operationId": "estructura.organigrama",
@@ -72257,6 +72578,17 @@
                 ],
                 "title": "EstadoFormacion"
             },
+            "EstadoOrdenExamen": {
+                "type": "string",
+                "description": "Los estados de una orden de ex\u00e1menes. `vencida` no est\u00e1 aqu\u00ed a prop\u00f3sito: es una orden `emitida` o `parcial` que pas\u00f3 su plazo (D5, 90 d\u00edas), y se calcula al leerla en vez de escribirse.\n| |\n|---|\n| `emitida` <br/> Reci\u00e9n emitida: ning\u00fan resultado todav\u00eda. |\n| `parcial` <br/> Alg\u00fan examen tiene resultado y otro no. |\n| `completa` <br/> Todos tienen resultado o se marcaron como no realizados. |\n| `anulada` <br/>  |",
+                "enum": [
+                    "emitida",
+                    "parcial",
+                    "completa",
+                    "anulada"
+                ],
+                "title": "EstadoOrdenExamen"
+            },
             "EstadoPermiso": {
                 "type": "string",
                 "enum": [
@@ -77609,6 +77941,117 @@
                 ],
                 "title": "OdontogramaProcedimiento"
             },
+            "OrdenExamen": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "folio": {
+                        "type": "string"
+                    },
+                    "historia_clinica_id": {
+                        "type": "integer"
+                    },
+                    "consulta_medica_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "solicitado_por": {
+                        "type": "integer"
+                    },
+                    "fecha_solicitud": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "diagnostico_cie10_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "prioridad": {
+                        "$ref": "#/components/schemas/PrioridadOrdenExamen"
+                    },
+                    "indicaciones": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "laboratorio_destino": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "consentimiento_firmado": {
+                        "type": "boolean"
+                    },
+                    "estado": {
+                        "$ref": "#/components/schemas/EstadoOrdenExamen"
+                    },
+                    "anulado_en": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "anulado_por": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "motivo_anulacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "vencida": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "folio",
+                    "historia_clinica_id",
+                    "consulta_medica_id",
+                    "solicitado_por",
+                    "fecha_solicitud",
+                    "diagnostico_cie10_id",
+                    "prioridad",
+                    "indicaciones",
+                    "laboratorio_destino",
+                    "consentimiento_firmado",
+                    "estado",
+                    "anulado_en",
+                    "anulado_por",
+                    "motivo_anulacion",
+                    "created_at",
+                    "updated_at",
+                    "vencida"
+                ],
+                "title": "OrdenExamen"
+            },
             "OrigenVinculo": {
                 "type": "string",
                 "description": "| |\n|---|\n| `accion_personal` <br/> Naci\u00f3 de una Acci\u00f3n de Personal de ingreso. Es el camino normal. |\n| `vinculacion_inicial` <br/> Carga inicial: el servidor ya estaba vinculado antes de que el sistema existiera. El acto administrativo ocurri\u00f3 en papel y no puede reconstruirse sin inventar un documento que nunca existi\u00f3. |",
@@ -78942,6 +79385,15 @@
                     "observaciones"
                 ],
                 "title": "PrestamoEquipoResource"
+            },
+            "PrioridadOrdenExamen": {
+                "type": "string",
+                "description": "Con qu\u00e9 urgencia se piden los ex\u00e1menes; va impresa en la orden.\n",
+                "enum": [
+                    "rutina",
+                    "urgente"
+                ],
+                "title": "PrioridadOrdenExamen"
             },
             "PrioridadTicket": {
                 "type": "string",
@@ -85271,6 +85723,78 @@
                     "procedimiento"
                 ],
                 "title": "StoreOdontogramaProcedimientoRequest"
+            },
+            "StoreOrdenExamenRequest": {
+                "type": "object",
+                "description": "Lo que hace falta para emitir una orden de ex\u00e1menes.\n\nSolo ex\u00e1menes del cat\u00e1logo activo (D4), sin repetir. La nota va solo en los\nque la llevan, y un examen sensible exige la constancia de que el paciente\nfirm\u00f3 el consentimiento (D8).",
+                "properties": {
+                    "consulta_medica_id": {
+                        "type": "integer"
+                    },
+                    "fecha_solicitud": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "diagnostico_cie10_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "prioridad": {
+                        "type": "string",
+                        "enum": [
+                            "rutina",
+                            "urgente"
+                        ]
+                    },
+                    "indicaciones": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 1000
+                    },
+                    "laboratorio_destino": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 150
+                    },
+                    "consentimiento_firmado": {
+                        "type": "boolean"
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "catalogo_examen_id": {
+                                    "type": "integer"
+                                },
+                                "nota": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 100
+                                }
+                            },
+                            "required": [
+                                "catalogo_examen_id"
+                            ]
+                        },
+                        "minItems": 1,
+                        "maxItems": 100
+                    }
+                },
+                "required": [
+                    "consulta_medica_id",
+                    "fecha_solicitud",
+                    "items"
+                ],
+                "title": "StoreOrdenExamenRequest"
             },
             "StorePartidaPresupuestariaRequest": {
                 "type": "object",
