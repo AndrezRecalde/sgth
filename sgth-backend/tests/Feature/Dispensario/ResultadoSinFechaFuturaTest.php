@@ -22,11 +22,11 @@ beforeEach(function () {
     Model::unguard();
     Storage::fake('local');
 
-    $this->enfermera = User::create([
+    $this->medico = User::create([
         'email' => 'resultado-fecha@example.com', 'usuario_ti' => 'resultado-fecha',
         'password' => bcrypt('123456'), 'primer_login' => false,
     ]);
-    $this->enfermera->assignRole(Role::firstOrCreate(['name' => 'enfermera', 'guard_name' => 'sanctum']));
+    $this->medico->assignRole(Role::firstOrCreate(['name' => 'medico', 'guard_name' => 'sanctum']));
 
     $unidad = unidadDePrueba(['nombre' => 'Direccion de Fechas de Resultados']);
     $puesto = puestoDePrueba($unidad, 'Analista de Fechas de Resultados');
@@ -51,7 +51,7 @@ function resultadoFechado(int $historiaId, string $fecha): Illuminate\Testing\Te
 }
 
 test('un_resultado_con_fecha_futura_no_se_sube', function () {
-    $this->actingAs($this->enfermera, 'sanctum');
+    $this->actingAs($this->medico, 'sanctum');
 
     $errores = resultadoFechado($this->historia->id, now()->addDay()->toDateString())
         ->assertStatus(422)
@@ -62,7 +62,7 @@ test('un_resultado_con_fecha_futura_no_se_sube', function () {
 });
 
 test('hoy_y_dias_pasados_valen', function () {
-    $this->actingAs($this->enfermera, 'sanctum');
+    $this->actingAs($this->medico, 'sanctum');
 
     resultadoFechado($this->historia->id, now()->toDateString())->assertCreated();
     resultadoFechado($this->historia->id, now()->subMonth()->toDateString())->assertCreated();

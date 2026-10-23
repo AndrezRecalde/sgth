@@ -2154,7 +2154,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->middleware('role:medico|odontologo|enfermera|admin-dispensario')
             ->group(function () {
                 Route::get('/', [ResultadoMedicoController::class, 'index']);
-                Route::post('/', [ResultadoMedicoController::class, 'store']);
+                // Los registran el médico y el odontólogo (D2 y P1 de
+                // docs/diseno-examenes-medicos.md); Enfermería solo los ve.
+                Route::post('/', [ResultadoMedicoController::class, 'store'])
+                    ->middleware('role:medico|odontologo');
                 // El archivo ya no se sirve desde /storage: sale por aquí.
                 Route::get('{id}/archivo', [ResultadoMedicoController::class, 'archivo'])
                     ->whereNumber('id');
