@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { resultadoMedicoService } from '../services/resultadoMedicoService'
-import type { ResultadoMedico } from '../services/resultadoMedicoService'
+import type { ResultadoMedico, RevisarResultadoData } from '../services/resultadoMedicoService'
 import { notificar } from '@/components/ui'
 import { abrirOGuardarArchivo } from '@/lib/archivo'
 
@@ -88,5 +88,46 @@ export function useEliminarResultado() {
       qc.invalidateQueries({ queryKey: ['examenes', 'ordenes'] })
     },
     onError: notificar.alFallar('No se pudo retirar el resultado'),
+  })
+}
+
+/**
+ * La revisión cambia la lista de resultados, la bandeja de «por revisar» y
+ * «Mi jornada»: se refrescan las tres.
+ */
+function useRefrescarRevision() {
+  const qc = useQueryClient()
+  return () => {
+    qc.invalidateQueries({ queryKey: ['resultados'] })
+    qc.invalidateQueries({ queryKey: ['examenes'] })
+    qc.invalidateQueries({ queryKey: ['dispensario', 'mi-jornada'] })
+  }
+}
+
+export function useRevisarResultado() {
+  const refrescar = useRefrescarRevision()
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: RevisarResultadoData }) =>
+      resultadoMedicoService.revisar(id, data),
+    onSuccess: () => {
+      notificar.exito('Resultado revisado', 'Su lectura quedó registrada.')
+      refrescar()
+    },
+    // Lo que tiene campo lo pinta el modal; aquí, el resto.
+    onError: notificar.alFallarSalvoCampos('No se pudo guardar la revisión'),
+  })
+}
+
+export function useEnteradoCritico() {
+  const refrescar = useRefrescarRevision()
+
+  return useMutation({
+    mutationFn: (id: number) => resultadoMedicoService.enterado(id),
+    onSuccess: () => {
+      notificar.exito('Crítico visto', 'Deja de estar fijo en su jornada.')
+      refrescar()
+    },
+    onError: notificar.alFallar('No se pudo marcar como visto'),
   })
 }

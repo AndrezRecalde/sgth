@@ -13,27 +13,51 @@ export interface ResultadoMedico {
   orden_examen_id?:     number | null
   /** La orden de la que vino, si vino de una. */
   orden_examen?: {
-    id:     number
-    folio:  string
-    estado: string
+    id:             number
+    folio:          string
+    estado:         string
+    solicitado_por?: number
   } | null
   /** Los exámenes de esa orden que cubre el archivo. */
   items_orden?: {
     id:      number
     examen?: { id: number; nombre: string } | null
   }[]
+  /** El paciente, para darle un turno de control desde un resultado alterado. */
+  historia_clinica?: {
+    id:                number
+    servidor_id:       number | null
+    carga_familiar_id: number | null
+  } | null
   tipo:                 string
   descripcion:          string
   archivo:              string
   fecha_resultado:      string
-  subido_por?: {
-    id:         number
-    usuario_ti?: string
-    servidor?: {
-      nombre:   string
-      apellido: string
-    } | null
+  subido_por?:          PersonaResultado | null
+  /** La lectura del médico (D3). Lo subido antes de la fase 4 está revisado sin interpretación. */
+  estado_revision:      'por_revisar' | 'revisado'
+  interpretacion:       Interpretacion | null
+  comentario_medico:    string | null
+  revisado_en:          string | null
+  /** Un crítico que revisó otro médico, hasta que lo ve quien pidió el examen. */
+  critico_visto_en:     string | null
+  revisor?:             PersonaResultado | null
+}
+
+export type Interpretacion = 'normal' | 'alterado' | 'critico'
+
+export interface PersonaResultado {
+  id:          number
+  usuario_ti?: string
+  servidor?: {
+    nombre:   string
+    apellido: string
   } | null
+}
+
+export interface RevisarResultadoData {
+  interpretacion:    Interpretacion
+  comentario_medico: string | null
 }
 
 export const TIPO_RESULTADO_OPTIONS = [
@@ -87,4 +111,23 @@ export const resultadoMedicoService = {
     api.delete<ApiResponse<unknown>>(
       `/dispensario/resultados-medicos/${id}`
     ).then(r => r.data.datos),
+
+  /** La lectura del médico: normal, alterado o crítico, con su comentario. */
+  revisar: (id: number, data: RevisarResultadoData) =>
+    api.patch<ApiResponse<ResultadoMedico>>(
+      `/dispensario/resultados-medicos/${id}/revisar`, data
+    ).then(r => r.data.datos),
+
+  /** Quien pidió el examen da por visto un crítico que revisó otro. */
+  enterado: (id: number) =>
+    api.patch<ApiResponse<ResultadoMedico>>(
+      `/dispensario/resultados-medicos/${id}/enterado`
+    ).then(r => r.data.datos),
+}
+
+/** Etiqueta y tono de la lectura del médico. */
+export const INTERPRETACION: Record<Interpretacion, { label: string; tone: 'success' | 'warning' | 'danger' }> = {
+  normal:   { label: 'Normal',   tone: 'success' },
+  alterado: { label: 'Alterado', tone: 'warning' },
+  critico:  { label: 'Crítico',  tone: 'danger'  },
 }

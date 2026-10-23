@@ -1,28 +1,14 @@
 'use client'
 
-import { confirmar, DataState, StatusBadge } from '@/components/ui'
-import {
-  Stack, Text, Button, Group, Card, ThemeIcon,
-  ActionIcon, Tooltip, SegmentedControl,
-} from '@mantine/core'
+import { DataState } from '@/components/ui'
+import { Stack, Text, Button, Group, SegmentedControl } from '@mantine/core'
 import { useState } from 'react'
-import {
-  IconPlus, IconFileText, IconTrash,
-  IconExternalLink,
-} from '@tabler/icons-react'
+import { IconPlus, IconFileText } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
-import { getIcon } from '@/lib/tablerIcons'
 import { SubirResultadoModal } from './SubirResultadoModal'
-import {
-  useResultadosPorConsulta,
-  useResultadosPorPaciente,
-  useEliminarResultado,
-  useVerResultado,
-} from '../hooks/useResultadoMedico'
-import {
-  TIPO_RESULTADO_OPTIONS,
-  TIPO_RESULTADO_ICONS,
-} from '../services/resultadoMedicoService'
+import { ResultadoCard } from './examenes/ResultadoCard'
+import { RevisarResultadoModal } from './examenes/RevisarResultadoModal'
+import { useResultadosPorConsulta, useResultadosPorPaciente } from '../hooks/useResultadoMedico'
 import type { ConsultaMedica } from '../services/consultaMedicaService'
 import type { ResultadoMedico } from '../services/resultadoMedicoService'
 import { formatFechaMes } from '@/lib/fecha'
@@ -31,10 +17,6 @@ import { useAuthStore } from '@/store/auth.store'
 interface Props {
   consulta:          ConsultaMedica
   historiaClinicaId: number
-}
-
-function getLabelTipo(tipo: string): string {
-  return TIPO_RESULTADO_OPTIONS.find(o => o.value === tipo)?.label ?? tipo
 }
 
 type Alcance = 'consulta' | 'paciente'
@@ -69,14 +51,8 @@ export function TabResultados({
     return 'Sin consulta'
   }
 
-  const eliminar = useEliminarResultado()
-  const ver = useVerResultado()
-  const { usuario, hasRole } = useAuthStore()
-
-  // Lo retira quien lo subió o la administración, igual que exige el
-  // servidor: un botón que siempre responde 403 es peor que no enseñarlo.
-  const puedeRetirar = (r: ResultadoMedico) =>
-    r.subido_por?.id === usuario?.id || hasRole('admin-dispensario')
+  const [revisando, setRevisando] = useState<ResultadoMedico | null>(null)
+  const { hasRole } = useAuthStore()
 
   // Los registran el médico y el odontólogo (D2, P1); Enfermería solo los ve.
   const puedeSubir = hasRole('medico') || hasRole('odontologo')
@@ -129,81 +105,13 @@ export function TabResultados({
       >
         <Stack gap="sm">
           {resultados.map((r) => (
-            <Card key={r.id} withBorder radius="md" p="sm">
-              <Group justify="space-between" wrap="nowrap">
-                <Group gap="sm" wrap="nowrap">
-                  <ThemeIcon
-                    size="md" variant="light" radius="xl"
-                  >
-                    {getIcon(TIPO_RESULTADO_ICONS[r.tipo] ?? 'IconFileText', 16)}
-                  </ThemeIcon>
-                  <Stack gap={0}>
-                    <Group gap="xs">
-                      <StatusBadge size="xs">
-                        {getLabelTipo(r.tipo)}
-                      </StatusBadge>
-                      <Text size="xs" c="dimmed">
-                        {formatFechaMes(r.fecha_resultado)}
-                      </Text>
-                    </Group>
-                    <Text size="sm">{r.descripcion}</Text>
-                    {r.orden_examen && (
-                      <Text size="xs" c="dimmed">
-                        Orden <Text span ff="monospace" inherit>{r.orden_examen.folio}</Text>
-                        {r.items_orden?.length
-                          ? ` · ${r.items_orden.map((i) => i.examen?.nombre).filter(Boolean).join(', ')}`
-                          : ''}
-                      </Text>
-                    )}
-                    {alcance === 'paciente' && (
-                      <Text size="xs" c="dimmed">{origen(r)}</Text>
-                    )}
-                    {r.subido_por?.servidor && (
-                      <Text size="xs" c="dimmed">
-                        Dr. {r.subido_por.servidor.nombre}{' '}
-                        {r.subido_por.servidor.apellido}
-                      </Text>
-                    )}
-                  </Stack>
-                </Group>
-
-                <Group gap="xs" wrap="nowrap">
-                  <Tooltip label="Ver archivo" withArrow>
-                    <ActionIcon
-                      size="sm"
-                      variant="light"
-                      aria-label={`Ver el archivo de ${r.descripcion}`}
-                      loading={ver.isPending && ver.variables?.id === r.id}
-                      onClick={() => ver.mutate(r)}
-                    >
-                      <IconExternalLink size={13} />
-                    </ActionIcon>
-                  </Tooltip>
-                  {puedeRetirar(r) && (
-                    <Tooltip label="Retirar" withArrow>
-                      <ActionIcon
-                        size="sm"
-                        variant="light"
-                        color="red"
-                        aria-label={`Retirar ${r.descripcion}`}
-                        onClick={() => confirmar({
-                          title:   'Retirar resultado',
-                          message: 'Dejará de aparecer en la consulta. El archivo se conserva en el registro del Dispensario.',
-                          confirmLabel: 'Retirar',
-                          destructiva: true,
-                          onConfirm: () => eliminar.mutate(r.id),
-                        })}
-                      >
-                        <IconTrash size={13} />
-                      </ActionIcon>
-                    </Tooltip>
-                  )}
-                </Group>
-              </Group>
-            </Card>
+            <ResultadoCard key={r.id} resultado={r} onRevisar={setRevisando}
+              origen={alcance === 'paciente' ? origen(r) : undefined} />
           ))}
         </Stack>
       </DataState>
+
+      <RevisarResultadoModal resultado={revisando} onClose={() => setRevisando(null)} />
 
       <SubirResultadoModal
         opened={modalOpened}
