@@ -236,3 +236,19 @@ test('enfermeria_lo_ve_pero_no_lo_atiende_y_el_servidor_no_entra', function () {
 
     expect($envio->fresh()->estado->value)->toBe('por_validar');
 });
+
+test('el_motivo_del_rechazo_admite_lo_que_deja_escribir_la_pantalla', function () {
+    $envio = envioDelServidor([($this->item)('Glucosa')]);
+    // El modal de motivo de la casa deja escribir hasta 500 caracteres.
+    $motivo = str_repeat('La hoja no trae el nombre del paciente. ', 12);
+
+    $this->actingAs($this->solicitante, 'sanctum')
+        ->patchJson("/api/v1/dispensario/envios-resultado/{$envio->id}/rechazar", ['motivo_rechazo' => $motivo])
+        ->assertOk();
+
+    expect($envio->fresh()->motivo_rechazo)->toBe(trim($motivo));
+
+    $this->patchJson("/api/v1/dispensario/envios-resultado/{$envio->id}/rechazar", [
+        'motivo_rechazo' => str_repeat('x', 501),
+    ])->assertStatus(422)->assertJsonValidationErrors(['motivo_rechazo'], 'errores');
+});
