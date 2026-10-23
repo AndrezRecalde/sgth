@@ -23,6 +23,7 @@ use App\Http\Controllers\Autoservicio\MisPrestamosController;
 use App\Http\Controllers\Autoservicio\MisCargasFamiliaresController;
 use App\Http\Controllers\Autoservicio\MisCertificadosMedicosController;
 use App\Http\Controllers\Autoservicio\MisDocumentosLaboralesController;
+use App\Http\Controllers\Autoservicio\MisExamenesController;
 use App\Http\Controllers\Autoservicio\MisSolicitudesAccionController;
 use App\Http\Controllers\Bienestar\EncuestaClimaController;
 use App\Http\Controllers\Bienestar\PlanBienestarController;
@@ -1091,6 +1092,17 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // registra el dispensario al admitir al paciente, y la ausencia la
         // justifica el certificado médico, que ya crea su permiso con folio.
         Route::get('mi-historia-clinica', [AutoservicioController::class, 'miHistoriaClinica']);
+
+        // «Mis exámenes» (docs/diseno-examenes-medicos.md, fase 6): las órdenes
+        // del servidor, su impreso y el resultado que envía para que un médico
+        // lo valide. Lo de otro responde 404.
+        Route::prefix('mis-examenes')->middleware('permission:acceso-autoservicio')->group(function () {
+            Route::get('/', [MisExamenesController::class, 'index']);
+            Route::get('ordenes/{orden}/pdf', [MisExamenesController::class, 'pdf'])->whereNumber('orden');
+            Route::post('ordenes/{orden}/envios', [MisExamenesController::class, 'enviar'])->whereNumber('orden');
+            Route::post('envios/{envio}/retirar', [MisExamenesController::class, 'retirar'])->whereNumber('envio');
+            Route::get('envios/{envio}/archivo', [MisExamenesController::class, 'archivo'])->whereNumber('envio');
+        });
 
         // `mis-cargas-familiares` vuelve el 2026-10-19 con otro contrato. El
         // CRUD que hubo aquí se retiró el 2026-10-03: ninguna pantalla lo
