@@ -2,6 +2,12 @@ import api from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
 import type { AreaExamen, CatalogoExamen, PerfilExamen } from './examenService'
 
+/** De dónde salió un examen al pasar a sensible: los perfiles ocupacionales y los riesgos. */
+export interface QuitadoDeLoOcupacional {
+  perfiles: string[]
+  riesgos:  string[]
+}
+
 export interface GuardarExamenCatalogoData {
   area:          string
   nombre:        string
@@ -34,11 +40,15 @@ export const examenAdminService = {
     })),
 
   /** Uno nuevo va al final de su área; editar admite solo una parte. */
+  /**
+   * La respuesta entera: al marcar un examen como sensible, el mensaje dice de
+   * qué perfiles ocupacionales y de qué riesgos se quitó (`meta.quitado_de`).
+   */
   guardarExamen: (id: number | undefined, data: Partial<GuardarExamenCatalogoData>) =>
     (id
-      ? api.patch<ApiResponse<CatalogoExamen>>(`/dispensario/catalogo-examenes/${id}`, data)
-      : api.post<ApiResponse<CatalogoExamen>>('/dispensario/catalogo-examenes', data)
-    ).then(r => r.data.datos),
+      ? api.patch<ApiResponse<CatalogoExamen, { quitado_de: QuitadoDeLoOcupacional }>>(`/dispensario/catalogo-examenes/${id}`, data)
+      : api.post<ApiResponse<CatalogoExamen, { quitado_de: QuitadoDeLoOcupacional }>>('/dispensario/catalogo-examenes', data)
+    ).then(r => r.data),
 
   perfiles: () =>
     api.get<ApiResponse<PerfilExamen[]>>('/dispensario/perfiles-examen', {

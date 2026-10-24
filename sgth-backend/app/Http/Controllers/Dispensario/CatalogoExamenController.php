@@ -8,8 +8,10 @@ use App\Http\Requests\Dispensario\StoreCatalogoExamenRequest;
 use App\Http\Requests\Dispensario\UpdateCatalogoExamenRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\Dispensario\CatalogoExamen;
+use App\Services\Dispensario\ExamenSensibleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /**
  * El catálogo de exámenes: lo lee todo el personal clínico para pedir, y lo
@@ -17,6 +19,8 @@ use Illuminate\Http\Request;
  */
 final class CatalogoExamenController extends Controller
 {
+    public function __construct(private readonly ExamenSensibleService $sensibles) {}
+
     /**
      * El catálogo entero, en el orden de la hoja, con las áreas en `meta`.
      *
@@ -75,9 +79,22 @@ final class CatalogoExamenController extends Controller
             $datos['orden'] = $this->siguienteOrden($datos['area']);
         }
 
-        $examen->update($datos);
+        // Al pasar a sensible sale de todo lo ocupacional, y se dice de dónde.
+        $pasaASensible = ($datos['sensible'] ?? false) && ! $examen->sensible;
 
-        return ApiResponse::ok($examen->fresh(), 'Examen actualizado.');
+        $quitado = DB::transaction(function () use ($examen, $datos, $pasaASensible) {
+            $examen->update($datos);
+
+            return $pasaASensible
+                ? $this->sensibles->quitarDeLoOcupacional($examen)
+                : ['perfiles' => [], 'riesgos' => []];
+        });
+
+        return ApiResponse::ok(
+            $examen->fresh(),
+            trim("Examen «{$examen->nombre}» actualizado. " . ExamenSensibleService::mensaje($quitado)),
+            meta: ['quitado_de' => $quitado],
+        );
     }
 
     private function siguienteOrden(string $area): int

@@ -38,9 +38,12 @@ beforeEach(function () {
 test('la_migracion_carga_la_hoja_del_laboratorio', function () {
     expect(CatalogoExamen::count())->toBe(209)
         ->and(CatalogoExamen::distinct()->count('area'))->toBe(18)
+        // Con VDRL y hepatitis B y C, que el Dispensario sumó el 2026-10-24
+        // (migración 2026_11_23_000000).
         ->and(CatalogoExamen::where('sensible', true)->orderBy('id')->pluck('nombre')->all())->toBe([
+            'HBsAg cualitativo', 'HBsAg IgG', 'HCV cualitativo', 'HCV IgG', 'HCV IgM',
             'HIV 1/2/0', 'Anfetaminas', 'Éxtasis', 'Cocaína', 'Opio', 'Tetrahidrocannabinol',
-            'HCG beta cualitativo', 'HCG beta cuantitativo', 'Prueba de embarazo',
+            'HCG beta cualitativo', 'HCG beta cuantitativo', 'Prueba de embarazo', 'VDRL',
         ])
         ->and(CatalogoExamen::whereNotNull('etiqueta_nota')->count())->toBe(5)
         ->and(CatalogoExamen::where('nombre', 'Tolerancia oral a la glucosa')->value('etiqueta_nota'))
