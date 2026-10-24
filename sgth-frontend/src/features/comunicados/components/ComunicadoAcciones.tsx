@@ -6,7 +6,7 @@ import {
   IconCalendarEvent, IconCopy, IconEdit, IconPin, IconPinnedOff, IconSend, IconTrash, IconX,
 } from '@tabler/icons-react'
 import { useRouter } from 'next/navigation'
-import { confirmar, MotivoModal } from '@/components/ui'
+import { confirmar, MotivoModal, notificar } from '@/components/ui'
 import { ROUTES } from '@/config/routes'
 import { hoyIso } from '@/lib/fecha'
 import { plural } from '@/lib/plural'
@@ -32,14 +32,20 @@ export function ComunicadoAcciones({ comunicado: c }: { comunicado: Comunicado }
   const publicado = c.estado === 'publicado'
 
   const confirmarPublicacion = () => {
+    // El backend lo rechaza igual; así se dice antes de pedir la confirmación.
+    if (!c.publicado_hasta) {
+      notificar.aviso('Falta la fecha de fin', 'Edite el borrador y elija hasta cuándo se verá en el Portal.')
+      return
+    }
     const futura = c.publicado_desde && c.publicado_desde.substring(0, 10) > hoyIso()
     confirmar({
       title: futura ? 'Programar la publicación' : 'Publicar',
       message: (
         <>
           {futura
-            ? <>Saldrá en el Portal el <b>{fechaPublicacion(c.publicado_desde)}</b>. </>
-            : <>Saldrá ya en el Portal. </>}
+            ? <>Saldrá en el Portal el <b>{fechaPublicacion(c.publicado_desde)}</b></>
+            : <>Saldrá ya en el Portal</>}
+          {' '}y se verá hasta el <b>{fechaPublicacion(c.publicado_hasta)}</b>.
           Hoy la verían <b>{plural(c.total_destinatarios ?? 0, 'persona', 'personas')}</b>.
           {c.requiere_confirmacion && ' Cada una deberá confirmar que la leyó.'}
           {' '}Lo publicado ya no se edita: para corregirlo hay que retirarlo y duplicarlo.

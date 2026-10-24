@@ -67685,16 +67685,13 @@
             },
             "ActualizarPublicacionRequest": {
                 "type": "object",
-                "description": "Lo que cambia en lo publicado: el fijado y la fecha de fin\n(docs/diseno-noticias-comunicados.md, regla 1). Se manda solo lo que cambia.",
+                "description": "Lo que cambia en lo publicado: el fijado y la fecha de fin\n(docs/diseno-noticias-comunicados.md, regla 1). Se manda solo lo que cambia;\nla fecha de fin se alarga o se acorta, pero no se quita.",
                 "properties": {
                     "fijado": {
                         "type": "boolean"
                     },
                     "publicado_hasta": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
+                        "type": "string",
                         "format": "date"
                     }
                 },

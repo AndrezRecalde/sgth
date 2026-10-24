@@ -8,6 +8,16 @@
   border-color: var(--sgth-accent-border);
 }
 
+/* Fijada por Talento Humano: sale primero y con el color del Portal (2026-10-24). */
+.fijada {
+  background-color: var(--sgth-accent-light);
+  border-color: var(--sgth-accent-border);
+}
+
+.fijada:hover {
+  background-color: var(--sgth-accent-light-hover);
+}
+
 .pie {
   border-top: 1px solid var(--sgth-border);
 }

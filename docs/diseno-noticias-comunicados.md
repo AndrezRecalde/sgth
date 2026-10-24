@@ -88,6 +88,8 @@ Una cuenta sin servidor asociado (`servidor_id` nulo) solo ve lo dirigido a todo
 
 Hasta **3 publicaciones fijadas** a la vez; salen primero en el inicio y en el listado. Fijar una cuarta devuelve un aviso pidiendo desfijar otra.
 
+Desde el 24-10-2026 [D12] se distinguen a simple vista: en la tarjeta del inicio, la fila lleva el fondo suave del color del Portal y un filete a la izquierda; en el listado, la tarjeta lleva ese fondo y el borde del mismo color; en las dos, la chincheta y «Fijada» van en color. No se usa ámbar, que en el Portal ya significa «Por confirmar». Al vencer, deja de salir fijada y libera su lugar: con la fecha de fin obligatoria, ninguna queda fijada para siempre.
+
 ---
 
 ## 4. Reglas [Propuesta]
@@ -95,7 +97,7 @@ Hasta **3 publicaciones fijadas** a la vez; salen primero en el inicio y en el l
 1. **Solo el borrador se edita libremente.** En lo publicado se puede cambiar la fecha de fin y el fijado; el asunto o título, el cuerpo, los adjuntos y los destinatarios quedan congelados [D5].
 2. **Corregir es retirar y duplicar.** «Duplicar» crea un borrador con todo copiado (adjuntos incluidos) y la referencia al original.
 3. **El borrador se puede eliminar; lo publicado nunca se borra.** Se retira con motivo, sale del Portal y queda en el historial de TH con sus lecturas.
-4. **Para publicar** se exigen el asunto o título (máx. 150) y el cuerpo y, si hay fecha de fin, que sea posterior a la de inicio. El **resumen** (máx. 300) es opcional desde el 18-10-2026: sin él, la tarjeta del Portal y la campana muestran el comienzo del texto (unos 200 caracteres, cortado en una palabra, con «Leer más»). Existe para cuando el texto empieza con el saludo de la circular, que no dice nada de lo que se comunica. La fecha de inicio puede ser futura (queda programado), pero no anterior a hoy.
+4. **Para publicar** se exigen el asunto o título (máx. 150), el cuerpo y la **fecha de fin**, que no puede ser anterior a la de inicio. La fecha de fin es obligatoria desde el 24-10-2026 [D12]: sin ella, lo publicado no salía nunca del Portal. El borrador se guarda sin ella, y en lo publicado se alarga o se acorta, pero no se quita. El **resumen** (máx. 300) es opcional desde el 18-10-2026: sin él, la tarjeta del Portal y la campana muestran el comienzo del texto (unos 200 caracteres, cortado en una palabra, con «Leer más»). Existe para cuando el texto empieza con el saludo de la circular, que no dice nada de lo que se comunica. La fecha de inicio puede ser futura (queda programado), pero no anterior a hoy.
 5. **El cuerpo se limpia al guardar** con una lista blanca: párrafos, negrita, cursiva, subrayado, títulos, listas, citas, enlaces (`http`, `https`, `mailto`) y resaltado. Sin imágenes.
 6. **Archivos:** hasta 5 adjuntos PDF de hasta 10 MB cada uno; sin portada [D10]. Se guardan en el disco privado y se sirven por controlador, que comprueba que quien pide es destinatario o de TH.
 7. **El aviso de publicación muestra cuántos lo verán** («Lo verán 312 servidores») antes de confirmar.
@@ -109,7 +111,7 @@ Hasta **3 publicaciones fijadas** a la vez; salen primero en el inicio y en el l
 
 La tarjeta «Noticias y comunicados» (misma posición, junto a la ficha) pasa a mostrar:
 
-- Hasta 5 publicaciones: fijadas primero, luego las más recientes.
+- Hasta 5 publicaciones: fijadas primero —con el color del Portal, 3.5—, luego las más recientes.
 - Por cada una: insignia del tipo, asunto o título, fecha («hace 2 días»), el resumen o el comienzo del texto en dos líneas (`extracto` del API) y un punto si no la ha leído.
 - Al pie, «Ver todas» con el número sin leer.
 - Sin publicaciones: el estado vacío del catálogo («Talento Humano no ha publicado novedades»), sin el «próximamente».
@@ -153,7 +155,7 @@ Página completa en cuatro bloques:
 1. **Datos**, cada campo en su propia línea: tipo, referencia del documento (solo comunicado), asunto o título según el tipo, y resumen opcional.
 2. **Contenido:** editor enriquecido; adjuntos PDF (en la edición, porque necesitan que el borrador exista).
 3. **Destinatarios:** Todos / Por dirección / Por régimen; el conteo de destinatarios se actualiza al cambiar.
-4. **Publicación:** fecha de inicio (hoy por defecto), fecha de fin opcional, fijar, pedir confirmación de lectura (solo comunicado).
+4. **Publicación:** fecha de inicio (hoy por defecto), fecha de fin (obligatoria para publicar, con los atajos «1 semana», «15 días», «1 mes» y «3 meses» contados desde la de inicio, o desde hoy al cambiarla en lo publicado) [D12], fijar, pedir confirmación de lectura (solo comunicado).
 
 Botones: *Guardar borrador*, *Vista previa*, *Publicar*. *Publicar* solo aparece a quien tiene `publicar-comunicados`; quien no lo tiene deja el borrador listo y lo publica otra persona [D1]. La vista previa usa **el mismo componente** que el detalle del Portal, para que lo que TH revisa sea exactamente lo que ve el servidor.
 
@@ -245,7 +247,7 @@ Un comunicado no visible para el usuario responde 404, no 403: no se revela que 
 | `audiencia` | varchar | `todos` o `segmentada` |
 | `regimenes` | jsonb null | Vacío = cualquier régimen |
 | `publicado_desde` | timestamp null | Al publicar: ahora, o el inicio del día programado |
-| `publicado_hasta` | timestamp null | El final de ese día (23:59:59) |
+| `publicado_hasta` | timestamp null | El final de ese día (23:59:59). Nulo solo en el borrador: se exige para publicar [D12] |
 | `fijado` | boolean | |
 | `requiere_confirmacion` | boolean | Solo comunicados |
 | `duplicado_de_id` | FK null | El original, si se duplicó |
@@ -311,6 +313,7 @@ Consecuencias:
 | **2. Pantallas de TH** [Hecho] | Menú, listado, formulario, documentos, detalle con vista previa, publicar, retirar, duplicar, fijar, fecha de fin; regenerar los tipos | Lint, tipos, revisión en el navegador |
 | **3. Portal** [Hecho] | Rutas de autoservicio, tarjeta del inicio, listado, detalle, lectura, confirmación, aviso de pendientes, campana | Pest: visibilidad por unidad, dependencias, régimen, cuenta sin servidor, 404 al que no es destinatario; navegador |
 | **4. Seguimiento** [Hecho] | Pestaña *Lecturas* del detalle con las cifras, la tabla de destinatarios y el Excel de pendientes (`SeguimientoComunicadoService`, `LecturasPendientesExport`) | Pest: cifras, destinatarios de hoy, filtros por estado, dirección y búsqueda, borrador sin seguimiento, Excel solo con `ver-lecturas-comunicados`; navegador |
+| **5. Fecha de fin y fijadas** [Hecho] | Fecha de fin obligatoria para publicar y no se quita en lo publicado; atajos de duración; fijadas con el color del Portal en el inicio y el listado [D12] | Pest: borrador sin fecha que no se publica, quitarla en lo publicado da 422; navegador |
 
 Producción: `php artisan migrate` (crea tablas y permisos). Sin datos que conciliar: el módulo nace vacío.
 
@@ -331,3 +334,4 @@ Producción: `php artisan migrate` (crea tablas y permisos). Sin datos que conci
 | D9 | ~~¿TH necesita el Excel de quién no confirmó?~~ | 6.4 | **Aceptada (17-10-2026):** sí |
 | D10 | ~~¿La portada es obligatoria en las noticias?~~ | 4 | **Resuelta (18-10-2026):** no hay portada. TH no publica imágenes; las tarjetas del Portal son de solo texto. La primera entrega la tenía y se quitó en el PR 2, con la migración `2026_11_10_000200`, antes de llegar a producción |
 | D11 | ~~Observaciones de TH al formulario~~ | 3.1, 3.3, 4, 6.3 | **Resuelta (18-10-2026):** «Asunto» en el comunicado y «Título» en la noticia; resumen opcional con extracto automático; destinatarios solo por dirección (nivel 2), siempre con sus dependencias; cada campo de «Datos» en su línea |
+| D12 | ~~¿Cuánto se ve una publicación y cómo se nota una fijada?~~ | 3.5, 4, 6.3 | **Resuelta (24-10-2026):** la fecha de fin es obligatoria para publicar, con atajos de duración; las fijadas, arriba y con el color del Portal (no ámbar) |

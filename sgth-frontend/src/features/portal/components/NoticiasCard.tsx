@@ -13,7 +13,7 @@ import classes from './NoticiasCard.module.css'
 /**
  * Las noticias y comunicados en el inicio del Portal
  * (docs/diseno-noticias-comunicados.md, 5.1): las cinco primeras —fijadas
- * antes—, con un punto en las que no ha abierto.
+ * antes, con el color del Portal—, con un punto en las que no ha abierto.
  */
 export function NoticiasCard() {
   const { data, isLoading, isError } = useResumenComunicados()
@@ -50,7 +50,12 @@ export function NoticiasCard() {
         ) : (
           <Stack gap={0}>
             {recientes.map((c) => (
-              <UnstyledButton key={c.id} component={Link} href={ROUTES.PORTAL.COMUNICADO(c.id)} className={classes.fila}>
+              <UnstyledButton
+                key={c.id}
+                component={Link}
+                href={ROUTES.PORTAL.COMUNICADO(c.id)}
+                className={`${classes.fila} ${c.fijado ? classes.fijada : ''}`}
+              >
                 <span className={c.leido_at ? classes.leido : classes.sinLeer} aria-label={c.leido_at ? undefined : 'Sin leer'} />
                 <Stack gap={4} className={classes.contenido}>
                   <EtiquetasComunicado c={c} />

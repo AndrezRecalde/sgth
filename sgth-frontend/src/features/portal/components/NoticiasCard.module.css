@@ -12,6 +12,17 @@
   background-color: var(--sgth-surface-hover);
 }
 
+/* Fijada por Talento Humano: arriba, con el color del Portal y su filete (2026-10-24). */
+.fijada {
+  margin-bottom: 4px;
+  background-color: var(--sgth-accent-light);
+  box-shadow: inset 3px 0 0 var(--sgth-accent);
+}
+
+.fijada:hover {
+  background-color: var(--sgth-accent-light-hover);
+}
+
 /* El punto de «sin leer» y su hueco, para que las filas leídas no se corran. */
 .sinLeer,
 .leido {

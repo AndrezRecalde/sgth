@@ -31,10 +31,16 @@ export function fechaPublicacion(valor: string | null): string {
   return formatFechaHora(valor, { conHora: false })
 }
 
-/** «Desde el 25/10/2026», «Del 17/10/2026 al 04/11/2026», «Sin publicar». */
+/**
+ * «Del 17/10/2026 al 04/11/2026». Sin fecha de fin solo queda un borrador —se
+ * exige para publicar desde el 2026-10-24—, así que se dice que falta.
+ */
 export function rangoVigencia(c: Pick<Comunicado, 'publicado_desde' | 'publicado_hasta'>): string {
-  if (!c.publicado_desde && !c.publicado_hasta) return 'Al publicar, sin fecha de fin'
-  if (!c.publicado_hasta) return `Desde el ${fechaPublicacion(c.publicado_desde)}`
+  if (!c.publicado_hasta) {
+    return c.publicado_desde
+      ? `Desde el ${fechaPublicacion(c.publicado_desde)}; falta la fecha de fin`
+      : 'Al publicar; falta la fecha de fin'
+  }
   if (!c.publicado_desde) return `Al publicar, hasta el ${fechaPublicacion(c.publicado_hasta)}`
   return `Del ${fechaPublicacion(c.publicado_desde)} al ${fechaPublicacion(c.publicado_hasta)}`
 }
