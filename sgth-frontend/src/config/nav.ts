@@ -363,12 +363,13 @@ export const NAV_SALUD: NavGroup[] = [
         icon:  'IconDental',
       },
       {
-        // La bandeja de lo que espera resultados —Enfermería la mira para el
-        // seguimiento—, los perfiles y, para la administración, el catálogo.
+        // La bandeja de lo que espera resultados, los perfiles y, para la
+        // administración, el catálogo. Enfermería no la ve desde el
+        // 2026-10-24: no hacía nada aquí y veía resultados de cada paciente.
         label: 'Exámenes',
         href:  ROUTES.SALUD.EXAMENES,
         icon:  'IconFlask',
-        roles: ['medico', 'odontologo', 'enfermera', 'admin-dispensario'],
+        roles: ['medico', 'odontologo', 'admin-dispensario'],
       },
       {
         label:    'Enfermería',

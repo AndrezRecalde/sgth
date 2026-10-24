@@ -215,10 +215,14 @@ test('el_listado_exige_el_paciente_y_marca_las_vencidas', function () {
     // Una de hace 91 días sin resultados: vencida.
     OrdenExamen::where('id', $vieja['id'])->update(['fecha_solicitud' => now()->subDays(91)->toDateString()]);
 
-    $this->actingAs($this->enfermera, 'sanctum')
-        ->getJson('/api/v1/dispensario/ordenes-examen')
-        ->assertStatus(422);
+    $this->getJson('/api/v1/dispensario/ordenes-examen')->assertStatus(422);
 
+    // Enfermería no las lista desde el 2026-10-24.
+    $this->actingAs($this->enfermera, 'sanctum')
+        ->getJson("/api/v1/dispensario/ordenes-examen?historia_clinica_id={$this->historia->id}")
+        ->assertForbidden();
+
+    $this->actingAs($this->medico, 'sanctum');
     $datos = $this->getJson("/api/v1/dispensario/ordenes-examen?historia_clinica_id={$this->historia->id}")
         ->assertOk()->json('datos');
 

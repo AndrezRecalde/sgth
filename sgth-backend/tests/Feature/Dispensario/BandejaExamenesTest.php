@@ -108,7 +108,7 @@ test('busca_por_folio_cedula_o_nombre_del_paciente', function () {
     $rosa = ordenDeBandeja(($this->consultaDe)('0812470011', 'Rosa', 'Mena'), 5);
     $hugo = ordenDeBandeja(($this->consultaDe)('0812470012', 'Hugo', 'Arteaga'), 5);
 
-    $this->actingAs($this->enfermera, 'sanctum');
+    $this->actingAs($this->medico, 'sanctum');
     $folios = fn (string $q) => collect(bandeja('buscar=' . urlencode($q))->assertOk()->json('datos.data'))
         ->pluck('folio')->all();
 
@@ -122,11 +122,12 @@ test('busca_por_folio_cedula_o_nombre_del_paciente', function () {
     expect(bandeja('buscar=arteaga')->json('meta.resumen'))->toBe(['pendientes' => 1, 'vencidas' => 0, 'por_revisar' => 0, 'por_validar' => 0]);
 });
 
-test('la_ve_el_personal_clinico_y_nadie_mas', function () {
+test('la_ve_quien_pide_examenes_y_nadie_mas', function () {
     ordenDeBandeja(($this->consultaDe)('0812470021', 'Ana', 'Lopez'), 1);
 
+    // Enfermería dejó de verla el 2026-10-24.
     $this->actingAs($this->enfermera, 'sanctum');
-    bandeja()->assertOk();
+    bandeja()->assertForbidden();
 
     $this->actingAs($this->ajeno, 'sanctum');
     bandeja()->assertForbidden();

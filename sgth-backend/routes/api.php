@@ -2188,13 +2188,19 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 Route::get('{id}/pdf', [FemoPdfController::class, 'generar']);
             });
 
+        // Exámenes: resultados, catálogo, perfiles, bandeja, envíos del Portal
+        // y órdenes. Enfermería no entra a nada de esto desde el 2026-10-24:
+        // no registra, no valida ni hace el seguimiento que justificaba que
+        // viera la bandeja, y lo que veía eran resultados y nombres de
+        // exámenes —VIH, VDRL— de cada paciente. Decisión del usuario.
+
         // Resultados médicos
         Route::prefix('resultados-medicos')
-            ->middleware('role:medico|odontologo|enfermera|admin-dispensario')
+            ->middleware('role:medico|odontologo|admin-dispensario')
             ->group(function () {
                 Route::get('/', [ResultadoMedicoController::class, 'index']);
                 // Los registran el médico y el odontólogo (D2 y P1 de
-                // docs/diseno-examenes-medicos.md); Enfermería solo los ve.
+                // docs/diseno-examenes-medicos.md).
                 Route::post('/', [ResultadoMedicoController::class, 'store'])
                     ->middleware('role:medico|odontologo');
                 // El archivo ya no se sirve desde /storage: sale por aquí.
@@ -2216,7 +2222,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // lee el personal clínico para pedir; lo mantiene la administración.
         Route::prefix('catalogo-examenes')->group(function () {
             Route::get('/', [CatalogoExamenController::class, 'index'])
-                ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
+                ->middleware('role:medico|odontologo|admin-dispensario');
             Route::post('/', [CatalogoExamenController::class, 'store'])
                 ->middleware('role:admin-dispensario');
             Route::patch('{examen}', [CatalogoExamenController::class, 'update'])
@@ -2228,7 +2234,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // especialidad) y la administración (D6, D12).
         Route::prefix('perfiles-examen')->group(function () {
             Route::get('/', [PerfilExamenController::class, 'index'])
-                ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
+                ->middleware('role:medico|odontologo|admin-dispensario');
             Route::post('/', [PerfilExamenController::class, 'store'])
                 ->middleware('role:medico|odontologo|admin-dispensario');
             Route::patch('{perfil}', [PerfilExamenController::class, 'update'])
@@ -2236,20 +2242,19 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 ->whereNumber('perfil');
         });
 
-        // La bandeja: las órdenes que esperan resultados. Enfermería la ve
-        // para el seguimiento.
+        // La bandeja: las órdenes que esperan resultados.
         Route::get('examenes/bandeja', [BandejaExamenesController::class, 'index'])
-            ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
+            ->middleware('role:medico|odontologo|admin-dispensario');
         Route::get('examenes/bandeja/por-revisar', [BandejaExamenesController::class, 'porRevisar'])
-            ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
+            ->middleware('role:medico|odontologo|admin-dispensario');
         Route::get('examenes/bandeja/por-validar', [BandejaExamenesController::class, 'porValidar'])
-            ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
+            ->middleware('role:medico|odontologo|admin-dispensario');
 
         // Lo que los servidores envían desde el Portal (fase 6): lo validan o
         // lo rechazan quienes registran resultados (D2).
         Route::prefix('envios-resultado')->group(function () {
             Route::get('{envio}/archivo', [EnvioResultadoController::class, 'archivo'])
-                ->middleware('role:medico|odontologo|enfermera|admin-dispensario')
+                ->middleware('role:medico|odontologo|admin-dispensario')
                 ->whereNumber('envio');
             Route::patch('{envio}/validar', [EnvioResultadoController::class, 'validar'])
                 ->middleware('role:medico|odontologo')
@@ -2263,14 +2268,14 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // consulta; las anula quien las emitió o la administración.
         Route::prefix('ordenes-examen')->group(function () {
             Route::get('/', [OrdenExamenController::class, 'index'])
-                ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
+                ->middleware('role:medico|odontologo|admin-dispensario');
             Route::post('/', [OrdenExamenController::class, 'store'])
                 ->middleware('role:medico|odontologo');
             Route::get('{orden}', [OrdenExamenController::class, 'show'])
-                ->middleware('role:medico|odontologo|enfermera|admin-dispensario')
+                ->middleware('role:medico|odontologo|admin-dispensario')
                 ->whereNumber('orden');
             Route::get('{orden}/pdf', [OrdenExamenController::class, 'pdf'])
-                ->middleware('role:medico|odontologo|enfermera|admin-dispensario')
+                ->middleware('role:medico|odontologo|admin-dispensario')
                 ->whereNumber('orden')
                 ->name('dispensario.ordenes-examen.pdf');
             Route::patch('{orden}/anular', [OrdenExamenController::class, 'anular'])

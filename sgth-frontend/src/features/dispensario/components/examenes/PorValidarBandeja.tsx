@@ -15,7 +15,8 @@ const POR_PAGINA = 15
 
 /**
  * Lo que los pacientes enviaron desde el Portal y nadie ha validado (fase 6,
- * D2). Lo validan o lo rechazan el médico y el odontólogo; Enfermería lo ve.
+ * D2). Lo validan o lo rechazan el médico y el odontólogo; la administración
+ * lo ve.
  */
 export function PorValidarBandeja({ buscar }: { buscar: string }) {
   const { hasRole } = useAuthStore()

@@ -148,7 +148,7 @@ test('un_perfil_retirado_no_se_ofrece', function () {
         ->assertOk();
 
     $nombres = fn (string $url) => collect(
-        $this->actingAs($this->enfermera, 'sanctum')->getJson($url)->assertOk()->json('datos')
+        $this->actingAs($this->admin, 'sanctum')->getJson($url)->assertOk()->json('datos')
     )->pluck('nombre')->all();
 
     expect($nombres('/api/v1/dispensario/perfiles-examen'))->toBe([])
@@ -168,8 +168,10 @@ test('se_filtran_por_especialidad', function () {
     expect(collect($datos)->pluck('nombre')->all())->toBe(['Dos']);
 });
 
-test('enfermeria_los_lee_pero_no_los_arma', function () {
-    $this->actingAs($this->enfermera, 'sanctum')
-        ->postJson('/api/v1/dispensario/perfiles-examen', perfilDeExamenes([]))
-        ->assertForbidden();
+test('enfermeria_ni_los_lee_ni_los_arma', function () {
+    $this->actingAs($this->enfermera, 'sanctum');
+
+    // Leerlos, solo hasta el 2026-10-24.
+    $this->getJson('/api/v1/dispensario/perfiles-examen')->assertForbidden();
+    $this->postJson('/api/v1/dispensario/perfiles-examen', perfilDeExamenes([]))->assertForbidden();
 });
