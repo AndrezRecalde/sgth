@@ -48,6 +48,7 @@ use App\Http\Controllers\Dispensario\AtencionEnfermeriaController;
 use App\Http\Controllers\Dispensario\CatalogoExamenController;
 use App\Http\Controllers\Dispensario\PerfilExamenController;
 use App\Http\Controllers\Dispensario\BandejaExamenesController;
+use App\Http\Controllers\Dispensario\EnvioResultadoController;
 use App\Http\Controllers\Dispensario\OrdenExamenController;
 use App\Http\Controllers\Dispensario\CertificadoMedicoController;
 use App\Http\Controllers\Dispensario\BorradorConsultaController;
@@ -2224,6 +2225,22 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
         Route::get('examenes/bandeja/por-revisar', [BandejaExamenesController::class, 'porRevisar'])
             ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
+        Route::get('examenes/bandeja/por-validar', [BandejaExamenesController::class, 'porValidar'])
+            ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
+
+        // Lo que los servidores envían desde el Portal (fase 6): lo validan o
+        // lo rechazan quienes registran resultados (D2).
+        Route::prefix('envios-resultado')->group(function () {
+            Route::get('{envio}/archivo', [EnvioResultadoController::class, 'archivo'])
+                ->middleware('role:medico|odontologo|enfermera|admin-dispensario')
+                ->whereNumber('envio');
+            Route::patch('{envio}/validar', [EnvioResultadoController::class, 'validar'])
+                ->middleware('role:medico|odontologo')
+                ->whereNumber('envio');
+            Route::patch('{envio}/rechazar', [EnvioResultadoController::class, 'rechazar'])
+                ->middleware('role:medico|odontologo')
+                ->whereNumber('envio');
+        });
 
         // Órdenes de exámenes: las emite el médico o el odontólogo en su
         // consulta; las anula quien las emitió o la administración.

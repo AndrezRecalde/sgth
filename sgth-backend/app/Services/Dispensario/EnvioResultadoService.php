@@ -2,12 +2,15 @@
 
 namespace App\Services\Dispensario;
 
+use App\Contracts\Dispensario\OrdenExamenServiceInterface;
 use App\Enums\EstadoEnvioResultado;
 use App\Enums\EstadoItemOrdenExamen;
+use App\Enums\EstadoRevisionResultado;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Dispensario\EnvioResultado;
 use App\Models\Dispensario\ItemOrdenExamen;
 use App\Models\Dispensario\OrdenExamen;
+use App\Models\Dispensario\ResultadoMedico;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
@@ -29,6 +32,8 @@ final class EnvioResultadoService
 {
     /** El mismo disco privado que los resultados: es un dato de salud. */
     private const DISCO = 'local';
+
+    public function __construct(private readonly OrdenExamenServiceInterface $ordenes) {}
 
     /** Las órdenes del servidor, de cualquier historia suya. */
     public function ordenesDelServidor(int $servidorId): Builder
@@ -108,6 +113,78 @@ final class EnvioResultadoService
         $envio->update(['estado' => EstadoEnvioResultado::RETIRADO]);
 
         return $envio;
+    }
+
+    // ── El Dispensario ───────────────────────────────────────────
+
+    /**
+     * Un médico lo acepta (D2): nace el resultado de la historia clínica,
+     * contra la orden y por revisar, con el mismo archivo. Los exámenes los
+     * confirma él; lo que marcó el servidor era una propuesta.
+     *
+     * El resultado queda a nombre de quien valida —es quien lo registra en la
+     * historia— y en la consulta que pidió la orden, donde lo buscará quien la
+     * atendió. Si la orden se cerró mientras esperaba, falla con el mismo
+     * mensaje que una subida del Dispensario y el envío sigue por validar.
+     *
+     * @param array{items: list<int>, tipo: string, descripcion: string, fecha_resultado: string} $datos
+     */
+    public function validar(int $envioId, array $datos, User $medico): EnvioResultado
+    {
+        return DB::transaction(function () use ($envioId, $datos, $medico) {
+            $envio = EnvioResultado::with('ordenExamen')->lockForUpdate()->findOrFail($envioId);
+            $this->exigirPorValidar($envio);
+
+            $resultado = ResultadoMedico::create([
+                'historia_clinica_id' => $envio->ordenExamen->historia_clinica_id,
+                'consulta_medica_id'  => $envio->ordenExamen->consulta_medica_id,
+                'orden_examen_id'     => $envio->orden_examen_id,
+                'subido_por'          => $medico->id,
+                'tipo'                => $datos['tipo'],
+                'descripcion'         => trim($datos['descripcion']),
+                'fecha_resultado'     => $datos['fecha_resultado'],
+                'archivo'             => $envio->archivo,
+                'estado_revision'     => EstadoRevisionResultado::POR_REVISAR,
+            ]);
+
+            $this->ordenes->adjuntarResultado($resultado, array_map('intval', $datos['items']));
+
+            $envio->update([
+                'estado'              => EstadoEnvioResultado::VALIDADO,
+                'atendido_por'        => $medico->id,
+                'atendido_en'         => now(),
+                'resultado_medico_id' => $resultado->id,
+            ]);
+
+            return $envio;
+        });
+    }
+
+    /** No es del paciente, no se lee o ya estaba: vuelve al servidor con el motivo. */
+    public function rechazar(int $envioId, string $motivo, User $medico): EnvioResultado
+    {
+        return DB::transaction(function () use ($envioId, $motivo, $medico) {
+            $envio = EnvioResultado::lockForUpdate()->findOrFail($envioId);
+            $this->exigirPorValidar($envio);
+
+            $envio->update([
+                'estado'         => EstadoEnvioResultado::RECHAZADO,
+                'motivo_rechazo' => $motivo,
+                'atendido_por'   => $medico->id,
+                'atendido_en'    => now(),
+            ]);
+
+            return $envio;
+        });
+    }
+
+    private function exigirPorValidar(EnvioResultado $envio): void
+    {
+        if ($envio->estado !== EstadoEnvioResultado::POR_VALIDAR) {
+            throw new ReglaNegocioException(
+                'Este envío ya está ' . mb_strtolower($envio->estado->etiqueta()) . ': solo se valida o se rechaza uno por validar.'
+            );
+        }
     }
 
     public function descargar(EnvioResultado $envio): StreamedResponse

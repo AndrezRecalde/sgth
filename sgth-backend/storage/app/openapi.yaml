@@ -5316,12 +5316,18 @@
                                                             "type": "integer",
                                                             "description": "Llegan solas del cese: si se acumulan, alguien sale sin su\nevaluaci\u00f3n de retiro.",
                                                             "minimum": 0
+                                                        },
+                                                        "por_validar": {
+                                                            "type": "integer",
+                                                            "description": "Llegan solas del cese: si se acumulan, alguien sale sin su\nevaluaci\u00f3n de retiro.",
+                                                            "minimum": 0
                                                         }
                                                     },
                                                     "required": [
                                                         "pendientes",
                                                         "vencidas",
-                                                        "por_revisar"
+                                                        "por_revisar",
+                                                        "por_validar"
                                                     ]
                                                 }
                                             },
@@ -5352,7 +5358,7 @@
         "/v1/dispensario/examenes/bandeja/por-revisar": {
             "get": {
                 "operationId": "bandejaExamenes.porRevisar",
-                "summary": "Los resultados que nadie ha le\u00eddo todav\u00eda (D3), los m\u00e1s antiguos primero.\n`solicitante` deja los de un m\u00e9dico: los de sus \u00f3rdenes y, sin orden,\nlos de sus consultas. Es el enlace de su \u00abMi jornada\u00bb",
+                "summary": "Los resultados que nadie ha le\u00eddo todav\u00eda (D3), los m\u00e1s antiguos primero.\r\n`solicitante` deja los de un m\u00e9dico: los de sus \u00f3rdenes y, sin orden,\r\nlos de sus consultas. Es el enlace de su \u00abMi jornada\u00bb",
                 "tags": [
                     "BandejaExamenes"
                 ],
@@ -5523,6 +5529,188 @@
                                                 {
                                                     "$ref": "#/components/schemas/LengthAwarePaginator"
                                                 }
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/dispensario/examenes/bandeja/por-validar": {
+            "get": {
+                "operationId": "bandejaExamenes.porValidar",
+                "summary": "Lo que los servidores enviaron desde el Portal y nadie ha validado (fase\r\n6, D2), lo m\u00e1s antiguo primero: es lo que m\u00e1s espera",
+                "tags": [
+                    "BandejaExamenes"
+                ],
+                "parameters": [
+                    {
+                        "name": "buscar",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 100
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Resultados enviados desde el Portal, por validar."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/EnvioResultado"
+                                                    }
+                                                },
+                                                "first_page_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "next_page_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "prev_page_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "data",
+                                                "first_page_url",
+                                                "from",
+                                                "last_page_url",
+                                                "last_page",
+                                                "links",
+                                                "next_page_url",
+                                                "path",
+                                                "per_page",
+                                                "prev_page_url",
+                                                "to",
+                                                "total"
                                             ]
                                         },
                                         "meta": {
@@ -25360,6 +25548,183 @@
                 "responses": {
                     "204": {
                         "description": "No content"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/dispensario/envios-resultado/{envio}/archivo": {
+            "get": {
+                "operationId": "envioResultado.archivo",
+                "summary": "El archivo, para mirarlo antes de validarlo",
+                "tags": [
+                    "EnvioResultado"
+                ],
+                "parameters": [
+                    {
+                        "name": "envio",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/dispensario/envios-resultado/{envio}/validar": {
+            "patch": {
+                "operationId": "envioResultado.validar",
+                "tags": [
+                    "EnvioResultado"
+                ],
+                "parameters": [
+                    {
+                        "name": "envio",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ValidarEnvioResultadoRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Resultado validado: ya est\u00e1 en la historia cl\u00ednica, por revisar."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/EnvioResultado"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/dispensario/envios-resultado/{envio}/rechazar": {
+            "patch": {
+                "operationId": "envioResultado.rechazar",
+                "tags": [
+                    "EnvioResultado"
+                ],
+                "parameters": [
+                    {
+                        "name": "envio",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "motivo_rechazo": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    }
+                                },
+                                "required": [
+                                    "motivo_rechazo"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Env\u00edo rechazado. El servidor ver\u00e1 el motivo en el Portal."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/EnvioResultado"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -73486,6 +73851,96 @@
                 ],
                 "title": "EnviarResultadoRequest"
             },
+            "EnvioResultado": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "orden_examen_id": {
+                        "type": "integer"
+                    },
+                    "enviado_por": {
+                        "type": "integer"
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {}
+                    },
+                    "fecha_resultado": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "comentario": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "archivo": {
+                        "type": "string"
+                    },
+                    "estado": {
+                        "$ref": "#/components/schemas/EstadoEnvioResultado"
+                    },
+                    "motivo_rechazo": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "atendido_por": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "atendido_en": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "resultado_medico_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "orden_examen_id",
+                    "enviado_por",
+                    "items",
+                    "fecha_resultado",
+                    "comentario",
+                    "archivo",
+                    "estado",
+                    "motivo_rechazo",
+                    "atendido_por",
+                    "atendido_en",
+                    "resultado_medico_id",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "EnvioResultado"
+            },
             "EppEntrega": {
                 "type": "object",
                 "properties": {
@@ -93239,6 +93694,46 @@
                     "observacion"
                 ],
                 "title": "Vacacion"
+            },
+            "ValidarEnvioResultadoRequest": {
+                "type": "object",
+                "description": "Validar un resultado que el servidor envi\u00f3 desde el Portal: el m\u00e9dico\nconfirma qu\u00e9 ex\u00e1menes trae y lo registra como cualquier resultado. Que los\nex\u00e1menes sean de la orden y sigan esperando lo mira el servicio, con la\norden bloqueada.",
+                "properties": {
+                    "tipo": {
+                        "type": "string",
+                        "description": "Los mismos que al subir un resultado en el Dispensario.",
+                        "enum": [
+                            "laboratorio",
+                            "imagen",
+                            "ecografia",
+                            "rayos_x",
+                            "electrocardiograma",
+                            "otro"
+                        ]
+                    },
+                    "descripcion": {
+                        "type": "string",
+                        "maxLength": 500
+                    },
+                    "fecha_resultado": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "minItems": 1
+                    }
+                },
+                "required": [
+                    "tipo",
+                    "descripcion",
+                    "fecha_resultado",
+                    "items"
+                ],
+                "title": "ValidarEnvioResultadoRequest"
             },
             "VarianteIdentidad": {
                 "type": "string",

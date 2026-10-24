@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Dispensario;
 
+use App\Enums\EstadoEnvioResultado;
 use App\Enums\EstadoOrdenExamen;
 use App\Enums\EstadoRevisionResultado;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
+use App\Models\Dispensario\EnvioResultado;
 use App\Models\Dispensario\OrdenExamen;
 use App\Models\Dispensario\ResultadoMedico;
 use Illuminate\Database\Eloquent\Builder;
@@ -59,6 +61,7 @@ final class BandejaExamenesController extends Controller
             'pendientes' => $this->abiertas($request)->where('fecha_solicitud', '>=', $limite)->count(),
             'vencidas'   => $this->abiertas($request)->where('fecha_solicitud', '<', $limite)->count(),
             'por_revisar' => $this->sinRevisar($request)->count(),
+            'por_validar' => $this->sinValidar($request)->count(),
         ];
 
         return ApiResponse::ok($ordenes, 'Bandeja de exámenes.', 200, ['resumen' => $resumen]);
@@ -96,6 +99,26 @@ final class BandejaExamenesController extends Controller
         return ApiResponse::ok($resultados, 'Resultados por revisar.');
     }
 
+    /**
+     * Lo que los servidores enviaron desde el Portal y nadie ha validado (fase
+     * 6, D2), lo más antiguo primero: es lo que más espera.
+     */
+    public function porValidar(Request $request): JsonResponse
+    {
+        $request->validate([
+            'buscar'   => ['nullable', 'string', 'max:100'],
+            'per_page' => ['sometimes', 'integer', 'min:1'],
+        ]);
+
+        $envios = $this->sinValidar($request)
+            ->with(EnvioResultadoController::RELACIONES)
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->paginate(min($request->integer('per_page', 15), self::PER_PAGE_MAX));
+
+        return ApiResponse::ok($envios, 'Resultados enviados desde el Portal, por validar.');
+    }
+
     /** Emitidas o parciales, con la búsqueda por folio, cédula o nombre del paciente. */
     private function abiertas(Request $request): Builder
     {
@@ -116,6 +139,17 @@ final class BandejaExamenesController extends Controller
             ->where('estado_revision', EstadoRevisionResultado::POR_REVISAR)
             ->when($like !== null, fn (Builder $q) => $q->where(fn (Builder $w) => $this
                 ->delPaciente($w->whereHas('ordenExamen', fn (Builder $o) => $o->where('folio', 'ilike', $like)), $like)));
+    }
+
+    /** Por validar, con la misma búsqueda: el folio de su orden, la cédula o el nombre. */
+    private function sinValidar(Request $request): Builder
+    {
+        $like = $this->patron($request);
+
+        return EnvioResultado::query()
+            ->where('estado', EstadoEnvioResultado::POR_VALIDAR)
+            ->when($like !== null, fn (Builder $q) => $q->whereHas('ordenExamen', fn (Builder $o) => $o
+                ->where(fn (Builder $w) => $this->delPaciente($w->where('folio', 'ilike', $like), $like))));
     }
 
     /** La búsqueda como patrón de `ilike`, con los comodines escritos tomados tal cual. */

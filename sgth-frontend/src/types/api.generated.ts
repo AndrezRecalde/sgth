@@ -980,6 +980,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/dispensario/examenes/bandeja/por-validar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lo que los servidores enviaron desde el Portal y nadie ha validado (fase
+         *     6, D2), lo más antiguo primero: es lo que más espera
+         */
+        get: operations["bandejaExamenes.porValidar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/viaticos/bandeja": {
         parameters: {
             query?: never;
@@ -3787,6 +3807,55 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/v1/dispensario/envios-resultado/{envio}/archivo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** El archivo, para mirarlo antes de validarlo */
+        get: operations["envioResultado.archivo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/dispensario/envios-resultado/{envio}/validar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["envioResultado.validar"];
+        trace?: never;
+    };
+    "/v1/dispensario/envios-resultado/{envio}/rechazar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["envioResultado.rechazar"];
         trace?: never;
     };
     "/v1/sso/epp-entregas/reporte": {
@@ -12228,6 +12297,27 @@ export interface components {
             archivo: string;
             items: number[];
         };
+        /** EnvioResultado */
+        EnvioResultado: {
+            id: number;
+            orden_examen_id: number;
+            enviado_por: number;
+            items: unknown[];
+            /** Format: date-time */
+            fecha_resultado: string;
+            comentario: string | null;
+            archivo: string;
+            estado: components["schemas"]["EstadoEnvioResultado"];
+            motivo_rechazo: string | null;
+            atendido_por: number | null;
+            /** Format: date-time */
+            atendido_en: string | null;
+            resultado_medico_id: number | null;
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
         /** EppEntrega */
         EppEntrega: {
             id: number;
@@ -17658,6 +17748,24 @@ export interface components {
             observacion: string | null;
         };
         /**
+         * ValidarEnvioResultadoRequest
+         * @description Validar un resultado que el servidor envió desde el Portal: el médico
+         *     confirma qué exámenes trae y lo registra como cualquier resultado. Que los
+         *     exámenes sean de la orden y sigan esperando lo mira el servicio, con la
+         *     orden bloqueada.
+         */
+        ValidarEnvioResultadoRequest: {
+            /**
+             * @description Los mismos que al subir un resultado en el Dispensario.
+             * @enum {string}
+             */
+            tipo: "laboratorio" | "imagen" | "ecografia" | "rayos_x" | "electrocardiograma" | "otro";
+            descripcion: string;
+            /** Format: date-time */
+            fecha_resultado: string;
+            items: number[];
+        };
+        /**
          * VarianteIdentidad
          * @description Las variantes del logo institucional (docs/diseno-comunicacion-social.md, 4.2). Dos son obligatorias; las demás tienen un respaldo, así que el sistema funciona completo con dos archivos. Solo PNG (y JPG para la hoja membretada y los fondos de la credencial): dompdf dibuja mal muchos SVG, y un SVG puede llevar código ejecutable.
          *     | |
@@ -20243,6 +20351,11 @@ export interface operations {
                                  *     evaluación de retiro.
                                  */
                                 por_revisar: number;
+                                /**
+                                 * @description Llegan solas del cese: si se acumulan, alguien sale sin su
+                                 *     evaluación de retiro.
+                                 */
+                                por_validar: number;
                             };
                         };
                     };
@@ -20298,6 +20411,59 @@ export interface operations {
                             /** @description Total number of items being paginated. */
                             total: number;
                         } | components["schemas"]["LengthAwarePaginator"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "bandejaExamenes.porValidar": {
+        parameters: {
+            query?: {
+                buscar?: string | null;
+                per_page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Resultados enviados desde el Portal, por validar.";
+                        datos: {
+                            current_page: number;
+                            data: components["schemas"]["EnvioResultado"][];
+                            first_page_url: string | null;
+                            from: number | null;
+                            last_page_url: string | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            next_page_url: string | null;
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            prev_page_url: string | null;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
                         meta: null;
                     };
                 };
@@ -28657,6 +28823,96 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "envioResultado.archivo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                envio: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "envioResultado.validar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                envio: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ValidarEnvioResultadoRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Resultado validado: ya está en la historia clínica, por revisar.";
+                        datos: components["schemas"]["EnvioResultado"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "envioResultado.rechazar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                envio: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    motivo_rechazo: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Envío rechazado. El servidor verá el motivo en el Portal.";
+                        datos: components["schemas"]["EnvioResultado"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "eppEntrega.reporte": {

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ResultadoMedico extends Model
@@ -96,6 +97,12 @@ class ResultadoMedico extends Model
     public function ordenExamen(): BelongsTo
     {
         return $this->belongsTo(OrdenExamen::class);
+    }
+
+    /** El envío del Portal del que nació, si el paciente lo mandó (fase 6). */
+    public function envioPortal(): HasOne
+    {
+        return $this->hasOne(EnvioResultado::class);
     }
 
     /** Los exámenes de la orden que cubre este archivo. */
