@@ -33360,6 +33360,68 @@
                 }
             }
         },
+        "/v1/dispensario/inventario/medicinas/{id}/kardex": {
+            "get": {
+                "operationId": "inventarioMedicinas.kardex",
+                "tags": [
+                    "InventarioMedicinas"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 20
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Kardex de la medicina."
+                                        },
+                                        "datos": {
+                                            "type": "object"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/dispensario/inventario/medicinas/{medicina}": {
             "put": {
                 "operationId": "medicinas.update",
@@ -33482,30 +33544,46 @@
                 }
             }
         },
-        "/v1/dispensario/inventario/medicinas/{id}/kardex": {
-            "get": {
-                "operationId": "inventarioMedicinas.kardex",
+        "/v1/dispensario/inventario/medicinas/{medicina}/ajustar-inventario": {
+            "post": {
+                "operationId": "inventarioMedicinas.ajustarInventario",
                 "tags": [
                     "InventarioMedicinas"
                 ],
                 "parameters": [
                     {
-                        "name": "id",
+                        "name": "medicina",
                         "in": "path",
                         "required": true,
                         "schema": {
                             "type": "integer"
                         }
-                    },
-                    {
-                        "name": "per_page",
-                        "in": "query",
-                        "schema": {
-                            "type": "integer",
-                            "default": 20
-                        }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "nuevo_stock": {
+                                        "type": "integer",
+                                        "minimum": 0
+                                    },
+                                    "motivo": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    }
+                                },
+                                "required": [
+                                    "nuevo_stock",
+                                    "motivo"
+                                ]
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -33519,10 +33597,10 @@
                                         },
                                         "mensaje": {
                                             "type": "string",
-                                            "const": "Kardex de la medicina."
+                                            "const": "Inventario ajustado correctamente."
                                         },
                                         "datos": {
-                                            "type": "object"
+                                            "$ref": "#/components/schemas/InventarioMedicina"
                                         },
                                         "meta": {
                                             "type": "null"
@@ -33537,6 +33615,9 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -33605,87 +33686,6 @@
                                         "mensaje": {
                                             "type": "string",
                                             "const": "Existencias dadas de baja correctamente."
-                                        },
-                                        "datos": {
-                                            "$ref": "#/components/schemas/InventarioMedicina"
-                                        },
-                                        "meta": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/v1/dispensario/inventario/medicinas/{medicina}/ajustar-inventario": {
-            "post": {
-                "operationId": "inventarioMedicinas.ajustarInventario",
-                "tags": [
-                    "InventarioMedicinas"
-                ],
-                "parameters": [
-                    {
-                        "name": "medicina",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "nuevo_stock": {
-                                        "type": "integer",
-                                        "minimum": 0
-                                    },
-                                    "motivo": {
-                                        "type": "string",
-                                        "maxLength": 255
-                                    }
-                                },
-                                "required": [
-                                    "nuevo_stock",
-                                    "motivo"
-                                ]
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Inventario ajustado correctamente."
                                         },
                                         "datos": {
                                             "$ref": "#/components/schemas/InventarioMedicina"
