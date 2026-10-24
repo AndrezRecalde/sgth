@@ -15,4 +15,7 @@ interface RecetaServiceInterface
         string $motivo,
         int $anuladoPor
     ): RecetaMedica;
+
+    /** Un medicamento del inventario que el mostrador no va a entregar: el paciente lo adquiere fuera. */
+    public function marcarNoEntregado(int $recetaId, int $itemId, string $motivo, ?string $detalle, int $marcadoPor): RecetaMedica;
 }
