@@ -12941,6 +12941,9 @@ export interface components {
             numero_historia: string | null;
             cedula_paciente: string | null;
             tipo_paciente: string;
+            fusionada_con_id: number | null;
+            /** Format: date-time */
+            fusionada_en: string | null;
         };
         /** HistorialAcademicoServidor */
         HistorialAcademicoServidor: {
