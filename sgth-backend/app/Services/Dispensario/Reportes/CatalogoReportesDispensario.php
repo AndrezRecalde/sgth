@@ -27,6 +27,7 @@ final class CatalogoReportesDispensario implements CatalogoReportesDispensarioIn
         AusentismoReporte::class,
         ExamenesPedidosReporte::class,
         LecturaResultadosReporte::class,
+        OrdenesVencidasReporte::class,
         EnfermeriaReporte::class,
         MovimientoMedicamentosReporte::class,
         ExistenciasReporte::class,
@@ -49,6 +50,7 @@ final class CatalogoReportesDispensario implements CatalogoReportesDispensarioIn
                 'formatos'    => $r->formatos(),
                 'nominal'     => $r->nominal(),
                 'periodo'     => $r->usaPeriodo(),
+                'corte'       => $r->corte(),
                 'agrupaciones' => collect($r->agrupaciones())
                     ->map(fn ($etiqueta, $valor) => ['value' => $valor, 'label' => $etiqueta])
                     ->values()->all(),

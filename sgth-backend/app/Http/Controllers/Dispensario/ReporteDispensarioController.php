@@ -63,7 +63,7 @@ final class ReporteDispensarioController extends Controller
                 $reporte->titulo(),
                 // Una foto de hoy no tiene período: decirlo evita que se lea
                 // como el stock de esas fechas.
-                $reporte->usaPeriodo() ? 'Período: ' . $filtros->periodo() : 'Existencias al ' . now()->format('d/m/Y'),
+                $reporte->usaPeriodo() ? 'Período: ' . $filtros->periodo() : "{$reporte->corte()} al " . now()->format('d/m/Y'),
                 $alcance->descripcion(),
                 $request->user()->nombre_completo ?? $request->user()->usuario_ti,
                 $resultado['columnas'],

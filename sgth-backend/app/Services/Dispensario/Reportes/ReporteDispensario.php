@@ -58,6 +58,13 @@ interface ReporteDispensario
     /** `false` en una foto de hoy (las existencias): no pide fechas. */
     public function usaPeriodo(): bool;
 
+    /**
+     * En una foto de hoy, qué es lo que se fotografía: «Existencias», «Órdenes
+     * vencidas». Encabeza el archivo y la pantalla («… al 23/10/2026»). Null
+     * en los que usan período.
+     */
+    public function corte(): ?string;
+
     /** @return list<array{clave: string, titulo: string}> */
     public function columnas(FiltrosReporte $filtros): array;
 

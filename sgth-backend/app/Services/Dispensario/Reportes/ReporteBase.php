@@ -21,6 +21,11 @@ abstract class ReporteBase implements ReporteDispensario
         return true;
     }
 
+    public function corte(): ?string
+    {
+        return null;
+    }
+
     public function formatos(): array
     {
         return ['excel'];

@@ -78,10 +78,10 @@ export function FiltrosReporte({
         </>
       }
     >
-      {/* Las existencias son una foto de hoy: pedir fechas haría pensar que
-          se puede ver el stock de otro día. */}
+      {/* Una foto de hoy (las existencias, las órdenes vencidas): pedir
+          fechas haría pensar que se puede ver la de otro día. */}
       {!reporte.periodo && (
-        <Text size="sm" c="dimmed">Existencias al día de hoy</Text>
+        <Text size="sm" c="dimmed">{reporte.corte ?? 'Datos'} al día de hoy</Text>
       )}
 
       {reporte.periodo && <Group gap="sm" wrap="nowrap" align="flex-end">
