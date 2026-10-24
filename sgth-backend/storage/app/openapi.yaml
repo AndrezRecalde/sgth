@@ -9823,14 +9823,21 @@
                                             "type": "boolean"
                                         },
                                         "mensaje": {
-                                            "type": "string",
-                                            "const": "Examen actualizado."
+                                            "type": "string"
                                         },
                                         "datos": {
                                             "type": "string"
                                         },
                                         "meta": {
-                                            "type": "null"
+                                            "type": "object",
+                                            "properties": {
+                                                "quitado_de": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "quitado_de"
+                                            ]
                                         }
                                     },
                                     "required": [

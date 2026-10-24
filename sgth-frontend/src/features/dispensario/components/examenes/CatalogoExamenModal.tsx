@@ -83,7 +83,7 @@ function Formulario({ onClose, examen, areas }: Omit<Props, 'opened'>) {
         <Grid.Col span={12}>
           <Controller name="sensible" control={control} render={({ field }) => (
             <Switch label="Sensible" checked={field.value} onChange={(e) => field.onChange(e.currentTarget.checked)}
-              description="Pide constancia del consentimiento firmado y no entra en perfiles ocupacionales." />
+              description="Pide constancia del consentimiento firmado. Al marcarlo, sale de los perfiles ocupacionales y de la lista por riesgo." />
           )} />
         </Grid.Col>
         {examen && (

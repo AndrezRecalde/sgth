@@ -28,8 +28,11 @@ export function useGuardarExamenCatalogo() {
   return useMutation({
     mutationFn: ({ id, data }: { id?: number; data: Partial<GuardarExamenCatalogoData> }) =>
       examenAdminService.guardarExamen(id, data),
-    onSuccess: (examen) => {
-      notificar.exito('Catálogo actualizado', examen?.nombre)
+    onSuccess: (respuesta) => {
+      // Si salió de perfiles ocupacionales o de riesgos, el aviso dura más: hay que leerlo.
+      const quitado = respuesta.meta?.quitado_de
+      const salio = !!quitado && (quitado.perfiles.length > 0 || quitado.riesgos.length > 0)
+      notificar.exito('Catálogo actualizado', respuesta.mensaje, salio ? { autoClose: 12000 } : undefined)
       qc.invalidateQueries({ queryKey: ['examenes'] })
     },
     onError: notificar.alFallarSalvoCampos('No se pudo guardar el examen'),

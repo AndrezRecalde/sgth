@@ -22170,10 +22170,11 @@ export interface operations {
                 content: {
                     "application/json": {
                         exito: boolean;
-                        /** @constant */
-                        mensaje: "Examen actualizado.";
+                        mensaje: string;
                         datos: string;
-                        meta: null;
+                        meta: {
+                            quitado_de: string;
+                        };
                     };
                 };
             };
