@@ -26,6 +26,7 @@ final class CatalogoReportesDispensario implements CatalogoReportesDispensarioIn
         MorbilidadReporte::class,
         AusentismoReporte::class,
         ExamenesPedidosReporte::class,
+        LecturaResultadosReporte::class,
         EnfermeriaReporte::class,
         MovimientoMedicamentosReporte::class,
         ExistenciasReporte::class,
