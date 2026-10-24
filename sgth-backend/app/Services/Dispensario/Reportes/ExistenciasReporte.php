@@ -44,6 +44,11 @@ final class ExistenciasReporte extends ReporteBase
         return false;
     }
 
+    public function corte(): ?string
+    {
+        return 'Existencias';
+    }
+
     public function columnas(FiltrosReporte $filtros): array
     {
         return self::columnasDe([

@@ -98,7 +98,7 @@ test('cada perfil ve su catálogo', function () {
         ->getJson('/api/v1/dispensario/reportes')->assertOk()->json('datos.reportes'))->pluck('clave')->all();
 
     expect($claves($this->admin))->toBe([
-        'atenciones', 'morbilidad', 'ausentismo', 'examenes_pedidos', 'examenes_lectura', 'enfermeria',
+        'atenciones', 'morbilidad', 'ausentismo', 'examenes_pedidos', 'examenes_lectura', 'examenes_vencidas', 'enfermeria',
         'farmacia_movimiento', 'farmacia_existencias', 'salud_ocupacional',
         'informe', 'produccion', 'turnos',
     ]);
@@ -108,7 +108,7 @@ test('cada perfil ve su catálogo', function () {
         'farmacia_existencias', 'salud_ocupacional', 'informe', 'produccion', 'turnos',
     ]);
     // Cada profesional, lo suyo: ni ausentismo por unidad ni farmacia.
-    expect($claves($this->medico))->toBe(['atenciones', 'morbilidad', 'examenes_pedidos', 'examenes_lectura', 'produccion']);
+    expect($claves($this->medico))->toBe(['atenciones', 'morbilidad', 'examenes_pedidos', 'examenes_lectura', 'examenes_vencidas', 'produccion']);
     expect($claves($this->enfermera))->toBe(['enfermeria', 'produccion']);
 
     $this->actingAs(usuarioDeReportes('nadierep', null), 'sanctum')

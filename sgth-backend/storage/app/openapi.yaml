@@ -5358,7 +5358,7 @@
         "/v1/dispensario/examenes/bandeja/por-revisar": {
             "get": {
                 "operationId": "bandejaExamenes.porRevisar",
-                "summary": "Los resultados que nadie ha le\u00eddo todav\u00eda (D3), los m\u00e1s antiguos primero.\r\n`solicitante` deja los de un m\u00e9dico: los de sus \u00f3rdenes y, sin orden,\r\nlos de sus consultas. Es el enlace de su \u00abMi jornada\u00bb",
+                "summary": "Los resultados que nadie ha le\u00eddo todav\u00eda (D3), los m\u00e1s antiguos primero.\n`solicitante` deja los de un m\u00e9dico: los de sus \u00f3rdenes y, sin orden,\nlos de sus consultas. Es el enlace de su \u00abMi jornada\u00bb",
                 "tags": [
                     "BandejaExamenes"
                 ],
@@ -5557,7 +5557,7 @@
         "/v1/dispensario/examenes/bandeja/por-validar": {
             "get": {
                 "operationId": "bandejaExamenes.porValidar",
-                "summary": "Lo que los servidores enviaron desde el Portal y nadie ha validado (fase\r\n6, D2), lo m\u00e1s antiguo primero: es lo que m\u00e1s espera",
+                "summary": "Lo que los servidores enviaron desde el Portal y nadie ha validado (fase\n6, D2), lo m\u00e1s antiguo primero: es lo que m\u00e1s espera",
                 "tags": [
                     "BandejaExamenes"
                 ],
@@ -25681,7 +25681,7 @@
                                 "properties": {
                                     "motivo_rechazo": {
                                         "type": "string",
-                                        "maxLength": 255
+                                        "maxLength": 500
                                     }
                                 },
                                 "required": [

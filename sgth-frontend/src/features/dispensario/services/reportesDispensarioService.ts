@@ -18,6 +18,8 @@ export interface ReporteDisponible {
   nominal:     boolean
   /** `false` en una foto de hoy (las existencias): no pide fechas. */
   periodo:     boolean
+  /** En una foto de hoy, qué se fotografía: «Existencias», «Órdenes vencidas». */
+  corte:       string | null
   filtros:     FiltroReporte[]
   /** Cómo se puede agrupar; la primera es la de por defecto. Vacío si no agrupa. */
   agrupaciones: { value: string; label: string }[]
