@@ -115,7 +115,9 @@ test('corregir la cédula de un familiar también la lleva a su historia', funct
 });
 
 test('con dos historias, el triaje, la cola y la ficha del servidor eligen la misma', function () {
-    // Como en desarrollo: una vieja sin cédula y otra, posterior, con ella.
+    // Como antes de juntarlas y de la migración 2026_11_22, que ya no deja
+    // tener dos: una vieja sin cédula y otra, posterior, con ella.
+    Illuminate\Support\Facades\DB::statement('DROP INDEX IF EXISTS uq_hc_servidor_vivo');
     historiaSinCedulaUnica($this->servidor);
     $conCedula = HistoriaClinica::create([
         'tipo_paciente' => 'servidor', 'servidor_id' => $this->servidor->id, 'estado' => true,

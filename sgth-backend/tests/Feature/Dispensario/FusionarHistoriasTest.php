@@ -22,6 +22,8 @@ uses(Tests\TestCase::class, RefreshDatabase::class);
 
 beforeEach(function () {
     Model::unguard();
+    // Los duplicados son de antes de la migración 2026_11_22, que ya no deja tenerlos.
+    DB::statement('DROP INDEX IF EXISTS uq_hc_servidor_vivo');
 
     $this->medico = User::create([
         'email' => 'fusion@example.com', 'usuario_ti' => 'fusion',
