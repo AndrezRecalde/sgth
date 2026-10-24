@@ -13,6 +13,8 @@ const TONO_ESTADO: Record<string, SemanticTone> = {
   pendiente:           'warning',
   despachada_parcial:  'info',
   despachada_completa: 'success',
+  // Lo que faltaba quedó «adquirir fuera»: el mostrador terminó.
+  cerrada_con_faltantes: 'success',
   anulada:             'danger',
   // Nada que entregar aquí: ni es trabajo pendiente ni salió mal.
   externa:             'neutral',
@@ -22,16 +24,17 @@ const ESTADO_LABELS: Record<string, string> = {
   pendiente:           'Pendiente',
   despachada_parcial:  'Parcial',
   despachada_completa: 'Completada',
+  cerrada_con_faltantes: 'Con faltantes',
   anulada:             'Anulada',
   externa:             'Externa',
 }
 
 /**
  * Anular cierra lo que falta por entregar, así que no procede sobre una receta
- * ya cerrada. Una `externa` sí se anula —es la única vía para retirarla cuando
+ * ya cerrada —completa o con faltantes—. Una `externa` sí se anula —es la única vía para retirarla cuando
  * el médico cambia el tratamiento— y el servidor la acepta igual.
  */
-const NO_ANULABLES = ['despachada_completa', 'anulada']
+const NO_ANULABLES = ['despachada_completa', 'cerrada_con_faltantes', 'anulada']
 
 export function getNombrePaciente(r: RecetaMedica): string {
   const historia = r.consulta_medica?.historia_clinica

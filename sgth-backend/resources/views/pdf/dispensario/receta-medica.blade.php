@@ -319,10 +319,11 @@
                      rótulo y remite a una nota al pie, para que fuera nadie lo
                      lea como que el medicamento no está disponible: no lo
                      maneja ESTE dispensario, y eso es un dato de esta casa, no
-                     del fármaco. Solo marca lo que está fuera del catálogo; lo
-                     que está en él pero hoy agotado, no, porque mañana puede
-                     no estarlo. --}}
-                <span class="farmaco">{{ $generico }}</span>@if ($item->esExterno())<span class="marca-externo">*</span>@endif
+                     del fármaco. Marca lo que está fuera del catálogo y lo que
+                     el mostrador marcó «no entregado» para esta receta
+                     (decisión del 2026-10-24); lo que solo está hoy agotado,
+                     no, porque mañana puede no estarlo. --}}
+                <span class="farmaco">{{ $generico }}</span>@if ($item->esExterno() || $item->estado === \App\Models\Dispensario\ItemReceta::NO_ENTREGADO)<span class="marca-externo">*</span>@endif
                 @if ($ficha)
                     <div class="presentacion">
                         {{ collect([
@@ -343,6 +344,20 @@
                 @if ($item->observaciones)
                     <div class="observacion">{{ $item->observaciones }}</div>
                 @endif
+                @if ($item->estado === \App\Models\Dispensario\ItemReceta::NO_ENTREGADO)
+                    @php
+                        $faltan = $item->cantidad_prescrita - (int) $item->cantidad_despachada;
+                        $motivoNoEntregado = \App\Enums\MotivoNoEntregado::tryFrom((string) $item->motivo_no_entregado)?->etiqueta();
+                    @endphp
+                    <div class="observacion">
+                        No se entregó en el Dispensario{{ $motivoNoEntregado ? ' (' . mb_strtolower($motivoNoEntregado) . ')' : '' }}:
+                        @if ((int) $item->cantidad_despachada > 0)
+                            se entregaron {{ $item->cantidad_despachada }}; adquiera {{ $faltan }} unid. fuera.
+                        @else
+                            adquiera {{ $faltan }} unid. fuera.
+                        @endif
+                    </div>
+                @endif
             </td>
         </tr>
     @endforeach
@@ -351,7 +366,7 @@
 
 {{-- La nota va antes del cierre para que «fin de la prescripción» siga siendo
      lo último de la lista. --}}
-@if ($items->contains->esExterno())
+@if ($items->contains(fn ($i) => $i->esExterno() || $i->estado === \App\Models\Dispensario\ItemReceta::NO_ENTREGADO))
     <div class="nota-externos">
         <span class="marca-externo">*</span>
         No se entrega en el Dispensario Médico del GADPE; adquiéralo en una

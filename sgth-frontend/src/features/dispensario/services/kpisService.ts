@@ -32,6 +32,8 @@ export interface KpisDispensario {
     pendiente:            number
     despachada_parcial:   number
     despachada_completa:  number
+    /** Lo que faltaba quedó «adquirir fuera» (2026-10-24). */
+    cerrada_con_faltantes: number
     anulada:              number
   }
   consultas_por_medico: Array<{

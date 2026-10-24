@@ -132,7 +132,7 @@ export function DetalleConsultaDrawer({
                       Emitida: {formatFechaMes(receta.fecha_emision)}
                     </Text>
                     <StatusBadge
-                      tone={receta.estado === 'despachada_completa' ? 'success' : receta.estado === 'despachada_parcial' ? 'warning' : 'neutral'}
+                      tone={['despachada_completa', 'cerrada_con_faltantes'].includes(receta.estado) ? 'success' : receta.estado === 'despachada_parcial' ? 'warning' : 'neutral'}
                       size="xs"
                     >
                       {receta.estado.replace(/_/g, ' ')}

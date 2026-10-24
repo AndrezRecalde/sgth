@@ -203,3 +203,19 @@ test('el listado y el resumen del mostrador cuentan las cerradas con faltantes',
         ->assertOk()
         ->assertJsonPath('meta.resumen.cerrada_con_faltantes', 1);
 });
+
+test('el impreso dice qué adquirir fuera, con lo que ya se entregó', function () {
+    $receta = recetaNoEntregado([$this->paracetamol, $this->amoxicilina]);
+    despacharNoEntregado($receta, itemNoEntregado($receta, $this->paracetamol), 10)->assertOk();
+    despacharNoEntregado($receta, itemNoEntregado($receta, $this->amoxicilina), 4)->assertOk();
+    marcarNoEntregado($receta, itemNoEntregado($receta, $this->amoxicilina))->assertOk();
+
+    $html = view('pdf.dispensario.receta-medica',
+        app(App\Services\Dispensario\PdfRecetaService::class)->datosDelImpreso($receta->id))->render();
+
+    expect($html)->toContain('No se entregó en el Dispensario (agotado)')
+        ->and($html)->toContain('se entregaron 4; adquiera 6 unid. fuera.')
+        ->and($html)->toContain('adquiéralo en una')
+        // El asterisco del amoxicilina y el de la nota; el paracetamol, entregado, no lleva.
+        ->and(substr_count($html, '<span class="marca-externo">*</span>'))->toBe(2);
+});

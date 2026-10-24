@@ -18,6 +18,10 @@ export interface ItemReceta {
   duracion:                string
   observaciones?:          string | null
   estado?:                 string
+  /** Si el mostrador no lo va a entregar: agotado, vencido u otro (el paciente lo adquiere fuera). */
+  motivo_no_entregado?:    string | null
+  detalle_no_entregado?:   string | null
+  no_entregado_en?:        string | null
   inventario?: {
     nombre:            string
     presentacion?:     string
@@ -105,9 +109,10 @@ export function esItemExterno(item: ItemReceta): boolean {
 
 /**
  * Estados en los que no queda nada que despachar. `externa` entra desde que se
- * emite: todo lo recetado se adquiere fuera del dispensario.
+ * emite: todo lo recetado se adquiere fuera del dispensario. `cerrada_con_faltantes`,
+ * cuando lo que no se entregó quedó «adquirir fuera».
  */
-const ESTADOS_SIN_DESPACHO = ['despachada_completa', 'anulada', 'externa']
+const ESTADOS_SIN_DESPACHO = ['despachada_completa', 'anulada', 'externa', 'cerrada_con_faltantes']
 
 /** Si a la receta le queda algo que la farmacia pueda entregar. */
 export function admiteDespacho(receta: Pick<RecetaMedica, 'estado'>): boolean {
@@ -139,6 +144,13 @@ export const recetaService = {
       total:   r.data.datos?.total ?? 0,
       resumen: r.data.meta?.resumen ?? {},
     })),
+
+  /** El mostrador no va a entregar un medicamento: el paciente lo adquiere fuera. */
+  noEntregado: (recetaId: number, itemId: number, data: { motivo: string; detalle: string | null }) =>
+    api.patch<ApiResponse<RecetaMedica>>(
+      `/dispensario/recetas/${recetaId}/items/${itemId}/no-entregado`,
+      data
+    ).then(r => r.data),
 
   despachar: (id: number, data: DespacharRecetaData) =>
     api.post<ApiResponse<RecetaMedica>>(

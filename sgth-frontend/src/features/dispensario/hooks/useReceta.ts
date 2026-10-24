@@ -165,6 +165,26 @@ export function useAnularReceta() {
   })
 }
 
+/**
+ * Marca un medicamento «no entregado: adquirir fuera». No mueve existencias:
+ * solo cambian la receta abierta y el listado del mostrador.
+ */
+export function useMarcarNoEntregado() {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ recetaId, itemId, motivo, detalle }: {
+      recetaId: number; itemId: number; motivo: string; detalle: string | null
+    }) => recetaService.noEntregado(recetaId, itemId, { motivo, detalle }),
+    onSuccess: (respuesta) => {
+      notificar.exito('Medicamento no entregado', respuesta.mensaje)
+      qc.invalidateQueries({ queryKey: ['recetas'] })
+    },
+    // Lo que tiene campo lo pinta el modal; aquí, el resto.
+    onError: notificar.alFallarSalvoCampos('No se pudo marcar el medicamento como no entregado'),
+  })
+}
+
 export function useDespacharReceta() {
   const qc = useQueryClient()
 

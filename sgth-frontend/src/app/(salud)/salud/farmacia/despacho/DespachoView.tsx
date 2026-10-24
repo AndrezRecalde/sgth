@@ -31,6 +31,8 @@ const ESTADO_OPTIONS = [
   { value: 'pendiente',           label: 'Pendiente'  },
   { value: 'despachada_parcial',  label: 'Parcial'    },
   { value: 'despachada_completa', label: 'Completada' },
+  // Lo que no se entregó quedó «adquirir fuera».
+  { value: 'cerrada_con_faltantes', label: 'Cerrada con faltantes' },
   { value: 'anulada',             label: 'Anulada'    },
   // Todo lo recetado se adquiere fuera: la farmacia no entrega nada.
   { value: 'externa',             label: 'Externa'    },
