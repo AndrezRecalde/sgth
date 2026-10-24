@@ -26,6 +26,8 @@ const ESTADO_RECETA: Record<string, { label: string; tone: SemanticTone }> = {
   pendiente:           { label: 'Pendiente',  tone: 'neutral' },
   despachada_parcial:  { label: 'Parcial',    tone: 'warning' },
   despachada_completa: { label: 'Despachada', tone: 'success' },
+  // Lo que el mostrador no tenía quedó «adquirir fuera».
+  cerrada_con_faltantes: { label: 'Con faltantes', tone: 'success' },
   anulada:             { label: 'Anulada',    tone: 'danger'  },
   // No es un problema ni un logro: la farmacia no tiene nada que hacer con
   // ella, y con eso queda cerrada.

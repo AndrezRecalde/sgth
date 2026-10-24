@@ -43,6 +43,10 @@ export function TableroFarmacia({ kpis }: Props) {
               {recetas?.despachada_parcial ?? 0} parciales
             </StatusBadge>
             <StatusBadge>{recetas?.despachada_completa ?? 0} despachadas</StatusBadge>
+            {/* Lo que el mostrador no tenía: el paciente lo compró fuera. */}
+            {!!recetas?.cerrada_con_faltantes && (
+              <StatusBadge>{recetas.cerrada_con_faltantes} con faltantes</StatusBadge>
+            )}
             <StatusBadge>{recetas?.anulada ?? 0} anuladas</StatusBadge>
           </Group>
         </SectionCard>

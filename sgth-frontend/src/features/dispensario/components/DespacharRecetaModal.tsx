@@ -3,11 +3,11 @@
 import type { SemanticTone } from '@/config/design.tokens'
 import {
   Stack, Text, Group, NumberInput, Alert, Card,
-  ThemeIcon, Grid,
+  ThemeIcon, Grid, Button,
 } from '@mantine/core'
 import { ModalFooter, SgthModal, StatusBadge } from '@/components/ui'
 import {
-  IconPill, IconAlertTriangle, IconBan,
+  IconPill, IconAlertTriangle, IconBan, IconShoppingCartOff,
 } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useContainedInput } from '@/hooks/useContainedInput'
@@ -17,6 +17,9 @@ import {
 } from '../services/recetaService'
 import type { RecetaMedica, ItemReceta } from '../services/recetaService'
 import { formatFechaMes } from '@/lib/fecha'
+import { AdquirirFueraAlert } from './AdquirirFueraAlert'
+import { NoEntregadoRecetaModal } from './NoEntregadoRecetaModal'
+import type { MotivoNoEntregado } from '../schemas/noEntregado.schema'
 
 interface Props {
   opened:  boolean
@@ -56,6 +59,25 @@ const ESTADO_ITEM: Record<string, { label: string; tone: SemanticTone }> = {
   pendiente:           { label: 'Pendiente', tone: 'neutral' },
   despachado_parcial:  { label: 'Parcial',   tone: 'warning' },
   despachado_completo: { label: 'Completo',  tone: 'success' },
+  no_entregado:        { label: 'No entregado', tone: 'danger' },
+}
+
+/** El estado de la receta, en la cabecera del modal. */
+const ESTADO_RECETA: Record<string, { label: string; tone: SemanticTone }> = {
+  pendiente:             { label: 'Pendiente',              tone: 'warning' },
+  despachada_parcial:    { label: 'Parcial',                tone: 'info' },
+  despachada_completa:   { label: 'Completada',             tone: 'success' },
+  cerrada_con_faltantes: { label: 'Cerrada con faltantes',  tone: 'success' },
+  anulada:               { label: 'Anulada',                tone: 'danger' },
+  externa:               { label: 'Externa',                tone: 'neutral' },
+}
+
+/**
+ * El motivo con que abre «No se entrega»: lo que dice el estante. Sin nada
+ * entregable y con vencidas, vencido; si no, agotado.
+ */
+function motivoSugerido(item: ItemReceta): MotivoNoEntregado {
+  return entregable(item) === 0 && (item.inventario?.stock_caducado ?? 0) > 0 ? 'vencido' : 'agotado'
 }
 
 export function DespacharRecetaModal({
@@ -73,6 +95,7 @@ export function DespacharRecetaModal({
   const actualizando = isPlaceholderData || isFetching
 
   const [cantidades, setCantidades] = useState<Record<number, number>>({})
+  const [noEntregando, setNoEntregando] = useState<ItemReceta | null>(null)
 
   // Las cantidades arrancan en lo que falta por despachar y a partir de ahí
   // las edita quien despacha. Se siembran con la receta fresca, no con la
@@ -101,15 +124,18 @@ export function DespacharRecetaModal({
 
   const nombrePaciente = getNombrePaciente(receta)
 
-  // Lo que la farmacia no maneja va aparte: no se despacha ni se cuenta como
-  // trabajo pendiente del mostrador, pero tiene que verse, porque es
-  // justamente lo que hay que decirle al paciente que compre fuera.
+  // Lo que la farmacia no maneja y lo que el mostrador marcó «no entregado»
+  // van aparte: no se despachan ni cuentan como trabajo pendiente, pero tienen
+  // que verse, porque es justamente lo que hay que decirle al paciente que
+  // compre fuera.
   const itemsExternos = receta.items.filter(esItemExterno)
+  const itemsNoEntregados = receta.items.filter(item => item.estado === 'no_entregado')
 
-  const itemsFarmacia = receta.items.filter(item => ! esItemExterno(item))
+  const itemsFarmacia = receta.items.filter(item => ! esItemExterno(item) && item.estado !== 'no_entregado')
   const itemsPendientes = itemsFarmacia.filter(
     item => item.estado !== 'despachado_completo'
   )
+  const estadoReceta = ESTADO_RECETA[receta.estado] ?? { label: receta.estado.replace(/_/g, ' '), tone: 'neutral' }
 
   // «Ver detalle» de una receta cerrada abría este mismo modal con las
   // cantidades editables y «Confirmar despacho» activo: sobre una anulada
@@ -162,9 +188,7 @@ export function DespacharRecetaModal({
                 {formatFechaMes(receta.fecha_emision)}
               </Text>
             </Stack>
-            <StatusBadge tone={receta.estado === 'pendiente' ? 'warning' : 'info'}>
-              {receta.estado.replace(/_/g, ' ')}
-            </StatusBadge>
+            <StatusBadge tone={estadoReceta.tone}>{estadoReceta.label}</StatusBadge>
           </Group>
           {receta.indicaciones_generales && (
             <Text size="xs" c="dimmed" mt="xs">
@@ -190,36 +214,7 @@ export function DespacharRecetaModal({
         {/* Antes que la lista de entrega: quien atiende el mostrador tiene que
             poder decirle al paciente, de entrada, qué no va a llevarse de
             aquí. */}
-        {itemsExternos.length > 0 && (
-          <Alert
-            icon={<IconAlertTriangle size={14} />}
-            color="amber"
-            variant="light"
-            title={
-              itemsExternos.length === 1
-                ? 'Un medicamento no lo maneja la farmacia'
-                : `${itemsExternos.length} medicamentos no los maneja la farmacia`
-            }
-          >
-            <Stack gap={4} mt={4}>
-              {itemsExternos.map(item => (
-                <Text size="xs" key={item.id}>
-                  <Text span fw={600} c="inherit">
-                    {nombreDeItem(item)}
-                  </Text>
-                  {' — '}
-                  {item.cantidad_prescrita} unid. · {item.dosis} ·{' '}
-                  {item.frecuencia} · {item.duracion}
-                </Text>
-              ))}
-              <Text size="xs" c="dimmed">
-                {itemsExternos.length === 1
-                  ? 'El paciente lo adquiere fuera del dispensario. No se despacha ni descuenta existencias.'
-                  : 'El paciente los adquiere fuera del dispensario. No se despachan ni descuentan existencias.'}
-              </Text>
-            </Stack>
-          </Alert>
-        )}
+        <AdquirirFueraAlert items={[...itemsExternos, ...itemsNoEntregados]} />
 
         <Text size="sm" fw={500}>
           {soloLectura ? 'Medicamentos de la farmacia' : 'Medicamentos a despachar'}
@@ -230,7 +225,9 @@ export function DespacharRecetaModal({
             <Text size="sm">
               {itemsExternos.length === receta.items.length
                 ? 'Esta receta no tiene nada que la farmacia pueda entregar.'
-                : 'Todos los ítems de esta receta ya fueron despachados.'}
+                : itemsNoEntregados.length > 0 && itemsFarmacia.length === 0
+                  ? 'Nada de esta receta se entrega aquí: lo que falta lo adquiere fuera.'
+                  : 'Lo que se entrega aquí ya fue despachado.'}
             </Text>
           </Alert>
         ) : (
@@ -295,9 +292,20 @@ export function DespacharRecetaModal({
                           </Text>
                         </Stack>
                       </Group>
-                      <StatusBadge tone={estadoItem.tone} size="xs">
-                        {estadoItem.label}
-                      </StatusBadge>
+                      <Group gap={4} wrap="nowrap">
+                        <StatusBadge tone={estadoItem.tone} size="xs">
+                          {estadoItem.label}
+                        </StatusBadge>
+                        {/* Agotado, vencido u otro: el paciente lo adquiere
+                            fuera y la receta puede cerrarse (opción A). */}
+                        {!soloLectura && (
+                          <Button size="compact-xs" variant="subtle" color="red"
+                            leftSection={<IconShoppingCartOff size={12} />}
+                            disabled={actualizando} onClick={() => setNoEntregando(item)}>
+                            No se entrega
+                          </Button>
+                        )}
+                      </Group>
                     </Group>
 
                     {/* Los tres números caben en una fila hasta en el teléfono;
@@ -353,6 +361,9 @@ export function DespacharRecetaModal({
           </Stack>
         )}
       </Stack>
+      <NoEntregadoRecetaModal recetaId={receta.id} item={noEntregando}
+        motivoSugerido={noEntregando ? motivoSugerido(noEntregando) : undefined}
+        onClose={() => setNoEntregando(null)} />
       {soloLectura ? (
         <ModalFooter onCancel={handleClose} cancelLabel="Cerrar" sinPrincipal />
       ) : (
