@@ -182,6 +182,14 @@ final class RecetaService implements RecetaServiceInterface
                 );
             }
 
+            // Cerrada con faltantes también terminó: lo que faltaba quedó
+            // «adquirir fuera», y anularla volvería inválido ese impreso.
+            if ($receta->estado === EstadoReceta::CERRADA_CON_FALTANTES->value) {
+                throw new ReglaNegocioException(
+                    'No se puede anular una receta cerrada: lo que no se entregó ya figura como «adquirir fuera».'
+                );
+            }
+
             $receta->update([
                 'estado'           => 'anulada',
                 'anulado_en'       => now(),
@@ -211,6 +219,7 @@ final class RecetaService implements RecetaServiceInterface
                 EstadoReceta::DESPACHADA_COMPLETA->value,
                 EstadoReceta::ANULADA->value,
                 EstadoReceta::EXTERNA->value,
+                EstadoReceta::CERRADA_CON_FALTANTES->value,
             ])) {
                 throw new ReglaNegocioException("La receta no puede ser despachada porque su estado es: {$receta->estado}");
             }
@@ -237,6 +246,13 @@ final class RecetaService implements RecetaServiceInterface
                         "«{$item->medicamento_externo}» no lo maneja la " .
                         'farmacia: el paciente lo adquiere fuera y no se ' .
                         'despacha desde el dispensario.'
+                    );
+                }
+
+                // Lo marcado como no entregado ya no se espera en el mostrador.
+                if ($item->estado === ItemReceta::NO_ENTREGADO) {
+                    throw new ReglaNegocioException(
+                        "«{$item->inventario?->nombre}» se marcó como no entregado: el paciente lo adquiere fuera."
                     );
                 }
 
@@ -294,37 +310,81 @@ final class RecetaService implements RecetaServiceInterface
                 }
             }
 
-            // Evaluar estado general de la receta
-            $receta->load('items'); // Recargar para estado actualizado
-            
-            // Los externos no cuentan para nada de esto: la farmacia ya hizo
-            // con ellos todo lo que podía hacer, que es nada. Sin excluirlos,
-            // una receta con un solo medicamento externo no llegaría jamás a
-            // «despachada completa» por muy entregado que estuviera el resto.
-            $delCatalogo = $receta->items->reject->esExterno();
-
-            $todosCompletos = $delCatalogo->every(
-                fn ($i) => $i->estado === 'despachado_completo'
-            );
-            $todosPendientes = $delCatalogo->every(
-                fn ($i) => $i->estado === 'pendiente'
-            );
-
-            if ($todosCompletos) {
-                $estadoReceta = 'despachada_completa';
-            } elseif ($todosPendientes) {
-                $estadoReceta = 'pendiente';
-            } else {
-                $estadoReceta = 'despachada_parcial';
-            }
-
             $receta->update([
-                'estado' => $estadoReceta,
+                'estado' => $this->estadoSegunItems($receta->load('items')),
                 'despachado_por' => $despachadoPor,
                 'despachado_en' => now(),
             ]);
 
             return $receta;
         });
+    }
+
+    /**
+     * El mostrador no va a entregar un medicamento del inventario: agotado,
+     * vencido u otro motivo (decisión del Dispensario del 2026-10-24, opción
+     * A). Queda «no entregado» con quién y cuándo, y la receta se cierra si ya
+     * no espera nada más. Lo entregado antes, si lo hubo, se queda; no se
+     * toca el kardex, porque no sale nada del estante. No se avisa al médico.
+     */
+    public function marcarNoEntregado(int $recetaId, int $itemId, string $motivo, ?string $detalle, int $marcadoPor): RecetaMedica
+    {
+        return DB::transaction(function () use ($recetaId, $itemId, $motivo, $detalle, $marcadoPor) {
+            // Con la receta bloqueada, como el despacho: los dos cambian sus ítems.
+            $receta = RecetaMedica::lockForUpdate()->findOrFail($recetaId);
+
+            if (! in_array($receta->estado, [EstadoReceta::PENDIENTE->value, EstadoReceta::DESPACHADA_PARCIAL->value], true)) {
+                throw new ReglaNegocioException("La receta {$receta->folio} ya no espera entregas: no se marca nada más.");
+            }
+
+            $item = $receta->items()->with('inventario:id,nombre')->findOrFail($itemId);
+
+            if ($item->esExterno()) {
+                throw new ReglaNegocioException("«{$item->medicamento_externo}» no lo maneja la farmacia: ya se adquiere fuera.");
+            }
+
+            $nombre = $item->inventario?->nombre ?? 'El medicamento';
+            if ($item->estado === 'despachado_completo') {
+                throw new ReglaNegocioException("«{$nombre}» ya se entregó completo.");
+            }
+            if ($item->estado === ItemReceta::NO_ENTREGADO) {
+                throw new ReglaNegocioException("«{$nombre}» ya está marcado como no entregado.");
+            }
+
+            $detalle = trim((string) $detalle);
+            $item->update([
+                'estado'               => ItemReceta::NO_ENTREGADO,
+                'motivo_no_entregado'  => $motivo,
+                'detalle_no_entregado' => $detalle !== '' ? $detalle : null,
+                'no_entregado_por'     => $marcadoPor,
+                'no_entregado_en'      => now(),
+            ]);
+
+            $receta->update(['estado' => $this->estadoSegunItems($receta->load('items'))]);
+
+            return $receta;
+        });
+    }
+
+    /**
+     * El estado de la receta según sus ítems del inventario.
+     *
+     * Los externos no cuentan: la farmacia ya hizo con ellos todo lo que podía
+     * hacer, que es nada. Sin excluirlos, una receta con un solo medicamento
+     * externo no llegaría jamás a «despachada completa» por muy entregado que
+     * estuviera el resto. Un «no entregado» también termina el ítem: con todo
+     * entregado o marcado, la receta se cierra con faltantes.
+     */
+    private function estadoSegunItems(RecetaMedica $receta): string
+    {
+        $delCatalogo = $receta->items->reject->esExterno();
+        $terminado = fn (ItemReceta $i) => in_array($i->estado, ['despachado_completo', ItemReceta::NO_ENTREGADO], true);
+
+        return match (true) {
+            $delCatalogo->every(fn (ItemReceta $i) => $i->estado === 'despachado_completo') => EstadoReceta::DESPACHADA_COMPLETA->value,
+            $delCatalogo->every($terminado)                                                 => EstadoReceta::CERRADA_CON_FALTANTES->value,
+            $delCatalogo->every(fn (ItemReceta $i) => $i->estado === 'pendiente')          => EstadoReceta::PENDIENTE->value,
+            default                                                                         => EstadoReceta::DESPACHADA_PARCIAL->value,
+        };
     }
 }

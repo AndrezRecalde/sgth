@@ -213,6 +213,7 @@ final class EstadisticasDispensarioService implements EstadisticasDispensarioSer
                 'pendiente' => (int) $recetasEstado->get('pendiente', 0),
                 'despachada_parcial' => (int) $recetasEstado->get('despachada_parcial', 0),
                 'despachada_completa' => (int) $recetasEstado->get('despachada_completa', 0),
+                'cerrada_con_faltantes' => (int) $recetasEstado->get('cerrada_con_faltantes', 0),
                 'anulada' => (int) $recetasEstado->get('anulada', 0),
             ],
             'consultas_por_medico' => $consultasPorMedico,

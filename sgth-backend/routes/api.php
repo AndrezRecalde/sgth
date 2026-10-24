@@ -2037,6 +2037,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
             Route::post('{id}/despachar', [RecetaController::class, 'despachar'])
                 ->middleware('role:enfermera|admin-dispensario');
+            // Lo que el mostrador no va a entregar: el paciente lo adquiere
+            // fuera (decisión del Dispensario del 2026-10-24, opción A).
+            Route::patch('{id}/items/{itemId}/no-entregado', [RecetaController::class, 'noEntregado'])
+                ->middleware('role:enfermera|admin-dispensario')
+                ->whereNumber(['id', 'itemId']);
             Route::post('{id}/anular', [RecetaController::class, 'anular'])
                 ->middleware('role:medico|odontologo|admin-dispensario');
             Route::patch('{recetaId}/items/{itemId}',

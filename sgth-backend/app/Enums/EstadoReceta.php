@@ -25,6 +25,14 @@ enum EstadoReceta: string
      */
     case EXTERNA             = 'externa';
 
+    /**
+     * Lo del inventario está entregado o marcado «no entregado: adquirir
+     * fuera» y al menos uno es lo segundo (decisión del Dispensario del
+     * 2026-10-24, opción A). Terminal como la completa: no se despacha ni se
+     * anula, y el impreso dice qué comprar fuera.
+     */
+    case CERRADA_CON_FALTANTES = 'cerrada_con_faltantes';
+
     /** @return list<string> */
     public static function valores(): array
     {

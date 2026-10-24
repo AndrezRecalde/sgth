@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\Dispensario;
 
 use App\Enums\EstadoReceta;
+use App\Enums\MotivoNoEntregado;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dispensario\StoreRecetaMedicaRequest;
 use App\Http\Responses\ApiResponse;
@@ -277,5 +278,36 @@ final class RecetaController extends Controller
         );
 
         return ApiResponse::ok($receta, 'Receta despachada exitosamente.');
+    }
+
+    /**
+     * Un medicamento del inventario que el mostrador no va a entregar
+     * (decisión del Dispensario del 2026-10-24, opción A). Lo marca quien
+     * despacha; «otro motivo» pide el detalle.
+     */
+    public function noEntregado(Request $request, int $id, int $itemId): JsonResponse
+    {
+        $request->validate([
+            'motivo'  => ['required', Rule::in(MotivoNoEntregado::valores())],
+            'detalle' => ['nullable', 'string', 'max:255',
+                Rule::requiredIf($request->input('motivo') === MotivoNoEntregado::OTRO->value)],
+        ], [
+            'motivo.in'        => 'Elija el motivo: agotado, vencido u otro.',
+            'detalle.required' => 'Explique por qué no se entrega: queda en la receta.',
+        ]);
+
+        $receta = $this->recetaService->marcarNoEntregado(
+            $id,
+            $itemId,
+            $request->string('motivo')->value(),
+            $request->input('detalle'),
+            $request->user()->id,
+        );
+
+        $mensaje = $receta->estado === EstadoReceta::CERRADA_CON_FALTANTES->value
+            ? 'Marcado como no entregado. La receta se cerró: el impreso dice qué adquirir fuera.'
+            : 'Marcado como no entregado: el paciente lo adquiere fuera.';
+
+        return ApiResponse::ok($receta, $mensaje);
     }
 }

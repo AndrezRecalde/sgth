@@ -8179,6 +8179,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/dispensario/recetas/{id}/items/{itemId}/no-entregado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Un medicamento del inventario que el mostrador no va a entregar
+         *     (decisión del Dispensario del 2026-10-24, opción A). Lo marca quien
+         *     despacha; «otro motivo» pide el detalle
+         */
+        patch: operations["receta.noEntregado"];
+        trace?: never;
+    };
     "/v1/dispensario/recetas/{id}/anular": {
         parameters: {
             query?: never;
@@ -40155,6 +40176,44 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Receta despachada exitosamente.";
+                        datos: components["schemas"]["RecetaMedica"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "receta.noEntregado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                itemId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    motivo: "agotado" | "vencido" | "otro";
+                    detalle?: string | null;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @enum {string} */
+                        mensaje: "Marcado como no entregado. La receta se cerró: el impreso dice qué adquirir fuera." | "Marcado como no entregado: el paciente lo adquiere fuera.";
                         datos: components["schemas"]["RecetaMedica"];
                         meta: null;
                     };

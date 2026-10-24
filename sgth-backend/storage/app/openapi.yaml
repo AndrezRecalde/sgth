@@ -52182,6 +52182,105 @@
                 }
             }
         },
+        "/v1/dispensario/recetas/{id}/items/{itemId}/no-entregado": {
+            "patch": {
+                "operationId": "receta.noEntregado",
+                "summary": "Un medicamento del inventario que el mostrador no va a entregar\n(decisi\u00f3n del Dispensario del 2026-10-24, opci\u00f3n A). Lo marca quien\ndespacha; \u00abotro motivo\u00bb pide el detalle",
+                "tags": [
+                    "Receta"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "itemId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "motivo": {
+                                        "type": "string",
+                                        "enum": [
+                                            "agotado",
+                                            "vencido",
+                                            "otro"
+                                        ]
+                                    },
+                                    "detalle": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 255
+                                    }
+                                },
+                                "required": [
+                                    "motivo"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Marcado como no entregado. La receta se cerr\u00f3: el impreso dice qu\u00e9 adquirir fuera.",
+                                                "Marcado como no entregado: el paciente lo adquiere fuera."
+                                            ]
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/RecetaMedica"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/dispensario/recetas/{id}/anular": {
             "post": {
                 "operationId": "receta.anular",
