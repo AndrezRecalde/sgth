@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Models\Dispensario\HistoriaClinica;
 use App\Models\Expediente\Servidor;
 use Illuminate\Support\Facades\Cache;
 
@@ -34,6 +35,11 @@ class ServidorObserver
     public function updated(Servidor $servidor): void
     {
         $this->limpiarCachesRelacionados();
+
+        // Su historia clínica sigue la cédula corregida: se busca por ella.
+        if ($servidor->wasChanged('cedula')) {
+            HistoriaClinica::seguirCedula($servidor->id, null, $servidor->getOriginal('cedula'), $servidor->cedula);
+        }
 
         $cambios = array_intersect_key($servidor->getChanges(), array_flip(self::CAMPOS_LEGALES));
 

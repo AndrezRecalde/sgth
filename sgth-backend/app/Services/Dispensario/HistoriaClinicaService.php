@@ -223,10 +223,10 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
             );
         }
 
-        $existente = HistoriaClinica::where(
-            $esServidor ? 'servidor_id' : 'carga_familiar_id',
-            $paciente->id
-        )->first();
+        $existente = HistoriaClinica::delDueno(
+            $esServidor ? $paciente->id : null,
+            $esServidor ? null : $paciente->id,
+        );
 
         if ($existente) {
             return $existente;

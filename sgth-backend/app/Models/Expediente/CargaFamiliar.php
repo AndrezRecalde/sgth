@@ -3,12 +3,15 @@
 namespace App\Models\Expediente;
 
 use App\Enums\TipoParentesco;
+use App\Observers\Expediente\CargaFamiliarObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+#[ObservedBy(CargaFamiliarObserver::class)]
 class CargaFamiliar extends Model
 {
     use HasFactory, SoftDeletes;
@@ -68,9 +71,10 @@ class CargaFamiliar extends Model
 
     public function historiaClinica(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
+        // Si quedó más de una, la misma que `HistoriaClinica::delDueno()`.
         return $this->hasOne(
             \App\Models\Dispensario\HistoriaClinica::class,
             'carga_familiar_id'
-        );
+        )->orderByRaw('cedula_paciente IS NULL')->orderBy('id');
     }
 }

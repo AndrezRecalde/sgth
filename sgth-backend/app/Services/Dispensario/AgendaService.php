@@ -394,9 +394,13 @@ final class AgendaService implements AgendaServiceInterface
      */
     private function adjuntarHistoria(Collection $turnos): void
     {
+        // Si un paciente tiene dos, la misma que `HistoriaClinica::delDueno()`:
+        // `pluck` se queda con la última de cada dueño, así que va al final.
         $porServidor = HistoriaClinica::whereIn('servidor_id', $turnos->pluck('servidor_id')->filter())
+            ->orderByRaw('cedula_paciente IS NOT NULL')->orderByDesc('id')
             ->pluck('id', 'servidor_id');
         $porCarga = HistoriaClinica::whereIn('carga_familiar_id', $turnos->pluck('carga_familiar_id')->filter())
+            ->orderByRaw('cedula_paciente IS NOT NULL')->orderByDesc('id')
             ->pluck('id', 'carga_familiar_id');
 
         $turnos->each(function (AgendaMedica $turno) use ($porServidor, $porCarga) {
