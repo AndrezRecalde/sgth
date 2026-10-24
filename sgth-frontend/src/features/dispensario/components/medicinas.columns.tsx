@@ -19,6 +19,8 @@ import { diasParaCaducar } from '../utils/caducidad';
 import { formatFechaMes } from '@/lib/fecha';
 
 interface ColumnActions {
+  /** Lo que el rol puede hacer (`usePermisosInventario`): lo demás no se ofrece. */
+  permisos: { gestionaCatalogo: boolean; ajustaStock: boolean; daDeBaja: boolean };
   onEditar: (m: InventarioMedicina) => void;
   onDarDeBaja: (m: InventarioMedicina) => void;
   onAjustar: (m: InventarioMedicina) => void;
@@ -184,6 +186,7 @@ export function getMedicinasColumns(
             {
               label: "Editar",
               icon: <IconEdit size={14} />,
+              hidden: !actions.permisos.gestionaCatalogo,
               onClick: () => actions.onEditar(m),
             },
             ...(m.stock_actual > 0
@@ -191,12 +194,14 @@ export function getMedicinasColumns(
                   label: "Dar de baja existencias",
                   icon: <IconTrash size={14} />,
                   color: "red",
+                  hidden: !actions.permisos.daDeBaja,
                   onClick: () => actions.onDarDeBaja(m),
                 }]
               : []),
             {
               label: "Ajustar inventario",
               icon: <IconAdjustments size={14} />,
+              hidden: !actions.permisos.ajustaStock,
               onClick: () => actions.onAjustar(m),
             },
             {
@@ -215,6 +220,7 @@ export function getMedicinasColumns(
                 <IconCircleCheck size={14} />
               ),
               color: m.estado ? "red" : undefined,
+              hidden: !actions.permisos.gestionaCatalogo,
               onClick: () => actions.onToggleEstado(m),
             },
           ]}

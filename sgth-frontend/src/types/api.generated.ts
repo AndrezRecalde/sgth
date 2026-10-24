@@ -5094,22 +5094,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/dispensario/inventario/medicinas/{medicina}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put: operations["medicinas.update"];
-        post?: never;
-        delete: operations["medicinas.destroy"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/dispensario/inventario/medicinas/{id}/kardex": {
         parameters: {
             query?: never;
@@ -5126,7 +5110,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/dispensario/inventario/medicinas/{medicina}/baja": {
+    "/v1/dispensario/inventario/medicinas/{medicina}": {
         parameters: {
             query?: never;
             header?: never;
@@ -5134,9 +5118,9 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put?: never;
-        post: operations["inventarioMedicinas.registrarBaja"];
-        delete?: never;
+        put: operations["medicinas.update"];
+        post?: never;
+        delete: operations["medicinas.destroy"];
         options?: never;
         head?: never;
         patch?: never;
@@ -5152,6 +5136,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["inventarioMedicinas.ajustarInventario"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/dispensario/inventario/medicinas/{medicina}/baja": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["inventarioMedicinas.registrarBaja"];
         delete?: never;
         options?: never;
         head?: never;
@@ -32284,6 +32284,36 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
+    "inventarioMedicinas.kardex": {
+        parameters: {
+            query?: {
+                per_page?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Kardex de la medicina.";
+                        datos: Record<string, never>;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "medicinas.update": {
         parameters: {
             query?: never;
@@ -32345,18 +32375,23 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
-    "inventarioMedicinas.kardex": {
+    "inventarioMedicinas.ajustarInventario": {
         parameters: {
-            query?: {
-                per_page?: number;
-            };
+            query?: never;
             header?: never;
             path: {
-                id: number;
+                medicina: number;
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": {
+                    nuevo_stock: number;
+                    motivo: string;
+                };
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -32366,13 +32401,14 @@ export interface operations {
                     "application/json": {
                         exito: boolean;
                         /** @constant */
-                        mensaje: "Kardex de la medicina.";
-                        datos: Record<string, never>;
+                        mensaje: "Inventario ajustado correctamente.";
+                        datos: components["schemas"]["InventarioMedicina"];
                         meta: null;
                     };
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "inventarioMedicinas.registrarBaja": {
@@ -32407,42 +32443,6 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Existencias dadas de baja correctamente.";
-                        datos: components["schemas"]["InventarioMedicina"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
-    "inventarioMedicinas.ajustarInventario": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                medicina: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    nuevo_stock: number;
-                    motivo: string;
-                };
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Inventario ajustado correctamente.";
                         datos: components["schemas"]["InventarioMedicina"];
                         meta: null;
                     };
