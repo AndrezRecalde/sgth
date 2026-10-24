@@ -30,6 +30,7 @@ import { DarDeBajaStockModal } from "@/features/dispensario/components/DarDeBaja
 import { AjustarInventarioModal } from "@/features/dispensario/components/AjustarInventarioModal";
 import { KardexDrawer } from "@/features/dispensario/components/KardexDrawer";
 import { getMedicinasColumns } from "@/features/dispensario/components/medicinas.columns";
+import { usePermisosInventario } from "@/features/dispensario/hooks/usePermisosInventario";
 import type { InventarioMedicina } from "@/features/dispensario/services/inventarioMedicinaService";
 
 import { PageShell , confirmar } from '@/components/ui'
@@ -80,7 +81,10 @@ export function FarmaciaView() {
     setPage(1);
   };
 
+  const permisos = usePermisosInventario();
+
   const columns = getMedicinasColumns({
+    permisos,
     onEditar: (m) => {
       setMedicinaSel(m);
       abrirModal();
@@ -124,26 +128,34 @@ export function FarmaciaView() {
         title="Farmacia"
         description="Gestión del inventario de medicinas"
         actions={
-          <Group gap="xs">
-            <Button
-              component={Link}
-              href={ROUTES.SALUD.FARMACIA_ADQUISICIONES}
-              variant="light"
-              leftSection={<IconShoppingCart size={14} />}
-            >
-              Adquisiciones
-            </Button>
-            <Button
-              variant="light"
-              leftSection={<IconCubePlus size={14} />}
-              onClick={() => {
-                setMedicinaSel(null);
-                abrirModal();
-              }}
-            >
-              Nueva medicina
-            </Button>
-          </Group>
+          // Médicos y odontólogos consultan; la administración registra
+          // adquisiciones y mantiene el catálogo (decisión del 2026-10-24).
+          (permisos.registraAdquisiciones || permisos.gestionaCatalogo) && (
+            <Group gap="xs">
+              {permisos.registraAdquisiciones && (
+                <Button
+                  component={Link}
+                  href={ROUTES.SALUD.FARMACIA_ADQUISICIONES}
+                  variant="light"
+                  leftSection={<IconShoppingCart size={14} />}
+                >
+                  Adquisiciones
+                </Button>
+              )}
+              {permisos.gestionaCatalogo && (
+                <Button
+                  variant="light"
+                  leftSection={<IconCubePlus size={14} />}
+                  onClick={() => {
+                    setMedicinaSel(null);
+                    abrirModal();
+                  }}
+                >
+                  Nueva medicina
+                </Button>
+              )}
+            </Group>
+          )
         }
       />
 

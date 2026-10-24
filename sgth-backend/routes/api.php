@@ -2052,7 +2052,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             )->middleware('role:medico|odontologo');
         });
 
-        // Inventario — todo el personal del dispensario
+        // Inventario — lo consulta todo el personal del Dispensario; lo que
+        // cambia las existencias, el mostrador y la administración (decisión
+        // del Dispensario del 2026-10-24, pregunta 2). Antes los cuatro roles
+        // podían todo, ajustar el stock sin documento incluido.
         Route::prefix('inventario')
             ->middleware('role:medico|odontologo|enfermera|admin-dispensario')
             ->group(function () {
@@ -2060,13 +2063,22 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                     [InventarioMedicinasController::class, 'buscar']);
                 Route::get('medicinas/stock-bajo',
                     [InventarioMedicinasController::class, 'contarStockBajo']);
-                Route::apiResource('medicinas', InventarioMedicinasController::class);
+                Route::apiResource('medicinas', InventarioMedicinasController::class)
+                    ->only(['index', 'show']);
                 Route::get('medicinas/{id}/kardex',
                     [InventarioMedicinasController::class, 'kardex']);
-                Route::post('medicinas/{medicina}/baja',
-                    [InventarioMedicinasController::class, 'registrarBaja']);
+                // Dar de alta, editar, retirar o reactivar un medicamento y
+                // ajustar el stock: la administración.
+                Route::apiResource('medicinas', InventarioMedicinasController::class)
+                    ->only(['store', 'update', 'destroy'])
+                    ->middleware('role:admin-dispensario');
                 Route::post('medicinas/{medicina}/ajustar-inventario',
-                    [InventarioMedicinasController::class, 'ajustarInventario']);
+                    [InventarioMedicinasController::class, 'ajustarInventario'])
+                    ->middleware('role:admin-dispensario');
+                // Dar de baja existencias vencidas o rotas: también enfermería.
+                Route::post('medicinas/{medicina}/baja',
+                    [InventarioMedicinasController::class, 'registrarBaja'])
+                    ->middleware('role:enfermera|admin-dispensario');
             });
 
         Route::prefix('adquisiciones')
