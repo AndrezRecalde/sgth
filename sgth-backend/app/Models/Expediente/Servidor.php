@@ -156,9 +156,12 @@ class Servidor extends Model
         return $this->hasMany(ContratoServidor::class);
     }
 
+    /** Si quedó más de una, la misma que `HistoriaClinica::delDueno()`. */
     public function historiaClinica(): HasOne
     {
-        return $this->hasOne(HistoriaClinica::class, 'servidor_id');
+        return $this->hasOne(HistoriaClinica::class, 'servidor_id')
+            ->orderByRaw('cedula_paciente IS NULL')
+            ->orderBy('id');
     }
 
 

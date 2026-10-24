@@ -141,11 +141,14 @@ class DatosPruebaDispensarioSeeder extends Seeder
 
     /**
      * Pacientes sin historia previa: `cedula_paciente` es única, así que
-     * reutilizar un servidor ya atendido chocaría contra el índice.
+     * reutilizar un servidor ya atendido chocaría contra el índice. Y sin
+     * historia a su nombre: una sin cédula no la ve el índice, y la siembra le
+     * abría una segunda al mismo servidor.
      */
     private function pacientes()
     {
         return Servidor::where('estado', true)
+            ->whereDoesntHave('historiaClinica')
             ->whereNotIn(
                 'cedula',
                 HistoriaClinica::whereNotNull('cedula_paciente')

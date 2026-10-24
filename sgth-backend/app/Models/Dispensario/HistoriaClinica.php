@@ -80,6 +80,35 @@ class HistoriaClinica extends Model
         return $this->cedula_paciente ?? '—';
     }
 
+    /**
+     * La historia de un servidor o de un familiar, buscada por su dueño.
+     *
+     * Si quedó más de una —lo que corrige `sgth:historias:fusionar`—, la que
+     * tiene cédula y, entre ellas, la más antigua: así todas las pantallas
+     * eligen la misma. Antes cada una tomaba la que le devolvía la base, y una
+     * misma atención llegó a quedar con el triaje en una y la consulta en otra.
+     */
+    public static function delDueno(?int $servidorId, ?int $cargaId): ?self
+    {
+        if ($servidorId === null && $cargaId === null) {
+            return null;
+        }
+
+        return self::query()
+            ->where($servidorId !== null ? 'servidor_id' : 'carga_familiar_id', $servidorId ?? $cargaId)
+            ->orderByRaw('cedula_paciente IS NULL')
+            ->orderBy('id')
+            ->first();
+    }
+
+    /**
+     * La historia del paciente, o una nueva si no tiene.
+     *
+     * Primero por su dueño y después por la cédula. Solo por la cédula, a un
+     * servidor con una historia sin cédula —las que abría la recepción antes
+     * del 2026-09-05— o con la cédula corregida en el expediente se le abría
+     * una segunda.
+     */
     public static function buscarOCrearPorCedula(
         string $cedula,
         string $tipoPaciente = 'servidor',
@@ -87,6 +116,20 @@ class HistoriaClinica extends Model
         ?int $cargaId = null,
         ?int $userId = null
     ): self {
+        $delDueno = self::delDueno($servidorId, $cargaId);
+
+        if ($delDueno) {
+            // La que no tenía cédula la estrena, si nadie más la tiene.
+            if ($delDueno->cedula_paciente === null && ! self::withTrashed()->where('cedula_paciente', $cedula)->exists()) {
+                $delDueno->update([
+                    'cedula_paciente' => $cedula,
+                    'numero_historia' => $delDueno->numero_historia ?? $cedula,
+                ]);
+            }
+
+            return $delDueno;
+        }
+
         $hce = self::where('cedula_paciente', $cedula)->first();
 
         if ($hce) {
@@ -108,5 +151,32 @@ class HistoriaClinica extends Model
             // (ej. doble invocación de efectos en el cliente).
             return self::where('cedula_paciente', $cedula)->firstOrFail();
         }
+    }
+
+    /**
+     * Cuando Talento Humano corrige la cédula de un servidor o de un familiar,
+     * su historia la sigue: se busca por ella en la recepción y en la ficha
+     * ocupacional, y con la vieja ya no se encontraba y se abría otra.
+     *
+     * Si la nueva ya la tiene otra historia —la del preocupacional de esa
+     * persona, por ejemplo— no se toca: son dos historias de la misma persona
+     * y las junta `sgth:historias:fusionar`.
+     */
+    public static function seguirCedula(?int $servidorId, ?int $cargaId, ?string $anterior, ?string $nueva): void
+    {
+        $historia = self::delDueno($servidorId, $cargaId);
+
+        if (! $historia || ! $nueva || $historia->cedula_paciente === $nueva
+            || self::withTrashed()->where('cedula_paciente', $nueva)->exists()) {
+            return;
+        }
+
+        $historia->update([
+            'cedula_paciente' => $nueva,
+            // El número es la cédula; uno distinto (el de una siembra) se respeta.
+            'numero_historia' => in_array($historia->numero_historia, [null, $anterior], true)
+                ? $nueva
+                : $historia->numero_historia,
+        ]);
     }
 }
