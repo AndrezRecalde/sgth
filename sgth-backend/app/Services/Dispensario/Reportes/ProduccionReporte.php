@@ -140,7 +140,7 @@ final class ProduccionReporte extends ReporteBase
 
     private function porProfesional(Collection $registros): array
     {
-        $nombres = $this->nombres($registros->pluck('actor')->unique()->all());
+        $nombres = $this->nombresDeUsuarios($registros->pluck('actor')->unique()->all());
 
         return $registros->groupBy('actor')
             ->map(fn (Collection $grupo, $actor) => [
@@ -176,16 +176,5 @@ final class ProduccionReporte extends ReporteBase
             + $fila['servicios_enfermeria'] + $fila['triajes'] + $fila['signos_sso'];
 
         return $fila;
-    }
-
-    /** @return array<int, string> */
-    private function nombres(array $usuarios): array
-    {
-        return DB::table('users as u')
-            ->leftJoin('servidores as s', 's.id', '=', 'u.servidor_id')
-            ->whereIn('u.id', $usuarios)
-            ->selectRaw("u.id, COALESCE(NULLIF(TRIM(COALESCE(s.nombre, '') || ' ' || COALESCE(s.apellido, '')), ''), u.usuario_ti) as nombre")
-            ->pluck('nombre', 'id')
-            ->all();
     }
 }

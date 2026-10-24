@@ -149,7 +149,7 @@ test('el catálogo agrupa por área y dice en qué formatos sale cada reporte', 
         ->getJson('/api/v1/dispensario/reportes')->json('datos.reportes'));
 
     expect($catalogo->pluck('area')->unique()->values()->all())
-        ->toBe(['Atención clínica', 'Enfermería', 'Farmacia', 'Salud ocupacional', 'Gestión']);
+        ->toBe(['Atención clínica', 'Exámenes', 'Enfermería', 'Farmacia', 'Salud ocupacional', 'Gestión']);
     expect($catalogo->firstWhere('clave', 'informe')['formatos'])->toBe(['excel', 'pdf']);
     expect($catalogo->firstWhere('clave', 'turnos')['formatos'])->toBe(['excel']);
 });
