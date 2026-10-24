@@ -76059,6 +76059,19 @@
                     },
                     "tipo_paciente": {
                         "type": "string"
+                    },
+                    "fusionada_con_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "fusionada_en": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
                     }
                 },
                 "required": [
@@ -76076,7 +76089,9 @@
                     "carga_familiar_id",
                     "numero_historia",
                     "cedula_paciente",
-                    "tipo_paciente"
+                    "tipo_paciente",
+                    "fusionada_con_id",
+                    "fusionada_en"
                 ],
                 "title": "HistoriaClinica"
             },

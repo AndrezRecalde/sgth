@@ -35,7 +35,14 @@ class HistoriaClinica extends Model
         return [
             'medicacion_habitual' => 'encrypted',
             'estado' => 'boolean',
+            'fusionada_en' => 'datetime',
         ];
+    }
+
+    /** La historia en la que se fusionó esta, si es una retirada por `sgth:historias:fusionar`. */
+    public function fusionadaCon(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'fusionada_con_id');
     }
 
     public function servidor(): BelongsTo
