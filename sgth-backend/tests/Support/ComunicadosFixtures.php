@@ -74,7 +74,9 @@ function datosDeComunicado(array $cambios = []): array
         'unidades'              => [],
         'regimenes'             => [],
         'publicado_desde'       => null,
-        'publicado_hasta'       => null,
+        // Obligatoria para publicar (2026-10-24); un mes, contado desde el
+        // «ahora» de cada prueba.
+        'publicado_hasta'       => now()->addMonth()->toDateString(),
         'fijado'                => false,
         'requiere_confirmacion' => true,
     ], $cambios);

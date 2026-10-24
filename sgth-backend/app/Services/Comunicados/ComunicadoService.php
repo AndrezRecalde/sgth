@@ -142,11 +142,11 @@ final class ComunicadoService implements ComunicadoServiceInterface
             $desde = ($desde === null || $desde->isSameDay($ahora)) ? $ahora : $desde->copy()->startOfDay();
             $hasta = $bloqueado->publicado_hasta;
 
-            if ($hasta !== null && $hasta->lt($ahora)) {
-                throw new ReglaNegocioException('La fecha de fin ya pasó: cámbiela o quítela antes de publicar.');
+            if ($hasta->lt($ahora)) {
+                throw new ReglaNegocioException('La fecha de fin ya pasó: cámbiela antes de publicar.');
             }
 
-            if ($hasta !== null && $hasta->lt($desde)) {
+            if ($hasta->lt($desde)) {
                 throw new ReglaNegocioException('La fecha de fin es anterior a la de inicio.');
             }
 
@@ -257,9 +257,15 @@ final class ComunicadoService implements ComunicadoServiceInterface
             $cambios = [];
 
             if (array_key_exists('publicado_hasta', $datos)) {
-                $hasta = $datos['publicado_hasta'] === null ? null : Carbon::parse($datos['publicado_hasta'])->endOfDay();
+                // Se alarga o se acorta, pero no se quita (2026-10-24): sin
+                // fecha de fin, lo publicado se quedaba en el Portal para siempre.
+                if ($datos['publicado_hasta'] === null) {
+                    throw new ReglaNegocioException('Lo publicado necesita fecha de fin: elija otra en vez de quitarla.');
+                }
 
-                if ($hasta !== null && $bloqueado->publicado_desde !== null && $hasta->lt($bloqueado->publicado_desde)) {
+                $hasta = Carbon::parse($datos['publicado_hasta'])->endOfDay();
+
+                if ($bloqueado->publicado_desde !== null && $hasta->lt($bloqueado->publicado_desde)) {
                     throw new ReglaNegocioException('La fecha de fin es anterior a la de inicio.');
                 }
 
@@ -374,6 +380,12 @@ final class ComunicadoService implements ComunicadoServiceInterface
     {
         if (! HtmlEnriquecido::tieneTexto($comunicado->cuerpo)) {
             throw new ReglaNegocioException('Para publicar falta el texto.');
+        }
+
+        // Obligatoria desde el 2026-10-24: sin ella, lo publicado no salía nunca
+        // del Portal. El borrador sí se guarda sin fecha de fin.
+        if ($comunicado->publicado_hasta === null) {
+            throw new ReglaNegocioException('Para publicar falta la fecha de fin: elija hasta cuándo se verá en el Portal.');
         }
 
         if ($comunicado->audiencia === AudienciaComunicado::SEGMENTADA

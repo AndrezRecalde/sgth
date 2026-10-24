@@ -34,11 +34,19 @@ function Lectura({ c }: { c: ComunicadoPortal }) {
 /**
  * Una publicación en el listado del Portal (docs/diseno-noticias-comunicados.md,
  * 5.2): solo texto —no hay portada—, con el resumen o el comienzo del texto.
- * La tarjeta entera abre el detalle.
+ * La tarjeta entera abre el detalle. Las fijadas, que salen primero, llevan el
+ * color del Portal.
  */
 export function TarjetaComunicado({ c }: { c: ComunicadoPortal }) {
   return (
-    <Card component={Link} href={ROUTES.PORTAL.COMUNICADO(c.id)} withBorder radius="lg" padding="md" className={classes.tarjeta}>
+    <Card
+      component={Link}
+      href={ROUTES.PORTAL.COMUNICADO(c.id)}
+      withBorder
+      radius="lg"
+      padding="md"
+      className={`${classes.tarjeta} ${c.fijado ? classes.fijada : ''}`}
+    >
       <Stack gap="xs" h="100%">
         <EtiquetasComunicado c={c} />
         <Text fw={c.leido_at ? 500 : 600} lh={1.35}>{c.titulo}</Text>

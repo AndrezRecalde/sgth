@@ -242,10 +242,24 @@ test('en lo publicado solo cambian el fijado y la fecha de fin', function () {
         ->assertStatus(422)
         ->assertJsonValidationErrors(['publicado_hasta'], 'errores');
 
+    // Se alarga o se acorta, pero no se quita.
     $this->actingAs($this->admin, 'sanctum')
         ->patchJson("/api/v1/comunicados/{$publicado->id}/publicacion", ['publicado_hasta' => null])
-        ->assertOk();
-    expect($publicado->fresh()->publicado_hasta)->toBeNull();
+        ->assertStatus(422)
+        ->assertJsonPath('errores.publicado_hasta.0', 'Lo publicado necesita fecha de fin: elija otra en vez de quitarla.');
+    expect($publicado->fresh()->publicado_hasta->format('Y-m-d'))->toBe('2026-11-04');
+});
+
+test('sin fecha de fin el borrador se guarda, pero no se publica', function () {
+    $borrador = borradorDeComunicado($this->admin, ['publicado_hasta' => null]);
+
+    expect($borrador->publicado_hasta)->toBeNull();
+
+    $this->actingAs($this->admin, 'sanctum')
+        ->postJson("/api/v1/comunicados/{$borrador->id}/publicar")
+        ->assertStatus(422)
+        ->assertJsonPath('mensaje', 'Para publicar falta la fecha de fin: elija hasta cuándo se verá en el Portal.');
+    expect($borrador->fresh()->estado->value)->toBe('borrador');
 });
 
 test('un borrador no cambia por la ruta de la publicación', function () {

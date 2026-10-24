@@ -10734,12 +10734,13 @@ export interface components {
         /**
          * ActualizarPublicacionRequest
          * @description Lo que cambia en lo publicado: el fijado y la fecha de fin
-         *     (docs/diseno-noticias-comunicados.md, regla 1). Se manda solo lo que cambia.
+         *     (docs/diseno-noticias-comunicados.md, regla 1). Se manda solo lo que cambia;
+         *     la fecha de fin se alarga o se acorta, pero no se quita.
          */
         ActualizarPublicacionRequest: {
             fijado?: boolean;
             /** Format: date */
-            publicado_hasta?: string | null;
+            publicado_hasta?: string;
         };
         /**
          * AdjuntarResolucionVistoBuenoRequest

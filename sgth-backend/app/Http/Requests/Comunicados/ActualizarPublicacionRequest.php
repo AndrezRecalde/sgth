@@ -6,7 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * Lo que cambia en lo publicado: el fijado y la fecha de fin
- * (docs/diseno-noticias-comunicados.md, regla 1). Se manda solo lo que cambia.
+ * (docs/diseno-noticias-comunicados.md, regla 1). Se manda solo lo que cambia;
+ * la fecha de fin se alarga o se acorta, pero no se quita.
  */
 class ActualizarPublicacionRequest extends FormRequest
 {
@@ -20,7 +21,7 @@ class ActualizarPublicacionRequest extends FormRequest
     {
         return [
             'fijado'          => ['sometimes', 'boolean'],
-            'publicado_hasta' => ['sometimes', 'nullable', 'date_format:Y-m-d', 'after_or_equal:today'],
+            'publicado_hasta' => ['sometimes', 'required', 'date_format:Y-m-d', 'after_or_equal:today'],
         ];
     }
 
@@ -36,6 +37,9 @@ class ActualizarPublicacionRequest extends FormRequest
     /** @return array<string, string> */
     public function messages(): array
     {
-        return ['publicado_hasta.after_or_equal' => 'La fecha de fin no puede ser anterior a hoy.'];
+        return [
+            'publicado_hasta.required'       => 'Lo publicado necesita fecha de fin: elija otra en vez de quitarla.',
+            'publicado_hasta.after_or_equal' => 'La fecha de fin no puede ser anterior a hoy.',
+        ];
     }
 }

@@ -101,6 +101,22 @@ export function sumarDias(fecha: string, dias: number): string {
 }
 
 /**
+ * `YYYY-MM-DD` más tantos meses, en la hora local. Si el día no existe en el
+ * mes de llegada se queda en el último: del 31 de enero, un mes es el 28 (o
+ * 29) de febrero y no el 3 de marzo, como haría `setMonth`.
+ */
+export function sumarMeses(fecha: string, meses: number): string {
+  const d = toDateValue(fecha)
+  if (!d) return ''
+  const dia = d.getDate()
+  d.setDate(1)
+  d.setMonth(d.getMonth() + meses)
+  const ultimo = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()
+  d.setDate(Math.min(dia, ultimo))
+  return fromDateValue(d)
+}
+
+/**
  * ¿La fecha `YYYY-MM-DD` es de hoy o anterior?
  *
  * El espejo del `before_or_equal:today` de Laravel, para que el aviso salga en

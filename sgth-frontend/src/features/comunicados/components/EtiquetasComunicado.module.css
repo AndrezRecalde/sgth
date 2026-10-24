@@ -1,0 +1,4 @@
+/* La marca de fijada va en el color del Portal, como el fondo de su tarjeta. */
+.fijada {
+  color: var(--sgth-accent-text);
+}

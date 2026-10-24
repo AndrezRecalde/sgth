@@ -9,8 +9,9 @@ import { z } from 'zod/v4'
  * `titulo` es el asunto en un comunicado y el título en una noticia: la
  * columna es la misma, solo cambia cómo se llama en pantalla.
  *
- * Las fechas van como `YYYY-MM-DD`; vacía es «sin fecha»: la de inicio sale al
- * publicar, y sin fecha de fin no vence.
+ * Las fechas van como `YYYY-MM-DD`. Sin fecha de inicio, sale al publicar. La
+ * de fin puede faltar en el borrador, pero sin ella no se publica: eso también
+ * lo dice el backend (2026-10-24).
  */
 export const comunicadoSchema = z.object({
   tipo:                  z.enum(['noticia', 'comunicado']),

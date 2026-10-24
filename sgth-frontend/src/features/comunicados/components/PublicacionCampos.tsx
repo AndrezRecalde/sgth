@@ -4,9 +4,10 @@ import { Grid, Stack, Switch } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { Controller, useWatch, type Control, type FieldErrors } from 'react-hook-form'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { fromDateValue, toDateValue } from '@/lib/fecha'
+import { fromDateValue, hoyIso, toDateValue } from '@/lib/fecha'
 import { MAXIMO_FIJADOS } from '../constants/comunicados'
 import type { ComunicadoFormData } from '../schemas/comunicado.schema'
+import { AtajosFechaFin } from './AtajosFechaFin'
 
 interface Props {
   control: Control<ComunicadoFormData>
@@ -50,18 +51,26 @@ export function PublicacionCampos({ control, errors }: Props) {
             name="publicado_hasta"
             control={control}
             render={({ field }) => (
-              <DatePickerInput
-                label="Fecha de fin"
-                description="Vacía: no vence. Vale hasta el final de ese día."
-                placeholder="Sin fecha de fin"
-                valueFormat="DD/MM/YYYY"
-                minDate={toDateValue(desde) ?? hoy}
-                clearable
-                {...contained}
-                value={toDateValue(field.value)}
-                onChange={(d) => field.onChange(fromDateValue(d))}
-                error={errors.publicado_hasta?.message}
-              />
+              <>
+                <DatePickerInput
+                  label="Fecha de fin"
+                  description="Obligatoria para publicar. Vale hasta el final de ese día."
+                  placeholder="Elija la fecha"
+                  valueFormat="DD/MM/YYYY"
+                  minDate={toDateValue(desde) ?? hoy}
+                  clearable
+                  {...contained}
+                  value={toDateValue(field.value)}
+                  onChange={(d) => field.onChange(fromDateValue(d))}
+                  error={errors.publicado_hasta?.message}
+                />
+                <AtajosFechaFin
+                  desde={desde || hoyIso()}
+                  valor={field.value}
+                  onElegir={field.onChange}
+                  etiqueta={desde ? 'Desde la fecha de inicio' : 'Desde hoy'}
+                />
+              </>
             )}
           />
         </Grid.Col>
