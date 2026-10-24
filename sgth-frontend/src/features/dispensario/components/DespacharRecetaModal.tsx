@@ -226,7 +226,11 @@ export function DespacharRecetaModal({
               {itemsExternos.length === receta.items.length
                 ? 'Esta receta no tiene nada que la farmacia pueda entregar.'
                 : itemsNoEntregados.length > 0 && itemsFarmacia.length === 0
-                  ? 'Nada de esta receta se entrega aquí: lo que falta lo adquiere fuera.'
+                  // Con algo ya entregado, «nada se entrega aquí» desmentía
+                  // las unidades que el paciente sí se llevó.
+                  ? receta.items.some(item => (item.cantidad_despachada ?? 0) > 0)
+                    ? 'Lo que había ya se entregó; lo que falta lo adquiere fuera.'
+                    : 'Nada de esta receta se entrega aquí: lo que falta lo adquiere fuera.'
                   : 'Lo que se entrega aquí ya fue despachado.'}
             </Text>
           </Alert>
