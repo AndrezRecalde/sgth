@@ -980,26 +980,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/dispensario/examenes/bandeja/por-validar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Lo que los servidores enviaron desde el Portal y nadie ha validado (fase
-         *     6, D2), lo más antiguo primero: es lo que más espera
-         */
-        get: operations["bandejaExamenes.porValidar"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/viaticos/bandeja": {
         parameters: {
             query?: never;
@@ -3809,55 +3789,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/dispensario/envios-resultado/{envio}/archivo": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** El archivo, para mirarlo antes de validarlo */
-        get: operations["envioResultado.archivo"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/dispensario/envios-resultado/{envio}/validar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: operations["envioResultado.validar"];
-        trace?: never;
-    };
-    "/v1/dispensario/envios-resultado/{envio}/rechazar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: operations["envioResultado.rechazar"];
-        trace?: never;
-    };
     "/v1/sso/epp-entregas/reporte": {
         parameters: {
             query?: never;
@@ -6169,89 +6100,6 @@ export interface paths {
         };
         /** El acta es del custodio: quien solo usa el equipo no la firmó */
         get: operations["misEquipos.acta"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/autoservicio/mis-examenes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Las suyas, de la más reciente a la más antigua. Lo retirado no sale */
-        get: operations["misExamenes.index"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/autoservicio/mis-examenes/ordenes/{orden}/pdf": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** El impreso que se lleva al laboratorio. El de una anulada ya no sirve */
-        get: operations["misExamenes.pdf"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/autoservicio/mis-examenes/ordenes/{orden}/envios": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["misExamenes.enviar"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/autoservicio/mis-examenes/envios/{envio}/retirar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["misExamenes.retirar"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/autoservicio/mis-examenes/envios/{envio}/archivo": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** El archivo que envió */
-        get: operations["misExamenes.archivo"];
         put?: never;
         post?: never;
         delete?: never;
@@ -12301,45 +12149,6 @@ export interface components {
                 condicion_entrega: components["schemas"]["CondicionFisicaBien"];
             }[];
         };
-        /**
-         * EnviarResultadoRequest
-         * @description El resultado que el servidor envía desde el Portal contra su orden. Aquí, la
-         *     forma; que la orden sea suya y que sus exámenes sigan esperando lo mira el
-         *     servicio, con la orden bloqueada.
-         */
-        EnviarResultadoRequest: {
-            /** Format: date-time */
-            fecha_resultado: string;
-            comentario?: string | null;
-            /**
-             * Format: binary
-             * @description Los mismos que acepta el Dispensario: el PDF del laboratorio o
-             *     la foto de la hoja.
-             */
-            archivo: string;
-            items: number[];
-        };
-        /** EnvioResultado */
-        EnvioResultado: {
-            id: number;
-            orden_examen_id: number;
-            enviado_por: number;
-            items: unknown[];
-            /** Format: date-time */
-            fecha_resultado: string;
-            comentario: string | null;
-            archivo: string;
-            estado: components["schemas"]["EstadoEnvioResultado"];
-            motivo_rechazo: string | null;
-            atendido_por: number | null;
-            /** Format: date-time */
-            atendido_en: string | null;
-            resultado_medico_id: number | null;
-            /** Format: date-time */
-            created_at: string | null;
-            /** Format: date-time */
-            updated_at: string | null;
-        };
         /** EppEntrega */
         EppEntrega: {
             id: number;
@@ -12484,34 +12293,11 @@ export interface components {
          */
         EstadoCumplimientoNormativa: "cumple" | "no_cumple" | "en_proceso";
         /**
-         * EstadoEnvioResultado
-         * @description En qué quedó un resultado que el servidor envió desde el Portal.
-         *     | |
-         *     |---|
-         *     | `por_validar` <br/> Espera a que un médico lo mire (D2). |
-         *     | `validado` <br/> Un médico lo aceptó: ya es un resultado de la historia clínica. |
-         *     | `rechazado` <br/> Un médico no lo aceptó, con motivo. |
-         *     | `retirado` <br/> El servidor lo retiró antes de que lo miraran. |
-         * @enum {string}
-         */
-        EstadoEnvioResultado: "por_validar" | "validado" | "rechazado" | "retirado";
-        /**
          * EstadoFormacion
          * @description Dónde está un título o curso del historial académico. Lo que registra Talento Humano entra validado; lo que registra el servidor desde el portal, por validar.
          * @enum {string}
          */
         EstadoFormacion: "validado" | "por_validar" | "rechazado";
-        /**
-         * EstadoItemOrdenExamen
-         * @description Cómo va cada examen de una orden.
-         *     | |
-         *     |---|
-         *     | `pendiente` <br/>  |
-         *     | `recibido` <br/> Tiene un resultado adjunto. |
-         *     | `no_realizado` <br/> El paciente no se lo hizo o el laboratorio no lo hace, con motivo. |
-         * @enum {string}
-         */
-        EstadoItemOrdenExamen: "pendiente" | "recibido" | "no_realizado";
         /**
          * EstadoOrdenExamen
          * @description Los estados de una orden de exámenes. `vencida` no está aquí a propósito: es una orden `emitida` o `parcial` que pasó su plazo (D5, 90 días), y se calcula al leerla en vez de escribirse.
@@ -13355,42 +13141,6 @@ export interface components {
             /** @description El QR en data: URL, para no sumar una librería al frontend. */
             qr: string;
             url_verificacion: string;
-        };
-        /** MiEnvioResultadoResource */
-        MiEnvioResultadoResource: {
-            id: number;
-            /** @description Los exámenes de la orden que dijo que cubre. */
-            items: number[];
-            fecha_resultado: string;
-            comentario: string | null;
-            estado: components["schemas"]["EstadoEnvioResultado"];
-            motivo_rechazo: string | null;
-            enviado_en: string;
-            atendido_en: string;
-        };
-        /** MiExamenDeOrdenResource */
-        MiExamenDeOrdenResource: {
-            id: number;
-            nombre: string;
-            nota: string | null;
-            estado: components["schemas"]["EstadoItemOrdenExamen"];
-            motivo_no_realizado: string | null;
-        };
-        /** MiOrdenExamenResource */
-        MiOrdenExamenResource: {
-            id: number;
-            folio: string;
-            fecha_solicitud: string;
-            estado: components["schemas"]["EstadoOrdenExamen"];
-            vencida: boolean;
-            prioridad: components["schemas"]["PrioridadOrdenExamen"];
-            laboratorio_destino: string | null;
-            indicaciones: string | null;
-            /** @description Si la pidió la evaluación ocupacional y no una consulta. */
-            ocupacional: boolean;
-            solicitante: string;
-            items?: components["schemas"]["MiExamenDeOrdenResource"][];
-            envios?: components["schemas"]["MiEnvioResultadoResource"][];
         };
         /**
          * MotivoAjusteConsumible
@@ -17773,24 +17523,6 @@ export interface components {
             observacion: string | null;
         };
         /**
-         * ValidarEnvioResultadoRequest
-         * @description Validar un resultado que el servidor envió desde el Portal: el médico
-         *     confirma qué exámenes trae y lo registra como cualquier resultado. Que los
-         *     exámenes sean de la orden y sigan esperando lo mira el servicio, con la
-         *     orden bloqueada.
-         */
-        ValidarEnvioResultadoRequest: {
-            /**
-             * @description Los mismos que al subir un resultado en el Dispensario.
-             * @enum {string}
-             */
-            tipo: "laboratorio" | "imagen" | "ecografia" | "rayos_x" | "electrocardiograma" | "otro";
-            descripcion: string;
-            /** Format: date-time */
-            fecha_resultado: string;
-            items: number[];
-        };
-        /**
          * VarianteIdentidad
          * @description Las variantes del logo institucional (docs/diseno-comunicacion-social.md, 4.2). Dos son obligatorias; las demás tienen un respaldo, así que el sistema funciona completo con dos archivos. Solo PNG (y JPG para la hoja membretada y los fondos de la credencial): dompdf dibuja mal muchos SVG, y un SVG puede llevar código ejecutable.
          *     | |
@@ -20376,11 +20108,6 @@ export interface operations {
                                  *     evaluación de retiro.
                                  */
                                 por_revisar: number;
-                                /**
-                                 * @description Llegan solas del cese: si se acumulan, alguien sale sin su
-                                 *     evaluación de retiro.
-                                 */
-                                por_validar: number;
                             };
                         };
                     };
@@ -20436,59 +20163,6 @@ export interface operations {
                             /** @description Total number of items being paginated. */
                             total: number;
                         } | components["schemas"]["LengthAwarePaginator"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
-    "bandejaExamenes.porValidar": {
-        parameters: {
-            query?: {
-                buscar?: string | null;
-                per_page?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Resultados enviados desde el Portal, por validar.";
-                        datos: {
-                            current_page: number;
-                            data: components["schemas"]["EnvioResultado"][];
-                            first_page_url: string | null;
-                            from: number | null;
-                            last_page_url: string | null;
-                            last_page: number;
-                            /** @description Generated paginator links. */
-                            links: {
-                                url: string | null;
-                                label: string;
-                                active: boolean;
-                            }[];
-                            next_page_url: string | null;
-                            /** @description Base path for paginator generated URLs. */
-                            path: string | null;
-                            /** @description Number of items shown per page. */
-                            per_page: number;
-                            prev_page_url: string | null;
-                            /** @description Number of the last item in the slice. */
-                            to: number | null;
-                            /** @description Total number of items being paginated. */
-                            total: number;
-                        };
                         meta: null;
                     };
                 };
@@ -28851,96 +28525,6 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
-    "envioResultado.archivo": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                envio: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-        };
-    };
-    "envioResultado.validar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                envio: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ValidarEnvioResultadoRequest"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Resultado validado: ya está en la historia clínica, por revisar.";
-                        datos: components["schemas"]["EnvioResultado"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
-    "envioResultado.rechazar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                envio: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    motivo_rechazo: string;
-                };
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Envío rechazado. El servidor verá el motivo en el Portal.";
-                        datos: components["schemas"]["EnvioResultado"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
     "eppEntrega.reporte": {
         parameters: {
             query: {
@@ -35101,148 +34685,6 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             404: components["responses"]["ModelNotFoundException"];
-        };
-    };
-    "misExamenes.index": {
-        parameters: {
-            query?: {
-                per_page?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Mis órdenes de exámenes.";
-                        datos: components["schemas"]["MiOrdenExamenResource"][];
-                        meta: {
-                            pagina_actual: number;
-                            por_pagina: number;
-                            total: number;
-                            ultima_pagina: number;
-                            desde: number | null;
-                            hasta: number | null;
-                        };
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
-    "misExamenes.pdf": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                orden: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    "Content-Disposition"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/pdf": string;
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-        };
-    };
-    "misExamenes.enviar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                orden: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["EnviarResultadoRequest"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Resultado enviado. Un médico del Dispensario lo revisará antes de agregarlo a su historia clínica.";
-                        datos: components["schemas"]["MiEnvioResultadoResource"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
-    "misExamenes.retirar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                envio: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Envío retirado.";
-                        datos: components["schemas"]["MiEnvioResultadoResource"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-        };
-    };
-    "misExamenes.archivo": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                envio: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
         };
     };
     "misPrestamos.index": {
