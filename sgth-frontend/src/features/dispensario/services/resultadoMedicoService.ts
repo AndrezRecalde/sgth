@@ -42,8 +42,6 @@ export interface ResultadoMedico {
   /** Un crítico que revisó otro médico, hasta que lo ve quien pidió el examen. */
   critico_visto_en:     string | null
   revisor?:             PersonaResultado | null
-  /** Si lo envió el paciente desde el Portal y un médico lo validó (fase 6). */
-  envio_portal?:        { id: number; comentario: string | null; created_at: string } | null
 }
 
 export type Interpretacion = 'normal' | 'alterado' | 'critico'

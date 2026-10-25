@@ -63,12 +63,6 @@ class OrdenExamen extends Model
         return $this->hasMany(ResultadoMedico::class);
     }
 
-    /** Lo que el paciente envió desde el Portal (fase 6), del más reciente al más antiguo. */
-    public function envios(): HasMany
-    {
-        return $this->hasMany(EnvioResultado::class)->orderByDesc('id');
-    }
-
     public function historiaClinica(): BelongsTo
     {
         return $this->belongsTo(HistoriaClinica::class);

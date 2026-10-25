@@ -219,8 +219,6 @@ export const ROUTES = {
     COMUNICADO:      (id: number) => `/portal/comunicados/${id}`,
     /** La credencial digital del servidor (Comunicación Social, fase 3.2). */
     MI_CREDENCIAL:   '/portal/mi-credencial',
-    /** Las órdenes de exámenes del Dispensario y el envío de resultados (docs/diseno-examenes-medicos.md, 5.7). */
-    MIS_EXAMENES:    '/portal/mis-examenes',
     VIATICOS:        '/portal/viaticos',
     VIATICOS_BANDEJA: '/portal/viaticos/bandeja',
     VIATICO_DETALLE: (codigo: string | number) =>

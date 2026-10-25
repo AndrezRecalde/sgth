@@ -11,7 +11,6 @@ use App\Contracts\Dispensario\OrdenExamenServiceInterface;
 use App\Enums\RegimenLaboral;
 use App\Models\Dispensario\CatalogoExamen;
 use App\Models\Dispensario\ConsultaMedica;
-use App\Models\Dispensario\EnvioResultado;
 use App\Models\Dispensario\HistoriaClinica;
 use App\Models\Dispensario\ResultadoMedico;
 use App\Models\Expediente\Servidor;
@@ -92,12 +91,7 @@ beforeEach(function () {
     resultadoLecturaResultados($deAna, 5, 'normal', 2);
     resultadoLecturaResultados($deAna, 5, 'alterado', 0);
     resultadoLecturaResultados([...$deAna, 'revisado_por' => $this->bruno->id], 5, 'critico', 1);
-    $delPortal = resultadoLecturaResultados($deAna, 5);
-    EnvioResultado::create([
-        'orden_examen_id' => $orden->id, 'enviado_por' => $paciente->id, 'items' => [],
-        'fecha_resultado' => today()->subDays(6)->toDateString(), 'archivo' => 'resultados-medicos/portal.pdf',
-        'estado' => 'validado', 'resultado_medico_id' => $delPortal->id,
-    ]);
+    resultadoLecturaResultados($deAna, 5);
     resultadoLecturaResultados($deAna, 100, 'normal', 3);
 
     // De Bruno: sin orden, por su consulta. Uno por revisar y uno anterior a la revisión.
@@ -129,12 +123,12 @@ test('por médico que responde cuenta lecturas, el porcentaje y la mediana de d�
     expect($filas->keys()->all())->toBe(['Ana Lectura', 'Bruno Lectura'])
         // Leídos: 0, 1, 2 y 3 días; la mediana es 1,5. Dos de cuatro, alterados o críticos.
         ->and($filas['Ana Lectura'])->toBe([
-            'profesional' => 'Ana Lectura', 'resultados' => 5, 'del_portal' => 1, 'por_revisar' => 1,
+            'profesional' => 'Ana Lectura', 'resultados' => 5, 'por_revisar' => 1,
             'normales' => 2, 'alterados' => 1, 'criticos' => 1, 'alterados_pct' => 50,
             'sin_lectura' => 0, 'lectura_dias' => 1.5,
         ])
         ->and($filas['Bruno Lectura'])->toBe([
-            'profesional' => 'Bruno Lectura', 'resultados' => 2, 'del_portal' => 0, 'por_revisar' => 1,
+            'profesional' => 'Bruno Lectura', 'resultados' => 2, 'por_revisar' => 1,
             'normales' => 0, 'alterados' => 0, 'criticos' => 0, 'alterados_pct' => null,
             'sin_lectura' => 1, 'lectura_dias' => null,
         ]);
