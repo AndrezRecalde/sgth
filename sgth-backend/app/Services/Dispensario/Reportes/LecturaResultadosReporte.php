@@ -57,8 +57,7 @@ final class LecturaResultadosReporte extends ReporteBase
             : ['mes', 'Mes'];
 
         return self::columnasDe([
-            $primera, ['resultados', 'Resultados recibidos'], ['del_portal', 'Enviados desde el Portal'],
-            ['por_revisar', 'Por revisar'], ['normales', 'Normales'], ['alterados', 'Alterados'],
+            $primera, ['resultados', 'Resultados recibidos'], ['por_revisar', 'Por revisar'], ['normales', 'Normales'], ['alterados', 'Alterados'],
             ['criticos', 'Críticos'], ['alterados_pct', 'Alterados o críticos (%)'],
             ['sin_lectura', 'Anteriores sin lectura'], ['lectura_dias', 'Días hasta leerlo (mediana)'],
         ]);
@@ -74,14 +73,12 @@ final class LecturaResultadosReporte extends ReporteBase
         $filas = DB::table('resultados_medicos as rm')
             ->leftJoin('ordenes_examen as o', 'o.id', '=', 'rm.orden_examen_id')
             ->leftJoin('consultas_medicas as c', 'c.id', '=', 'rm.consulta_medica_id')
-            ->leftJoin('envios_resultado as ep', 'ep.resultado_medico_id', '=', 'rm.id')
             ->whereNull('rm.deleted_at')
             ->whereBetween('rm.created_at', [$filtros->desde, $filtros->hasta])
             ->when($profesional, fn ($q) => $q->whereRaw(self::RESPONSABLE . ' = ?', [$profesional]))
             ->groupByRaw($grupo)
             ->selectRaw("{$grupo} as grupo")
             ->selectRaw('COUNT(*) as resultados')
-            ->selectRaw('COUNT(ep.id) as del_portal')
             ->selectRaw("COUNT(*) FILTER (WHERE rm.estado_revision = 'por_revisar') as por_revisar")
             ->selectRaw("COUNT(*) FILTER (WHERE rm.interpretacion = 'normal') as normales")
             ->selectRaw("COUNT(*) FILTER (WHERE rm.interpretacion = 'alterado') as alterados")
@@ -102,7 +99,6 @@ final class LecturaResultadosReporte extends ReporteBase
                         ? ['profesional' => $f->grupo === null ? 'Sin responsable' : ($nombres[$f->grupo] ?? "Usuario {$f->grupo}")]
                         : ['mes' => self::nombreDeMes((string) $f->grupo)]),
                     'resultados'    => (int) $f->resultados,
-                    'del_portal'    => (int) $f->del_portal,
                     'por_revisar'   => (int) $f->por_revisar,
                     'normales'      => (int) $f->normales,
                     'alterados'     => (int) $f->alterados,

@@ -38,8 +38,6 @@ test('enfermeria_no_lee_nada_de_los_examenes', function (string $url) {
 })->with([
     'la bandeja'               => 'examenes/bandeja',
     'los resultados por revisar' => 'examenes/bandeja/por-revisar',
-    'lo enviado por el Portal' => 'examenes/bandeja/por-validar',
-    'el archivo de un envío'   => 'envios-resultado/1/archivo',
     'los resultados'           => 'resultados-medicos?historia_clinica_id=1',
     'el archivo de un resultado' => 'resultados-medicos/1/archivo',
     'las órdenes'              => 'ordenes-examen?historia_clinica_id=1',

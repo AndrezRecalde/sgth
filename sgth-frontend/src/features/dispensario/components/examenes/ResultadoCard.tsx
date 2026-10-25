@@ -60,9 +60,7 @@ export function ResultadoCard({ resultado: r, origen, onRevisar }: Props) {
               </Text>
             )}
             {origen && <Text size="xs" c="dimmed">{origen}</Text>}
-            {r.envio_portal
-              ? <Text size="xs" c="dimmed">Lo envió el paciente desde el Portal{nombre(r.subido_por) ? `; lo validó Dr. ${nombre(r.subido_por)}` : ''}</Text>
-              : nombre(r.subido_por) && <Text size="xs" c="dimmed">Subió: Dr. {nombre(r.subido_por)}</Text>}
+            {nombre(r.subido_por) && <Text size="xs" c="dimmed">Subió: Dr. {nombre(r.subido_por)}</Text>}
             {r.comentario_medico && (
               <Text size="xs" mt={4}>
                 <Text span fw={500} inherit>Lectura{nombre(r.revisor) ? ` de Dr. ${nombre(r.revisor)}` : ''}:</Text>{' '}

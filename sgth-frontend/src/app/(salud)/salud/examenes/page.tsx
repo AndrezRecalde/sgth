@@ -15,7 +15,7 @@ interface Props {
   searchParams: Promise<{ vista?: string; solicitante?: string }>
 }
 
-const VISTAS: VistaBandeja[] = ['pendientes', 'vencidas', 'por-revisar', 'por-validar']
+const VISTAS: VistaBandeja[] = ['pendientes', 'vencidas', 'por-revisar']
 
 export default async function ExamenesPage({ searchParams }: Props) {
   const p = await searchParams

@@ -671,13 +671,6 @@ export const NAV_PORTAL: NavGroup[] = [
         icon:  'IconId',
       },
       {
-        // Las órdenes de exámenes y el envío del resultado del laboratorio,
-        // que valida un médico (docs/diseno-examenes-medicos.md, 5.7).
-        label: 'Mis exámenes médicos',
-        href:  ROUTES.PORTAL.MIS_EXAMENES,
-        icon:  'IconFlask',
-      },
-      {
         // Las acciones notificadas y su acuse de recibo (fase 6.3a).
         label: 'Mis documentos laborales',
         href:  ROUTES.PORTAL.DOCUMENTOS,

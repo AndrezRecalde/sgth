@@ -23,7 +23,6 @@ use App\Http\Controllers\Autoservicio\MisPrestamosController;
 use App\Http\Controllers\Autoservicio\MisCargasFamiliaresController;
 use App\Http\Controllers\Autoservicio\MisCertificadosMedicosController;
 use App\Http\Controllers\Autoservicio\MisDocumentosLaboralesController;
-use App\Http\Controllers\Autoservicio\MisExamenesController;
 use App\Http\Controllers\Autoservicio\MisSolicitudesAccionController;
 use App\Http\Controllers\Bienestar\EncuestaClimaController;
 use App\Http\Controllers\Bienestar\PlanBienestarController;
@@ -48,7 +47,6 @@ use App\Http\Controllers\Dispensario\AtencionEnfermeriaController;
 use App\Http\Controllers\Dispensario\CatalogoExamenController;
 use App\Http\Controllers\Dispensario\PerfilExamenController;
 use App\Http\Controllers\Dispensario\BandejaExamenesController;
-use App\Http\Controllers\Dispensario\EnvioResultadoController;
 use App\Http\Controllers\Dispensario\OrdenExamenController;
 use App\Http\Controllers\Dispensario\CertificadoMedicoController;
 use App\Http\Controllers\Dispensario\BorradorConsultaController;
@@ -1094,16 +1092,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // justifica el certificado médico, que ya crea su permiso con folio.
         Route::get('mi-historia-clinica', [AutoservicioController::class, 'miHistoriaClinica']);
 
-        // «Mis exámenes» (docs/diseno-examenes-medicos.md, fase 6): las órdenes
-        // del servidor, su impreso y el resultado que envía para que un médico
-        // lo valide. Lo de otro responde 404.
-        Route::prefix('mis-examenes')->middleware('permission:acceso-autoservicio')->group(function () {
-            Route::get('/', [MisExamenesController::class, 'index']);
-            Route::get('ordenes/{orden}/pdf', [MisExamenesController::class, 'pdf'])->whereNumber('orden');
-            Route::post('ordenes/{orden}/envios', [MisExamenesController::class, 'enviar'])->whereNumber('orden');
-            Route::post('envios/{envio}/retirar', [MisExamenesController::class, 'retirar'])->whereNumber('envio');
-            Route::get('envios/{envio}/archivo', [MisExamenesController::class, 'archivo'])->whereNumber('envio');
-        });
+        // «Mis exámenes» (fase 6 de docs/diseno-examenes-medicos.md) se retiró
+        // el 2026-10-25: los resultados los suben solo el médico y el
+        // odontólogo, y el servidor no ve sus órdenes en el Portal.
 
         // `mis-cargas-familiares` vuelve el 2026-10-19 con otro contrato. El
         // CRUD que hubo aquí se retiró el 2026-10-03: ninguna pantalla lo
@@ -2247,22 +2238,6 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->middleware('role:medico|odontologo|admin-dispensario');
         Route::get('examenes/bandeja/por-revisar', [BandejaExamenesController::class, 'porRevisar'])
             ->middleware('role:medico|odontologo|admin-dispensario');
-        Route::get('examenes/bandeja/por-validar', [BandejaExamenesController::class, 'porValidar'])
-            ->middleware('role:medico|odontologo|admin-dispensario');
-
-        // Lo que los servidores envían desde el Portal (fase 6): lo validan o
-        // lo rechazan quienes registran resultados (D2).
-        Route::prefix('envios-resultado')->group(function () {
-            Route::get('{envio}/archivo', [EnvioResultadoController::class, 'archivo'])
-                ->middleware('role:medico|odontologo|admin-dispensario')
-                ->whereNumber('envio');
-            Route::patch('{envio}/validar', [EnvioResultadoController::class, 'validar'])
-                ->middleware('role:medico|odontologo')
-                ->whereNumber('envio');
-            Route::patch('{envio}/rechazar', [EnvioResultadoController::class, 'rechazar'])
-                ->middleware('role:medico|odontologo')
-                ->whereNumber('envio');
-        });
 
         // Órdenes de exámenes: las emite el médico o el odontólogo en su
         // consulta; las anula quien las emitió o la administración.
