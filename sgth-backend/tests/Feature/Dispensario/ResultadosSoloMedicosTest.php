@@ -13,8 +13,8 @@ use Spatie\Permission\Models\Role;
 
 /*
  * Los resultados los registran el médico y el odontólogo (D2 y P1 de
- * docs/diseno-examenes-medicos.md). Enfermería los sigue viendo, para el
- * seguimiento, pero ya no los sube.
+ * docs/diseno-examenes-medicos.md). Enfermería ya no los sube y, desde el
+ * 2026-10-24, tampoco los ve.
  */
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
@@ -69,17 +69,24 @@ test('enfermeria_y_la_administracion_ya_no_suben_resultados', function () {
     expect(ResultadoMedico::count())->toBe(0);
 });
 
-test('enfermeria_sigue_viendo_los_resultados', function () {
+test('enfermeria_ya_no_ve_los_resultados_y_la_administracion_si', function () {
     subirResultadoComo(($this->conRol)('res-medico-2', 'medico'), $this->historia->id)->assertCreated();
     $id = ResultadoMedico::value('id');
     $enfermera = ($this->conRol)('res-enfermera-2', 'enfermera');
+    $admin = ($this->conRol)('res-admin-2', 'admin-dispensario');
 
     $this->actingAs($enfermera, 'sanctum')
         ->getJson("/api/v1/dispensario/resultados-medicos?historia_clinica_id={$this->historia->id}")
+        ->assertForbidden();
+    $this->actingAs($enfermera, 'sanctum')
+        ->getJson("/api/v1/dispensario/resultados-medicos/{$id}/archivo")
+        ->assertForbidden();
+
+    $this->actingAs($admin, 'sanctum')
+        ->getJson("/api/v1/dispensario/resultados-medicos?historia_clinica_id={$this->historia->id}")
         ->assertOk()
         ->assertJsonCount(1, 'datos');
-
-    $this->actingAs($enfermera, 'sanctum')
+    $this->actingAs($admin, 'sanctum')
         ->get("/api/v1/dispensario/resultados-medicos/{$id}/archivo")
         ->assertOk();
 });

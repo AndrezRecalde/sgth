@@ -107,7 +107,7 @@ function validarEnvio(User $quien, EnvioResultado $envio, array $items): TestRes
 test('la_bandeja_por_validar_lo_lista_y_el_resumen_lo_cuenta', function () {
     $envio = envioDelServidor([($this->item)('Glucosa')]);
 
-    $this->actingAs($this->enfermera, 'sanctum');
+    $this->actingAs($this->otroMedico, 'sanctum');
 
     $pagina = $this->getJson('/api/v1/dispensario/examenes/bandeja/por-validar')->assertOk()->json('datos');
     expect(collect($pagina['data'])->pluck('id')->all())->toBe([$envio->id])
@@ -221,11 +221,13 @@ test('no_se_validan_examenes_de_otra_orden', function () {
         ->assertJsonPath('mensaje', "Hay exámenes que no son de la orden {$this->orden->folio}.");
 });
 
-test('enfermeria_lo_ve_pero_no_lo_atiende_y_el_servidor_no_entra', function () {
+test('ni_enfermeria_ni_el_servidor_lo_ven_ni_lo_atienden', function () {
     $envio = envioDelServidor([($this->item)('Glucosa')]);
 
+    // Enfermería lo veía hasta el 2026-10-24.
     $this->actingAs($this->enfermera, 'sanctum');
-    $this->get("/api/v1/dispensario/envios-resultado/{$envio->id}/archivo")->assertOk();
+    $this->getJson('/api/v1/dispensario/examenes/bandeja/por-validar')->assertForbidden();
+    $this->getJson("/api/v1/dispensario/envios-resultado/{$envio->id}/archivo")->assertForbidden();
     validarEnvio($this->enfermera, $envio, [($this->item)('Glucosa')])->assertForbidden();
     $this->patchJson("/api/v1/dispensario/envios-resultado/{$envio->id}/rechazar", ['motivo_rechazo' => 'No'])
         ->assertForbidden();

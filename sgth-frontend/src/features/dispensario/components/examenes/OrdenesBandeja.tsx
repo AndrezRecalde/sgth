@@ -25,8 +25,7 @@ interface Props {
 
 /**
  * Las órdenes que esperan resultados. El médico registra desde aquí lo que trae
- * el paciente sin abrir una consulta; Enfermería la mira para llamar a quien no
- * volvió.
+ * el paciente sin abrir una consulta; la administración la ve.
  */
 export function OrdenesBandeja({ vencidas, buscar, pagina, cargando, error, onReintentar, page, porPagina, onPage }: Props) {
   const { hasRole } = useAuthStore()

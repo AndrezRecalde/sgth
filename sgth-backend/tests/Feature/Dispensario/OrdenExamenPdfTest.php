@@ -162,7 +162,7 @@ test('la_anulada_sale_marcada_con_su_motivo', function () {
         ->toContain('No debe procesarse.');
 });
 
-test('el_pdf_lo_descarga_el_personal_clinico_y_nadie_mas', function () {
+test('el_pdf_lo_descargan_quienes_piden_examenes_y_la_administracion', function () {
     $id = emitirOrdenParaPdf($this->consulta, ['Glucosa']);
 
     $this->get("/api/v1/dispensario/ordenes-examen/{$id}/pdf")
@@ -170,12 +170,20 @@ test('el_pdf_lo_descarga_el_personal_clinico_y_nadie_mas', function () {
         ->assertHeader('Content-Type', 'application/pdf')
         ->assertHeader('Content-Disposition', 'inline; filename="orden-examenes-EXA-' . date('Y') . '-00001.pdf"');
 
+    $admin = User::create([
+        'email' => 'orden-pdf-admin@example.com', 'usuario_ti' => 'ordenpdfadmin',
+        'password' => bcrypt('123456'), 'primer_login' => false,
+    ]);
+    $admin->assignRole(Role::firstOrCreate(['name' => 'admin-dispensario', 'guard_name' => 'sanctum']));
+    $this->actingAs($admin, 'sanctum')->get("/api/v1/dispensario/ordenes-examen/{$id}/pdf")->assertOk();
+
+    // Enfermería dejó de descargarlo el 2026-10-24.
     $enfermera = User::create([
         'email' => 'orden-pdf-enf@example.com', 'usuario_ti' => 'ordenpdfenf',
         'password' => bcrypt('123456'), 'primer_login' => false,
     ]);
     $enfermera->assignRole(Role::firstOrCreate(['name' => 'enfermera', 'guard_name' => 'sanctum']));
-    $this->actingAs($enfermera, 'sanctum')->get("/api/v1/dispensario/ordenes-examen/{$id}/pdf")->assertOk();
+    $this->actingAs($enfermera, 'sanctum')->getJson("/api/v1/dispensario/ordenes-examen/{$id}/pdf")->assertForbidden();
 
     $ajeno = User::create([
         'email' => 'orden-pdf-uath@example.com', 'usuario_ti' => 'ordenpdfuath',

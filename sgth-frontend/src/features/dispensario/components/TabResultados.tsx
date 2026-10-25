@@ -54,7 +54,7 @@ export function TabResultados({
   const [revisando, setRevisando] = useState<ResultadoMedico | null>(null)
   const { hasRole } = useAuthStore()
 
-  // Los registran el médico y el odontólogo (D2, P1); Enfermería solo los ve.
+  // Los registran el médico y el odontólogo (D2, P1).
   const puedeSubir = hasRole('medico') || hasRole('odontologo')
 
   return (

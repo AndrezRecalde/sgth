@@ -20,11 +20,11 @@ uses(Tests\TestCase::class, RefreshDatabase::class);
 beforeEach(function () {
     Model::unguard();
 
-    $this->enfermera = User::create([
+    $this->medico = User::create([
         'email' => 'resultados-listado@example.com', 'usuario_ti' => 'resultados-listado',
         'password' => bcrypt('123456'), 'primer_login' => false,
     ]);
-    $this->enfermera->assignRole(Role::firstOrCreate(['name' => 'enfermera', 'guard_name' => 'sanctum']));
+    $this->medico->assignRole(Role::firstOrCreate(['name' => 'medico', 'guard_name' => 'sanctum']));
 
     $unidad = unidadDePrueba(['nombre' => 'Direccion de Listado de Resultados']);
     $puesto = puestoDePrueba($unidad, 'Analista de Listado de Resultados');
@@ -43,7 +43,7 @@ beforeEach(function () {
     $this->otra = $historia('0812400002');
 
     $resultado = fn (HistoriaClinica $h, string $descripcion) => ResultadoMedico::create([
-        'historia_clinica_id' => $h->id, 'subido_por' => $this->enfermera->id,
+        'historia_clinica_id' => $h->id, 'subido_por' => $this->medico->id,
         'tipo' => 'laboratorio', 'descripcion' => $descripcion,
         'archivo' => "resultados-medicos/{$descripcion}.pdf", 'fecha_resultado' => '2026-10-20',
     ]);
@@ -53,7 +53,7 @@ beforeEach(function () {
 });
 
 test('sin_paciente_no_lista_nada', function () {
-    $errores = $this->actingAs($this->enfermera, 'sanctum')
+    $errores = $this->actingAs($this->medico, 'sanctum')
         ->getJson('/api/v1/dispensario/resultados-medicos')
         ->assertStatus(422)
         ->json('errores');
@@ -63,7 +63,7 @@ test('sin_paciente_no_lista_nada', function () {
 });
 
 test('lista_solo_los_del_paciente_con_el_mas_reciente_primero', function () {
-    $datos = $this->actingAs($this->enfermera, 'sanctum')
+    $datos = $this->actingAs($this->medico, 'sanctum')
         ->getJson("/api/v1/dispensario/resultados-medicos?historia_clinica_id={$this->historia->id}")
         ->assertOk()
         ->json('datos');

@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 /**
  * Lo que los servidores envían desde el Portal, del lado del Dispensario (fase
  * 6 de docs/diseno-examenes-medicos.md): verlo y validarlo o rechazarlo. Lo
- * atiende un médico o un odontólogo (D2); Enfermería lo ve en la bandeja.
+ * atiende un médico o un odontólogo (D2).
  */
 final class EnvioResultadoController extends Controller
 {

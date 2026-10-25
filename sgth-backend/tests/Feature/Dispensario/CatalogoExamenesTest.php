@@ -50,8 +50,8 @@ test('la_migracion_carga_la_hoja_del_laboratorio', function () {
         ->toBe('Gramos de glucosa');
 });
 
-test('el_personal_clinico_lee_el_catalogo_en_el_orden_de_la_hoja', function () {
-    $respuesta = $this->actingAs($this->enfermera, 'sanctum')
+test('quien_pide_examenes_lee_el_catalogo_en_el_orden_de_la_hoja', function () {
+    $respuesta = $this->actingAs($this->medico, 'sanctum')
         ->getJson('/api/v1/dispensario/catalogo-examenes')
         ->assertOk();
 
@@ -63,10 +63,12 @@ test('el_personal_clinico_lee_el_catalogo_en_el_orden_de_la_hoja', function () {
         ->and($respuesta->json('meta.areas.0'))->toBe(['value' => 'bioquimica', 'etiqueta' => 'Bioquímica', 'orden' => 1]);
 });
 
-test('quien_no_es_del_dispensario_no_lo_lee', function () {
-    $this->actingAs($this->otro, 'sanctum')
-        ->getJson('/api/v1/dispensario/catalogo-examenes')
-        ->assertForbidden();
+test('ni_enfermeria_ni_quien_no_es_del_dispensario_lo_leen', function () {
+    foreach ([$this->enfermera, $this->otro] as $usuario) {
+        $this->actingAs($usuario, 'sanctum')
+            ->getJson('/api/v1/dispensario/catalogo-examenes')
+            ->assertForbidden();
+    }
 });
 
 test('la_administracion_agrega_un_examen_al_final_de_su_area', function () {

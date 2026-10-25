@@ -18,8 +18,9 @@ interface Props {
 }
 
 /**
- * Los exámenes del Dispensario: la bandeja de lo que espera resultados, que
- * ve también Enfermería para el seguimiento, y lo que se ofrece al pedirlos.
+ * Los exámenes del Dispensario: la bandeja de lo que espera resultados y lo
+ * que se ofrece al pedirlos. Es de médicos, odontólogos y la administración;
+ * Enfermería no entra (2026-10-24).
  * Los perfiles los arma cada profesional para su especialidad; el catálogo,
  * solo la administración (P2); los exámenes por riesgo del puesto, el médico
  * ocupacional o la administración (D6).

@@ -18,7 +18,7 @@ use Illuminate\Validation\Rule;
 /**
  * La bandeja de exámenes (sección 5.4 de docs/diseno-examenes-medicos.md): las
  * órdenes que todavía esperan resultados, para el médico que recibe al
- * paciente sin consulta abierta y para Enfermería, que hace el seguimiento.
+ * paciente sin consulta abierta. Enfermería ya no la ve (ver las rutas).
  *
  * Las vencidas —abiertas y con más de 90 días (D5)— van aparte: dejan de
  * contar como pendientes, pero no desaparecen, para que alguien las mire
