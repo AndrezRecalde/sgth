@@ -22,9 +22,8 @@ use App\Models\User;
  * que lo tienen —Talento Humano, máxima autoridad, auditoría— son justo los que
  * deben verlas enteras.
  *
- * Ojo con el `Gate::before` de `AppServiceProvider`: admin-ti se salta esta
- * policy entera. Por eso la regla de no resolver la propia solicitud vive en el
- * controlador y no aquí.
+ * La regla de no resolver la propia solicitud vive en el servicio y no aquí: es
+ * de coherencia, no de quién puede.
  */
 class VacacionPolicy
 {

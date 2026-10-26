@@ -309,8 +309,9 @@ final class UsuarioService implements UsuarioServiceInterface
     }
 
     /**
-     * Las policies no bastan para esto: Gate::before deja pasar a admin-ti
-     * antes de consultarlas, y admin-ti es justo quien opera este módulo.
+     * Va aquí y no en la policy: es una regla de coherencia, y admin-ti, que
+     * opera este módulo, la saltaba con el Gate::before que existió hasta el
+     * 2026-10-26.
      */
     private function garantizarQueNoEsUnoMismo(
         User $actor,

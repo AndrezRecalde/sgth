@@ -13,9 +13,9 @@ use Spatie\Permission\Models\Role;
 uses(Tests\TestCase::class, RefreshDatabase::class);
 
 /**
- * Crea un rol con los permisos indicados, sin pasar por admin-ti: ese rol tiene
- * un Gate::before que devuelve true para todo y haría que estos tests pasaran
- * aunque las policies estuvieran mal.
+ * Crea un rol con los permisos indicados, sin pasar por admin-ti: hasta el
+ * 2026-10-26 ese rol tenía un Gate::before que devolvía true para todo, y
+ * habría hecho pasar estos tests aunque las policies estuvieran mal.
  */
 function rolConPermisos(string $nombre, array $permisos): Role
 {

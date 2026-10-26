@@ -10,9 +10,9 @@ use App\Exceptions\ReglaNegocioException;
  * es el titular. Hasta la fase 1.3 nada lo impedía, y quien trabaja en Talento
  * Humano podía suscribirse su propio ingreso o anularse su propia sanción.
  *
- * Va en los servicios y no en una policy: el `Gate::before` de admin-ti
- * contesta antes que cualquier policy, y una regla de coherencia no debe tener
- * atajo. Sin usuario autenticado —un comando, una tarea programada— no hay
+ * Va en los servicios y no en una policy: una regla de coherencia no debe
+ * tener atajo, y el `Gate::before` de admin-ti, hasta el 2026-10-26, contestaba
+ * antes que cualquier policy. Sin usuario autenticado —un comando, una tarea programada— no hay
  * nadie que se esté tramitando nada, y no aplica.
  */
 final class TramiteSobreSiMismo

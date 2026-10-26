@@ -10,8 +10,8 @@
 | La regla, decidida con el usuario: el servidor gestiona lo suyo —un viático
 | es de un solo servidor—; Financiero opera; Talento Humano consulta.
 |
-| Ningún usuario de estos tests es admin-ti: su `Gate::before` se salta la
-| policy y no probaría nada.
+| Ningún usuario de estos tests es admin-ti: hasta el 2026-10-26 su
+| `Gate::before` se saltaba la policy y no habría probado nada.
 */
 
 use App\Enums\EstadoViatico;

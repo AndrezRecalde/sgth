@@ -17,7 +17,7 @@ use App\Policies\Expediente\ServidorPolicy;
  * retirada, quizá a pedido del servidor— solo la ve Comunicación.
  *
  * Gestionarlas (subir, restaurar, retirar, la carga masiva) va por el permiso
- * en la ruta: `gestionar-fotografias`. admin-ti pasa por el Gate::before.
+ * en la ruta: `gestionar-fotografias`, que admin-ti tiene en su rol.
  */
 class FotografiaServidorPolicy
 {

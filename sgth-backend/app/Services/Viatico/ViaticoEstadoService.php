@@ -18,8 +18,8 @@ use Illuminate\Support\Facades\DB;
 /**
  * Cuándo puede hacerse cada cosa con un viático.
  *
- * Quién puede lo decide `ViaticoPolicy`. Aquí va lo que ningún atajo puede
- * saltarse —tampoco el `Gate::before` de admin-ti—:
+ * Quién puede lo decide `ViaticoPolicy`. Aquí va lo que nadie puede saltarse,
+ * tenga los permisos que tenga:
  *
  * - El grafo de estados. Antes cada acción miraba (o no) el estado a su
  *   manera: la liquidación se confirmaba desde `solicitado`, se rechazaba con el

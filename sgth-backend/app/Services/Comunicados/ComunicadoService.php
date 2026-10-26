@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\DB;
  * 3.2 y 4).
  *
  * Los permisos los pide la ruta; aquí viven las reglas de estado, que valen
- * también para admin-ti, a quien el Gate::before deja pasar cualquier permiso.
+ * para todos, también para quien tiene los tres permisos de comunicados.
  */
 final class ComunicadoService implements ComunicadoServiceInterface
 {

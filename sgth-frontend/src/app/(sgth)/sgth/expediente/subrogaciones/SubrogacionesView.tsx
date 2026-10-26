@@ -31,7 +31,7 @@ export function SubrogacionesView() {
   // Quien solo consulta —auditoría y máxima autoridad— ve el listado sin las
   // acciones: el backend las reserva a UATH, así que ofrecerlas era prometer
   // un 403.
-  const puedeAdministrar = hasRole('admin-uath') || hasRole('asistente-uath') || hasRole('admin-ti')
+  const puedeAdministrar = hasRole('admin-uath') || hasRole('asistente-uath')
 
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
   const [detalleOpened, { open: openDetalle, close: closeDetalle }] = useDisclosure(false)

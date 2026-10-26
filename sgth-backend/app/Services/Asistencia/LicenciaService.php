@@ -110,7 +110,7 @@ class LicenciaService
         $servidorId = (int) $datos['servidor_id'];
 
         // Nadie se registra su propia licencia. En el servicio y no en la
-        // policy: admin-ti se salta la policy entera (Gate::before).
+        // policy: es de coherencia, no de quién puede.
         if ($servidorDelUsuario !== null && $servidorDelUsuario === $servidorId) {
             throw new ReglaNegocioException('Nadie registra su propia licencia: la debe registrar otra persona de Talento Humano.');
         }

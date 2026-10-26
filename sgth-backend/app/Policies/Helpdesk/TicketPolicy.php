@@ -20,8 +20,8 @@ use App\Models\User;
  *   `asignar-ticket`.
  *
  * El alcance del listado sale de `Ticket::scopeVisiblesPara`, con la misma
- * regla. En qué estado se puede hacer cada cosa lo decide el servicio, y
- * admin-ti se salta esta policy por el `Gate::before`.
+ * regla. En qué estado se puede hacer cada cosa lo decide el servicio. admin-ti
+ * tiene los permisos del jefe de TIC en su rol.
  */
 class TicketPolicy
 {

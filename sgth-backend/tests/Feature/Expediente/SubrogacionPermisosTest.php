@@ -117,7 +117,16 @@ test('UATH, auditoría y la máxima autoridad sí leen el listado', function (st
     ($this->comoRol)($rol);
 
     $this->getJson('/api/v1/expediente/subrogaciones/vigentes')->assertOk();
-})->with(['admin-uath', 'asistente-uath', 'auditor', 'maxima-autoridad', 'admin-ti']);
+})->with(['admin-uath', 'asistente-uath', 'auditor', 'maxima-autoridad']);
+
+test('admin-ti no: las subrogaciones son de Talento Humano', function () {
+    // Entraba por el Gate::before, que se quitó el 2026-10-26
+    // (docs/plan-roles-y-accesos.md, PR 3).
+    ($this->comoRol)('admin-ti');
+
+    $this->getJson('/api/v1/expediente/subrogaciones/vigentes')->assertForbidden();
+    $this->getJson('/api/v1/expediente/subrogaciones/ausencias-del-titular')->assertForbidden();
+});
 
 test('el historial de otro servidor no se abre sin ser UATH ni auditoría', function () {
     $ajeno = ($this->servidorCon)();

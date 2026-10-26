@@ -229,8 +229,8 @@ class AprobacionCertificadoSirha7Service
             throw new ReglaNegocioException($this->porQueNo($certificado));
         }
 
-        // Nadie aprueba su propio reposo. En el servicio y no en la policy:
-        // admin-ti se salta la policy entera (Gate::before).
+        // Nadie aprueba su propio reposo. En el servicio y no en la policy: es
+        // de coherencia, no de quién puede.
         if ($servidorDelUsuario !== null && $servidorDelUsuario === (int) $certificado->servidor_id) {
             throw new ReglaNegocioException('Nadie aprueba su propio certificado: lo debe aprobar otra persona.');
         }

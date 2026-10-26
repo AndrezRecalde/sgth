@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Dedoc\Scramble\Scramble;
 use Dedoc\Scramble\Support\Generator\OpenApi;
 use Dedoc\Scramble\Support\Generator\SecurityScheme;
-use App\Models\Expediente\Servidor;
 use App\Models\User;
 use App\Support\ProxiesDeConfianza;
 use App\Contracts\Auth\AuthServiceInterface;
@@ -333,43 +332,21 @@ class AppServiceProvider extends ServiceProvider
             return $user?->hasRole('admin-ti');
         });
 
-        // Superusuario técnico — acceso sin restricciones.
+        // Aquí había un Gate::before que le daba a admin-ti todo permiso y toda
+        // policy, salvo sobre un Servidor. Se quitó el 2026-10-26: admin-ti es
+        // el administrador técnico —Usuarios, TIC, Comunicación, comunicados,
+        // configuración y la vinculación inicial— y tiene esos permisos de
+        // forma explícita en su rol (docs/plan-roles-y-accesos.md, PR 3).
         //
-        // 'admin-uath' salió de aquí (2026-08-04). El atajo anulaba todo
-        // permiso y toda policy para Talento Humano, incluida la restricción
-        // deliberada del seeder: tiene 'ver-historia-clinica-propia' y NO
-        // 'ver-historia-clinica', pero el bypass le devolvía las historias
-        // clínicas ajenas, odontología, despacho de medicamentos y los
-        // tamizajes psicosocial y ASSIST.
-        //
-        // No lo necesitaba: las policies de Expediente comprueban el rol
-        // directamente (ServidorPolicy::verAny y siguientes), así que su
-        // trabajo diario no depende de este atajo.
-        //
-        // El Expediente Digital tampoco (decisión de Talento Humano del
-        // 2026-10-03): es de Talento Humano, no del soporte técnico. Cuando lo
-        // que se autoriza es un Servidor, el atajo no responde y decide
-        // ServidorPolicy, que no nombra a admin-ti. Así quien tiene admin-ti Y
-        // admin-uath sigue entrando por admin-uath, y quien solo es admin-ti ve
-        // su propia ficha, como cualquier servidor. Sin esto la ficha le abría
-        // y la mitad de las pestañas —con rol en la ruta— le daban 403.
-        Gate::before(function ($user, $ability, $arguments = []) {
-            if (! $user->hasRole('admin-ti')) {
-                return null;
-            }
-
-            $sobre = $arguments[0] ?? null;
-            if ($sobre instanceof Servidor || $sobre === Servidor::class) {
-                return null;
-            }
-
-            return true;
-        });
+        // Con el atajo, por el API marcaba asistencia sin `marcar-en-linea`,
+        // leía los motivos de enfermedad de los permisos, aprobaba licencias y
+        // abría cualquier viático, mientras el menú, que mira los permisos
+        // reales, no le enseñaba nada de eso. Si una persona de TI tiene que
+        // trabajar en Talento Humano, se le asigna además el rol de TH.
 
         // El autodescubrimiento busca App\Policies\UserPolicy, así que sin este
         // registro la policy del módulo de usuarios nunca se ejecutaba: todo
-        // authorize() sobre User caía en "sin policy" y solo pasaba admin-ti
-        // por el Gate::before de arriba.
+        // authorize() sobre User caía en "sin policy".
         Gate::policy(User::class, \App\Policies\Admin\UsuarioPolicy::class);
 
         Scramble::configure()

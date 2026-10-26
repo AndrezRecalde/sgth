@@ -9,9 +9,9 @@
 | disparaba «Generar todos». Ahora manda la matriz de `RolPermisoSeeder`, que
 | ya tenía estas decisiones tomadas y nadie consultaba.
 |
-| Los usuarios de estos tests tienen roles concretos y ninguno es admin-ti: el
-| `Gate::before` le da todo a admin-ti, así que probar con él no demostraría
-| que la policy existe ni que se autodescubre.
+| Los usuarios de estos tests tienen roles concretos y ninguno es admin-ti:
+| hasta el 2026-10-26 el `Gate::before` le daba todo, así que probar con él no
+| habría demostrado que la policy existe ni que se autodescubre.
 */
 
 use App\Enums\RegimenLaboral;

@@ -20,9 +20,8 @@ use Illuminate\Auth\Access\HandlesAuthorization;
  * fuera repetía la contradicción que se corrigió en `ServidorPolicy` el
  * 2026-09-27, donde la ruta le concedía el rol y el policy le respondía 403.
  *
- * `admin-ti` no aparece aquí: lo cubre el `Gate::before` de AppServiceProvider.
- * En el middleware de las rutas sí hay que nombrarlo, porque ese no pasa por
- * las Gates.
+ * `admin-ti` no aparece aquí: las subrogaciones son de Talento Humano. Entraba
+ * por el `Gate::before`, que se quitó el 2026-10-26.
  *
  * No hay `super-admin` en ninguna rama: ese rol no está en el enum `Rol` ni lo
  * siembra `RolPermisoSeeder`, así que las tres comprobaciones que lo
