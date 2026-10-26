@@ -12,8 +12,8 @@
 | Ver no es emitir: máxima autoridad y auditoría ven los permisos de todos,
 | pero no los registran.
 |
-| Ningún usuario de estos tests es admin-ti: su `Gate::before` se salta la
-| policy y no probaría nada.
+| Ningún usuario de estos tests es admin-ti: hasta el 2026-10-26 su
+| `Gate::before` se saltaba la policy y no habría probado nada.
 */
 
 use App\Enums\Permiso;

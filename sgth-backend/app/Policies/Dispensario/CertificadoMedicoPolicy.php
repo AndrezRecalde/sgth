@@ -15,7 +15,7 @@ use App\Models\User;
  *
  * Solo cubre Asistencia. Emitir, ver y anular desde el dispensario lo deciden
  * los roles de las rutas de `dispensario/certificados-medicos`, como hasta
- * ahora. Y admin-ti se salta esta policy entera (Gate::before).
+ * ahora.
  */
 class CertificadoMedicoPolicy
 {

@@ -12,8 +12,9 @@ uses(Tests\TestCase::class, RefreshDatabase::class);
  *
  * El `Gate::before` le daba todo, así que la ficha de cualquiera le abría por
  * ServidorPolicy mientras la mitad de las pestañas —con rol en la ruta— le
- * respondían 403. Ahora, cuando lo que se autoriza es un Servidor, decide la
- * policy, que no nombra a admin-ti.
+ * respondían 403. Desde entonces, cuando lo que se autorizaba era un Servidor,
+ * decidía la policy, que no nombra a admin-ti. Desde el 2026-10-26 el atajo no
+ * existe para nada (docs/plan-roles-y-accesos.md, PR 3).
  */
 
 beforeEach(function () {
@@ -71,7 +72,8 @@ test('admin-ti conserva el buscador de servidores sin cuenta del módulo de Usua
         ->assertForbidden();
 });
 
-test('fuera del Expediente el atajo de admin-ti sigue igual', function () {
-    // Un permiso suelto, que no es un Servidor: lo sigue concediendo el atajo.
-    expect($this->ti->can('ver-historia-clinica'))->toBeTrue();
+test('fuera del Expediente admin-ti tampoco tiene atajo', function () {
+    // Hasta el 2026-10-26 el Gate::before le concedía cualquier permiso que no
+    // fuera sobre un Servidor. Ya no existe (docs/plan-roles-y-accesos.md, PR 3).
+    expect($this->ti->can('ver-historia-clinica'))->toBeFalse();
 });

@@ -17,9 +17,9 @@ import type { PermisoServidor } from '@/types/api'
  * - Anular un pendiente: el titular, o `anular-permiso-pendiente`.
  * - Aprobar en Sirha7: ver `aprobarSirha7`.
  *
- * admin-ti no aparece aquí: el backend le deja todo por `Gate::before`, pero
- * es un rol técnico y no opera permisos. Si además tiene un rol de Talento
- * Humano, sus botones llegan por los permisos de ese rol.
+ * admin-ti no aparece aquí: es un rol técnico y no opera permisos. Si además
+ * tiene un rol de Talento Humano, sus botones llegan por los permisos de ese
+ * rol.
  */
 export function useAccionesPermiso() {
   const { usuario, hasPermiso } = useAuth()

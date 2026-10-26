@@ -19,8 +19,7 @@ import type { Viatico, ViaticoConRelaciones } from '@/types/api'
  *   un viático en el que viaja. Como Financiero tampoco lo corrige: para él
  *   rige lo mismo que para el titular.
  *
- * admin-ti no aparece aquí: el backend le deja todo por `Gate::before`, pero
- * es un rol técnico y no opera viáticos.
+ * admin-ti no aparece aquí: es un rol técnico y no opera viáticos.
  */
 
 type ViaticoAcciones = Pick<Viatico, 'servidor_id'> &

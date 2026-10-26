@@ -16,10 +16,6 @@ use App\Models\User;
  * leer el permiso de cualquier otro —incluido el motivo de uno por enfermedad—
  * y descargar su PDF. Aquí se centraliza, y se apoya en la matriz de permisos
  * que el `RolPermisoSeeder` ya define en vez de en roles escritos a mano.
- *
- * Ojo con el `Gate::before` de `AppServiceProvider`: admin-ti se salta esta
- * policy entera. Es intencional (superusuario técnico), pero significa que
- * ninguna regla de aquí sirve para probar el blindaje con ese rol.
  */
 class PermisoServidorPolicy
 {

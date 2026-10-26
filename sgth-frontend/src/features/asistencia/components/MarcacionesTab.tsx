@@ -40,7 +40,7 @@ export function MarcacionesTab({ soloPropias = false }: Props) {
   const veTodos = !soloPropias && hasPermiso('ver-asistencia-todos')
   const propio = usuario?.servidor
   const cedulaPropia = propio?.puede_marcar ? (propio.cedula ?? null) : null
-  const puedeBuscar = hasRole('admin-uath') || hasRole('asistente-uath') || hasRole('admin-ti')
+  const puedeBuscar = hasRole('admin-uath') || hasRole('asistente-uath')
   const modo: ModoServidor = !veTodos ? 'propio' : puedeBuscar ? 'buscar' : 'cedula'
 
   // Talento Humano ve también a quien ya no marca o ya no está activo: su

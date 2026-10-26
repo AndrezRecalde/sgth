@@ -197,7 +197,9 @@ test('pero sí tramita las de los demás', function () {
     ($this->crear)(($this->servidor)())->assertCreated();
 });
 
-test('el atajo de admin-ti no se salta la regla', function () {
+// Escrita cuando admin-ti tenía un atajo que se saltaba las policies; la regla
+// vive en el servicio y sigue valiendo para él sin ese atajo.
+test('admin-ti tampoco se tramita algo a sí mismo', function () {
     $tecnico = ($this->servidor)();
     $this->actingAs(($this->usuario)('admin-ti', $tecnico), 'sanctum');
 

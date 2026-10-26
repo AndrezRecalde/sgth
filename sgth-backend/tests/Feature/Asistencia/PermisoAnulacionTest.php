@@ -12,7 +12,8 @@
 | (admin-uath y asistente-uath, con `anular-permiso-pendiente`). El jefe
 | inmediato no. El motivo es obligatorio siempre.
 |
-| Ningún usuario de aquí es admin-ti: su `Gate::before` se salta la policy.
+| Ningún usuario de aquí es admin-ti: hasta el 2026-10-26 su `Gate::before` se
+| saltaba la policy.
 */
 
 use App\Enums\EstadoPermiso;

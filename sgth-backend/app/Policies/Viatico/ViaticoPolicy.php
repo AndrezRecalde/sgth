@@ -25,7 +25,7 @@ use App\Models\Viatico\Viatico;
  * - El jefe de unidad no ve los de su unidad, por ahora.
  *
  * En qué estado se puede hacer cada cosa no es asunto de esta policy: lo
- * decide el servicio. Y admin-ti se la salta entera por el `Gate::before`.
+ * decide el servicio.
  */
 class ViaticoPolicy
 {

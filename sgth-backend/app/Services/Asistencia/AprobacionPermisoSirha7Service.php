@@ -70,7 +70,7 @@ class AprobacionPermisoSirha7Service
             }
 
             // Nadie aprueba su propio permiso. En el servicio y no en la policy:
-            // admin-ti se salta la policy entera (Gate::before).
+            // es de coherencia, no de quién puede.
             if ($servidorDelUsuario !== null && $servidorDelUsuario === (int) $permiso->servidor_id) {
                 throw new ReglaNegocioException('Nadie aprueba su propio permiso: lo debe aprobar otra persona.');
             }

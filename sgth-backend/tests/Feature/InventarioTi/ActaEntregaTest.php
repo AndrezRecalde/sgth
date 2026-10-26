@@ -48,9 +48,10 @@ beforeEach(function () {
         'email' => 'dtic@example.com', 'usuario_ti' => 'dtic',
         'password' => bcrypt('123456'), 'primer_login' => false,
     ]);
-    $this->admin->assignRole(Role::firstOrCreate(
-        ['name' => 'admin-ti', 'guard_name' => 'sanctum']
-    ));
+    // Con los permisos de su rol: desde el 2026-10-26 no hay atajo que le dé
+    // todo a admin-ti.
+    $this->seed(\Database\Seeders\RolPermisoSeeder::class);
+    $this->admin->assignRole('admin-ti');
 
     $this->bien = BienInformatico::create([
         'codigo_qr'            => 'GADPE-077-QR',

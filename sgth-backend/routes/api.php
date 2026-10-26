@@ -296,10 +296,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
     Route::get('catalogos/entidades-financieras', [EntidadFinancieraController::class, 'index']);
     Route::get('catalogos/tipos-unidad', [TipoUnidadController::class, 'index']);
 
-    // Rutas de administración
+    // Rutas de administración. Los bancos de las cuentas de los servidores los
+    // lleva Talento Humano; admin-ti salió de aquí al dejar de ser
+    // superusuario (docs/plan-roles-y-accesos.md, PR 3).
     Route::apiResource('catalogos/entidades-financieras', EntidadFinancieraController::class)
         ->except(['index', 'show'])
-        ->middleware('role:admin-ti|admin-uath');
+        ->middleware('role:admin-uath');
 
     // Módulo 01: Estructura Organizacional
     Route::prefix('estructura')->group(function () {
@@ -363,7 +365,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::get('partidas-presupuestarias/{partida}', [PartidaPresupuestariaController::class, 'show'])
             ->name('estructura.partidas-presupuestarias.show');
 
-        Route::middleware('role:admin-uath|admin-ti')->group(function () {
+        // admin-ti salió de aquí el 2026-10-26: las partidas son de Talento
+        // Humano (docs/plan-roles-y-accesos.md, PR 3).
+        Route::middleware('role:admin-uath')->group(function () {
             Route::post('partidas-presupuestarias', [PartidaPresupuestariaController::class, 'store'])
                 ->name('estructura.partidas-presupuestarias.store');
             Route::put('partidas-presupuestarias/{partida}', [PartidaPresupuestariaController::class, 'update'])
@@ -766,10 +770,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // rutas pedía rol y el policy autorizaba la lectura a cualquier usuario
         // autenticado: un servidor raso listaba las subrogaciones de toda la
         // institución y el historial de cualquier persona. El rol va aquí
-        // además del policy, y nombra a admin-ti porque este middleware no pasa
-        // por el Gate::before que se lo concede todo.
+        // además del policy. admin-ti salió de las dos listas el 2026-10-26,
+        // al dejar de ser superusuario (docs/plan-roles-y-accesos.md, PR 3).
         Route::prefix('subrogaciones')->group(function () {
-            Route::middleware('role:admin-uath|asistente-uath|auditor|maxima-autoridad|admin-ti')
+            Route::middleware('role:admin-uath|asistente-uath|auditor|maxima-autoridad')
                 ->group(function () {
                     // 'activas' se retiró el 2026-09-28: no lo consumía nadie.
                     // A «quién ejerce hoy» responde el organigrama, con la
@@ -782,7 +786,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             // Lo decide SubrogacionPolicy::verDeServidor().
             Route::get('servidor/{servidorId}', [SubrogacionController::class, 'listarPorServidor']);
 
-            Route::middleware('role:admin-uath|asistente-uath|admin-ti')->group(function () {
+            Route::middleware('role:admin-uath|asistente-uath')->group(function () {
                 // De qué ausencia del titular sale la subrogación (fase 5.2).
                 Route::get('ausencias-del-titular', [SubrogacionController::class, 'ausenciasDelTitular']);
                 Route::post('/', [SubrogacionController::class, 'registrar']);
@@ -1133,7 +1137,6 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
     // con ser admin-uath o analista-uath para todo: el analista creaba,
     // publicaba, borraba y declaraba ganadores. Ahora el analista ve y
     // califica; lo demás es de quien gestiona convocatorias (admin-uath).
-    // admin-ti pasa por el Gate::before.
     Route::prefix('seleccion')->group(function () {
         // Leer: listados, detalle, criterios, plantillas y calificaciones.
         Route::middleware('permission:ver-postulantes')->group(function () {

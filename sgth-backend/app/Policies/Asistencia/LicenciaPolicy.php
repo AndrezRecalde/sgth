@@ -16,8 +16,6 @@ use App\Models\User;
  *   calamidad, Talento Humano las demás (`CausaLicencia::permisoParaAprobar`).
  * - Las ve quien registra o aprueba alguna; quien solo aprueba algunas causas
  *   ve solo esas (`causasVisibles`).
- *
- * Y admin-ti se salta esta policy entera (Gate::before).
  */
 class LicenciaPolicy
 {

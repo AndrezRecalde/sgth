@@ -61,9 +61,10 @@ final class UsuarioPolicy
      * con entrar al grupo de rutas 'admin', y admin-uath —que no puede ni
      * listar usuarios— podía auto-otorgarse 'configurar-sistema'.
      *
-     * La prohibición de tocarse a uno mismo NO vive aquí: Gate::before deja
-     * pasar a admin-ti antes de consultar cualquier policy. Está en
-     * UsuarioService, donde ningún atajo la puede saltar.
+     * La prohibición de tocarse a uno mismo NO vive aquí: es una regla de
+     * coherencia, no de quién puede. Está en UsuarioService, donde ningún
+     * atajo la puede saltar (el Gate::before de admin-ti lo hacía hasta el
+     * 2026-10-26).
      */
     public function gestionarPermisos(User $user, User $model): bool
     {

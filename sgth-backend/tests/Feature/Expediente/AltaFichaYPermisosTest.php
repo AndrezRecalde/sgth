@@ -91,13 +91,16 @@ test('talento humano conserva los permisos que sí le corresponden', function ()
     expect($th->can(Permiso::GESTIONAR_EXPEDIENTE->value))->toBeTrue();
 });
 
-test('el superusuario técnico conserva el acceso sin restricciones', function () {
+test('admin-ti ya no tiene acceso sin restricciones', function () {
+    // El Gate::before que se lo daba se quitó el 2026-10-26: admin-ti es el
+    // administrador técnico y tiene sus permisos en el rol
+    // (docs/plan-roles-y-accesos.md, PR 3).
     Permission::firstOrCreate(['name' => 'ver-historia-clinica', 'guard_name' => 'sanctum']);
 
     $ti = User::factory()->create();
     $ti->assignRole('admin-ti');
 
-    expect($ti->can('ver-historia-clinica'))->toBeTrue();
+    expect($ti->can('ver-historia-clinica'))->toBeFalse();
 });
 
 /**

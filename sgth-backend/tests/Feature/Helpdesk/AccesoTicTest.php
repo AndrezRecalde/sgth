@@ -18,7 +18,7 @@ use Spatie\Permission\PermissionRegistrar;
 | Hasta el PR 0.2 el listado de tickets devolvía los de todos a cualquiera, el
 | detalle y los comentarios no miraban de quién era el ticket, y el inventario
 | iba por rol. Las pruebas usan los roles reales del seeder y ninguna con
-| admin-ti, que se salta la policy por el Gate::before.
+| admin-ti, que hasta el 2026-10-26 se saltaba la policy por el Gate::before.
 */
 
 uses(Tests\TestCase::class, RefreshDatabase::class);

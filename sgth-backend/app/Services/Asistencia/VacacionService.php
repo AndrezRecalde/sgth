@@ -362,7 +362,7 @@ class VacacionService implements VacacionServiceInterface
 
     /**
      * Nadie resuelve ni anula su propia solicitud. Va en el servicio y no en la
-     * policy: el Gate::before de admin-ti se saltaría la policy entera.
+     * policy: es de coherencia, no de quién puede.
      */
     private function rechazarSiEsPropia(User $usuario, Vacacion $vacacion, string $accion): void
     {

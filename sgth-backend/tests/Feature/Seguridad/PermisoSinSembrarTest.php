@@ -3,6 +3,7 @@
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 use Spatie\Permission\Models\Role;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
@@ -15,13 +16,13 @@ uses(Tests\TestCase::class, RefreshDatabase::class);
  * acaba en un 403 correcto.
  *
  * El 500 aparece cuando el permiso se consulta con `hasPermissionTo()`, la
- * variante estricta, que lanza `PermissionDoesNotExist`. La carga inicial de
- * servidores lo hace a propósito, para saltarse el `Gate::before` que aprueba
- * todo a admin-ti y poder revocar la vía a una persona concreta. El efecto es
- * que justo el rol que pasa el middleware es el que se come el error interno.
- *
- * Apareció al montar el barrido de rutas GET, cuyo usuario tiene todos los
- * roles y por tanto llega hasta ahí.
+ * variante estricta, que lanza `PermissionDoesNotExist`. Lo encontró el barrido
+ * de rutas GET en la carga inicial de servidores, que lo usa a propósito: el
+ * `Gate::before` de admin-ti le hacía pasar el middleware y caía en el error
+ * interno. Ese atajo ya no existe (2026-10-26) y hoy el middleware lo detiene
+ * antes, pero el renderizador sigue haciendo falta para cualquier
+ * `hasPermissionTo()` con un permiso que falte sembrar: se prueba con una ruta
+ * propia.
  */
 beforeEach(function () {
     User::unguard();
@@ -51,10 +52,18 @@ test('un_permiso_sin_sembrar_responde_no_autorizado_y_no_un_error_interno', func
 });
 
 test('la_falta_del_permiso_queda_registrada_con_su_nombre', function () {
+    // Una ruta que consulta con la variante estricta un permiso que no se
+    // sembró, como hacía la carga inicial cuando el atajo de admin-ti le
+    // dejaba pasar el middleware.
+    Route::middleware(['api', 'auth:sanctum'])->get(
+        '/api/v1/prueba/permiso-sin-sembrar',
+        fn () => response()->json(['tiene' => auth()->user()->hasPermissionTo('vincular-servidor-inicial', 'sanctum')]),
+    );
+
     Log::spy();
 
     $this->actingAs($this->adminTi, 'sanctum')
-        ->getJson('/api/v1/expediente/vinculacion-inicial')
+        ->getJson('/api/v1/prueba/permiso-sin-sembrar')
         ->assertStatus(403);
 
     // Sin esto, un permiso sin sembrar dejaría a todo el mundo fuera de esa
