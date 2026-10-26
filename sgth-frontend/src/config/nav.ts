@@ -142,12 +142,14 @@ export const NAV_SGTH: NavGroup[] = [
         ],
       },
       {
-        label: 'Novedades para Financiero',
+        label: 'Novedades del mes',
         href:  ROUTES.SGTH.NOMINA,
         icon:  'IconCash',
         // Las novedades del mes (fase 7.3a): de la nómina solo quedan ellas,
         // porque el SGTH no la calcula desde el 2026-10-20. Con su permiso, o
-        // saldría en el menú de todos los roles y abrirla daría un 403.
+        // saldría en el menú de todos los roles y abrirla daría un 403. Se
+        // llamaba «para Financiero», pero Financiero no entra aquí: las recibe
+        // por correo al entregarse el mes (PR 8 del plan de roles).
         permisos: ['ver-novedades-nomina'],
       },
       {

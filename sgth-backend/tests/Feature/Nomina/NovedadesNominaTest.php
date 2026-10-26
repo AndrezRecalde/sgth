@@ -44,6 +44,7 @@ beforeEach(function () {
     }
     permisosDeAccionesPersonal();
     (require database_path('migrations/2026_10_13_000100_crear_permisos_novedades_nomina.php'))->up();
+    (require database_path('migrations/2026_11_28_000000_novedades_solo_para_talento_humano.php'))->up();
     Mail::fake();
     $this->travelTo(Carbon::parse('2026-10-20 10:00'));
 
@@ -345,15 +346,22 @@ test('lo que cambia en un mes entregado va como ajuste en el siguiente, y una so
 
 // ── Quién ───────────────────────────────────────────────────────
 
-test('Financiero las ve y las descarga, pero las entrega Talento Humano', function () {
-    $financiero = User::factory()->create();
-    $financiero->assignRole('financiero');
-    $this->actingAs($financiero, 'sanctum');
-
+test('las ve Talento Humano; Financiero las recibe por correo y no entra a la pantalla', function () {
+    // Tenía el permiso, pero la pantalla vive en el SGTH, al que no entra; las
+    // novedades le llegan en Excel al entregarse el mes (PR 8 del plan de
+    // roles, decisión 2 del 2026-10-25).
+    $this->actingAs($this->user, 'sanctum');
     $this->getJson('/api/v1/nomina/novedades?periodo=2026-10')->assertOk();
     $this->get('/api/v1/nomina/novedades/excel?periodo=2026-10')
         ->assertOk()
         ->assertDownload('novedades_nomina_2026-10.xlsx');
+
+    $financiero = User::factory()->create();
+    $financiero->assignRole('financiero');
+    $this->actingAs($financiero, 'sanctum');
+
+    $this->getJson('/api/v1/nomina/novedades?periodo=2026-10')->assertForbidden();
+    $this->get('/api/v1/nomina/novedades/excel?periodo=2026-10', ['Accept' => 'application/json'])->assertForbidden();
     $this->postJson('/api/v1/nomina/novedades/entregar', ['periodo' => '2026-10'])->assertForbidden();
 
     $servidor = User::factory()->create();
