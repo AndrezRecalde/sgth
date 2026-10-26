@@ -18,6 +18,11 @@ interface ExpedienteServiceInterface
 
     public function listarServidores(array $filtros): mixed;
 
+    /** @return \Illuminate\Support\Collection<int, Servidor> */
+    public function buscarServidores(string $termino, int $limite): \Illuminate\Support\Collection;
+
+    public function servidorParaBuscador(int $servidorId): Servidor;
+
     public function exportarServidores(array $filtros): \Illuminate\Support\Collection;
 
     public function lineaDeTiempo(int $servidorId): \Illuminate\Support\Collection;

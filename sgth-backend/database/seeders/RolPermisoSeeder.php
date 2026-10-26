@@ -18,6 +18,9 @@ class RolPermisoSeeder extends Seeder
         Permiso::GESTIONAR_INVENTARIO_TI,
         Permiso::REGISTRAR_MANTENIMIENTO,
         Permiso::GESTIONAR_PRESTAMOS,
+        // A quién se le registra un ticket, se le entrega un equipo o se le
+        // presta uno.
+        Permiso::BUSCAR_SERVIDORES,
     ];
 
     /** El jefe de TIC: lo del técnico, más asignar, configurar y dar de baja. */
@@ -125,6 +128,7 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_EXPEDIENTE_UNIDAD,
             Permiso::VER_EXPEDIENTE_TODOS,
             Permiso::GESTIONAR_EXPEDIENTE,
+            Permiso::BUSCAR_SERVIDORES,
             Permiso::CARGAR_DOCUMENTOS,
             Permiso::GESTIONAR_CARGAS_FAMILIARES,
             // El trámite entero de una acción de personal (diseño, 6.3).
@@ -190,6 +194,7 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_EXPEDIENTE_UNIDAD,
             Permiso::VER_EXPEDIENTE_TODOS,
             Permiso::GESTIONAR_EXPEDIENTE,
+            Permiso::BUSCAR_SERVIDORES,
             Permiso::GESTIONAR_CARGAS_FAMILIARES,
             // Prepara y notifica; suscribir, registrar y anular son del
             // director (TH 22).
@@ -367,6 +372,9 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_CREDENCIALES,
             // Quién leyó y confirmó cada comunicado, solo para consultarlo.
             Permiso::VER_LECTURAS_COMUNICADOS,
+            // Para filtrar por servidor en Accidentes, EPP, Consolidado y
+            // Períodos.
+            Permiso::BUSCAR_SERVIDORES,
         ]));
     }
 

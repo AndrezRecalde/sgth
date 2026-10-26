@@ -16,6 +16,12 @@ enum Permiso: string
     case VER_EXPEDIENTE_UNIDAD = 'ver-expediente-unidad';
     case VER_EXPEDIENTE_TODOS = 'ver-expediente-todos';
     case GESTIONAR_EXPEDIENTE = 'gestionar-expediente';
+    // Buscar a un servidor por nombre o cédula para elegirlo en un formulario
+    // —un ticket, una custodia, un accidente—. No abre el Expediente: devuelve
+    // nombre, cédula y unidad. Hasta el 2026-10-26 el buscador pedía el listado
+    // del Expediente, que solo sirve a Talento Humano, y a TIC le daba 403
+    // (docs/plan-roles-y-accesos.md, PR 2).
+    case BUSCAR_SERVIDORES = 'buscar-servidores';
     /**
      * Carga inicial de servidores ya vinculados: crea la ficha y el contrato
      * vigente sin Acción de Personal. Es temporal — se otorga para migrar lo

@@ -20,11 +20,11 @@ import { ReporteSiithPanel } from '@/features/expediente/components/ReporteSiith
 import { ContratoColectivoPanel } from '@/features/expediente/components/ContratoColectivoPanel'
 import { SolicitudesDelPortalPanel } from '@/features/expediente/components/SolicitudesDelPortalPanel'
 import { usePuedePrepararAccion } from '@/features/expediente/hooks/usePuedePrepararAccion'
-import type { FamiliaDelCatalogo, ServidorConRelaciones } from '@/types/api'
+import type { FamiliaDelCatalogo, ServidorBusqueda } from '@/types/api'
 import { PageHeader, PageShell } from '@/components/ui'
 
 export function AccionesPersonalView() {
-  const [servidor, setServidor] = useState<ServidorConRelaciones | null>(null)
+  const [servidor, setServidor] = useState<ServidorBusqueda | null>(null)
 
   // La pestaña de registrar es de quien prepara acciones (diseño, 6.3). A
   // quien solo suscribe o registra le queda la bandeja.

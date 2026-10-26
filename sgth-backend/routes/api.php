@@ -88,6 +88,7 @@ use App\Http\Controllers\Expediente\AccionPersonalPdfController;
 use App\Http\Controllers\Expediente\AusentismoSaludController;
 use App\Http\Controllers\Expediente\CertificadoLaboralController;
 use App\Http\Controllers\Expediente\FirmanteAccionPersonalController;
+use App\Http\Controllers\Expediente\BuscarServidorController;
 use App\Http\Controllers\Expediente\ExportServidoresController;
 use App\Http\Controllers\Expediente\ContratoServidorController;
 use App\Http\Controllers\Expediente\CuentaBancariaServidorController;
@@ -413,6 +414,19 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         });
 
     Route::prefix('expediente')->group(function () {
+        // El buscador de los formularios: elegir a una persona para un ticket,
+        // una custodia o un filtro. Con su propio permiso y no con
+        // ServidorPolicy, que solo sirve el listado a Talento Humano: TIC
+        // recibía 403 (docs/plan-roles-y-accesos.md, PR 2). Antes que
+        // `apiResource`, o `servidores/{servidore}` se traga la ruta literal.
+        Route::middleware('permission:buscar-servidores')->group(function () {
+            Route::get('servidores/buscar', [BuscarServidorController::class, 'index'])
+                ->name('servidores.buscar');
+            Route::get('servidores/buscar/{id}', [BuscarServidorController::class, 'show'])
+                ->whereNumber('id')
+                ->name('servidores.buscar.show');
+        });
+
         Route::get('servidores-export/excel', [ExportServidoresController::class, 'excel']);
         Route::get('servidores-export/pdf', [ExportServidoresController::class, 'pdf']);
         // 'store' retirado: sin consumidor real, y su contrato de datos

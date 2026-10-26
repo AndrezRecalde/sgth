@@ -85,6 +85,12 @@ export type ExtensionTelefonica  = components['schemas']['ExtensionTelefonicaRes
 
 // ── Expediente ───────────────────────────────
 export type Servidor                       = components['schemas']['ServidorResource']
+/**
+ * El que devuelve el buscador de los formularios: lo justo para elegir a una
+ * persona. Lo del vínculo (`contrato_vigente`, `puesto`, `pendiente_vinculacion`,
+ * `ultimo_nombramiento`) solo llega a Talento Humano.
+ */
+export type ServidorBusqueda               = components['schemas']['ServidorBusquedaResource']
 export type ContratoServidor               = components['schemas']['ContratoServidor']
 export type DiscapacidadServidor           = components['schemas']['DiscapacidadServidor']
 export type EnfermedadCatastroficaServidor = components['schemas']['EnfermedadCatastroficaServidor']

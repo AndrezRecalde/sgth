@@ -231,9 +231,10 @@ test('la migracion crea el jefe de tic y deja los roles como el seeder', functio
     (require database_path('migrations/2026_11_14_000000_borrar_tablas_de_nomina.php'))->up();
     app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-    // Lo que dan las migraciones posteriores (gestionar-prestamos, 2.1) no lo
-    // recrea esta: el jefe de TIC lo recibe al correr la de préstamos.
-    $posteriores = ['gestionar-prestamos'];
+    // Lo que dan las migraciones posteriores (gestionar-prestamos, 2.1; el
+    // buscador de servidores, 2026-10-26) no lo recrea esta: el jefe de TIC lo
+    // recibe al correr la suya.
+    $posteriores = ['gestionar-prestamos', 'buscar-servidores'];
     foreach ($delSeeder as $rol => $esperados) {
         $tiene = $permisos($rol);
         expect(array_values(array_diff($tiene, $posteriores)))->toBe(array_values(array_diff($esperados, $posteriores)));

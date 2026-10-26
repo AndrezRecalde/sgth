@@ -7,7 +7,7 @@ import { Toolbar } from '@/components/ui'
 import { BuscarServidorSelect } from '@/features/expediente/components/BuscarServidorSelect'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
-import type { ServidorConRelaciones } from '@/types/api'
+import type { ServidorBusqueda } from '@/types/api'
 
 /**
  * Cómo se elige a quién consultar:
@@ -22,7 +22,7 @@ export type ModoServidor = 'propio' | 'buscar' | 'cedula'
 
 export interface FiltrosMarcaciones {
   servidorId:    number | null
-  elegido:       ServidorConRelaciones | null
+  elegido:       ServidorBusqueda | null
   cedulaEscrita: string
   fechaInicio:   string | null
   fechaFin:      string | null
