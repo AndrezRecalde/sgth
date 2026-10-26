@@ -21,8 +21,10 @@ export const agendaService = {
     ).then(r => r.data.datos),
 
   turnosDelDia: (params?: {
-    fecha_desde?: string
-    fecha_hasta?: string
+    fecha_desde?:   string
+    fecha_hasta?:   string
+    /** La cola de una especialidad: Consultas, medicina; Odontología, la suya. */
+    tipo_atencion?: 'medicina_general' | 'odontologia'
   }) =>
     api.get<ApiResponse<AgendaMedica[]>>(
       '/dispensario/agenda/turnos-del-dia',

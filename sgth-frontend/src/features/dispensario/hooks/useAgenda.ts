@@ -80,14 +80,16 @@ export function useCancelarTurno() {
 }
 
 export function useTurnosDelDia(params?: {
-  fecha_desde?: string
-  fecha_hasta?: string
+  fecha_desde?:   string
+  fecha_hasta?:   string
+  tipo_atencion?: 'medicina_general' | 'odontologia'
 }) {
   return useQuery({
     queryKey: ['agenda', 'turnos-del-dia', params],
     queryFn:  () => agendaService.turnosDelDia(params),
     staleTime: 1000 * 15,
-    refetchInterval: params ? undefined : 1000 * 30,
+    // Se refresca sola mientras mira el día de hoy, no un rango elegido.
+    refetchInterval: params?.fecha_desde ? undefined : 1000 * 30,
   })
 }
 

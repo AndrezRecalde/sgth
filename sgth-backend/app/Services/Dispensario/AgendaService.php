@@ -149,10 +149,18 @@ final class AgendaService implements AgendaServiceInterface
         }
     }
 
+    /**
+     * La cola de un profesional. Con `$tipoAtencion`, solo la de esa
+     * especialidad: Consultas y Odontología enseñaban la misma lista, así que
+     * quien era médico y odontólogo veía sus turnos de odontología en
+     * Consultas, abiertos como «Atención médica» (docs/plan-roles-y-accesos.md,
+     * PR 6).
+     */
     public function turnosDelDia(
         int $medicoId,
         ?string $fechaDesde = null,
-        ?string $fechaHasta = null
+        ?string $fechaHasta = null,
+        ?string $tipoAtencion = null
     ): Collection {
         $desde = $fechaDesde ? Carbon::parse($fechaDesde) : today();
         $hasta = $fechaHasta ? Carbon::parse($fechaHasta) : $desde;
@@ -162,6 +170,7 @@ final class AgendaService implements AgendaServiceInterface
             'triaje', 'consultaMedica',
         ])
             ->where('medico_id', $medicoId)
+            ->when($tipoAtencion !== null, fn ($q) => $q->where('tipo_atencion', $tipoAtencion))
             ->whereBetween('fecha', [$desde, $hasta])
             ->orderByRaw("
                 CASE estado

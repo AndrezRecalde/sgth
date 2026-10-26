@@ -30,6 +30,7 @@ export function OdontologiaTurnosView() {
 
   return (
     <TurnosDelDiaTable
+      tipoAtencion="odontologia"
       onAtender={atender}
       onVerConsulta={abrirFicha}
     />
