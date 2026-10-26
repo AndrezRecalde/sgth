@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\Dispensario\OrdenExamen;
 use App\Models\Dispensario\ResultadoMedico;
+use App\Services\Dispensario\AlcanceClinico;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -96,23 +97,31 @@ final class BandejaExamenesController extends Controller
         return ApiResponse::ok($resultados, 'Resultados por revisar.');
     }
 
-    /** Emitidas o parciales, con la búsqueda por folio, cédula o nombre del paciente. */
+    /**
+     * Emitidas o parciales, con la búsqueda por folio, cédula o nombre del
+     * paciente. Cada profesional ve las de su especialidad; la administración,
+     * todas. Antes el odontólogo veía —y registraba— las de medicina general
+     * (docs/plan-roles-y-accesos.md, PR 5).
+     */
     private function abiertas(Request $request): Builder
     {
         $like = $this->patron($request);
 
-        return OrdenExamen::query()
+        return AlcanceClinico::ordenesDe(OrdenExamen::query(), AlcanceClinico::especialidadDe($request->user()))
             ->whereIn('estado', [EstadoOrdenExamen::EMITIDA, EstadoOrdenExamen::PARCIAL])
             ->when($like !== null, fn (Builder $q) => $q->where(fn (Builder $w) => $this
                 ->delPaciente($w->where('folio', 'ilike', $like), $like)));
     }
 
-    /** Por revisar, con la misma búsqueda: el folio de su orden, la cédula o el nombre. */
+    /**
+     * Por revisar, con la misma búsqueda: el folio de su orden, la cédula o el
+     * nombre. También por especialidad, como las órdenes.
+     */
     private function sinRevisar(Request $request): Builder
     {
         $like = $this->patron($request);
 
-        return ResultadoMedico::query()
+        return AlcanceClinico::resultadosDe(ResultadoMedico::query(), AlcanceClinico::especialidadDe($request->user()))
             ->where('estado_revision', EstadoRevisionResultado::POR_REVISAR)
             ->when($like !== null, fn (Builder $q) => $q->where(fn (Builder $w) => $this
                 ->delPaciente($w->whereHas('ordenExamen', fn (Builder $o) => $o->where('folio', 'ilike', $like)), $like)));

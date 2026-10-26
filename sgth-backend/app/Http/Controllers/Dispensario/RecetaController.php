@@ -9,6 +9,7 @@ use App\Http\Responses\ApiResponse;
 use App\Contracts\Dispensario\RecetaServiceInterface;
 use App\Models\Dispensario\ConsultaMedica;
 use App\Models\Dispensario\RecetaMedica;
+use App\Services\Dispensario\AlcanceClinico;
 use App\Services\Dispensario\PdfRecetaService;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
@@ -21,14 +22,35 @@ final class RecetaController extends Controller
     /** Techo del paginador: `?per_page=-1` salía sin LIMIT y traía la tabla entera. */
     private const PER_PAGE_MAX = 100;
 
+    /**
+     * De la consulta, lo que necesita quien despacha: de quién es, quién la
+     * firmó y cuándo. Iba entera —motivo, enfermedad actual, examen físico,
+     * diagnóstico, plan y notas del médico— a todo el que abría el despacho
+     * (docs/plan-roles-y-accesos.md, PR 5). El impreso tampoco lleva el
+     * diagnóstico.
+     */
+    private const DE_LA_CONSULTA = [
+        'consultaMedica:id,historia_clinica_id,medico_id,fecha_consulta,especialidad',
+        'consultaMedica.historiaClinica:id,servidor_id,carga_familiar_id',
+        'consultaMedica.historiaClinica.servidor:id,nombre,apellido,cedula',
+        'consultaMedica.historiaClinica.cargaFamiliar:id,nombres,apellidos,cedula,servidor_id',
+        'consultaMedica.historiaClinica.cargaFamiliar.servidor:id,nombre,apellido',
+        'consultaMedica.medico:id,usuario_ti,email,servidor_id',
+        'consultaMedica.medico.servidor:id,nombre,apellido',
+    ];
+
     public function __construct(
         private readonly RecetaServiceInterface $recetaService,
         private readonly PdfRecetaService $pdfService
     ) {}
 
     /** El impreso, para entregárselo al paciente o archivarlo. */
-    public function pdf(int $id): Response
+    public function pdf(Request $request, int $id): Response|JsonResponse
     {
+        if (! $this->puedeVer($request, $id)) {
+            return $this->ajena();
+        }
+
         $resultado = $this->pdfService->generarContent($id);
 
         return response($resultado['content'], 200, [
@@ -46,10 +68,7 @@ final class RecetaController extends Controller
             // Con el resumen de lotes: quien despacha necesita saber cuánto de
             // ese stock se puede entregar, no cuánto hay en el estante.
             'items.inventario' => fn ($q) => $q->conResumenDeLotes(),
-            'consultaMedica.historiaClinica.servidor',
-            'consultaMedica.historiaClinica.cargaFamiliar.servidor',
-            'consultaMedica.medico:id,usuario_ti,email,servidor_id',
-            'consultaMedica.medico.servidor:id,nombre,apellido',
+            ...self::DE_LA_CONSULTA,
         ])
             // Por la fecha que la pantalla enseña. Ordenar por `created_at`
             // dejaba el listado desordenado a la vista: una receta emitida el
@@ -142,6 +161,12 @@ final class RecetaController extends Controller
         \Illuminate\Database\Eloquent\Builder $query,
         Request $request
     ): void {
+        // El médico y el odontólogo, las suyas; quien despacha, todas. Va con
+        // los filtros para que el listado y sus contadores digan lo mismo.
+        if (! AlcanceClinico::despachaRecetas($request->user())) {
+            $query->whereHas('consultaMedica', fn ($q) => $q->where('medico_id', $request->user()->id));
+        }
+
         if ($request->filled('consulta_medica_id')) {
             $query->where(
                 'consulta_medica_id',
@@ -215,17 +240,39 @@ final class RecetaController extends Controller
         return ApiResponse::created($result, 'Receta emitida.');
     }
 
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
+        if (! $this->puedeVer($request, $id)) {
+            return $this->ajena();
+        }
+
         $receta = RecetaMedica::with([
             // Con el resumen de lotes: quien despacha necesita saber cuánto de
             // ese stock se puede entregar, no cuánto hay en el estante.
             'items.inventario' => fn ($q) => $q->conResumenDeLotes(),
-            'consultaMedica.historiaClinica.servidor',
-            'consultaMedica.historiaClinica.cargaFamiliar',
+            ...self::DE_LA_CONSULTA,
         ])->findOrFail($id);
 
         return ApiResponse::ok($receta);
+    }
+
+    /** La suya, o cualquiera si despacha. La que no existe sigue dando 404. */
+    private function puedeVer(Request $request, int $id): bool
+    {
+        if (AlcanceClinico::despachaRecetas($request->user())) {
+            return true;
+        }
+
+        $medico = RecetaMedica::whereKey($id)
+            ->join('consultas_medicas', 'consultas_medicas.id', '=', 'recetas_medicas.consulta_medica_id')
+            ->value('consultas_medicas.medico_id');
+
+        return $medico === null || (int) $medico === $request->user()->id;
+    }
+
+    private function ajena(): JsonResponse
+    {
+        return ApiResponse::error('Esta receta es de otro profesional: solo la ve quien la emitió y quien la despacha.', null, 403);
     }
 
     /**
