@@ -1115,6 +1115,39 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/expediente/servidores/buscar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["servidores.buscar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/servidores/buscar/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** El que ya está elegido, para que el formulario enseñe su nombre */
+        get: operations["servidores.buscar.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/seleccion/convocatorias/{convocatoriaId}/postulantes/{postulanteId}/calificaciones": {
         parameters: {
             query?: never;
@@ -14822,6 +14855,42 @@ export interface components {
             contacto_emergencia_parentesco: string | null;
             contacto_emergencia_telefono: string | null;
         };
+        /** ServidorBusquedaResource */
+        ServidorBusquedaResource: {
+            id: number;
+            cedula: string;
+            nombre: string;
+            segundo_nombre: string | null;
+            apellido: string;
+            segundo_apellido: string | null;
+            regimen_laboral: components["schemas"]["RegimenLaboral"] | null;
+            /**
+             * @description Estado propio del servidor (activo/inactivo). Marcaciones enseña
+             *     el historial de quien ya no está.
+             */
+            estado: boolean;
+            puede_marcar: boolean;
+            unidad_administrativa?: {
+                id: number;
+                nombre: string;
+            } | null;
+            /** @description ── Solo para Talento Humano ──────────────────────────── */
+            contrato_vigente?: {
+                tipo_nombramiento: components["schemas"]["TipoNombramiento"];
+                remuneracion: string | null;
+            } | null;
+            /** @description `rmu` es un accesor: sale del grupo ocupacional del puesto. */
+            puesto?: {
+                rmu: string;
+            } | null;
+            /** @description Sin contrato vigente: el formulario de acciones ofrece el ingreso. */
+            pendiente_vinculacion?: boolean;
+            /**
+             * @description El de su último vínculo, vigente o no: decide si cabe la
+             *     restitución o el reintegro (fase 4.5b).
+             */
+            ultimo_nombramiento?: string;
+        };
         /** ServidorResource */
         ServidorResource: {
             id: number;
@@ -20593,6 +20662,68 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             422: components["responses"]["ValidationException"];
+        };
+    };
+    "servidores.buscar": {
+        parameters: {
+            query: {
+                /**
+                 * @description Desde dos letras, como el buscador: con una sola, media
+                 *     institución coincide.
+                 */
+                search: string;
+                per_page?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Servidores encontrados.";
+                        datos: components["schemas"]["ServidorBusquedaResource"][];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "servidores.buscar.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Servidor.";
+                        datos: components["schemas"]["ServidorBusquedaResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
         };
     };
     "calificacion.obtener": {

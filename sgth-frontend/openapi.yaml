@@ -6463,6 +6463,136 @@
                 }
             }
         },
+        "/v1/expediente/servidores/buscar": {
+            "get": {
+                "operationId": "servidores.buscar",
+                "tags": [
+                    "BuscarServidor"
+                ],
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": true,
+                        "description": "Desde dos letras, como el buscador: con una sola, media\ninstituci\u00f3n coincide.",
+                        "schema": {
+                            "type": "string",
+                            "minLength": 2,
+                            "maxLength": 100
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1,
+                            "maximum": 20
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Servidores encontrados."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ServidorBusquedaResource"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/servidores/buscar/{id}": {
+            "get": {
+                "operationId": "servidores.buscar.show",
+                "summary": "El que ya est\u00e1 elegido, para que el formulario ense\u00f1e su nombre",
+                "tags": [
+                    "BuscarServidor"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Servidor."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/ServidorBusquedaResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/seleccion/convocatorias/{convocatoriaId}/postulantes/{postulanteId}/calificaciones": {
             "get": {
                 "operationId": "calificacion.obtener",
@@ -83196,6 +83326,127 @@
                     "contacto_emergencia_telefono"
                 ],
                 "title": "Servidor"
+            },
+            "ServidorBusquedaResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "cedula": {
+                        "type": "string"
+                    },
+                    "nombre": {
+                        "type": "string"
+                    },
+                    "segundo_nombre": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "apellido": {
+                        "type": "string"
+                    },
+                    "segundo_apellido": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "regimen_laboral": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/RegimenLaboral"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "estado": {
+                        "type": "boolean",
+                        "description": "Estado propio del servidor (activo/inactivo). Marcaciones ense\u00f1a\nel historial de quien ya no est\u00e1."
+                    },
+                    "puede_marcar": {
+                        "type": "boolean"
+                    },
+                    "unidad_administrativa": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "nombre": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "nombre"
+                        ]
+                    },
+                    "contrato_vigente": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "\u2500\u2500 Solo para Talento Humano \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+                        "properties": {
+                            "tipo_nombramiento": {
+                                "$ref": "#/components/schemas/TipoNombramiento"
+                            },
+                            "remuneracion": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "tipo_nombramiento",
+                            "remuneracion"
+                        ]
+                    },
+                    "puesto": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "`rmu` es un accesor: sale del grupo ocupacional del puesto.",
+                        "properties": {
+                            "rmu": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "rmu"
+                        ]
+                    },
+                    "pendiente_vinculacion": {
+                        "type": "boolean",
+                        "description": "Sin contrato vigente: el formulario de acciones ofrece el ingreso."
+                    },
+                    "ultimo_nombramiento": {
+                        "type": "string",
+                        "description": "El de su \u00faltimo v\u00ednculo, vigente o no: decide si cabe la\nrestituci\u00f3n o el reintegro (fase 4.5b)."
+                    }
+                },
+                "required": [
+                    "id",
+                    "cedula",
+                    "nombre",
+                    "segundo_nombre",
+                    "apellido",
+                    "segundo_apellido",
+                    "regimen_laboral",
+                    "estado",
+                    "puede_marcar"
+                ],
+                "title": "ServidorBusquedaResource"
             },
             "ServidorResource": {
                 "type": "object",
