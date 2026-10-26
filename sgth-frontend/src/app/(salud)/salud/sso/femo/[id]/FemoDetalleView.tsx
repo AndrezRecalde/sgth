@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { Button, Group, Skeleton } from '@mantine/core'
+import { useAuth } from '@/hooks/useAuth'
 import { IconStethoscope, IconDownload, IconEdit } from '@tabler/icons-react'
 import { useFemoDetalle } from '@/features/dispensario/hooks/useFemo'
 import { usePdfFemo } from '@/features/dispensario/hooks/usePdfFemo'
@@ -25,6 +26,7 @@ interface Props {
 export function FemoDetalleView({ id }: Props) {
   const femoId = Number(id)
   const router = useRouter()
+  const { usuario, hasRole } = useAuth()
 
   const { data: ficha, isLoading, isError } = useFemoDetalle(femoId)
   const { descargarFemo, loading: descargando } = usePdfFemo()
@@ -59,7 +61,10 @@ export function FemoDetalleView({ id }: Props) {
       ? `${ficha.postulante.nombres} ${ficha.postulante.apellidos}`
       : undefined
   const aptitud = APTITUD_OPTIONS.find(o => o.value === ficha.aptitud)?.label ?? 'Borrador'
-  const solicitudEnCurso = ficha.solicitud?.estado === 'en_proceso' ? ficha.solicitud : null
+  // Un borrador lo retoma solo quien lo creó, y solo si es médico
+  // (docs/plan-roles-y-accesos.md, PR 4).
+  const laContinua = hasRole('medico') && ficha.evaluador_id === usuario?.id
+  const solicitudEnCurso = laContinua && ficha.solicitud?.estado === 'en_proceso' ? ficha.solicitud : null
 
   return (
     <PageShell>

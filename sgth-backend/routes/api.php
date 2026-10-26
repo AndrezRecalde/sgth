@@ -1994,9 +1994,17 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->middleware('role:medico|odontologo|admin-dispensario')
             ->group(function () {
                 Route::get('historia-clinica/{historiaClinicaId}', [OdontogramaController::class, 'show']);
+                Route::get('piezas/{piezaId}/historial', [OdontogramaController::class, 'historialPieza']);
+            });
+
+        // Lo que se le hizo a cada pieza lo registra el odontólogo, y nadie
+        // más: también lo podían registrar el médico y la administración del
+        // Dispensario (docs/plan-roles-y-accesos.md, PR 4).
+        Route::prefix('odontograma')
+            ->middleware('role:odontologo')
+            ->group(function () {
                 Route::post('procedimientos', [OdontogramaController::class, 'registrarProcedimiento']);
                 Route::patch('procedimientos/{id}/anular', [OdontogramaController::class, 'anularProcedimiento']);
-                Route::get('piezas/{piezaId}/historial', [OdontogramaController::class, 'historialPieza']);
             });
 
         // Certificados médicos: dicen el diagnóstico y los días de reposo de
@@ -2150,9 +2158,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
 
         // El acto médico. Iniciar el FEMO y cerrar la solicitud con un dictamen
         // de aptitud lo hace quien evalúa, y nadie más: iban en el mismo grupo
-        // que la lectura, así que Talento Humano podía emitir el dictamen.
+        // que la lectura, así que Talento Humano podía emitir el dictamen. Desde
+        // el 2026-10-26 tampoco la administración del Dispensario, que no tiene
+        // permisos clínicos; el dictamen, además, solo el médico de la ficha
+        // (docs/plan-roles-y-accesos.md, PR 4).
         Route::prefix('solicitudes-certificacion')
-            ->middleware('role:medico|admin-dispensario')
+            ->middleware('role:medico')
             ->group(function () {
                 Route::patch('{id}/iniciar', [SolicitudCertificacionController::class, 'iniciarProceso']);
                 Route::patch('{id}/completar', [SolicitudCertificacionController::class, 'completar']);
@@ -2187,10 +2198,19 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 Route::get('examenes-por-riesgo', [ExamenesPorRiesgoController::class, 'index']);
                 Route::put('examenes-por-riesgo', [ExamenesPorRiesgoController::class, 'update']);
                 Route::get('/', [FichaSaludOcupacionalController::class, 'index']);
-                Route::post('/', [FichaSaludOcupacionalController::class, 'store']);
                 Route::get('{id}', [FichaSaludOcupacionalController::class, 'show']);
-                Route::patch('{id}', [FichaSaludOcupacionalController::class, 'update']);
                 Route::get('{id}/pdf', [FemoPdfController::class, 'generar']);
+            });
+
+        // Llenar la ficha es el acto médico: solo el médico, y una ficha en
+        // curso solo la continúa quien la creó (lo comprueba el controlador).
+        // La administración del Dispensario la consulta, arriba
+        // (docs/plan-roles-y-accesos.md, PR 4).
+        Route::prefix('fichas-sso')
+            ->middleware('role:medico')
+            ->group(function () {
+                Route::post('/', [FichaSaludOcupacionalController::class, 'store']);
+                Route::patch('{id}', [FichaSaludOcupacionalController::class, 'update']);
             });
 
         // Exámenes: resultados, catálogo, perfiles, bandeja, envíos del Portal

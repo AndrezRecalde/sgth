@@ -56,7 +56,7 @@ final class SolicitudCertificacionController extends Controller
             // Se enumeran las columnas a propósito: `observaciones` es el texto
             // clínico que escribe quien evalúa, y la UATH acordó el 2026-09-26
             // que no forma parte del expediente administrativo.
-            'fichaSaludOcupacional:id,aptitud,restricciones,fecha_evaluacion',
+            'fichaSaludOcupacional:id,aptitud,restricciones,fecha_evaluacion,evaluador_id',
         ])
             // created_at es timestamp(0): sin desempate por id, dos páginas
             // del mismo resultado pueden solaparse.
@@ -421,6 +421,14 @@ final class SolicitudCertificacionController extends Controller
             if (! $ficha) {
                 return ApiResponse::error(
                     'Guarde la ficha FEMO antes de emitir el dictamen.', null, 422
+                );
+            }
+
+            // El dictamen lo firma quien evaluó (docs/plan-roles-y-accesos.md,
+            // PR 4): cualquier médico podía cerrar la evaluación de un colega.
+            if ((int) $ficha->evaluador_id !== $request->user()->id) {
+                return ApiResponse::error(
+                    'Solo el médico que llenó la ficha FEMO puede emitir el dictamen.', null, 403
                 );
             }
 

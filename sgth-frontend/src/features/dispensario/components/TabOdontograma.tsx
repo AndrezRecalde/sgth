@@ -87,7 +87,7 @@ function HistorialDetalle({ item, puedeAnular, onAnular }: HistorialDetalleProps
 }
 
 export function TabOdontograma({ historiaClinicaId, consultaMedicaId }: Props) {
-  const { usuario } = useAuth()
+  const { usuario, hasRole } = useAuth()
   const { data: odontograma, isLoading } = useOdontograma(historiaClinicaId)
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
   const [piezaSeleccionada, setPiezaSeleccionada] =
@@ -101,7 +101,11 @@ export function TabOdontograma({ historiaClinicaId, consultaMedicaId }: Props) {
   // él: el procedimiento quedaba sin consulta, colgando del día y no de la
   // visita. Es la misma regla que ya tenían la receta, el certificado y los
   // resultados.
-  const puedeRegistrar = consultaMedicaId != null
+  //
+  // Y solo lo escribe el odontólogo: el backend se lo cierra al médico y a la
+  // administración desde el 2026-10-26 (docs/plan-roles-y-accesos.md, PR 4).
+  const esOdontologo = hasRole('odontologo')
+  const puedeRegistrar = esOdontologo && consultaMedicaId != null
 
   const handleSeleccionarPieza = (pieza: OdontogramaPieza) => {
     if (!puedeRegistrar) return
@@ -189,7 +193,12 @@ export function TabOdontograma({ historiaClinicaId, consultaMedicaId }: Props) {
 
   return (
     <Stack gap="md" p="md">
-      {!puedeRegistrar && (
+      {!esOdontologo ? (
+        <Text size="sm" c="dimmed">
+          Los procedimientos los registra el odontólogo. Aquí el odontograma se
+          puede consultar.
+        </Text>
+      ) : !puedeRegistrar && (
         <Text size="sm" c="dimmed">
           Guarde la consulta primero para registrar procedimientos. Mientras
           tanto, el odontograma se puede consultar.
@@ -210,7 +219,9 @@ export function TabOdontograma({ historiaClinicaId, consultaMedicaId }: Props) {
           title="Sin procedimientos registrados"
           description={puedeRegistrar
             ? 'Haga clic en una pieza del odontograma para registrar un procedimiento.'
-            : 'Guarde la consulta para registrar el primero.'}
+            : esOdontologo
+              ? 'Guarde la consulta para registrar el primero.'
+              : 'Todavía no hay procedimientos en este odontograma.'}
         />
       ) : (
         <SgthTable

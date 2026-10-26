@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button, Group, Text, Alert, Skeleton } from '@mantine/core'
 import { IconCheck, IconInfoCircle, IconDeviceFloppy } from '@tabler/icons-react'
+import { useAuth } from '@/hooks/useAuth'
 import { FemoAsistente } from '@/features/dispensario/components/femo/FemoAsistente'
 import { useFemoDetalle } from '@/features/dispensario/hooks/useFemo'
 import { useGuardarFemo } from '@/features/dispensario/hooks/useGuardarFemo'
@@ -27,6 +28,7 @@ interface Props {
  */
 export function NuevaFemoView({ solicitudId }: Props) {
   const router         = useRouter()
+  const { usuario, hasRole } = useAuth()
   const solicitudIdNum = Number(solicitudId)
 
   const wizard = useFemoWizardState({
@@ -72,6 +74,24 @@ export function NuevaFemoView({ solicitudId }: Props) {
       router.replace(ROUTES.SALUD.SSO)
     }
   }, [solicitudIdNum, solicitudError, solicitudCargando, solicitud, router])
+
+  // Llenarla es el acto médico: solo el médico, y una ficha empezada solo
+  // quien la creó. El backend responde 403 al resto; aquí se evita llenar un
+  // formulario que no se va a poder guardar (docs/plan-roles-y-accesos.md,
+  // PR 4).
+  const ajena = !!fichaGuardada && !!usuario && fichaGuardada.evaluador_id !== usuario.id
+  useEffect(() => {
+    if (!usuario) return
+    if (!hasRole('medico') || ajena) {
+      notificar.aviso(
+        'No puede llenar esta ficha',
+        ajena
+          ? 'La FEMO la está llenando otro médico: solo quien la inició puede continuarla.'
+          : 'La ficha FEMO la llena el médico que evalúa.',
+      )
+      router.replace(ROUTES.SALUD.SSO)
+    }
+  }, [usuario, ajena, hasRole, router])
 
   const guardarBorrador = () => {
     void guardado.guardar().then((id) => { if (id) cambios.marcarGuardado() })

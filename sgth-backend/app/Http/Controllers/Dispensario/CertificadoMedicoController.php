@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dispensario;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\Dispensario\CertificadoMedico;
+use App\Models\Dispensario\ConsultaMedica;
 use App\Services\Dispensario\CertificadoMedicoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -67,6 +68,20 @@ class CertificadoMedicoController extends Controller
             'diagnostico_cie10_id' => ['nullable', 'exists:diagnosticos_cie10,id'],
             'observaciones'        => ['nullable', 'string', 'max:1000'],
         ]);
+
+        // Como la receta: el certificado sale con el nombre y el diagnóstico de
+        // quien atendió, así que solo lo emite él. Antes cualquier médico u
+        // odontólogo podía emitirlo sobre la consulta de otro
+        // (docs/plan-roles-y-accesos.md, PR 4).
+        $medicoDeLaConsulta = ConsultaMedica::whereKey($datos['consulta_medica_id'])->value('medico_id');
+
+        if ((int) $medicoDeLaConsulta !== $request->user()->id) {
+            return ApiResponse::error(
+                'Solo quien atendió la consulta puede emitir el certificado de reposo.',
+                null,
+                403
+            );
+        }
 
         $certificado = $this->service->emitir(
             $datos, $request->user()->id

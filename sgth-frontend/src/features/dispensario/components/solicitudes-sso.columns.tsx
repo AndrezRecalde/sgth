@@ -13,6 +13,13 @@ import {
 
 interface AccionesSso {
   descargando: boolean
+  /**
+   * Iniciar y llenar la FEMO es el acto médico: solo el médico, y una en curso
+   * solo quien la creó. La administración del Dispensario consulta
+   * (docs/plan-roles-y-accesos.md, PR 4).
+   */
+  evalua: boolean
+  usuarioId: number | null
   puedeConfirmarIncorporacion: boolean
   onIniciar: (id: number) => void
   onContinuar: (id: number) => void
@@ -54,18 +61,22 @@ export function getSolicitudesSsoColumns(acciones: AccionesSso): Columna[] {
 
 function accionesDe(s: SolicitudCertificacion, a: AccionesSso) {
   const sinSignos = 'Pendiente signos vitales (Enfermería)'
+  const evaluador = s.ficha_salud_ocupacional?.evaluador_id
+  const deOtroMedico = evaluador != null && evaluador !== a.usuarioId
 
   return [
-    ...(s.estado === 'pendiente' ? [{
+    ...(a.evalua && s.estado === 'pendiente' ? [{
       label: s.constantes_vitales ? 'Iniciar y crear FEMO' : sinSignos,
       icon: <IconPlayerPlay size={14} />,
       disabled: !s.constantes_vitales,
       onClick: () => a.onIniciar(s.id),
     }] : []),
-    ...(s.estado === 'en_proceso' ? [{
-      label: s.constantes_vitales ? 'Continuar FEMO' : sinSignos,
+    ...(a.evalua && s.estado === 'en_proceso' ? [{
+      label: deOtroMedico
+        ? 'La FEMO la está llenando otro médico'
+        : s.constantes_vitales ? 'Continuar FEMO' : sinSignos,
       icon: <IconFileText size={14} />,
-      disabled: !s.constantes_vitales,
+      disabled: deOtroMedico || !s.constantes_vitales,
       onClick: () => a.onContinuar(s.id),
     }] : []),
     ...(s.ficha_femo_id ? [{

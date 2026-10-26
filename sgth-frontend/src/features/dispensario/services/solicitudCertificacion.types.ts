@@ -85,6 +85,8 @@ export interface SolicitudCertificacion {
     aptitud:          string
     restricciones?:   string | null
     fecha_evaluacion: string
+    /** Quien la creó: solo él la continúa y emite el dictamen. */
+    evaluador_id?:    number
   } | null
   constantes_vitales?: SolicitudConstantesVitales | null
   servidor?: {

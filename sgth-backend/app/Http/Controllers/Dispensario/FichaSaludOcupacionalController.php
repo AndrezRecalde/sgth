@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Dispensario\StoreFichaSaludOcupacionalRequest;
 use App\Http\Requests\Dispensario\UpdateFichaSaludOcupacionalRequest;
 use App\Http\Responses\ApiResponse;
+use App\Models\Dispensario\FichaSaludOcupacional;
 use App\Services\Dispensario\FemoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -58,8 +59,23 @@ final class FichaSaludOcupacionalController extends Controller
         return ApiResponse::ok($ficha);
     }
 
+    /**
+     * La ficha en curso la continúa quien la creó, que es quien la firma como
+     * evaluador: otro médico podía cambiarle la aptitud a la evaluación de un
+     * colega (docs/plan-roles-y-accesos.md, PR 4).
+     */
     public function update(UpdateFichaSaludOcupacionalRequest $request, int $id): JsonResponse
     {
+        $evaluador = FichaSaludOcupacional::whereKey($id)->value('evaluador_id');
+
+        if ($evaluador !== null && (int) $evaluador !== $request->user()->id) {
+            return ApiResponse::error(
+                'Esta ficha la está llenando otro médico: solo quien la inició puede continuarla.',
+                null,
+                403
+            );
+        }
+
         $ficha = $this->femoService->actualizar(
             $id,
             $request->validated(),
