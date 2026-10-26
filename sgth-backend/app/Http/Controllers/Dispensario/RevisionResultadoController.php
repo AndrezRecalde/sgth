@@ -7,6 +7,7 @@ use App\Enums\InterpretacionResultado;
 use App\Exceptions\ReglaNegocioException;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
+use App\Services\Dispensario\AlcanceClinico;
 use App\Models\Dispensario\ResultadoMedico;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -38,6 +39,12 @@ final class RevisionResultadoController extends Controller
         ]);
 
         $usuario = $request->user();
+
+        // Como la bandeja: cada profesional, los de su especialidad
+        // (docs/plan-roles-y-accesos.md, PR 5).
+        if (! AlcanceClinico::veResultado($usuario, $id)) {
+            return ApiResponse::error('Este resultado es de otra especialidad.', null, 403);
+        }
 
         $resultado = DB::transaction(function () use ($request, $id, $usuario) {
             $resultado = ResultadoMedico::with(['ordenExamen', 'consultaMedica', 'revisor.servidor'])

@@ -7,6 +7,7 @@ use App\Enums\EstadoRevisionResultado;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dispensario\StoreResultadoMedicoRequest;
 use App\Http\Responses\ApiResponse;
+use App\Services\Dispensario\AlcanceClinico;
 use App\Models\Dispensario\ResultadoMedico;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -89,6 +90,13 @@ final class ResultadoMedicoController extends Controller
 
     public function store(StoreResultadoMedicoRequest $request): JsonResponse
     {
+        // El resultado de una orden lo registra quien la ve en su bandeja: la
+        // de su especialidad (docs/plan-roles-y-accesos.md, PR 5).
+        $orden = $request->integer('orden_examen_id');
+        if ($orden && ! AlcanceClinico::veOrden($request->user(), $orden)) {
+            return ApiResponse::error('Esta orden es de otra especialidad.', null, 403);
+        }
+
         $ruta = $request->file('archivo')->store(
             'resultados-medicos', self::DISCO
         );

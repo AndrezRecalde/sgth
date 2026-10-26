@@ -1956,10 +1956,13 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 });
             });
 
-        // Consultas médicas — SOLO médicos y odontólogos crean,
-        // todo el personal médico puede ver
+        // Consultas médicas: las escriben y las leen el médico y el odontólogo.
+        // Hasta el 2026-10-26 también las leían Enfermería y la administración
+        // del Dispensario, que no las usan en ninguna pantalla; y quien las lee
+        // ve solo las suyas y las de los pacientes que atiende
+        // (ConsultaMedicaController; docs/plan-roles-y-accesos.md, PR 5).
         Route::prefix('consultas')
-            ->middleware('role:medico|odontologo|enfermera|admin-dispensario')
+            ->middleware('role:medico|odontologo')
             ->group(function () {
                 Route::get('/', [ConsultaMedicaController::class, 'index']);
                 // Registrarla es de quien atiende. El comentario de arriba lo

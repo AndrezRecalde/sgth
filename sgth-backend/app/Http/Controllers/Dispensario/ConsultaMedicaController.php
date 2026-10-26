@@ -10,6 +10,7 @@ use App\Http\Requests\Dispensario\UpdateConsultaMedicaRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\Dispensario\ConsultaMedica;
 use App\Models\Dispensario\DiagnosticoCie10;
+use App\Services\Dispensario\AlcanceClinico;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -84,11 +85,20 @@ final class ConsultaMedicaController extends Controller
             ->orderBy('hora_consulta', 'desc')
             ->orderBy('id', 'desc');
 
+        // Las notas de un paciente, a quien lo atiende; sin paciente, las
+        // propias. Antes cualquiera del Dispensario las leía todas
+        // (docs/plan-roles-y-accesos.md, PR 5).
         if ($request->filled('historia_clinica_id')) {
+            if (! AlcanceClinico::atiendeHistoria($request->user(), $request->integer('historia_clinica_id'))) {
+                return $this->noAtiende();
+            }
+
             $query->where(
                 'historia_clinica_id',
                 $request->historia_clinica_id
             );
+        } else {
+            $query->where('medico_id', $request->user()->id);
         }
 
         if ($request->filled('medico_id')) {
@@ -196,8 +206,12 @@ final class ConsultaMedicaController extends Controller
      * Lo que la consulta decía antes de cada corrección, de la más reciente a
      * la más antigua. Vacío mientras nadie la haya tocado.
      */
-    public function versiones(int $id): JsonResponse
+    public function versiones(Request $request, int $id): JsonResponse
     {
+        if (! $this->puedeLeer($request, $id)) {
+            return $this->noAtiende();
+        }
+
         $consulta = ConsultaMedica::with([
             'versiones.autorDelCambio:id,usuario_ti,email,servidor_id',
             'versiones.autorDelCambio.servidor:id,nombre,apellido',
@@ -231,8 +245,12 @@ final class ConsultaMedicaController extends Controller
         return ApiResponse::ok($consulta->versiones);
     }
 
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
+        if (! $this->puedeLeer($request, $id)) {
+            return $this->noAtiende();
+        }
+
         $consulta = ConsultaMedica::with([
             'historiaClinica.servidor',
             'historiaClinica.cargaFamiliar',
@@ -246,5 +264,25 @@ final class ConsultaMedicaController extends Controller
         ])->findOrFail($id);
 
         return ApiResponse::ok($consulta);
+    }
+
+    /**
+     * La consulta la lee quien la firmó o quien atiende a ese paciente. La que
+     * no existe sigue dando 404 más adelante.
+     */
+    private function puedeLeer(Request $request, int $id): bool
+    {
+        $consulta = ConsultaMedica::find($id, ['id', 'historia_clinica_id', 'medico_id']);
+
+        return $consulta === null
+            || (int) $consulta->medico_id === $request->user()->id
+            || AlcanceClinico::atiendeHistoria($request->user(), (int) $consulta->historia_clinica_id);
+    }
+
+    private function noAtiende(): JsonResponse
+    {
+        return ApiResponse::error(
+            'Las notas de este paciente las lee el profesional que lo atiende.', null, 403
+        );
     }
 }

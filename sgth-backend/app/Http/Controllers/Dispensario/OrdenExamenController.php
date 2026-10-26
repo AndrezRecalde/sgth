@@ -6,6 +6,7 @@ use App\Contracts\Dispensario\OrdenExamenServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dispensario\StoreOrdenExamenRequest;
 use App\Http\Responses\ApiResponse;
+use App\Services\Dispensario\AlcanceClinico;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Dispensario\ConsultaMedica;
 use App\Models\Dispensario\FichaSaludOcupacional;
@@ -169,6 +170,12 @@ final class OrdenExamenController extends Controller
         ], [
             'motivo_no_realizado.required' => 'Indique por qué no se realizó.',
         ]);
+
+        // Como la bandeja: cada profesional, las de su especialidad
+        // (docs/plan-roles-y-accesos.md, PR 5).
+        if (! AlcanceClinico::veOrden($request->user(), $orden)) {
+            return ApiResponse::error('Esta orden es de otra especialidad.', null, 403);
+        }
 
         $this->ordenes->marcarNoRealizado(
             $orden,
