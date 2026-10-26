@@ -4381,6 +4381,11 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
+        /**
+         * La ficha en curso la continúa quien la creó, que es quien la firma como
+         *     evaluador: otro médico podía cambiarle la aptitud a la evaluación de un
+         *     colega (docs/plan-roles-y-accesos.md, PR 4)
+         */
         patch: operations["fichaSaludOcupacional.update"];
         trace?: never;
     };
@@ -6605,6 +6610,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/dispensario/odontograma/piezas/{piezaId}/historial": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["odontograma.historialPieza"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/dispensario/odontograma/procedimientos": {
         parameters: {
             query?: never;
@@ -6642,22 +6663,6 @@ export interface paths {
          *     visitas pasadas
          */
         patch: operations["odontograma.anularProcedimiento"];
-        trace?: never;
-    };
-    "/v1/dispensario/odontograma/piezas/{piezaId}/historial": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["odontograma.historialPieza"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/v1/seleccion/onboardings/{id}": {
@@ -18165,6 +18170,8 @@ export interface operations {
             query?: {
                 fecha_desde?: string | null;
                 fecha_hasta?: string | null;
+                /** @description Consultas pide la de medicina; Odontología, la suya. */
+                tipo_atencion?: components["schemas"]["EspecialidadAtencion"];
             };
             header?: never;
             path?: never;
@@ -18216,6 +18223,20 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Este turno es de otro profesional.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
         };
     };
     "agenda.reactivar": {
@@ -18244,6 +18265,20 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Este turno es de otro profesional.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
         };
     };
     "agenda.enConsulta": {
@@ -18272,6 +18307,20 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Este turno es de otro profesional.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
         };
     };
     "agenda.devolverALaCola": {
@@ -18420,6 +18469,20 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Este turno es de otro profesional.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
         };
     };
     "agenda.destroy": {
@@ -18448,6 +18511,20 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Este turno es de otro profesional.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
         };
     };
     "alergiaPaciente.index": {
@@ -23040,6 +23117,20 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Solo quien atendió la consulta puede emitir el certificado de reposo.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
             422: components["responses"]["ValidationException"];
         };
     };
@@ -30429,6 +30520,20 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Esta ficha la está llenando otro médico: solo quien la inició puede continuarla.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
             422: components["responses"]["ValidationException"];
         };
     };
@@ -35996,6 +36101,34 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
+    "odontograma.historialPieza": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                piezaId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Operación exitosa.";
+                        datos: string;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "odontograma.registrarProcedimiento": {
         parameters: {
             query?: never;
@@ -36072,34 +36205,6 @@ export interface operations {
                 };
             };
             422: components["responses"]["ValidationException"];
-        };
-    };
-    "odontograma.historialPieza": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                piezaId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Operación exitosa.";
-                        datos: string;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
         };
     };
     "onboarding.update": {
