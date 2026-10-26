@@ -114,4 +114,18 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Usuarios de prueba
+    |--------------------------------------------------------------------------
+    |
+    | La contraseña de las cuentas `prueba.<rol>` que crea, solo en local,
+    | UsuariosPruebaPorRolSeeder. Sin ella, el seeder no crea nada.
+    |
+    */
+
+    'usuarios_prueba' => [
+        'clave' => env('SGTH_CLAVE_USUARIOS_PRUEBA'),
+    ],
+
 ];
