@@ -20213,30 +20213,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Bandeja de exámenes.";
-                        datos: {
-                            current_page: number;
-                            data: components["schemas"]["OrdenExamen"][];
-                            first_page_url: string | null;
-                            from: number | null;
-                            last_page_url: string | null;
-                            last_page: number;
-                            /** @description Generated paginator links. */
-                            links: {
-                                url: string | null;
-                                label: string;
-                                active: boolean;
-                            }[];
-                            next_page_url: string | null;
-                            /** @description Base path for paginator generated URLs. */
-                            path: string | null;
-                            /** @description Number of items shown per page. */
-                            per_page: number;
-                            prev_page_url: string | null;
-                            /** @description Number of the last item in the slice. */
-                            to: number | null;
-                            /** @description Total number of items being paginated. */
-                            total: number;
-                        };
+                        datos: components["schemas"]["LengthAwarePaginator"];
                         meta: {
                             resumen: {
                                 /**
@@ -20285,30 +20262,7 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Resultados por revisar.";
-                        datos: {
-                            current_page: number;
-                            data: components["schemas"]["ResultadoMedico"][];
-                            first_page_url: string | null;
-                            from: number | null;
-                            last_page_url: string | null;
-                            last_page: number;
-                            /** @description Generated paginator links. */
-                            links: {
-                                url: string | null;
-                                label: string;
-                                active: boolean;
-                            }[];
-                            next_page_url: string | null;
-                            /** @description Base path for paginator generated URLs. */
-                            path: string | null;
-                            /** @description Number of items shown per page. */
-                            per_page: number;
-                            prev_page_url: string | null;
-                            /** @description Number of the last item in the slice. */
-                            to: number | null;
-                            /** @description Total number of items being paginated. */
-                            total: number;
-                        } | components["schemas"]["LengthAwarePaginator"];
+                        datos: components["schemas"]["LengthAwarePaginator"];
                         meta: null;
                     };
                 };
@@ -24205,6 +24159,7 @@ export interface operations {
     "consultaMedica.index": {
         parameters: {
             query?: {
+                historia_clinica_id?: number;
                 especialidad?: string;
                 fecha_desde?: string;
                 fecha_hasta?: string;
@@ -24253,6 +24208,20 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Las notas de este paciente las lee el profesional que lo atiende.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
         };
     };
     "consultaMedica.store": {
@@ -24312,6 +24281,20 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Las notas de este paciente las lee el profesional que lo atiende.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
             404: components["responses"]["ModelNotFoundException"];
         };
     };
@@ -24341,6 +24324,20 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Las notas de este paciente las lee el profesional que lo atiende.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
             404: components["responses"]["ModelNotFoundException"];
         };
     };
@@ -36442,6 +36439,20 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Esta orden es de otra especialidad.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
             404: components["responses"]["ModelNotFoundException"];
             422: components["responses"]["ValidationException"];
         };
@@ -39795,6 +39806,20 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Esta receta es de otro profesional: solo la ve quien la emitió y quien la despacha.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
         };
     };
     "receta.show": {
@@ -39823,6 +39848,20 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Esta receta es de otro profesional: solo la ve quien la emitió y quien la despacha.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
             404: components["responses"]["ModelNotFoundException"];
         };
     };
@@ -41310,6 +41349,20 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Esta orden es de otra especialidad.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
             422: components["responses"]["ValidationException"];
         };
     };
@@ -41429,6 +41482,20 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Este resultado es de otra especialidad.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
             422: components["responses"]["ValidationException"];
         };
     };
