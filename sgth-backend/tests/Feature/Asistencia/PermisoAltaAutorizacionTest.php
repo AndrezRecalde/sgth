@@ -113,7 +113,7 @@ test('ver los permisos de todos no es poder emitirlos', function (string $rol) {
     $usuario = ($this->usuario)($rol, ($this->servidor)());
 
     ($this->pedir)($usuario, ['servidor_id' => $this->otro->id])->assertForbidden();
-})->with(['maxima-autoridad', 'auditor', 'recepcion']);
+})->with(['auditor', 'recepcion']);
 
 test('Talento Humano registra permisos a nombre de cualquier servidor', function (string $rol) {
     $usuario = ($this->usuario)($rol);
@@ -149,5 +149,5 @@ test('la migración da el permiso a los roles de Talento Humano que ya existen, 
     expect($tiene('admin-uath'))->toBeTrue()
         ->and($tiene('asistente-uath'))->toBeTrue()
         ->and($tiene('jefe-unidad'))->toBeFalse()
-        ->and($tiene('maxima-autoridad'))->toBeFalse();
+        ->and($tiene('auditor'))->toBeFalse();
 });

@@ -35,7 +35,7 @@ final class LecturaResultadosReporte extends ReporteBase
     public function perfiles(): array
     {
         return [
-            AlcanceReporte::ADMINISTRACION, AlcanceReporte::AUTORIDAD,
+            AlcanceReporte::ADMINISTRACION,
             AlcanceReporte::MEDICO, AlcanceReporte::ODONTOLOGO,
         ];
     }

@@ -57,7 +57,6 @@ function certificadoSegundaTanda(array $historia, int $medico, int $dias, string
 
 beforeEach(function () {
     $this->admin     = usuarioSegundaTanda('admin2', 'admin-dispensario');
-    $this->autoridad = usuarioSegundaTanda('aut2', 'maxima-autoridad');
     $this->medico    = usuarioSegundaTanda('med2', 'medico');
     $this->enfermera = usuarioSegundaTanda('enf2', 'enfermera');
     $this->otraEnf   = usuarioSegundaTanda('enf3', 'enfermera');
@@ -89,14 +88,14 @@ beforeEach(function () {
 });
 
 test('el ausentismo cuenta solo a los servidores, sin lo anulado, por unidad y por diagnóstico', function () {
-    $porUnidad = collect($this->actingAs($this->autoridad, 'sanctum')
+    $porUnidad = collect($this->actingAs($this->admin, 'sanctum')
         ->getJson('/api/v1/dispensario/reportes/ausentismo' . $this->filtros)
         ->assertOk()->json('datos.filas'))->keyBy('unidad');
 
     expect($porUnidad['Obras Públicas'])->toMatchArray(['certificados' => 2, 'servidores' => 2, 'dias_reposo' => 8, 'promedio_dias' => 4]);
     expect($porUnidad['Talento Humano'])->toMatchArray(['certificados' => 1, 'dias_reposo' => 2]);
 
-    $porDiagnostico = collect($this->actingAs($this->autoridad, 'sanctum')
+    $porDiagnostico = collect($this->actingAs($this->admin, 'sanctum')
         ->getJson('/api/v1/dispensario/reportes/ausentismo' . $this->filtros . '&agrupacion=diagnostico')
         ->assertOk()->json('datos.filas'))->keyBy('cie10');
 
@@ -165,7 +164,7 @@ test('las existencias van por lote, con su estado de caducidad y su valor', func
     $lote('LEJOS', now()->addYear()->toDateString(), 15);
     $lote('AGOTADO', now()->addYear()->toDateString(), 0);
 
-    $filas = collect($this->actingAs($this->autoridad, 'sanctum')
+    $filas = collect($this->actingAs($this->admin, 'sanctum')
         ->getJson('/api/v1/dispensario/reportes/farmacia_existencias' . $this->filtros)
         ->assertOk()->json('datos.filas'))->keyBy('lote');
 

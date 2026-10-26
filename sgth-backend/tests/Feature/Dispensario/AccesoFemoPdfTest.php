@@ -34,7 +34,7 @@ test('Talento Humano no descarga el PDF de la ficha FEMO', function (string $rol
     $this->actingAs(usuarioDeRolFemoPdf($rol), 'sanctum')
         ->get('/api/v1/dispensario/fichas-sso/1/pdf')
         ->assertStatus(403);
-})->with(['admin-uath', 'asistente-uath', 'analista-uath']);
+})->with(['admin-uath', 'asistente-uath']);
 
 test('quien evalúa no queda bloqueado por el rol en esa misma ruta', function () {
     // La ficha 1 no existe, así que lo que importa es que la respuesta no sea

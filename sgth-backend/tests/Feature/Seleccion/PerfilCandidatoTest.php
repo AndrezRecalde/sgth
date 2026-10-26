@@ -72,10 +72,12 @@ describe('corregir datos', function () {
         $this->patchJson(($this->url)($incorporado), ['telefono' => '0991112233'])->assertStatus(422);
     });
 
-    test('el analista no corrige datos', function () {
+    // Quien solo ve y califica: era el analista, cuyo rol se retiró el
+    // 2026-10-26 (docs/plan-roles-y-accesos.md, PR 7).
+    test('quien solo evalúa no corrige datos', function () {
         $p = ($this->candidato)('1790000001');
         $analista = User::factory()->create();
-        $analista->assignRole('analista-uath');
+        $analista->givePermissionTo(['ver-postulantes', 'evaluar-postulantes']);
 
         $this->actingAs($analista, 'sanctum')->patchJson(($this->url)($p), ['telefono' => '0991112233'])->assertForbidden();
     });
@@ -101,11 +103,11 @@ describe('inducción', function () {
             ->assertJsonPath('datos.0.onboarding.induccion_completada', true);
     });
 
-    test('el analista no la marca', function () {
+    test('quien solo evalúa no la marca', function () {
         $p = ($this->candidato)('1790000001', EstadoPostulante::INCORPORADO);
         $o = Onboarding::create(['postulante_id' => $p->id, 'created_by' => $this->admin->id]);
         $analista = User::factory()->create();
-        $analista->assignRole('analista-uath');
+        $analista->givePermissionTo(['ver-postulantes', 'evaluar-postulantes']);
 
         $this->actingAs($analista, 'sanctum')
             ->patchJson("/api/v1/seleccion/onboardings/{$o->id}", ['induccion_completada' => true])

@@ -3,7 +3,7 @@
 /*
 | El reporte «Órdenes vencidas» (6.5 de docs/diseno-examenes-medicos.md): las
 | órdenes de más de 90 días que siguen esperando resultados, con el contacto
-| del paciente para buscarlo. Foto de hoy y nominal: la autoridad no lo ve.
+| del paciente para buscarlo. Foto de hoy y nominal.
 */
 
 use App\Contracts\Dispensario\OrdenExamenServiceInterface;
@@ -58,7 +58,6 @@ beforeEach(function () {
     Model::unguard();
 
     $this->admin = usuarioOrdenesVencidas('admin-vencidas', 'admin-dispensario');
-    $this->autoridad = usuarioOrdenesVencidas('aut-vencidas', 'maxima-autoridad');
     $this->ana = usuarioOrdenesVencidas('ana-vencidas', 'medico', servidorOrdenesVencidas('0812490001', 'Ana', 'Unidad Ana'));
     $this->bruno = usuarioOrdenesVencidas('bruno-vencidas', 'medico', servidorOrdenesVencidas('0812490002', 'Bruno', 'Unidad Bruno'));
 
@@ -118,13 +117,9 @@ test('lista las vencidas de hoy, las más viejas primero, con el contacto para b
         ]);
 });
 
-test('cada médico ve las que pidió, y la autoridad no la saca', function () {
+test('cada médico ve las que pidió', function () {
     expect(filasOrdenesVencidas($this->bruno, "&profesional_id={$this->ana->id}")->pluck('folio')->all())
         ->toBe([$this->deBruno->folio]);
-
-    $this->actingAs($this->autoridad, 'sanctum')
-        ->getJson('/api/v1/dispensario/reportes/examenes_vencidas?desde=2026-01-01&hasta=2026-01-31')
-        ->assertForbidden();
 });
 
 test('es una foto de hoy: el catálogo lo dice y el excel también', function () {

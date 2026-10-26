@@ -146,7 +146,7 @@ test('Talento Humano descarga el certificado de aptitud', function (string $rol)
     expect($respuesta->headers->get('content-type'))->toContain('application/pdf')
         ->and($respuesta->headers->get('content-disposition'))
         ->toContain('certificado-aptitud-0804455661-'.$solicitud->id.'.pdf');
-})->with(['admin-uath', 'asistente-uath', 'analista-uath', 'medico']);
+})->with(['admin-uath', 'asistente-uath', 'medico']);
 
 test('el certificado lleva la aptitud, las restricciones y quién firma', function () {
     ['solicitud' => $solicitud] = escenarioCertificado();
@@ -281,7 +281,7 @@ test('el certificado cabe en una hoja, aun con restricciones largas', function (
 });
 
 test('a un candidato de selección no se le llama servidor', function () {
-    $solicitante = usuarioDeRolCertificado('analista-uath');
+    $solicitante = usuarioDeRolCertificado('asistente-uath');
 
     // No hay factory de Postulante, y `convocatoria_id` no admite nulos: el
     // andamio mínimo es unidad -> grupo -> puesto -> convocatoria.

@@ -19,10 +19,7 @@ uses(Tests\TestCase::class, RefreshDatabase::class);
 
 beforeEach(function () {
     $this->user = User::factory()->create();
-    
-    // Crear roles necesarios
-    Role::firstOrCreate(['name' => 'maxima-autoridad', 'guard_name' => 'sanctum']);
-    
+
     $this->unidad = unidadDePrueba(['codigo' => 'GTIC', 'nombre' => 'Gerencia']);
     $this->puesto = puestoDePrueba($this->unidad);
 

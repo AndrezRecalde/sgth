@@ -70,7 +70,6 @@ beforeEach(function () {
     Model::unguard();
 
     $this->admin = usuarioLecturaResultados('admin-lectura', 'admin-dispensario');
-    $this->autoridad = usuarioLecturaResultados('aut-lectura', 'maxima-autoridad');
     $this->enfermera = usuarioLecturaResultados('enf-lectura', 'enfermera');
     $this->ana = usuarioLecturaResultados('ana-lectura', 'medico', 'Ana');
     $this->bruno = usuarioLecturaResultados('bruno-lectura', 'medico', 'Bruno');
@@ -135,7 +134,7 @@ test('por médico que responde cuenta lecturas, el porcentaje y la mediana de d�
 });
 
 test('por mes es la agrupación de por defecto', function () {
-    $filas = filasLecturaResultados($this->autoridad, '')->keyBy('mes');
+    $filas = filasLecturaResultados($this->admin, '')->keyBy('mes');
 
     // El mes como lo escribe el reporte: «Octubre 2026».
     $mes = fn ($fecha) => ucfirst($fecha->locale('es')->isoFormat('MMMM YYYY'));

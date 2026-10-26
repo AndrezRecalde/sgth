@@ -773,7 +773,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // además del policy. admin-ti salió de las dos listas el 2026-10-26,
         // al dejar de ser superusuario (docs/plan-roles-y-accesos.md, PR 3).
         Route::prefix('subrogaciones')->group(function () {
-            Route::middleware('role:admin-uath|asistente-uath|auditor|maxima-autoridad')
+            Route::middleware('role:admin-uath|asistente-uath|auditor')
                 ->group(function () {
                     // 'activas' se retiró el 2026-09-28: no lo consumía nadie.
                     // A «quién ejerce hoy» responde el organigrama, con la
@@ -1135,8 +1135,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
     //
     // Por permiso, no por rol (decisión 6 de TH, 2026-10-05). Antes bastaba
     // con ser admin-uath o analista-uath para todo: el analista creaba,
-    // publicaba, borraba y declaraba ganadores. Ahora el analista ve y
-    // califica; lo demás es de quien gestiona convocatorias (admin-uath).
+    // publicaba, borraba y declaraba ganadores. El rol de analista se retiró
+    // el 2026-10-26 (docs/plan-roles-y-accesos.md, PR 7); crear, publicar e
+    // incorporar siguen siendo de quien gestiona convocatorias (admin-uath).
     Route::prefix('seleccion')->group(function () {
         // Leer: listados, detalle, criterios, plantillas y calificaciones.
         Route::middleware('permission:ver-postulantes')->group(function () {
@@ -1833,11 +1834,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
         });
 
-        // Dashboard Estadístico — SOLO admin-dispensario (y máxima autoridad)
+        // Dashboard Estadístico — SOLO admin-dispensario. La máxima autoridad
+        // salió con su rol el 2026-10-26 (docs/plan-roles-y-accesos.md, PR 7).
         Route::get('dashboard/kpis', [DashboardDispensarioController::class, 'kpis'])
-            ->middleware('role:admin-dispensario|maxima-autoridad');
+            ->middleware('role:admin-dispensario');
         Route::get('dashboard/panorama', [DashboardDispensarioController::class, 'panorama'])
-            ->middleware('role:admin-dispensario|maxima-autoridad');
+            ->middleware('role:admin-dispensario');
 
         // «Mi jornada»: cada profesional ve solo lo suyo. No es el tablero de
         // la jefatura, que compara a unos con otros.
@@ -1845,10 +1847,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             ->middleware('role:medico|odontologo|enfermera');
 
         // Reportes del Dispensario. Qué reporte y con qué alcance lo decide
-        // `AlcanceReporte`: la administración todo, la máxima autoridad solo lo
-        // agregado y cada profesional lo suyo.
+        // `AlcanceReporte`: la administración todo y cada profesional lo suyo.
         Route::prefix('reportes')
-            ->middleware('role:admin-dispensario|maxima-autoridad|medico|odontologo|enfermera')
+            ->middleware('role:admin-dispensario|medico|odontologo|enfermera')
             ->group(function () {
                 Route::get('/', [ReporteDispensarioController::class, 'index']);
                 Route::get('{clave}/excel', [ReporteDispensarioController::class, 'excel']);
@@ -2124,7 +2125,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // Creación de solicitudes en lote desde Expediente (RRHH, no médico)
         // NOTA: debe registrarse antes que GET {id} de la ruta wildcard.
         Route::prefix('solicitudes-certificacion')
-            ->middleware('role:admin-uath|asistente-uath|analista-uath|admin-dispensario')
+            ->middleware('role:admin-uath|asistente-uath|admin-dispensario')
             ->group(function () {
                 Route::post('lote', [SolicitudCertificacionController::class, 'storeLote']);
                 // Quien la pidió la retira: cancelar no es un acto médico. El
@@ -2136,7 +2137,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // solicitud. Es el único sitio desde donde se ve a quien nunca tuvo
         // una evaluación, así que lo leen los mismos que el seguimiento.
         Route::prefix('certificaciones/cobertura')
-            ->middleware('role:medico|admin-dispensario|admin-uath|asistente-uath|analista-uath')
+            ->middleware('role:medico|admin-dispensario|admin-uath|asistente-uath')
             ->group(function () {
                 Route::get('/', [CoberturaCertificacionController::class, 'index']);
                 Route::get('excel', [CoberturaCertificacionController::class, 'excel']);
@@ -2151,7 +2152,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // el menú y recibía un 403 al abrirlo. Lo mismo le pasaba con el lote
         // desde Expediente, que el controlador ya le autoriza por permiso.
         Route::prefix('solicitudes-certificacion')
-            ->middleware('role:medico|admin-dispensario|admin-uath|asistente-uath|analista-uath')
+            ->middleware('role:medico|admin-dispensario|admin-uath|asistente-uath')
             ->group(function () {
                 Route::get('/', [SolicitudCertificacionController::class, 'index']);
                 // El certificado de aptitud: la aptitud, sus restricciones y
@@ -2180,7 +2181,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // el expediente del servidor y el borrador del ingreso, no es un acto
         // clínico.
         Route::prefix('solicitudes-certificacion')
-            ->middleware('role:admin-uath|analista-uath')
+            ->middleware('role:admin-uath')
             ->group(function () {
                 Route::post('{id}/confirmar-incorporacion', [SolicitudCertificacionController::class, 'confirmarIncorporacion']);
             });
@@ -2392,7 +2393,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 [EncuestaClimaController::class, 'responder']);
             Route::get('encuestas/{encuesta}/resultados',
                 [EncuestaClimaController::class, 'resultados'])
-                ->middleware('role:admin-uath|director|maxima-autoridad');
+                ->middleware('role:admin-uath|director');
         });
 
     // Comunicación Social: las fotografías de los servidores
@@ -2500,7 +2501,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         ->group(function () {
             Route::get('dashboard',
                 [DashboardController::class, 'kpis'])
-                ->middleware('role:admin-uath|maxima-autoridad|auditor|director');
+                ->middleware('role:admin-uath|auditor|director');
 
             // Reportes Ad Hoc y Configuración
             Route::get('configuraciones',
@@ -2516,10 +2517,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             // Reportes Asíncronos (Background)
             Route::post('background',
                 [ReporteController::class, 'solicitarFondo'])
-                ->middleware('role:admin-uath|maxima-autoridad|auditor|director');
+                ->middleware('role:admin-uath|auditor|director');
             Route::get('background/{job_id}',
                 [ReporteController::class, 'estadoFondo'])
-                ->middleware('role:admin-uath|maxima-autoridad|auditor|director');
+                ->middleware('role:admin-uath|auditor|director');
         });
 
 });

@@ -57,8 +57,7 @@ export function SaludHomeView() {
   // mirando el cargador para siempre.
   const roles = useAuthStore((s) => s.usuario?.roles ?? SIN_ROLES)
 
-  const verTablero =
-    roles.includes('admin-dispensario') || roles.includes('maxima-autoridad')
+  const verTablero = roles.includes('admin-dispensario')
 
   // Quien administra el dispensario y además atiende se queda en el tablero:
   // es la pantalla que solo él puede ver, y a la suya llega por el menú.

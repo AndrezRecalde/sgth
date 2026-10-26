@@ -14,7 +14,10 @@ uses(Tests\TestCase::class, RefreshDatabase::class);
 /*
  * Quién hace qué en Reclutamiento (decisión 6 de TH, 2026-10-05). Antes las
  * rutas solo miraban el rol: el analista de la UATH creaba, publicaba,
- * borraba y declaraba ganadores igual que admin-uath. Ahora ve y califica.
+ * borraba y declaraba ganadores igual que admin-uath. Desde entonces va por
+ * permiso: ver y calificar no es gestionar. El rol de analista se retiró el
+ * 2026-10-26 (docs/plan-roles-y-accesos.md, PR 7); la separación se prueba
+ * con alguien que tiene solo esos dos permisos.
  */
 
 beforeEach(function () {
@@ -23,6 +26,13 @@ beforeEach(function () {
     $this->usuario = function (string $rol): User {
         $u = User::factory()->create();
         $u->assignRole($rol);
+
+        return $u;
+    };
+
+    $this->evaluador = function (): User {
+        $u = User::factory()->create();
+        $u->givePermissionTo(['ver-postulantes', 'evaluar-postulantes']);
 
         return $u;
     };
@@ -48,8 +58,8 @@ beforeEach(function () {
     $this->base = "/api/v1/seleccion/convocatorias/{$this->convocatoria->id}";
 });
 
-test('el analista ve y califica', function () {
-    $this->actingAs(($this->usuario)('analista-uath'), 'sanctum');
+test('quien solo evalúa ve y califica', function () {
+    $this->actingAs(($this->evaluador)(), 'sanctum');
 
     $this->getJson('/api/v1/seleccion/convocatorias')->assertOk();
     $this->getJson($this->base)->assertOk();
@@ -61,8 +71,8 @@ test('el analista ve y califica', function () {
     ])->assertOk();
 });
 
-test('el analista no crea, edita, publica, cierra, inscribe ni declara', function (string $metodo, string $ruta, array $datos = []) {
-    $this->actingAs(($this->usuario)('analista-uath'), 'sanctum');
+test('quien solo evalúa no crea, edita, publica, cierra, inscribe ni declara', function (string $metodo, string $ruta, array $datos = []) {
+    $this->actingAs(($this->evaluador)(), 'sanctum');
 
     $ruta = str_replace(['{base}', '{p}'], [$this->base, $this->postulante->id], $ruta);
     $this->json($metodo, $ruta, $datos)->assertForbidden();

@@ -29,7 +29,7 @@ final class MorbilidadReporte extends ReporteBase
 
     public function perfiles(): array
     {
-        return [AlcanceReporte::ADMINISTRACION, AlcanceReporte::AUTORIDAD, AlcanceReporte::MEDICO];
+        return [AlcanceReporte::ADMINISTRACION, AlcanceReporte::MEDICO];
     }
 
     public function filtros(): array

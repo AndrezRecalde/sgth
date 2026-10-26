@@ -37,7 +37,6 @@ test('admin-uath redacta, publica y ve las lecturas; el asistente no publica por
         ->and(permisosDeComunicadosDelRol('asistente-uath'))->toBe(['redactar-comunicados', 'ver-lecturas-comunicados'])
         ->and(permisosDeComunicadosDelRol('auditor'))->toBe(['ver-lecturas-comunicados'])
         ->and(permisosDeComunicadosDelRol('admin-ti'))->toBe(PERMISOS_DE_COMUNICADOS)
-        ->and(permisosDeComunicadosDelRol('analista-uath'))->toBe([])
         ->and(permisosDeComunicadosDelRol('servidor'))->toBe([])
         ->and(permisosDeComunicadosDelRol('comunicacion-social'))->toBe([]);
 });
@@ -110,7 +109,7 @@ test('un servidor no entra a la gestión', function (string $rol) {
     $this->actingAs($usuario, 'sanctum')->getJson('/api/v1/comunicados')->assertForbidden();
     $this->actingAs($usuario, 'sanctum')->getJson("/api/v1/comunicados/{$comunicado->id}")->assertForbidden();
     $this->actingAs($usuario, 'sanctum')->postJson('/api/v1/comunicados', datosDeComunicado())->assertForbidden();
-})->with(['servidor', 'jefe-unidad', 'director', 'analista-uath', 'comunicacion-social']);
+})->with(['servidor', 'jefe-unidad', 'director', 'comunicacion-social']);
 
 test('la migración da los permisos a los roles que ya existen, y publicar no va al asistente', function () {
     foreach (['admin-ti', 'admin-uath', 'asistente-uath', 'auditor'] as $rol) {

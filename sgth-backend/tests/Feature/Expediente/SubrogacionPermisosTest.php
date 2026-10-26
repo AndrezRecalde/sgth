@@ -23,7 +23,7 @@ uses(TestCase::class, RefreshDatabase::class);
  */
 beforeEach(function () {
     foreach ([
-        'admin-uath', 'asistente-uath', 'auditor', 'maxima-autoridad',
+        'admin-uath', 'asistente-uath', 'auditor',
         'admin-ti', 'servidor', 'jefe-unidad',
     ] as $rol) {
         Role::firstOrCreate(['name' => $rol, 'guard_name' => 'sanctum']);
@@ -113,11 +113,11 @@ test('un jefe de unidad tampoco: ver el módulo no viene con el subsistema', fun
     $this->getJson('/api/v1/expediente/subrogaciones/vigentes')->assertForbidden();
 });
 
-test('UATH, auditoría y la máxima autoridad sí leen el listado', function (string $rol) {
+test('UATH y auditoría sí leen el listado', function (string $rol) {
     ($this->comoRol)($rol);
 
     $this->getJson('/api/v1/expediente/subrogaciones/vigentes')->assertOk();
-})->with(['admin-uath', 'asistente-uath', 'auditor', 'maxima-autoridad']);
+})->with(['admin-uath', 'asistente-uath', 'auditor']);
 
 test('admin-ti no: las subrogaciones son de Talento Humano', function () {
     // Entraba por el Gate::before, que se quitó el 2026-10-26

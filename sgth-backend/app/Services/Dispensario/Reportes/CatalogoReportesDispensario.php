@@ -104,9 +104,7 @@ final class CatalogoReportesDispensario implements CatalogoReportesDispensarioIn
         }
 
         if (!$this->puede($reporte, $alcance)) {
-            throw new HttpException(403, $alcance->soloAgregados() && $reporte->nominal()
-                ? 'Este reporte lleva nombres de pacientes con diagnósticos: solo lo ve el Dispensario.'
-                : 'Este reporte no está disponible para su rol.');
+            throw new HttpException(403, 'Este reporte no está disponible para su rol.');
         }
 
         return $reporte;
@@ -123,17 +121,13 @@ final class CatalogoReportesDispensario implements CatalogoReportesDispensarioIn
     }
 
     /**
-     * La administración lo pide todo. La autoridad, nada nominal. Cada
-     * profesional, lo que su reporte declare para su perfil.
+     * La administración lo pide todo. Cada profesional, lo que su reporte
+     * declare para su perfil.
      */
     private function puede(ReporteDispensario $reporte, AlcanceReporte $alcance): bool
     {
         if ($alcance->perfil === AlcanceReporte::ADMINISTRACION) {
             return true;
-        }
-
-        if ($alcance->soloAgregados() && $reporte->nominal()) {
-            return false;
         }
 
         return in_array($alcance->perfil, $reporte->perfiles(), true);

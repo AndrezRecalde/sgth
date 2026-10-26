@@ -59,7 +59,6 @@ function turnoTerceraTanda(int $medico, string $estado, string $especialidad = '
 
 beforeEach(function () {
     $this->admin     = usuarioTerceraTanda('admin3', 'admin-dispensario');
-    $this->autoridad = usuarioTerceraTanda('aut3', 'maxima-autoridad');
     $this->medico    = usuarioTerceraTanda('med3', 'medico');
 
     $unidad = unidadDePrueba(['nombre' => 'Unidad Turnos']);
@@ -84,7 +83,7 @@ test('salud ocupacional cuenta solo las fichas cerradas, por tipo y aptitud', fu
     // Borrador del médico: no cuenta como evaluación, sí como solicitud abierta.
     femoTerceraTanda($this->medico->id, $this->admin->id, 'periodica', 'apto', 'en_proceso');
 
-    $filas = collect($this->actingAs($this->autoridad, 'sanctum')
+    $filas = collect($this->actingAs($this->admin, 'sanctum')
         ->getJson('/api/v1/dispensario/reportes/salud_ocupacional' . $this->filtros)
         ->assertOk()->json('datos.filas'))->keyBy('tipo');
 
@@ -120,7 +119,7 @@ test('el informe junta los demás reportes y sale en PDF de una hoja', function 
     turnoTerceraTanda($this->medico->id, 'atendido', esperaMin: 15);
     femoTerceraTanda($this->medico->id, $this->admin->id, 'ingreso', 'apto', 'completada');
 
-    $filas = collect($this->actingAs($this->autoridad, 'sanctum')
+    $filas = collect($this->actingAs($this->admin, 'sanctum')
         ->getJson('/api/v1/dispensario/reportes/informe' . $this->filtros)
         ->assertOk()->json('datos.filas'));
 
@@ -132,7 +131,7 @@ test('el informe junta los demás reportes y sale en PDF de una hoja', function 
     expect($filas->firstWhere('indicador', 'Espera promedio (min)')['valor'])->toBe(15);
     expect($filas->firstWhere('indicador', 'Evaluaciones FEMO cerradas')['valor'])->toBe(1);
 
-    $pdf = $this->actingAs($this->autoridad, 'sanctum')
+    $pdf = $this->actingAs($this->admin, 'sanctum')
         ->get('/api/v1/dispensario/reportes/informe/pdf' . $this->filtros)
         ->assertOk();
     expect($pdf->headers->get('content-type'))->toBe('application/pdf');

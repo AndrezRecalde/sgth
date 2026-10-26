@@ -127,8 +127,9 @@ export const NAV_SGTH: NavGroup[] = [
             // El endpoint solo lo sirve a estos roles desde el
             // 2026-09-28. Sin declararlos aquí, un director o un jefe de unidad
             // veía la pantalla en el menú y se encontraba un 403 al abrirla.
-            // admin-ti salió el 2026-10-26, al dejar de ser superusuario.
-            roles: ['admin-uath', 'asistente-uath', 'auditor', 'maxima-autoridad'],
+            // admin-ti salió el 2026-10-26, al dejar de ser superusuario, y la
+            // máxima autoridad, con su rol (PR 7).
+            roles: ['admin-uath', 'asistente-uath', 'auditor'],
           },
           {
             label: 'Nueva acción de personal',
@@ -351,7 +352,7 @@ export const NAV_SALUD: NavGroup[] = [
         label: 'Dashboard',
         href:  ROUTES.SALUD.HOME,
         icon:  'IconHome',
-        roles: ['admin-dispensario', 'maxima-autoridad'],
+        roles: ['admin-dispensario'],
       },
       {
         label: 'Consultas',
@@ -465,9 +466,9 @@ export const NAV_SALUD: NavGroup[] = [
         label: 'Reportes',
         href:  ROUTES.SALUD.REPORTES,
         icon:  'IconReportAnalytics',
-        // Cada perfil ve los suyos: la administración todo, la máxima
-        // autoridad lo agregado y cada profesional lo propio (`AlcanceReporte`).
-        roles: ['admin-dispensario', 'maxima-autoridad', 'medico', 'odontologo', 'enfermera'],
+        // Cada perfil ve los suyos: la administración todo y cada profesional
+        // lo propio (`AlcanceReporte`).
+        roles: ['admin-dispensario', 'medico', 'odontologo', 'enfermera'],
       },
     ],
   },
@@ -771,7 +772,7 @@ export const NAV_PORTAL: NavGroup[] = [
 // ── Roles por subsistema ──────────────
 export const ROLES_SGTH = [
   'admin-ti', 'admin-uath', 'asistente-uath',
-  'maxima-autoridad', 'director', 'jefe-unidad',
+  'director', 'jefe-unidad',
   'auditor',
 ]
 
@@ -831,7 +832,7 @@ export const ROLES_PORTAL = [
   'servidor', 'director', 'jefe-unidad',
   'medico', 'odontologo', 'enfermera',
   'admin-uath', 'asistente-uath',
-  'admin-ti', 'maxima-autoridad', 'auditor',
+  'admin-ti', 'auditor',
   'recepcion', 'trabajo-social', 'financiero',
   'admin-dispensario', 'tecnico-dtic', 'jefe-tic',
   'comunicacion-social', 'responsable-identidad',
