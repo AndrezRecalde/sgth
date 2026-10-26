@@ -97,7 +97,7 @@ export function Sidebar({ subsistema, collapsed, onNavigate }: Props) {
   return (
     <nav className={classes.sidebar} aria-label="Navegación principal">
       <Link
-        href={inicioDelSubsistema(subsistema, roles)}
+        href={inicioDelSubsistema(subsistema, permisos, roles)}
         className={`${classes.brand} ${collapsed ? classes.brandCollapsed : ''}`}
       >
         {/* Sin optimizar: la URL lleva su versión y el navegador ya la guarda. */}

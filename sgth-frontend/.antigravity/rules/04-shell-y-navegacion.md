@@ -5,6 +5,7 @@ lo modifica para resolver una necesidad propia.
 
 ```
 AppShell.tsx           orquesta; publica data-subsistema
+├── GuardaDePantalla.tsx abre solo las pantallas del menú del usuario
 ├── Sidebar.tsx        marca, conmutador, menú
 │   ├── SubsistemaSwitcher.tsx
 │   ├── NavItem.tsx
@@ -17,14 +18,16 @@ AppShell.tsx           orquesta; publica data-subsistema
 
 ## Responsabilidades de `SGTHAppShell`
 
-Solo tres, y ninguna más:
+Solo cuatro, y ninguna más:
 
 1. **Guardar la ruta.** Sin sesión rehidratada, a la pantalla de acceso. Es la
    segunda capa: el `matcher` del middleware ya cubre todo el área autenticada
    (ver [02](02-arquitectura.md)).
-2. **Publicar el subsistema activo** como `data-subsistema`, de donde cuelga
+2. **Guardar la pantalla** con `GuardaDePantalla`: solo se abre la que el menú
+   le ofrece al usuario (ver «Permisos y roles», abajo).
+3. **Publicar el subsistema activo** como `data-subsistema`, de donde cuelga
    todo el acento visual.
-3. **Coordinar el estado del sidebar** entre la barra superior y el menú.
+4. **Coordinar el estado del sidebar** entre la barra superior y el menú.
 
 ### La hidratación va antes que la redirección
 
@@ -74,29 +77,34 @@ cuenta, junto al resto de preferencias del usuario.
 
 ## El menú se declara, no se programa
 
-`config/nav.ts` es la fuente única. De ahí salen **tres** cosas:
+`config/nav.ts` es la fuente única. De ahí salen **cinco** cosas:
 
 1. el menú lateral,
 2. las migas de pan (`findNavTrail`),
-3. el buscador Ctrl+K (`flattenNav`).
+3. el buscador Ctrl+K (`flattenNav`),
+4. los subsistemas a los que entra cada quien (`getSubsistemasDisponibles`)
+   y por qué pantalla (`inicioDelSubsistema`),
+5. qué pantallas puede abrir (`puedeAbrirPantalla`).
 
-Agregar una pantalla al menú la hace navegable, rastreable y buscable de una
-sola vez.
+Agregar una pantalla al menú la hace navegable, rastreable, buscable y
+protegida de una sola vez.
 
 ```ts
 {
   label:   'Entregas de EPP',
   href:    ROUTES.SGTH.RIESGOS_LABORALES_ENTREGAS_EPP,
   icon:    'IconTruckDelivery',   // nombre de @tabler/icons-react, como texto
-  permiso: 'gestionar-sso',       // opcional: filtra el ítem
+  permiso: 'gestionar-sso',       // la guarda: la misma que pide el API
 }
 ```
 
 Pasos para una pantalla nueva:
 
 1. Ruta en `config/routes.ts`.
-2. Entrada en el grupo correspondiente de `config/nav.ts`.
-3. Carpeta y `page.tsx` bajo el route group del subsistema.
+2. Entrada en el grupo correspondiente de `config/nav.ts`, **con su guarda**.
+3. Carpeta y `page.tsx` bajo el route group del subsistema, colgando de la ruta
+   de su entrada: una ruta de detalle (`/expediente/123`) la protege la entrada
+   del listado.
 
 ## Estado activo — no se codifica a mano
 
@@ -117,15 +125,29 @@ vuelvas a introducir listas de ese tipo.**
 - Se usa `roles` cuando el backend protege la ruta por rol y no por permiso,
   que es el caso de todo el Dispensario. Basta con tener uno de los listados.
 - Un ítem padre que se queda sin hijos visibles desaparece con ellos.
-- `getSubsistemasDisponibles(roles)` decide a qué subsistemas puede entrar el
-  usuario; el conmutador solo ofrece menú si hay más de uno.
+- **Toda pantalla lleva guarda**, propia o de su padre, y es la misma que pide
+  su API. Desde el 2026-10-26 (`docs/plan-roles-y-accesos.md`, PR 9) una
+  entrada sin guarda no es un descuido menor: le abre el subsistema entero a
+  cualquier usuario.
+- `getSubsistemasDisponibles(permisos, roles)`: se entra a un subsistema si se
+  ve al menos una de sus pantallas. Antes lo decidían listas de roles por
+  subsistema (`ROLES_SGTH`…), escritas aparte del menú y desfasadas de él. **No
+  las vuelvas a introducir**: el menú ya es la respuesta.
+- `inicioDelSubsistema(subsistema, permisos, roles)`: el `home` si el usuario
+  lo tiene en el menú, o si no es una entrada del menú (la portada del
+  Portal); si no, la primera pantalla visible. El SGTH no tiene pantalla de
+  inicio y siempre entra por la primera.
+- `GuardaDePantalla` pinta «No tiene acceso» en una ruta cuyo destino del menú
+  completo (el más largo que la contiene) no está en el menú del usuario. Una
+  ruta que no cuelga de ninguno no se juzga. En el `home` de un subsistema
+  lleva al inicio que corresponda.
 
 Lo mismo vale para lo que el menú dispara de fondo: el contador de stock bajo
 del sidebar se pedía en los tres subsistemas y devolvía 403 a quien no es del
 dispensario. Va tras `ROLES_INVENTARIO_MED`.
 
-Filtrar el menú **no es** control de acceso. El backend sigue siendo quien
-autoriza cada petición.
+Ni el menú ni la guarda de pantalla **son** control de acceso a los datos. El
+backend sigue siendo quien autoriza cada petición.
 
 ## Subsistemas
 

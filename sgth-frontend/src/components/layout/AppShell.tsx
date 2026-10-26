@@ -7,6 +7,7 @@ import { useEffect } from 'react'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
 import { CommandPalette } from './CommandPalette'
+import { GuardaDePantalla } from './GuardaDePantalla'
 import { useAuth } from '@/hooks/useAuth'
 import { useHydrated } from '@/hooks/useHydrated'
 import { useUiStore } from '@/store/ui.store'
@@ -18,11 +19,13 @@ import { LAYOUT } from '@/config/design.tokens'
  * Shell de la aplicación autenticada. Lo montan los layouts de los route
  * groups protegidos: (sgth), (salud), (tic), (comunicacion) y (portal).
  *
- * Responsabilidades — y solo estas tres:
+ * Responsabilidades — y solo estas cuatro:
  *  1. Guardar la ruta: sin sesión rehidratada, a /login.
- *  2. Publicar el subsistema activo como `data-subsistema`, de donde cuelga
+ *  2. Guardar la pantalla: solo se abre la que el menú le ofrece al usuario
+ *     (`GuardaDePantalla`).
+ *  3. Publicar el subsistema activo como `data-subsistema`, de donde cuelga
  *     todo el acento visual (ver `styles/tokens.css`).
- *  3. Coordinar el estado abierto/plegado del sidebar entre Topbar y Sidebar.
+ *  4. Coordinar el estado abierto/plegado del sidebar entre Topbar y Sidebar.
  *
  * Comportamiento responsive:
  *   ≥ md  → sidebar fijo; el usuario puede plegarlo a iconos (se recuerda).
@@ -116,7 +119,9 @@ export function SGTHAppShell({ children }: { children: React.ReactNode }) {
         />
       </AppShell.Navbar>
 
-      <AppShell.Main>{children}</AppShell.Main>
+      <AppShell.Main>
+        <GuardaDePantalla subsistema={subsistema}>{children}</GuardaDePantalla>
+      </AppShell.Main>
 
       <CommandPalette subsistema={subsistema} />
     </AppShell>

@@ -17,20 +17,23 @@ interface Props {
 }
 
 /**
- * Conmutador entre SGTH, Dispensario y Portal.
+ * Conmutador entre los subsistemas.
  *
  * Vive en el sidebar, bajo la marca: el subsistema activo determina TODO el
  * menú que hay debajo, así que el control que lo cambia debe estar ahí y no
  * escondido tras un icono de la barra superior.
  *
- * Si el usuario solo tiene acceso a un subsistema no hay nada que conmutar:
- * se muestra como etiqueta de contexto, sin menú.
+ * Ofrece los subsistemas donde el usuario ve al menos una pantalla. Si solo
+ * tiene uno no hay nada que conmutar: se muestra como etiqueta de contexto,
+ * sin menú.
  */
 export function SubsistemaSwitcher({ actual, collapsed }: Props) {
   const router = useRouter()
   const { usuario } = useAuth()
+  const permisos = usuario?.permisos ?? []
+  const roles = usuario?.roles ?? []
 
-  const disponibles = getSubsistemasDisponibles(usuario?.roles ?? [])
+  const disponibles = getSubsistemasDisponibles(permisos, roles)
   const cfg = SUBSISTEMAS[actual]
   const Icono = cfg.icon
   const puedeConmutar = disponibles.length > 1
@@ -89,7 +92,7 @@ export function SubsistemaSwitcher({ actual, collapsed }: Props) {
           return (
             <Menu.Item
               key={key}
-              onClick={() => router.push(inicioDelSubsistema(key, usuario?.roles ?? []))}
+              onClick={() => router.push(inicioDelSubsistema(key, permisos, roles))}
               // `Menu.Item` no deja que su etiqueta interna encoja, así que un
               // texto largo empuja el ancho del menú en vez de recortarse.
               classNames={{ itemLabel: classes.menuItemLabel }}

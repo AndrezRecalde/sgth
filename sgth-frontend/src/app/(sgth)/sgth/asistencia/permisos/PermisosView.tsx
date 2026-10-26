@@ -11,9 +11,9 @@ import { PermisosTab } from '@/features/asistencia/components/PermisosTab'
 /*
 | Permisos y, para quien los aprueba, los certificados médicos del dispensario.
 |
-| Los certificados van aquí y no en una pantalla aparte: Trabajo Social solo
-| entra al SGTH a Asistencia › Permisos (`ROLES_SGTH_SOLO_PERMISOS`), y la
-| viñeta la ven TH y Trabajo Social, los que aprueban (decisión del 2026-10-08).
+| Los certificados van aquí y no en una pantalla aparte: del SGTH, Trabajo
+| Social solo tiene en el menú Asistencia › Permisos, y la viñeta la ven TH y
+| Trabajo Social, los que aprueban (decisión del 2026-10-08).
 */
 export function PermisosView() {
   const { hasPermiso } = useAuth()
