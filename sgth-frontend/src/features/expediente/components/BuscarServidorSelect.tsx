@@ -9,7 +9,7 @@ import {
 import { useDebouncedValue } from '@mantine/hooks'
 import { useContainedInput, type ContainedSize } from '@/hooks/useContainedInput'
 import api from '@/lib/axios'
-import type { ApiResponse, PaginatedResponse, ServidorConRelaciones } from '@/types/api'
+import type { ApiResponse, ServidorBusqueda } from '@/types/api'
 
 // Cada tecla pedía una lista: escribir un apellido disparaba una petición por
 // letra y solo importaba la última. Contra el servidor de desarrollo, que
@@ -17,19 +17,21 @@ import type { ApiResponse, PaginatedResponse, ServidorConRelaciones } from '@/ty
 const RETARDO_BUSQUEDA_MS = 300
 
 /*
-| El tipo es el del API, no una copia local.
+| Busca en `expediente/servidores/buscar`, con su propio permiso
+| (`buscar-servidores`), y no en el listado del Expediente.
 |
-| Había una interfaz `Servidor` propia con siete campos, y como no declaraba
-| `contrato_vigente` —que el listado sí carga: ExpedienteService::listarServidores
-| lo trae en su `with()`— quien la consumía tenía que asertar. De ahí venía el
-| `srv as ServidorConRelaciones` del selector de categorías, justo el gesto que
-| la regla 09 señala: una relación que el endpoint devuelve y el tipo no declara.
+| El listado solo lo sirve ServidorPolicy a Talento Humano, así que el personal
+| de TIC recibía 403 al registrar un ticket, entregar o prestar un equipo, y el
+| auditor no podía filtrar por servidor (docs/plan-roles-y-accesos.md, PR 2).
+| El buscador devuelve lo justo para elegir a una persona; lo del vínculo
+| —nombramiento, remuneración— solo llega a Talento Humano, que lo usa en
+| Acciones de Personal, Subrogaciones y el sumario.
 */
 interface Props {
   label:     string
   value?:    number | null
   onChange:  (id: number | null) => void
-  onSelect?: (servidor: ServidorConRelaciones) => void
+  onSelect?: (servidor: ServidorBusqueda) => void
   required?: boolean
   error?:    string
   /** `sm` para la variante compacta de una barra de filtros (regla 06). */
@@ -46,7 +48,7 @@ export function BuscarServidorSelect({
   // muestra el servidor seleccionado. Una cadena vacía sí es escritura suya.
   const [search, setSearch]       = useState<string | null>(null)
 
-  const getNombreCompleto = (s: ServidorConRelaciones) =>
+  const getNombreCompleto = (s: ServidorBusqueda) =>
     [s.nombre, s.segundo_nombre, s.apellido, s.segundo_apellido]
       .filter(Boolean).join(' ')
 
@@ -54,11 +56,14 @@ export function BuscarServidorSelect({
   // formulario que llegaba con servidor ya asignado —editar un registro—
   // pintaba el campo vacío y parecía que no había ninguno. Se resuelve el id
   // contra la API para poder mostrarlo.
+  //
+  // La clave no es la del expediente (`['expediente', 'servidor', id]`): este
+  // servidor viene recortado, y sembrarlo ahí dejaba la ficha sin sus datos.
   const { data: servidorSel } = useQuery({
-    queryKey: ['expediente', 'servidor', value],
+    queryKey: ['expediente', 'servidor', 'buscar', value],
     queryFn: () =>
       api
-        .get<ApiResponse<ServidorConRelaciones>>(`/expediente/servidores/${value}`)
+        .get<ApiResponse<ServidorBusqueda>>(`/expediente/servidores/buscar/${value}`)
         .then((r) => r.data.datos),
     enabled: !!value,
     staleTime: Infinity,
@@ -74,18 +79,12 @@ export function BuscarServidorSelect({
 
   const { data: servidores = [], isFetching } = useQuery({
     queryKey: ['expediente', 'servidores', 'buscar', termino],
-    queryFn: async () => {
-      // El listado devuelve `datos` como arreglo y la paginación en `meta`,
-      // pero otros endpoints del expediente anidan `datos.data`: se aceptan
-      // las dos formas porque este selector se usa en ambos sitios.
-      const { data } = await api.get<
-        ApiResponse<ServidorConRelaciones[] | PaginatedResponse<ServidorConRelaciones>>
-      >('/expediente/servidores', { params: { search: termino, per_page: 10 } })
-
-      const datos = data.datos
-
-      return Array.isArray(datos) ? datos : datos?.data ?? []
-    },
+    queryFn: () =>
+      api
+        .get<ApiResponse<ServidorBusqueda[]>>('/expediente/servidores/buscar', {
+          params: { search: termino, per_page: 10 },
+        })
+        .then((r) => r.data.datos),
     enabled: termino.length >= 2,
   })
 
@@ -94,10 +93,10 @@ export function BuscarServidorSelect({
   // en mitad de una palabra.
   const buscando = isFetching || (escrito.length >= 2 && termino !== escrito)
 
-  const handleSelect = (srv: ServidorConRelaciones) => {
+  const handleSelect = (srv: ServidorBusqueda) => {
     // Sembrar la caché con el servidor recién elegido evita que el campo
     // parpadee vacío mientras la consulta por id va y vuelve.
-    queryClient.setQueryData(['expediente', 'servidor', srv.id], srv)
+    queryClient.setQueryData(['expediente', 'servidor', 'buscar', srv.id], srv)
     setSearch(null)
     onChange(srv.id)
     onSelect?.(srv)

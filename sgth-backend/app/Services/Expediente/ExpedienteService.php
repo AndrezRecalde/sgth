@@ -307,6 +307,36 @@ class ExpedienteService implements ExpedienteServiceInterface
     }
 
     /**
+     * Lo que carga el buscador de servidores: la unidad, que enseña a todos, y
+     * lo del vínculo, que solo enseña a Talento Humano (ServidorBusquedaResource).
+     */
+    private const RELACIONES_BUSCADOR = [
+        'unidadAdministrativa:id,nombre', 'puesto.grupoOcupacional', 'contratoVigente', 'ultimoContrato',
+    ];
+
+    /**
+     * El buscador de los formularios: por nombre o cédula, con las mismas
+     * reglas que el listado, sin paginar y con tope. El id desempata el orden:
+     * dos homónimos salían cada vez en un orden distinto.
+     */
+    public function buscarServidores(string $termino, int $limite): Collection
+    {
+        return $this->filtrarServidores(
+            Servidor::query()->with(self::RELACIONES_BUSCADOR),
+            ['search' => $termino],
+        )
+            ->orderBy('apellido')->orderBy('nombre')->orderBy('id')
+            ->limit($limite)
+            ->get();
+    }
+
+    /** El que ya está elegido en un formulario, para enseñar su nombre. */
+    public function servidorParaBuscador(int $servidorId): Servidor
+    {
+        return Servidor::with(self::RELACIONES_BUSCADOR)->findOrFail($servidorId);
+    }
+
+    /**
      * Filtros compartidos entre el listado paginado y la exportación de
      * nómina (Excel/PDF), para que ambos apliquen exactamente las mismas
      * reglas.

@@ -7,15 +7,15 @@ import { useCatalogoAcciones } from '../hooks/useCatalogoAcciones'
 import {
   familiaDisponible, familiaRequiereVinculo, familiasDelFormulario, type VinculoDelServidor,
 } from '../utils/catalogoAcciones'
-import type { CatalogoAccionesPersonal, FamiliaDelCatalogo, ServidorConRelaciones } from '@/types/api'
+import type { CatalogoAccionesPersonal, FamiliaDelCatalogo, ServidorBusqueda } from '@/types/api'
 import { getApiErrorMessage } from '@/types/api'
 import { SectionHeading } from '@/components/ui'
 import { etiquetaNombramiento } from '../utils/tipoNombramientoOptions'
 import classes from './SelectorServidorCategoria.module.css'
 
 interface Props {
-  servidor:          ServidorConRelaciones | null
-  onServidorChange:  (servidor: ServidorConRelaciones | null) => void
+  servidor:          ServidorBusqueda | null
+  onServidorChange:  (servidor: ServidorBusqueda | null) => void
   onFamiliaSeleccionada: (familia: FamiliaDelCatalogo) => void
 }
 

@@ -8,7 +8,7 @@ import { useAusenciasDelTitular } from './useSubrogaciones'
 import { esNivelJerarquicoSuperior } from '../utils/subrogaciones'
 import type { SubrogacionFormData } from '../schemas/subrogacion.schema'
 import type {
-  AusenciaDelTitular, PuestoConRelaciones, ServidorConRelaciones, TipoSubrogacion,
+  AusenciaDelTitular, PuestoConRelaciones, ServidorBusqueda, TipoSubrogacion,
 } from '@/types/api'
 
 /**
@@ -36,7 +36,7 @@ export function useFormularioSubrogacion(form: UseFormReturn<SubrogacionFormData
    * pagar, y pedir los 500 servidores de la institución para eso castigaba a
    * quien abre el modal desde una conexión de la Prefectura.
    */
-  const [subroganteSel, setSubroganteSel] = useState<ServidorConRelaciones | null>(null)
+  const [subroganteSel, setSubroganteSel] = useState<ServidorBusqueda | null>(null)
 
   const { data: unidades = [] } = useTodasUnidades({ nivel: 2 })
 
@@ -156,7 +156,7 @@ export function useFormularioSubrogacion(form: UseFormReturn<SubrogacionFormData
     olvidarAusencia()
   }
 
-  const elegirSubrogante = (servidor: ServidorConRelaciones | null) => {
+  const elegirSubrogante = (servidor: ServidorBusqueda | null) => {
     setSubroganteSel(servidor)
   }
 
