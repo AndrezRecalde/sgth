@@ -302,8 +302,8 @@ class RolPermisoSeeder extends Seeder
             Permiso::GESTIONAR_VIATICOS,
             Permiso::LIQUIDAR_VIATICO,
             Permiso::GESTIONAR_TARIFAS_VIATICO,
-            // Las novedades del mes, que aplica en su sistema (fase 7.3a).
-            Permiso::VER_NOVEDADES_NOMINA,
+            // Las novedades del mes no: le llegan por correo, en Excel, cuando
+            // Talento Humano entrega el mes (PR 8 del plan de roles).
         ]));
 
         // MEDICO
