@@ -132,7 +132,11 @@ export function DespachoView() {
     <PageShell>
       <PageHeader
         title="Despacho de recetas"
-        description="Recetas emitidas por el Dispensario Médico pendientes de entrega"
+        // El médico y el odontólogo ven solo las que emitieron; todas, quien
+        // despacha (docs/plan-roles-y-accesos.md, PR 5).
+        description={puedeDespachar
+          ? 'Recetas emitidas por el Dispensario Médico pendientes de entrega'
+          : 'Las recetas que usted emitió y en qué va su entrega'}
         actions={
           <Group gap="xs">
             {pendientes > 0 && (
@@ -177,20 +181,24 @@ export function DespachoView() {
           </>
         }
       >
-        <Select
-          label="Profesional"
-          placeholder="Todos los profesionales"
-          data={prescriptores.map(m => ({
-            value: String(m.id),
-            label: m.nombre_completo || `Profesional ${m.id}`,
-          }))}
-          searchable
-          clearable
-          {...contained}
-          value={medicoId}
-          onChange={(v) => { setMedicoId(v); setPage(1) }}
-          style={{ minWidth: 220 }}
-        />
+        {/* Quien no despacha solo ve las suyas: filtrar por otro profesional
+            le devolvería siempre una lista vacía. */}
+        {puedeDespachar && (
+          <Select
+            label="Profesional"
+            placeholder="Todos los profesionales"
+            data={prescriptores.map(m => ({
+              value: String(m.id),
+              label: m.nombre_completo || `Profesional ${m.id}`,
+            }))}
+            searchable
+            clearable
+            {...contained}
+            value={medicoId}
+            onChange={(v) => { setMedicoId(v); setPage(1) }}
+            style={{ minWidth: 220 }}
+          />
+        )}
         <DatePickerInput
           type="range"
           label="Fechas"
