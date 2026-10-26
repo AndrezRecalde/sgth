@@ -5,6 +5,7 @@ import { Select, TextInput } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
 import { IconClipboardHeart } from '@tabler/icons-react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/hooks/useAuth'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import {
   useSolicitudesCertificacion,
@@ -32,6 +33,7 @@ const POR_PAGINA = 15
 export function SsoView() {
   const router    = useRouter()
   const contained = useContainedInput('sm')
+  const { usuario, hasRole } = useAuth()
 
   const [page, setPage]                 = useState(1)
   // Arranca con lo pendiente Y lo que ya empezó: con solo «pendiente» se
@@ -67,6 +69,8 @@ export function SsoView() {
   // (`gestionar-onboarding`), que no trabaja en esta pantalla.
   const columns = getSolicitudesSsoColumns({
     descargando,
+    evalua: hasRole('medico'),
+    usuarioId: usuario?.id ?? null,
     puedeConfirmarIncorporacion: false,
     onIniciar: (id) => {
       // Un doble clic mandaba dos PATCH: el segundo daba 422 y un aviso de
