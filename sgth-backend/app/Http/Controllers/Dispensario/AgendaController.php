@@ -3,12 +3,22 @@
 namespace App\Http\Controllers\Dispensario;
 
 use App\Contracts\Dispensario\AgendaServiceInterface;
+use App\Enums\EspecialidadAtencion;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dispensario\StoreAgendaMedicaRequest;
 use App\Http\Responses\ApiResponse;
+use App\Models\Dispensario\AgendaMedica;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
+/**
+ * La agenda del Dispensario. Enfermería y la administración llevan la cola de
+ * todos: dan los turnos, los cancelan y los marcan. El médico y el odontólogo,
+ * solo los suyos. Hasta el 2026-10-26 cualquiera de los cuatro listaba la cola
+ * entera y podía cancelar, marcar como no presentado, reactivar o pasar a
+ * consulta el turno de otro profesional (docs/plan-roles-y-accesos.md, PR 6).
+ */
 final class AgendaController extends Controller
 {
     public function __construct(
@@ -24,6 +34,11 @@ final class AgendaController extends Controller
             'tipo_atencion' => ['nullable', 'string', 'max:30'],
             'per_page'      => ['nullable', 'integer', 'min:1', 'max:200'],
         ]);
+
+        // El profesional, su cola; pedir la de otro no la abre.
+        if (! $this->llevaLaCola($request)) {
+            $filtros['medico_id'] = $request->user()->id;
+        }
 
         $agenda = $this->agendaService->listar($filtros);
 
@@ -41,15 +56,23 @@ final class AgendaController extends Controller
         return ApiResponse::created($cita, 'Cita agendada.');
     }
 
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
+        if ($this->esDeOtro($request, $id)) {
+            return $this->deOtro();
+        }
+
         $cita = $this->agendaService->obtener($id);
 
         return ApiResponse::ok($cita);
     }
 
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
+        if ($this->esDeOtro($request, $id)) {
+            return $this->deOtro();
+        }
+
         $cita = $this->agendaService->cancelar($id);
 
         return ApiResponse::ok($cita, 'Cita cancelada.');
@@ -58,14 +81,17 @@ final class AgendaController extends Controller
     public function turnosDelDia(Request $request): JsonResponse
     {
         $request->validate([
-            'fecha_desde' => ['nullable', 'date'],
-            'fecha_hasta' => ['nullable', 'date', 'after_or_equal:fecha_desde'],
+            'fecha_desde'   => ['nullable', 'date'],
+            'fecha_hasta'   => ['nullable', 'date', 'after_or_equal:fecha_desde'],
+            // Consultas pide la de medicina; Odontología, la suya.
+            'tipo_atencion' => ['nullable', Rule::enum(EspecialidadAtencion::class)],
         ]);
 
         $turnos = $this->agendaService->turnosDelDia(
             $request->user()->id,
             $request->input('fecha_desde'),
             $request->input('fecha_hasta'),
+            $request->input('tipo_atencion'),
         );
 
         return ApiResponse::ok($turnos);
@@ -87,6 +113,10 @@ final class AgendaController extends Controller
         Request $request,
         int $agenda
     ): JsonResponse {
+        if ($this->esDeOtro($request, $agenda)) {
+            return $this->deOtro();
+        }
+
         $turno = $this->agendaService->marcarNoPresentado(
             $agenda, $request->user()->id
         );
@@ -98,6 +128,10 @@ final class AgendaController extends Controller
         Request $request,
         int $agenda
     ): JsonResponse {
+        if ($this->esDeOtro($request, $agenda)) {
+            return $this->deOtro();
+        }
+
         $turno = $this->agendaService->reactivar(
             $agenda, $request->user()->id
         );
@@ -105,8 +139,12 @@ final class AgendaController extends Controller
         return ApiResponse::ok($turno, 'Turno reactivado correctamente.');
     }
 
-    public function marcarEnConsulta(int $agenda): JsonResponse
+    public function marcarEnConsulta(Request $request, int $agenda): JsonResponse
     {
+        if ($this->esDeOtro($request, $agenda)) {
+            return $this->deOtro();
+        }
+
         $turno = $this->agendaService->marcarEnConsulta($agenda);
 
         return ApiResponse::ok($turno, 'Turno en consulta.');
@@ -119,5 +157,31 @@ final class AgendaController extends Controller
         );
 
         return ApiResponse::ok($turno, 'El turno volvió a la cola.');
+    }
+
+    /** Enfermería y la administración, que dan los turnos y llevan la cola. */
+    private function llevaLaCola(Request $request): bool
+    {
+        return $request->user()->hasAnyRole(['enfermera', 'admin-dispensario']);
+    }
+
+    /**
+     * Si el turno es de otro profesional y quien pregunta no lleva la cola. El
+     * que no existe no lo es: sigue dando 404 más adelante.
+     */
+    private function esDeOtro(Request $request, int $id): bool
+    {
+        if ($this->llevaLaCola($request)) {
+            return false;
+        }
+
+        $medico = AgendaMedica::whereKey($id)->value('medico_id');
+
+        return $medico !== null && (int) $medico !== $request->user()->id;
+    }
+
+    private function deOtro(): JsonResponse
+    {
+        return ApiResponse::error('Este turno es de otro profesional.', null, 403);
     }
 }

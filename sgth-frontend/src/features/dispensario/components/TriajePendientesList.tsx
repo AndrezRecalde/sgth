@@ -9,7 +9,7 @@ import type { AgendaMedica } from '../services/agendaService'
 interface Props {
   /** Sin él no se ofrece «Tomar triaje»: quien no puede registrarlo no lo ve. */
   onSeleccionar?: (turno: AgendaMedica) => void
-  onCancelar:     (id: number) => void
+  onCancelar?:    (id: number) => void
 }
 
 /** Los turnos de hoy que esperan sus signos vitales, del primero en llegar al último. */

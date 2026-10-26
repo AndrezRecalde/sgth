@@ -355,14 +355,20 @@ export const NAV_SALUD: NavGroup[] = [
         roles: ['admin-dispensario'],
       },
       {
+        // La cola de cada profesional, una por especialidad. Sin `roles` salían
+        // a todo el Dispensario: Enfermería y la administración veían dos colas
+        // vacías, y el médico y el odontólogo, la misma lista en las dos
+        // (docs/plan-roles-y-accesos.md, PR 6).
         label: 'Consultas',
         href:  ROUTES.SALUD.CONSULTAS,
         icon:  'IconStethoscope',
+        roles: ['medico'],
       },
       {
         label: 'Odontología',
         href:  ROUTES.SALUD.ODONTOLOGIA,
         icon:  'IconDental',
+        roles: ['odontologo'],
       },
       {
         // La bandeja de lo que espera resultados, los perfiles y, para la

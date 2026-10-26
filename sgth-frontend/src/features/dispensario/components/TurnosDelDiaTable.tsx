@@ -13,17 +13,24 @@ import type { AgendaMedica } from '../services/agendaService'
 import { TURNO_PENDIENTE } from '../constants/turnos'
 
 interface Props {
+  /**
+   * La cola de qué especialidad: Consultas y Odontología enseñaban la misma
+   * lista, y a quien es médico y odontólogo le aparecían aquí los turnos de la
+   * otra (docs/plan-roles-y-accesos.md, PR 6).
+   */
+  tipoAtencion:  'medicina_general' | 'odontologia'
   onAtender:     (turno: AgendaMedica) => void
   onVerConsulta: (turno: AgendaMedica) => void
 }
 
-export function TurnosDelDiaTable({ onAtender, onVerConsulta }: Props) {
+export function TurnosDelDiaTable({ tipoAtencion, onAtender, onVerConsulta }: Props) {
   const contained = useContainedInput('sm')
   const [rango, setRango] = useState<[Date | null, Date | null]>([null, null])
   const [filtroActivo, setFiltroActivo] =
     useState<{ fecha_desde?: string; fecha_hasta?: string } | undefined>(undefined)
 
-  const { data: turnos = [], isLoading, error, refetch } = useTurnosDelDia(filtroActivo)
+  const { data: turnos = [], isLoading, error, refetch } =
+    useTurnosDelDia({ ...filtroActivo, tipo_atencion: tipoAtencion })
   const { noPresentado, reactivar } = useAccionesTurno()
 
   const atendidos = turnos.filter(t => t.estado === 'atendido').length
