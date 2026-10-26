@@ -12,6 +12,7 @@ import type { PacienteEncontrado } from '../services/pacienteService'
 import type { AgendaMedica } from '../services/agendaService'
 import { ESTADO_TURNO_LABELS, EN_ESPERA } from '../constants/turnos'
 import { StatusBadge } from '@/components/ui'
+import { usePuedeTriar } from '../hooks/usePuedeTriar'
 
 export type AccionPaciente = 'turno' | 'servicio_enfermeria'
 
@@ -37,6 +38,9 @@ export function PacienteCard({
   paciente, creandoHistoria, onCrearHistoria, onElegir, turnoAbierto, onTomarTriaje,
 }: Props) {
   const esServidor = paciente.tipo === 'servidor'
+  // El servicio de enfermería lo registran Enfermería y la administración, los
+  // mismos que el triaje; al médico que entraba aquí le daba 403 (PR 6).
+  const registraServicio = usePuedeTriar()
 
   const iniciales = paciente.nombre_completo
     .split(' ')
@@ -115,17 +119,19 @@ export function PacienteCard({
             </Button>
           </Alert>
         ) : (
-          <SimpleGrid cols={{ base: 1, xs: 2 }} spacing="sm">
+          <SimpleGrid cols={{ base: 1, xs: registraServicio ? 2 : 1 }} spacing="sm">
             <Button leftSection={<IconStethoscope size={16} />} onClick={() => onElegir('turno')}>
               Crear turno
             </Button>
-            <Button
-              variant="light"
-              leftSection={<IconVaccine size={16} />}
-              onClick={() => onElegir('servicio_enfermeria')}
-            >
-              Servicio de enfermería
-            </Button>
+            {registraServicio && (
+              <Button
+                variant="light"
+                leftSection={<IconVaccine size={16} />}
+                onClick={() => onElegir('servicio_enfermeria')}
+              >
+                Servicio de enfermería
+              </Button>
+            )}
           </SimpleGrid>
         )}
       </Stack>

@@ -37,8 +37,11 @@ const RUTA_VUELTA: Record<Especialidad, string> = {
 export function AtencionTurnoView({ folio, especialidad }: Props) {
   const router = useRouter()
 
-  // El contador de la sala de espera alimenta la cabecera del panel.
-  const { data: turnos = [] } = useTurnosDelDia()
+  // El contador de la sala de espera alimenta la cabecera del panel: el de la
+  // cola de esta especialidad.
+  const { data: turnos = [] } = useTurnosDelDia({
+    tipo_atencion: especialidad === 'odontologica' ? 'odontologia' : 'medicina_general',
+  })
   const totalEnEspera = turnos.filter(t => TURNO_PENDIENTE.includes(t.estado)).length
 
   const { data: turno, isLoading, error } = useQuery({

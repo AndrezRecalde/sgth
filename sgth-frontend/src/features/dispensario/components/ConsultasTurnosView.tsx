@@ -30,6 +30,7 @@ export function ConsultasTurnosView() {
 
   return (
     <TurnosDelDiaTable
+      tipoAtencion="medicina_general"
       onAtender={atender}
       onVerConsulta={abrirFicha}
     />

@@ -134,7 +134,9 @@ export function EnfermeriaColaMonitoreoView() {
           vacio={soloAlertas
             ? { titulo: 'Sin turnos con alerta', descripcion: 'Ningún triaje de esta fecha quedó fuera de rango.' }
             : { titulo: 'Sin turnos', descripcion: 'No hay turnos registrados en esta fecha.' }}
-          onCancelar={pedirCancelacion}
+          // Cancelar es de quien lleva la cola, como el triaje: el backend no
+          // deja al médico cancelar el turno de otro (PR 6).
+          onCancelar={puedeTriar ? pedirCancelacion : undefined}
           onTomarTriaje={puedeTriar ? setTurnoTriaje : undefined}
         />
       )}
@@ -142,7 +144,7 @@ export function EnfermeriaColaMonitoreoView() {
       {vista === 'pendientes_triaje' && (
         <TriajePendientesList
           onSeleccionar={puedeTriar ? setTurnoTriaje : undefined}
-          onCancelar={pedirCancelacion}
+          onCancelar={puedeTriar ? pedirCancelacion : undefined}
         />
       )}
 
