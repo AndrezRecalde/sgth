@@ -33,7 +33,7 @@ final class EnfermeriaReporte extends ReporteBase
 
     public function perfiles(): array
     {
-        return [AlcanceReporte::ADMINISTRACION, AlcanceReporte::AUTORIDAD, AlcanceReporte::ENFERMERIA];
+        return [AlcanceReporte::ADMINISTRACION, AlcanceReporte::ENFERMERIA];
     }
 
     public function filtros(): array

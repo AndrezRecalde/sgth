@@ -21,8 +21,7 @@ function filtrosIniciales(): FiltrosReporteDispensario {
 }
 
 const AVISOS = {
-  propio:    'Estos reportes muestran solo sus atenciones.',
-  autoridad: 'Ve los reportes agregados. Los que llevan nombres de pacientes con diagnósticos se quedan en el Dispensario.',
+  propio: 'Estos reportes muestran solo sus atenciones.',
 } as const
 
 /**
@@ -51,9 +50,7 @@ export function ReportesDispensarioView() {
     setFiltros((f) => ({ ...f, agrupacion: agrupaciones[0]?.value }))
   }
 
-  const aviso = catalogo.data?.propio
-    ? AVISOS.propio
-    : catalogo.data?.alcance === 'autoridad' ? AVISOS.autoridad : null
+  const aviso = catalogo.data?.propio ? AVISOS.propio : null
 
   return (
     <DataState

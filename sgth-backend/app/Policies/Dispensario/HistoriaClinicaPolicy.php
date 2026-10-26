@@ -13,7 +13,7 @@ final class HistoriaClinicaPolicy
 
     public function before(User $user, string $ability): ?bool
     {
-        // NO HAY BYPASS para 'maxima-autoridad' ni 'admin-uath' aquí.
+        // NO HAY BYPASS para ningún rol de Talento Humano aquí.
         // Solo retornamos null para que la evaluación continúe al método específico.
         return null;
     }

@@ -31,7 +31,7 @@ final class ExistenciasReporte extends ReporteBase
 
     public function perfiles(): array
     {
-        return [AlcanceReporte::ADMINISTRACION, AlcanceReporte::AUTORIDAD];
+        return [AlcanceReporte::ADMINISTRACION];
     }
 
     public function filtros(): array

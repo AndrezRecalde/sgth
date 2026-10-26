@@ -7,10 +7,9 @@ enum Rol: string
     // Administración RRHH
     case ADMIN_UATH = 'admin-uath';
     case ASISTENTE_UATH = 'asistente-uath';
-    case ANALISTA_UATH = 'analista-uath';
 
-    // Autoridades
-    case MAXIMA_AUTORIDAD = 'maxima-autoridad';
+    // Autoridades. `analista-uath` y `maxima-autoridad` se retiraron el
+    // 2026-10-26 (docs/plan-roles-y-accesos.md, PR 7).
     case DIRECTOR = 'director';
     case JEFE_UNIDAD = 'jefe-unidad';
 
@@ -52,8 +51,6 @@ enum Rol: string
         return match ($this) {
             self::ADMIN_UATH => 'Administrador UATH',
             self::ASISTENTE_UATH => 'Asistente UATH',
-            self::ANALISTA_UATH => 'Analista UATH',
-            self::MAXIMA_AUTORIDAD => 'Máxima Autoridad',
             self::DIRECTOR => 'Director de Área',
             self::JEFE_UNIDAD => 'Jefe de Unidad',
             self::SERVIDOR => 'Servidor Público',

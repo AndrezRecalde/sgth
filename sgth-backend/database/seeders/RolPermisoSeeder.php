@@ -228,33 +228,10 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_LECTURAS_COMUNICADOS,
         ]));
 
-        // ANALISTA_UATH
-        $this->crearRol(Rol::ANALISTA_UATH, array_merge($permisosBase, [
-            Permiso::VER_EXPEDIENTE_UNIDAD,
-            Permiso::VER_EXPEDIENTE_TODOS,
-            // En Reclutamiento ve y califica (decisión de TH, 2026-10-05):
-            // crear, publicar, declarar e incorporar son de admin-uath.
-            Permiso::VER_POSTULANTES,
-            Permiso::EVALUAR_POSTULANTES,
-            Permiso::SOLICITAR_CERTIFICACION_MEDICA,
-        ]));
-
-        // MAXIMA_AUTORIDAD
-        $this->crearRol(Rol::MAXIMA_AUTORIDAD, array_merge($permisosBase, [
-            Permiso::VER_ESTRUCTURA,
-            Permiso::GESTIONAR_DISTRIBUTIVO,
-            Permiso::VER_EXPEDIENTE_UNIDAD,
-            Permiso::VER_EXPEDIENTE_TODOS,
-            Permiso::VER_ASISTENCIA_UNIDAD,
-            Permiso::VER_ASISTENCIA_TODOS,
-            Permiso::VER_PERMISOS_TODOS,
-            Permiso::VER_VACACIONES_UNIDAD,
-            Permiso::VER_ACTIVIDADES_UNIDAD,
-            Permiso::APROBAR_ACTIVIDADES,
-            Permiso::VER_AUDITORIA,
-            Permiso::VER_DASHBOARD_EJECUTIVO,
-            Permiso::GENERAR_REPORTES,
-        ]));
+        // Aquí estaban ANALISTA_UATH y MAXIMA_AUTORIDAD, retirados el
+        // 2026-10-26 (docs/plan-roles-y-accesos.md, PR 7): ninguno tenía
+        // usuarios ni subsistema donde entrar. Su lectura la conservan
+        // admin-uath, asistente-uath y el auditor.
 
         // DIRECTOR
         $this->crearRol(Rol::DIRECTOR, array_merge($permisosBase, [

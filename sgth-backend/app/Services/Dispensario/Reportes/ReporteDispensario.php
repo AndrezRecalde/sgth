@@ -27,12 +27,15 @@ interface ReporteDispensario
      */
     public function formatos(): array;
 
-    /** Lleva nombres de pacientes con datos de salud: la autoridad no lo ve. */
+    /**
+     * Lleva nombres de pacientes con datos de salud. El catálogo lo marca con
+     * un candado.
+     */
     public function nominal(): bool;
 
     /**
      * Los perfiles que lo pueden pedir (constantes de `AlcanceReporte`). La
-     * administración siempre; la autoridad, solo si no es nominal.
+     * administración, siempre.
      *
      * @return list<string>
      */

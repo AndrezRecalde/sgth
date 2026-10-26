@@ -4,7 +4,7 @@
 | El reporte «Exámenes pedidos» (6.5 de docs/diseno-examenes-medicos.md):
 | órdenes y exámenes del período, los que volvieron, los que esperan, los que
 | se vencieron y la mediana de días de retorno. Por mes, por área o por quien
-| pidió la orden. Es agregado: la autoridad lo ve; cada médico, lo suyo.
+| pidió la orden. La administración lo ve entero; cada médico, lo suyo.
 */
 
 use App\Contracts\Dispensario\OrdenExamenServiceInterface;
@@ -73,7 +73,6 @@ beforeEach(function () {
     Model::unguard();
 
     $this->admin = usuarioExamenesPedidos('admin-pedidos', 'admin-dispensario');
-    $this->autoridad = usuarioExamenesPedidos('aut-pedidos', 'maxima-autoridad');
     $this->enfermera = usuarioExamenesPedidos('enf-pedidos', 'enfermera');
     $this->ana = usuarioExamenesPedidos('ana-pedidos', 'medico', 'Ana');
     $this->bruno = usuarioExamenesPedidos('bruno-pedidos', 'medico', 'Bruno');
@@ -140,7 +139,7 @@ test('por área sigue el orden de la hoja y una orden cuenta en cada área que t
 });
 
 test('por mes es la agrupación de por defecto y la mediana es la del mes', function () {
-    $filas = filasExamenesPedidos($this->autoridad, '')->keyBy('mes');
+    $filas = filasExamenesPedidos($this->admin, '')->keyBy('mes');
 
     $viejo = mesExamenesPedidos(today()->subDays(100));
     $reciente = mesExamenesPedidos(today()->subDays(10));
@@ -162,7 +161,7 @@ test('el médico ve solo sus órdenes aunque pida las de otro, y enfermería no 
 });
 
 test('sale en excel', function () {
-    $this->actingAs($this->autoridad, 'sanctum')
+    $this->actingAs($this->admin, 'sanctum')
         ->get('/api/v1/dispensario/reportes/examenes_pedidos/excel' . $this->filtros)
         ->assertOk();
 });

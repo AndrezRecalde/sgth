@@ -35,11 +35,12 @@ class SubrogacionPolicy
     private const ROLES_ESCRITURA = ['admin-uath', 'asistente-uath'];
 
     /**
-     * Quien además solo consulta. Auditoría por su función, y la máxima
-     * autoridad porque firma los actos que estas subrogaciones respaldan.
+     * Quien además solo consulta: Auditoría, por su función. La máxima
+     * autoridad estuvo aquí hasta que se retiró su rol, el 2026-10-26
+     * (docs/plan-roles-y-accesos.md, PR 7).
      */
     private const ROLES_LECTURA = [
-        'admin-uath', 'asistente-uath', 'auditor', 'maxima-autoridad',
+        'admin-uath', 'asistente-uath', 'auditor',
     ];
 
     public function registrar(User $user): bool

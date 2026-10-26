@@ -37,7 +37,6 @@ function consultaDeReporte(int $historia, int $medico, string $fecha, ?int $cie1
 
 beforeEach(function () {
     $this->admin      = usuarioDeReportes('admrep', 'admin-dispensario');
-    $this->autoridad  = usuarioDeReportes('autrep', 'maxima-autoridad');
     $this->medico     = usuarioDeReportes('medrep', 'medico');
     $this->otroMedico = usuarioDeReportes('medrep2', 'medico');
     $this->enfermera  = usuarioDeReportes('enfrep', 'enfermera');
@@ -102,11 +101,6 @@ test('cada perfil ve su catálogo', function () {
         'farmacia_movimiento', 'farmacia_existencias', 'salud_ocupacional',
         'informe', 'produccion', 'turnos',
     ]);
-    // La autoridad, nada con nombres de pacientes.
-    expect($claves($this->autoridad))->toBe([
-        'morbilidad', 'ausentismo', 'examenes_pedidos', 'examenes_lectura', 'enfermeria', 'farmacia_movimiento',
-        'farmacia_existencias', 'salud_ocupacional', 'informe', 'produccion', 'turnos',
-    ]);
     // Cada profesional, lo suyo: ni ausentismo por unidad ni farmacia.
     expect($claves($this->medico))->toBe(['atenciones', 'morbilidad', 'examenes_pedidos', 'examenes_lectura', 'examenes_vencidas', 'produccion']);
     expect($claves($this->enfermera))->toBe(['enfermeria', 'produccion']);
@@ -120,13 +114,6 @@ test('quien solo ve lo suyo no elige profesional', function () {
         ->getJson('/api/v1/dispensario/reportes')->json('datos.reportes');
 
     expect(collect($reportes)->firstWhere('clave', 'atenciones')['filtros'])->not->toContain('profesional');
-});
-
-test('la autoridad no saca el registro nominal ni por la URL', function () {
-    $this->actingAs($this->autoridad, 'sanctum')
-        ->getJson('/api/v1/dispensario/reportes/atenciones' . $this->filtros)->assertForbidden();
-    $this->actingAs($this->autoridad, 'sanctum')
-        ->get('/api/v1/dispensario/reportes/atenciones/excel' . $this->filtros)->assertForbidden();
 });
 
 test('el registro de atenciones trae al paciente con su edad, sexo, unidad y diagnósticos', function () {
@@ -160,7 +147,7 @@ test('el médico solo ve sus consultas aunque pida las de otro', function () {
 });
 
 test('la morbilidad cuenta el diagnóstico principal por sexo y edad', function () {
-    $filas = collect($this->actingAs($this->autoridad, 'sanctum')
+    $filas = collect($this->actingAs($this->admin, 'sanctum')
         ->getJson('/api/v1/dispensario/reportes/morbilidad' . $this->filtros)
         ->assertOk()->json('datos.filas'));
 
@@ -222,7 +209,7 @@ test('el período se valida', function () {
 });
 
 test('el catálogo trae las opciones de los filtros solo a quien ve todo', function () {
-    $opciones = $this->actingAs($this->autoridad, 'sanctum')
+    $opciones = $this->actingAs($this->admin, 'sanctum')
         ->getJson('/api/v1/dispensario/reportes')->json('datos.opciones');
 
     expect(collect($opciones['profesionales'])->pluck('nombre')->all())

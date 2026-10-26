@@ -24,12 +24,12 @@ interface Props {
  * podía mirar un mes cerrado.
  */
 export function TableroDispensario({ periodo }: Props) {
-  // El endpoint es de la administración del dispensario y de la máxima
-  // autoridad. A `/salud` llega cualquiera del módulo, así que sin esta
+  // El endpoint es de la administración del dispensario. A `/salud` llega
+  // cualquiera del módulo, así que sin esta
   // comprobación un médico o una enfermera se encontrarían la pantalla de
   // inicio presidida por un error de permisos.
   const hasRole = useAuthStore((s) => s.hasRole)
-  const puedeVerlo = hasRole('admin-dispensario') || hasRole('maxima-autoridad')
+  const puedeVerlo = hasRole('admin-dispensario')
 
   const { data: kpis, isLoading, error } = useKpisDispensario(periodo, puedeVerlo)
   const panorama = usePanoramaDispensario(periodo, puedeVerlo)
