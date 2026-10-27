@@ -186,7 +186,7 @@ export function UsuariosView() {
           <EmptyState
             icon={IconUsers}
             title="No hay usuarios registrados"
-            description="Comienza creando el primer usuario del sistema."
+            description="Comience creando el primer usuario del sistema."
             action={
               <Button
                 variant="light"
