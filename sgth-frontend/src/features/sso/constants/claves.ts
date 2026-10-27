@@ -183,7 +183,7 @@ export const clavesSso = {
       ['sso', 'documentos', tipo, documentableId] as const,
   },
 
-  /** Sale del consolidado de permisos de Asistencia, fijando tipo='enfermedad'. */
+  /** El consolidado de permisos por enfermedad, de `/sso/ausentismo`. */
   ausentismo: {
     todo: ['sso', 'ausentismo'] as const,
     consolidado: (params: Filtros) => ['sso', 'ausentismo', 'consolidado', params] as const,

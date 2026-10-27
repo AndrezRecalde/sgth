@@ -71,6 +71,7 @@ use App\Http\Controllers\Dispensario\ResultadoMedicoController;
 use App\Http\Controllers\Dispensario\RevisionResultadoController;
 use App\Http\Controllers\Dispensario\SolicitudCertificacionController;
 use App\Http\Controllers\Dispensario\TriajeController;
+use App\Http\Controllers\Estructura\BuscarPuestoController;
 use App\Http\Controllers\Estructura\CargoController;
 use App\Http\Controllers\Estructura\ExtensionTelefonicaController;
 use App\Http\Controllers\Estructura\EscalaRemuneracionController;
@@ -163,6 +164,7 @@ use App\Http\Controllers\Seleccion\PostulanteController;
 use App\Http\Controllers\Seleccion\SeleccionController;
 use App\Http\Controllers\Sgd\DocumentoInstitucionalController;
 use App\Http\Controllers\Sso\AccidenteTrabajoController;
+use App\Http\Controllers\Sso\AusentismoSsoController;
 use App\Http\Controllers\Sso\CapacitacionSsoController;
 use App\Http\Controllers\Sso\CumplimientoNormativaController;
 use App\Http\Controllers\Sso\DashboardSsoController;
@@ -322,6 +324,18 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             [UnidadAdministrativaController::class, 'sugerirCodigo']
         );
         Route::apiResource('unidades-administrativas', UnidadAdministrativaController::class);
+        // El buscador de los formularios: cargo y unidad, sin RMU ni ocupante.
+        // Lo usan Talento Humano y Riesgos laborales, donde el técnico de SSO
+        // asigna riesgos y EPP a un puesto sin `ver-estructura`
+        // (docs/plan-roles-y-accesos.md, PR 12). Antes que `apiResource`, o
+        // `puestos/{puesto}` se traga la ruta literal.
+        Route::middleware('permission:ver-estructura|gestionar-sso|ver-reportes-sso')->group(function () {
+            Route::get('puestos/buscar', [BuscarPuestoController::class, 'index'])
+                ->name('puestos.buscar');
+            Route::get('puestos/buscar/{id}', [BuscarPuestoController::class, 'show'])
+                ->whereNumber('id')
+                ->name('puestos.buscar.show');
+        });
         Route::apiResource('puestos', PuestoController::class);
         Route::prefix('puestos/{puestoId}/actividades')
             ->group(function () {
@@ -1699,8 +1713,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         });
 
     // Módulo 10 — SSO
+    // Por permiso y no por `role:admin-uath|asistente-uath|auditor`: así entra
+    // también el técnico de seguridad y salud ocupacional, que no es de TH
+    // (docs/plan-roles-y-accesos.md, PR 12). Dentro, las policies y los grupos
+    // de abajo separan leer de gestionar.
     Route::prefix('sso')
-        ->middleware('role:admin-uath|asistente-uath|auditor')
+        ->middleware('permission:ver-reportes-sso|gestionar-sso')
         ->group(function () {
             Route::apiResource('riesgos', RiesgoLaboralController::class);
             Route::apiResource('accidentes', AccidenteTrabajoController::class);
@@ -1736,6 +1754,16 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 Route::get('programa-drogas/seguimiento/lista', [ProgramaDrogaSeguimientoController::class, 'listaSeguimiento']);
                 Route::get('documentos', [DocumentoSsoController::class, 'index']);
                 Route::get('documentos/{id}/generar-enlace', [DocumentoSsoController::class, 'generarEnlace']);
+
+                // El consolidado de permisos por enfermedad, con su propia
+                // ruta: el de Asistencia pide `ver-permisos-todos`, que el
+                // técnico de SSO no tiene ni debe tener.
+                Route::get('ausentismo', [AusentismoSsoController::class, 'index'])
+                    ->name('sso.ausentismo');
+                Route::get('ausentismo/exportar-excel', [AusentismoSsoController::class, 'exportarExcel'])
+                    ->name('sso.ausentismo.excel');
+                Route::get('ausentismo/exportar-pdf', [AusentismoSsoController::class, 'exportarPdf'])
+                    ->name('sso.ausentismo.pdf');
             });
 
             Route::middleware('permission:gestionar-sso')->group(function () {

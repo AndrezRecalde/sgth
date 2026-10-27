@@ -43,6 +43,10 @@ enum Rol: string
     case COMUNICACION_SOCIAL = 'comunicacion-social';
     case RESPONSABLE_IDENTIDAD = 'responsable-identidad';
 
+    // Seguridad y salud ocupacional: lleva Riesgos laborales y nada más de
+    // Talento Humano (docs/plan-roles-y-accesos.md, PR 12).
+    case TECNICO_SSO = 'tecnico-sso';
+
     // Control y auditoría
     case AUDITOR = 'auditor';
 
@@ -66,6 +70,7 @@ enum Rol: string
             self::ADMIN_TI => 'Administrador TI',
             self::COMUNICACION_SOCIAL => 'Comunicación Social',
             self::RESPONSABLE_IDENTIDAD => 'Responsable de Identidad Institucional',
+            self::TECNICO_SSO => 'Técnico de Seguridad y Salud Ocupacional',
             self::AUDITOR => 'Auditor',
         };
     }

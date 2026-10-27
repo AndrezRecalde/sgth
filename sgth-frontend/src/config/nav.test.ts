@@ -104,6 +104,20 @@ describe('buildNav', () => {
     expect(pantallas('tic', 'auditor')).not.toContain(ROUTES.TIC.DIRECTORIO)
     expect(pantallas('sgth', 'admin-uath')).not.toContain('/sgth/estructura/directorio')
   })
+
+  it('al técnico de SSO le ofrece Riesgos laborales y nada más del SGTH', () => {
+    // PR 12: el módulo pedía los roles de Talento Humano, y ahora sus permisos.
+    const tecnico = pantallas('sgth', 'tecnico-sso')
+
+    expect(tecnico).toContain(ROUTES.SGTH.RIESGOS_LABORALES_ACCIDENTES)
+    expect(tecnico).toContain(ROUTES.SGTH.RIESGOS_LABORALES_AUSENTISMO)
+    expect(tecnico.filter((href) => !href.startsWith(ROUTES.SGTH.RIESGOS_LABORALES))).toEqual([])
+    expect(inicioDelSubsistema('sgth', ...sesion('tecnico-sso'))).toBe(ROUTES.SGTH.RIESGOS_LABORALES)
+
+    for (const rol of ['admin-uath', 'asistente-uath', 'auditor'] as const) {
+      expect(pantallas('sgth', rol), rol).toContain(ROUTES.SGTH.RIESGOS_LABORALES)
+    }
+  })
 })
 
 describe('getSubsistemasDisponibles', () => {
@@ -125,6 +139,7 @@ describe('getSubsistemasDisponibles', () => {
     'responsable-identidad': ['comunicacion', 'portal'],
     'servidor':              ['portal'],
     'tecnico-dtic':          ['tic', 'portal'],
+    'tecnico-sso':           ['sgth', 'portal'],
     'trabajo-social':        ['sgth', 'portal'],
   }
 
