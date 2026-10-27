@@ -48,12 +48,17 @@ export function BandejaViaticosView() {
 
   const { data: resumen, isLoading } = useBandejaResumen(filtros)
 
+  // Talento Humano consulta la Bandeja y no opera nada: los contadores en
+  // ámbar le pedían una atención que no le toca, y la cabecera decía que
+  // esperaban «a Financiero» sin decirle que él solo mira (PR 14).
+  const pideAccion = (clave: EtapaBandeja | 'vuelos') => puede.opera && PIDEN_ACCION.has(clave)
+
   const contador = (clave: EtapaBandeja | 'vuelos') => {
     const n = resumen?.conteos[clave] ?? 0
     if (n === 0) return null
 
     return (
-      <CountBadge tone={PIDEN_ACCION.has(clave) ? 'warning' : 'neutral'} destacado={PIDEN_ACCION.has(clave)}>
+      <CountBadge tone={pideAccion(clave) ? 'warning' : 'neutral'} destacado={pideAccion(clave)}>
         {n}
       </CountBadge>
     )
@@ -63,7 +68,9 @@ export function BandejaViaticosView() {
     <PageShell>
       <PageHeader
         title="Bandeja de viáticos"
-        description="Lo que espera a Financiero, el dinero de cada etapa y los plazos de liquidación"
+        description={puede.opera
+          ? 'Lo que espera a Financiero, el dinero de cada etapa y los plazos de liquidación'
+          : 'Solo consulta: los viáticos los opera Gestión Financiera. Aquí se ven el dinero de cada etapa y los plazos de liquidación'}
       />
 
       <Stack gap="md">

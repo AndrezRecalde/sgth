@@ -53,6 +53,11 @@ export function useAccionesViatico() {
   return {
     veTodos:
       aprueba || gestiona || revisaLiquidacion || hasPermiso('ver-viaticos-todos'),
+    /**
+     * Tiene alguna acción de Financiero. Quien solo tiene `ver-viaticos-todos`
+     * —Talento Humano— consulta la Bandeja, pero no le toca nada de ella.
+     */
+    opera: aprueba || gestiona || revisaLiquidacion,
     solicitar: miServidor !== null && hasPermiso('solicitar-viatico'),
     esTitular,
     editar,

@@ -15,9 +15,8 @@ use Tests\TestCase;
 uses(TestCase::class, RefreshDatabase::class);
 
 beforeEach(function () {
-    foreach (['admin-uath', 'admin-ti'] as $rol) {
-        Role::firstOrCreate(['name' => $rol, 'guard_name' => 'sanctum']);
-    }
+    rolQueRegistraFichas('admin-uath');
+    Role::firstOrCreate(['name' => 'admin-ti', 'guard_name' => 'sanctum']);
 
     $this->provincia = DB::table('provincias')->insertGetId(
         ['nombre' => 'Esmeraldas', 'codigo' => '08', 'created_at' => now(), 'updated_at' => now()]
@@ -104,8 +103,9 @@ test('admin-ti ya no tiene acceso sin restricciones', function () {
 });
 
 /**
- * Las policies de Expediente comprueban el rol directamente, así que el
- * trabajo diario de Talento Humano no dependía del atajo.
+ * Las policies de Expediente comprueban el rol o el permiso de Talento Humano
+ * —registrar fichas va con `registrar-ficha-servidor` desde el PR 14—, así que
+ * el trabajo diario de Talento Humano no dependía del atajo.
  */
 test('talento humano sigue pudiendo ver y gestionar expedientes', function () {
     $th = User::factory()->create();

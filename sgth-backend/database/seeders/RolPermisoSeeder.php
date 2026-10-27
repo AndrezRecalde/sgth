@@ -142,6 +142,7 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_EXPEDIENTE_UNIDAD,
             Permiso::VER_EXPEDIENTE_TODOS,
             Permiso::GESTIONAR_EXPEDIENTE,
+            Permiso::REGISTRAR_FICHA_SERVIDOR,
             Permiso::BUSCAR_SERVIDORES,
             Permiso::CARGAR_DOCUMENTOS,
             Permiso::GESTIONAR_CARGAS_FAMILIARES,

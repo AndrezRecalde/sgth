@@ -6,6 +6,7 @@ import { useDisclosure } from '@mantine/hooks'
 import { useRouter } from 'next/navigation'
 import { confirmar, DataState, PageHeader, PageShell, StatusBadge } from '@/components/ui'
 import { ROUTES } from '@/config/routes'
+import { useAuth } from '@/hooks/useAuth'
 import { NuevaPlantillaModal } from '@/features/seleccion/components/NuevaPlantillaModal'
 import { useEliminarPlantilla, usePlantillas } from '@/features/seleccion/hooks/usePlantilla'
 import { TIPO_CONTRATO_PLANTILLA_OPTIONS } from '@/features/seleccion/services/plantillaService'
@@ -18,13 +19,18 @@ export function PlantillasView() {
   const [modalAbierto, modal] = useDisclosure(false)
   const { data: plantillas = [], isLoading, error, refetch } = usePlantillas()
   const eliminar = useEliminarPlantilla()
+  // Crear y eliminar piden `gestionar-convocatorias` en el API (PR 14).
+  const { hasPermiso } = useAuth()
+  const gestiona = hasPermiso('gestionar-convocatorias')
 
   return (
     <PageShell>
       <PageHeader
         title="Plantillas de evaluación"
         description="Criterios reutilizables para las convocatorias"
-        actions={<Button variant="light" leftSection={<IconPlus size={14} />} onClick={modal.open}>Nueva plantilla</Button>}
+        actions={gestiona && (
+          <Button variant="light" leftSection={<IconPlus size={14} />} onClick={modal.open}>Nueva plantilla</Button>
+        )}
       />
 
       <DataState
@@ -61,17 +67,19 @@ export function PlantillasView() {
                       <IconEdit size={16} />
                     </ActionIcon>
                   </Tooltip>
-                  <Tooltip label="Eliminar plantilla">
-                    <ActionIcon variant="light" color="red" aria-label={`Eliminar la plantilla ${p.nombre}`}
-                      onClick={() => confirmar({
-                        title: 'Eliminar plantilla',
-                        message: <>Se eliminará la plantilla <b>{p.nombre}</b>. No se puede deshacer.</>,
-                        destructiva: true,
-                        onConfirm: () => eliminar.mutate(p.id),
-                      })}>
-                      <IconTrash size={16} />
-                    </ActionIcon>
-                  </Tooltip>
+                  {gestiona && (
+                    <Tooltip label="Eliminar plantilla">
+                      <ActionIcon variant="light" color="red" aria-label={`Eliminar la plantilla ${p.nombre}`}
+                        onClick={() => confirmar({
+                          title: 'Eliminar plantilla',
+                          message: <>Se eliminará la plantilla <b>{p.nombre}</b>. No se puede deshacer.</>,
+                          destructiva: true,
+                          onConfirm: () => eliminar.mutate(p.id),
+                        })}>
+                        <IconTrash size={16} />
+                      </ActionIcon>
+                    </Tooltip>
+                  )}
                 </Group>
               </Group>
             </Card>

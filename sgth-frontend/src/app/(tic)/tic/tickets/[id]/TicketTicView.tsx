@@ -23,7 +23,11 @@ import { useTicket } from '@/features/helpdesk/hooks/useTickets'
  */
 export function TicketTicView({ id }: { id: number }) {
   const router = useRouter()
-  const { usuario } = useAuth()
+  const { usuario, hasPermiso } = useAuth()
+  // La nota interna es de quien atiende (`TicketPolicy::verNotasInternas`). A
+  // quien solo consulta la Bandeja, el API se la guarda como mensaje público,
+  // a la vista del solicitante, así que el selector no se le ofrece (PR 14).
+  const conNotasInternas = hasPermiso('gestionar-tickets')
   const { data: t, isLoading } = useTicket(id)
 
   if (isLoading) {
@@ -79,7 +83,7 @@ export function TicketTicView({ id }: { id: number }) {
                   <Text size="xs" c="dimmed">Lo que contó {t.solicitante?.nombre}, el {formatFechaHora(t.created_at)}</Text>
                   <Text size="sm" style={{ whiteSpace: 'pre-line' }}>{t.descripcion}</Text>
                 </div>
-                <ConversacionTicket ticket={t} usuarioId={usuario?.id ?? null} puedeEscribir={!final} conNotasInternas />
+                <ConversacionTicket ticket={t} usuarioId={usuario?.id ?? null} puedeEscribir={!final} conNotasInternas={conNotasInternas} />
               </Stack>
             </SectionCard>
           </Stack>

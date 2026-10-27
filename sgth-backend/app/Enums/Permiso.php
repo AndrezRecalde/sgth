@@ -16,6 +16,11 @@ enum Permiso: string
     case VER_EXPEDIENTE_UNIDAD = 'ver-expediente-unidad';
     case VER_EXPEDIENTE_TODOS = 'ver-expediente-todos';
     case GESTIONAR_EXPEDIENTE = 'gestionar-expediente';
+    // Registrar la ficha de un servidor nuevo, antes de su acción de personal.
+    // Lo hacía `ServidorPolicy::crear` por el rol admin-uath, y el botón se
+    // pintaba a todo quien abría el Expediente (docs/plan-roles-y-accesos.md,
+    // PR 14).
+    case REGISTRAR_FICHA_SERVIDOR = 'registrar-ficha-servidor';
     // Buscar a un servidor por nombre o cédula para elegirlo en un formulario
     // —un ticket, una custodia, un accidente—. No abre el Expediente: devuelve
     // nombre, cédula y unidad. Hasta el 2026-10-26 el buscador pedía el listado

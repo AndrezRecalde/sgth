@@ -37,7 +37,10 @@ final class TableroComunicacionService
         $credenciales = $user->can(Permiso::VER_CREDENCIALES->value);
 
         return [
-            'fotografias'  => $credenciales || $user->can(Permiso::GESTIONAR_FOTOGRAFIAS->value) ? $this->fotografias() : null,
+            // Solo a quien toma las fotos: con `ver-credenciales` bastaba, y el
+            // bloque llevaba a admin-uath y al auditor a una pantalla que no
+            // pueden abrir (docs/plan-roles-y-accesos.md, PR 14).
+            'fotografias'  => $user->can(Permiso::GESTIONAR_FOTOGRAFIAS->value) ? $this->fotografias() : null,
             'credenciales' => $credenciales ? $this->credenciales() : null,
             'identidad'    => $user->can(Permiso::GESTIONAR_IDENTIDAD_INSTITUCIONAL->value) ? $this->identidad() : null,
         ];

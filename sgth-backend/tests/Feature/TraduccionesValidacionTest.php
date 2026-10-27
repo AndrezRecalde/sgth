@@ -26,7 +26,7 @@ test('el idioma de la aplicación es español y tiene sus traducciones', functio
 });
 
 test('un 422 sin mensaje propio llega en español, no como validation.*', function () {
-    Role::firstOrCreate(['name' => 'admin-uath', 'guard_name' => 'sanctum']);
+    rolQueRegistraFichas('admin-uath');
     $unidad = unidadDePrueba(['codigo' => 'UATH', 'nombre' => 'Talento Humano']);
 
     $servidor = Servidor::create([

@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import { RequierePermiso } from '@/components/layout/RequierePermiso'
+import { ROUTES } from '@/config/routes'
 import { EntregarConsumiblesView } from './EntregarConsumiblesView'
 
 export const metadata: Metadata = {
@@ -13,5 +15,10 @@ interface Props {
 export default async function EntregarConsumiblesPage({ searchParams }: Props) {
   const { bien } = await searchParams
 
-  return <EntregarConsumiblesView bienId={bien ? Number(bien) : null} />
+  return (
+    // El listado lo abre también quien solo consulta el inventario.
+    <RequierePermiso permiso="gestionar-inventario-ti" volverA={ROUTES.TIC.CONSUMIBLES}>
+      <EntregarConsumiblesView bienId={bien ? Number(bien) : null} />
+    </RequierePermiso>
+  )
 }

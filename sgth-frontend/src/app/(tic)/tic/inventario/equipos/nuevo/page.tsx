@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import { RequierePermiso } from '@/components/layout/RequierePermiso'
+import { ROUTES } from '@/config/routes'
 import { NuevoEquipoView } from './NuevoEquipoView'
 
 export const metadata: Metadata = {
@@ -26,9 +28,12 @@ export default async function NuevoEquipoPage({ searchParams }: Props) {
   const ubicacion = idValido(p.ubicacion)
 
   return (
-    <NuevoEquipoView
-      copiarId={idValido(p.copiar)}
-      enSitio={constatacion && ubicacion ? { constatacionId: constatacion, ubicacionId: ubicacion, codigo: (p.codigo ?? '').slice(0, 50) } : null}
-    />
+    // El listado lo abre también quien solo consulta el inventario.
+    <RequierePermiso permiso="gestionar-inventario-ti" volverA={ROUTES.TIC.EQUIPOS}>
+      <NuevoEquipoView
+        copiarId={idValido(p.copiar)}
+        enSitio={constatacion && ubicacion ? { constatacionId: constatacion, ubicacionId: ubicacion, codigo: (p.codigo ?? '').slice(0, 50) } : null}
+      />
+    </RequierePermiso>
   )
 }
