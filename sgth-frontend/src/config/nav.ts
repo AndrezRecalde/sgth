@@ -31,19 +31,9 @@ export interface NavGroup {
 // Toda entrada declara su guarda: el subsistema se ofrece a quien ve al menos
 // una, y una entrada sin guarda lo abría a cualquiera (docs/plan-roles-y-
 // accesos.md, PR 9). Aquí estaba el «Dashboard»: está en construcción, así
-// que sale del menú y se entra por la primera pantalla que cada quien ve.
+// que sale del menú y se entra por la primera pantalla que cada quien ve. Y
+// el grupo «Administración», con Usuarios, que se mudó a Tecnologías (PR 10).
 export const NAV_SGTH: NavGroup[] = [
-  {
-    label: 'Administración',
-    items: [
-      {
-        label:   'Usuarios',
-        href:    ROUTES.SGTH.USUARIOS,
-        icon:    'IconUserCog',
-        permiso: 'gestionar-usuarios',
-      },
-    ],
-  },
   {
     label: 'Talento Humano',
     items: [
@@ -624,6 +614,14 @@ export const NAV_TIC: NavGroup[] = [
         href:     ROUTES.TIC.CONFIGURACION,
         icon:     'IconSettings',
         permisos: ['gestionar-inventario-ti', 'configurar-sla', 'gestionar-tecnicos'],
+      },
+      {
+        // Las cuentas de acceso son trabajo de TI, no de Talento Humano
+        // (decisión 7 del 2026-10-25). El API no cambió de lugar.
+        label:   'Usuarios',
+        href:    ROUTES.TIC.USUARIOS,
+        icon:    'IconUserCog',
+        permiso: 'gestionar-usuarios',
       },
     ],
   },

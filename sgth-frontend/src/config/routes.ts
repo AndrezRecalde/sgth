@@ -24,7 +24,8 @@ export const ROUTES = {
   // ── SGTH (Talento Humano) ─────────────
   SGTH: {
     HOME:             '/sgth',
-    USUARIOS:         '/sgth/usuarios',
+    // Sin USUARIOS (PR 10 de docs/plan-roles-y-accesos.md): la pantalla se
+    // mudó a Tecnologías, y `/sgth/usuarios` solo redirige a TIC.USUARIOS.
     ESTRUCTURA:       '/sgth/estructura',
     ESTRUCTURA_DIRECTORIO: '/sgth/estructura/directorio',
     ESTRUCTURA_PUESTOS:    '/sgth/estructura/puestos',
@@ -171,6 +172,8 @@ export const ROUTES = {
     REPORTES:       '/tic/reportes',
     /** Catálogos del inventario: tipos, marcas, ubicaciones y contratos. */
     CONFIGURACION: '/tic/configuracion',
+    /** Las cuentas de acceso al sistema, sus roles y permisos (estuvo en el SGTH). */
+    USUARIOS:      '/tic/usuarios',
   },
 
   // ── COMUNICACIÓN SOCIAL ───────────────

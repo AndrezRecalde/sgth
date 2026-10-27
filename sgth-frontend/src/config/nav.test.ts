@@ -82,6 +82,14 @@ describe('buildNav', () => {
       ROUTES.SGTH.ASISTENCIA_LICENCIAS,
     ])
   })
+
+  it('ofrece Usuarios en Tecnologías, solo a quien gestiona las cuentas', () => {
+    // Se mudó del SGTH en el PR 10: allí a admin-ti le quedan los comunicados.
+    expect(pantallas('tic', 'admin-ti')).toContain(ROUTES.TIC.USUARIOS)
+    expect(pantallas('sgth', 'admin-ti')).toEqual([ROUTES.SGTH.COMUNICADOS])
+    expect(pantallas('tic', 'jefe-tic')).not.toContain(ROUTES.TIC.USUARIOS)
+    expect(pantallas('tic', 'tecnico-dtic')).not.toContain(ROUTES.TIC.USUARIOS)
+  })
 })
 
 describe('getSubsistemasDisponibles', () => {
@@ -144,7 +152,7 @@ describe('inicioDelSubsistema', () => {
 
   it('entra al SGTH por la primera pantalla, porque no tiene una de inicio', () => {
     expect(inicioDelSubsistema('sgth', ...sesion('recepcion'))).toBe(ROUTES.SGTH.ASISTENCIA_PERMISOS)
-    expect(inicioDelSubsistema('sgth', ...sesion('admin-ti'))).toBe(ROUTES.SGTH.USUARIOS)
+    expect(inicioDelSubsistema('sgth', ...sesion('admin-ti'))).toBe(ROUTES.SGTH.COMUNICADOS)
 
     for (const rol of ROLES.filter((r) => getSubsistemasDisponibles(...sesion(r)).includes('sgth'))) {
       expect(inicioDelSubsistema('sgth', ...sesion(rol))).not.toBe(ROUTES.SGTH.HOME)
