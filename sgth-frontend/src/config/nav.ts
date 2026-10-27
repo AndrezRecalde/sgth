@@ -28,17 +28,11 @@ export interface NavGroup {
 }
 
 // ── SGTH ─────────────────────────────
+// Toda entrada declara su guarda: el subsistema se ofrece a quien ve al menos
+// una, y una entrada sin guarda lo abría a cualquiera (docs/plan-roles-y-
+// accesos.md, PR 9). Aquí estaba el «Dashboard»: está en construcción, así
+// que sale del menú y se entra por la primera pantalla que cada quien ve.
 export const NAV_SGTH: NavGroup[] = [
-  {
-    label: 'Principal',
-    items: [
-      {
-        label: 'Dashboard',
-        href:  ROUTES.SGTH.HOME,
-        icon:  'IconHome',
-      },
-    ],
-  },
   {
     label: 'Administración',
     items: [
@@ -59,14 +53,19 @@ export const NAV_SGTH: NavGroup[] = [
         icon:  'IconSitemap',
         children: [
           {
-            label: 'Organigrama',
-            href:  ROUTES.SGTH.ESTRUCTURA,
-            icon:  'IconSitemap',
+            // El árbol es público, pero el detalle de cada unidad pide
+            // `ver-estructura`, como el resto de Estructura.
+            label:   'Organigrama',
+            href:    ROUTES.SGTH.ESTRUCTURA,
+            icon:    'IconSitemap',
+            permiso: 'ver-estructura',
           },
           {
-            label: 'Directorio telefónico',
-            href:  ROUTES.SGTH.ESTRUCTURA_DIRECTORIO,
-            icon:  'IconPhone',
+            // Hasta que pase al Portal (PR 11), con quien ve la estructura.
+            label:   'Directorio telefónico',
+            href:    ROUTES.SGTH.ESTRUCTURA_DIRECTORIO,
+            icon:    'IconPhone',
+            permiso: 'ver-estructura',
           },
           {
             label: 'Puestos y cargos',
@@ -77,14 +76,16 @@ export const NAV_SGTH: NavGroup[] = [
             permiso: 'ver-estructura',
           },
           {
-            label: 'Plantilla',
-            href:  ROUTES.SGTH.ESTRUCTURA_PLANTILLA,
-            icon:  'IconChartBar',
+            label:   'Plantilla',
+            href:    ROUTES.SGTH.ESTRUCTURA_PLANTILLA,
+            icon:    'IconChartBar',
+            permiso: 'ver-estructura',
           },
           {
-            label: 'Partidas presupuestarias',
-            href:  ROUTES.SGTH.ESTRUCTURA_PARTIDAS,
-            icon:  'IconReceipt2',
+            label:   'Partidas presupuestarias',
+            href:    ROUTES.SGTH.ESTRUCTURA_PARTIDAS,
+            icon:    'IconReceipt2',
+            permiso: 'ver-estructura',
           },
         ],
       },
@@ -158,14 +159,21 @@ export const NAV_SGTH: NavGroup[] = [
         icon:  'IconClock',
         children: [
           {
-            label: 'Marcaciones',
-            href:  ROUTES.SGTH.ASISTENCIA,
-            icon:  'IconClock',
+            // Las propias están en el Portal; aquí, quien ve las de otros.
+            label:    'Marcaciones',
+            href:     ROUTES.SGTH.ASISTENCIA,
+            icon:     'IconClock',
+            permisos: ['ver-asistencia-unidad', 'ver-asistencia-todos'],
           },
           {
-            label: 'Permisos',
-            href:  ROUTES.SGTH.ASISTENCIA_PERMISOS,
-            icon:  'IconClipboardList',
+            // `ver-permisos` lo tienen todos y alcanza para los propios, que
+            // están en el Portal. Aquí, quien ve los de otros: Talento Humano,
+            // la jefatura, Recepción y Trabajo Social. Sustituye al atajo de
+            // `ROLES_SGTH_SOLO_PERMISOS`, que reducía el SGTH a esta pantalla.
+            label:    'Permisos',
+            href:     ROUTES.SGTH.ASISTENCIA_PERMISOS,
+            icon:     'IconClipboardList',
+            permisos: ['ver-permisos-todos', 'ver-asistencia-unidad', 'confirmar-recepcion', 'validar-trabajo-social'],
           },
           {
             label: 'Vacaciones',
@@ -181,16 +189,21 @@ export const NAV_SGTH: NavGroup[] = [
             permisos: ['gestionar-licencias', 'aprobar-permiso-sirha7', 'validar-trabajo-social'],
           },
           {
-            // Casi todo en esta pantalla genera o recalcula saldos.
-            label: 'Períodos de vacaciones',
-            href:  ROUTES.SGTH.ASISTENCIA_PERIODOS,
-            icon:  'IconCalendarStats',
-            permiso: 'gestionar-vacaciones',
+            // Generar y recalcular saldos es de `gestionar-vacaciones`; la
+            // consulta, también de quien ve la asistencia de todos. La pantalla
+            // ya se pintaba en lectura para ellos y el menú se la escondía.
+            label:    'Períodos de vacaciones',
+            href:     ROUTES.SGTH.ASISTENCIA_PERIODOS,
+            icon:     'IconCalendarStats',
+            permisos: ['gestionar-vacaciones', 'ver-asistencia-todos'],
           },
           {
-            label: 'Consolidado de permisos',
-            href:  ROUTES.SGTH.ASISTENCIA_CONSOLIDADO,
-            icon:  'IconReportAnalytics',
+            // Sin guarda salía también al director y al jefe de unidad, y la
+            // ruta les respondía 403.
+            label:   'Consolidado de permisos',
+            href:    ROUTES.SGTH.ASISTENCIA_CONSOLIDADO,
+            icon:    'IconReportAnalytics',
+            permiso: 'ver-permisos-todos',
           },
           // «Marcación online» se mudó al portal: es autoservicio.
         ],
@@ -416,9 +429,12 @@ export const NAV_SALUD: NavGroup[] = [
         icon:     'IconPill',
         children: [
           {
+            // Los cuatro del `role:` de la lectura del inventario. Sin guarda,
+            // esta entrada abría el Dispensario a cualquiera (PR 9).
             label: 'Inventario',
             href:  ROUTES.SALUD.FARMACIA,
             icon:  'IconPackage',
+            roles: ['medico', 'odontologo', 'enfermera', 'admin-dispensario'],
           },
           {
             label: 'Adquisiciones',
@@ -429,9 +445,12 @@ export const NAV_SALUD: NavGroup[] = [
             roles: ['admin-dispensario'],
           },
           {
+            // Los del listado de recetas: el médico y el odontólogo ven las
+            // suyas; Enfermería y la administración, todas (PR 5).
             label: 'Despacho',
             href:  ROUTES.SALUD.FARMACIA_DESPACHO,
             icon:  'IconTruck',
+            roles: ['medico', 'odontologo', 'enfermera', 'admin-dispensario'],
           },
         ],
       },
@@ -483,16 +502,17 @@ export const NAV_SALUD: NavGroup[] = [
 ]
 
 // ── TECNOLOGÍAS (Unidad de TIC) ───────
-// Préstamos y mesa de ayuda se suman en sus fases
-// (docs/diseno-subsistema-tic.md, sección 8).
+// Mesa de ayuda, inventario y préstamos (docs/diseno-subsistema-tic.md).
 export const NAV_TIC: NavGroup[] = [
   {
     label: 'Principal',
     items: [
       {
-        label: 'Inicio',
-        href:  ROUTES.TIC.HOME,
-        icon:  'IconHome',
+        // Los del tablero (`tic/tablero`): cada bloque sale con su permiso.
+        label:    'Inicio',
+        href:     ROUTES.TIC.HOME,
+        icon:     'IconHome',
+        permisos: ['gestionar-tickets', 'ver-tickets-todos', 'ver-inventario-ti', 'gestionar-inventario-ti', 'gestionar-prestamos'],
       },
     ],
   },
@@ -610,16 +630,18 @@ export const NAV_TIC: NavGroup[] = [
 ]
 
 // ── COMUNICACIÓN SOCIAL ───────────────
-// Fotografías, credenciales e identidad institucional se suman en sus fases
-// (docs/diseno-comunicacion-social.md, sección 9).
+// Fotografías, credenciales e identidad institucional
+// (docs/diseno-comunicacion-social.md).
 export const NAV_COMUNICACION: NavGroup[] = [
   {
     label: 'Principal',
     items: [
       {
-        label: 'Inicio',
-        href:  ROUTES.COMUNICACION.HOME,
-        icon:  'IconHome',
+        // Los del tablero (`comunicacion/tablero`).
+        label:    'Inicio',
+        href:     ROUTES.COMUNICACION.HOME,
+        icon:     'IconHome',
+        permisos: ['gestionar-fotografias', 'ver-credenciales', 'gestionar-identidad-institucional'],
       },
     ],
   },
@@ -656,6 +678,8 @@ export const NAV_COMUNICACION: NavGroup[] = [
 ]
 
 // ── PORTAL SERVIDOR ───────────────────
+// Cada entrada con el permiso que pide su API; las de autoservicio que no
+// piden uno propio, con `acceso-autoservicio`, que tiene todo servidor.
 export const NAV_PORTAL: NavGroup[] = [
   {
     label: 'Mi Espacio',
@@ -665,6 +689,7 @@ export const NAV_PORTAL: NavGroup[] = [
         label: 'Noticias y comunicados',
         href:  ROUTES.PORTAL.COMUNICADOS,
         icon:  'IconNews',
+        permiso: 'acceso-autoservicio',
       },
       {
         // La ficha, la formación académica y la hoja de vida en PDF. «Mi CV»
@@ -673,18 +698,21 @@ export const NAV_PORTAL: NavGroup[] = [
         label: 'Mi Perfil',
         href:  ROUTES.PORTAL.MI_PERFIL,
         icon:  'IconUser',
+        permiso: 'acceso-autoservicio',
       },
       {
         // La credencial digital, con su QR (Comunicación Social, 6.1).
         label: 'Mi credencial',
         href:  ROUTES.PORTAL.MI_CREDENCIAL,
         icon:  'IconId',
+        permiso: 'acceso-autoservicio',
       },
       {
         // Las acciones notificadas y su acuse de recibo (fase 6.3a).
         label: 'Mis documentos laborales',
         href:  ROUTES.PORTAL.DOCUMENTOS,
         icon:  'IconFolder',
+        permiso: 'acceso-autoservicio',
       },
     ],
   },
@@ -695,22 +723,26 @@ export const NAV_PORTAL: NavGroup[] = [
         label: 'Permisos',
         href:  ROUTES.PORTAL.MIS_PERMISOS,
         icon:  'IconCalendarEvent',
+        permiso: 'acceso-autoservicio',
       },
       {
         label: 'Vacaciones',
         href:  ROUTES.PORTAL.MIS_VACACIONES,
         icon:  'IconBeach',
+        permiso: 'acceso-autoservicio',
       },
       {
         // Las solicitudes que se atienden con una acción de personal (fase 6.3b).
         label: 'Renuncia, licencia y jubilación',
         href:  ROUTES.PORTAL.SOLICITUDES_LABORALES,
         icon:  'IconFileDescription',
+        permiso: 'acceso-autoservicio',
       },
       {
         label: 'Mis viáticos',
         href:  ROUTES.PORTAL.VIATICOS,
         icon:  'IconPlane',
+        permiso: 'solicitar-viatico',
       },
       {
         // Financiero y quien consulta los viáticos de todos. El permiso es el
@@ -733,6 +765,7 @@ export const NAV_PORTAL: NavGroup[] = [
         label: 'Marcaciones',
         href:  ROUTES.PORTAL.MIS_MARCACIONES,
         icon:  'IconClockRecord',
+        permiso: 'acceso-autoservicio',
       },
       {
         // Permiso individual: TI lo asigna desde Usuarios a pedido de TH.
@@ -745,6 +778,7 @@ export const NAV_PORTAL: NavGroup[] = [
         label: 'Actividades',
         href:  ROUTES.PORTAL.MIS_ACTIVIDADES,
         icon:  'IconListCheck',
+        permiso: 'registrar-actividades',
       },
     ],
   },
@@ -755,21 +789,25 @@ export const NAV_PORTAL: NavGroup[] = [
         label: 'Mis Tickets',
         href:  ROUTES.PORTAL.MIS_TICKETS,
         icon:  'IconHeadset',
+        permiso: 'ver-ticket-propio',
       },
       {
         label: 'Mis equipos',
         href:  ROUTES.PORTAL.MIS_EQUIPOS,
         icon:  'IconDevices',
+        permiso: 'acceso-autoservicio',
       },
       {
         label: 'Préstamo de equipos',
         href:  ROUTES.PORTAL.PRESTAMOS,
         icon:  'IconPresentation',
+        permiso: 'acceso-autoservicio',
       },
       {
         label: 'Mis préstamos',
         href:  ROUTES.PORTAL.MIS_PRESTAMOS,
         icon:  'IconListDetails',
+        permiso: 'acceso-autoservicio',
       },
       // «Reportar abuso» sale del menú hasta que exista su página
       // (2026-10-17): llevaba a un 404.
@@ -777,101 +815,44 @@ export const NAV_PORTAL: NavGroup[] = [
   },
 ]
 
-// ── Roles por subsistema ──────────────
-export const ROLES_SGTH = [
-  'admin-ti', 'admin-uath', 'asistente-uath',
-  'director', 'jefe-unidad',
-  'auditor',
-]
-
-/**
- * Roles que entran al SGTH solo para trabajar los permisos de ausencia.
- *
- * Recepción confirma el documento físico y Trabajo Social valida enfermedad y
- * calamidad: el backend ya les daba los dos permisos, pero sus roles no estaban
- * en `ROLES_SGTH` y solo veían el Portal, así que a Asistencia › Permisos
- * llegaban escribiendo la dirección (decisión de TH, 2026-10-08).
- *
- * No van en `ROLES_SGTH` porque el resto del menú no está pensado para ellos:
- * muchas entradas no declaran restricción y les responderían 403. Con uno de
- * estos roles y ninguno de `ROLES_SGTH`, el SGTH se reduce a esa pantalla.
- */
-export const ROLES_SGTH_SOLO_PERMISOS = ['recepcion', 'trabajo-social']
-
-/** Tiene el SGTH reducido a Asistencia › Permisos. */
-export function soloPermisosEnSgth(roles: string[]): boolean {
-  return !roles.some(r => ROLES_SGTH.includes(r))
-    && roles.some(r => ROLES_SGTH_SOLO_PERMISOS.includes(r))
+// ── Menú por subsistema ───────────────
+// Las listas de roles por subsistema (`ROLES_SGTH`, `ROLES_TIC`…) decidían a
+// qué subsistema entraba cada quien, escritas aparte del menú y desfasadas de
+// él: ofrecían el SGTH a quien no veía ninguna pantalla y se lo negaban a
+// Recepción y a Trabajo Social, que tienen Permisos. Ahora la respuesta es el
+// propio menú: se entra a un subsistema si se ve al menos una de sus pantallas
+// (docs/plan-roles-y-accesos.md, PR 9).
+const NAV_POR_SUBSISTEMA: Record<Subsistema, NavGroup[]> = {
+  sgth:         NAV_SGTH,
+  salud:        NAV_SALUD,
+  tic:          NAV_TIC,
+  comunicacion: NAV_COMUNICACION,
+  portal:       NAV_PORTAL,
 }
 
 /**
- * Adónde lleva entrar a un subsistema. Para quien solo trabaja los permisos,
- * el SGTH empieza en ellos: el panel principal no le dice nada.
- */
-export function inicioDelSubsistema(subsistema: Subsistema, roles: string[]): string {
-  if (subsistema === 'sgth' && soloPermisosEnSgth(roles)) {
-    return ROUTES.SGTH.ASISTENCIA_PERMISOS
-  }
-
-  return SUBSISTEMAS[subsistema].home
-}
-
-/**
- * `tecnico-dtic` estuvo aquí hasta que existió Tecnologías: el backend no le
- * abre ninguna ruta del Dispensario, así que entraba a un subsistema donde
- * todo le respondía 403.
- */
-export const ROLES_SALUD = [
-  'medico', 'odontologo', 'enfermera',
-  'admin-dispensario',
-]
-
-/**
- * Quiénes pueden consultar el inventario de medicinas. Hoy coincide con
- * `ROLES_SALUD`, pero es otra pregunta: el contador de stock del sidebar se
- * pide con esta lista, y un rol nuevo del Dispensario no tiene por qué ver el
- * inventario.
+ * Quiénes pueden consultar el inventario de medicinas. El contador de stock
+ * del sidebar se pide con esta lista, y un rol nuevo del Dispensario no tiene
+ * por qué ver el inventario.
  */
 export const ROLES_INVENTARIO_MED = [
   'medico', 'odontologo', 'enfermera', 'admin-dispensario',
 ]
 
-export const ROLES_PORTAL = [
-  'servidor', 'director', 'jefe-unidad',
-  'medico', 'odontologo', 'enfermera',
-  'admin-uath', 'asistente-uath',
-  'admin-ti', 'auditor',
-  'recepcion', 'trabajo-social', 'financiero',
-  'admin-dispensario', 'tecnico-dtic', 'jefe-tic',
-  'comunicacion-social', 'responsable-identidad',
-]
-
 /**
- * Quienes trabajan en la Unidad de TIC, y el auditor, que consulta el
- * inventario (`ver-inventario-ti`).
+ * Subsistemas cuyo `home` no es una pantalla de trabajo. El panel del SGTH
+ * está en construcción, así que se entra por la primera pantalla del menú, y
+ * su página queda para quien no tiene ninguna.
  */
-export const ROLES_TIC = ['admin-ti', 'jefe-tic', 'tecnico-dtic', 'auditor']
+const SIN_PANTALLA_DE_INICIO: Subsistema[] = ['sgth']
 
-/**
- * El equipo de Comunicación Social, la persona designada para los logos, y
- * quienes consultan las credenciales (`ver-credenciales`): Talento Humano y el
- * auditor.
- */
-export const ROLES_COMUNICACION = [
-  'admin-ti', 'comunicacion-social', 'responsable-identidad', 'admin-uath', 'auditor',
-]
+type Guarda = Pick<NavItem, 'permiso' | 'permisos' | 'roles'>
 
-// ── Helper: qué subsistemas puede ver ─
-export function getSubsistemasDisponibles(roles: string[]): Subsistema[] {
-  const disponibles: Subsistema[] = []
-  if (roles.some(r => ROLES_SGTH.includes(r)) || soloPermisosEnSgth(roles)) {
-    disponibles.push('sgth')
-  }
-  if (roles.some(r => ROLES_SALUD.includes(r)))  disponibles.push('salud')
-  if (roles.some(r => ROLES_TIC.includes(r)))    disponibles.push('tic')
-  if (roles.some(r => ROLES_COMUNICACION.includes(r))) disponibles.push('comunicacion')
-  if (roles.some(r => ROLES_PORTAL.includes(r))) disponibles.push('portal')
-  return disponibles
+/** Cumple la guarda de una entrada: su `permiso`, alguno de sus `permisos` y alguno de sus `roles`. */
+function cumple(item: Guarda, permisos: string[], roles: string[]): boolean {
+  return (!item.permiso || permisos.includes(item.permiso))
+    && (!item.permisos || item.permisos.some(p => permisos.includes(p)))
+    && (!item.roles || item.roles.some(rol => roles.includes(rol)))
 }
 
 // ── Helper: nav filtrado por permisos ─
@@ -889,47 +870,55 @@ export function buildNav(
   permisos: string[],
   roles: string[] = [],
 ): NavGroup[] {
-  const navMap: Record<Subsistema, NavGroup[]> = {
-    sgth:   NAV_SGTH,
-    salud:  NAV_SALUD,
-    tic:    NAV_TIC,
-    comunicacion: NAV_COMUNICACION,
-    portal: NAV_PORTAL,
-  }
+  const visible = (item: Guarda) => cumple(item, permisos, roles)
 
-  const visible = (item: { permiso?: string; permisos?: string[]; roles?: string[] }) =>
-    (!item.permiso || permisos.includes(item.permiso)) &&
-    (!item.permisos || item.permisos.some(p => permisos.includes(p))) &&
-    (!item.roles || item.roles.some(rol => roles.includes(rol)))
-
-  // Quien solo trabaja los permisos ve esa entrada y nada más, aunque otras
-  // no declaren restricción (ver `ROLES_SGTH_SOLO_PERMISOS`).
-  const soloPermisos = subsistema === 'sgth' && soloPermisosEnSgth(roles)
-  const permitido = (item: { href: string; children?: { href: string }[] }) =>
-    !soloPermisos
-    || item.href === ROUTES.SGTH.ASISTENCIA_PERMISOS
-    || !!item.children?.some(c => c.href === ROUTES.SGTH.ASISTENCIA_PERMISOS)
-  const visibleAqui = (item: Parameters<typeof visible>[0] & { href: string }) =>
-    visible(item) && permitido(item)
-
-  return navMap[subsistema]
+  return NAV_POR_SUBSISTEMA[subsistema]
     .map(group => ({
       ...group,
       items: group.items
-        .filter(visibleAqui)
+        .filter(visible)
         .map(item => ({
           ...item,
-          children: item.children?.filter(visibleAqui),
+          children: item.children?.filter(visible),
         }))
         .filter(item => !item.children || item.children.length > 0),
     }))
     .filter(group => group.items.length > 0)
 }
 
+// ── Helper: qué subsistemas puede ver ─
+/** Los subsistemas donde el usuario tiene al menos una pantalla en el menú. */
+export function getSubsistemasDisponibles(permisos: string[], roles: string[]): Subsistema[] {
+  return (Object.keys(NAV_POR_SUBSISTEMA) as Subsistema[])
+    .filter(subsistema => buildNav(subsistema, permisos, roles).length > 0)
+}
+
+/**
+ * Adónde lleva entrar a un subsistema: a su `home` si el usuario lo tiene en
+ * el menú, o si no es una entrada del menú (la portada del Portal); si no, a
+ * su primera pantalla. Así el médico entra a sus Consultas y no al tablero de
+ * gestión, y quien solo trabaja los permisos, a Permisos.
+ */
+export function inicioDelSubsistema(
+  subsistema: Subsistema,
+  permisos: string[],
+  roles: string[],
+): string {
+  const home = SUBSISTEMAS[subsistema].home
+  const visibles = flattenNav(subsistema, permisos, roles)
+
+  if (!SIN_PANTALLA_DE_INICIO.includes(subsistema)) {
+    const esEntrada = hojas(NAV_POR_SUBSISTEMA[subsistema]).some(h => h.href === home)
+    if (!esEntrada || visibles.some(h => h.href === home)) return home
+  }
+
+  return visibles[0]?.href ?? home
+}
+
 // ── Navegación derivada ───────────────
-// El menú lateral, las migas de pan y el buscador de comandos leen la MISMA
-// estructura. Agregar una pantalla al nav la hace navegable, buscable y
-// rastreable en las migas sin tocar nada más.
+// El menú lateral, las migas de pan, el buscador de comandos y la guarda de
+// pantalla leen la MISMA estructura. Agregar una pantalla al nav la hace
+// navegable, buscable y rastreable en las migas sin tocar nada más.
 
 export interface NavLeaf {
   label:  string
@@ -941,15 +930,11 @@ export interface NavLeaf {
   padre?: string
 }
 
-/** Aplana el menú de un subsistema a una lista de destinos navegables. */
-export function flattenNav(
-  subsistema: Subsistema,
-  permisos: string[],
-  roles: string[] = [],
-): NavLeaf[] {
+/** Los destinos de un menú: los ítems sin hijos y los hijos de los que tienen. */
+function hojas(grupos: NavGroup[]): NavLeaf[] {
   const leaves: NavLeaf[] = []
 
-  for (const group of buildNav(subsistema, permisos, roles)) {
+  for (const group of grupos) {
     for (const item of group.items) {
       if (item.children?.length) {
         for (const child of item.children) {
@@ -975,10 +960,34 @@ export function flattenNav(
   return leaves
 }
 
+/** Aplana el menú de un subsistema a una lista de destinos navegables. */
+export function flattenNav(
+  subsistema: Subsistema,
+  permisos: string[],
+  roles: string[] = [],
+): NavLeaf[] {
+  return hojas(buildNav(subsistema, permisos, roles))
+}
+
+/**
+ * El destino que contiene a `pathname`. Elige la coincidencia MÁS LARGA:
+ * `/sgth/expediente/subrogaciones` gana sobre `/sgth/expediente`, que también
+ * es prefijo válido.
+ */
+function contenedorDe(leaves: NavLeaf[], pathname: string): NavLeaf | null {
+  const candidatos = leaves.filter(
+    (leaf) => pathname === leaf.href || pathname.startsWith(`${leaf.href}/`),
+  )
+
+  if (!candidatos.length) return null
+
+  return candidatos.reduce((mejor, actual) =>
+    actual.href.length > mejor.href.length ? actual : mejor,
+  )
+}
+
 /**
  * Devuelve la ruta jerárquica hasta la pantalla activa, para las migas de pan.
- * Elige la coincidencia MÁS LARGA: `/sgth/expediente/subrogaciones` gana sobre
- * `/sgth/expediente`, que también es prefijo válido.
  *
  * Los roles entran igual que en el sidebar y en el buscador: sin ellos,
  * `flattenNav` descartaba toda pantalla declarada por rol —el Dispensario
@@ -992,13 +1001,30 @@ export function findNavTrail(
   roles: string[],
   pathname: string,
 ): NavLeaf | null {
-  const candidatos = flattenNav(subsistema, permisos, roles).filter(
-    (leaf) => pathname === leaf.href || pathname.startsWith(`${leaf.href}/`),
-  )
+  return contenedorDe(flattenNav(subsistema, permisos, roles), pathname)
+}
 
-  if (!candidatos.length) return null
+/**
+ * Si el usuario puede abrir la pantalla de `pathname`.
+ *
+ * La pantalla es el destino del menú COMPLETO que la contiene —el del listado,
+ * en una ruta de detalle—, y se abre si ese destino está en el menú del
+ * usuario. Quien escribía la dirección de una pantalla que el menú no le
+ * ofrecía entraba a una página que le respondía 403 a cada consulta. Una ruta
+ * que no cuelga de ningún destino, como el `home` del SGTH o la portada del
+ * Portal, no se juzga aquí.
+ *
+ * Es una guarda de pantalla, no de datos: quien autoriza cada petición sigue
+ * siendo el backend.
+ */
+export function puedeAbrirPantalla(
+  subsistema: Subsistema,
+  pathname: string,
+  permisos: string[],
+  roles: string[],
+): boolean {
+  const pantalla = contenedorDe(hojas(NAV_POR_SUBSISTEMA[subsistema]), pathname)
+  if (!pantalla) return true
 
-  return candidatos.reduce((mejor, actual) =>
-    actual.href.length > mejor.href.length ? actual : mejor,
-  )
+  return flattenNav(subsistema, permisos, roles).some(h => h.href === pantalla.href)
 }

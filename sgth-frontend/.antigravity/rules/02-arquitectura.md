@@ -81,6 +81,7 @@ src/
 ├── lib/                    axios, queryClient, iconos del menú
 ├── store/                  Zustand
 ├── styles/                 tokens.css, globals.css, inputs contained
+├── test/                   arranque de Vitest y datos compartidos de las pruebas
 └── types/                  api.generated.ts (generado) y api.ts
 ```
 

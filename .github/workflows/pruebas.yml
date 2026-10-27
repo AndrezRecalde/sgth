@@ -177,7 +177,7 @@ jobs:
           echo '::endgroup::'
 
   frontend:
-    name: Frontend · tipos, lint y build
+    name: Frontend · tipos, lint, pruebas y build
     runs-on: ubuntu-latest
 
     defaults:
@@ -197,15 +197,20 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
-      # Los tres pasos de la regla 10. No son formalidades: durante la revisión
-      # del módulo SSO cazaron errores reales varias veces —un genérico de Zod
-      # que no estrechaba el tipo, imports que quedaban huérfanos tras cada
+      # Los pasos de la regla 10. No son formalidades: durante la revisión del
+      # módulo SSO cazaron errores reales varias veces —un genérico de Zod que
+      # no estrechaba el tipo, imports que quedaban huérfanos tras cada
       # refactor—, y el frontend no tiene más red que esta.
       - name: Tipos
         run: npx tsc --noEmit
 
       - name: Lint de código y de CSS
         run: npm run lint
+
+      # Desde el 2026-10-27: el menú y la guarda de pantalla, que deciden qué
+      # ve y qué abre cada rol (docs/plan-roles-y-accesos.md, PR 9).
+      - name: Pruebas de unidad
+        run: npm test
 
       - name: Build de producción
         run: npm run build

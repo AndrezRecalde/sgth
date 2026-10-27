@@ -81,12 +81,8 @@ export const ROUTES = {
     CONVOCATORIA: (id: string | number) =>
       `/sgth/reclutamiento/convocatorias/${id}`,
 
-    // ⚠ Estas dos apuntan a páginas que NO EXISTEN todavía: no hay
-    // `[id]/editar/page.tsx` ni `[id]/postulantes/[postulanteId]/page.tsx`.
-    // Estaban escritas a mano en la lista de convocatorias y en el detalle, y
-    // al traerlas aquí se vio que la acción «Editar» y el enlace al postulante
-    // llevan a un 404. Se dejan declaradas para no volver a escribir la URL
-    // suelta; lo que falta es la pantalla, o quitar la acción.
+    // La edición de una convocatoria en borrador. Llevó a un 404 hasta que
+    // existió su `[id]/editar/page.tsx`.
     CONVOCATORIA_EDITAR: (id: string | number) =>
       `/sgth/reclutamiento/convocatorias/${id}/editar`,
     // Sin CONVOCATORIA_POSTULANTE (2026-10-05): el perfil es un panel lateral.

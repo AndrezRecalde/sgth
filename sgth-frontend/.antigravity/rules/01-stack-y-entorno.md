@@ -28,6 +28,11 @@ zod                    4.x         se importa desde 'zod/v4'
 axios                  1.x
 echarts + echarts-for-react         estándar de gráficas
 react-easy-crop        6.2.3       recorte 3:4 de la foto del servidor (versión fija)
+
+Solo para pruebas (versiones fijas):
+vitest                 5.0.4       con vite 8.3.4
+jsdom                  30.1.2      el DOM de las pruebas de componentes
+@testing-library/react 16.3.3      con @testing-library/dom 10.4.2
 ```
 
 `@mantine/form` sigue instalado pero **ya no se usa en ninguna pantalla**. No
@@ -62,6 +67,7 @@ npm run dev            # servidor de desarrollo (turbopack)
 npm run build          # compilación de producción
 npx tsc --noEmit       # verificación de tipos
 npm run lint           # eslint src --max-warnings=0
+npm test               # pruebas de unidad (vitest run)
 ```
 
 El servidor de desarrollo se levanta **siempre** con `npm run dev`, nunca con

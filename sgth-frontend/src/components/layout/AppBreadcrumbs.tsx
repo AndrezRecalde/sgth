@@ -29,12 +29,14 @@ export function AppBreadcrumbs({ subsistema }: Props) {
   const { usuario } = useAuth()
 
   const cfg = SUBSISTEMAS[subsistema]
-  const trail = findNavTrail(subsistema, usuario?.permisos ?? [], usuario?.roles ?? [], pathname)
+  const permisos = usuario?.permisos ?? []
+  const roles = usuario?.roles ?? []
+  const trail = findNavTrail(subsistema, permisos, roles, pathname)
 
   if (!trail) return null
 
   const migas = [
-    { label: cfg.nombre, href: inicioDelSubsistema(subsistema, usuario?.roles ?? []) },
+    { label: cfg.nombre, href: inicioDelSubsistema(subsistema, permisos, roles) },
     ...(trail.padre ? [{ label: trail.padre, href: undefined }] : []),
     { label: trail.label, href: trail.href },
   ]
