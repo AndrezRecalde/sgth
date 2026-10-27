@@ -19,7 +19,10 @@ export function usePermisosInventario() {
     ajustaStock:      esAdministracion,
     /** Registrar una adquisición, con su documento. */
     registraAdquisiciones: esAdministracion,
-    /** Dar de baja existencias vencidas, rotas o retiradas por el fabricante. */
-    daDeBaja:         esAdministracion || roles.includes('enfermera'),
+    /**
+     * Dar de baja existencias vencidas, rotas o retiradas por el fabricante:
+     * también el mostrador, Enfermería y el auxiliar de farmacia.
+     */
+    daDeBaja:         esAdministracion || roles.includes('enfermera') || roles.includes('auxiliar-farmacia'),
   }
 }

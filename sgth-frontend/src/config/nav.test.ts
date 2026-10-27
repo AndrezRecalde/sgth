@@ -118,6 +118,15 @@ describe('buildNav', () => {
       expect(pantallas('sgth', rol), rol).toContain(ROUTES.SGTH.RIESGOS_LABORALES)
     }
   })
+
+  it('al auxiliar de farmacia le ofrece el inventario y el despacho, nada clínico', () => {
+    // PR 13: el mostrador, sin historias, consultas, agenda ni exámenes.
+    expect(pantallas('salud', 'auxiliar-farmacia')).toEqual([
+      ROUTES.SALUD.FARMACIA,
+      ROUTES.SALUD.FARMACIA_DESPACHO,
+    ])
+    expect(inicioDelSubsistema('salud', ...sesion('auxiliar-farmacia'))).toBe(ROUTES.SALUD.FARMACIA)
+  })
 })
 
 describe('getSubsistemasDisponibles', () => {
@@ -127,6 +136,7 @@ describe('getSubsistemasDisponibles', () => {
     'admin-uath':            ['sgth', 'comunicacion', 'portal'],
     'asistente-uath':        ['sgth', 'portal'],
     'auditor':               ['sgth', 'tic', 'comunicacion', 'portal'],
+    'auxiliar-farmacia':     ['salud', 'portal'],
     'comunicacion-social':   ['comunicacion', 'portal'],
     'director':              ['sgth', 'portal'],
     'enfermera':             ['salud', 'portal'],

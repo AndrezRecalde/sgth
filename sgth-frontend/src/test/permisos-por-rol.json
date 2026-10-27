@@ -225,6 +225,25 @@
         "ver-ticket-propio",
         "ver-vacaciones-unidad"
     ],
+    "auxiliar-farmacia": [
+        "acceso-autoservicio",
+        "cambiar-contrasena",
+        "crear-permiso",
+        "crear-ticket",
+        "despachar-medicamento",
+        "exportar-informe-actividades",
+        "inscribirse-curso",
+        "registrar-actividades",
+        "responder-encuesta-clima",
+        "solicitar-viatico",
+        "ver-asistencia-propia",
+        "ver-evaluacion-propia",
+        "ver-expediente-propio",
+        "ver-historia-clinica-propia",
+        "ver-permisos",
+        "ver-plan-capacitacion",
+        "ver-ticket-propio"
+    ],
     "comunicacion-social": [
         "acceso-autoservicio",
         "cambiar-contrasena",

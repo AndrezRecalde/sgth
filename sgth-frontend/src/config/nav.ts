@@ -337,6 +337,16 @@ export const NAV_SGTH: NavGroup[] = [
 ]
 
 // ── DISPENSARIO MÉDICO ────────────────
+/**
+ * Quiénes pueden consultar el inventario de medicinas: el `role:` del prefijo
+ * `inventario`. El menú y el contador de stock del sidebar se guían por esta
+ * lista, y un rol nuevo del Dispensario no tiene por qué ver el inventario.
+ * Antes que `NAV_SALUD`, que la usa al cargarse.
+ */
+export const ROLES_INVENTARIO_MED = [
+  'medico', 'odontologo', 'enfermera', 'admin-dispensario', 'auxiliar-farmacia',
+]
+
 export const NAV_SALUD: NavGroup[] = [
   {
     label: 'Dispensario',
@@ -411,12 +421,12 @@ export const NAV_SALUD: NavGroup[] = [
         icon:     'IconPill',
         children: [
           {
-            // Los cuatro del `role:` de la lectura del inventario. Sin guarda,
-            // esta entrada abría el Dispensario a cualquiera (PR 9).
+            // Los del `role:` de la lectura del inventario. Sin guarda, esta
+            // entrada abría el Dispensario a cualquiera (PR 9).
             label: 'Inventario',
             href:  ROUTES.SALUD.FARMACIA,
             icon:  'IconPackage',
-            roles: ['medico', 'odontologo', 'enfermera', 'admin-dispensario'],
+            roles: ROLES_INVENTARIO_MED,
           },
           {
             label: 'Adquisiciones',
@@ -428,11 +438,11 @@ export const NAV_SALUD: NavGroup[] = [
           },
           {
             // Los del listado de recetas: el médico y el odontólogo ven las
-            // suyas; Enfermería y la administración, todas (PR 5).
+            // suyas; quien despacha, todas (PR 5 y PR 13).
             label: 'Despacho',
             href:  ROUTES.SALUD.FARMACIA_DESPACHO,
             icon:  'IconTruck',
-            roles: ['medico', 'odontologo', 'enfermera', 'admin-dispensario'],
+            roles: ['medico', 'odontologo', 'enfermera', 'admin-dispensario', 'auxiliar-farmacia'],
           },
         ],
       },
@@ -834,15 +844,6 @@ const NAV_POR_SUBSISTEMA: Record<Subsistema, NavGroup[]> = {
   comunicacion: NAV_COMUNICACION,
   portal:       NAV_PORTAL,
 }
-
-/**
- * Quiénes pueden consultar el inventario de medicinas. El contador de stock
- * del sidebar se pide con esta lista, y un rol nuevo del Dispensario no tiene
- * por qué ver el inventario.
- */
-export const ROLES_INVENTARIO_MED = [
-  'medico', 'odontologo', 'enfermera', 'admin-dispensario',
-]
 
 /**
  * Subsistemas cuyo `home` no es una pantalla de trabajo. El panel del SGTH

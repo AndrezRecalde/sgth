@@ -329,6 +329,13 @@ class RolPermisoSeeder extends Seeder
             Permiso::EVALUAR_PERSONAL_MEDICO,
         ]));
 
+        // AUXILIAR_FARMACIA: el inventario y el mostrador. Sin
+        // `ver-historia-clinica` ni la agenda, a diferencia de Enfermería
+        // (docs/plan-roles-y-accesos.md, PR 13).
+        $this->crearRol(Rol::AUXILIAR_FARMACIA, array_merge($permisosBase, [
+            Permiso::DESPACHAR_MEDICAMENTO,
+        ]));
+
         // TECNICO_DTIC: atiende su cola y la de nadie, y lleva el inventario.
         // Asignar tickets y ver los de todos es del jefe (diseño TIC, 4.4).
         $this->crearRol(Rol::TECNICO_DTIC, array_merge($permisosBase, self::PERMISOS_TECNICO_TIC));

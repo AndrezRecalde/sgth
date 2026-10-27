@@ -7,8 +7,8 @@ const SIN_ROLES: readonly string[] = []
  * Qué puede hacer quien mira el despacho con cada receta. Son las reglas del
  * servidor:
  *
- * - Despachar, Enfermería y la administración del Dispensario: es el `role:`
- *   de `POST recetas/{id}/despachar`.
+ * - Despachar, Enfermería, la administración del Dispensario y el auxiliar de
+ *   farmacia: es el `role:` de `POST recetas/{id}/despachar`.
  * - Anular, la administración, o el médico u odontólogo que la emitió
  *   (`RecetaController::anular`).
  *
@@ -23,7 +23,9 @@ export function usePermisosDespacho() {
   const usuarioId = useAuthStore((s) => s.usuario?.id)
 
   const esAdministracion = roles.includes('admin-dispensario')
-  const puedeDespachar = esAdministracion || roles.includes('enfermera')
+  const puedeDespachar = esAdministracion
+    || roles.includes('enfermera')
+    || roles.includes('auxiliar-farmacia')
 
   const puedeAnular = (receta: RecetaMedica): boolean =>
     esAdministracion ||
