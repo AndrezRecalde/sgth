@@ -16,7 +16,12 @@ import type { ExtensionConRelaciones } from '@/types/api'
 // pedía el directorio entero y solo importaba la última.
 const RETARDO_BUSQUEDA_MS = 300
 
-export function DirectorioView() {
+/**
+ * Las extensiones las mantiene TIC (docs/plan-roles-y-accesos.md, PR 11); el
+ * personal las consulta desde el Portal. Aquí salen también las inactivas: si
+ * no, la que se desactivaba desaparecía y no había cómo reactivarla.
+ */
+export function DirectorioTicView() {
   const [search, setSearch] = useState('')
   const [unidadId, setUnidadId] = useState<string | null>(null)
 
@@ -30,6 +35,7 @@ export function DirectorioView() {
   const { data: directorio = [], isLoading } = useDirectorio({
     search: searchConRetardo || undefined,
     unidad_administrativa_id: unidadId ? Number(unidadId) : undefined,
+    incluir_inactivas: true,
   })
 
   const editar = (ext: ExtensionConRelaciones) => {
@@ -46,7 +52,7 @@ export function DirectorioView() {
     <PageShell>
       <PageHeader
         title="Directorio telefónico"
-        description="Extensiones por unidad administrativa"
+        description="Extensiones por unidad administrativa. El personal ve las activas desde el Portal."
         actions={
           <Button
             leftSection={<IconCubePlus size={16} />}

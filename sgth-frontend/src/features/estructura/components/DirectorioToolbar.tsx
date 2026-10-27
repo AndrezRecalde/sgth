@@ -2,8 +2,7 @@
 
 import { TextInput, Select, ActionIcon, Stack, Group } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
-import { useUnidades } from "../hooks/useUnidades";
-import type { UnidadConRelaciones } from "@/types/api";
+import { useTodasUnidades } from "../hooks/useUnidades";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import { useMobileBreakpoint } from "@/hooks/useMobileBreakpoint";
 
@@ -18,16 +17,17 @@ export function DirectorioToolbar({
   onUnidadChange,
   onClear,
 }: Props) {
-  const { data: unidades = [] } = useUnidades({ nivel: 2 });
+  // `todas` y no el listado de Estructura: ese pide `ver-estructura`, que no
+  // tienen ni el personal del Portal ni TIC, y pagina de 15 en 15, así que el
+  // filtro solo ofrecía las primeras quince direcciones.
+  const { data: unidades = [] } = useTodasUnidades({ nivel: 2 });
   const { isMobile } = useMobileBreakpoint();
   const contained = useContainedInput();
 
-  const unidadOptions = ((unidades ?? []) as UnidadConRelaciones[]).map(
-    (u) => ({
-      value: String(u.id),
-      label: u.nombre ?? `Unidad ${u.id}`,
-    }),
-  );
+  const unidadOptions = unidades.map((u) => ({
+    value: String(u.id),
+    label: u.nombre ?? `Unidad ${u.id}`,
+  }));
 
   const content = (
     <>

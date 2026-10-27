@@ -27,7 +27,8 @@ export const ROUTES = {
     // Sin USUARIOS (PR 10 de docs/plan-roles-y-accesos.md): la pantalla se
     // mudó a Tecnologías, y `/sgth/usuarios` solo redirige a TIC.USUARIOS.
     ESTRUCTURA:       '/sgth/estructura',
-    ESTRUCTURA_DIRECTORIO: '/sgth/estructura/directorio',
+    // Sin ESTRUCTURA_DIRECTORIO (PR 11): el directorio se consulta en el
+    // Portal y se mantiene en TIC; `/sgth/estructura/directorio` redirige.
     ESTRUCTURA_PUESTOS:    '/sgth/estructura/puestos',
     ESTRUCTURA_PARTIDAS:   '/sgth/estructura/partidas',
     ESTRUCTURA_PLANTILLA:  '/sgth/estructura/plantilla',
@@ -174,6 +175,8 @@ export const ROUTES = {
     CONFIGURACION: '/tic/configuracion',
     /** Las cuentas de acceso al sistema, sus roles y permisos (estuvo en el SGTH). */
     USUARIOS:      '/tic/usuarios',
+    /** Las extensiones telefónicas, activas e inactivas; el personal las consulta en el Portal. */
+    DIRECTORIO:    '/tic/directorio',
   },
 
   // ── COMUNICACIÓN SOCIAL ───────────────
@@ -218,6 +221,8 @@ export const ROUTES = {
     COMUNICADO:      (id: number) => `/portal/comunicados/${id}`,
     /** La credencial digital del servidor (Comunicación Social, fase 3.2). */
     MI_CREDENCIAL:   '/portal/mi-credencial',
+    /** El directorio telefónico, en consulta (estuvo en el SGTH, en Estructura). */
+    DIRECTORIO:      '/portal/directorio',
     VIATICOS:        '/portal/viaticos',
     VIATICOS_BANDEJA: '/portal/viaticos/bandeja',
     VIATICO_DETALLE: (codigo: string | number) =>

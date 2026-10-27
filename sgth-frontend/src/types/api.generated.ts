@@ -4192,7 +4192,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Directorio telefónico — lista plana con filtros opcionales */
+        /**
+         * Directorio telefónico — lista plana con filtros opcionales
+         * @description Las inactivas, solo para quien mantiene el directorio y las pide con
+         *     `incluir_inactivas`: sin eso, la extensión que se desactivaba desaparecía
+         *     también de la pantalla de gestión y no había forma de reactivarla.
+         */
         get: operations["extensionTelefonica.index"];
         put?: never;
         post?: never;

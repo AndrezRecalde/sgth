@@ -90,6 +90,20 @@ describe('buildNav', () => {
     expect(pantallas('tic', 'jefe-tic')).not.toContain(ROUTES.TIC.USUARIOS)
     expect(pantallas('tic', 'tecnico-dtic')).not.toContain(ROUTES.TIC.USUARIOS)
   })
+
+  it('ofrece el directorio a todos en el Portal y su gestión solo a TIC', () => {
+    // PR 11: salió del SGTH, donde lo editaba también Talento Humano.
+    for (const rol of ROLES) {
+      expect(pantallas('portal', rol), rol).toContain(ROUTES.PORTAL.DIRECTORIO)
+    }
+
+    for (const rol of ['tecnico-dtic', 'jefe-tic', 'admin-ti'] as const) {
+      expect(pantallas('tic', rol), rol).toContain(ROUTES.TIC.DIRECTORIO)
+    }
+
+    expect(pantallas('tic', 'auditor')).not.toContain(ROUTES.TIC.DIRECTORIO)
+    expect(pantallas('sgth', 'admin-uath')).not.toContain('/sgth/estructura/directorio')
+  })
 })
 
 describe('getSubsistemasDisponibles', () => {
