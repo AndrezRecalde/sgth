@@ -212,11 +212,10 @@ export const NAV_SGTH: NavGroup[] = [
         label:    'Riesgos laborales (SSO)',
         href:     ROUTES.SGTH.RIESGOS_LABORALES,
         icon:     'IconShieldCheck',
-        // El prefijo `sso` del API pide uno de estos tres roles y, dentro,
-        // `gestionar-sso|ver-reportes-sso`. Se declara igual aquí: con solo
-        // `gestionar-sso`, el auditor —que tiene el de lectura y el rol— no
-        // veía en el menú un módulo que el API le abre completo en lectura.
-        roles:    ['admin-uath', 'asistente-uath', 'auditor'],
+        // El prefijo `sso` del API pide `gestionar-sso|ver-reportes-sso`, sin
+        // roles desde el PR 12: entra también el técnico de SSO, que no es de
+        // Talento Humano. Con solo `gestionar-sso`, el auditor —que tiene el
+        // de lectura— no vería un módulo que el API le abre en lectura.
         permisos: ['gestionar-sso', 'ver-reportes-sso'],
         children: [
           {

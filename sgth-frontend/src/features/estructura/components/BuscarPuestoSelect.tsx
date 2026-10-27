@@ -16,12 +16,12 @@ import { StatusBadge } from '@/components/ui'
 // una en una, se encolan y el desplegable se queda en «Buscando...» segundos.
 const RETARDO_BUSQUEDA_MS = 300
 
+/** Lo que da el buscador de puestos: sin RMU, partida ni ocupante. */
 interface Puesto {
   id:    number
-  cargo?: { nombre: string }
-  unidad_administrativa?: { nombre: string }
-  grupo_ocupacional?: { nombre?: string; rmu?: number }
-  regimen_laboral?: string
+  cargo?: { nombre: string } | null
+  unidad_administrativa?: { nombre: string } | null
+  regimen_laboral?: string | null
 }
 
 interface Props {
@@ -57,10 +57,15 @@ export function BuscarPuestoSelect({
   // formulario que llegaba con puesto ya asignado —editar un registro— pintaba
   // el campo vacío y parecía que no había ninguno. Se resuelve el id contra la
   // API para poder mostrarlo.
+  //
+  // Por el buscador y no por `/estructura/puestos`, que pide `ver-estructura`:
+  // el técnico de SSO asigna riesgos y EPP a un puesto sin ver la estructura,
+  // y recibía 403 (docs/plan-roles-y-accesos.md, PR 12). El buscador da cargo,
+  // unidad y régimen, que es todo lo que este campo enseña.
   const { data: puestoSel } = useQuery({
     queryKey: ['estructura', 'puesto', value],
     queryFn: async () => {
-      const res = await api.get(`/estructura/puestos/${value}`)
+      const res = await api.get(`/estructura/puestos/buscar/${value}`)
       return res.data?.datos as Puesto
     },
     enabled: !!value,
@@ -86,16 +91,11 @@ export function BuscarPuestoSelect({
   const { data: puestos = [], isFetching } = useQuery({
     queryKey: ['estructura', 'puestos', 'buscar', termino],
     queryFn: async () => {
-      const res = await api.get('/estructura/puestos', {
+      const res = await api.get('/estructura/puestos/buscar', {
         params: { search: termino, per_page: 10 },
       })
       const datos = res.data?.datos
-      const items: Puesto[] = Array.isArray(datos)
-        ? datos
-        : Array.isArray(datos?.data)
-          ? datos.data
-          : []
-      return items
+      return (Array.isArray(datos) ? datos : []) as Puesto[]
     },
     enabled: termino.length >= 2,
   })

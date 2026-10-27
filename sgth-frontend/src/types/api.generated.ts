@@ -546,6 +546,55 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/sso/ausentismo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** El consolidado del período, solo de permisos por enfermedad */
+        get: operations["sso.ausentismo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sso/ausentismo/exportar-excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sso.ausentismo.excel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sso/ausentismo/exportar-pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sso.ausentismo.pdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/login": {
         parameters: {
             query?: never;
@@ -1110,6 +1159,39 @@ export interface paths {
         post?: never;
         /** Descarta el borrador: lo pide el médico, o se limpia al guardar */
         delete: operations["dispensario.consultas.borrador.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/estructura/puestos/buscar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["puestos.buscar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/estructura/puestos/buscar/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** El que ya está elegido, para que el formulario enseñe su nombre */
+        get: operations["puestos.buscar.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -14232,6 +14314,17 @@ export interface components {
             /** Format: date-time */
             updated_at: string | null;
         };
+        /** PuestoBusquedaResource */
+        PuestoBusquedaResource: {
+            id: number;
+            regimen_laboral: string;
+            cargo?: {
+                nombre: string;
+            } | null;
+            unidad_administrativa?: {
+                nombre: string;
+            } | null;
+        };
         /** PuestoEpp */
         PuestoEpp: {
             id: number;
@@ -19302,6 +19395,96 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
+    "sso.ausentismo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Consolidado de permisos";
+                        datos: {
+                            consolidado: {
+                                [key: string]: unknown;
+                            }[];
+                            totales: {
+                                total_permisos: string;
+                                total_minutos: number;
+                                /**
+                                 * @description El pie de la columna «Tiempo» era un guion, en la tabla y en
+                                 *     el PDF, teniendo los minutos justo al lado. Es la cifra que
+                                 *     Talento Humano lee al cerrar el mes: cuántas horas de
+                                 *     ausencia suma el período.
+                                 */
+                                tiempo_total: string;
+                                total_dias: number;
+                            };
+                            filtros: {
+                                fecha_inicio: string;
+                                fecha_fin: string;
+                                tipo: string;
+                                servidor_id: string;
+                                unidad_administrativa_id: string;
+                            };
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "sso.ausentismo.excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Transfer-Encoding": "chunked";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv; charset=UTF-8": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "sso.ausentismo.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "auth.login": {
         parameters: {
             query?: never;
@@ -20698,6 +20881,65 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             422: components["responses"]["ValidationException"];
+        };
+    };
+    "puestos.buscar": {
+        parameters: {
+            query: {
+                /** @description Desde dos letras, como el buscador. */
+                search: string;
+                per_page?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Puestos encontrados.";
+                        datos: components["schemas"]["PuestoBusquedaResource"][];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "puestos.buscar.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Puesto.";
+                        datos: components["schemas"]["PuestoBusquedaResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
         };
     };
     "servidores.buscar": {

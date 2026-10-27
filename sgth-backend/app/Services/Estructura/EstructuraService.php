@@ -6,6 +6,7 @@ use App\Contracts\Estructura\EstructuraServiceInterface;
 use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Estructura\Puesto;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use App\Exceptions\ReglaNegocioException;
@@ -429,21 +430,56 @@ final class EstructuraService implements EstructuraServiceInterface
             )
             ->when(
                 filled($filtros['search'] ?? null),
-                function ($q) use ($filtros) {
-                    foreach (preg_split('/\s+/', trim($filtros['search'])) as $palabra) {
-                        if ($palabra === '') {
-                            continue;
-                        }
-
-                        $q->where(fn($sub) => $sub
-                            ->where('cargos.nombre', 'ilike', "%{$palabra}%")
-                            ->orWhere('cargos.denominacion_generica', 'ilike', "%{$palabra}%")
-                            ->orWhere('unidades_administrativas.nombre', 'ilike', "%{$palabra}%"));
-                    }
-                }
+                fn($q) => $this->filtrarPuestosPorTexto($q, $filtros['search'])
             )
             ->orderBy('cargos.nombre', 'asc')
             ->paginate($filtros['per_page'] ?? 15);
+    }
+
+    public function buscarPuestos(string $termino, int $limite): Collection
+    {
+        $query = Puesto::query()
+            ->with(['cargo:id,nombre', 'unidadAdministrativa:id,nombre'])
+            ->leftJoin('cargos', 'cargos.id', '=', 'puestos.cargo_id')
+            ->leftJoin(
+                'unidades_administrativas',
+                'unidades_administrativas.id',
+                '=',
+                'puestos.unidad_administrativa_id'
+            )
+            ->select('puestos.*');
+
+        return $this->filtrarPuestosPorTexto($query, $termino)
+            ->orderBy('cargos.nombre')
+            ->orderBy('puestos.id')
+            ->limit($limite)
+            ->get();
+    }
+
+    public function puestoParaBuscador(int $id): Puesto
+    {
+        return Puesto::with(['cargo:id,nombre', 'unidadAdministrativa:id,nombre'])->findOrFail($id);
+    }
+
+    /**
+     * Cada palabra tiene que aparecer en el cargo, su denominación o la
+     * unidad: «analista talento» encuentra al analista de Talento Humano. Pide
+     * los `join` de `cargos` y `unidades_administrativas`.
+     */
+    private function filtrarPuestosPorTexto(Builder $query, string $texto): Builder
+    {
+        foreach (preg_split('/\s+/', trim($texto)) as $palabra) {
+            if ($palabra === '') {
+                continue;
+            }
+
+            $query->where(fn($sub) => $sub
+                ->where('cargos.nombre', 'ilike', "%{$palabra}%")
+                ->orWhere('cargos.denominacion_generica', 'ilike', "%{$palabra}%")
+                ->orWhere('unidades_administrativas.nombre', 'ilike', "%{$palabra}%"));
+        }
+
+        return $query;
     }
 
     public function crearPuesto(array $datos): Puesto

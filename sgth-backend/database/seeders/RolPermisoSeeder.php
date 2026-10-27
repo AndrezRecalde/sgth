@@ -65,6 +65,18 @@ class RolPermisoSeeder extends Seeder
         Permiso::VER_LECTURAS_COMUNICADOS,
     ];
 
+    /**
+     * El técnico de seguridad y salud ocupacional: todo Riesgos laborales, y
+     * buscar a la persona de un accidente o una entrega de EPP. Nada más de
+     * Talento Humano (docs/plan-roles-y-accesos.md, PR 12).
+     */
+    public const PERMISOS_TECNICO_SSO = [
+        Permiso::GESTIONAR_SSO,
+        Permiso::VER_REPORTES_SSO,
+        Permiso::REGISTRAR_ACCIDENTE,
+        Permiso::BUSCAR_SERVIDORES,
+    ];
+
     public function run(): void
     {
         // 1. Crear todos los permisos del Enum
@@ -329,6 +341,9 @@ class RolPermisoSeeder extends Seeder
 
         // RESPONSABLE_IDENTIDAD
         $this->crearRol(Rol::RESPONSABLE_IDENTIDAD, array_merge($permisosBase, self::PERMISOS_RESPONSABLE_IDENTIDAD));
+
+        // TECNICO_SSO
+        $this->crearRol(Rol::TECNICO_SSO, array_merge($permisosBase, self::PERMISOS_TECNICO_SSO));
 
         // AUDITOR
         $this->crearRol(Rol::AUDITOR, array_merge($permisosBase, [

@@ -116,9 +116,12 @@ class ConsolidadoPermisoController extends Controller
      * en tres sitios es una invitación a cruzar dos de ellos sin que nada se
      * queje.
      *
+     * Protegido y no privado: el ausentismo de SSO es este mismo informe con
+     * el tipo fijo (`AusentismoSsoController`).
+     *
      * @return array{inicio: string, fin: string, tipo: string, servidor: ?Servidor, unidad: ?UnidadAdministrativa}
      */
-    private function filtros(Request $request): array
+    protected function filtros(Request $request): array
     {
         $validado = $request->validate([
             'fecha_inicio' => 'required|date',

@@ -34,6 +34,12 @@ interface EstructuraServiceInterface
     // Puestos
     public function listarPuestos(array $filtros): LengthAwarePaginator;
 
+    /** El buscador de los formularios: cargo y unidad, sin nada del listado de TH. */
+    public function buscarPuestos(string $termino, int $limite): Collection;
+
+    /** El que ya está elegido, para que el formulario enseñe su nombre. */
+    public function puestoParaBuscador(int $id): Puesto;
+
     public function crearPuesto(array $datos): Puesto;
 
     public function obtenerPuesto(int $id): Puesto;

@@ -3311,6 +3311,171 @@
                 }
             }
         },
+        "/v1/sso/ausentismo": {
+            "get": {
+                "operationId": "sso.ausentismo",
+                "summary": "El consolidado del per\u00edodo, solo de permisos por enfermedad",
+                "tags": [
+                    "AusentismoSso"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Consolidado de permisos"
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "consolidado": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "additionalProperties": {}
+                                                    }
+                                                },
+                                                "totales": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "total_permisos": {
+                                                            "type": "string"
+                                                        },
+                                                        "total_minutos": {
+                                                            "type": "integer"
+                                                        },
+                                                        "tiempo_total": {
+                                                            "type": "string",
+                                                            "description": "El pie de la columna \u00abTiempo\u00bb era un guion, en la tabla y en\nel PDF, teniendo los minutos justo al lado. Es la cifra que\nTalento Humano lee al cerrar el mes: cu\u00e1ntas horas de\nausencia suma el per\u00edodo."
+                                                        },
+                                                        "total_dias": {
+                                                            "type": "number"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "total_permisos",
+                                                        "total_minutos",
+                                                        "tiempo_total",
+                                                        "total_dias"
+                                                    ]
+                                                },
+                                                "filtros": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "fecha_inicio": {
+                                                            "type": "string"
+                                                        },
+                                                        "fecha_fin": {
+                                                            "type": "string"
+                                                        },
+                                                        "tipo": {
+                                                            "type": "string"
+                                                        },
+                                                        "servidor_id": {
+                                                            "type": "string"
+                                                        },
+                                                        "unidad_administrativa_id": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "fecha_inicio",
+                                                        "fecha_fin",
+                                                        "tipo",
+                                                        "servidor_id",
+                                                        "unidad_administrativa_id"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "consolidado",
+                                                "totales",
+                                                "filtros"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/sso/ausentismo/exportar-excel": {
+            "get": {
+                "operationId": "sso.ausentismo.excel",
+                "tags": [
+                    "AusentismoSso"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "text/csv; charset=UTF-8": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Transfer-Encoding": {
+                                "required": true,
+                                "schema": {
+                                    "type": "string",
+                                    "enum": [
+                                        "chunked"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/sso/ausentismo/exportar-pdf": {
+            "get": {
+                "operationId": "sso.ausentismo.pdf",
+                "tags": [
+                    "AusentismoSso"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/auth/login": {
             "post": {
                 "operationId": "auth.login",
@@ -6386,6 +6551,136 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/estructura/puestos/buscar": {
+            "get": {
+                "operationId": "puestos.buscar",
+                "tags": [
+                    "BuscarPuesto"
+                ],
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": true,
+                        "description": "Desde dos letras, como el buscador.",
+                        "schema": {
+                            "type": "string",
+                            "minLength": 2,
+                            "maxLength": 100
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1,
+                            "maximum": 20
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Puestos encontrados."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/PuestoBusquedaResource"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/estructura/puestos/buscar/{id}": {
+            "get": {
+                "operationId": "puestos.buscar.show",
+                "summary": "El que ya est\u00e1 elegido, para que el formulario ense\u00f1e su nombre",
+                "tags": [
+                    "BuscarPuesto"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Puesto."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/PuestoBusquedaResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -81343,6 +81638,50 @@
                     "updated_at"
                 ],
                 "title": "PuestoActividad"
+            },
+            "PuestoBusquedaResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "regimen_laboral": {
+                        "type": "string"
+                    },
+                    "cargo": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "nombre": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "nombre"
+                        ]
+                    },
+                    "unidad_administrativa": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "nombre": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "nombre"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "regimen_laboral"
+                ],
+                "title": "PuestoBusquedaResource"
             },
             "PuestoEpp": {
                 "type": "object",

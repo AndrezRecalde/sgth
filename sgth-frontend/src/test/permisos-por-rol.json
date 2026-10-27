@@ -499,6 +499,28 @@
         "ver-plan-capacitacion",
         "ver-ticket-propio"
     ],
+    "tecnico-sso": [
+        "acceso-autoservicio",
+        "buscar-servidores",
+        "cambiar-contrasena",
+        "crear-permiso",
+        "crear-ticket",
+        "exportar-informe-actividades",
+        "gestionar-sso",
+        "inscribirse-curso",
+        "registrar-accidente",
+        "registrar-actividades",
+        "responder-encuesta-clima",
+        "solicitar-viatico",
+        "ver-asistencia-propia",
+        "ver-evaluacion-propia",
+        "ver-expediente-propio",
+        "ver-historia-clinica-propia",
+        "ver-permisos",
+        "ver-plan-capacitacion",
+        "ver-reportes-sso",
+        "ver-ticket-propio"
+    ],
     "trabajo-social": [
         "acceso-autoservicio",
         "cambiar-contrasena",
