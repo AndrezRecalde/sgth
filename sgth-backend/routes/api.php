@@ -1888,10 +1888,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
 
         // El personal clínico del dispensario, con nombre: lo piden Farmacia
         // (quién recetó) y la asignación de turnos. No es para cualquiera con
-        // sesión.
+        // sesión. El auxiliar de farmacia, por el filtro del despacho (PR 13).
         Route::get('personal-medico',
             [PersonalMedicoController::class, 'index']
-        )->middleware('role:medico|odontologo|enfermera|admin-dispensario')
+        )->middleware('role:medico|odontologo|enfermera|admin-dispensario|auxiliar-farmacia')
          ->name('dispensario.personal-medico');
 
         // Autocompletado del CIE-10 al diagnosticar (consulta, FEMO y
@@ -2072,24 +2072,25 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         )->middleware('role:medico|odontologo|admin-dispensario')
          ->name('dispensario.certificados.show');
 
-        // Recetas — médicos emiten, enfermeras y admin despachan
+        // Recetas — médicos emiten; Enfermería, la administración y el
+        // auxiliar de farmacia despachan (PR 13).
         Route::prefix('recetas')->group(function () {
             Route::get('/', [RecetaController::class, 'index'])
-                ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
+                ->middleware('role:medico|odontologo|enfermera|admin-dispensario|auxiliar-farmacia');
             Route::post('/', [RecetaController::class, 'store'])
                 ->middleware('role:medico|odontologo');
             // Antes del comodín {id}, o «pdf» se leería como parte de él.
             Route::get('{id}/pdf', [RecetaController::class, 'pdf'])
-                ->middleware('role:medico|odontologo|enfermera|admin-dispensario')
+                ->middleware('role:medico|odontologo|enfermera|admin-dispensario|auxiliar-farmacia')
                 ->name('dispensario.recetas.pdf');
             Route::get('{id}', [RecetaController::class, 'show'])
-                ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
+                ->middleware('role:medico|odontologo|enfermera|admin-dispensario|auxiliar-farmacia');
             Route::post('{id}/despachar', [RecetaController::class, 'despachar'])
-                ->middleware('role:enfermera|admin-dispensario');
+                ->middleware('role:enfermera|admin-dispensario|auxiliar-farmacia');
             // Lo que el mostrador no va a entregar: el paciente lo adquiere
             // fuera (decisión del Dispensario del 2026-10-24, opción A).
             Route::patch('{id}/items/{itemId}/no-entregado', [RecetaController::class, 'noEntregado'])
-                ->middleware('role:enfermera|admin-dispensario')
+                ->middleware('role:enfermera|admin-dispensario|auxiliar-farmacia')
                 ->whereNumber(['id', 'itemId']);
             Route::post('{id}/anular', [RecetaController::class, 'anular'])
                 ->middleware('role:medico|odontologo|admin-dispensario');
@@ -2104,9 +2105,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // Inventario — lo consulta todo el personal del Dispensario; lo que
         // cambia las existencias, el mostrador y la administración (decisión
         // del Dispensario del 2026-10-24, pregunta 2). Antes los cuatro roles
-        // podían todo, ajustar el stock sin documento incluido.
+        // podían todo, ajustar el stock sin documento incluido. El auxiliar de
+        // farmacia, como Enfermería: consulta y da de baja (PR 13).
         Route::prefix('inventario')
-            ->middleware('role:medico|odontologo|enfermera|admin-dispensario')
+            ->middleware('role:medico|odontologo|enfermera|admin-dispensario|auxiliar-farmacia')
             ->group(function () {
                 Route::get('medicinas/buscar',
                     [InventarioMedicinasController::class, 'buscar']);
@@ -2124,10 +2126,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 Route::post('medicinas/{medicina}/ajustar-inventario',
                     [InventarioMedicinasController::class, 'ajustarInventario'])
                     ->middleware('role:admin-dispensario');
-                // Dar de baja existencias vencidas o rotas: también enfermería.
+                // Dar de baja existencias vencidas o rotas: también el
+                // mostrador.
                 Route::post('medicinas/{medicina}/baja',
                     [InventarioMedicinasController::class, 'registrarBaja'])
-                    ->middleware('role:enfermera|admin-dispensario');
+                    ->middleware('role:enfermera|admin-dispensario|auxiliar-farmacia');
             });
 
         Route::prefix('adquisiciones')

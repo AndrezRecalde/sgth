@@ -19,8 +19,8 @@ use Illuminate\Database\Eloquent\Builder;
  * enteras a todo el personal del Dispensario: cualquier médico, odontólogo,
  * enfermera o administrativo leía lo de cualquier paciente.
  *
- * - Recetas: el médico y el odontólogo, las suyas; quien despacha —Enfermería
- *   y la administración—, todas, para entregarlas.
+ * - Recetas: el médico y el odontólogo, las suyas; quien despacha —Enfermería,
+ *   la administración y el auxiliar de farmacia—, todas, para entregarlas.
  * - Notas de consulta: el médico y el odontólogo, las suyas y las de los
  *   pacientes que atienden. Enfermería y la administración, ninguna.
  * - Exámenes: cada profesional, los de su especialidad; la administración,
@@ -28,10 +28,13 @@ use Illuminate\Database\Eloquent\Builder;
  */
 final class AlcanceClinico
 {
-    /** Quien entrega los medicamentos ve todas las recetas, para despacharlas. */
+    /**
+     * Quien entrega los medicamentos ve todas las recetas, para despacharlas:
+     * Enfermería, la administración y el auxiliar de farmacia (PR 13).
+     */
     public static function despachaRecetas(User $usuario): bool
     {
-        return $usuario->hasAnyRole(['enfermera', 'admin-dispensario']);
+        return $usuario->hasAnyRole(['enfermera', 'admin-dispensario', 'auxiliar-farmacia']);
     }
 
     /**

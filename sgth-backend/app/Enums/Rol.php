@@ -28,6 +28,9 @@ enum Rol: string
     case ODONTOLOGO = 'odontologo';
     case ENFERMERA = 'enfermera';
     case ADMIN_DISPENSARIO = 'admin-dispensario';
+    // Lleva el inventario y entrega los medicamentos, sin historias clínicas
+    // ni consultas (docs/plan-roles-y-accesos.md, PR 13).
+    case AUXILIAR_FARMACIA = 'auxiliar-farmacia';
 
     // Tecnología
     case TECNICO_DTIC = 'tecnico-dtic';
@@ -65,6 +68,7 @@ enum Rol: string
             self::ODONTOLOGO => 'Odontólogo',
             self::ENFERMERA => 'Enfermera',
             self::ADMIN_DISPENSARIO => 'Administrativo Dispensario',
+            self::AUXILIAR_FARMACIA => 'Auxiliar de Farmacia',
             self::TECNICO_DTIC => 'Técnico DTIC',
             self::JEFE_TIC => 'Jefe de TIC',
             self::ADMIN_TI => 'Administrador TI',
