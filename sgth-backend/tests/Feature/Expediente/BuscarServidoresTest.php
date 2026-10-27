@@ -144,10 +144,14 @@ it('el seeder da el permiso a los mismos roles que la migración', function () {
     $migracion = require database_path('migrations/2026_11_26_000000_permiso_buscar_servidores.php');
     $roles = (new ReflectionClassConstant($migracion, 'ROLES'))->getValue();
 
+    // Los roles que nacieron después ya con el permiso no los toca esta
+    // migración: se lo da la suya. El técnico de SSO, en la 2026_11_30 (PR 12).
+    $posteriores = ['tecnico-sso'];
+
     $conPermiso = Role::where('guard_name', 'sanctum')
         ->whereHas('permissions', fn ($q) => $q->where('name', 'buscar-servidores'))
         ->pluck('name');
 
     expect($conPermiso->sort()->values()->all())
-        ->toBe(collect($roles)->sort()->values()->all());
+        ->toBe(collect([...$roles, ...$posteriores])->sort()->values()->all());
 });
