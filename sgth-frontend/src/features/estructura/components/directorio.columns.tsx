@@ -1,4 +1,4 @@
-import { Text } from '@mantine/core'
+import { Group, Text } from '@mantine/core'
 import { IconEdit, IconTrash } from '@tabler/icons-react'
 import { TableActions } from '@/components/ui/TableActions'
 import type { DataTableColumn } from 'mantine-datatable'
@@ -26,8 +26,12 @@ export const getDirectorioColumns = (
   {
     accessor: 'responsable',
     title: 'Responsable',
-    render: ({ responsable }) => (
-      <Text size="sm">{responsable ?? '-'}</Text>
+    // Las inactivas solo llegan a la pantalla de TIC.
+    render: ({ responsable, estado }) => (
+      <Group gap="xs" wrap="nowrap">
+        <Text size="sm">{responsable ?? '-'}</Text>
+        {estado === false && <StatusBadge size="xs">Inactiva</StatusBadge>}
+      </Group>
     ),
   },
   {

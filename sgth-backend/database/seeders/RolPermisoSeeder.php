@@ -21,6 +21,8 @@ class RolPermisoSeeder extends Seeder
         // A quién se le registra un ticket, se le entrega un equipo o se le
         // presta uno.
         Permiso::BUSCAR_SERVIDORES,
+        // Las extensiones son de la central telefónica, que lleva TIC.
+        Permiso::GESTIONAR_DIRECTORIO,
     ];
 
     /** El jefe de TIC: lo del técnico, más asignar, configurar y dar de baja. */

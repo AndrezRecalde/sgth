@@ -4,9 +4,8 @@ import { TextInput, Select, Switch, Grid } from '@mantine/core'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { useUnidades } from '../hooks/useUnidades'
+import { useTodasUnidades } from '../hooks/useUnidades'
 import { extensionSchema, type ExtensionFormData } from '../schemas/extension.schema'
-import type { UnidadConRelaciones } from '@/types/api'
 
 interface Props {
   initialValues?: Partial<ExtensionFormData>
@@ -15,8 +14,9 @@ interface Props {
 
 export function ExtensionForm({ initialValues, onSubmit }: Props) {
   const contained = useContainedInput()
-  const { data: unidadesRaw } = useUnidades({ nivel: 2 })
-  const unidades = (unidadesRaw ?? []) as UnidadConRelaciones[]
+  // Como en el filtro del directorio: el listado de Estructura pide
+  // `ver-estructura`, que TIC no tiene, y solo trae quince.
+  const { data: unidades = [] } = useTodasUnidades({ nivel: 2 })
 
   const {
     register,

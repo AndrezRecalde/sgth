@@ -51,13 +51,6 @@ export const NAV_SGTH: NavGroup[] = [
             permiso: 'ver-estructura',
           },
           {
-            // Hasta que pase al Portal (PR 11), con quien ve la estructura.
-            label:   'Directorio telefónico',
-            href:    ROUTES.SGTH.ESTRUCTURA_DIRECTORIO,
-            icon:    'IconPhone',
-            permiso: 'ver-estructura',
-          },
-          {
             label: 'Puestos y cargos',
             href:  ROUTES.SGTH.ESTRUCTURA_PUESTOS,
             icon:  'IconBriefcase',
@@ -623,6 +616,14 @@ export const NAV_TIC: NavGroup[] = [
         icon:    'IconUserCog',
         permiso: 'gestionar-usuarios',
       },
+      {
+        // Las extensiones son de la central telefónica, que lleva TIC
+        // (decisión 8 del 2026-10-25). El personal las consulta en el Portal.
+        label:   'Directorio telefónico',
+        href:    ROUTES.TIC.DIRECTORIO,
+        icon:    'IconPhone',
+        permiso: 'gestionar-directorio',
+      },
     ],
   },
 ]
@@ -687,6 +688,13 @@ export const NAV_PORTAL: NavGroup[] = [
         label: 'Noticias y comunicados',
         href:  ROUTES.PORTAL.COMUNICADOS,
         icon:  'IconNews',
+        permiso: 'acceso-autoservicio',
+      },
+      {
+        // En consulta para todos; lo mantiene TIC (decisión 8 del 2026-10-25).
+        label: 'Directorio telefónico',
+        href:  ROUTES.PORTAL.DIRECTORIO,
+        icon:  'IconPhone',
         permiso: 'acceso-autoservicio',
       },
       {

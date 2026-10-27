@@ -475,6 +475,8 @@ export type ExtensionTelefonicaParams = {
   per_page?: number
   search?: string
   unidad_administrativa_id?: number
+  /** Solo lo atiende el backend para quien tiene `gestionar-directorio`. */
+  incluir_inactivas?: boolean
 }
 
 // Tipos extendidos con relaciones (no generados por OpenAPI)

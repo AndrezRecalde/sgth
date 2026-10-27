@@ -27849,6 +27849,7 @@
         "/v1/estructura/directorio-telefonico": {
             "get": {
                 "operationId": "extensionTelefonica.index",
+                "description": "Las inactivas, solo para quien mantiene el directorio y las pide con\n`incluir_inactivas`: sin eso, la extensi\u00f3n que se desactivaba desaparec\u00eda\ntambi\u00e9n de la pantalla de gesti\u00f3n y no hab\u00eda forma de reactivarla.",
                 "summary": "Directorio telef\u00f3nico \u2014 lista plana con filtros opcionales",
                 "tags": [
                     "ExtensionTelefonica"

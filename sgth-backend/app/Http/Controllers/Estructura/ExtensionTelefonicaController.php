@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Estructura;
 
+use App\Enums\Permiso;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Estructura\ExtensionTelefonicaResource;
 use App\Models\Estructura\ExtensionTelefonica;
@@ -15,11 +16,18 @@ class ExtensionTelefonicaController extends Controller
 {
     /**
      * Directorio telefónico — lista plana con filtros opcionales.
+     *
+     * Las inactivas, solo para quien mantiene el directorio y las pide con
+     * `incluir_inactivas`: sin eso, la extensión que se desactivaba desaparecía
+     * también de la pantalla de gestión y no había forma de reactivarla.
      */
     public function index(Request $request): JsonResponse
     {
+        $conInactivas = $request->boolean('incluir_inactivas')
+            && $request->user()->can(Permiso::GESTIONAR_DIRECTORIO->value);
+
         $extensiones = ExtensionTelefonica::with('unidadAdministrativa')
-            ->activas()
+            ->when(! $conInactivas, fn($q) => $q->activas())
             ->when(
                 $request->filled('search'),
                 fn($q) => $q->where(function ($q) use ($request) {
@@ -38,6 +46,7 @@ class ExtensionTelefonicaController extends Controller
                 )
             )
             ->orderBy('numero_extension')
+            ->orderBy('id')
             ->get();
 
         return ApiResponse::ok(

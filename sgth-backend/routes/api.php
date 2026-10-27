@@ -376,11 +376,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 ->name('estructura.partidas-presupuestarias.destroy');
         });
 
-        // Directorio telefónico público para servidores
+        // El directorio telefónico: lo consulta todo el personal desde el
+        // Portal; las extensiones las mantiene TIC, también las inactivas
+        // (docs/plan-roles-y-accesos.md, PR 11).
         Route::get('directorio-telefonico', [ExtensionTelefonicaController::class, 'index']);
 
-        // Gestión de extensiones (protegida por middleware)
-        Route::middleware('role:admin-ti|admin-uath')->group(function () {
+        Route::middleware('permission:gestionar-directorio')->group(function () {
             Route::post('extensiones', [ExtensionTelefonicaController::class, 'store']);
             Route::put('extensiones/{id}', [ExtensionTelefonicaController::class, 'update']);
             Route::delete('extensiones/{id}', [ExtensionTelefonicaController::class, 'destroy']);

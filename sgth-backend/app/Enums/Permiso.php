@@ -153,6 +153,9 @@ enum Permiso: string
     case GESTIONAR_TECNICOS = 'gestionar-tecnicos';
     case CONFIGURAR_SLA = 'configurar-sla';
     case GESTIONAR_BASE_CONOCIMIENTO = 'gestionar-base-conocimiento';
+    // Las extensiones del directorio telefónico, que mantiene TIC
+    // (docs/plan-roles-y-accesos.md, PR 11). Consultarlo no pide permiso.
+    case GESTIONAR_DIRECTORIO = 'gestionar-directorio';
 
     // ── MÓDULO 14: Disciplinario ─────────────────────────────────
     case VER_SUMARIOS = 'ver-sumarios';
