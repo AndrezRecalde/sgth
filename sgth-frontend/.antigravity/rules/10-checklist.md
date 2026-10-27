@@ -6,11 +6,30 @@
 npx tsc --noEmit
 npx eslint src
 node scripts/lint-css.mjs
+npm test
 ```
 
 La tercera línea revisa las hojas CSS, que ESLint no lee: hexadecimales,
 `rgb()`, colores con nombre y escalas fuera de la paleta. `npm run lint` corre
-las dos últimas.
+la segunda y la tercera.
+
+### Las pruebas de unidad
+
+`npm test` corre Vitest. Existe desde el 2026-10-27 y empezó por el menú
+(`config/nav.test.ts`) y la guarda de pantalla del shell
+(`components/layout/GuardaDePantalla.test.tsx`), que deciden qué ve y qué
+puede abrir cada rol: un error ahí no se nota con la sesión de quien desarrolla,
+que suele tener muchos roles.
+
+- La prueba va junto a lo que prueba, como `nombre.test.ts` o `.test.tsx`.
+- Corre en Node. Si monta componentes, su primera línea es
+  `// @vitest-environment jsdom`, y se envuelve en `MantineProvider` con el
+  `theme` de la app.
+- Los permisos de cada rol están en `src/test/permisos-por-rol.json`, que no
+  se edita a mano: lo genera, y vigila que siga igual a `RolPermisoSeeder`,
+  `PermisosPorRolDelFrontendTest` del backend. Si cambia el seeder, se
+  regenera con lo que dice la cabecera de esa prueba.
+- Si tocas `config/nav.ts` o el shell, `npm test` va en verde antes de cerrar.
 
 `--ext` se cayó del comando: con la configuración plana de ESLint 9 no hace
 nada —las extensiones salen de `eslint.config.mjs`— y dejarlo escrito sugería
