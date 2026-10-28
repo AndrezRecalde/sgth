@@ -5,9 +5,10 @@ import { Button } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconCalendarEvent, IconCubePlus } from '@tabler/icons-react'
 import {
-  DataState, MotivoModal, PAGINACION_ES, PageHeader, PageShell, SgthTable,
+  AvisoSinFicha, DataState, MotivoModal, PAGINACION_ES, PageHeader, PageShell, SgthTable,
 } from '@/components/ui'
 import { useAuth } from '@/hooks/useAuth'
+import { useTieneFicha } from '@/hooks/useTieneFicha'
 import {
   FILTROS_INICIALES_MIS_PERMISOS,
   MisPermisosFiltros,
@@ -43,6 +44,7 @@ export function MisPermisosView() {
   )
   const [modalAbierto, { open: abrirModal, close: cerrarModal }] = useDisclosure(false)
   const { hasPermiso } = useAuth()
+  const tieneFicha = useTieneFicha()
   const puedeRegistrar = hasPermiso('crear-permiso')
   const { exportar, exportandoId } = useExportarPermiso()
   const { anular } = usePermisoMutations()
@@ -71,6 +73,20 @@ export function MisPermisosView() {
   })
 
   const periodo = filtros.anio ? `en ${filtros.anio}` : 'registrados'
+
+  // Sin ficha, «Nuevo permiso» abría un modal que solo decía que no podía, y
+  // el vacío no explicaba por qué no había nada (PR 15).
+  if (!tieneFicha) {
+    return (
+      <PageShell>
+        <PageHeader
+          title="Mis permisos"
+          description="Sus permisos de ausencia: el estado, el plazo para entregar el respaldo y el motivo."
+        />
+        <AvisoSinFicha motivo="Los permisos de ausencia se registran sobre el expediente del servidor." />
+      </PageShell>
+    )
+  }
 
   return (
     <PageShell>

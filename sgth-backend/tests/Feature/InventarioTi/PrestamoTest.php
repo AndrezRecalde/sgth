@@ -359,3 +359,14 @@ test('el acta del préstamo sale desde la entrega', function () {
         ->assertHeader('Content-Type', 'application/pdf')
         ->assertHeader('Content-Disposition', 'inline; filename="acta-prestamo-PRE-2026-00001.pdf"');
 });
+
+test('una cuenta sin ficha recibe 422 al pedir equipos', function () {
+    // Era un 404, como si faltara algo que buscar; es una regla de quién pide,
+    // igual que en el resto del autoservicio (docs/plan-roles-y-accesos.md,
+    // PR 15). El técnico de TIC de estas pruebas no tiene ficha.
+    pedirPrestamo($this->tecnico)
+        ->assertStatus(422)
+        ->assertJsonPath('mensaje', 'Su usuario no está vinculado a un expediente: no puede pedir equipos.');
+
+    expect(PrestamoEquipo::count())->toBe(0);
+});

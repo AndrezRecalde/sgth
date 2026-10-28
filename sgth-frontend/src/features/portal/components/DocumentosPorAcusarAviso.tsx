@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Alert, Anchor } from '@mantine/core'
 import { IconSignature } from '@tabler/icons-react'
 import { ROUTES } from '@/config/routes'
+import { useTieneFicha } from '@/hooks/useTieneFicha'
 import { useMisDocumentos } from '../hooks/useMisDocumentos'
 
 /**
@@ -12,7 +13,9 @@ import { useMisDocumentos } from '../hooks/useMisDocumentos'
  * pendientes, no se muestra nada.
  */
 export function DocumentosPorAcusarAviso() {
-  const pendientes = (useMisDocumentos().data ?? []).filter((d) => d.puede_acusar).length
+  // Sin ficha no hay documentos y el API responde 422: la portada ya no lo
+  // monta, pero el aviso no depende de que quien lo use se acuerde.
+  const pendientes = (useMisDocumentos(useTieneFicha()).data ?? []).filter((d) => d.puede_acusar).length
 
   if (!pendientes) return null
 

@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation'
 import { ActionIcon, Button, Group, SegmentedControl, Select, Text } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { IconChevronLeft, IconChevronRight, IconListDetails, IconPresentation } from '@tabler/icons-react'
-import { DataState, PageHeader, PageShell, SectionCard, Toolbar } from '@/components/ui'
+import { AvisoSinFicha, DataState, PageHeader, PageShell, SectionCard, Toolbar } from '@/components/ui'
 import { ROUTES } from '@/config/routes'
 import { useContainedInput } from '@/hooks/useContainedInput'
+import { useTieneFicha } from '@/hooks/useTieneFicha'
 import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 import { plural } from '@/lib/plural'
 import { AgendaEquipos } from '@/features/prestamos-ti/components/AgendaEquipos'
@@ -40,6 +41,10 @@ function primerDia(): string {
 export function DisponibilidadView() {
   const router = useRouter()
   const compacto = useContainedInput('sm')
+  // Sin ficha la disponibilidad se puede consultar, pero el préstamo se pide a
+  // nombre del servidor: el formulario se llenaba y el API lo rechazaba
+  // (PR 15). La agenda queda como la de TIC, de solo consulta.
+  const tieneFicha = useTieneFicha()
   const { data: reglas } = useReglasPrestamoPortal()
   const conFinDeSemana = reglas?.presta_fines_de_semana ?? false
 
@@ -68,7 +73,7 @@ export function DisponibilidadView() {
         description={reglas
           ? `Proyectores, parlantes y otros equipos de TIC. Se prestan de ${reglas.hora_apertura} a ${reglas.hora_cierre}, hasta ${plural(reglas.plazo_maximo_dias_habiles, 'día hábil', 'días hábiles')}.`
           : 'Proyectores, parlantes y otros equipos de TIC.'}
-        actions={(
+        actions={tieneFicha && (
           <Group gap="xs">
             <Button variant="subtle" leftSection={<IconListDetails size={16} />} onClick={() => router.push(ROUTES.PORTAL.MIS_PRESTAMOS)}>
               Mis préstamos
@@ -80,6 +85,10 @@ export function DisponibilidadView() {
           </Group>
         )}
       />
+
+      {!tieneFicha && (
+        <AvisoSinFicha compacto motivo="Puede consultar la disponibilidad, pero el préstamo se pide a nombre del servidor." />
+      )}
 
       <Toolbar>
         <SegmentedControl value={vista} onChange={(v) => setVista(v === 'semana' ? 'semana' : 'dia')}
@@ -109,10 +118,12 @@ export function DisponibilidadView() {
         {reglas && (
           <SectionCard title={vista === 'dia' ? 'Horario del día' : 'Horario de la semana'}>
             <Text size="xs" c="dimmed" mb="sm">
-              Marque los equipos que necesita, o haga clic en un horario libre de su barra. Lo pintado ya está ocupado.
+              {tieneFicha
+                ? 'Marque los equipos que necesita, o haga clic en un horario libre de su barra. Lo pintado ya está ocupado.'
+                : 'Lo pintado ya está ocupado.'}
             </Text>
             <AgendaEquipos equipos={visibles} dias={dias} reglas={reglas} seleccion={seleccion}
-              onSeleccionar={alternar} onElegir={elegir} />
+              onSeleccionar={tieneFicha ? alternar : undefined} onElegir={tieneFicha ? elegir : undefined} />
           </SectionCard>
         )}
       </DataState>

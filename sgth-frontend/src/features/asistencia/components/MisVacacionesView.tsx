@@ -3,9 +3,9 @@
 import { useState } from 'react'
 import { Button } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconBeach, IconCubePlus, IconUserOff } from '@tabler/icons-react'
+import { IconBeach, IconCubePlus } from '@tabler/icons-react'
 import {
-  DataState, EmptyState, PAGINACION_ES, PageHeader, PageShell, SectionCard, SgthTable,
+  AvisoSinFicha, DataState, EmptyState, PAGINACION_ES, PageHeader, PageShell, SectionCard, SgthTable,
 } from '@/components/ui'
 import { useAuth } from '@/hooks/useAuth'
 import { generaVacaciones } from '@/lib/regimen'
@@ -34,18 +34,14 @@ export function MisVacacionesView() {
   const servidor = usuario?.servidor ?? null
   const [page, setPage] = useState(1)
   const [modalAbierto, { open: abrirModal, close: cerrarModal }] = useDisclosure(false)
-  const { data, isLoading, error, refetch } = useMisVacaciones()
+  const { data, isLoading, error, refetch } = useMisVacaciones(!!servidor)
   const { exportar, exportandoId } = useExportarVacacion()
 
   if (!servidor) {
     return (
       <PageShell>
         <PageHeader title={TITULO} description={DESCRIPCION} />
-        <EmptyState
-          icon={IconUserOff}
-          title="Su usuario no está vinculado a un servidor"
-          description="Las vacaciones se llevan sobre el expediente del servidor. Pídale a Talento Humano que complete la vinculación."
-        />
+        <AvisoSinFicha motivo="Las vacaciones se llevan sobre el expediente del servidor." />
       </PageShell>
     )
   }

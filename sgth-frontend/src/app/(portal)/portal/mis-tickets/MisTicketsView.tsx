@@ -4,8 +4,9 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button, SegmentedControl } from '@mantine/core'
 import { IconHeadset, IconPlus } from '@tabler/icons-react'
-import { DataState, PAGINACION_ES, PageHeader, PageShell, SgthTable, Toolbar } from '@/components/ui'
+import { AvisoSinFicha, DataState, PAGINACION_ES, PageHeader, PageShell, SgthTable, Toolbar } from '@/components/ui'
 import { ROUTES } from '@/config/routes'
+import { useTieneFicha } from '@/hooks/useTieneFicha'
 import { NuevoTicketModal, type PropuestaTicket } from '@/features/helpdesk/components/NuevoTicketModal'
 import { columnasMisTickets } from '@/features/helpdesk/components/tickets.columns'
 import { FILTROS_MIS_TICKETS } from '@/features/helpdesk/constants/estados'
@@ -28,9 +29,24 @@ export function MisTicketsView() {
   const [vista, setVista] = useState<Vista>('en_curso')
   const [page, setPage] = useState(1)
   const [nuevo, setNuevo] = useState<PropuestaTicket | null>(null)
+  const tieneFicha = useTieneFicha()
   const { data, isLoading, error } = useTickets({ propios: true, vista }, page)
 
   const pedir = <Button variant="light" leftSection={<IconPlus size={16} />} onClick={() => setNuevo({})}>Pedir ayuda</Button>
+
+  // El ticket se registra a nombre del servidor: sin ficha, el API lo
+  // rechazaba al enviar, con el problema ya escrito (PR 15).
+  if (!tieneFicha) {
+    return (
+      <PageShell>
+        <PageHeader
+          title="Mis tickets"
+          description="Sus pedidos de ayuda a la Unidad de TIC: sígalos, responda y confirme la solución."
+        />
+        <AvisoSinFicha motivo="Los tickets se registran a nombre del servidor. Mientras tanto, la Unidad de TIC puede registrar el suyo." />
+      </PageShell>
+    )
+  }
 
   return (
     <PageShell>

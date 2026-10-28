@@ -4,9 +4,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button, Select } from '@mantine/core'
 import { IconBan, IconEye, IconPresentation } from '@tabler/icons-react'
-import { DataState, PAGINACION_ES, PageHeader, PageShell, SgthTable, Toolbar, confirmar, type TableAction } from '@/components/ui'
+import { AvisoSinFicha, DataState, PAGINACION_ES, PageHeader, PageShell, SgthTable, Toolbar, confirmar, type TableAction } from '@/components/ui'
 import { ROUTES } from '@/config/routes'
 import { useContainedInput } from '@/hooks/useContainedInput'
+import { useTieneFicha } from '@/hooks/useTieneFicha'
 import { PrestamoDetalle } from '@/features/prestamos-ti/components/PrestamoDetalle'
 import { columnasMisPrestamos } from '@/features/prestamos-ti/components/prestamos.columns'
 import { ESTADOS_PRESTAMO } from '@/features/prestamos-ti/constants/estados'
@@ -20,6 +21,7 @@ import type { EstadoPrestamo, PrestamoEquipo } from '@/features/prestamos-ti/ser
 export function MisPrestamosView() {
   const router = useRouter()
   const compacto = useContainedInput('sm')
+  const tieneFicha = useTieneFicha()
   const [page, setPage] = useState(1)
   const [estado, setEstado] = useState<EstadoPrestamo | null>(null)
   const [abierto, setAbierto] = useState<number | null>(null)
@@ -43,6 +45,20 @@ export function MisPrestamosView() {
   ]
 
   const pedir = <Button variant="light" leftSection={<IconPresentation size={16} />} onClick={() => router.push(ROUTES.PORTAL.PRESTAMOS)}>Pedir equipos</Button>
+
+  // Sin ficha el vacío decía «Todavía no ha pedido equipos» y ofrecía pedirlos,
+  // para que el API rechazara el préstamo al enviar (PR 15).
+  if (!tieneFicha) {
+    return (
+      <PageShell>
+        <PageHeader
+          title="Mis préstamos"
+          description="Sus solicitudes de equipos a TIC: si están aprobadas, cuándo los retiró y cuándo los devolvió."
+        />
+        <AvisoSinFicha motivo="Los préstamos de equipos se piden a nombre del servidor." />
+      </PageShell>
+    )
+  }
 
   return (
     <PageShell>

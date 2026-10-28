@@ -101,3 +101,15 @@ test('lo que pide desde el portal queda en su unidad aunque mande otra', functio
     expect(Vacacion::where('servidor_id', $this->titular->id)->sole()->unidad_administrativa_id)
         ->toBe($this->unidad->id);
 });
+
+test('una cuenta sin ficha recibe 422 y no un 404 de ruta inexistente', function () {
+    // Con el `0` del controlador, el saldo hacía `findOrFail(0)` y salía «La
+    // ruta solicitada no existe» (docs/plan-roles-y-accesos.md, PR 15).
+    $sinFicha = User::factory()->create(['servidor_id' => null]);
+    $sinFicha->assignRole('servidor');
+
+    $this->actingAs($sinFicha, 'sanctum')
+        ->getJson('/api/v1/autoservicio/mis-vacaciones')
+        ->assertStatus(422)
+        ->assertJsonPath('mensaje', 'Su cuenta no está vinculada a un servidor: no tiene vacaciones.');
+});

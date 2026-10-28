@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Grid } from '@mantine/core'
 import { IconLock } from '@tabler/icons-react'
-import { EmptyState, SectionCard, confirmar, notificar } from '@/components/ui'
+import { AvisoSinFicha, EmptyState, SectionCard, confirmar, notificar } from '@/components/ui'
 import { useAuth } from '@/hooks/useAuth'
 import { useMarcacionOnline } from '../hooks/useMarcacionOnline'
 import { useUbicacion } from '../hooks/useUbicacion'
@@ -79,6 +79,11 @@ export function MarcacionOnlineTab() {
         description="Si su trabajo lo requiere, solicítela a Talento Humano."
       />
     )
+  }
+
+  // Sin ficha, el aviso de abajo culpaba a la marcación biométrica (PR 15).
+  if (!servidor) {
+    return <AvisoSinFicha motivo="La marcación en línea se registra con la cédula del servidor." />
   }
 
   if (!habilitado) {

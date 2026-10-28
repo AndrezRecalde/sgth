@@ -5,9 +5,10 @@ import { Alert, Text } from '@mantine/core'
 import { IconFileCertificate, IconFileText, IconInfoCircle, IconSignature } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
 import {
-  DataState, PageHeader, PageShell, SgthTable, StatusBadge, TableActions, confirmar, notificar,
+  AvisoSinFicha, DataState, PageHeader, PageShell, SgthTable, StatusBadge, TableActions, confirmar, notificar,
   type TableAction,
 } from '@/components/ui'
+import { useTieneFicha } from '@/hooks/useTieneFicha'
 import { abrirOGuardarArchivo } from '@/lib/archivo'
 import { formatFecha, formatFechaHora } from '@/lib/fecha'
 import { getApiErrorMessage } from '@/types/api'
@@ -21,7 +22,8 @@ import { misDocumentosService, type MiDocumentoLaboral } from '../services/misDo
  * que se le notificó por el portal.
  */
 export function MisDocumentosLaboralesView() {
-  const { data, isLoading, error } = useMisDocumentos()
+  const tieneFicha = useTieneFicha()
+  const { data, isLoading, error } = useMisDocumentos(tieneFicha)
   const acusar = useAcusarRecibo()
   const [abriendo, setAbriendo] = useState<number | null>(null)
   const documentos = data ?? []
@@ -96,12 +98,27 @@ export function MisDocumentosLaboralesView() {
     { accessor: 'acciones', title: '', width: 50, render: (d) => <TableActions actions={accionesDe(d)} /> },
   ]
 
+  const cabecera = (
+    <PageHeader
+      title="Mis documentos laborales"
+      description="Las acciones de personal que se le notificaron, sus registros internos y constancias"
+    />
+  )
+
+  // Sin ficha el API responde 422, y la pantalla lo pintaba como un error en
+  // rojo con el texto del backend (PR 15).
+  if (!tieneFicha) {
+    return (
+      <PageShell>
+        {cabecera}
+        <AvisoSinFicha motivo="Los documentos laborales se emiten sobre el expediente del servidor." />
+      </PageShell>
+    )
+  }
+
   return (
     <PageShell>
-      <PageHeader
-        title="Mis documentos laborales"
-        description="Las acciones de personal que se le notificaron, sus registros internos y constancias"
-      />
+      {cabecera}
 
       {pendientes > 0 && (
         <Alert variant="light" color="amber" icon={<IconInfoCircle size={16} />}>

@@ -2,12 +2,16 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { notificar } from '@/components/ui'
 import { misDocumentosService } from '../services/misDocumentosService'
 
-/** «Mis documentos laborales» (fase 6.3a). */
-export function useMisDocumentos() {
+/**
+ * «Mis documentos laborales» (fase 6.3a). `enabled` en `false` para una cuenta
+ * sin ficha: el API le responde 422 (PR 15).
+ */
+export function useMisDocumentos(enabled = true) {
   return useQuery({
     queryKey: ['mis-documentos-laborales'],
     queryFn: misDocumentosService.listar,
     staleTime: 1000 * 60,
+    enabled,
   })
 }
 

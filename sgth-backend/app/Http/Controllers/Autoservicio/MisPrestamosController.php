@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Autoservicio;
 use App\Contracts\InventarioTi\DisponibilidadPrestamoServiceInterface;
 use App\Contracts\InventarioTi\PrestamoEstadoServiceInterface;
 use App\Contracts\InventarioTi\PrestamoServiceInterface;
+use App\Exceptions\ReglaNegocioException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\InventarioTi\SolicitarPrestamoRequest;
 use App\Http\Resources\InventarioTi\PrestamoEquipoResource;
@@ -53,10 +54,11 @@ final class MisPrestamosController extends Controller
 
     public function store(SolicitarPrestamoRequest $request): JsonResponse
     {
-        $servidorId = $request->user()->servidor_id;
-        if (! $servidorId) {
-            return ApiResponse::noEncontrado('Su usuario no está vinculado a un expediente: no puede pedir equipos.');
-        }
+        // 422 y no 404: no falta nada que buscar, es una regla de quién pide.
+        // Igual que el resto del autoservicio con una cuenta sin ficha
+        // (docs/plan-roles-y-accesos.md, PR 15).
+        $servidorId = $request->user()->servidor_id
+            ?? throw new ReglaNegocioException('Su usuario no está vinculado a un expediente: no puede pedir equipos.');
 
         $prestamo = $this->prestamos->solicitar($servidorId, $request->validated());
 
