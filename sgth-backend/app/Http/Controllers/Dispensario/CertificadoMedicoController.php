@@ -19,12 +19,9 @@ class CertificadoMedicoController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $query = CertificadoMedico::with([
-            'consultaMedica.historiaClinica.servidor',
-            'consultaMedica.historiaClinica.cargaFamiliar',
-            'emisor',
-            'diagnosticoCie10',
-        ])
+        // Con el anulador: la tarjeta de la consulta pinta quién lo anuló, y el
+        // listado no lo traía.
+        $query = CertificadoMedico::with(CertificadoMedicoService::RELACIONES)
             // created_at es timestamp(0): sin desempate por id, dos páginas
             // del mismo resultado pueden solaparse.
             ->orderBy('created_at', 'desc')
@@ -95,13 +92,8 @@ class CertificadoMedicoController extends Controller
 
     public function show(int $id): JsonResponse
     {
-        $certificado = CertificadoMedico::with([
-            'consultaMedica.historiaClinica.servidor',
-            'consultaMedica.historiaClinica.cargaFamiliar',
-            'emisor',
-            'anulador',
-            'diagnosticoCie10',
-        ])->findOrFail($id);
+        $certificado = CertificadoMedico::with(CertificadoMedicoService::RELACIONES)
+            ->findOrFail($id);
 
         return ApiResponse::ok($certificado);
     }
