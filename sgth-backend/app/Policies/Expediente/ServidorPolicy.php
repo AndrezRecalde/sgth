@@ -2,6 +2,7 @@
 
 namespace App\Policies\Expediente;
 
+use App\Enums\Permiso;
 use App\Models\User;
 use App\Models\Expediente\Servidor;
 
@@ -61,11 +62,13 @@ class ServidorPolicy
     }
 
     /**
-     * Determine whether the user can create models.
+     * Registrar la ficha de un servidor nuevo. Por permiso y no por el rol
+     * admin-uath desde el PR 14 de docs/plan-roles-y-accesos.md: el botón del
+     * Expediente se guía por el mismo permiso.
      */
     public function crear(User $user): bool
     {
-        return $user->hasRole('admin-uath');
+        return $user->can(Permiso::REGISTRAR_FICHA_SERVIDOR->value);
     }
 
     /**

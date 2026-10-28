@@ -141,13 +141,17 @@ test('una vigente cuyo contrato ya terminó cuenta como vencida aunque la tarea 
 test('cada bloque sale con su permiso', function () {
     $tablero = fn (string $rol) => $this->actingAs(usuarioDePruebaTablero($rol), 'sanctum')->getJson('/api/v1/comunicacion/tablero');
 
-    // Talento Humano y Auditoría consultan las credenciales, y con ellas las fotos.
+    // Talento Humano y Auditoría consultan las credenciales, pero no las
+    // fotos: el bloque los llevaba a una pantalla que no pueden abrir (PR 14).
     foreach (['admin-uath', 'auditor'] as $rol) {
         $datos = $tablero($rol)->assertOk()->json('datos');
-        expect($datos['fotografias'])->not->toBeNull()
+        expect($datos['fotografias'])->toBeNull()
             ->and($datos['credenciales'])->not->toBeNull()
             ->and($datos['identidad'])->toBeNull();
     }
+
+    // Quien toma las fotos, sí.
+    expect($tablero('comunicacion-social')->assertOk()->json('datos.fotografias'))->not->toBeNull();
 
     // La persona designada para los logos ve solo los logos.
     $datos = $tablero('responsable-identidad')->assertOk()->json('datos');

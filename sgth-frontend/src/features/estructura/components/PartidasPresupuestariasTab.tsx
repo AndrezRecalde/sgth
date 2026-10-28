@@ -13,6 +13,7 @@ import {
   Toolbar,
   confirmar,
 } from "@/components/ui";
+import { useAuth } from "@/hooks/useAuth";
 import { useContainedInput } from "@/hooks/useContainedInput";
 import { usePartidasPresupuestarias } from "../hooks/usePartidasPresupuestarias";
 import { usePartidaPresupuestariaMutations } from "../hooks/usePartidaPresupuestariaMutations";
@@ -31,6 +32,11 @@ export function PartidasPresupuestariasTab() {
   const [modalOpened, { open, close }] = useDisclosure(false);
 
   const contained = useContainedInput();
+  // La pantalla la abre quien ve la estructura; el catálogo lo escribe quien
+  // gestiona el distributivo, que es lo que pide el API (PR 14). Antes el
+  // asistente, el director y el auditor veían los botones y recibían 403.
+  const { hasPermiso } = useAuth();
+  const puedeGestionar = hasPermiso("gestionar-distributivo");
   const { eliminar } = usePartidaPresupuestariaMutations();
   const [searchConRetardo] = useDebouncedValue(search, RETARDO_BUSQUEDA_MS);
   const { data: partidas = [], isLoading, error } = usePartidasPresupuestarias(
@@ -100,12 +106,14 @@ export function PartidasPresupuestariasTab() {
             {
               label: "Editar partida",
               icon: <IconEdit size={14} />,
+              hidden: !puedeGestionar,
               onClick: () => handleEdit(partida),
             },
             {
               label: "Eliminar partida",
               icon: <IconTrash size={14} />,
               color: "red",
+              hidden: !puedeGestionar,
               onClick: () =>
                 confirmar({
                   title: "Eliminar partida presupuestaria",
@@ -132,16 +140,18 @@ export function PartidasPresupuestariasTab() {
     <Stack gap="md">
       <Toolbar
         actions={
-          <Button
-            leftSection={<IconPlus size={16} />}
-            variant="light"
-            onClick={() => {
-              setEditPartida(null);
-              open();
-            }}
-          >
-            Nueva partida
-          </Button>
+          puedeGestionar && (
+            <Button
+              leftSection={<IconPlus size={16} />}
+              variant="light"
+              onClick={() => {
+                setEditPartida(null);
+                open();
+              }}
+            >
+              Nueva partida
+            </Button>
+          )
         }
       >
         <TextInput

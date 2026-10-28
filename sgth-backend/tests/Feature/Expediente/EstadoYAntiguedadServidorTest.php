@@ -23,7 +23,7 @@ uses(TestCase::class, RefreshDatabase::class);
 |  - el régimen y la fecha de ingreso dejan de editarse en la ficha.
 */
 beforeEach(function () {
-    Role::firstOrCreate(['name' => 'admin-uath', 'guard_name' => 'sanctum']);
+    rolQueRegistraFichas('admin-uath');
     $this->actingAs(User::factory()->create(), 'sanctum');
 
     $this->unidad = UnidadAdministrativa::create([

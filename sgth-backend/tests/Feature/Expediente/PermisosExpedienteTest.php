@@ -22,9 +22,10 @@ use Tests\TestCase;
 uses(TestCase::class, RefreshDatabase::class);
 
 beforeEach(function () {
-    foreach (['servidor', 'admin-uath', 'asistente-uath'] as $rol) {
+    foreach (['servidor', 'asistente-uath'] as $rol) {
         Role::firstOrCreate(['name' => $rol, 'guard_name' => 'sanctum']);
     }
+    rolQueRegistraFichas('admin-uath');
 
     $unidad = unidadDePrueba(['codigo' => 'UATH', 'nombre' => 'Talento Humano']);
     $puesto = puestoDePrueba($unidad);

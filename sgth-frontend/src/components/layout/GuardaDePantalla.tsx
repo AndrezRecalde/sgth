@@ -1,12 +1,11 @@
 'use client'
 
 import { useEffect } from 'react'
-import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Button, Skeleton } from '@mantine/core'
-import { IconLock } from '@tabler/icons-react'
-import { EmptyState, PageShell } from '@/components/ui'
+import { Skeleton } from '@mantine/core'
+import { PageShell } from '@/components/ui'
 import { useAuth } from '@/hooks/useAuth'
+import { PantallaSinAcceso } from './RequierePermiso'
 import {
   getSubsistemasDisponibles, inicioDelSubsistema, puedeAbrirPantalla,
 } from '@/config/nav'
@@ -72,19 +71,9 @@ export function GuardaDePantalla({ subsistema, children }: Props) {
       : ROUTES.PORTAL.HOME
 
   return (
-    <PageShell>
-      <EmptyState
-        icon={IconLock}
-        title={entra
-          ? 'No tiene acceso a esta pantalla'
-          : `No tiene acceso a ${SUBSISTEMAS[subsistema].nombre}`}
-        description="Su perfil no la incluye. Si se la acaban de conceder, cierre la sesión y vuelva a entrar; si la necesita para su trabajo, solicítela a Talento Humano."
-        action={
-          <Button component={Link} href={salida} variant="default">
-            Ir al inicio
-          </Button>
-        }
-      />
-    </PageShell>
+    <PantallaSinAcceso
+      volverA={salida}
+      titulo={entra ? undefined : `No tiene acceso a ${SUBSISTEMAS[subsistema].nombre}`}
+    />
   )
 }

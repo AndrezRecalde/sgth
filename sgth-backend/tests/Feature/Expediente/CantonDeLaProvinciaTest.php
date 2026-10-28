@@ -17,7 +17,7 @@ uses(Tests\TestCase::class, RefreshDatabase::class);
  */
 
 beforeEach(function () {
-    Role::firstOrCreate(['name' => 'admin-uath', 'guard_name' => 'sanctum']);
+    rolQueRegistraFichas('admin-uath');
     $uath = User::factory()->create();
     $uath->assignRole('admin-uath');
     $this->actingAs($uath, 'sanctum');

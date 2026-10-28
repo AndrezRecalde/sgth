@@ -23,7 +23,7 @@ import { useDisclosure } from '@mantine/hooks'
 import type { Adquisicion } from
   '@/features/dispensario/services/adquisicionService'
 
-import { PageHeader, PageShell, SgthTable } from '@/components/ui'
+import { DataState, PageHeader, PageShell, SgthTable } from '@/components/ui'
 
 function NuevaAdquisicion({
   onCreada,
@@ -83,7 +83,7 @@ function HistorialAdquisiciones() {
   const anular       = useAnularAdquisicion()
   const descargarDocumento = useDescargarDocumentoAdquisicion()
 
-  const { data, isLoading } = useAdquisiciones({
+  const { data, isLoading, error, refetch } = useAdquisiciones({
     page, per_page: 15,
   })
 
@@ -102,16 +102,32 @@ function HistorialAdquisiciones() {
 
   return (
     <Stack gap="md">
-      <SgthTable
-        records={adquisiciones}
-        columns={columns}
-        fetching={isLoading}
-        minHeight={200}
-        totalRecords={data?.total ?? 0}
-        recordsPerPage={15}
+      {/* Con `DataState`: un fallo de la consulta se veía como una tabla
+          vacía, es decir, como si no se hubiera comprado nada (PR 14). */}
+      <DataState
+        loading={isLoading}
+        error={error}
+        errorTitle="No se pudo cargar el historial de adquisiciones"
+        errorHint="No quiere decir que no haya adquisiciones registradas: no se pudieron consultar."
+        onRetry={() => refetch()}
+        empty={!adquisiciones.length}
         page={page}
-        onPageChange={setPage}
-      />
+        emptyProps={{
+          icon: IconShoppingCart,
+          title: 'Sin adquisiciones registradas',
+          description: 'Las compras de medicamentos que se registren aparecerán aquí, con su documento.',
+        }}
+      >
+        <SgthTable
+          records={adquisiciones}
+          columns={columns}
+          minHeight={200}
+          totalRecords={data?.total ?? 0}
+          recordsPerPage={15}
+          page={page}
+          onPageChange={setPage}
+        />
+      </DataState>
 
       <SubirDocumentoModal
         opened={modalOpened}

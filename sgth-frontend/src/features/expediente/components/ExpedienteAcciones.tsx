@@ -15,6 +15,8 @@ interface Props {
   seleccionados: number
   puedeSolicitarCertificacion: boolean
   puedeVincularInicial: boolean
+  /** `registrar-ficha-servidor`: el asistente abre el Expediente y no registra fichas. */
+  puedeRegistrarFicha: boolean
   exportando: 'excel' | 'pdf' | null
   onSolicitarCertificacion: () => void
   onExportar: (tipo: 'excel' | 'pdf') => void
@@ -31,6 +33,7 @@ export function ExpedienteAcciones({
   seleccionados,
   puedeSolicitarCertificacion,
   puedeVincularInicial,
+  puedeRegistrarFicha,
   exportando,
   onSolicitarCertificacion,
   onExportar,
@@ -90,13 +93,15 @@ export function ExpedienteAcciones({
 
       {/* «Registrar ficha» y no «Nuevo servidor»: esto crea a la persona, no
           la contrata. El vínculo se registra en el paso siguiente. */}
-      <Button
-        variant="light"
-        leftSection={<IconUserPlus size={16} />}
-        onClick={onRegistrarFicha}
-      >
-        Registrar ficha
-      </Button>
+      {puedeRegistrarFicha && (
+        <Button
+          variant="light"
+          leftSection={<IconUserPlus size={16} />}
+          onClick={onRegistrarFicha}
+        >
+          Registrar ficha
+        </Button>
+      )}
     </>
   )
 }

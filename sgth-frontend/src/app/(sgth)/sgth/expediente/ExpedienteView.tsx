@@ -28,6 +28,9 @@ export function ExpedienteView() {
   const { hasPermiso } = useAuth()
   const router = useRouter()
   const puedeVincularInicial = usePuedeVincularInicial()
+  // Lo que pide `ServidorPolicy::crear` (PR 14): el asistente ve el Expediente
+  // y no registra fichas.
+  const puedeRegistrarFicha = hasPermiso('registrar-ficha-servidor')
   const [vinculacionOpened, { open: abrirVinculacion, close: cerrarVinculacion }] = useDisclosure(false)
   const {
     page, setPage, filtros, hayFiltros, filtrosSecundarios, situacion,
@@ -90,6 +93,7 @@ export function ExpedienteView() {
             seleccionados={selectedRecords.length}
             puedeSolicitarCertificacion={hasPermiso('solicitar-certificacion-medica')}
             puedeVincularInicial={puedeVincularInicial}
+            puedeRegistrarFicha={puedeRegistrarFicha}
             exportando={exportando}
             onSolicitarCertificacion={openLote}
             onExportar={handleExportar}
@@ -151,8 +155,10 @@ export function ExpedienteView() {
         } : {
           icon: IconFolder,
           title: 'No hay servidores registrados',
-          description: 'Comience registrando la ficha del primer servidor. El vínculo laboral se registra después, con su Acción de Personal de Ingreso.',
-          action: (
+          description: puedeRegistrarFicha
+            ? 'Comience registrando la ficha del primer servidor. El vínculo laboral se registra después, con su Acción de Personal de Ingreso.'
+            : 'Las fichas las registra el administrador de Talento Humano.',
+          action: puedeRegistrarFicha && (
             <Button variant="light"
               leftSection={<IconUserPlus size={14} />}
               onClick={handleNuevo}>

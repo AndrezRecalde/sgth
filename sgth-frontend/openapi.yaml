@@ -59966,6 +59966,7 @@
                                                         "object",
                                                         "null"
                                                     ],
+                                                    "description": "Solo a quien toma las fotos: con `ver-credenciales` bastaba, y el\nbloque llevaba a admin-uath y al auditor a una pantalla que no\npueden abrir (docs/plan-roles-y-accesos.md, PR 14).",
                                                     "properties": {
                                                         "activos": {
                                                             "type": "integer"

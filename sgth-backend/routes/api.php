@@ -372,16 +372,18 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
 
         // Catálogo de partidas presupuestarias. La lectura queda abierta a
         // cualquier usuario autenticado porque alimenta los selectores de
-        // Puestos y de las acciones de personal; la gestión del catálogo la
-        // restringe el middleware de rol, igual que las extensiones.
+        // Puestos y de las acciones de personal; la gestión del catálogo, el
+        // permiso del distributivo.
         Route::get('partidas-presupuestarias', [PartidaPresupuestariaController::class, 'index'])
             ->name('estructura.partidas-presupuestarias.index');
         Route::get('partidas-presupuestarias/{partida}', [PartidaPresupuestariaController::class, 'show'])
             ->name('estructura.partidas-presupuestarias.show');
 
         // admin-ti salió de aquí el 2026-10-26: las partidas son de Talento
-        // Humano (docs/plan-roles-y-accesos.md, PR 3).
-        Route::middleware('role:admin-uath')->group(function () {
+        // Humano (docs/plan-roles-y-accesos.md, PR 3). Por permiso y no por
+        // `role:admin-uath` desde el PR 14: `gestionar-distributivo` existía,
+        // lo tiene solo admin-uath, y ninguna ruta lo pedía.
+        Route::middleware('permission:gestionar-distributivo')->group(function () {
             Route::post('partidas-presupuestarias', [PartidaPresupuestariaController::class, 'store'])
                 ->name('estructura.partidas-presupuestarias.store');
             Route::put('partidas-presupuestarias/{partida}', [PartidaPresupuestariaController::class, 'update'])

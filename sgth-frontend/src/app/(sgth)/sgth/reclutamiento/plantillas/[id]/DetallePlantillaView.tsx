@@ -7,6 +7,7 @@ import { useDisclosure } from '@mantine/hooks'
 import { useRouter } from 'next/navigation'
 import { DataState, PageHeader, PageShell, SectionCard, StatusBadge } from '@/components/ui'
 import { ROUTES } from '@/config/routes'
+import { useAuth } from '@/hooks/useAuth'
 import { AgregarCriterioPlantillaModal } from '@/features/seleccion/components/AgregarCriterioPlantillaModal'
 import { SeccionCriterios } from '@/features/seleccion/components/SeccionCriterios'
 import { useEliminarCriterioPlantilla, usePlantillaDetalle } from '@/features/seleccion/hooks/usePlantilla'
@@ -25,11 +26,17 @@ export function DetallePlantillaView({ id }: { id: string }) {
   const [modalAbierto, modal] = useDisclosure(false)
   const { data: plantilla, isLoading, error, refetch } = usePlantillaDetalle(plantillaId)
   const eliminar = useEliminarCriterioPlantilla(plantillaId)
+  // Lo que pide el API para agregar y quitar criterios. Era `editable: true`
+  // fijo: la pantalla se guarda en el menú con el mismo permiso, pero una
+  // regla que vive en dos sitios no debe depender de que el otro la cumpla
+  // (PR 14).
+  const { hasPermiso } = useAuth()
+  const gestiona = hasPermiso('gestionar-convocatorias')
 
   const criterios = plantilla?.criterios ?? []
   const total = criterios.reduce((s, c) => s + Number(c.puntaje_maximo), 0)
   const agregarEn = (s: SeccionCriterio) => { setSeccion(s); modal.open() }
-  const seccionProps = { editable: true, onEliminar: (cid: number) => eliminar.mutate(cid) }
+  const seccionProps = { editable: gestiona, onEliminar: (cid: number) => eliminar.mutate(cid) }
 
   return (
     <PageShell>

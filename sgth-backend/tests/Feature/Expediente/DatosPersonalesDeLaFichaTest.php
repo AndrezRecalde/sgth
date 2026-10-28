@@ -19,7 +19,7 @@ use Spatie\Permission\Models\Role;
 uses(Tests\TestCase::class, RefreshDatabase::class);
 
 beforeEach(function () {
-    Role::firstOrCreate(['name' => 'admin-uath', 'guard_name' => 'sanctum']);
+    rolQueRegistraFichas('admin-uath');
     $this->talentoHumano = User::factory()->create();
     $this->talentoHumano->assignRole('admin-uath');
 

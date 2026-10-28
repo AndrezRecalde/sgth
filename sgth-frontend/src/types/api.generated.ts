@@ -43458,6 +43458,11 @@ export interface operations {
                         /** @constant */
                         mensaje: "Inicio de Comunicación Social.";
                         datos: {
+                            /**
+                             * @description Solo a quien toma las fotos: con `ver-credenciales` bastaba, y el
+                             *     bloque llevaba a admin-uath y al auditor a una pantalla que no
+                             *     pueden abrir (docs/plan-roles-y-accesos.md, PR 14).
+                             */
                             fotografias: {
                                 activos: number;
                                 con_foto: number;
