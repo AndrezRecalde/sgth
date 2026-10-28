@@ -28,6 +28,29 @@ class CertificadoMedicoService
 
     public const DIAS_MAX_REPOSO = 3;
 
+    /**
+     * Relaciones de cada certificado en el listado, el detalle, la emisión y
+     * la anulación. Emisor y anulador van con las columnas que pide
+     * `nombre_completo` y nada más: cargados enteros, el accesor traía por su
+     * cuenta el servidor completo, y la respuesta salía con el correo y el
+     * celular personales, el contacto de emergencia, la fecha de nacimiento y
+     * el tipo de sangre del médico que lo emitió o de quien lo anuló.
+     *
+     * El paciente, con lo que lo identifica —lo mismo que imprime el PDF—: la
+     * pantalla de la consulta no pinta nada de él desde aquí, y el listado sin
+     * filtro de la administración devolvía el expediente de cada paciente con
+     * reposo.
+     */
+    public const RELACIONES = [
+        'consultaMedica.historiaClinica.servidor:id,nombre,apellido,cedula',
+        'consultaMedica.historiaClinica.cargaFamiliar:id,servidor_id,cedula,nombres,apellidos,parentesco',
+        'emisor:id,usuario_ti,email,servidor_id',
+        'emisor.servidor:id,nombre,apellido',
+        'anulador:id,usuario_ti,email,servidor_id',
+        'anulador.servidor:id,nombre,apellido',
+        'diagnosticoCie10',
+    ];
+
     public function emitir(array $datos, int $emisorId): CertificadoMedico
     {
         return DB::transaction(function () use ($datos, $emisorId) {
@@ -88,11 +111,7 @@ class CertificadoMedicoService
                 'created_by'           => $emisorId,
             ]);
 
-            return $certificado->load([
-                'consultaMedica',
-                'emisor',
-                'diagnosticoCie10',
-            ]);
+            return $certificado->load(self::RELACIONES);
         });
     }
 
@@ -178,9 +197,7 @@ class CertificadoMedicoService
                 "Se anuló el reposo médico {$certificado->folio} del titular.",
             );
 
-            return $certificado->load([
-                'consultaMedica', 'emisor', 'anulador', 'diagnosticoCie10',
-            ]);
+            return $certificado->load(self::RELACIONES);
         });
     }
 

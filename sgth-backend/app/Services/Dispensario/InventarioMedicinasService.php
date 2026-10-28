@@ -367,6 +367,13 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
      * baja, ajuste y anulación es una fila más, y ninguna se borra —es el libro
      * inmutable del inventario—. Traerlo entero era barato el primer mes y deja
      * de serlo solo.
+     *
+     * Quien registró cada movimiento va con las columnas que pide
+     * `nombre_completo` y nada más: cargado entero, el accesor traía por su
+     * cuenta el servidor completo, y el kardex —que ve todo el personal del
+     * Dispensario, el auxiliar de farmacia incluido— salía con el correo y el
+     * celular personales, el contacto de emergencia, la fecha de nacimiento y
+     * el tipo de sangre de esa persona. La pantalla solo pinta el nombre.
      */
     public function kardex(int $id, int $porPagina = 20): LengthAwarePaginator
     {
@@ -375,7 +382,11 @@ final class InventarioMedicinasService implements InventarioMedicinasServiceInte
         return MovimientoInventarioMed::where(
             'inventario_medicina_id', $id
         )
-            ->with(['registrador', 'lote'])
+            ->with([
+                'registrador:id,usuario_ti,email,servidor_id',
+                'registrador.servidor:id,nombre,apellido',
+                'lote',
+            ])
             ->orderBy('created_at', 'desc')
             ->orderBy('id', 'desc')
             ->paginate($porPagina);
