@@ -8,17 +8,15 @@ namespace App\Enums;
  * Al 2026-10-28, 40 de ellos no los comprobaba ningún código (ni rutas, ni
  * policies, ni pantallas): docs/plan-roles-y-accesos.md, PR 16. Cada sección
  * dice por qué cuando el motivo es uno solo —módulo futuro, o Dispensario
- * hasta su parte del PR 17, que los va usando—. Los otros 15 se revisaron
- * pantalla por pantalla en docs/revision-permisos-sin-uso.md, aprobado el
- * 2026-10-28, que se aplica en cuatro PR. Ya tienen uso los cuatro del
- * Expediente (`ver-expediente-todos`, `gestionar-expediente`,
- * `cargar-documentos` y `gestionar-cargas-familiares`) y los tres de Régimen
- * disciplinario. Se retiraron `ver-distributivo`, `ver-expediente-unidad`,
- * `ver-actividades-unidad`, `aprobar-actividades` y
- * `evaluar-personal-medico`. Faltan `gestionar-tarifas-viatico`,
- * `gestionar-base-conocimiento`, `exportar-reportes` y `ver-auditoria`. Antes
- * de darles uso, comprobar quién los tiene: el seeder los asigna aunque nadie
- * los mire.
+ * hasta su parte del PR 17, que los va usando—. Los otros 15, y los dos del
+ * Dispensario que quedaron sin uso, se revisaron pantalla por pantalla en
+ * docs/revision-permisos-sin-uso.md, aprobado el 2026-10-28. Desde entonces
+ * tienen uso los cuatro del Expediente, los tres de Régimen disciplinario y
+ * `ver-historia-clinica-propia`; se retiraron cinco; y los que esperan un
+ * módulo o una pantalla lo dicen junto a su caso. `configurar-sistema` no
+ * entró en esa revisión: sigue sin uso y su retiro está por decidir. Antes
+ * de darle uso a un permiso, comprobar quién lo tiene: el seeder los asigna
+ * aunque nadie los mire.
  */
 enum Permiso: string
 {
@@ -156,6 +154,10 @@ enum Permiso: string
     case APROBAR_VIATICO = 'aprobar-viatico';
     case LIQUIDAR_VIATICO = 'liquidar-viatico';
     case VER_VIATICOS_TODOS = 'ver-viaticos-todos';
+    // Sin uso hasta que haya pantalla de tarifas: hoy las seis las carga
+    // `TarifaViaticoSeeder`, y un cambio del MDT se edita en la base. Se le
+    // pregunta a Financiero si la necesita (docs/revision-permisos-sin-uso.md,
+    // D6).
     case GESTIONAR_TARIFAS_VIATICO = 'gestionar-tarifas-viatico';
     case GESTIONAR_VIATICOS = 'gestionar-viaticos';
 
@@ -175,10 +177,11 @@ enum Permiso: string
     // reposo), `ver-examenes`, `gestionar-catalogo-examenes` y
     // `registrar-odontograma`; desde el 17d (salud ocupacional, reportes,
     // tableros), `gestionar-fichas-sso-med` y los cuatro `ver-*` del final.
-    // Sin uso queda `ver-historia-clinica-propia` (base);
-    // `evaluar-personal-medico` se retiró el 2026-10-28 (D12): si el personal
-    // médico se evalúa, lo hará el módulo de Evaluación. Lo que es identidad
-    // —la especialidad, el perfil de «Mi jornada»— sigue por rol.
+    // `ver-historia-clinica-propia` (base) guarda `autoservicio/mi-historia-
+    // clinica` desde el 2026-10-28 (D11), y `evaluar-personal-medico` se
+    // retiró ese día (D12): si el personal médico se evalúa, lo hará el módulo
+    // de Evaluación. Lo que es identidad —la especialidad, el perfil de «Mi
+    // jornada»— sigue por rol.
     case VER_AGENDA_DISPENSARIO = 'ver-agenda-dispensario';
     // Llevar la cola de todos: dar turnos y operar los de cualquier
     // profesional. Enfermería y la administración (PR 17b); el médico y el
@@ -245,6 +248,9 @@ enum Permiso: string
     case ASIGNAR_TICKET = 'asignar-ticket';
     case GESTIONAR_TECNICOS = 'gestionar-tecnicos';
     case CONFIGURAR_SLA = 'configurar-sla';
+    // Módulo futuro: la base de conocimiento es la fase 5.5 de
+    // docs/diseno-subsistema-tic.md, con tickets reales. `tic/base-conocimiento`
+    // devuelve una lista vacía y no la pide ninguna pantalla (D7).
     case GESTIONAR_BASE_CONOCIMIENTO = 'gestionar-base-conocimiento';
     // Las extensiones del directorio telefónico, que mantiene TIC
     // (docs/plan-roles-y-accesos.md, PR 11). Consultarlo no pide permiso.
@@ -273,11 +279,18 @@ enum Permiso: string
     case EXPORTAR_INFORME_ACTIVIDADES = 'exportar-informe-actividades';
 
     // ── MÓDULO 17: Bienestar ─────────────────────────────────────
+    // Módulo futuro: `bienestar` tiene backend y no pantalla, y sus rutas van
+    // por el rol de Talento Humano. Este permiso no lo comprueba nadie todavía.
     case GESTIONAR_BIENESTAR = 'gestionar-bienestar';
     // Módulo futuro: la encuesta de clima laboral no existe todavía.
     case RESPONDER_ENCUESTA_CLIMA = 'responder-encuesta-clima';
 
     // ── MÓDULO 18: Reportería ────────────────────────────────────
+    // Módulo futuro: `reporteria` tiene backend y no pantalla, y sus rutas van
+    // por `role:admin-uath|auditor|director`. Cuando tenga pantalla pasan a
+    // estos permisos. Ojo: `exportar-reportes` lo tiene solo admin-uath, así
+    // que entonces hay que decidir si el director y el auditor exportan (D10).
+    // `ver-dashboard-ejecutivo` sí se usa: en las encuestas de la mesa de ayuda.
     case VER_DASHBOARD_EJECUTIVO = 'ver-dashboard-ejecutivo';
     case GENERAR_REPORTES = 'generar-reportes';
     case EXPORTAR_REPORTES = 'exportar-reportes';
@@ -304,7 +317,14 @@ enum Permiso: string
     case GESTIONAR_USUARIOS = 'gestionar-usuarios';
     case ACTIVAR_USUARIO = 'activar-usuario';
     case GESTIONAR_ROLES = 'gestionar-roles';
+    // Sin uso hasta que haya una pantalla de la bitácora (`activity_log`): hoy
+    // cada módulo enseña su propio rastro. Al construirla, quitárselo a
+    // admin-ti, porque la bitácora trae datos de Talento Humano y de salud
+    // (D10; decisión 1 del plan de roles).
     case VER_AUDITORIA = 'ver-auditoria';
+    // Sin uso: la configuración de TIC y la de Comunicación van con sus propios
+    // permisos. No entró en la revisión del 2026-10-28; su retiro está por
+    // decidir.
     case CONFIGURAR_SISTEMA = 'configurar-sistema';
     case RESTABLECER_CONTRASENA = 'restablecer-contrasena';
 }

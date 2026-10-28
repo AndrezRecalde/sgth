@@ -9,6 +9,7 @@ use App\Models\Expediente\Servidor;
 use App\Models\User;
 use App\Services\Estructura\PlantillaService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
@@ -134,7 +135,8 @@ test('el desglose por unidad ordena por vacantes', function () {
 });
 
 test('el endpoint responde el resumen', function () {
-    Role::firstOrCreate(['name' => 'admin-uath', 'guard_name' => 'sanctum']);
+    Role::firstOrCreate(['name' => 'admin-uath', 'guard_name' => 'sanctum'])
+        ->givePermissionTo(Permission::firstOrCreate(['name' => 'ver-estructura', 'guard_name' => 'sanctum']));
 
     $usuario = User::factory()->create();
     $usuario->assignRole('admin-uath');
@@ -152,4 +154,12 @@ test('el endpoint responde el resumen', function () {
                 'sin_plaza'   => ['servicios_ocasionales', 'servicios_profesionales', 'porcentaje_ocasionales'],
             ],
         ]);
+});
+
+test('sin ver-estructura no se ve la plantilla', function () {
+    // Hasta el 2026-10-28 la ruta no pedía nada, aunque el menú la declaraba
+    // con `ver-estructura` (docs/revision-permisos-sin-uso.md, 5.2).
+    $this->actingAs(User::factory()->create(), 'sanctum')
+        ->getJson('/api/v1/estructura/plantilla')
+        ->assertForbidden();
 });
