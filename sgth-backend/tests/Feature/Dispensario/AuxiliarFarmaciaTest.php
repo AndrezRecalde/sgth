@@ -205,6 +205,8 @@ test('la migracion crea el rol como el seeder', function () {
 
     $migracion->up();
     $migracion->up(); // idempotente
+    // Las lecturas de farmacia se las da la migración del PR 17a.
+    (require database_path('migrations/2026_12_04_000000_dispensario_permisos_de_farmacia.php'))->up();
     app(PermissionRegistrar::class)->forgetCachedPermissions();
 
     expect($permisos())->toBe($delSeeder);

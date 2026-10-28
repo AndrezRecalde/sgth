@@ -135,6 +135,14 @@ describe('buildNav', () => {
     }
   })
 
+  it('la farmacia va por permiso: uno suelto basta, sin el rol', () => {
+    // PR 17a: antes las entradas pedían roles del Dispensario.
+    expect(flattenNav('salud', ['ver-inventario-med'], []).map((p) => p.href)).toEqual([ROUTES.SALUD.FARMACIA])
+    expect(flattenNav('salud', ['ver-recetas'], []).map((p) => p.href)).toEqual([ROUTES.SALUD.FARMACIA_DESPACHO])
+    expect(pantallas('salud', 'admin-dispensario')).toContain(ROUTES.SALUD.FARMACIA_ADQUISICIONES)
+    expect(pantallas('salud', 'enfermera')).not.toContain(ROUTES.SALUD.FARMACIA_ADQUISICIONES)
+  })
+
   it('al auxiliar de farmacia le ofrece el inventario y el despacho, nada clínico', () => {
     // PR 13: el mostrador, sin historias, consultas, agenda ni exámenes.
     expect(pantallas('salud', 'auxiliar-farmacia')).toEqual([

@@ -3,6 +3,7 @@
 namespace App\Services\Dispensario;
 
 use App\Enums\EspecialidadAtencion;
+use App\Enums\Permiso;
 use App\Models\Dispensario\AgendaMedica;
 use App\Models\Dispensario\ConsultaMedica;
 use App\Models\Dispensario\HistoriaClinica;
@@ -30,11 +31,12 @@ final class AlcanceClinico
 {
     /**
      * Quien entrega los medicamentos ve todas las recetas, para despacharlas:
-     * Enfermería, la administración y el auxiliar de farmacia (PR 13).
+     * Enfermería, la administración y el auxiliar de farmacia (PR 13). Por
+     * permiso desde el PR 17a, el mismo que pide la ruta de despachar.
      */
     public static function despachaRecetas(User $usuario): bool
     {
-        return $usuario->hasAnyRole(['enfermera', 'admin-dispensario', 'auxiliar-farmacia']);
+        return $usuario->can(Permiso::DESPACHAR_MEDICAMENTO->value);
     }
 
     /**

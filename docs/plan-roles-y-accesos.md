@@ -310,6 +310,23 @@ Depende del PR 5: sin él, el auxiliar recibiría las notas clínicas en el JSON
 - El menú del Dispensario deja los `roles`.
 - Hay que reescribir las pruebas de 73 archivos. Conviene partirlo en varios PR por módulo.
 
+**Partición aprobada el 2026-10-28.** El inventario dio 129 endpoints, 77 `role:`, 14 combinaciones de
+roles, 73 pruebas con el rol pelado y unas 25 comprobaciones en el frontend. Cada parte conserva
+exactamente quién puede qué:
+
+| Parte | Área | Permisos que ya existían | Permisos nuevos |
+|---|---|---|---|
+| 17a | Farmacia: inventario, recetas, despacho, adquisiciones | `emitir-receta`, `despachar-medicamento`, `gestionar-inventario-med` (a admin-dispensario) | `ver-inventario-med`, `ver-recetas`, `supervisar-dispensario` |
+| 17b | Agenda, triaje, enfermería, pacientes, historias, disponibilidad | `ver-agenda-dispensario`, `ver-historia-clinica`, `crear-consulta`, `gestionar-agenda` | `registrar-triaje` |
+| 17c | Consultas, exámenes, odontograma, certificados de reposo, CIE-10 | `crear-consulta` | `ver-examenes`, `gestionar-catalogo-examenes`, `registrar-odontograma` |
+| 17d | Salud ocupacional, reportes y tableros | `gestionar-fichas-sso-med`, `solicitar-certificacion-medica`, `gestionar-onboarding` | `ver-fichas-sso-med`, `ver-certificaciones-medicas`, `ver-tablero-dispensario` |
+
+- `supervisar-dispensario` (solo admin-dispensario) es «anula o ve lo que registró otro profesional».
+- Lo que decide identidad sigue por rol: la especialidad, la cola, el perfil de «Mi jornada» y quién
+  atiende para recibir turnos.
+- Las pruebas no se reescriben: `rolesDelDispensario()` (tests/Support/RolesFixtures.php) crea los cinco
+  roles con los permisos del seeder antes de cada prueba de Feature/Dispensario.
+
 ## 5. Orden y dependencias
 
 | PR | Depende de | Suite completa |

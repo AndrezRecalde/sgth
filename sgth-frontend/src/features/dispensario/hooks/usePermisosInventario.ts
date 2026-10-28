@@ -1,28 +1,31 @@
 import { useAuthStore } from '@/store/auth.store'
 
-const SIN_ROLES: string[] = []
+const SIN_PERMISOS: string[] = []
 
 /**
- * Qué puede hacer cada rol con el inventario de la farmacia (decisión del
+ * Qué puede hacer cada quien con el inventario de la farmacia (decisión del
  * Dispensario del 2026-10-24, pregunta 2). Todos lo consultan; lo que cambia
  * las existencias queda en el mostrador y la administración. La pantalla no
  * ofrece lo que el servidor rechazaría (la regla de la #529).
+ *
+ * Por permiso desde el PR 17a de docs/plan-roles-y-accesos.md: los mismos que
+ * piden las rutas, que tienen los mismos roles que antes.
  */
 export function usePermisosInventario() {
-  const roles = useAuthStore((s) => s.usuario?.roles ?? SIN_ROLES)
-  const esAdministracion = roles.includes('admin-dispensario')
+  const permisos = useAuthStore((s) => s.usuario?.permisos ?? SIN_PERMISOS)
+  const gestiona = permisos.includes('gestionar-inventario-med')
 
   return {
     /** Dar de alta, editar, retirar o reactivar un medicamento del catálogo. */
-    gestionaCatalogo: esAdministracion,
+    gestionaCatalogo: gestiona,
     /** Ajustar el stock tras un conteo físico. */
-    ajustaStock:      esAdministracion,
+    ajustaStock:      gestiona,
     /** Registrar una adquisición, con su documento. */
-    registraAdquisiciones: esAdministracion,
+    registraAdquisiciones: gestiona,
     /**
      * Dar de baja existencias vencidas, rotas o retiradas por el fabricante:
-     * también el mostrador, Enfermería y el auxiliar de farmacia.
+     * el mostrador, que es quien despacha.
      */
-    daDeBaja:         esAdministracion || roles.includes('enfermera') || roles.includes('auxiliar-farmacia'),
+    daDeBaja:         permisos.includes('despachar-medicamento'),
   }
 }

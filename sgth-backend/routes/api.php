@@ -1891,9 +1891,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // El personal clínico del dispensario, con nombre: lo piden Farmacia
         // (quién recetó) y la asignación de turnos. No es para cualquiera con
         // sesión. El auxiliar de farmacia, por el filtro del despacho (PR 13).
+        // Por permiso desde el PR 17a: la agenda o las recetas.
         Route::get('personal-medico',
             [PersonalMedicoController::class, 'index']
-        )->middleware('role:medico|odontologo|enfermera|admin-dispensario|auxiliar-farmacia')
+        )->middleware('permission:ver-agenda-dispensario|ver-recetas')
          ->name('dispensario.personal-medico');
 
         // Autocompletado del CIE-10 al diagnosticar (consulta, FEMO y
@@ -2075,42 +2076,45 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
          ->name('dispensario.certificados.show');
 
         // Recetas — médicos emiten; Enfermería, la administración y el
-        // auxiliar de farmacia despachan (PR 13).
+        // auxiliar de farmacia despachan (PR 13). Por permiso desde el PR 17a,
+        // con los mismos titulares que tenían los roles.
         Route::prefix('recetas')->group(function () {
             Route::get('/', [RecetaController::class, 'index'])
-                ->middleware('role:medico|odontologo|enfermera|admin-dispensario|auxiliar-farmacia');
+                ->middleware('permission:ver-recetas');
             Route::post('/', [RecetaController::class, 'store'])
-                ->middleware('role:medico|odontologo');
+                ->middleware('permission:emitir-receta');
             // Antes del comodín {id}, o «pdf» se leería como parte de él.
             Route::get('{id}/pdf', [RecetaController::class, 'pdf'])
-                ->middleware('role:medico|odontologo|enfermera|admin-dispensario|auxiliar-farmacia')
+                ->middleware('permission:ver-recetas')
                 ->name('dispensario.recetas.pdf');
             Route::get('{id}', [RecetaController::class, 'show'])
-                ->middleware('role:medico|odontologo|enfermera|admin-dispensario|auxiliar-farmacia');
+                ->middleware('permission:ver-recetas');
             Route::post('{id}/despachar', [RecetaController::class, 'despachar'])
-                ->middleware('role:enfermera|admin-dispensario|auxiliar-farmacia');
+                ->middleware('permission:despachar-medicamento');
             // Lo que el mostrador no va a entregar: el paciente lo adquiere
             // fuera (decisión del Dispensario del 2026-10-24, opción A).
             Route::patch('{id}/items/{itemId}/no-entregado', [RecetaController::class, 'noEntregado'])
-                ->middleware('role:enfermera|admin-dispensario|auxiliar-farmacia')
+                ->middleware('permission:despachar-medicamento')
                 ->whereNumber(['id', 'itemId']);
+            // Quien la emitió, o la administración: lo decide el controlador.
             Route::post('{id}/anular', [RecetaController::class, 'anular'])
-                ->middleware('role:medico|odontologo|admin-dispensario');
+                ->middleware('permission:emitir-receta|supervisar-dispensario');
             Route::patch('{recetaId}/items/{itemId}',
                 [ItemRecetaController::class, 'update']
-            )->middleware('role:medico|odontologo');
+            )->middleware('permission:emitir-receta');
             Route::delete('{recetaId}/items/{itemId}',
                 [ItemRecetaController::class, 'destroy']
-            )->middleware('role:medico|odontologo');
+            )->middleware('permission:emitir-receta');
         });
 
         // Inventario — lo consulta todo el personal del Dispensario; lo que
         // cambia las existencias, el mostrador y la administración (decisión
         // del Dispensario del 2026-10-24, pregunta 2). Antes los cuatro roles
         // podían todo, ajustar el stock sin documento incluido. El auxiliar de
-        // farmacia, como Enfermería: consulta y da de baja (PR 13).
+        // farmacia, como Enfermería: consulta y da de baja (PR 13). Por permiso
+        // desde el PR 17a, con los mismos titulares.
         Route::prefix('inventario')
-            ->middleware('role:medico|odontologo|enfermera|admin-dispensario|auxiliar-farmacia')
+            ->middleware('permission:ver-inventario-med')
             ->group(function () {
                 Route::get('medicinas/buscar',
                     [InventarioMedicinasController::class, 'buscar']);
@@ -2124,19 +2128,19 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 // ajustar el stock: la administración.
                 Route::apiResource('medicinas', InventarioMedicinasController::class)
                     ->only(['store', 'update', 'destroy'])
-                    ->middleware('role:admin-dispensario');
+                    ->middleware('permission:gestionar-inventario-med');
                 Route::post('medicinas/{medicina}/ajustar-inventario',
                     [InventarioMedicinasController::class, 'ajustarInventario'])
-                    ->middleware('role:admin-dispensario');
+                    ->middleware('permission:gestionar-inventario-med');
                 // Dar de baja existencias vencidas o rotas: también el
-                // mostrador.
+                // mostrador, que es quien despacha.
                 Route::post('medicinas/{medicina}/baja',
                     [InventarioMedicinasController::class, 'registrarBaja'])
-                    ->middleware('role:enfermera|admin-dispensario|auxiliar-farmacia');
+                    ->middleware('permission:despachar-medicamento');
             });
 
         Route::prefix('adquisiciones')
-            ->middleware('role:admin-dispensario')
+            ->middleware('permission:gestionar-inventario-med')
             ->group(function () {
                 Route::get('/', [AdquisicionController::class, 'index']);
                 Route::post('/', [AdquisicionController::class, 'store']);

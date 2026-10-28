@@ -7,18 +7,22 @@
         "despachar-medicamento",
         "evaluar-personal-medico",
         "exportar-informe-actividades",
+        "gestionar-inventario-med",
         "inscribirse-curso",
         "registrar-actividades",
         "responder-encuesta-clima",
         "solicitar-viatico",
+        "supervisar-dispensario",
         "ver-agenda-dispensario",
         "ver-asistencia-propia",
         "ver-evaluacion-propia",
         "ver-expediente-propio",
         "ver-historia-clinica",
         "ver-historia-clinica-propia",
+        "ver-inventario-med",
         "ver-permisos",
         "ver-plan-capacitacion",
+        "ver-recetas",
         "ver-ticket-propio"
     ],
     "admin-ti": [
@@ -239,8 +243,10 @@
         "ver-evaluacion-propia",
         "ver-expediente-propio",
         "ver-historia-clinica-propia",
+        "ver-inventario-med",
         "ver-permisos",
         "ver-plan-capacitacion",
+        "ver-recetas",
         "ver-ticket-propio"
     ],
     "comunicacion-social": [
@@ -307,8 +313,10 @@
         "ver-expediente-propio",
         "ver-historia-clinica",
         "ver-historia-clinica-propia",
+        "ver-inventario-med",
         "ver-permisos",
         "ver-plan-capacitacion",
+        "ver-recetas",
         "ver-ticket-propio"
     ],
     "financiero": [
@@ -408,8 +416,10 @@
         "ver-expediente-propio",
         "ver-historia-clinica",
         "ver-historia-clinica-propia",
+        "ver-inventario-med",
         "ver-permisos",
         "ver-plan-capacitacion",
+        "ver-recetas",
         "ver-ticket-propio"
     ],
     "odontologo": [
@@ -430,8 +440,10 @@
         "ver-expediente-propio",
         "ver-historia-clinica",
         "ver-historia-clinica-propia",
+        "ver-inventario-med",
         "ver-permisos",
         "ver-plan-capacitacion",
+        "ver-recetas",
         "ver-ticket-propio"
     ],
     "recepcion": [

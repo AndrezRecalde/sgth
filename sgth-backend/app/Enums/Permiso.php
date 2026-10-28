@@ -5,10 +5,11 @@ namespace App\Enums;
 /**
  * Los permisos del sistema, con guard `sanctum`.
  *
- * Al 2026-10-28, 40 de ellos no los comprueba ningún código (ni rutas, ni
+ * Al 2026-10-28, 40 de ellos no los comprobaba ningún código (ni rutas, ni
  * policies, ni pantallas): docs/plan-roles-y-accesos.md, PR 16. Cada sección
  * dice por qué cuando el motivo es uno solo —módulo futuro, o Dispensario
- * hasta el PR 17—. Los otros 15 quedan para una revisión aparte, pantalla por
+ * hasta su parte del PR 17, que los va usando—. Los otros 15 quedan para una
+ * revisión aparte, pantalla por
  * pantalla: `ver-distributivo`,
  * `ver-expediente-unidad`, `ver-expediente-todos`, `gestionar-expediente`,
  * `cargar-documentos`, `gestionar-cargas-familiares`,
@@ -149,11 +150,10 @@ enum Permiso: string
     case VER_REPORTES_SSO = 'ver-reportes-sso';
 
     // ── MÓDULO 11: Dispensario ───────────────────────────────────
-    // Decorativos hasta el PR 17 de docs/plan-roles-y-accesos.md: el
-    // Dispensario se autoriza por rol (`role:medico|…` en las rutas), así que
-    // ningún código comprueba los de abajo, salvo
-    // `solicitar-certificacion-medica`. Se asignan para que el paso a permisos
-    // no tenga que tocar los roles.
+    // El Dispensario pasa de `role:` a permisos por partes, en el PR 17 de
+    // docs/plan-roles-y-accesos.md. Desde el 17a (Farmacia) se usan
+    // `emitir-receta`, `despachar-medicamento`, `gestionar-inventario-med` y
+    // los tres del final; el resto sigue decorativo hasta su parte.
     case VER_AGENDA_DISPENSARIO = 'ver-agenda-dispensario';
     case GESTIONAR_AGENDA = 'gestionar-agenda';
     // `solicitar-cita` se retiró junto con su ruta, que nunca funcionó.
@@ -166,6 +166,17 @@ enum Permiso: string
     case GESTIONAR_FICHAS_SSO_MED = 'gestionar-fichas-sso-med';
     case EVALUAR_PERSONAL_MEDICO = 'evaluar-personal-medico';    // admin-dispensario
     case SOLICITAR_CERTIFICACION_MEDICA = 'solicitar-certificacion-medica'; // RRHH, desde Expediente
+    // Consultar el inventario de medicinas, su kárdex y el stock bajo: todo el
+    // Dispensario y el auxiliar de farmacia (PR 17a).
+    case VER_INVENTARIO_MED = 'ver-inventario-med';
+    // Leer las recetas: el médico y el odontólogo, las suyas; quien despacha,
+    // todas (`AlcanceClinico`, PR 5). Va con la lista del personal médico,
+    // que es el filtro de Despacho (PR 17a).
+    case VER_RECETAS = 'ver-recetas';
+    // La administración del Dispensario: anula o ve lo que registró otro
+    // profesional. Hasta el PR 17 era `hasRole('admin-dispensario')` repetido
+    // en cada controlador.
+    case SUPERVISAR_DISPENSARIO = 'supervisar-dispensario';
 
     // ── MÓDULO 12: Inventario TI ─────────────────────────────────
     case VER_INVENTARIO_TI = 'ver-inventario-ti';

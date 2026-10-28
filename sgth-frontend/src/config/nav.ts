@@ -337,16 +337,8 @@ export const NAV_SGTH: NavGroup[] = [
 ]
 
 // ── DISPENSARIO MÉDICO ────────────────
-/**
- * Quiénes pueden consultar el inventario de medicinas: el `role:` del prefijo
- * `inventario`. El menú y el contador de stock del sidebar se guían por esta
- * lista, y un rol nuevo del Dispensario no tiene por qué ver el inventario.
- * Antes que `NAV_SALUD`, que la usa al cargarse.
- */
-export const ROLES_INVENTARIO_MED = [
-  'medico', 'odontologo', 'enfermera', 'admin-dispensario', 'auxiliar-farmacia',
-]
-
+// Pasa de `roles` a permisos por partes (docs/plan-roles-y-accesos.md,
+// PR 17). Farmacia ya va por permiso (17a); el resto, en las siguientes.
 export const NAV_SALUD: NavGroup[] = [
   {
     label: 'Dispensario',
@@ -421,28 +413,28 @@ export const NAV_SALUD: NavGroup[] = [
         icon:     'IconPill',
         children: [
           {
-            // Los del `role:` de la lectura del inventario. Sin guarda, esta
-            // entrada abría el Dispensario a cualquiera (PR 9).
-            label: 'Inventario',
-            href:  ROUTES.SALUD.FARMACIA,
-            icon:  'IconPackage',
-            roles: ROLES_INVENTARIO_MED,
+            // Lo que pide la lectura del inventario. Sin guarda, esta entrada
+            // abría el Dispensario a cualquiera (PR 9).
+            label:   'Inventario',
+            href:    ROUTES.SALUD.FARMACIA,
+            icon:    'IconPackage',
+            permiso: 'ver-inventario-med',
           },
           {
-            label: 'Adquisiciones',
-            href:  ROUTES.SALUD.FARMACIA_ADQUISICIONES,
-            icon:  'IconShoppingCart',
-            // El backend reserva todo el módulo a admin-dispensario, así que
-            // ofrecerlo al resto solo lleva a una pantalla que responde 403.
-            roles: ['admin-dispensario'],
+            // El catálogo, el ajuste de stock y las adquisiciones: la
+            // administración del Dispensario.
+            label:   'Adquisiciones',
+            href:    ROUTES.SALUD.FARMACIA_ADQUISICIONES,
+            icon:    'IconShoppingCart',
+            permiso: 'gestionar-inventario-med',
           },
           {
-            // Los del listado de recetas: el médico y el odontólogo ven las
-            // suyas; quien despacha, todas (PR 5 y PR 13).
-            label: 'Despacho',
-            href:  ROUTES.SALUD.FARMACIA_DESPACHO,
-            icon:  'IconTruck',
-            roles: ['medico', 'odontologo', 'enfermera', 'admin-dispensario', 'auxiliar-farmacia'],
+            // El listado de recetas: el médico y el odontólogo ven las suyas;
+            // quien despacha, todas (PR 5 y PR 13).
+            label:   'Despacho',
+            href:    ROUTES.SALUD.FARMACIA_DESPACHO,
+            icon:    'IconTruck',
+            permiso: 'ver-recetas',
           },
         ],
       },
