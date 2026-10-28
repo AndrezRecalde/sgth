@@ -7,6 +7,7 @@ import {
 } from '@tabler/icons-react'
 import { confirmar, type TableAction } from '@/components/ui'
 import { useDisciplinarioMutations } from './useDisciplinarioMutations'
+import { usePermisosDisciplinario } from './usePermisosDisciplinario'
 import { esHitoConFecha, type HitoConFecha } from '../components/AvanzarHitoModal'
 import {
   ESTADO_SUMARIO_LABELS,
@@ -28,6 +29,9 @@ import type { Sumario } from '@/types/api'
  */
 export function useAccionesSumario() {
   const { avanzarSumario } = useDisciplinarioMutations()
+  // Avanzar, apelar y cerrar van por `gestionar-sumarios`; resolver, por
+  // `registrar-sancion`.
+  const { gestiona, sanciona } = usePermisosDisciplinario()
 
   const [aVer, setAVer] = useState<Sumario | null>(null)
   const [detalleOpened, detalle] = useDisclosure(false)
@@ -68,7 +72,7 @@ export function useAccionesSumario() {
         // Cada hito pide su fecha, que es de donde salen los plazos legales.
         label: siguiente ? `Avanzar a ${ESTADO_SUMARIO_LABELS[siguiente]}` : 'Avanzar',
         icon: <IconArrowRight size={14} />,
-        hidden: !siguiente || !esHitoConFecha(siguiente),
+        hidden: !gestiona || !siguiente || !esHitoConFecha(siguiente),
         onClick: () => {
           if (!siguiente || !esHitoConFecha(siguiente)) return
           setAAvanzar({ sumario: s, destino: siguiente })
@@ -78,7 +82,7 @@ export function useAccionesSumario() {
       {
         label: 'Resolver e imponer sanción',
         icon: <IconScaleOutline size={14} />,
-        hidden: !puedeResolverse(s.estado),
+        hidden: !sanciona || !puedeResolverse(s.estado),
         onClick: () => {
           setAResolver(s)
           resolver.open()
@@ -87,7 +91,7 @@ export function useAccionesSumario() {
       {
         label: 'Registrar apelación',
         icon: <IconArrowRight size={14} />,
-        hidden: !transiciones.includes('apelado'),
+        hidden: !gestiona || !transiciones.includes('apelado'),
         disabled: avanzarSumario.isPending,
         onClick: () => avanzarSumario.mutate({ id: s.id, data: { estado: 'apelado' } }),
       },
@@ -95,7 +99,7 @@ export function useAccionesSumario() {
         label: 'Cerrar sin sanción',
         icon: <IconFolderOff size={14} />,
         color: 'red',
-        hidden: !transiciones.includes('cerrado'),
+        hidden: !gestiona || !transiciones.includes('cerrado'),
         disabled: avanzarSumario.isPending,
         onClick: () => cerrarSinSancion(s),
       },

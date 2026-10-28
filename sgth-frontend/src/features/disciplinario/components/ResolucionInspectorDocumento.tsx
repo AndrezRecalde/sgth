@@ -11,6 +11,7 @@ import { erroresAlFormulario } from '@/lib/erroresAlFormulario'
 import { getApiErrorMessage } from '@/types/api'
 import { ZonaArchivo } from '@/features/expediente/components/ZonaArchivo'
 import { useDisciplinarioMutations } from '../hooks/useDisciplinarioMutations'
+import { usePermisosDisciplinario } from '../hooks/usePermisosDisciplinario'
 import { disciplinarioService } from '../services/disciplinarioService'
 import {
   RESOLUCION_MAX_MB, RESOLUCION_TIPOS, resolucionVistoBuenoSchema,
@@ -27,6 +28,7 @@ const CON_RESOLUCION = ['concedido', 'negado', 'impugnado']
  * respaldo de la cesación, no tenía dónde quedar.
  */
 export function ResolucionInspectorDocumento({ tramite }: { tramite: VistoBueno }) {
+  const { gestiona } = usePermisosDisciplinario()
   const [abierto, { open, close }] = useDisclosure(false)
 
   if (!CON_RESOLUCION.includes(tramite.estado)) return null
@@ -56,9 +58,11 @@ export function ResolucionInspectorDocumento({ tramite }: { tramite: VistoBueno 
               Descargar
             </Button>
           )}
-          <Button size="xs" variant="light" leftSection={<IconFileUpload size={14} />} onClick={open}>
-            {tramite.tiene_documento ? 'Reemplazar' : 'Adjuntar PDF'}
-          </Button>
+          {gestiona && (
+            <Button size="xs" variant="light" leftSection={<IconFileUpload size={14} />} onClick={open}>
+              {tramite.tiene_documento ? 'Reemplazar' : 'Adjuntar PDF'}
+            </Button>
+          )}
         </Group>
       </Group>
 

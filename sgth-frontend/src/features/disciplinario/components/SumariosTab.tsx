@@ -8,6 +8,7 @@ import { DataState, PAGINACION_ES, SgthTable, Toolbar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useSumarios } from '../hooks/useDisciplinario'
 import { useAccionesSumario } from '../hooks/useAccionesSumario'
+import { usePermisosDisciplinario } from '../hooks/usePermisosDisciplinario'
 import { SumarioModal } from './SumarioModal'
 import { ResolverSumarioModal } from './ResolverSumarioModal'
 import { AvanzarHitoModal } from './AvanzarHitoModal'
@@ -31,6 +32,7 @@ export function SumariosTab() {
 
   // Las acciones de la fila y los paneles que abre cada una viven en su hook.
   const { accionesDe, detalle, resolucion, avance } = useAccionesSumario()
+  const { gestiona } = usePermisosDisciplinario()
 
   // Cambiar el filtro sin volver a la primera página consultaría esa misma
   // página del resultado ya filtrado —casi siempre vacía—, así que la tabla
@@ -47,7 +49,7 @@ export function SumariosTab() {
   })
   const sumarios = data?.data ?? []
 
-  const abrir = (
+  const abrir = gestiona && (
     <Button leftSection={<IconPlus size={16} />} variant="light" onClick={open}>
       Abrir sumario
     </Button>

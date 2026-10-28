@@ -1710,27 +1710,38 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
     // el listado, y lo único que añadía eran createdBy/updatedBy, que en el JSON
     // pisaban la columna `created_by` con el usuario entero de quien abrió el
     // trámite —su correo y su ficha, con cédula y teléfono—.
-    Route::prefix('disciplinario')
-        ->middleware('role:admin-uath')
-        ->group(function () {
+    //
+    // Por permiso y no por `role:admin-uath` desde el 2026-10-28
+    // (docs/revision-permisos-sin-uso.md, D8): leer, gestionar los trámites y
+    // resolver un sumario, que impone la sanción. Los tres los tiene solo
+    // admin-uath, como antes.
+    Route::prefix('disciplinario')->group(function () {
+        Route::middleware('permission:ver-sumarios')->group(function () {
             Route::get('sumarios', [DisciplinarioController::class, 'index']);
-            Route::post('sumarios', [DisciplinarioController::class, 'store']);
-            Route::put('sumarios/{sumario}/avanzar', [DisciplinarioController::class, 'avanzar']);
-            Route::post('sumarios/{id}/resolver', [DisciplinarioController::class, 'resolver']);
-
-            // El catálogo de faltas del reglamento interno de los obreros (fase
-            // 4.4). Sin borrado: se desactiva.
+            // El catálogo de faltas del reglamento interno de los obreros
+            // (fase 4.4). Sin borrado: se desactiva.
             Route::get('reglamento-interno/faltas', [FaltaReglamentoInternoController::class, 'index']);
-            Route::post('reglamento-interno/faltas', [FaltaReglamentoInternoController::class, 'store']);
-            Route::put('reglamento-interno/faltas/{falta}', [FaltaReglamentoInternoController::class, 'update']);
-
             Route::get('vistos-buenos', [VistoBuenoController::class, 'index']);
-            Route::post('vistos-buenos', [VistoBuenoController::class, 'store']);
-            Route::put('vistos-buenos/{vistoBueno}/transicionar', [VistoBuenoController::class, 'transicionar']);
             // La resolución del Inspector en PDF (2026-10-04).
-            Route::post('vistos-buenos/{vistoBueno}/documento', [VistoBuenoController::class, 'adjuntarDocumento']);
             Route::get('vistos-buenos/{vistoBueno}/documento', [VistoBuenoController::class, 'descargarDocumento']);
         });
+
+        Route::middleware('permission:gestionar-sumarios')->group(function () {
+            // Avanzar es también apelar y cerrar sin sanción.
+            Route::post('sumarios', [DisciplinarioController::class, 'store']);
+            Route::put('sumarios/{sumario}/avanzar', [DisciplinarioController::class, 'avanzar']);
+            Route::post('reglamento-interno/faltas', [FaltaReglamentoInternoController::class, 'store']);
+            Route::put('reglamento-interno/faltas/{falta}', [FaltaReglamentoInternoController::class, 'update']);
+            Route::post('vistos-buenos', [VistoBuenoController::class, 'store']);
+            Route::put('vistos-buenos/{vistoBueno}/transicionar', [VistoBuenoController::class, 'transicionar']);
+            Route::post('vistos-buenos/{vistoBueno}/documento', [VistoBuenoController::class, 'adjuntarDocumento']);
+        });
+
+        // Resolver impone la sanción y genera su acción de personal o, si hay
+        // destitución, la cesación.
+        Route::post('sumarios/{id}/resolver', [DisciplinarioController::class, 'resolver'])
+            ->middleware('permission:registrar-sancion');
+    });
 
     // Módulo 10 — SSO
     // Por permiso y no por `role:admin-uath|asistente-uath|auditor`: así entra

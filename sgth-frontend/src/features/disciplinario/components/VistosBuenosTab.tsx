@@ -9,6 +9,7 @@ import {
 } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useVistosBuenos } from '../hooks/useDisciplinario'
+import { usePermisosDisciplinario } from '../hooks/usePermisosDisciplinario'
 import { VistoBuenoModal } from './VistoBuenoModal'
 import { TransicionarVistoBuenoModal } from './TransicionarVistoBuenoModal'
 import { VistoBuenoDetalleDrawer } from './VistoBuenoDetalleDrawer'
@@ -25,6 +26,7 @@ const POR_PAGINA = 15
 export function VistosBuenosTab() {
   // Variante compacta: es una barra de filtros, no un formulario de captura.
   const contained = useContainedInput('sm')
+  const { gestiona } = usePermisosDisciplinario()
   const [estado, setEstado] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [seleccionado, setSeleccionado] = useState<VistoBueno | null>(null)
@@ -72,11 +74,13 @@ export function VistosBuenosTab() {
       // Un trámite terminal no admite cambios: se muestra apagado en vez de
       // desaparecer, para que se vea que la acción existe (regla 06).
       disabled: TRANSICIONES_VISTO_BUENO[t.estado].length === 0,
+      // Sin `gestionar-sumarios` no se ofrece: la ruta respondería 403.
+      hidden: !gestiona,
       onClick: () => abrirTransicion(t),
     },
   ]
 
-  const solicitar = (
+  const solicitar = gestiona && (
     <Button leftSection={<IconPlus size={16} />} variant="light" onClick={openCrear}>
       Solicitar visto bueno
     </Button>
