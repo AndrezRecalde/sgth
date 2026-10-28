@@ -156,7 +156,9 @@ enum Permiso: string
     // `ver-inventario-med`, `ver-recetas` y `supervisar-dispensario`; desde
     // el 17b (agenda, triaje, enfermería, historias), `ver-agenda-dispensario`,
     // `gestionar-agenda`, `ver-historia-clinica`, `crear-consulta` y
-    // `registrar-triaje`. El resto sigue decorativo hasta su parte.
+    // `registrar-triaje`; desde el 17c (consultas, exámenes, odontograma,
+    // reposo), `ver-examenes`, `gestionar-catalogo-examenes` y
+    // `registrar-odontograma`. El resto sigue decorativo hasta su parte.
     case VER_AGENDA_DISPENSARIO = 'ver-agenda-dispensario';
     // Llevar la cola de todos: dar turnos y operar los de cualquier
     // profesional. Enfermería y la administración (PR 17b); el médico y el
@@ -186,6 +188,15 @@ enum Permiso: string
     // profesional. Hasta el PR 17 era `hasRole('admin-dispensario')` repetido
     // en cada controlador.
     case SUPERVISAR_DISPENSARIO = 'supervisar-dispensario';
+    // Los exámenes: la bandeja, las órdenes, los resultados y los perfiles.
+    // El médico, el odontólogo y la administración; cada uno ve su
+    // especialidad (`AlcanceClinico`). Registrar resultados y órdenes es
+    // `crear-consulta` (PR 17c).
+    case VER_EXAMENES = 'ver-examenes';
+    // El catálogo de exámenes, que mantiene la administración (PR 17c).
+    case GESTIONAR_CATALOGO_EXAMENES = 'gestionar-catalogo-examenes';
+    // Los procedimientos de cada pieza dental: el odontólogo (PR 4 y 17c).
+    case REGISTRAR_ODONTOGRAMA = 'registrar-odontograma';
 
     // ── MÓDULO 12: Inventario TI ─────────────────────────────────
     case VER_INVENTARIO_TI = 'ver-inventario-ti';

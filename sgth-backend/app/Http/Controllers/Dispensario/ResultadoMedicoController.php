@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dispensario;
 
 use App\Contracts\Dispensario\OrdenExamenServiceInterface;
 use App\Enums\EstadoRevisionResultado;
+use App\Enums\Permiso;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dispensario\StoreResultadoMedicoRequest;
 use App\Http\Responses\ApiResponse;
@@ -177,7 +178,7 @@ final class ResultadoMedicoController extends Controller
 
         if (
             $resultado->subido_por !== $usuario->id
-            && ! $usuario->hasRole('admin-dispensario')
+            && ! $usuario->can(Permiso::SUPERVISAR_DISPENSARIO->value)
         ) {
             return ApiResponse::error(
                 'Solo quien subió el resultado o la administración del ' .

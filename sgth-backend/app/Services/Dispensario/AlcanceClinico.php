@@ -48,7 +48,7 @@ final class AlcanceClinico
         $medico = $usuario->hasRole('medico');
         $odontologo = $usuario->hasRole('odontologo');
 
-        if ($usuario->hasRole('admin-dispensario') || ($medico && $odontologo)) {
+        if ($usuario->can(Permiso::SUPERVISAR_DISPENSARIO->value) || ($medico && $odontologo)) {
             return null;
         }
 

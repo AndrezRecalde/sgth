@@ -31,15 +31,15 @@ export function OrdenesExamenSection({ consulta, historiaClinicaId }: Props) {
   const { data: ordenes = [], isLoading, error, refetch } = useOrdenesExamen(historiaClinicaId, consulta.id)
   const anular = useAnularOrdenExamen()
   const { abrir: abrirPdf, abriendo } = useOrdenExamenPdf()
-  const { usuario, hasRole } = useAuthStore()
+  const { usuario, hasPermiso } = useAuthStore()
 
   // Como el servidor: pide quien atendió la consulta (la orden sale con su
   // firma); anula quien la emitió o la administración, mientras esté abierta.
   const puedeSolicitar = consulta.medico_id === usuario?.id
   const puedeAnular = (o: OrdenExamen) =>
-    ordenAbierta(o) && (o.solicitado_por === usuario?.id || hasRole('admin-dispensario'))
+    ordenAbierta(o) && (o.solicitado_por === usuario?.id || hasPermiso('supervisar-dispensario'))
   // Lo que vuelve lo registran el médico y el odontólogo (D2, P1).
-  const puedeRegistrar = hasRole('medico') || hasRole('odontologo')
+  const puedeRegistrar = hasPermiso('crear-consulta')
 
   return (
     <Stack gap="sm">

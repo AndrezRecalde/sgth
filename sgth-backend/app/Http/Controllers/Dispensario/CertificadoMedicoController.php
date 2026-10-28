@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Dispensario;
 
+use App\Enums\Permiso;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\Dispensario\CertificadoMedico;
@@ -113,7 +114,7 @@ class CertificadoMedicoController extends Controller
 
         $certificado = CertificadoMedico::findOrFail($id);
 
-        $esAdministracion = $request->user()->hasRole('admin-dispensario');
+        $esAdministracion = $request->user()->can(Permiso::SUPERVISAR_DISPENSARIO->value);
         $loEmitio = $certificado->emitido_por === $request->user()->id;
 
         if (! $esAdministracion && ! $loEmitio) {

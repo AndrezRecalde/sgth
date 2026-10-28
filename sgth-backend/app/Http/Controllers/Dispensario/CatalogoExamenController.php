@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dispensario;
 
 use App\Enums\AreaExamen;
+use App\Enums\Permiso;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dispensario\StoreCatalogoExamenRequest;
 use App\Http\Requests\Dispensario\UpdateCatalogoExamenRequest;
@@ -35,7 +36,7 @@ final class CatalogoExamenController extends Controller
         ]);
 
         $conInactivos = $request->boolean('incluir_inactivos')
-            && $request->user()->hasRole('admin-dispensario');
+            && $request->user()->can(Permiso::GESTIONAR_CATALOGO_EXAMENES->value);
 
         $examenes = CatalogoExamen::query()
             ->when(! $conInactivos, fn ($q) => $q->activos())

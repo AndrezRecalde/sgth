@@ -26,8 +26,8 @@ interface Props {
  * ocupacional o la administración (D6).
  */
 export function ExamenesView({ vista, solicitante = null }: Props) {
-  const { hasRole } = useAuth()
-  const catalogo = hasRole('admin-dispensario')
+  const { hasRole, hasPermiso } = useAuth()
+  const catalogo = hasPermiso('gestionar-catalogo-examenes')
   // Como la ficha ocupacional, de la que es parte: médico y administración.
   const porRiesgo = hasRole('medico') || hasRole('admin-dispensario')
   const [pestana, setPestana] = useState<string | null>('pendientes')

@@ -28,14 +28,14 @@ interface Props {
  * el paciente sin abrir una consulta; la administración la ve.
  */
 export function OrdenesBandeja({ vencidas, buscar, pagina, cargando, error, onReintentar, page, porPagina, onPage }: Props) {
-  const { hasRole } = useAuthStore()
+  const { hasPermiso } = useAuthStore()
   const [registrando, setRegistrando] = useState<OrdenBandeja | null>(null)
   const [sinRealizar, setSinRealizar] = useState<OrdenBandeja | null>(null)
   const { abrir: abrirPdf } = useOrdenExamenPdf()
   const ordenes = pagina?.data ?? []
 
   // Lo que vuelve lo registran el médico y el odontólogo (D2, P1).
-  const puedeRegistrar = hasRole('medico') || hasRole('odontologo')
+  const puedeRegistrar = hasPermiso('crear-consulta')
 
   return (
     <>

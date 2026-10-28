@@ -87,7 +87,7 @@ function HistorialDetalle({ item, puedeAnular, onAnular }: HistorialDetalleProps
 }
 
 export function TabOdontograma({ historiaClinicaId, consultaMedicaId }: Props) {
-  const { usuario, hasRole } = useAuth()
+  const { usuario, hasPermiso } = useAuth()
   const { data: odontograma, isLoading } = useOdontograma(historiaClinicaId)
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
   const [piezaSeleccionada, setPiezaSeleccionada] =
@@ -104,7 +104,7 @@ export function TabOdontograma({ historiaClinicaId, consultaMedicaId }: Props) {
   //
   // Y solo lo escribe el odontólogo: el backend se lo cierra al médico y a la
   // administración desde el 2026-10-26 (docs/plan-roles-y-accesos.md, PR 4).
-  const esOdontologo = hasRole('odontologo')
+  const esOdontologo = hasPermiso('registrar-odontograma')
   const puedeRegistrar = esOdontologo && consultaMedicaId != null
 
   const handleSeleccionarPieza = (pieza: OdontogramaPieza) => {
