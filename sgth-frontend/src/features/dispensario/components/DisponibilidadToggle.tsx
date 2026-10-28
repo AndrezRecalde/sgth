@@ -7,8 +7,6 @@ import {
 } from '../hooks/useDisponibilidad'
 import { useAuth } from '@/hooks/useAuth'
 
-const ROLES_CLINICOS = ['medico', 'odontologo']
-
 /**
  * El estado de disponibilidad de quien atiende, en la barra superior.
  *
@@ -20,12 +18,12 @@ const ROLES_CLINICOS = ['medico', 'odontologo']
  * actualiza es peor que no tenerla.
  *
  * Solo lo ve quien atiende pacientes. El resto del personal del dispensario no
- * aparece en esa lista, así que el control no le dice nada.
+ * aparece en esa lista, así que el control no le dice nada. Es
+ * `crear-consulta`, lo que pide el API desde el PR 17b.
  */
 export function DisponibilidadToggle() {
-  const { usuario } = useAuth()
-  const roles = (usuario?.roles as string[]) ?? []
-  const esClinico = roles.some(r => ROLES_CLINICOS.includes(r))
+  const { hasPermiso } = useAuth()
+  const esClinico = hasPermiso('crear-consulta')
 
   const { data, isLoading } = useMiDisponibilidad(esClinico)
   const alternar = useAlternarDisponibilidad()
