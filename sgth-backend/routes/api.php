@@ -311,7 +311,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // arriba: leer la estructura de la institución no exige sesión.
 
         // Estado de la plantilla: plazas, ocupación y personal por modalidad.
+        // Con `ver-estructura`, como su entrada del menú: hasta el 2026-10-28
+        // la abría cualquier usuario con sesión (docs/revision-permisos-sin-
+        // uso.md, 5.2).
         Route::get('plantilla', [PlantillaController::class, 'resumen'])
+            ->middleware('permission:ver-estructura')
             ->name('estructura.plantilla');
         Route::get(
             'unidades-administrativas/todas',
@@ -1143,7 +1147,14 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // y respondía 500 siempre; ninguna pantalla la usaba. Las citas las
         // registra el dispensario al admitir al paciente, y la ausencia la
         // justifica el certificado médico, que ya crea su permiso con folio.
-        Route::get('mi-historia-clinica', [AutoservicioController::class, 'miHistoriaClinica']);
+        //
+        // Las consultas propias (fecha, médico, diagnóstico), con
+        // `ver-historia-clinica-propia`, que tienen todos los roles por los
+        // permisos base. Hasta el 2026-10-28 no pedía nada; qué pantalla del
+        // Portal la muestra se decide aparte (docs/revision-permisos-sin-
+        // uso.md, D11).
+        Route::get('mi-historia-clinica', [AutoservicioController::class, 'miHistoriaClinica'])
+            ->middleware('permission:ver-historia-clinica-propia');
 
         // «Mis exámenes» (fase 6 de docs/diseno-examenes-medicos.md) se retiró
         // el 2026-10-25: los resultados los suben solo el médico y el

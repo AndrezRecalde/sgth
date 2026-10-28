@@ -272,19 +272,23 @@ de ayuda (`api.php:1524`).
   roles. El arreglo es una línea: `permission:ver-estructura`.
 - **`GET autoservicio/mi-historia-clinica`**: ver D11.
 
-## 6. Cómo se haría, si se aprueba lo recomendado
+## 6. Cómo se aplica
 
-Un PR por bloque, cada uno desde `main`. Todos tocan `RolPermisoSeeder`, así que cada uno corre las
-pruebas de paridad: los archivos de `tests/Feature` que hacen `require database_path('migrations` o usan
-`ReflectionClassConstant`.
+Cuatro PR apilados, cada uno sobre la rama del anterior y con base `main`: se fusionan en orden. Todos
+tocan `RolPermisoSeeder`, así que cada uno corrió las pruebas de paridad (los archivos de
+`tests/Feature` que hacen `require database_path('migrations` o usan `ReflectionClassConstant`).
 
-1. **Expediente por permisos (D2, D4, D5).** `ServidorPolicy`, los `role:` del Expediente y el menú
-   pasan a permisos. Una migración le quita `ver-expediente-todos` al auditor y le da
-   `cargar-documentos` al asistente. Lleva el fixture de pruebas de TH de la sección 3.2. Conviene la
-   suite completa en el CI, porque son 81 archivos.
-2. **Disciplinario por permisos (D8).** El prefijo `disciplinario` y el menú. Usa el mismo fixture.
-3. **Retiros (D1, D3, D9, D12, y `configurar-sistema` si se aprueba).** Enum, seeder, una migración
-   que borre los permisos y `permisos-por-rol.json`. Antes, mirar en producción quién los tiene como
-   permiso directo.
-4. **Documentar en el enum (D6, D7, D10 y 5.1).** Mover a sus secciones de módulo futuro, y poner la
-   guarda de `estructura/plantilla` y de `mi-historia-clinica` (D11).
+1. **#603 — Expediente por permisos (D2, D4, D5).** `ServidorPolicy`, los `role:` del Expediente y el
+   menú pasan a permisos. La migración `2026_12_08` le quita `ver-expediente-todos` al auditor y le da
+   `cargar-documentos` al asistente. Trae `rolesDeTalentoHumano()`, el fixture de la sección 3.2.
+2. **#604 — Disciplinario por permisos (D8).** El prefijo `disciplinario`, el menú y los botones de la
+   pantalla. Migración `2026_12_09`.
+3. **#605 — Retiros (D1, D3, D9, D12).** Enum, seeder, la migración `2026_12_10` que borra los cinco y
+   `permisos-por-rol.json`. `configurar-sistema` no se retira: no entró en las decisiones.
+4. **Documentar en el enum y las dos guardas (D6, D7, D10, D11 y 5.1).** Cada permiso que espera un
+   módulo o una pantalla lo dice junto a su caso, y `estructura/plantilla` y `mi-historia-clinica`
+   piden su permiso. Sin migración.
+
+En producción: `php artisan migrate` hasta `2026_12_10`. Antes, conviene mirar si alguien tiene como
+permiso adicional uno de los cinco que se retiran: la migración se lo quita sin avisar, aunque no le
+abría nada.

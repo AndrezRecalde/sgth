@@ -9,6 +9,7 @@ use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
 
@@ -56,6 +57,20 @@ beforeEach(function () {
         'servidor_id'     => $this->paciente->id,
         'estado'          => true,
     ]);
+
+    // La ruta pide `ver-historia-clinica-propia` desde el 2026-10-28; todo
+    // servidor lo tiene por los permisos base.
+    $permiso = Permission::firstOrCreate(['name' => 'ver-historia-clinica-propia', 'guard_name' => 'sanctum']);
+    $this->medico->givePermissionTo($permiso);
+    $this->pacienteUser->givePermissionTo($permiso);
+});
+
+test('sin ver-historia-clinica-propia no se ven las consultas propias', function () {
+    $this->pacienteUser->revokePermissionTo('ver-historia-clinica-propia');
+
+    $this->actingAs($this->pacienteUser, 'sanctum')
+        ->getJson('/api/v1/autoservicio/mi-historia-clinica')
+        ->assertForbidden();
 });
 
 test('el_servidor_ve_sus_consultas_en_el_autoservicio', function () {
