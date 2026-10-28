@@ -1,8 +1,8 @@
 'use client'
 
 import { Button, Stack, Tabs, Text } from '@mantine/core'
-import { IconFileDownload, IconSchool, IconUser, IconUserOff, IconUsers } from '@tabler/icons-react'
-import { DataState, EmptyState, PageHeader, PageShell } from '@/components/ui'
+import { IconFileDownload, IconSchool, IconUser, IconUsers } from '@tabler/icons-react'
+import { AvisoSinFicha, DataState, PageHeader, PageShell } from '@/components/ui'
 import { DatosPersonalesTab } from '@/features/expediente/components/tabs/DatosPersonalesTab'
 import { useServidor } from '@/features/expediente/hooks/useServidor'
 import { useAuth } from '@/hooks/useAuth'
@@ -34,11 +34,7 @@ export function MiPerfilView() {
     return (
       <PageShell>
         <PageHeader title={TITULO} description={DESCRIPCION} />
-        <EmptyState
-          icon={IconUserOff}
-          title="Su usuario no está vinculado a un servidor"
-          description="La ficha y la hoja de vida salen del expediente del servidor. Pídale a Talento Humano que complete la vinculación."
-        />
+        <AvisoSinFicha motivo="La ficha y la hoja de vida salen del expediente del servidor." />
       </PageShell>
     )
   }

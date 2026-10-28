@@ -5,10 +5,11 @@ import { useDisclosure } from '@mantine/hooks'
 import { IconArrowBackUp, IconFileText, IconInbox, IconPlus } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
 import {
-  DataState, PageHeader, PageShell, SgthTable, StatusBadge, TableActions, confirmar, notificar,
+  AvisoSinFicha, DataState, PageHeader, PageShell, SgthTable, StatusBadge, TableActions, confirmar, notificar,
   type TableAction,
 } from '@/components/ui'
 import type { SemanticTone } from '@/config/design.tokens'
+import { useTieneFicha } from '@/hooks/useTieneFicha'
 import { abrirOGuardarArchivo } from '@/lib/archivo'
 import { formatFecha } from '@/lib/fecha'
 import { getApiErrorMessage } from '@/types/api'
@@ -29,6 +30,7 @@ const TONO: Record<EstadoSolicitudAccion, SemanticTone> = {
  * acción que la atendió cuando ya se le notificó.
  */
 export function MisSolicitudesView() {
+  const tieneFicha = useTieneFicha()
   const { data, isLoading, error } = useMisSolicitudes()
   const retirar = useRetirarSolicitud()
   const [nuevaOpened, { open: abrirNueva, close: cerrarNueva }] = useDisclosure(false)
@@ -109,25 +111,31 @@ export function MisSolicitudesView() {
       <PageHeader
         title="Renuncia, licencia y jubilación"
         description="Sus solicitudes a Talento Humano y en qué quedó cada una"
-        actions={
+        // Sin ficha, el formulario se llenaba entero, archivo incluido, y el
+        // API lo rechazaba al enviar (PR 15).
+        actions={tieneFicha && (
           <Button variant="light" leftSection={<IconPlus size={16} />} onClick={abrirNueva}>
             Nueva solicitud
           </Button>
-        }
+        )}
       />
 
-      <DataState
-        loading={isLoading}
-        error={error}
-        empty={!solicitudes.length}
-        emptyProps={{
-          icon: IconInbox,
-          title: 'No ha presentado solicitudes',
-          description: 'Presente una renuncia, una licencia sin remuneración o su jubilación con «Nueva solicitud».',
-        }}
-      >
-        <SgthTable records={solicitudes} columns={columnas} minHeight={160} />
-      </DataState>
+      {tieneFicha ? (
+        <DataState
+          loading={isLoading}
+          error={error}
+          empty={!solicitudes.length}
+          emptyProps={{
+            icon: IconInbox,
+            title: 'No ha presentado solicitudes',
+            description: 'Presente una renuncia, una licencia sin remuneración o su jubilación con «Nueva solicitud».',
+          }}
+        >
+          <SgthTable records={solicitudes} columns={columnas} minHeight={160} />
+        </DataState>
+      ) : (
+        <AvisoSinFicha motivo="Las solicitudes a Talento Humano se presentan sobre el expediente del servidor." />
+      )}
 
       <NuevaSolicitudModal opened={nuevaOpened} onClose={cerrarNueva} />
     </PageShell>

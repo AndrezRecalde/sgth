@@ -7,7 +7,8 @@ import { ROUTES } from "@/config/routes";
 import { Button } from "@mantine/core";
 import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
 import { IconInbox, IconPlane, IconPlus } from "@tabler/icons-react";
-import { DataState, PAGINACION_ES, PageHeader, PageShell, SgthTable } from "@/components/ui";
+import { AvisoSinFicha, DataState, PAGINACION_ES, PageHeader, PageShell, SgthTable } from "@/components/ui";
+import { useTieneFicha } from "@/hooks/useTieneFicha";
 import { useViaticos } from "../hooks/useViaticos";
 import { useAccionesViatico } from "../hooks/useAccionesViatico";
 import { ViaticoModal } from "./ViaticoModal";
@@ -29,6 +30,7 @@ export function ViaticoView() {
   const router = useRouter();
   const [modalAbierto, { open, close }] = useDisclosure(false);
   const puede = useAccionesViatico();
+  const tieneFicha = useTieneFicha();
 
   const [filtros, setFiltros] = useState<FiltrosViaticoForm>(FILTROS_VIATICO_INICIALES);
   const [page, setPage] = useState(1);
@@ -76,6 +78,13 @@ export function ViaticoView() {
         }
       />
 
+      {/* Sin ficha el API devuelve la lista vacía y el vacío decía «Todavía no
+          tiene viáticos». La Bandeja sigue en la cabecera para Financiero
+          (PR 15). */}
+      {!tieneFicha ? (
+        <AvisoSinFicha motivo="Los viáticos se solicitan a nombre del servidor que viaja." />
+      ) : (
+      <>
       <ViaticoFiltros
         filtros={filtros}
         onCambiar={(cambio) => {
@@ -118,6 +127,8 @@ export function ViaticoView() {
           {...PAGINACION_ES}
         />
       </DataState>
+      </>
+      )}
 
       <ViaticoModal opened={modalAbierto} onClose={close} onCreated={abrir} />
     </PageShell>

@@ -40973,37 +40973,6 @@
                             }
                         }
                     },
-                    "404": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "exito": {
-                                            "type": "boolean"
-                                        },
-                                        "mensaje": {
-                                            "type": "string",
-                                            "const": "Su usuario no est\u00e1 vinculado a un expediente: no puede pedir equipos."
-                                        },
-                                        "datos": {
-                                            "type": "null"
-                                        },
-                                        "errores": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "exito",
-                                        "mensaje",
-                                        "datos",
-                                        "errores"
-                                    ]
-                                }
-                            }
-                        }
-                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     },

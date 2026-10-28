@@ -26,6 +26,7 @@ del módulo.
 | `DetailList` | Pares etiqueta/valor de un detalle | Valor ausente se dibuja como guion |
 | `DataState` | Los cuatro estados de una consulta | Envuelve la tabla o la lista |
 | `EmptyState` | Estado vacío | Dice qué falta **y** qué hacer |
+| `AvisoSinFicha` | Lo «mío» del Portal para una cuenta sin ficha de servidor | Con `useTieneFicha()`; la consulta no se lanza y «crear» no se ofrece; `compacto` si la pantalla aún sirve para consultar |
 | `SgthTable` | La única tabla del sistema | `PAGINACION_ES` si hay paginación |
 | `TableActions` | Menú de acciones de una fila | Última columna, `width: 50`, `accessor: 'acciones'` (`SgthTable` la fija a la derecha) |
 | `SgthModal` | Base de todo modal | Nunca el `Modal` de Mantine directo |

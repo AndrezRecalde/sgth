@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { IconDevices, IconFileText, IconHeadset } from '@tabler/icons-react'
-import { DataState, PageHeader, PageShell, SgthTable, type TableAction } from '@/components/ui'
+import { AvisoSinFicha, DataState, PageHeader, PageShell, SgthTable, type TableAction } from '@/components/ui'
 import { ROUTES } from '@/config/routes'
 import { useAuth } from '@/hooks/useAuth'
 import { NuevoTicketModal, type PropuestaTicket } from '@/features/helpdesk/components/NuevoTicketModal'
@@ -34,18 +34,24 @@ export function MisEquiposView() {
         title="Mis equipos"
         description="Los equipos informáticos que tiene a su cargo o usa. Si uno falla, repórtelo desde su menú; si algo no coincide, comuníquelo a la Unidad de TIC."
       />
-      <DataState
-        loading={isLoading}
-        error={error}
-        empty={!data.length}
-        emptyProps={{
-          icon: IconDevices,
-          title: 'No tiene equipos a su cargo',
-          description: 'Cuando TIC le entregue un equipo en custodia, aparecerá aquí con su acta.',
-        }}
-      >
-        <SgthTable records={data} columns={columnasMisEquipos(servidorId, accionesDe)} minHeight={160} />
-      </DataState>
+      {/* Sin ficha el API devuelve la lista vacía, y el vacío decía «No tiene
+          equipos a su cargo», como si TIC no le hubiera entregado nada (PR 15). */}
+      {servidorId === null ? (
+        <AvisoSinFicha motivo="Los equipos se entregan en custodia a un servidor, con su acta." />
+      ) : (
+        <DataState
+          loading={isLoading}
+          error={error}
+          empty={!data.length}
+          emptyProps={{
+            icon: IconDevices,
+            title: 'No tiene equipos a su cargo',
+            description: 'Cuando TIC le entregue un equipo en custodia, aparecerá aquí con su acta.',
+          }}
+        >
+          <SgthTable records={data} columns={columnasMisEquipos(servidorId, accionesDe)} minHeight={160} />
+        </DataState>
+      )}
 
       {/* Abre un ticket con el equipo ya elegido (diseño, 5.2). */}
       <NuevoTicketModal propuesta={reporte} onClose={() => setReporte(null)} onCreado={(t) => router.push(ROUTES.PORTAL.MI_TICKET(t.id))} />

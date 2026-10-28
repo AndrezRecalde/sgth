@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Stack, Text } from '@mantine/core'
 import { IconClock, IconLock } from '@tabler/icons-react'
-import { DataState, EmptyState, SgthTable } from '@/components/ui'
+import { AvisoSinFicha, DataState, EmptyState, SgthTable } from '@/components/ui'
 import { useAuth } from '@/hooks/useAuth'
 import { useMarcaciones, type ParamsMarcaciones } from '../hooks/useMarcaciones'
 import { marcacionesColumns } from './marcaciones.columns'
@@ -57,6 +57,11 @@ export function MarcacionesTab({ soloPropias = false }: Props) {
   const consultar = () => {
     if (!cedula || !filtros.fechaInicio || !filtros.fechaFin) return
     setConsultados({ cedula, fecha_inicio: filtros.fechaInicio, fecha_fin: filtros.fechaFin })
+  }
+
+  // Sin ficha, el aviso de abajo culpaba a la marcación biométrica (PR 15).
+  if (!veTodos && !propio) {
+    return <AvisoSinFicha motivo="Las marcaciones del biométrico se consultan por la cédula del servidor." />
   }
 
   if (!veTodos && !cedulaPropia) {

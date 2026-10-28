@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Autoservicio;
 
 use App\Contracts\Autoservicio\AutoservicioServiceInterface;
+use App\Exceptions\ReglaNegocioException;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -40,6 +41,13 @@ class AutoservicioController extends Controller
 
     public function misVacaciones(Request $request): JsonResponse
     {
+        // Con el `0` de `getServidorId`, el saldo hacía `findOrFail(0)` y la
+        // cuenta sin ficha recibía un 404 «La ruta solicitada no existe»
+        // (PR 15).
+        if (! $request->user()->servidor_id) {
+            throw new ReglaNegocioException('Su cuenta no está vinculada a un servidor: no tiene vacaciones.');
+        }
+
         $vacaciones = $this->autoservicioService->obtenerMisVacaciones($this->getServidorId($request));
         return ApiResponse::ok($vacaciones, 'Mis vacaciones obtenidas.');
     }

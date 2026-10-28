@@ -6,9 +6,10 @@ import { DatePickerInput } from '@mantine/dates'
 import { useDebouncedValue } from '@mantine/hooks'
 import { IconFileTypePdf, IconListCheck, IconPlus } from '@tabler/icons-react'
 import {
-  DataState, PAGINACION_ES, PageHeader, PageShell, SgthTable, Toolbar, confirmar, notificar,
+  AvisoSinFicha, DataState, PAGINACION_ES, PageHeader, PageShell, SgthTable, Toolbar, confirmar, notificar,
 } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
+import { useTieneFicha } from '@/hooks/useTieneFicha'
 import { guardarArchivo } from '@/lib/archivo'
 import { formatFecha, fromDateValueOrNull, hoyIso } from '@/lib/fecha'
 import { getApiErrorMessage } from '@/types/api'
@@ -37,6 +38,7 @@ function mesEnCurso(): Rango {
  * Son suyas: nadie más las ve ni las aprueba.
  */
 export function MisActividadesView() {
+  const tieneFicha = useTieneFicha()
   const compacto = useContainedInput('sm')
   const [rango, setRango] = useState<Rango>(mesEnCurso)
   const [categoria, setCategoria] = useState<CategoriaActividad | null>(null)
@@ -87,6 +89,20 @@ export function MisActividadesView() {
       onConfirm: () => eliminar.mutate(a.id),
     }),
   })
+
+  // Sin ficha, anotar y exportar fallaban con 422 después de llenar el
+  // formulario, y el vacío invitaba a «Anotar actividad» (PR 15).
+  if (!tieneFicha) {
+    return (
+      <PageShell>
+        <PageHeader
+          title="Mis actividades"
+          description="Lo que hace en su jornada, día por día. Se corrigen solo las del mes en curso."
+        />
+        <AvisoSinFicha motivo="Las actividades se anotan sobre el expediente del servidor, y el informe sale con sus datos." />
+      </PageShell>
+    )
+  }
 
   return (
     <PageShell>

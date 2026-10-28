@@ -35233,20 +35233,6 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Su usuario no está vinculado a un expediente: no puede pedir equipos.";
-                        datos: null;
-                        errores: null;
-                    };
-                };
-            };
             422: components["responses"]["ValidationException"];
         };
     };
