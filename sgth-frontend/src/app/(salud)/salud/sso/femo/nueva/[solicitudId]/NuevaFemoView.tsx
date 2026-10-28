@@ -28,7 +28,7 @@ interface Props {
  */
 export function NuevaFemoView({ solicitudId }: Props) {
   const router         = useRouter()
-  const { usuario, hasRole } = useAuth()
+  const { usuario, hasPermiso } = useAuth()
   const solicitudIdNum = Number(solicitudId)
 
   const wizard = useFemoWizardState({
@@ -82,7 +82,7 @@ export function NuevaFemoView({ solicitudId }: Props) {
   const ajena = !!fichaGuardada && !!usuario && fichaGuardada.evaluador_id !== usuario.id
   useEffect(() => {
     if (!usuario) return
-    if (!hasRole('medico') || ajena) {
+    if (!hasPermiso('gestionar-fichas-sso-med') || ajena) {
       notificar.aviso(
         'No puede llenar esta ficha',
         ajena
@@ -91,7 +91,7 @@ export function NuevaFemoView({ solicitudId }: Props) {
       )
       router.replace(ROUTES.SALUD.SSO)
     }
-  }, [usuario, ajena, hasRole, router])
+  }, [usuario, ajena, hasPermiso, router])
 
   const guardarBorrador = () => {
     void guardado.guardar().then((id) => { if (id) cambios.marcarGuardado() })

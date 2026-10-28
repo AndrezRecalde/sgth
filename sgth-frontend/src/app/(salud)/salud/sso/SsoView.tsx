@@ -33,7 +33,7 @@ const POR_PAGINA = 15
 export function SsoView() {
   const router    = useRouter()
   const contained = useContainedInput('sm')
-  const { usuario, hasRole } = useAuth()
+  const { usuario, hasPermiso } = useAuth()
 
   const [page, setPage]                 = useState(1)
   // Arranca con lo pendiente Y lo que ya empezó: con solo «pendiente» se
@@ -69,7 +69,7 @@ export function SsoView() {
   // (`gestionar-onboarding`), que no trabaja en esta pantalla.
   const columns = getSolicitudesSsoColumns({
     descargando,
-    evalua: hasRole('medico'),
+    evalua: hasPermiso('gestionar-fichas-sso-med'),
     usuarioId: usuario?.id ?? null,
     puedeConfirmarIncorporacion: false,
     onIniciar: (id) => {

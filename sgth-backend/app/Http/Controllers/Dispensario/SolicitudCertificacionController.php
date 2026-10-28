@@ -258,7 +258,9 @@ final class SolicitudCertificacionController extends Controller
      */
     private function constantesVisiblesPara(Request $request): string
     {
-        $clinico = $request->user()?->hasAnyRole(['medico', 'enfermera', 'admin-dispensario']);
+        // Por permiso desde el PR 17d: quien lee historias clínicas. Talento
+        // Humano, que también abre la solicitud, no lo tiene.
+        $clinico = $request->user()?->can(Permiso::VER_HISTORIA_CLINICA->value);
 
         return $clinico
             ? 'constantesVitales'

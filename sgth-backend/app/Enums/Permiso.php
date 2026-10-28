@@ -158,7 +158,11 @@ enum Permiso: string
     // `gestionar-agenda`, `ver-historia-clinica`, `crear-consulta` y
     // `registrar-triaje`; desde el 17c (consultas, exámenes, odontograma,
     // reposo), `ver-examenes`, `gestionar-catalogo-examenes` y
-    // `registrar-odontograma`. El resto sigue decorativo hasta su parte.
+    // `registrar-odontograma`; desde el 17d (salud ocupacional, reportes,
+    // tableros), `gestionar-fichas-sso-med` y los cuatro `ver-*` del final.
+    // Sin uso quedan `evaluar-personal-medico` y `ver-historia-clinica-propia`
+    // (base). Lo que es identidad —la especialidad, el perfil de «Mi
+    // jornada»— sigue por rol.
     case VER_AGENDA_DISPENSARIO = 'ver-agenda-dispensario';
     // Llevar la cola de todos: dar turnos y operar los de cualquier
     // profesional. Enfermería y la administración (PR 17b); el médico y el
@@ -197,6 +201,17 @@ enum Permiso: string
     case GESTIONAR_CATALOGO_EXAMENES = 'gestionar-catalogo-examenes';
     // Los procedimientos de cada pieza dental: el odontólogo (PR 4 y 17c).
     case REGISTRAR_ODONTOGRAMA = 'registrar-odontograma';
+    // El tablero de gestión del Dispensario: la administración (PR 17d).
+    case VER_TABLERO_DISPENSARIO = 'ver-tablero-dispensario';
+    // Leer las fichas FEMO, su tablero y los exámenes por riesgo: el médico y
+    // la administración. Llenarlas es `gestionar-fichas-sso-med` (PR 17d).
+    case VER_FICHAS_SSO_MED = 'ver-fichas-sso-med';
+    // El seguimiento de las certificaciones médicas y su cobertura: el
+    // médico, la administración del Dispensario y Talento Humano (PR 17d).
+    case VER_CERTIFICACIONES_MEDICAS = 'ver-certificaciones-medicas';
+    // Los reportes del Dispensario; qué ve cada uno lo decide
+    // `AlcanceReporte` (PR 17d).
+    case VER_REPORTES_DISPENSARIO = 'ver-reportes-dispensario';
 
     // ── MÓDULO 12: Inventario TI ─────────────────────────────────
     case VER_INVENTARIO_TI = 'ver-inventario-ti';

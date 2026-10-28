@@ -1,15 +1,19 @@
 <?php
 namespace App\Policies\Dispensario;
 
+use App\Enums\Permiso;
 use App\Models\Dispensario\HistoriaClinica;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
+/**
+ * Por permiso desde el PR 17d de docs/plan-roles-y-accesos.md, como las
+ * rutas de historias. Al 2026-10-28 ningún `authorize` la usa: las rutas
+ * deciden con `permission:ver-historia-clinica`.
+ */
 final class HistoriaClinicaPolicy
 {
     use HandlesAuthorization;
-
-    private const ROLES_MEDICOS = ['medico', 'odontologo', 'enfermera', 'admin-dispensario'];
 
     public function before(User $user, string $ability): ?bool
     {
@@ -50,11 +54,11 @@ final class HistoriaClinicaPolicy
 
     public function delete(User $user, HistoriaClinica $model): bool
     {
-        return $user->hasRole('admin-dispensario');
+        return $user->can(Permiso::SUPERVISAR_DISPENSARIO->value);
     }
 
     private function isPersonalMedico(User $user): bool
     {
-        return $user->hasAnyRole(self::ROLES_MEDICOS);
+        return $user->can(Permiso::VER_HISTORIA_CLINICA->value);
     }
 }

@@ -163,6 +163,15 @@ describe('buildNav', () => {
     expect(flattenNav('salud', ['crear-consulta'], []).map((p) => p.href)).not.toContain(ROUTES.SALUD.CONSULTAS)
   })
 
+  it('el Dispensario queda por permisos salvo las colas por especialidad (PR 17d)', () => {
+    expect(flattenNav('salud', ['ver-tablero-dispensario'], []).map((p) => p.href)).toEqual([ROUTES.SALUD.HOME])
+    expect(flattenNav('salud', ['ver-reportes-dispensario'], []).map((p) => p.href)).toEqual([ROUTES.SALUD.REPORTES])
+    expect(flattenNav('salud', ['ver-fichas-sso-med'], []).map((p) => p.href)).toContain(ROUTES.SALUD.FEMO)
+    expect(pantallas('salud', 'medico')).toContain(ROUTES.SALUD.FEMO)
+    expect(pantallas('salud', 'odontologo')).not.toContain(ROUTES.SALUD.FEMO)
+    expect(inicioDelSubsistema('salud', ...sesion('admin-dispensario'))).toBe(ROUTES.SALUD.HOME)
+  })
+
   it('al auxiliar de farmacia le ofrece el inventario y el despacho, nada clínico', () => {
     // PR 13: el mostrador, sin historias, consultas, agenda ni exámenes.
     expect(pantallas('salud', 'auxiliar-farmacia')).toEqual([
