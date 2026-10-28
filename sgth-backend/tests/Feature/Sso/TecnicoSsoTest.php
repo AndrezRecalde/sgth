@@ -73,7 +73,7 @@ test('el tecnico de sso lleva riesgos laborales y nada de talento humano', funct
         'gestionar-sso', 'ver-reportes-sso', 'registrar-accidente', 'buscar-servidores',
     ]))->toBeTrue();
 
-    foreach (['ver-estructura', 'ver-permisos-todos', 'ver-expediente-todos', 'ver-expediente-unidad',
+    foreach (['ver-estructura', 'ver-permisos-todos', 'ver-expediente-todos',
         'gestionar-expediente', 'ver-asistencia-todos', 'generar-reportes'] as $permiso) {
         expect($this->tecnico->can($permiso))->toBeFalse("no debería tener {$permiso}");
     }

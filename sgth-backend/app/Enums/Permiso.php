@@ -13,11 +13,12 @@ namespace App\Enums;
  * 2026-10-28, que se aplica en cuatro PR. Ya tienen uso los cuatro del
  * Expediente (`ver-expediente-todos`, `gestionar-expediente`,
  * `cargar-documentos` y `gestionar-cargas-familiares`) y los tres de Régimen
- * disciplinario. Faltan `ver-distributivo`, `ver-expediente-unidad`,
- * `gestionar-tarifas-viatico`, `gestionar-base-conocimiento`,
- * `ver-actividades-unidad`, `aprobar-actividades`, `exportar-reportes` y
- * `ver-auditoria`. Antes de darles uso, comprobar quién los tiene: el seeder
- * los asigna aunque nadie los mire.
+ * disciplinario. Se retiraron `ver-distributivo`, `ver-expediente-unidad`,
+ * `ver-actividades-unidad`, `aprobar-actividades` y
+ * `evaluar-personal-medico`. Faltan `gestionar-tarifas-viatico`,
+ * `gestionar-base-conocimiento`, `exportar-reportes` y `ver-auditoria`. Antes
+ * de darles uso, comprobar quién los tiene: el seeder los asigna aunque nadie
+ * los mire.
  */
 enum Permiso: string
 {
@@ -25,12 +26,17 @@ enum Permiso: string
     case VER_ESTRUCTURA = 'ver-estructura';
     case GESTIONAR_PUESTOS = 'gestionar-puestos';
     case GESTIONAR_ORGANIGRAMA = 'gestionar-organigrama';
-    case VER_DISTRIBUTIVO = 'ver-distributivo';
+    // Aquí estaba `ver-distributivo`, retirado el 2026-10-28
+    // (docs/revision-permisos-sin-uso.md, D1): quién ocupa cada puesto y con
+    // qué RMU ya se ve en Puestos con `ver-estructura`, y es público por la
+    // LOTAIP.
     case GESTIONAR_DISTRIBUTIVO = 'gestionar-distributivo';
 
     // ── MÓDULO 02: Expediente ────────────────────────────────────
     case VER_EXPEDIENTE_PROPIO = 'ver-expediente-propio';
-    case VER_EXPEDIENTE_UNIDAD = 'ver-expediente-unidad';
+    // `ver-expediente-unidad` se retiró el 2026-10-28 (D3): la jefatura no
+    // tiene pantalla de expedientes. Una «Mi equipo» llevaría un permiso hecho
+    // para lo que muestre, no el Expediente entero.
     // Listar y abrir la ficha de cualquier servidor (`ServidorPolicy::verAny`
     // y `ver`). Talento Humano; hasta el 2026-10-28 lo decidía su rol.
     case VER_EXPEDIENTE_TODOS = 'ver-expediente-todos';
@@ -169,9 +175,10 @@ enum Permiso: string
     // reposo), `ver-examenes`, `gestionar-catalogo-examenes` y
     // `registrar-odontograma`; desde el 17d (salud ocupacional, reportes,
     // tableros), `gestionar-fichas-sso-med` y los cuatro `ver-*` del final.
-    // Sin uso quedan `evaluar-personal-medico` y `ver-historia-clinica-propia`
-    // (base). Lo que es identidad —la especialidad, el perfil de «Mi
-    // jornada»— sigue por rol.
+    // Sin uso queda `ver-historia-clinica-propia` (base);
+    // `evaluar-personal-medico` se retiró el 2026-10-28 (D12): si el personal
+    // médico se evalúa, lo hará el módulo de Evaluación. Lo que es identidad
+    // —la especialidad, el perfil de «Mi jornada»— sigue por rol.
     case VER_AGENDA_DISPENSARIO = 'ver-agenda-dispensario';
     // Llevar la cola de todos: dar turnos y operar los de cualquier
     // profesional. Enfermería y la administración (PR 17b); el médico y el
@@ -188,7 +195,6 @@ enum Permiso: string
     case DESPACHAR_MEDICAMENTO = 'despachar-medicamento';      // enfermeras/admin-dispensario
     case GESTIONAR_INVENTARIO_MED = 'gestionar-inventario-med';
     case GESTIONAR_FICHAS_SSO_MED = 'gestionar-fichas-sso-med';
-    case EVALUAR_PERSONAL_MEDICO = 'evaluar-personal-medico';    // admin-dispensario
     case SOLICITAR_CERTIFICACION_MEDICA = 'solicitar-certificacion-medica'; // RRHH, desde Expediente
     // Consultar el inventario de medicinas, su kárdex y el stock bajo: todo el
     // Dispensario y el auxiliar de farmacia (PR 17a).
@@ -260,9 +266,10 @@ enum Permiso: string
     case GESTIONAR_CURSOS = 'gestionar-cursos';
 
     // ── MÓDULO 16: Actividades ───────────────────────────────────
+    // Cada servidor ve solo las suyas, sin revisión del jefe (2026-10-12,
+    // #431). Por eso se retiraron `ver-actividades-unidad` y
+    // `aprobar-actividades` el 2026-10-28 (D9).
     case REGISTRAR_ACTIVIDADES = 'registrar-actividades';
-    case VER_ACTIVIDADES_UNIDAD = 'ver-actividades-unidad';
-    case APROBAR_ACTIVIDADES = 'aprobar-actividades';
     case EXPORTAR_INFORME_ACTIVIDADES = 'exportar-informe-actividades';
 
     // ── MÓDULO 17: Bienestar ─────────────────────────────────────

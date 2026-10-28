@@ -84,7 +84,7 @@ test('el auxiliar despacha y no tiene permisos clinicos', function () {
     expect($this->auxiliar->can('despachar-medicamento'))->toBeTrue();
 
     foreach (['ver-historia-clinica', 'ver-agenda-dispensario', 'crear-consulta', 'emitir-receta',
-        'gestionar-fichas-sso-med', 'evaluar-personal-medico'] as $permiso) {
+        'gestionar-fichas-sso-med', 'supervisar-dispensario'] as $permiso) {
         expect($this->auxiliar->can($permiso))->toBeFalse("no debería tener {$permiso}");
     }
 });
