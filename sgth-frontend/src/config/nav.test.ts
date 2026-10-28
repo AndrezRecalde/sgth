@@ -153,6 +153,16 @@ describe('buildNav', () => {
     expect(pantallas('salud', 'medico')).not.toContain(ROUTES.SALUD.ENFERMERIA)
   })
 
+  it('Exámenes va por permiso; Consultas y Odontología siguen por especialidad (PR 17c)', () => {
+    expect(flattenNav('salud', ['ver-examenes'], []).map((p) => p.href)).toEqual([ROUTES.SALUD.EXAMENES])
+    for (const rol of ['medico', 'odontologo', 'admin-dispensario'] as const) {
+      expect(pantallas('salud', rol), rol).toContain(ROUTES.SALUD.EXAMENES)
+    }
+    expect(pantallas('salud', 'enfermera')).not.toContain(ROUTES.SALUD.EXAMENES)
+    // La cola es de la especialidad: el permiso solo no la abre.
+    expect(flattenNav('salud', ['crear-consulta'], []).map((p) => p.href)).not.toContain(ROUTES.SALUD.CONSULTAS)
+  })
+
   it('al auxiliar de farmacia le ofrece el inventario y el despacho, nada clínico', () => {
     // PR 13: el mostrador, sin historias, consultas, agenda ni exámenes.
     expect(pantallas('salud', 'auxiliar-farmacia')).toEqual([

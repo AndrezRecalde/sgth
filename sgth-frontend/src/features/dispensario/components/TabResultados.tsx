@@ -52,10 +52,10 @@ export function TabResultados({
   }
 
   const [revisando, setRevisando] = useState<ResultadoMedico | null>(null)
-  const { hasRole } = useAuthStore()
+  const { hasPermiso } = useAuthStore()
 
   // Los registran el médico y el odontólogo (D2, P1).
-  const puedeSubir = hasRole('medico') || hasRole('odontologo')
+  const puedeSubir = hasPermiso('crear-consulta')
 
   return (
     <Stack gap="md" p="md">

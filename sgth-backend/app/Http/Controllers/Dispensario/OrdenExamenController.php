@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dispensario;
 
 use App\Contracts\Dispensario\OrdenExamenServiceInterface;
+use App\Enums\Permiso;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dispensario\StoreOrdenExamenRequest;
 use App\Http\Responses\ApiResponse;
@@ -199,7 +200,7 @@ final class OrdenExamenController extends Controller
         $existente = OrdenExamen::findOrFail($orden);
         $usuario = $request->user();
 
-        if ($existente->solicitado_por !== $usuario->id && ! $usuario->hasRole('admin-dispensario')) {
+        if ($existente->solicitado_por !== $usuario->id && ! $usuario->can(Permiso::SUPERVISAR_DISPENSARIO->value)) {
             return ApiResponse::error(
                 'Solo quien emitió la orden o la administración del Dispensario pueden anularla.',
                 null,

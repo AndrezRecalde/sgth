@@ -25,14 +25,14 @@ const nombre = (p?: PersonaResultado | null) =>
 export function ResultadoCard({ resultado: r, origen, onRevisar }: Props) {
   const eliminar = useEliminarResultado()
   const ver = useVerResultado()
-  const { usuario, hasRole } = useAuthStore()
+  const { usuario, hasPermiso } = useAuthStore()
 
   // Lo retira quien lo subió o la administración, igual que exige el
   // servidor: un botón que siempre responde 403 es peor que no enseñarlo.
-  const puedeRetirar = r.subido_por?.id === usuario?.id || hasRole('admin-dispensario')
+  const puedeRetirar = r.subido_por?.id === usuario?.id || hasPermiso('supervisar-dispensario')
   // Lo revisa cualquier médico; una lectura ya hecha solo la corrige quien la
   // hizo (D3). Lo subido antes de la revisión queda como estaba.
-  const puedeRevisar = (hasRole('medico') || hasRole('odontologo'))
+  const puedeRevisar = hasPermiso('crear-consulta')
     && (r.estado_revision === 'por_revisar' || r.revisor?.id === usuario?.id)
   const lectura = r.interpretacion ? INTERPRETACION[r.interpretacion] : null
 

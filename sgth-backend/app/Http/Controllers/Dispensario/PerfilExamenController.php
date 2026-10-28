@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dispensario;
 
 use App\Enums\EspecialidadAtencion;
+use App\Enums\Permiso;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dispensario\StorePerfilExamenRequest;
 use App\Http\Requests\Dispensario\UpdatePerfilExamenRequest;
@@ -98,7 +99,7 @@ final class PerfilExamenController extends Controller
     /** La administración, cualquiera; el profesional, los de su especialidad. */
     private function puedeArmar(User $usuario, EspecialidadAtencion $especialidad): bool
     {
-        return $usuario->hasRole('admin-dispensario')
+        return $usuario->can(Permiso::SUPERVISAR_DISPENSARIO->value)
             || $usuario->hasRole($especialidad->rol());
     }
 

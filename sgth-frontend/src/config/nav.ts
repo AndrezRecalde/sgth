@@ -338,8 +338,8 @@ export const NAV_SGTH: NavGroup[] = [
 
 // ── DISPENSARIO MÉDICO ────────────────
 // Pasa de `roles` a permisos por partes (docs/plan-roles-y-accesos.md,
-// PR 17). Farmacia (17a) y Enfermería (17b) ya van por permiso; el resto, en
-// las siguientes. Consultas y Odontología siguen por rol a propósito: es una
+// PR 17). Farmacia (17a), Enfermería (17b) y Exámenes (17c) ya van por
+// permiso; el resto, en la siguiente. Consultas y Odontología siguen por rol a propósito: es una
 // cola por especialidad, y eso es identidad, no autorización.
 export const NAV_SALUD: NavGroup[] = [
   {
@@ -375,10 +375,11 @@ export const NAV_SALUD: NavGroup[] = [
         // La bandeja de lo que espera resultados, los perfiles y, para la
         // administración, el catálogo. Enfermería no la ve desde el
         // 2026-10-24: no hacía nada aquí y veía resultados de cada paciente.
-        label: 'Exámenes',
-        href:  ROUTES.SALUD.EXAMENES,
-        icon:  'IconFlask',
-        roles: ['medico', 'odontologo', 'admin-dispensario'],
+        // Por permiso desde el PR 17c.
+        label:   'Exámenes',
+        href:    ROUTES.SALUD.EXAMENES,
+        icon:    'IconFlask',
+        permiso: 'ver-examenes',
       },
       {
         label:    'Enfermería',

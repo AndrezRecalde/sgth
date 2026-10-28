@@ -1905,7 +1905,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // el catálogo no es secreto, pero cada letra era una consulta de texto
         // sobre 8918 filas que cualquiera podía lanzar desde fuera.
         Route::get('cie10/buscar', [DiagnosticoCie10Controller::class, 'buscar'])
-            ->middleware('role:medico|odontologo|admin-dispensario')
+            ->middleware('permission:crear-consulta|supervisar-dispensario')
             ->name('dispensario.cie10.buscar');
 
         // A quién asignarle un turno. Lo pide Recepción, así que va con el
@@ -2001,7 +2001,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // ve solo las suyas y las de los pacientes que atiende
         // (ConsultaMedicaController; docs/plan-roles-y-accesos.md, PR 5).
         Route::prefix('consultas')
-            ->middleware('role:medico|odontologo')
+            ->middleware('permission:crear-consulta')
             ->group(function () {
                 Route::get('/', [ConsultaMedicaController::class, 'index']);
                 // Registrarla es de quien atiende. El comentario de arriba lo
@@ -2009,7 +2009,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 // enfermera o la administración podían crear una consulta
                 // firmada con su usuario.
                 Route::post('/', [ConsultaMedicaController::class, 'store'])
-                    ->middleware('role:medico|odontologo');
+                    ->middleware('permission:crear-consulta');
 
                 // Lo que se lleva escrito y aún no se ha guardado. Antes del
                 // comodín {id}, o «borrador» se leería como un id.
@@ -2029,14 +2029,19 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 );
                 Route::get('{id}', [ConsultaMedicaController::class, 'show']);
                 Route::patch('{id}', [ConsultaMedicaController::class, 'update'])
-                    ->middleware('role:medico|odontologo');
+                    ->middleware('permission:crear-consulta');
             });
 
         // Odontograma — mismo acceso que consultas médicas
         // NOTA: segmentos literales (historia-clinica, procedimientos, piezas)
         // registrados antes de cualquier wildcard {id}.
+        //
+        // Desde el PR 17c, lo que leen o anulan el médico, el odontólogo y la
+        // administración —odontograma, certificados de reposo, CIE-10— va con
+        // `crear-consulta|supervisar-dispensario`: quien atiende, o quien
+        // supervisa. Registrar procedimientos, `registrar-odontograma`.
         Route::prefix('odontograma')
-            ->middleware('role:medico|odontologo|admin-dispensario')
+            ->middleware('permission:crear-consulta|supervisar-dispensario')
             ->group(function () {
                 Route::get('historia-clinica/{historiaClinicaId}', [OdontogramaController::class, 'show']);
                 Route::get('piezas/{piezaId}/historial', [OdontogramaController::class, 'historialPieza']);
@@ -2046,7 +2051,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // más: también lo podían registrar el médico y la administración del
         // Dispensario (docs/plan-roles-y-accesos.md, PR 4).
         Route::prefix('odontograma')
-            ->middleware('role:odontologo')
+            ->middleware('permission:registrar-odontograma')
             ->group(function () {
                 Route::post('procedimientos', [OdontogramaController::class, 'registrarProcedimiento']);
                 Route::patch('procedimientos/{id}/anular', [OdontogramaController::class, 'anularProcedimiento']);
@@ -2057,28 +2062,28 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // consulta y descarga también la administración del Dispensario.
         Route::get('certificados-medicos',
             [CertificadoMedicoController::class, 'index']
-        )->middleware('role:medico|odontologo|admin-dispensario')
+        )->middleware('permission:crear-consulta|supervisar-dispensario')
          ->name('dispensario.certificados.index');
 
         Route::post('certificados-medicos',
             [CertificadoMedicoController::class, 'store']
-        )->middleware('role:medico|odontologo')
+        )->middleware('permission:crear-consulta')
          ->name('dispensario.certificados.store');
 
         // Antes del comodín {id}, o los segmentos literales se leerían como id.
         Route::get('certificados-medicos/{id}/pdf',
             [CertificadoMedicoController::class, 'pdf']
-        )->middleware('role:medico|odontologo|admin-dispensario')
+        )->middleware('permission:crear-consulta|supervisar-dispensario')
          ->name('dispensario.certificados.pdf');
 
         Route::patch('certificados-medicos/{id}/anular',
             [CertificadoMedicoController::class, 'anular']
-        )->middleware('role:medico|odontologo|admin-dispensario')
+        )->middleware('permission:crear-consulta|supervisar-dispensario')
          ->name('dispensario.certificados.anular');
 
         Route::get('certificados-medicos/{id}',
             [CertificadoMedicoController::class, 'show']
-        )->middleware('role:medico|odontologo|admin-dispensario')
+        )->middleware('permission:crear-consulta|supervisar-dispensario')
          ->name('dispensario.certificados.show');
 
         // Recetas — médicos emiten; Enfermería, la administración y el
@@ -2270,28 +2275,33 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // no registra, no valida ni hace el seguimiento que justificaba que
         // viera la bandeja, y lo que veía eran resultados y nombres de
         // exámenes —VIH, VDRL— de cada paciente. Decisión del usuario.
+        //
+        // Por permiso desde el PR 17c, con los mismos titulares: leer y
+        // operar, `ver-examenes` (médico, odontólogo, administración);
+        // registrar resultados y órdenes, `crear-consulta` (quien atiende);
+        // el catálogo, `gestionar-catalogo-examenes` (la administración).
 
         // Resultados médicos
         Route::prefix('resultados-medicos')
-            ->middleware('role:medico|odontologo|admin-dispensario')
+            ->middleware('permission:ver-examenes')
             ->group(function () {
                 Route::get('/', [ResultadoMedicoController::class, 'index']);
                 // Los registran el médico y el odontólogo (D2 y P1 de
                 // docs/diseno-examenes-medicos.md).
                 Route::post('/', [ResultadoMedicoController::class, 'store'])
-                    ->middleware('role:medico|odontologo');
+                    ->middleware('permission:crear-consulta');
                 // El archivo ya no se sirve desde /storage: sale por aquí.
                 Route::get('{id}/archivo', [ResultadoMedicoController::class, 'archivo'])
                     ->whereNumber('id');
                 Route::delete('{id}', [ResultadoMedicoController::class, 'destroy'])
-                    ->middleware('role:medico|odontologo|admin-dispensario');
+                    ->middleware('permission:ver-examenes');
                 // La lectura del médico (D3): normal, alterado o crítico; y
                 // quien pidió el examen da por visto un crítico ajeno.
                 Route::patch('{id}/revisar', [RevisionResultadoController::class, 'revisar'])
-                    ->middleware('role:medico|odontologo')
+                    ->middleware('permission:crear-consulta')
                     ->whereNumber('id');
                 Route::patch('{id}/enterado', [RevisionResultadoController::class, 'enterado'])
-                    ->middleware('role:medico|odontologo')
+                    ->middleware('permission:crear-consulta')
                     ->whereNumber('id');
             });
 
@@ -2299,11 +2309,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // lee el personal clínico para pedir; lo mantiene la administración.
         Route::prefix('catalogo-examenes')->group(function () {
             Route::get('/', [CatalogoExamenController::class, 'index'])
-                ->middleware('role:medico|odontologo|admin-dispensario');
+                ->middleware('permission:ver-examenes');
             Route::post('/', [CatalogoExamenController::class, 'store'])
-                ->middleware('role:admin-dispensario');
+                ->middleware('permission:gestionar-catalogo-examenes');
             Route::patch('{examen}', [CatalogoExamenController::class, 'update'])
-                ->middleware('role:admin-dispensario')
+                ->middleware('permission:gestionar-catalogo-examenes')
                 ->whereNumber('examen');
         });
 
@@ -2311,40 +2321,40 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // especialidad) y la administración (D6, D12).
         Route::prefix('perfiles-examen')->group(function () {
             Route::get('/', [PerfilExamenController::class, 'index'])
-                ->middleware('role:medico|odontologo|admin-dispensario');
+                ->middleware('permission:ver-examenes');
             Route::post('/', [PerfilExamenController::class, 'store'])
-                ->middleware('role:medico|odontologo|admin-dispensario');
+                ->middleware('permission:ver-examenes');
             Route::patch('{perfil}', [PerfilExamenController::class, 'update'])
-                ->middleware('role:medico|odontologo|admin-dispensario')
+                ->middleware('permission:ver-examenes')
                 ->whereNumber('perfil');
         });
 
         // La bandeja: las órdenes que esperan resultados.
         Route::get('examenes/bandeja', [BandejaExamenesController::class, 'index'])
-            ->middleware('role:medico|odontologo|admin-dispensario');
+            ->middleware('permission:ver-examenes');
         Route::get('examenes/bandeja/por-revisar', [BandejaExamenesController::class, 'porRevisar'])
-            ->middleware('role:medico|odontologo|admin-dispensario');
+            ->middleware('permission:ver-examenes');
 
         // Órdenes de exámenes: las emite el médico o el odontólogo en su
         // consulta; las anula quien las emitió o la administración.
         Route::prefix('ordenes-examen')->group(function () {
             Route::get('/', [OrdenExamenController::class, 'index'])
-                ->middleware('role:medico|odontologo|admin-dispensario');
+                ->middleware('permission:ver-examenes');
             Route::post('/', [OrdenExamenController::class, 'store'])
-                ->middleware('role:medico|odontologo');
+                ->middleware('permission:crear-consulta');
             Route::get('{orden}', [OrdenExamenController::class, 'show'])
-                ->middleware('role:medico|odontologo|admin-dispensario')
+                ->middleware('permission:ver-examenes')
                 ->whereNumber('orden');
             Route::get('{orden}/pdf', [OrdenExamenController::class, 'pdf'])
-                ->middleware('role:medico|odontologo|admin-dispensario')
+                ->middleware('permission:ver-examenes')
                 ->whereNumber('orden')
                 ->name('dispensario.ordenes-examen.pdf');
             Route::patch('{orden}/anular', [OrdenExamenController::class, 'anular'])
-                ->middleware('role:medico|odontologo|admin-dispensario')
+                ->middleware('permission:ver-examenes')
                 ->whereNumber('orden');
             // Lo marca quien registra resultados (D2, P1).
             Route::patch('{orden}/items/{item}/no-realizado', [OrdenExamenController::class, 'noRealizado'])
-                ->middleware('role:medico|odontologo')
+                ->middleware('permission:crear-consulta')
                 ->whereNumber(['orden', 'item']);
         });
     });

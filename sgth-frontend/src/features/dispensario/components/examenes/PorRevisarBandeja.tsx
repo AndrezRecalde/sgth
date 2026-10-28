@@ -27,7 +27,7 @@ interface Props {
  */
 export function PorRevisarBandeja({ buscar, solicitanteInicial = null }: Props) {
   const contained = useContainedInput()
-  const { hasRole } = useAuthStore()
+  const { hasPermiso } = useAuthStore()
   const [solicitante, setSolicitante] = useState<string | null>(solicitanteInicial ? String(solicitanteInicial) : null)
   const [page, setPage] = useState(1)
   const [revisando, setRevisando] = useState<ResultadoPorRevisar | null>(null)
@@ -42,7 +42,7 @@ export function PorRevisarBandeja({ buscar, solicitanteInicial = null }: Props) 
     solicitante: solicitante ? Number(solicitante) : undefined, buscar, page, per_page: POR_PAGINA,
   })
   const resultados = data?.data ?? []
-  const puedeRevisar = hasRole('medico') || hasRole('odontologo')
+  const puedeRevisar = hasPermiso('crear-consulta')
 
   return (
     <Stack gap="sm">

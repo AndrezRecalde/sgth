@@ -113,6 +113,8 @@ class RolPermisoSeeder extends Seeder
         // Farmacia (PR 17a): consulta el inventario y sus recetas.
         Permiso::VER_INVENTARIO_MED,
         Permiso::VER_RECETAS,
+        // Exámenes (PR 17c): la bandeja, las órdenes y los resultados.
+        Permiso::VER_EXAMENES,
     ];
 
     public const PERMISOS_ODONTOLOGO = [
@@ -122,6 +124,9 @@ class RolPermisoSeeder extends Seeder
         Permiso::EMITIR_RECETA,
         Permiso::VER_INVENTARIO_MED,
         Permiso::VER_RECETAS,
+        Permiso::VER_EXAMENES,
+        // El odontograma lo registra solo el odontólogo (PR 4).
+        Permiso::REGISTRAR_ODONTOGRAMA,
     ];
 
     public const PERMISOS_ENFERMERA = [
@@ -149,6 +154,8 @@ class RolPermisoSeeder extends Seeder
         Permiso::SUPERVISAR_DISPENSARIO,
         Permiso::GESTIONAR_AGENDA,
         Permiso::REGISTRAR_TRIAJE,
+        Permiso::VER_EXAMENES,
+        Permiso::GESTIONAR_CATALOGO_EXAMENES,
     ];
 
     /**

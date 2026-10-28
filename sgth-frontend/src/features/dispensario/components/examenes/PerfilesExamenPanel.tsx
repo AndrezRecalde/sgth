@@ -24,10 +24,10 @@ const ROL: Record<Especialidad, string> = { medicina_general: 'medico', odontolo
 export function PerfilesExamenPanel() {
   const { data = [], isLoading, error, refetch } = usePerfilesExamenAdmin()
   const guardar = useGuardarPerfilExamen()
-  const { hasRole } = useAuthStore()
+  const { hasRole, hasPermiso } = useAuthStore()
   const [edicion, setEdicion] = useState<{ abierta: boolean; perfil: PerfilExamen | null }>({ abierta: false, perfil: null })
 
-  const especialidades = ESPECIALIDADES.filter((e) => hasRole('admin-dispensario') || hasRole(ROL[e]))
+  const especialidades = ESPECIALIDADES.filter((e) => hasPermiso('supervisar-dispensario') || hasRole(ROL[e]))
   const puedeArmar = (p: PerfilExamen) => especialidades.includes(p.especialidad)
 
   return (
