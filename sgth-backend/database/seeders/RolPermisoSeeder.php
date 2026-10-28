@@ -187,7 +187,6 @@ class RolPermisoSeeder extends Seeder
             Permiso::EXPORTAR_REPORTES,
             Permiso::VER_AUDITORIA,
             Permiso::VER_ACTIVIDADES_UNIDAD,
-            Permiso::PUEDE_MARCAR_ONLINE,
             Permiso::SOLICITAR_CERTIFICACION_MEDICA,
             Permiso::ANULAR_PERMISO_PENDIENTE,
             Permiso::APROBAR_PERMISO_SIRHA7,
@@ -224,7 +223,6 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_VACACIONES_UNIDAD,
             Permiso::VER_ACTIVIDADES_UNIDAD,
             Permiso::GENERAR_REPORTES,
-            Permiso::PUEDE_MARCAR_ONLINE,
             Permiso::SOLICITAR_CERTIFICACION_MEDICA,
             Permiso::GESTIONAR_SSO,
             Permiso::VER_REPORTES_SSO,
@@ -270,10 +268,9 @@ class RolPermisoSeeder extends Seeder
             Permiso::APROBAR_ACTIVIDADES,
         ]));
 
-        // SERVIDOR
-        $this->crearRol(Rol::SERVIDOR, array_merge($permisosBase, [
-            Permiso::PUEDE_MARCAR_ONLINE,
-        ]));
+        // SERVIDOR: lo de todo servidor. La marcación en línea no va por rol:
+        // `marcar-en-linea` se le da a la persona desde Usuarios.
+        $this->crearRol(Rol::SERVIDOR, $permisosBase);
 
         // RECEPCION
         $this->crearRol(Rol::RECEPCION, array_merge($permisosBase, [

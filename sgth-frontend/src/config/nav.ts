@@ -713,7 +713,9 @@ export const NAV_PORTAL: NavGroup[] = [
         label: 'Mi Perfil',
         href:  ROUTES.PORTAL.MI_PERFIL,
         icon:  'IconUser',
-        permiso: 'acceso-autoservicio',
+        // Su propio permiso, que estaba en todos los roles y no lo miraba
+        // nadie (PR 16). Como `acceso-autoservicio`, lo tiene todo servidor.
+        permiso: 'ver-expediente-propio',
       },
       {
         // La credencial digital, con su QR (Comunicación Social, 6.1).
@@ -727,7 +729,8 @@ export const NAV_PORTAL: NavGroup[] = [
         label: 'Mis documentos laborales',
         href:  ROUTES.PORTAL.DOCUMENTOS,
         icon:  'IconFolder',
-        permiso: 'acceso-autoservicio',
+        // Los documentos de su expediente, como «Mi Perfil» (PR 16).
+        permiso: 'ver-expediente-propio',
       },
     ],
   },
@@ -780,7 +783,9 @@ export const NAV_PORTAL: NavGroup[] = [
         label: 'Marcaciones',
         href:  ROUTES.PORTAL.MIS_MARCACIONES,
         icon:  'IconClockRecord',
-        permiso: 'acceso-autoservicio',
+        // Su propio permiso, que estaba en todos los roles y no lo miraba
+        // nadie (PR 16). Como `acceso-autoservicio`, lo tiene todo servidor.
+        permiso: 'ver-asistencia-propia',
       },
       {
         // Permiso individual: TI lo asigna desde Usuarios a pedido de TH.
