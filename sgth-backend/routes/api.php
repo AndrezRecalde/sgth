@@ -416,9 +416,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
     // Condiciones de salud de una carga familiar. Las mismas manos que
     // gestionan la carga (ver el grupo de historiales, más abajo): hasta el
     // 2026-09-19 no pedían rol y cualquier usuario autenticado podía
-    // agregarlas o borrarlas en el expediente de otro.
+    // agregarlas o borrarlas en el expediente de otro. Por permiso y no por
+    // el rol de Talento Humano desde el 2026-10-28
+    // (docs/revision-permisos-sin-uso.md, D4).
     Route::prefix('expediente/cargas-familiares/{cargaId}')
-        ->middleware('role:admin-uath|asistente-uath')
+        ->middleware('permission:gestionar-cargas-familiares')
         ->group(function () {
             Route::post('discapacidades', [DiscapacidadCargaFamiliarController::class, 'store'])
                 ->name('carga.discapacidades.store');
@@ -476,13 +478,18 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // Humano, «por el momento», pendiente de reforzar): veía el botón y
         // recibía 403, aunque en Declaraciones sí podía subir. BORRAR sigue
         // siendo solo de admin-uath.
+        //
+        // Subir va por `cargar-documentos` desde el 2026-10-28, que tienen los
+        // dos roles (docs/revision-permisos-sin-uso.md, D5): si Talento Humano
+        // decide reforzarlo, el permiso se le quita al asistente desde
+        // Usuarios, sin tocar código.
         Route::prefix('servidores/{servidorId}')->group(function () {
             Route::get('documentos',
                 [DocumentoServidorController::class, 'index'])
                 ->name('documentos.index');
             Route::post('documentos',
                 [DocumentoServidorController::class, 'store'])
-                ->middleware('role:admin-uath|asistente-uath')
+                ->middleware('permission:cargar-documentos')
                 ->name('documentos.store');
             Route::delete('documentos/{documentoId}',
                 [DocumentoServidorController::class, 'destroy'])
@@ -671,20 +678,25 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // 'descargar' se retiró: el PDF ya no se guarda en disco, sale en la
         // misma respuesta. Servía una carpeta que nadie limpiaba y que
         // acumulaba copias con cédula y remuneración.
+        //
+        // Lo que sigue va por `gestionar-expediente` y `gestionar-cargas-
+        // familiares` desde el 2026-10-28, en vez del rol `admin-uath|
+        // asistente-uath`: los tienen esos mismos dos roles
+        // (docs/revision-permisos-sin-uso.md, D4).
         Route::get('servidores/{id}/certificado-laboral', [CertificadoLaboralController::class, 'generar'])
-            ->middleware('role:admin-uath|asistente-uath');
+            ->middleware('permission:gestionar-expediente');
 
         // Los títulos y cursos que los servidores registraron desde el portal
-        // y esperan a Talento Humano. Mismo rol que el historial académico.
+        // y esperan a Talento Humano. Mismo permiso que el historial académico.
         Route::get('formacion-por-validar', [HistorialAcademicoController::class, 'porValidar'])
-            ->middleware('role:admin-uath|asistente-uath');
+            ->middleware('permission:gestionar-expediente');
 
         // Las cargas familiares que los servidores piden desde «Mi perfil»
-        // (docs/diseno-cargas-familiares-portal.md, 6.2). Los mismos roles
-        // que gestionan las cargas en el expediente; nadie resuelve las de su
+        // (docs/diseno-cargas-familiares-portal.md, 6.2). El mismo permiso
+        // que gestiona las cargas en el expediente; nadie resuelve las de su
         // propia familia (lo impide el servicio).
         Route::prefix('cargas-por-validar')
-            ->middleware('role:admin-uath|asistente-uath')
+            ->middleware('permission:gestionar-cargas-familiares')
             ->name('cargas-por-validar.')
             ->group(function () {
                 Route::get('/', [SolicitudCargaFamiliarController::class, 'index'])->name('index');
@@ -696,16 +708,16 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                     ->whereNumber('solicitud')->name('documento');
             });
 
-        // La bitácora de lo ya emitido. Mismo rol que emitir: quien no puede
-        // entregar un certificado tampoco tiene por qué saber a quién se le
-        // entregó uno ni cuándo.
+        // La bitácora de lo ya emitido. Mismo permiso que emitir: quien no
+        // puede entregar un certificado tampoco tiene por qué saber a quién se
+        // le entregó uno ni cuándo.
         Route::get('servidores/{id}/certificados-emitidos', [CertificadoLaboralController::class, 'emitidos'])
-            ->middleware('role:admin-uath|asistente-uath')
+            ->middleware('permission:gestionar-expediente')
             ->name('certificados.emitidos');
 
         // Historiales gestionados por la UATH
         Route::prefix('servidores/{servidorId}')
-            ->middleware('role:admin-uath|asistente-uath')
+            ->middleware('permission:gestionar-expediente')
             ->group(function () {
                 // 'store' queda fuera: un vínculo no se crea suelto, se crea
                 // desde la acción de personal que lo respalda (regla de
@@ -753,13 +765,6 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 Route::get('historial-academico/{id}/documento', [HistorialAcademicoController::class, 'documento'])
                     ->whereNumber('id');
 
-                // Cargas familiares
-                Route::get('cargas-familiares', [CargaFamiliarController::class, 'index']);
-                Route::post('cargas-familiares', [CargaFamiliarController::class, 'store']);
-                Route::put('cargas-familiares/{id}', [CargaFamiliarController::class, 'update']);
-                Route::delete('cargas-familiares/{id}', [CargaFamiliarController::class, 'destroy']);
-                Route::post('cargas-familiares/{id}/toggle-estado', [CargaFamiliarController::class, 'toggleEstado']);
-
                 // Declaraciones juramentadas
                 Route::get('declaraciones-juramentadas', [DeclaracionJuramentadaController::class, 'index']);
                 Route::post('declaraciones-juramentadas', [DeclaracionJuramentadaController::class, 'store']);
@@ -770,11 +775,24 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
 
             });
 
+        // Cargas familiares. Estaban en el grupo de historiales, con el rol;
+        // desde el 2026-10-28 llevan su propio permiso, el mismo de sus
+        // condiciones de salud y de «Cargas por validar».
+        Route::prefix('servidores/{servidorId}')
+            ->middleware('permission:gestionar-cargas-familiares')
+            ->group(function () {
+                Route::get('cargas-familiares', [CargaFamiliarController::class, 'index']);
+                Route::post('cargas-familiares', [CargaFamiliarController::class, 'store']);
+                Route::put('cargas-familiares/{id}', [CargaFamiliarController::class, 'update']);
+                Route::delete('cargas-familiares/{id}', [CargaFamiliarController::class, 'destroy']);
+                Route::post('cargas-familiares/{id}/toggle-estado', [CargaFamiliarController::class, 'toggleEstado']);
+            });
+
         // Cuentas bancarias. Deciden a dónde va el sueldo: hasta el 2026-09-19
         // no pedían rol y cualquier usuario autenticado podía listar, crear o
         // marcar como principal una cuenta en el expediente de otro.
         Route::prefix('servidores/{id}/cuentas-bancarias')
-            ->middleware('role:admin-uath|asistente-uath')
+            ->middleware('permission:gestionar-expediente')
             ->group(function () {
                 Route::get('/', [CuentaBancariaServidorController::class, 'index']);
                 Route::post('/', [CuentaBancariaServidorController::class, 'store']);

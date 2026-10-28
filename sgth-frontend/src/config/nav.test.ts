@@ -135,6 +135,27 @@ describe('buildNav', () => {
     }
   })
 
+  it('el expediente va por sus permisos y lo ve solo talento humano', () => {
+    // docs/revision-permisos-sin-uso.md, D2 y D4: antes las tres entradas
+    // pedían el rol `admin-uath|asistente-uath`.
+    const expediente = [
+      ROUTES.SGTH.EXPEDIENTE,
+      ROUTES.SGTH.FORMACION_POR_VALIDAR,
+      ROUTES.SGTH.CARGAS_POR_VALIDAR,
+    ]
+
+    for (const rol of ROLES) {
+      const sgth = pantallas('sgth', rol)
+      const deTalentoHumano = rol === 'admin-uath' || rol === 'asistente-uath'
+      for (const href of expediente) {
+        expect(sgth.includes(href), `${rol} ${href}`).toBe(deTalentoHumano)
+      }
+    }
+
+    expect(flattenNav('sgth', ['gestionar-cargas-familiares'], []).map((p) => p.href))
+      .toEqual([ROUTES.SGTH.CARGAS_POR_VALIDAR])
+  })
+
   it('la farmacia va por permiso: uno suelto basta, sin el rol', () => {
     // PR 17a: antes las entradas pedían roles del Dispensario.
     expect(flattenNav('salud', ['ver-inventario-med'], []).map((p) => p.href)).toEqual([ROUTES.SALUD.FARMACIA])

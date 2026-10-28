@@ -77,6 +77,20 @@ class RolPermisoSeeder extends Seeder
         Permiso::BUSCAR_SERVIDORES,
     ];
 
+    /**
+     * El Expediente de Talento Humano, para admin-uath y asistente-uath: verlo
+     * entero, gestionar sus historiales, subir documentos y llevar las cargas
+     * familiares. Hasta el 2026-10-28 lo decidía el rol en las rutas y en
+     * `ServidorPolicy` (docs/revision-permisos-sin-uso.md, 3.2). Borrar un
+     * documento sigue siendo de admin-uath, por su rol.
+     */
+    public const PERMISOS_EXPEDIENTE_TH = [
+        Permiso::VER_EXPEDIENTE_TODOS,
+        Permiso::GESTIONAR_EXPEDIENTE,
+        Permiso::CARGAR_DOCUMENTOS,
+        Permiso::GESTIONAR_CARGAS_FAMILIARES,
+    ];
+
     /** Los permisos de cualquier servidor público de la institución. */
     public const PERMISOS_BASE = [
         Permiso::VER_EXPEDIENTE_PROPIO,
@@ -224,12 +238,9 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_DISTRIBUTIVO,
             Permiso::GESTIONAR_DISTRIBUTIVO,
             Permiso::VER_EXPEDIENTE_UNIDAD,
-            Permiso::VER_EXPEDIENTE_TODOS,
-            Permiso::GESTIONAR_EXPEDIENTE,
+            ...self::PERMISOS_EXPEDIENTE_TH,
             Permiso::REGISTRAR_FICHA_SERVIDOR,
             Permiso::BUSCAR_SERVIDORES,
-            Permiso::CARGAR_DOCUMENTOS,
-            Permiso::GESTIONAR_CARGAS_FAMILIARES,
             // El trámite entero de una acción de personal (diseño, 6.3).
             Permiso::PREPARAR_ACCION_PERSONAL,
             Permiso::SUSCRIBIR_ACCION_PERSONAL,
@@ -292,10 +303,10 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_ESTRUCTURA,
             Permiso::GESTIONAR_PUESTOS,
             Permiso::VER_EXPEDIENTE_UNIDAD,
-            Permiso::VER_EXPEDIENTE_TODOS,
-            Permiso::GESTIONAR_EXPEDIENTE,
+            // También sube documentos, por decisión de Talento Humano del
+            // 2026-10-03; si se le quita, se hace desde Usuarios.
+            ...self::PERMISOS_EXPEDIENTE_TH,
             Permiso::BUSCAR_SERVIDORES,
-            Permiso::GESTIONAR_CARGAS_FAMILIARES,
             // Prepara y notifica; suscribir, registrar y anular son del
             // director (TH 22).
             Permiso::PREPARAR_ACCION_PERSONAL,
@@ -409,7 +420,8 @@ class RolPermisoSeeder extends Seeder
         $this->crearRol(Rol::AUDITOR, array_merge($permisosBase, [
             Permiso::VER_ESTRUCTURA,
             Permiso::VER_EXPEDIENTE_UNIDAD,
-            Permiso::VER_EXPEDIENTE_TODOS,
+            // Sin `ver-expediente-todos`: el Expediente lo abre Talento Humano
+            // y el auditor nunca entró (docs/revision-permisos-sin-uso.md, D2).
             Permiso::VER_NOVEDADES_NOMINA,
             Permiso::VER_ASISTENCIA_UNIDAD,
             Permiso::VER_ASISTENCIA_TODOS,

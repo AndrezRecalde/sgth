@@ -15,21 +15,21 @@ use App\Models\Expediente\Servidor;
 class ServidorPolicy
 {
     /**
-     * Listar los servidores de la institución.
+     * Listar los servidores de la institución, y exportar el listado.
      *
      * asistente-uath registra permisos a nombre de cualquier servidor
      * (`registrar-permisos-servidores`), y para eso el formulario lista los
      * servidores de la unidad elegida. Sin él aquí, ese selector le respondía
      * 403 y no podía elegir a nadie.
      *
-     * Se agrega el rol y no `ver-expediente-todos`, que también tiene el
-     * auditor: abrirlo por ese permiso habría ampliado el listado a más roles
-     * de los que lo necesitan.
+     * Por `ver-expediente-todos` y no por el rol desde el 2026-10-28
+     * (docs/revision-permisos-sin-uso.md, D2). Lo tienen admin-uath y
+     * asistente-uath. El auditor también lo tenía por el seeder sin haber
+     * entrado nunca, y se le quitó en la misma migración.
      */
     public function verAny(User $user): bool
     {
-        return $user->hasRole('admin-uath')
-            || $user->hasRole('asistente-uath');
+        return $user->can(Permiso::VER_EXPEDIENTE_TODOS->value);
     }
 
     /**
@@ -50,8 +50,9 @@ class ServidorPolicy
      */
     public function ver(User $user, Servidor $servidor): bool
     {
-        // Un servidor solo puede ver su propio expediente. UATH puede ver todos.
-        if ($user->hasRole('admin-uath') || $user->hasRole('asistente-uath')) {
+        // Un servidor solo puede ver su propio expediente. Talento Humano ve
+        // todos, por el mismo permiso que verAny().
+        if ($user->can(Permiso::VER_EXPEDIENTE_TODOS->value)) {
             return true;
         }
 
@@ -90,9 +91,10 @@ class ServidorPolicy
     public function actualizar(User $user, Servidor $servidor): bool
     {
         // El servidor titular puede actualizar partes no sensibles (ej. teléfono),
-        // pero UATH puede actualizar todo. La validación de campos se delega al Request/Service.
-        // Aquí validamos el acceso general a la actualización.
-        if ($user->hasRole('admin-uath') || $user->hasRole('asistente-uath')) {
+        // y Talento Humano, por `gestionar-expediente` desde el 2026-10-28. La
+        // validación de campos se delega al Request/Service. Aquí validamos el
+        // acceso general a la actualización.
+        if ($user->can(Permiso::GESTIONAR_EXPEDIENTE->value)) {
             return true;
         }
 

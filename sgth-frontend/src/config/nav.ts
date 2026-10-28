@@ -81,28 +81,29 @@ export const NAV_SGTH: NavGroup[] = [
             label: 'Expediente digital',
             href:  ROUTES.SGTH.EXPEDIENTE,
             icon:  'IconFolder',
-            // Los de ServidorPolicy::verAny. Sin declararlos, director, jefe
+            // Lo de ServidorPolicy::verAny. Sin declararlo, director, jefe
             // de unidad, auditor y máxima autoridad lo veían en el menú y
             // recibían 403; y admin-ti no entra al Expediente (Talento
-            // Humano, 2026-10-03).
-            roles: ['admin-uath', 'asistente-uath'],
+            // Humano, 2026-10-03). Por permiso y no por rol desde el
+            // 2026-10-28 (docs/revision-permisos-sin-uso.md, D2).
+            permiso: 'ver-expediente-todos',
           },
           {
             // Lo que los servidores registran desde «Mi perfil» del portal
-            // (2026-10-17). Mismos roles que el historial académico.
-            label: 'Títulos por validar',
-            href:  ROUTES.SGTH.FORMACION_POR_VALIDAR,
-            icon:  'IconSchool',
-            roles: ['admin-uath', 'asistente-uath'],
+            // (2026-10-17). El permiso del historial académico.
+            label:   'Títulos por validar',
+            href:    ROUTES.SGTH.FORMACION_POR_VALIDAR,
+            icon:    'IconSchool',
+            permiso: 'gestionar-expediente',
           },
           {
             // Las cargas familiares que los servidores piden desde «Mi
-            // perfil» (docs/diseno-cargas-familiares-portal.md). Los roles de
-            // `expediente/cargas-por-validar`.
-            label: 'Cargas por validar',
-            href:  ROUTES.SGTH.CARGAS_POR_VALIDAR,
-            icon:  'IconUsers',
-            roles: ['admin-uath', 'asistente-uath'],
+            // perfil» (docs/diseno-cargas-familiares-portal.md). El permiso
+            // de `expediente/cargas-por-validar`.
+            label:   'Cargas por validar',
+            href:    ROUTES.SGTH.CARGAS_POR_VALIDAR,
+            icon:    'IconUsers',
+            permiso: 'gestionar-cargas-familiares',
           },
           {
             label: 'Subrogaciones y encargos',

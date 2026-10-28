@@ -23,7 +23,10 @@ export function DocumentosTab({ servidorId }: Props) {
   const { data: documentos = [], isLoading, error } = useDocumentos(servidorId)
   const { eliminar } = useDocumentoMutations(servidorId)
   // Subir, Talento Humano entero; borrar, solo admin-uath (decisión de TH del
-  // 2026-10-03). Sin esto el asistente veía «Eliminar» y recibía 403.
+  // 2026-10-03). Sin esto el asistente veía «Eliminar» y recibía 403. Subir va
+  // con el permiso de la ruta desde el 2026-10-28, para que TI pueda quitárselo
+  // a alguien desde Usuarios (docs/revision-permisos-sin-uso.md, D5).
+  const puedeSubir = useAuthStore((s) => s.hasPermiso)('cargar-documentos')
   const puedeEliminar = useAuthStore((s) => s.hasRole)('admin-uath')
 
   const descargar = async (doc: DocumentoServidor) => {
@@ -50,12 +53,12 @@ export function DocumentosTab({ servidorId }: Props) {
     <Stack gap="md">
       <SectionCard
         title="Documentos del expediente"
-        actions={
+        actions={puedeSubir && (
           <Button size="xs" variant="light"
             leftSection={<IconPlus size={14} />} onClick={open}>
             Subir documento
           </Button>
-        }
+        )}
       >
         {/* Qué falta por anexar: revisarlo a ojo obligaba a conocer de memoria
             la lista de documentos básicos del expediente. */}
