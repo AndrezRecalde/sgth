@@ -45,3 +45,20 @@ uses()
         Model::reguard();
     })
     ->in('Feature', 'Unit');
+
+/*
+| Los roles del Dispensario con sus permisos, antes de cada prueba del módulo.
+| Las rutas pasan de `role:` a `permission:` (docs/plan-roles-y-accesos.md,
+| PR 17) y unas 70 pruebas creaban el rol pelado: ver `rolesDelDispensario()`.
+*/
+uses()
+    ->beforeEach(function () {
+        // Solo donde hay base y se refresca: FactoresRiesgoMspTest no levanta
+        // Laravel, y en una prueba sin RefreshDatabase los roles quedarían
+        // escritos en la base compartida.
+        if ($this instanceof Tests\TestCase
+            && in_array(Illuminate\Foundation\Testing\RefreshDatabase::class, class_uses_recursive($this), true)) {
+            rolesDelDispensario();
+        }
+    })
+    ->in('Feature/Dispensario');

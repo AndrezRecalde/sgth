@@ -77,6 +77,84 @@ class RolPermisoSeeder extends Seeder
         Permiso::BUSCAR_SERVIDORES,
     ];
 
+    /** Los permisos de cualquier servidor público de la institución. */
+    public const PERMISOS_BASE = [
+        Permiso::VER_EXPEDIENTE_PROPIO,
+        Permiso::VER_ASISTENCIA_PROPIA,
+        Permiso::CREAR_PERMISO,
+        Permiso::VER_PERMISOS,
+        Permiso::ACCESO_AUTOSERVICIO,
+        Permiso::CAMBIAR_CONTRASENA,
+        Permiso::VER_HISTORIA_CLINICA_PROPIA,
+        Permiso::CREAR_TICKET,
+        Permiso::VER_TICKET_PROPIO,
+        Permiso::REGISTRAR_ACTIVIDADES,
+        Permiso::EXPORTAR_INFORME_ACTIVIDADES,
+        Permiso::RESPONDER_ENCUESTA_CLIMA,
+        Permiso::INSCRIBIRSE_CURSO,
+        Permiso::VER_EVALUACION_PROPIA,
+        Permiso::SOLICITAR_VIATICO,
+        Permiso::VER_PLAN_CAPACITACION,
+    ];
+
+    /*
+    | El Dispensario pasa de rol a permiso por partes (docs/plan-roles-y-
+    | accesos.md, PR 17). Cada rol tiene su constante, como los de TIC, para
+    | que las pruebas creen el rol con lo mismo que le da este seeder
+    | (`rolesDelDispensario()` en tests/Support/RolesFixtures.php).
+    */
+
+    public const PERMISOS_MEDICO = [
+        Permiso::VER_AGENDA_DISPENSARIO,
+        Permiso::VER_HISTORIA_CLINICA,
+        Permiso::CREAR_CONSULTA,
+        Permiso::EMITIR_RECETA,
+        Permiso::GESTIONAR_FICHAS_SSO_MED,
+        // Farmacia (PR 17a): consulta el inventario y sus recetas.
+        Permiso::VER_INVENTARIO_MED,
+        Permiso::VER_RECETAS,
+    ];
+
+    public const PERMISOS_ODONTOLOGO = [
+        Permiso::VER_AGENDA_DISPENSARIO,
+        Permiso::VER_HISTORIA_CLINICA,
+        Permiso::CREAR_CONSULTA,
+        Permiso::EMITIR_RECETA,
+        Permiso::VER_INVENTARIO_MED,
+        Permiso::VER_RECETAS,
+    ];
+
+    public const PERMISOS_ENFERMERA = [
+        Permiso::VER_AGENDA_DISPENSARIO,
+        Permiso::VER_HISTORIA_CLINICA,
+        Permiso::DESPACHAR_MEDICAMENTO,
+        Permiso::VER_INVENTARIO_MED,
+        Permiso::VER_RECETAS,
+    ];
+
+    public const PERMISOS_ADMIN_DISPENSARIO = [
+        Permiso::VER_AGENDA_DISPENSARIO,
+        Permiso::VER_HISTORIA_CLINICA,
+        Permiso::DESPACHAR_MEDICAMENTO,
+        Permiso::EVALUAR_PERSONAL_MEDICO,
+        Permiso::VER_INVENTARIO_MED,
+        Permiso::VER_RECETAS,
+        // El catálogo de medicamentos, el ajuste de stock y las adquisiciones.
+        Permiso::GESTIONAR_INVENTARIO_MED,
+        // Anula o ve lo que registró otro profesional.
+        Permiso::SUPERVISAR_DISPENSARIO,
+    ];
+
+    /**
+     * El inventario y el mostrador. Sin `ver-historia-clinica` ni la agenda, a
+     * diferencia de Enfermería (docs/plan-roles-y-accesos.md, PR 13).
+     */
+    public const PERMISOS_AUXILIAR_FARMACIA = [
+        Permiso::DESPACHAR_MEDICAMENTO,
+        Permiso::VER_INVENTARIO_MED,
+        Permiso::VER_RECETAS,
+    ];
+
     public function run(): void
     {
         // 1. Crear todos los permisos del Enum
@@ -87,25 +165,7 @@ class RolPermisoSeeder extends Seeder
             ]);
         }
 
-        // Permisos base para cualquier servidor público en la institución
-        $permisosBase = [
-            Permiso::VER_EXPEDIENTE_PROPIO,
-            Permiso::VER_ASISTENCIA_PROPIA,
-            Permiso::CREAR_PERMISO,
-            Permiso::VER_PERMISOS,
-            Permiso::ACCESO_AUTOSERVICIO,
-            Permiso::CAMBIAR_CONTRASENA,
-            Permiso::VER_HISTORIA_CLINICA_PROPIA,
-            Permiso::CREAR_TICKET,
-            Permiso::VER_TICKET_PROPIO,
-            Permiso::REGISTRAR_ACTIVIDADES,
-            Permiso::EXPORTAR_INFORME_ACTIVIDADES,
-            Permiso::RESPONDER_ENCUESTA_CLIMA,
-            Permiso::INSCRIBIRSE_CURSO,
-            Permiso::VER_EVALUACION_PROPIA,
-            Permiso::SOLICITAR_VIATICO,
-            Permiso::VER_PLAN_CAPACITACION,
-        ];
+        $permisosBase = self::PERMISOS_BASE;
 
         // 2. Crear roles y asignar permisos según la matriz
 
@@ -295,44 +355,12 @@ class RolPermisoSeeder extends Seeder
             // Talento Humano entrega el mes (PR 8 del plan de roles).
         ]));
 
-        // MEDICO
-        $this->crearRol(Rol::MEDICO, array_merge($permisosBase, [
-            Permiso::VER_AGENDA_DISPENSARIO,
-            Permiso::VER_HISTORIA_CLINICA,
-            Permiso::CREAR_CONSULTA,
-            Permiso::EMITIR_RECETA,
-            Permiso::GESTIONAR_FICHAS_SSO_MED,
-        ]));
-
-        // ODONTOLOGO
-        $this->crearRol(Rol::ODONTOLOGO, array_merge($permisosBase, [
-            Permiso::VER_AGENDA_DISPENSARIO,
-            Permiso::VER_HISTORIA_CLINICA,
-            Permiso::CREAR_CONSULTA,
-            Permiso::EMITIR_RECETA,
-        ]));
-
-        // ENFERMERA
-        $this->crearRol(Rol::ENFERMERA, array_merge($permisosBase, [
-            Permiso::VER_AGENDA_DISPENSARIO,
-            Permiso::VER_HISTORIA_CLINICA,
-            Permiso::DESPACHAR_MEDICAMENTO,
-        ]));
-
-        // ADMIN_DISPENSARIO
-        $this->crearRol(Rol::ADMIN_DISPENSARIO, array_merge($permisosBase, [
-            Permiso::VER_AGENDA_DISPENSARIO,
-            Permiso::VER_HISTORIA_CLINICA,
-            Permiso::DESPACHAR_MEDICAMENTO,
-            Permiso::EVALUAR_PERSONAL_MEDICO,
-        ]));
-
-        // AUXILIAR_FARMACIA: el inventario y el mostrador. Sin
-        // `ver-historia-clinica` ni la agenda, a diferencia de Enfermería
-        // (docs/plan-roles-y-accesos.md, PR 13).
-        $this->crearRol(Rol::AUXILIAR_FARMACIA, array_merge($permisosBase, [
-            Permiso::DESPACHAR_MEDICAMENTO,
-        ]));
+        // El Dispensario, de sus constantes.
+        $this->crearRol(Rol::MEDICO, array_merge($permisosBase, self::PERMISOS_MEDICO));
+        $this->crearRol(Rol::ODONTOLOGO, array_merge($permisosBase, self::PERMISOS_ODONTOLOGO));
+        $this->crearRol(Rol::ENFERMERA, array_merge($permisosBase, self::PERMISOS_ENFERMERA));
+        $this->crearRol(Rol::ADMIN_DISPENSARIO, array_merge($permisosBase, self::PERMISOS_ADMIN_DISPENSARIO));
+        $this->crearRol(Rol::AUXILIAR_FARMACIA, array_merge($permisosBase, self::PERMISOS_AUXILIAR_FARMACIA));
 
         // TECNICO_DTIC: atiende su cola y la de nadie, y lleva el inventario.
         // Asignar tickets y ver los de todos es del jefe (diseño TIC, 4.4).

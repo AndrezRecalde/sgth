@@ -11,7 +11,7 @@ import { SubsistemaSwitcher } from './SubsistemaSwitcher'
 import { useAuth } from '@/hooks/useAuth'
 import { useStockBajoCount } from '@/features/dispensario/hooks/useInventarioMedicina'
 import { useIdentidadPublica, useUrlVariante } from '@/features/comunicacion/hooks/useIdentidadPublica'
-import { buildNav, inicioDelSubsistema, ROLES_INVENTARIO_MED } from '@/config/nav'
+import { buildNav, inicioDelSubsistema } from '@/config/nav'
 import { ROUTES, type Subsistema } from '@/config/routes'
 import classes from './Sidebar.module.css'
 
@@ -37,8 +37,7 @@ export function Sidebar({ subsistema, collapsed, onNavigate }: Props) {
   // a quien no es del dispensario le devolvía un 403 cada vez. Solo se consulta
   // donde el badge se pinta y a quien el backend deja entrar al inventario.
   const { data: stockBajo = 0 } = useStockBajoCount({
-    enabled: subsistema === 'salud' &&
-      roles.some((rol) => ROLES_INVENTARIO_MED.includes(rol)),
+    enabled: subsistema === 'salud' && permisos.includes('ver-inventario-med'),
   })
 
   /**

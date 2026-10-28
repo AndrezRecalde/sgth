@@ -3,6 +3,7 @@ namespace App\Http\Controllers\Dispensario;
 
 use App\Enums\EstadoReceta;
 use App\Enums\MotivoNoEntregado;
+use App\Enums\Permiso;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dispensario\StoreRecetaMedicaRequest;
 use App\Http\Responses\ApiResponse;
@@ -291,7 +292,8 @@ final class RecetaController extends Controller
 
         $receta = RecetaMedica::with('consultaMedica')->findOrFail($id);
 
-        $esAdministracion = $request->user()->hasRole('admin-dispensario');
+        // Por permiso desde el PR 17a: la administración del Dispensario.
+        $esAdministracion = $request->user()->can(Permiso::SUPERVISAR_DISPENSARIO->value);
         $laEmitio = $receta->consultaMedica?->medico_id === $request->user()->id;
 
         if (! $esAdministracion && ! $laEmitio) {
