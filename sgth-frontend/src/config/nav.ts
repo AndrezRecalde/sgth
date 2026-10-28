@@ -202,12 +202,13 @@ export const NAV_SGTH: NavGroup[] = [
         label: 'Régimen disciplinario',
         href:  ROUTES.SGTH.DISCIPLINARIO,
         icon:  'IconGavel',
-        // El prefijo `disciplinario` del API pide `role:admin-uath` y nada
-        // más: es la ruta más estrecha de este grupo. Sin declararlo aquí, el
-        // ítem se pintaba para todos —`buildNav` deja visible lo que no trae
-        // guarda— y el asistente o el auditor entraban a una pantalla cuyas
-        // dos pestañas respondían 403.
-        roles: ['admin-uath'],
+        // Las lecturas del prefijo `disciplinario` piden `ver-sumarios`, que
+        // solo tiene admin-uath. Sin declararlo aquí, el ítem se pintaba para
+        // todos —`buildNav` deja visible lo que no trae guarda— y el asistente
+        // o el auditor entraban a una pantalla cuyas dos pestañas respondían
+        // 403. Por permiso y no por rol desde el 2026-10-28
+        // (docs/revision-permisos-sin-uso.md, D8).
+        permiso: 'ver-sumarios',
       },
       {
         label:    'Riesgos laborales (SSO)',

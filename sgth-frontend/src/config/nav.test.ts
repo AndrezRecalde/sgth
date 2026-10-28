@@ -156,6 +156,14 @@ describe('buildNav', () => {
       .toEqual([ROUTES.SGTH.CARGAS_POR_VALIDAR])
   })
 
+  it('régimen disciplinario va por ver-sumarios y lo ve solo admin-uath', () => {
+    // docs/revision-permisos-sin-uso.md, D8: antes la entrada pedía el rol.
+    for (const rol of ROLES) {
+      expect(pantallas('sgth', rol).includes(ROUTES.SGTH.DISCIPLINARIO), rol).toBe(rol === 'admin-uath')
+    }
+    expect(flattenNav('sgth', ['ver-sumarios'], []).map((p) => p.href)).toEqual([ROUTES.SGTH.DISCIPLINARIO])
+  })
+
   it('la farmacia va por permiso: uno suelto basta, sin el rol', () => {
     // PR 17a: antes las entradas pedían roles del Dispensario.
     expect(flattenNav('salud', ['ver-inventario-med'], []).map((p) => p.href)).toEqual([ROUTES.SALUD.FARMACIA])

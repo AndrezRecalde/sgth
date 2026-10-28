@@ -91,6 +91,18 @@ class RolPermisoSeeder extends Seeder
         Permiso::GESTIONAR_CARGAS_FAMILIARES,
     ];
 
+    /**
+     * Régimen disciplinario, solo para admin-uath: leer, abrir y hacer avanzar
+     * los trámites, y resolver un sumario imponiendo la sanción. Hasta el
+     * 2026-10-28 lo decidía su rol en la ruta (docs/revision-permisos-sin-
+     * uso.md, D8).
+     */
+    public const PERMISOS_DISCIPLINARIO = [
+        Permiso::VER_SUMARIOS,
+        Permiso::GESTIONAR_SUMARIOS,
+        Permiso::REGISTRAR_SANCION,
+    ];
+
     /** Los permisos de cualquier servidor público de la institución. */
     public const PERMISOS_BASE = [
         Permiso::VER_EXPEDIENTE_PROPIO,
@@ -271,9 +283,7 @@ class RolPermisoSeeder extends Seeder
             // Consulta los viáticos; los opera Financiero.
             Permiso::VER_VIATICOS_TODOS,
             Permiso::GESTIONAR_SSO,
-            Permiso::VER_SUMARIOS,
-            Permiso::GESTIONAR_SUMARIOS,
-            Permiso::REGISTRAR_SANCION,
+            ...self::PERMISOS_DISCIPLINARIO,
             Permiso::GESTIONAR_PLAN_CAPACITACION,
             Permiso::GESTIONAR_CURSOS,
             Permiso::GESTIONAR_BIENESTAR,

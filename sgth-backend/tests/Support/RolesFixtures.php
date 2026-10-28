@@ -49,25 +49,31 @@ function rolesDelDispensario(): void
 
 /**
  * admin-uath y asistente-uath con los permisos del Expediente que les da
- * `RolPermisoSeeder` (`PERMISOS_EXPEDIENTE_TH`).
+ * `RolPermisoSeeder` (`PERMISOS_EXPEDIENTE_TH`), y admin-uath con los de
+ * Régimen disciplinario (`PERMISOS_DISCIPLINARIO`).
  *
  * El Expediente pasó del rol `admin-uath|asistente-uath` a sus permisos el
  * 2026-10-28 (docs/revision-permisos-sin-uso.md, 3.2), y unas 80 pruebas
  * creaban el rol pelado: con el rol bastaba. Tests/Pest.php llama a esto antes
  * de cada prueba de los directorios que abren el Expediente, así que esas
  * pruebas encuentran el rol ya creado y con sus permisos, igual que en
- * producción. Solo los del Expediente, para no darles nada que antes no
- * tenían.
+ * producción. Solo los del Expediente, y a admin-uath los de Régimen
+ * disciplinario (D8), para no darles nada que antes no tenían.
  */
 function rolesDeTalentoHumano(): void
 {
-    $nombres = array_map(fn (Permiso $p) => $p->value, RolPermisoSeeder::PERMISOS_EXPEDIENTE_TH);
+    $porRol = [
+        'admin-uath'     => [...RolPermisoSeeder::PERMISOS_EXPEDIENTE_TH, ...RolPermisoSeeder::PERMISOS_DISCIPLINARIO],
+        'asistente-uath' => RolPermisoSeeder::PERMISOS_EXPEDIENTE_TH,
+    ];
 
-    foreach ($nombres as $nombre) {
-        Permission::firstOrCreate(['name' => $nombre, 'guard_name' => 'sanctum']);
-    }
+    foreach ($porRol as $rol => $permisos) {
+        $nombres = array_map(fn (Permiso $p) => $p->value, $permisos);
 
-    foreach (['admin-uath', 'asistente-uath'] as $rol) {
+        foreach ($nombres as $nombre) {
+            Permission::firstOrCreate(['name' => $nombre, 'guard_name' => 'sanctum']);
+        }
+
         Role::firstOrCreate(['name' => $rol, 'guard_name' => 'sanctum'])->givePermissionTo($nombres);
     }
 

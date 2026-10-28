@@ -7,6 +7,7 @@ import type { DataTableColumn } from 'mantine-datatable'
 import { DataState, SgthTable, StatusBadge, TableActions } from '@/components/ui'
 import type { FaltaReglamentoInterno } from '@/types/api'
 import { useFaltasReglamento } from '../hooks/useDisciplinario'
+import { usePermisosDisciplinario } from '../hooks/usePermisosDisciplinario'
 import { TIPO_SANCION_LABELS, sancionesDeLaFalta } from '../utils/etiquetas'
 import { FaltaReglamentoModal } from './FaltaReglamentoModal'
 
@@ -19,6 +20,7 @@ const porcentaje = (v?: string | null) =>
  * obrero no se le sanciona (Código del Trabajo, Art. 44 a).
  */
 export function ReglamentoInternoTab() {
+  const { gestiona } = usePermisosDisciplinario()
   const { data: faltas = [], isLoading, error, refetch } = useFaltasReglamento()
   const [editando, setEditando] = useState<FaltaReglamentoInterno | null>(null)
   const [abierto, setAbierto] = useState(false)
@@ -65,12 +67,12 @@ export function ReglamentoInternoTab() {
       title: '',
       width: 50,
       render: (f) => (
-        <TableActions actions={[{ label: 'Corregir', icon: <IconPencil size={14} />, onClick: () => abrir(f) }]} />
+        <TableActions actions={[{ label: 'Corregir', icon: <IconPencil size={14} />, hidden: !gestiona, onClick: () => abrir(f) }]} />
       ),
     },
   ]
 
-  const agregar = (
+  const agregar = gestiona && (
     <Button leftSection={<IconPlus size={16} />} variant="light" onClick={() => abrir(null)}>
       Agregar falta
     </Button>

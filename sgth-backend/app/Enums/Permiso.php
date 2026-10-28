@@ -12,12 +12,12 @@ namespace App\Enums;
  * pantalla por pantalla en docs/revision-permisos-sin-uso.md, aprobado el
  * 2026-10-28, que se aplica en cuatro PR. Ya tienen uso los cuatro del
  * Expediente (`ver-expediente-todos`, `gestionar-expediente`,
- * `cargar-documentos` y `gestionar-cargas-familiares`). Faltan
- * `ver-distributivo`, `ver-expediente-unidad`, `gestionar-tarifas-viatico`,
- * `gestionar-base-conocimiento`, `ver-sumarios`, `gestionar-sumarios`,
- * `registrar-sancion`, `ver-actividades-unidad`, `aprobar-actividades`,
- * `exportar-reportes` y `ver-auditoria`. Antes de darles uso, comprobar quién
- * los tiene: el seeder los asigna aunque nadie los mire.
+ * `cargar-documentos` y `gestionar-cargas-familiares`) y los tres de Régimen
+ * disciplinario. Faltan `ver-distributivo`, `ver-expediente-unidad`,
+ * `gestionar-tarifas-viatico`, `gestionar-base-conocimiento`,
+ * `ver-actividades-unidad`, `aprobar-actividades`, `exportar-reportes` y
+ * `ver-auditoria`. Antes de darles uso, comprobar quién los tiene: el seeder
+ * los asigna aunque nadie los mire.
  */
 enum Permiso: string
 {
@@ -245,6 +245,9 @@ enum Permiso: string
     case GESTIONAR_DIRECTORIO = 'gestionar-directorio';
 
     // ── MÓDULO 14: Disciplinario ─────────────────────────────────
+    // Leer el módulo; gestionar sumarios, vistos buenos y el reglamento
+    // interno; y resolver un sumario, que impone la sanción. Solo admin-uath.
+    // Hasta el 2026-10-28 lo decidía su rol en la ruta.
     case VER_SUMARIOS = 'ver-sumarios';
     case GESTIONAR_SUMARIOS = 'gestionar-sumarios';
     case REGISTRAR_SANCION = 'registrar-sancion';
