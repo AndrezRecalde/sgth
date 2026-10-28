@@ -79,12 +79,10 @@ enum Permiso: string
     case VER_ESTRUCTURA              = 'ver-estructura';
     case GESTIONAR_PUESTOS           = 'gestionar-puestos';
     case GESTIONAR_ORGANIGRAMA       = 'gestionar-organigrama';
-    case VER_DISTRIBUTIVO            = 'ver-distributivo';
     case GESTIONAR_DISTRIBUTIVO      = 'gestionar-distributivo';
 
     // ── MÓDULO 02: Expediente ────────────────────────────────────
     case VER_EXPEDIENTE_PROPIO       = 'ver-expediente-propio';
-    case VER_EXPEDIENTE_UNIDAD       = 'ver-expediente-unidad';
     case VER_EXPEDIENTE_TODOS        = 'ver-expediente-todos';
     case GESTIONAR_EXPEDIENTE        = 'gestionar-expediente';
     case CARGAR_DOCUMENTOS           = 'cargar-documentos';
@@ -158,7 +156,6 @@ enum Permiso: string
     case DESPACHAR_MEDICAMENTO       = 'despachar-medicamento';      // enfermeras/admin-dispensario
     case GESTIONAR_INVENTARIO_MED    = 'gestionar-inventario-med';
     case GESTIONAR_FICHAS_SSO_MED    = 'gestionar-fichas-sso-med';
-    case EVALUAR_PERSONAL_MEDICO     = 'evaluar-personal-medico';    // admin-dispensario
 
     // ── MÓDULO 12: Inventario TI ─────────────────────────────────
     case VER_INVENTARIO_TI           = 'ver-inventario-ti';
@@ -188,8 +185,6 @@ enum Permiso: string
 
     // ── MÓDULO 16: Actividades ───────────────────────────────────
     case REGISTRAR_ACTIVIDADES         = 'registrar-actividades';
-    case VER_ACTIVIDADES_UNIDAD        = 'ver-actividades-unidad';
-    case APROBAR_ACTIVIDADES           = 'aprobar-actividades';
     case EXPORTAR_INFORME_ACTIVIDADES  = 'exportar-informe-actividades';
 
     // ── MÓDULO 17: Bienestar ─────────────────────────────────────
@@ -227,7 +222,6 @@ gestionar-distributivo       | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | �
 
 MÓDULO 02 EXPEDIENTE
 ver-expediente-propio        | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅
-ver-expediente-unidad        | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅
 ver-expediente-todos         | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅
 gestionar-expediente         | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌
 
@@ -250,7 +244,6 @@ ver-historia-clinica         | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | �
 crear-consulta               | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌
 emitir-receta                | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌
 despachar-medicamento        | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌
-evaluar-personal-medico      | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌
 
 MÓDULO 13 HELPDESK
 crear-ticket                 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅
@@ -259,8 +252,6 @@ gestionar-tecnicos           | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | �
 
 MÓDULO 16 ACTIVIDADES
 registrar-actividades        | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅
-ver-actividades-unidad       | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅
-aprobar-actividades          | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌
 
 ADMIN SISTEMA
 gestionar-usuarios           | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌

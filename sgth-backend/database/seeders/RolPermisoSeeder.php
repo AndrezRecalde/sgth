@@ -177,7 +177,6 @@ class RolPermisoSeeder extends Seeder
         Permiso::VER_AGENDA_DISPENSARIO,
         Permiso::VER_HISTORIA_CLINICA,
         Permiso::DESPACHAR_MEDICAMENTO,
-        Permiso::EVALUAR_PERSONAL_MEDICO,
         Permiso::VER_INVENTARIO_MED,
         Permiso::VER_RECETAS,
         // El catálogo de medicamentos, el ajuste de stock y las adquisiciones.
@@ -247,9 +246,7 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_ESTRUCTURA,
             Permiso::GESTIONAR_PUESTOS,
             Permiso::GESTIONAR_ORGANIGRAMA,
-            Permiso::VER_DISTRIBUTIVO,
             Permiso::GESTIONAR_DISTRIBUTIVO,
-            Permiso::VER_EXPEDIENTE_UNIDAD,
             ...self::PERMISOS_EXPEDIENTE_TH,
             Permiso::REGISTRAR_FICHA_SERVIDOR,
             Permiso::BUSCAR_SERVIDORES,
@@ -291,7 +288,6 @@ class RolPermisoSeeder extends Seeder
             Permiso::GENERAR_REPORTES,
             Permiso::EXPORTAR_REPORTES,
             Permiso::VER_AUDITORIA,
-            Permiso::VER_ACTIVIDADES_UNIDAD,
             Permiso::SOLICITAR_CERTIFICACION_MEDICA,
             // El seguimiento y la cobertura de las certificaciones (PR 17d).
             Permiso::VER_CERTIFICACIONES_MEDICAS,
@@ -312,7 +308,6 @@ class RolPermisoSeeder extends Seeder
         $this->crearRol(Rol::ASISTENTE_UATH, array_merge($permisosBase, [
             Permiso::VER_ESTRUCTURA,
             Permiso::GESTIONAR_PUESTOS,
-            Permiso::VER_EXPEDIENTE_UNIDAD,
             // También sube documentos, por decisión de Talento Humano del
             // 2026-10-03; si se le quita, se hace desde Usuarios.
             ...self::PERMISOS_EXPEDIENTE_TH,
@@ -328,7 +323,6 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_PERMISOS_TODOS,
             Permiso::REGISTRAR_PERMISOS_SERVIDORES,
             Permiso::VER_VACACIONES_UNIDAD,
-            Permiso::VER_ACTIVIDADES_UNIDAD,
             Permiso::GENERAR_REPORTES,
             Permiso::SOLICITAR_CERTIFICACION_MEDICA,
             Permiso::VER_CERTIFICACIONES_MEDICAS,
@@ -357,11 +351,8 @@ class RolPermisoSeeder extends Seeder
         // DIRECTOR
         $this->crearRol(Rol::DIRECTOR, array_merge($permisosBase, [
             Permiso::VER_ESTRUCTURA,
-            Permiso::VER_EXPEDIENTE_UNIDAD,
             Permiso::VER_ASISTENCIA_UNIDAD,
             Permiso::VER_VACACIONES_UNIDAD,
-            Permiso::VER_ACTIVIDADES_UNIDAD,
-            Permiso::APROBAR_ACTIVIDADES,
             Permiso::VER_DASHBOARD_EJECUTIVO,
             Permiso::GENERAR_REPORTES,
         ]));
@@ -369,11 +360,8 @@ class RolPermisoSeeder extends Seeder
         // JEFE_UNIDAD
         $this->crearRol(Rol::JEFE_UNIDAD, array_merge($permisosBase, [
             Permiso::VER_ESTRUCTURA,
-            Permiso::VER_EXPEDIENTE_UNIDAD,
             Permiso::VER_ASISTENCIA_UNIDAD,
             Permiso::VER_VACACIONES_UNIDAD,
-            Permiso::VER_ACTIVIDADES_UNIDAD,
-            Permiso::APROBAR_ACTIVIDADES,
         ]));
 
         // SERVIDOR: lo de todo servidor. La marcación en línea no va por rol:
@@ -429,7 +417,6 @@ class RolPermisoSeeder extends Seeder
         // AUDITOR
         $this->crearRol(Rol::AUDITOR, array_merge($permisosBase, [
             Permiso::VER_ESTRUCTURA,
-            Permiso::VER_EXPEDIENTE_UNIDAD,
             // Sin `ver-expediente-todos`: el Expediente lo abre Talento Humano
             // y el auditor nunca entró (docs/revision-permisos-sin-uso.md, D2).
             Permiso::VER_NOVEDADES_NOMINA,
@@ -437,7 +424,6 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_ASISTENCIA_TODOS,
             Permiso::VER_PERMISOS_TODOS,
             Permiso::VER_VACACIONES_UNIDAD,
-            Permiso::VER_ACTIVIDADES_UNIDAD,
             Permiso::VER_AUDITORIA,
             Permiso::VER_DASHBOARD_EJECUTIVO,
             Permiso::GENERAR_REPORTES,
