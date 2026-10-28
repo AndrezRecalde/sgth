@@ -8,16 +8,16 @@ namespace App\Enums;
  * Al 2026-10-28, 40 de ellos no los comprobaba ningún código (ni rutas, ni
  * policies, ni pantallas): docs/plan-roles-y-accesos.md, PR 16. Cada sección
  * dice por qué cuando el motivo es uno solo —módulo futuro, o Dispensario
- * hasta su parte del PR 17, que los va usando—. Los otros 15 quedan para una
- * revisión aparte, pantalla por
- * pantalla: `ver-distributivo`,
- * `ver-expediente-unidad`, `ver-expediente-todos`, `gestionar-expediente`,
- * `cargar-documentos`, `gestionar-cargas-familiares`,
- * `gestionar-tarifas-viatico`, `gestionar-base-conocimiento`,
- * `ver-sumarios`, `gestionar-sumarios`, `registrar-sancion`,
- * `ver-actividades-unidad`, `aprobar-actividades`, `exportar-reportes` y
- * `ver-auditoria`. Antes de darles uso, comprobar quién los tiene: el seeder
- * los asigna aunque nadie los mire.
+ * hasta su parte del PR 17, que los va usando—. Los otros 15 se revisaron
+ * pantalla por pantalla en docs/revision-permisos-sin-uso.md, aprobado el
+ * 2026-10-28, que se aplica en cuatro PR. Ya tienen uso los cuatro del
+ * Expediente (`ver-expediente-todos`, `gestionar-expediente`,
+ * `cargar-documentos` y `gestionar-cargas-familiares`). Faltan
+ * `ver-distributivo`, `ver-expediente-unidad`, `gestionar-tarifas-viatico`,
+ * `gestionar-base-conocimiento`, `ver-sumarios`, `gestionar-sumarios`,
+ * `registrar-sancion`, `ver-actividades-unidad`, `aprobar-actividades`,
+ * `exportar-reportes` y `ver-auditoria`. Antes de darles uso, comprobar quién
+ * los tiene: el seeder los asigna aunque nadie los mire.
  */
 enum Permiso: string
 {
@@ -31,7 +31,11 @@ enum Permiso: string
     // ── MÓDULO 02: Expediente ────────────────────────────────────
     case VER_EXPEDIENTE_PROPIO = 'ver-expediente-propio';
     case VER_EXPEDIENTE_UNIDAD = 'ver-expediente-unidad';
+    // Listar y abrir la ficha de cualquier servidor (`ServidorPolicy::verAny`
+    // y `ver`). Talento Humano; hasta el 2026-10-28 lo decidía su rol.
     case VER_EXPEDIENTE_TODOS = 'ver-expediente-todos';
+    // Los historiales del expediente, las cuentas bancarias y el certificado
+    // laboral, y `ServidorPolicy::actualizar`.
     case GESTIONAR_EXPEDIENTE = 'gestionar-expediente';
     // Registrar la ficha de un servidor nuevo, antes de su acción de personal.
     // Lo hacía `ServidorPolicy::crear` por el rol admin-uath, y el botón se
@@ -50,7 +54,12 @@ enum Permiso: string
      * que Talento Humano lleva en Excel y se revoca al terminar.
      */
     case VINCULAR_SERVIDOR_INICIAL = 'vincular-servidor-inicial';
+    // Subir documentos al expediente. Borrarlos sigue siendo del rol
+    // admin-uath. El asistente lo tiene por decisión de Talento Humano del
+    // 2026-10-03, y se le puede quitar desde Usuarios.
     case CARGAR_DOCUMENTOS = 'cargar-documentos';
+    // Las cargas familiares del expediente, sus condiciones de salud y las que
+    // piden los servidores desde «Mi perfil» («Cargas por validar»).
     case GESTIONAR_CARGAS_FAMILIARES = 'gestionar-cargas-familiares';
     // El trámite de una acción de personal, paso por paso (diseño de Acciones
     // de Personal, 6.3; TH 22). El asistente prepara y notifica; el director

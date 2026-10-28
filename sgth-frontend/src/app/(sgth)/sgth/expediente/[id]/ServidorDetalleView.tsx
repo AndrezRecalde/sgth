@@ -88,8 +88,9 @@ export function ServidorDetalleView({ id }: Props) {
         onBack={() => router.back()}
         actions={
           <Group gap="xs" wrap="nowrap">
-            {/* Lo emite Talento Humano, nunca el interesado: el endpoint está
-                cerrado a admin-uath y asistente-uath. */}
+            {/* Lo emite Talento Humano, nunca el interesado: el endpoint pide
+                `gestionar-expediente`, que tienen admin-uath y asistente-uath,
+                los mismos que abren esta pantalla. */}
             <Button
               variant="default"
               leftSection={<IconCertificate size={16} />}

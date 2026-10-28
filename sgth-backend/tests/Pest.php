@@ -62,3 +62,18 @@ uses()
         }
     })
     ->in('Feature/Dispensario');
+
+/*
+| Talento Humano con los permisos del Expediente, antes de cada prueba de los
+| directorios que lo abren. Las rutas y ServidorPolicy pasaron de `role:` a
+| `permission:` el 2026-10-28 (docs/revision-permisos-sin-uso.md, 3.2): ver
+| `rolesDeTalentoHumano()`.
+*/
+uses()
+    ->beforeEach(function () {
+        if ($this instanceof Tests\TestCase
+            && in_array(Illuminate\Foundation\Testing\RefreshDatabase::class, class_uses_recursive($this), true)) {
+            rolesDeTalentoHumano();
+        }
+    })
+    ->in('Feature/Expediente', 'Feature/Disciplinario');
