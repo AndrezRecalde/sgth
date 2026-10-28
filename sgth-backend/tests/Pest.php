@@ -76,4 +76,4 @@ uses()
             rolesDeTalentoHumano();
         }
     })
-    ->in('Feature/Expediente');
+    ->in('Feature/Expediente', 'Feature/Disciplinario');

@@ -173,7 +173,8 @@ it('la_movilizacion_tambien_justifica_y_lo_que_falte_se_devuelve', function () {
 it('solo_una_cuenta_principal_por_proposito', function () {
     // La cuenta principal la marca Talento Humano: desde el 2026-09-19 el
     // titular ya no puede hacerlo desde el expediente (PermisosExpedienteTest).
-    Role::firstOrCreate(['name' => 'admin-uath', 'guard_name' => 'sanctum']);
+    // Con `gestionar-expediente`, que pide la ruta desde el 2026-10-28.
+    rolesDeTalentoHumano();
     $this->user->assignRole('admin-uath');
 
     $entidad = EntidadFinanciera::create([

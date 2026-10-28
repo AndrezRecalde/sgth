@@ -28,6 +28,9 @@ uses(Tests\TestCase::class, RefreshDatabase::class);
 
 beforeEach(function () {
     $permiso = Permission::firstOrCreate(['name' => Permiso::GESTIONAR_ONBOARDING->value, 'guard_name' => 'sanctum']);
+    // Y los del Expediente: la prueba abre la ficha que crea el ingreso, y
+    // ServidorPolicy va por permisos desde el 2026-10-28.
+    rolesDeTalentoHumano();
     $rol = Role::firstOrCreate(['name' => 'admin-uath', 'guard_name' => 'sanctum']);
     $rol->givePermissionTo($permiso);
 
