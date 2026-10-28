@@ -28,8 +28,8 @@ export function TableroDispensario({ periodo }: Props) {
   // cualquiera del módulo, así que sin esta
   // comprobación un médico o una enfermera se encontrarían la pantalla de
   // inicio presidida por un error de permisos.
-  const hasRole = useAuthStore((s) => s.hasRole)
-  const puedeVerlo = hasRole('admin-dispensario')
+  const hasPermiso = useAuthStore((s) => s.hasPermiso)
+  const puedeVerlo = hasPermiso('ver-tablero-dispensario')
 
   const { data: kpis, isLoading, error } = useKpisDispensario(periodo, puedeVerlo)
   const panorama = usePanoramaDispensario(periodo, puedeVerlo)

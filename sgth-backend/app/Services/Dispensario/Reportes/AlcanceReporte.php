@@ -2,6 +2,7 @@
 
 namespace App\Services\Dispensario\Reportes;
 
+use App\Enums\Permiso;
 use App\Models\User;
 
 /**
@@ -32,8 +33,10 @@ final class AlcanceReporte
 
     public static function paraUsuario(User $usuario): ?self
     {
+        // La administración, por permiso desde el PR 17d; cada profesional,
+        // por quién es: su perfil decide qué reportes ve.
         return match (true) {
-            $usuario->hasRole('admin-dispensario') => new self(self::ADMINISTRACION, null),
+            $usuario->can(Permiso::SUPERVISAR_DISPENSARIO->value) => new self(self::ADMINISTRACION, null),
             $usuario->hasRole('medico')            => new self(self::MEDICO, $usuario->id),
             $usuario->hasRole('odontologo')        => new self(self::ODONTOLOGO, $usuario->id),
             $usuario->hasRole('enfermera')         => new self(self::ENFERMERIA, $usuario->id),

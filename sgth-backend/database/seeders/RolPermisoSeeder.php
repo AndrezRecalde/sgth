@@ -115,6 +115,10 @@ class RolPermisoSeeder extends Seeder
         Permiso::VER_RECETAS,
         // Exámenes (PR 17c): la bandeja, las órdenes y los resultados.
         Permiso::VER_EXAMENES,
+        // Salud ocupacional y reportes (PR 17d).
+        Permiso::VER_FICHAS_SSO_MED,
+        Permiso::VER_CERTIFICACIONES_MEDICAS,
+        Permiso::VER_REPORTES_DISPENSARIO,
     ];
 
     public const PERMISOS_ODONTOLOGO = [
@@ -127,6 +131,7 @@ class RolPermisoSeeder extends Seeder
         Permiso::VER_EXAMENES,
         // El odontograma lo registra solo el odontólogo (PR 4).
         Permiso::REGISTRAR_ODONTOGRAMA,
+        Permiso::VER_REPORTES_DISPENSARIO,
     ];
 
     public const PERMISOS_ENFERMERA = [
@@ -139,6 +144,7 @@ class RolPermisoSeeder extends Seeder
         // triaje y los servicios de enfermería.
         Permiso::GESTIONAR_AGENDA,
         Permiso::REGISTRAR_TRIAJE,
+        Permiso::VER_REPORTES_DISPENSARIO,
     ];
 
     public const PERMISOS_ADMIN_DISPENSARIO = [
@@ -156,6 +162,11 @@ class RolPermisoSeeder extends Seeder
         Permiso::REGISTRAR_TRIAJE,
         Permiso::VER_EXAMENES,
         Permiso::GESTIONAR_CATALOGO_EXAMENES,
+        // Tablero de gestión, salud ocupacional (lectura) y reportes (PR 17d).
+        Permiso::VER_TABLERO_DISPENSARIO,
+        Permiso::VER_FICHAS_SSO_MED,
+        Permiso::VER_CERTIFICACIONES_MEDICAS,
+        Permiso::VER_REPORTES_DISPENSARIO,
     ];
 
     /**
@@ -261,6 +272,8 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_AUDITORIA,
             Permiso::VER_ACTIVIDADES_UNIDAD,
             Permiso::SOLICITAR_CERTIFICACION_MEDICA,
+            // El seguimiento y la cobertura de las certificaciones (PR 17d).
+            Permiso::VER_CERTIFICACIONES_MEDICAS,
             Permiso::ANULAR_PERMISO_PENDIENTE,
             Permiso::APROBAR_PERMISO_SIRHA7,
             Permiso::GESTIONAR_LICENCIAS,
@@ -297,6 +310,7 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_ACTIVIDADES_UNIDAD,
             Permiso::GENERAR_REPORTES,
             Permiso::SOLICITAR_CERTIFICACION_MEDICA,
+            Permiso::VER_CERTIFICACIONES_MEDICAS,
             Permiso::GESTIONAR_SSO,
             Permiso::VER_REPORTES_SSO,
             Permiso::REGISTRAR_ACCIDENTE,

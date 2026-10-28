@@ -337,23 +337,22 @@ export const NAV_SGTH: NavGroup[] = [
 ]
 
 // ── DISPENSARIO MÉDICO ────────────────
-// Pasa de `roles` a permisos por partes (docs/plan-roles-y-accesos.md,
-// PR 17). Farmacia (17a), Enfermería (17b) y Exámenes (17c) ya van por
-// permiso; el resto, en la siguiente. Consultas y Odontología siguen por rol a propósito: es una
-// cola por especialidad, y eso es identidad, no autorización.
+// Por permisos desde el PR 17 (docs/plan-roles-y-accesos.md), en cuatro
+// partes. Consultas y Odontología siguen por rol a propósito: es una cola por
+// especialidad, y eso es identidad, no autorización.
 export const NAV_SALUD: NavGroup[] = [
   {
     label: 'Dispensario',
     items: [
       {
         // El tablero es de gestión —incluye consultas por profesional— y el
-        // endpoint solo lo sirve a estos dos roles. Sin declararlos aquí, el
-        // menú le prometía un tablero a todo el personal del dispensario y a
-        // la mayoría le abría una página vacía.
-        label: 'Dashboard',
-        href:  ROUTES.SALUD.HOME,
-        icon:  'IconHome',
-        roles: ['admin-dispensario'],
+        // endpoint solo lo sirve a la administración. Sin guarda, el menú le
+        // prometía un tablero a todo el personal del dispensario y a la
+        // mayoría le abría una página vacía.
+        label:   'Dashboard',
+        href:    ROUTES.SALUD.HOME,
+        icon:    'IconHome',
+        permiso: 'ver-tablero-dispensario',
       },
       {
         // La cola de cada profesional, una por especialidad. Sin `roles` salían
@@ -445,11 +444,11 @@ export const NAV_SALUD: NavGroup[] = [
       {
         // «Salud ocupacional» y no «SSO»: en SGTH ya existe «Riesgos laborales
         // (SSO)», que es otro módulo, de Talento Humano. Este es el del médico
-        // ocupacional, y el API lo reserva a estos dos roles.
+        // ocupacional: lo leen el médico y la administración.
         label:    'Salud ocupacional',
         href:     ROUTES.SALUD.SSO,
         icon:     'IconShieldCheck',
-        roles:    ['medico', 'admin-dispensario'],
+        permiso:  'ver-fichas-sso-med',
         children: [
           {
             label: 'Tablero',
@@ -483,7 +482,7 @@ export const NAV_SALUD: NavGroup[] = [
         icon:  'IconReportAnalytics',
         // Cada perfil ve los suyos: la administración todo y cada profesional
         // lo propio (`AlcanceReporte`).
-        roles: ['admin-dispensario', 'medico', 'odontologo', 'enfermera'],
+        permiso: 'ver-reportes-dispensario',
       },
     ],
   },

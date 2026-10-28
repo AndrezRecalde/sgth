@@ -18,15 +18,19 @@
         "supervisar-dispensario",
         "ver-agenda-dispensario",
         "ver-asistencia-propia",
+        "ver-certificaciones-medicas",
         "ver-evaluacion-propia",
         "ver-examenes",
         "ver-expediente-propio",
+        "ver-fichas-sso-med",
         "ver-historia-clinica",
         "ver-historia-clinica-propia",
         "ver-inventario-med",
         "ver-permisos",
         "ver-plan-capacitacion",
         "ver-recetas",
+        "ver-reportes-dispensario",
+        "ver-tablero-dispensario",
         "ver-ticket-propio"
     ],
     "admin-ti": [
@@ -130,6 +134,7 @@
         "ver-asistencia-todos",
         "ver-asistencia-unidad",
         "ver-auditoria",
+        "ver-certificaciones-medicas",
         "ver-credenciales",
         "ver-dashboard-ejecutivo",
         "ver-distributivo",
@@ -182,6 +187,7 @@
         "ver-asistencia-propia",
         "ver-asistencia-todos",
         "ver-asistencia-unidad",
+        "ver-certificaciones-medicas",
         "ver-estructura",
         "ver-evaluacion-propia",
         "ver-expediente-propio",
@@ -323,6 +329,7 @@
         "ver-permisos",
         "ver-plan-capacitacion",
         "ver-recetas",
+        "ver-reportes-dispensario",
         "ver-ticket-propio"
     ],
     "financiero": [
@@ -418,15 +425,18 @@
         "solicitar-viatico",
         "ver-agenda-dispensario",
         "ver-asistencia-propia",
+        "ver-certificaciones-medicas",
         "ver-evaluacion-propia",
         "ver-examenes",
         "ver-expediente-propio",
+        "ver-fichas-sso-med",
         "ver-historia-clinica",
         "ver-historia-clinica-propia",
         "ver-inventario-med",
         "ver-permisos",
         "ver-plan-capacitacion",
         "ver-recetas",
+        "ver-reportes-dispensario",
         "ver-ticket-propio"
     ],
     "odontologo": [
@@ -453,6 +463,7 @@
         "ver-permisos",
         "ver-plan-capacitacion",
         "ver-recetas",
+        "ver-reportes-dispensario",
         "ver-ticket-propio"
     ],
     "recepcion": [

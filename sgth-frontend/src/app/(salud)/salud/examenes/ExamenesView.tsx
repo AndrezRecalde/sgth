@@ -26,10 +26,10 @@ interface Props {
  * ocupacional o la administración (D6).
  */
 export function ExamenesView({ vista, solicitante = null }: Props) {
-  const { hasRole, hasPermiso } = useAuth()
+  const { hasPermiso } = useAuth()
   const catalogo = hasPermiso('gestionar-catalogo-examenes')
   // Como la ficha ocupacional, de la que es parte: médico y administración.
-  const porRiesgo = hasRole('medico') || hasRole('admin-dispensario')
+  const porRiesgo = hasPermiso('ver-fichas-sso-med')
   const [pestana, setPestana] = useState<string | null>('pendientes')
 
   return (

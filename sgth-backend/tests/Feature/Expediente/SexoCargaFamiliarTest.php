@@ -51,6 +51,10 @@ test('registrar un familiar pide el sexo y lo guarda', function () {
 });
 
 test('los reportes del Dispensario cuentan el sexo de los familiares', function () {
+    // Los reportes piden ver-reportes-dispensario desde el PR 17d; esta prueba
+    // vive fuera de Feature/Dispensario y no recibe los roles con sus permisos.
+    rolesDelDispensario();
+
     $medico = User::factory()->create();
     $medico->assignRole(Role::firstOrCreate(['name' => 'medico', 'guard_name' => 'sanctum']));
     $admin = User::factory()->create();

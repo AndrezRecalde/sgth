@@ -1870,20 +1870,24 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
 
         // Dashboard Estadístico — SOLO admin-dispensario. La máxima autoridad
         // salió con su rol el 2026-10-26 (docs/plan-roles-y-accesos.md, PR 7).
+        // Por permiso desde el PR 17d.
         Route::get('dashboard/kpis', [DashboardDispensarioController::class, 'kpis'])
-            ->middleware('role:admin-dispensario');
+            ->middleware('permission:ver-tablero-dispensario');
         Route::get('dashboard/panorama', [DashboardDispensarioController::class, 'panorama'])
-            ->middleware('role:admin-dispensario');
+            ->middleware('permission:ver-tablero-dispensario');
 
         // «Mi jornada»: cada profesional ve solo lo suyo. No es el tablero de
-        // la jefatura, que compara a unos con otros.
+        // la jefatura, que compara a unos con otros. Sigue por rol a
+        // propósito (PR 17d): la jornada es la del médico, el odontólogo o la
+        // enfermera según quién es (`MiJornadaService`), y eso es identidad.
         Route::get('mi-jornada', [MiJornadaController::class, 'index'])
             ->middleware('role:medico|odontologo|enfermera');
 
         // Reportes del Dispensario. Qué reporte y con qué alcance lo decide
         // `AlcanceReporte`: la administración todo y cada profesional lo suyo.
+        // Por permiso desde el PR 17d.
         Route::prefix('reportes')
-            ->middleware('role:admin-dispensario|medico|odontologo|enfermera')
+            ->middleware('permission:ver-reportes-dispensario')
             ->group(function () {
                 Route::get('/', [ReporteDispensarioController::class, 'index']);
                 Route::get('{clave}/excel', [ReporteDispensarioController::class, 'excel']);
@@ -2174,8 +2178,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
 
         // Creación de solicitudes en lote desde Expediente (RRHH, no médico)
         // NOTA: debe registrarse antes que GET {id} de la ruta wildcard.
+        // Por el permiso que el controlador ya exigía (PR 17d): el rol dejaba
+        // pasar a admin-dispensario, que recibía el 403 dentro.
         Route::prefix('solicitudes-certificacion')
-            ->middleware('role:admin-uath|asistente-uath|admin-dispensario')
+            ->middleware('permission:solicitar-certificacion-medica')
             ->group(function () {
                 Route::post('lote', [SolicitudCertificacionController::class, 'storeLote']);
                 // Quien la pidió la retira: cancelar no es un acto médico. El
@@ -2187,7 +2193,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // solicitud. Es el único sitio desde donde se ve a quien nunca tuvo
         // una evaluación, así que lo leen los mismos que el seguimiento.
         Route::prefix('certificaciones/cobertura')
-            ->middleware('role:medico|admin-dispensario|admin-uath|asistente-uath')
+            ->middleware('permission:ver-certificaciones-medicas')
             ->group(function () {
                 Route::get('/', [CoberturaCertificacionController::class, 'index']);
                 Route::get('excel', [CoberturaCertificacionController::class, 'excel']);
@@ -2200,9 +2206,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // seeder, y ese es justo el permiso con el que `nav.ts` pinta
         // «Certificaciones médicas»: sin el rol declarado aquí veía el ítem en
         // el menú y recibía un 403 al abrirlo. Lo mismo le pasaba con el lote
-        // desde Expediente, que el controlador ya le autoriza por permiso.
+        // desde Expediente, que el controlador ya le autoriza por permiso. Por
+        // permiso desde el PR 17d, con los mismos cuatro titulares.
         Route::prefix('solicitudes-certificacion')
-            ->middleware('role:medico|admin-dispensario|admin-uath|asistente-uath')
+            ->middleware('permission:ver-certificaciones-medicas')
             ->group(function () {
                 Route::get('/', [SolicitudCertificacionController::class, 'index']);
                 // El certificado de aptitud: la aptitud, sus restricciones y
@@ -2220,7 +2227,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // permisos clínicos; el dictamen, además, solo el médico de la ficha
         // (docs/plan-roles-y-accesos.md, PR 4).
         Route::prefix('solicitudes-certificacion')
-            ->middleware('role:medico')
+            ->middleware('permission:gestionar-fichas-sso-med')
             ->group(function () {
                 Route::patch('{id}/iniciar', [SolicitudCertificacionController::class, 'iniciarProceso']);
                 Route::patch('{id}/completar', [SolicitudCertificacionController::class, 'completar']);
@@ -2231,7 +2238,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // el expediente del servidor y el borrador del ingreso, no es un acto
         // clínico.
         Route::prefix('solicitudes-certificacion')
-            ->middleware('role:admin-uath')
+            ->middleware('permission:gestionar-onboarding')
             ->group(function () {
                 Route::post('{id}/confirmar-incorporacion', [SolicitudCertificacionController::class, 'confirmarIncorporacion']);
             });
@@ -2240,11 +2247,13 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // emitida, los diagnósticos y la exposición a factores de riesgo. Es
         // de quien evalúa, como las fichas.
         Route::get('salud-ocupacional/tablero', [TableroSaludOcupacionalController::class, 'index'])
-            ->middleware('role:medico|admin-dispensario');
+            ->middleware('permission:ver-fichas-sso-med');
 
-        // Fichas de salud ocupacional
+        // Fichas de salud ocupacional. Por permiso desde el PR 17d: leerlas,
+        // `ver-fichas-sso-med` (el médico y la administración); llenarlas,
+        // `gestionar-fichas-sso-med` (el médico).
         Route::prefix('fichas-sso')
-            ->middleware('role:medico|admin-dispensario')
+            ->middleware('permission:ver-fichas-sso-med')
             ->group(function () {
                 // Catálogo oficial de factores de riesgo del MSP (sección G).
                 // Va antes de '{id}' para que 'catalogo-riesgos' no se lea como id.
@@ -2264,7 +2273,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // La administración del Dispensario la consulta, arriba
         // (docs/plan-roles-y-accesos.md, PR 4).
         Route::prefix('fichas-sso')
-            ->middleware('role:medico')
+            ->middleware('permission:gestionar-fichas-sso-med')
             ->group(function () {
                 Route::post('/', [FichaSaludOcupacionalController::class, 'store']);
                 Route::patch('{id}', [FichaSaludOcupacionalController::class, 'update']);

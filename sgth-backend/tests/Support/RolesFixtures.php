@@ -8,7 +8,8 @@ use Spatie\Permission\PermissionRegistrar;
 
 /**
  * Los cinco roles del Dispensario con los permisos del Dispensario que les da
- * `RolPermisoSeeder`, sin los permisos base.
+ * `RolPermisoSeeder`, sin los permisos base; y admin-uath y asistente-uath con
+ * el único permiso del Dispensario que tienen, `ver-certificaciones-medicas`.
  *
  * El Dispensario pasa de `role:` a `permission:` por partes
  * (docs/plan-roles-y-accesos.md, PR 17), y unas 70 pruebas creaban el rol
@@ -27,6 +28,11 @@ function rolesDelDispensario(): void
         'admin-dispensario' => RolPermisoSeeder::PERMISOS_ADMIN_DISPENSARIO,
         'auxiliar-farmacia' => RolPermisoSeeder::PERMISOS_AUXILIAR_FARMACIA,
     ];
+
+    // Talento Humano consulta el seguimiento y la cobertura de las
+    // certificaciones médicas, que también son rutas del Dispensario (PR 17d).
+    $porRol['admin-uath'] = [Permiso::VER_CERTIFICACIONES_MEDICAS];
+    $porRol['asistente-uath'] = [Permiso::VER_CERTIFICACIONES_MEDICAS];
 
     foreach ($porRol as $rol => $permisos) {
         $nombres = array_map(fn (Permiso $p) => $p->value, $permisos);
