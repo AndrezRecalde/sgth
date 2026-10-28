@@ -23,7 +23,9 @@ export function AtencionesEnfermeriaTable({ fecha }: Props) {
   const [page, setPage] = useState(1)
   const anular = useAnularAtencionEnfermeria()
   const usuario = useAuthStore((st) => st.usuario)
-  const esAdministracion = usuario?.roles?.includes('admin-dispensario') ?? false
+  // La administración anula la de otra persona: `supervisar-dispensario`, como
+  // el API (PR 17b).
+  const esAdministracion = usuario?.permisos?.includes('supervisar-dispensario') ?? false
   const puedeAnular = (a: AtencionEnfermeria) => esAdministracion || a.enfermera_id === usuario?.id
   const [aAnular, setAAnular] = useState<AtencionEnfermeria | null>(null)
 

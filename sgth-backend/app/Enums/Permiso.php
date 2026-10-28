@@ -152,10 +152,19 @@ enum Permiso: string
     // ── MÓDULO 11: Dispensario ───────────────────────────────────
     // El Dispensario pasa de `role:` a permisos por partes, en el PR 17 de
     // docs/plan-roles-y-accesos.md. Desde el 17a (Farmacia) se usan
-    // `emitir-receta`, `despachar-medicamento`, `gestionar-inventario-med` y
-    // los tres del final; el resto sigue decorativo hasta su parte.
+    // `emitir-receta`, `despachar-medicamento`, `gestionar-inventario-med`,
+    // `ver-inventario-med`, `ver-recetas` y `supervisar-dispensario`; desde
+    // el 17b (agenda, triaje, enfermería, historias), `ver-agenda-dispensario`,
+    // `gestionar-agenda`, `ver-historia-clinica`, `crear-consulta` y
+    // `registrar-triaje`. El resto sigue decorativo hasta su parte.
     case VER_AGENDA_DISPENSARIO = 'ver-agenda-dispensario';
+    // Llevar la cola de todos: dar turnos y operar los de cualquier
+    // profesional. Enfermería y la administración (PR 17b); el médico y el
+    // odontólogo, solo los suyos.
     case GESTIONAR_AGENDA = 'gestionar-agenda';
+    // El triaje, los signos vitales previos al FEMO y los servicios de
+    // enfermería: Enfermería y la administración (PR 17b).
+    case REGISTRAR_TRIAJE = 'registrar-triaje';
     // `solicitar-cita` se retiró junto con su ruta, que nunca funcionó.
     case VER_HISTORIA_CLINICA_PROPIA = 'ver-historia-clinica-propia';
     case VER_HISTORIA_CLINICA = 'ver-historia-clinica';       // SOLO médicos

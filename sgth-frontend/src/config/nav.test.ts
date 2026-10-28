@@ -143,6 +143,16 @@ describe('buildNav', () => {
     expect(pantallas('salud', 'enfermera')).not.toContain(ROUTES.SALUD.FARMACIA_ADQUISICIONES)
   })
 
+  it('Enfermería va por el permiso del triaje (PR 17b)', () => {
+    expect(flattenNav('salud', ['registrar-triaje'], []).map((p) => p.href)).toEqual([
+      ROUTES.SALUD.ENFERMERIA,
+      ROUTES.SALUD.ENFERMERIA_COLA,
+      ROUTES.SALUD.ENFERMERIA_SSO,
+    ])
+    expect(pantallas('salud', 'enfermera')).toContain(ROUTES.SALUD.ENFERMERIA_SSO)
+    expect(pantallas('salud', 'medico')).not.toContain(ROUTES.SALUD.ENFERMERIA)
+  })
+
   it('al auxiliar de farmacia le ofrece el inventario y el despacho, nada clínico', () => {
     // PR 13: el mostrador, sin historias, consultas, agenda ni exámenes.
     expect(pantallas('salud', 'auxiliar-farmacia')).toEqual([

@@ -1817,8 +1817,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // Agenda — accesible para todo el personal del dispensario, y solo
         // para él. El comentario lo decía, pero estas seis rutas no llevaban
         // `role:` y cualquier servidor con sesión podía ver la cola o marcar
-        // a un paciente como no presentado.
-        Route::middleware('role:medico|odontologo|enfermera|admin-dispensario')
+        // a un paciente como no presentado. Por permiso desde el PR 17b, con
+        // los mismos titulares; qué turnos ve y opera cada uno lo decide el
+        // controlador (`gestionar-agenda`, la cola de todos).
+        Route::middleware('permission:ver-agenda-dispensario')
             ->group(function () {
                 Route::get('agenda/turnos-del-dia',
                     [AgendaController::class, 'turnosDelDia']
@@ -1836,7 +1838,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 // de quedarse en consulta para siempre. Es de quien atiende.
                 Route::patch('agenda/{agenda}/devolver-a-la-cola',
                     [AgendaController::class, 'devolverALaCola']
-                )->middleware('role:medico|odontologo')
+                )->middleware('permission:crear-consulta')
                  ->name('agenda.devolverALaCola');
                 Route::get('agenda/por-folio/{folio}',
                     [AgendaController::class, 'porFolio']
@@ -1851,18 +1853,19 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // estado, folio, paciente—, y el frontend nunca lo usó.
         Route::apiResource('agenda', AgendaController::class)
             ->except(['update'])
-            ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
+            ->middleware('permission:ver-agenda-dispensario');
 
-        // Triaje
+        // Triaje: lo registra Enfermería (y la administración); los signos
+        // vitales los lee todo el personal clínico (PR 17b).
         Route::prefix('agenda/{agendaId}/triaje')->group(function () {
             Route::post('/', [TriajeController::class, 'store'])
-                ->middleware('role:enfermera|admin-dispensario');
+                ->middleware('permission:registrar-triaje');
             Route::get('/', [TriajeController::class, 'show'])
-                ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
+                ->middleware('permission:ver-historia-clinica');
             Route::get('ultimo', [TriajeController::class, 'ultimoPorAgenda'])
-                ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
+                ->middleware('permission:ver-historia-clinica');
             Route::get('historial', [TriajeController::class, 'historial'])
-                ->middleware('role:medico|odontologo|enfermera|admin-dispensario');
+                ->middleware('permission:ver-historia-clinica');
         });
 
         // Dashboard Estadístico — SOLO admin-dispensario. La máxima autoridad
@@ -1909,43 +1912,46 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // acceso general del dispensario y no con el rol clínico.
         Route::get('disponibilidad/personal',
             [DisponibilidadController::class, 'paraAtencion']
-        )->middleware('role:medico|odontologo|enfermera|admin-dispensario')
+        )->middleware('permission:ver-agenda-dispensario')
          ->name('dispensario.disponibilidad.personal');
 
         // Marcarse disponible es de quien atiende pacientes. La guarda existía
         // solo en la pantalla, que ocultaba el control: por la API cualquiera
         // del dispensario podía marcarse disponible, y aunque la lista de
         // disponibles filtra por rol al leer, la fila quedaba escrita igual.
+        // Por permiso desde el PR 17b: el de quien atiende, `crear-consulta`.
         Route::get('disponibilidad/mi-estado',
             [DisponibilidadController::class, 'miEstado']
-        )->middleware('role:medico|odontologo')
+        )->middleware('permission:crear-consulta')
          ->name('dispensario.disponibilidad.miEstado');
 
         Route::post('disponibilidad/alternar',
             [DisponibilidadController::class, 'alternar']
-        )->middleware('role:medico|odontologo')
+        )->middleware('permission:crear-consulta')
          ->name('dispensario.disponibilidad.alternar');
 
         // Buscar por cédula revela si alguien es paciente del dispensario, y
         // las atenciones de enfermería son datos de salud: ni una cosa ni la
         // otra se abre a cualquier servidor con sesión.
+        // Por permiso desde el PR 17b, con los mismos titulares.
         Route::get('pacientes/buscar',
             [PacienteController::class, 'buscar']
-        )->middleware('role:medico|odontologo|enfermera|admin-dispensario')
+        )->middleware('permission:ver-agenda-dispensario')
          ->name('dispensario.pacientes.buscar');
 
         Route::get('pacientes/buscar-por-nombre',
             [PacienteController::class, 'buscarPorNombre']
-        )->middleware('role:medico|odontologo|enfermera|admin-dispensario')
+        )->middleware('permission:ver-agenda-dispensario')
          ->name('dispensario.pacientes.buscar-por-nombre');
 
         Route::get('atenciones-enfermeria',
             [AtencionEnfermeriaController::class, 'index']
-        )->middleware('role:medico|odontologo|enfermera|admin-dispensario')
+        )->middleware('permission:ver-historia-clinica')
          ->name('dispensario.atenciones-enfermeria.index');
 
-        // Registrar y anular un servicio es trabajo de Enfermería.
-        Route::middleware('role:enfermera|admin-dispensario')->group(function () {
+        // Registrar y anular un servicio es trabajo de Enfermería, como el
+        // triaje (PR 17b).
+        Route::middleware('permission:registrar-triaje')->group(function () {
             Route::post('atenciones-enfermeria',
                 [AtencionEnfermeriaController::class, 'store']
             )->name('dispensario.atenciones-enfermeria.store');
@@ -1959,9 +1965,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             )->name('dispensario.catalogo-servicios-enfermeria');
         });
 
-        // Historias clínicas — SOLO personal médico
+        // Historias clínicas — SOLO personal médico. Por permiso desde el PR 17b.
         Route::prefix('historias-clinicas')
-            ->middleware('role:medico|odontologo|enfermera|admin-dispensario')
+            ->middleware('permission:ver-historia-clinica')
             ->group(function () {
                 Route::get('/', [HistoriaClinicaController::class, 'index']);
                 Route::post('/', [HistoriaClinicaController::class, 'store']);
@@ -1976,7 +1982,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                     Route::post('/', [AlergiaPacienteController::class, 'store']);
                     Route::patch('{alergia}/anular',
                         [AlergiaPacienteController::class, 'anular']
-                    )->middleware('role:medico|odontologo');
+                    )->middleware('permission:crear-consulta');
                 });
 
                 // Antecedentes
@@ -1985,7 +1991,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                     Route::post('/', [AntecedentePacienteController::class, 'store']);
                     Route::patch('{antecedente}/anular',
                         [AntecedentePacienteController::class, 'anular']
-                    )->middleware('role:medico|odontologo');
+                    )->middleware('permission:crear-consulta');
                 });
             });
 
@@ -2152,9 +2158,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
 
         // Signos vitales de la solicitud (enfermería, previo al FEMO)
         // NOTA: debe registrarse antes que GET {id} para que "pendientes-triaje"
-        // no sea capturado por la ruta comodín {id}.
+        // no sea capturado por la ruta comodín {id}. Es triaje: va con el de
+        // Enfermería (PR 17b).
         Route::prefix('solicitudes-certificacion')
-            ->middleware('role:enfermera|admin-dispensario')
+            ->middleware('permission:registrar-triaje')
             ->group(function () {
                 Route::get('pendientes-triaje', [SolicitudCertificacionController::class, 'pendientesTriaje']);
                 Route::post('{id}/signos-vitales', [SolicitudCertificacionController::class, 'registrarSignosVitales']);

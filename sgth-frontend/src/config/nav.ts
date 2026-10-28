@@ -338,7 +338,9 @@ export const NAV_SGTH: NavGroup[] = [
 
 // ── DISPENSARIO MÉDICO ────────────────
 // Pasa de `roles` a permisos por partes (docs/plan-roles-y-accesos.md,
-// PR 17). Farmacia ya va por permiso (17a); el resto, en las siguientes.
+// PR 17). Farmacia (17a) y Enfermería (17b) ya van por permiso; el resto, en
+// las siguientes. Consultas y Odontología siguen por rol a propósito: es una
+// cola por especialidad, y eso es identidad, no autorización.
 export const NAV_SALUD: NavGroup[] = [
   {
     label: 'Dispensario',
@@ -382,10 +384,11 @@ export const NAV_SALUD: NavGroup[] = [
         label:    'Enfermería',
         href:     ROUTES.SALUD.ENFERMERIA,
         icon:     'IconHeartbeat',
-        // Sin `roles` salía a todo el Dispensario —también a quien solo da
+        // Sin guarda salía a todo el Dispensario —también a quien solo da
         // soporte técnico—, y el API le respondía 403 al entrar. Médicos y
-        // odontólogos tienen su propia cola en Consultas y Odontología.
-        roles:    ['enfermera', 'admin-dispensario'],
+        // odontólogos tienen su propia cola en Consultas y Odontología. Por
+        // permiso desde el PR 17b: el de Enfermería.
+        permiso:  'registrar-triaje',
         children: [
           {
             label: 'Atender paciente',
@@ -398,12 +401,12 @@ export const NAV_SALUD: NavGroup[] = [
             icon:  'IconList',
           },
           {
-            label: 'Atención SSO',
-            href:  ROUTES.SALUD.ENFERMERIA_SSO,
-            icon:  'IconShieldCheck',
+            label:   'Atención SSO',
+            href:    ROUTES.SALUD.ENFERMERIA_SSO,
+            icon:    'IconShieldCheck',
             // El triaje previo al FEMO lo registra Enfermería; el API
             // (`pendientes-triaje`) responde 403 al resto.
-            roles: ['enfermera', 'admin-dispensario'],
+            permiso: 'registrar-triaje',
           },
         ],
       },

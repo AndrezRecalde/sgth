@@ -130,6 +130,10 @@ class RolPermisoSeeder extends Seeder
         Permiso::DESPACHAR_MEDICAMENTO,
         Permiso::VER_INVENTARIO_MED,
         Permiso::VER_RECETAS,
+        // Agenda y triaje (PR 17b): lleva la cola de todos y registra el
+        // triaje y los servicios de enfermería.
+        Permiso::GESTIONAR_AGENDA,
+        Permiso::REGISTRAR_TRIAJE,
     ];
 
     public const PERMISOS_ADMIN_DISPENSARIO = [
@@ -143,6 +147,8 @@ class RolPermisoSeeder extends Seeder
         Permiso::GESTIONAR_INVENTARIO_MED,
         // Anula o ve lo que registró otro profesional.
         Permiso::SUPERVISAR_DISPENSARIO,
+        Permiso::GESTIONAR_AGENDA,
+        Permiso::REGISTRAR_TRIAJE,
     ];
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dispensario;
 
 use App\Contracts\Dispensario\AtencionEnfermeriaServiceInterface;
+use App\Enums\Permiso;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dispensario\AnularAtencionEnfermeriaRequest;
 use App\Http\Requests\Dispensario\StoreAtencionEnfermeriaRequest;
@@ -54,7 +55,8 @@ final class AtencionEnfermeriaController extends Controller
             $id,
             $request->string('motivo_anulacion')->value(),
             $request->user()->id,
-            $request->user()->hasRole('admin-dispensario'),
+            // La administración anula la de otra persona (PR 17b).
+            $request->user()->can(Permiso::SUPERVISAR_DISPENSARIO->value),
         );
 
         return ApiResponse::ok(

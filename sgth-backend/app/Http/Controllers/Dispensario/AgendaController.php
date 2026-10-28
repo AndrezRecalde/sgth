@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dispensario;
 
 use App\Contracts\Dispensario\AgendaServiceInterface;
 use App\Enums\EspecialidadAtencion;
+use App\Enums\Permiso;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dispensario\StoreAgendaMedicaRequest;
 use App\Http\Responses\ApiResponse;
@@ -159,10 +160,14 @@ final class AgendaController extends Controller
         return ApiResponse::ok($turno, 'El turno volvió a la cola.');
     }
 
-    /** Enfermería y la administración, que dan los turnos y llevan la cola. */
+    /**
+     * Enfermería y la administración, que dan los turnos y llevan la cola de
+     * todos. Por permiso desde el PR 17b: `gestionar-agenda`, que existía sin
+     * dueño.
+     */
     private function llevaLaCola(Request $request): bool
     {
-        return $request->user()->hasAnyRole(['enfermera', 'admin-dispensario']);
+        return $request->user()->can(Permiso::GESTIONAR_AGENDA->value);
     }
 
     /**
