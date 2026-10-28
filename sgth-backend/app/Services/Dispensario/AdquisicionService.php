@@ -14,15 +14,30 @@ use Illuminate\Support\Facades\DB;
 
 final class AdquisicionService implements AdquisicionServiceInterface
 {
+    /**
+     * Relaciones de cada adquisición. Registrador y anulador van con las
+     * columnas que pide `nombre_completo` y nada más: cargados enteros, el
+     * accesor traía por su cuenta el servidor completo, y el historial de
+     * Farmacia salía con el correo y el celular personales, el contacto de
+     * emergencia, la fecha de nacimiento y el tipo de sangre de quien registró
+     * o anuló cada compra. La pantalla solo pinta el nombre.
+     */
+    private const RELACIONES = [
+        'registrador:id,usuario_ti,email,servidor_id',
+        'registrador.servidor:id,nombre,apellido',
+        'anulador:id,usuario_ti,email,servidor_id',
+        'anulador.servidor:id,nombre,apellido',
+        'items.medicina',
+    ];
+
     public function __construct(
         private readonly StockPorLotes $stock
     ) {}
 
     public function listar(array $filtros): LengthAwarePaginator
     {
-        $query = AdquisicionMedicamento::with([
-            'registrador', 'anulador', 'items.medicina',
-        ])->orderBy('created_at', 'desc');
+        $query = AdquisicionMedicamento::with(self::RELACIONES)
+            ->orderBy('created_at', 'desc');
 
         if (!empty($filtros['tipo'])) {
             $query->where('tipo', $filtros['tipo']);
@@ -42,9 +57,7 @@ final class AdquisicionService implements AdquisicionServiceInterface
 
     public function obtener(int $id): AdquisicionMedicamento
     {
-        return AdquisicionMedicamento::with([
-            'registrador', 'anulador', 'items.medicina',
-        ])->findOrFail($id);
+        return AdquisicionMedicamento::with(self::RELACIONES)->findOrFail($id);
     }
 
     public function registrar(
@@ -117,7 +130,7 @@ final class AdquisicionService implements AdquisicionServiceInterface
                 ]);
             }
 
-            return $adquisicion->load(['items.medicina', 'registrador']);
+            return $adquisicion->load(self::RELACIONES);
         });
     }
 
@@ -206,9 +219,7 @@ final class AdquisicionService implements AdquisicionServiceInterface
                 'motivo_anulacion' => $motivo,
             ]);
 
-            return $adquisicion->load([
-                'items.medicina', 'registrador', 'anulador',
-            ]);
+            return $adquisicion->load(self::RELACIONES);
         });
     }
 
