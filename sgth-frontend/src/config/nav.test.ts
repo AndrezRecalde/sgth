@@ -119,6 +119,22 @@ describe('buildNav', () => {
     }
   })
 
+  it('el expediente y la asistencia propios del Portal van con sus permisos', () => {
+    // PR 16: `ver-expediente-propio` y `ver-asistencia-propia` estaban en
+    // todos los roles y no los miraba nadie.
+    const soloAutoservicio = flattenNav('portal', ['acceso-autoservicio'], []).map((p) => p.href)
+    expect(soloAutoservicio).not.toContain(ROUTES.PORTAL.MI_PERFIL)
+    expect(soloAutoservicio).not.toContain(ROUTES.PORTAL.DOCUMENTOS)
+    expect(soloAutoservicio).not.toContain(ROUTES.PORTAL.MIS_MARCACIONES)
+
+    for (const rol of ROLES) {
+      const portal = pantallas('portal', rol)
+      expect(portal, rol).toContain(ROUTES.PORTAL.MI_PERFIL)
+      expect(portal, rol).toContain(ROUTES.PORTAL.DOCUMENTOS)
+      expect(portal, rol).toContain(ROUTES.PORTAL.MIS_MARCACIONES)
+    }
+  })
+
   it('al auxiliar de farmacia le ofrece el inventario y el despacho, nada clínico', () => {
     // PR 13: el mostrador, sin historias, consultas, agenda ni exámenes.
     expect(pantallas('salud', 'auxiliar-farmacia')).toEqual([

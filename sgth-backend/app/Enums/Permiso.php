@@ -2,6 +2,22 @@
 
 namespace App\Enums;
 
+/**
+ * Los permisos del sistema, con guard `sanctum`.
+ *
+ * Al 2026-10-28, 40 de ellos no los comprueba ningún código (ni rutas, ni
+ * policies, ni pantallas): docs/plan-roles-y-accesos.md, PR 16. Cada sección
+ * dice por qué cuando el motivo es uno solo —módulo futuro, o Dispensario
+ * hasta el PR 17—. Los otros 15 quedan para una revisión aparte, pantalla por
+ * pantalla: `ver-distributivo`,
+ * `ver-expediente-unidad`, `ver-expediente-todos`, `gestionar-expediente`,
+ * `cargar-documentos`, `gestionar-cargas-familiares`,
+ * `gestionar-tarifas-viatico`, `gestionar-base-conocimiento`,
+ * `ver-sumarios`, `gestionar-sumarios`, `registrar-sancion`,
+ * `ver-actividades-unidad`, `aprobar-actividades`, `exportar-reportes` y
+ * `ver-auditoria`. Antes de darles uso, comprobar quién los tiene: el seeder
+ * los asigna aunque nadie los mire.
+ */
 enum Permiso: string
 {
     // ── MÓDULO 01: Estructura ────────────────────────────────────
@@ -87,9 +103,13 @@ enum Permiso: string
     case GESTIONAR_VACACIONES = 'gestionar-vacaciones';
     case APROBAR_VACACIONES = 'aprobar-vacaciones';
     case VER_VACACIONES_UNIDAD = 'ver-vacaciones-unidad';
-    case PUEDE_MARCAR_ONLINE = 'puede-marcar-online';
+    // Aquí estaba `puede-marcar-online`, retirado el 2026-10-28
+    // (docs/plan-roles-y-accesos.md, PR 16): no lo comprobaba nada y se
+    // confundía con `marcar-en-linea`, que es el que manda.
 
     // ── MÓDULO 05: SGD ───────────────────────────────────────────
+    // Módulo futuro: la gestión documental no tiene pantallas. Ningún código
+    // comprueba estos permisos todavía.
     case VER_DOCUMENTOS = 'ver-documentos';
     case CREAR_DOCUMENTOS = 'crear-documentos';
     case FIRMAR_DOCUMENTOS = 'firmar-documentos';
@@ -107,6 +127,8 @@ enum Permiso: string
     case GESTIONAR_ONBOARDING = 'gestionar-onboarding';
 
     // ── MÓDULO 08: Evaluación ────────────────────────────────────
+    // Módulo futuro: la evaluación del desempeño espera su diseño
+    // (docs/diseno-evaluacion-desempeno.md). Ningún código los comprueba.
     case VER_EVALUACION_PROPIA = 'ver-evaluacion-propia';
     case VER_EVALUACIONES_UNIDAD = 'ver-evaluaciones-unidad';
     case VER_EVALUACIONES_TODAS = 'ver-evaluaciones-todas';
@@ -127,6 +149,11 @@ enum Permiso: string
     case VER_REPORTES_SSO = 'ver-reportes-sso';
 
     // ── MÓDULO 11: Dispensario ───────────────────────────────────
+    // Decorativos hasta el PR 17 de docs/plan-roles-y-accesos.md: el
+    // Dispensario se autoriza por rol (`role:medico|…` en las rutas), así que
+    // ningún código comprueba los de abajo, salvo
+    // `solicitar-certificacion-medica`. Se asignan para que el paso a permisos
+    // no tenga que tocar los roles.
     case VER_AGENDA_DISPENSARIO = 'ver-agenda-dispensario';
     case GESTIONAR_AGENDA = 'gestionar-agenda';
     // `solicitar-cita` se retiró junto con su ruta, que nunca funcionó.
@@ -168,6 +195,7 @@ enum Permiso: string
     case REGISTRAR_SANCION = 'registrar-sancion';
 
     // ── MÓDULO 15: Capacitación ──────────────────────────────────
+    // Módulo futuro: sin pantallas. Ningún código los comprueba todavía.
     case VER_PLAN_CAPACITACION = 'ver-plan-capacitacion';
     case GESTIONAR_PLAN_CAPACITACION = 'gestionar-plan-capacitacion';
     case INSCRIBIRSE_CURSO = 'inscribirse-curso';
@@ -181,6 +209,7 @@ enum Permiso: string
 
     // ── MÓDULO 17: Bienestar ─────────────────────────────────────
     case GESTIONAR_BIENESTAR = 'gestionar-bienestar';
+    // Módulo futuro: la encuesta de clima laboral no existe todavía.
     case RESPONDER_ENCUESTA_CLIMA = 'responder-encuesta-clima';
 
     // ── MÓDULO 18: Reportería ────────────────────────────────────
