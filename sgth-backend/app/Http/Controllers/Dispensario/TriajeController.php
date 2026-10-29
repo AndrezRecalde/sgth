@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\Dispensario;
 
+use App\Enums\Permiso;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dispensario\StoreTriajeRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\Dispensario\AgendaMedica;
 use App\Models\Dispensario\Triaje;
+use App\Services\Dispensario\AgendaService;
 use App\Services\Dispensario\TriajeService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class TriajeController extends Controller
 {
@@ -105,12 +108,24 @@ class TriajeController extends Controller
         return null;
     }
 
-    public function pendientes(): JsonResponse
+    /**
+     * Los turnos de hoy que esperan triaje. Los de todos, para quien lleva la
+     * cola (`gestionar-agenda`: Enfermería y la administración); el médico y
+     * el odontólogo, los suyos, como en la agenda. Antes cualquiera con la
+     * agenda veía los pacientes de los demás (revisión de las cuentas de
+     * prueba, 2026-10-29).
+     */
+    public function pendientes(Request $request): JsonResponse
     {
+        $usuario = $request->user();
+
+        // Del paciente, solo lo que pinta la cola: sin columnas salía su ficha
+        // entera (AgendaService::PACIENTE).
         $turnos = AgendaMedica::with([
             'medico:id,usuario_ti,email,servidor_id', 'medico.servidor:id,nombre,apellido',
-            'servidor', 'cargaFamiliar.servidor',
-        ])->where('estado', 'en_espera')
+            ...AgendaService::PACIENTE,
+        ])->when(! $usuario->can(Permiso::GESTIONAR_AGENDA->value), fn ($q) => $q->where('medico_id', $usuario->id))
+          ->where('estado', 'en_espera')
           ->where('requiere_triaje', true)
           // Sobre `triajes` y no sobre `triaje`: el segundo es ahora una
           // subconsulta «la última», y preguntarle si no existe no es lo mismo
