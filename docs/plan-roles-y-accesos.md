@@ -362,5 +362,29 @@ exactamente quién puede qué:
 
 ## 7. Migraciones para producción
 
-Los PR 2, 7, 8, 11, 12, 13, 14 y 16 llevan migración. La del PR 7 se detiene si encuentra usuarios
-con los roles retirados.
+Doce PR llevan migración; `php artisan migrate` las corre todas, en este orden:
+
+| Migración | PR | Qué hace |
+|---|---|---|
+| `2026_11_26` | 2 (#582) | `buscar-servidores` |
+| `2026_11_27` | 7 (#587) | Retira `maxima-autoridad` y `analista-uath` |
+| `2026_11_28` | 8 (#588) | Quita `ver-novedades-nomina` a financiero |
+| `2026_11_29` | 11 (#591) | `gestionar-directorio` |
+| `2026_11_30` | 12 (#592) | Rol `tecnico-sso` |
+| `2026_12_01` | 13 (#593) | Rol `auxiliar-farmacia` |
+| `2026_12_02` | 14 (#594) | `registrar-ficha-servidor` |
+| `2026_12_03` | 16 (#598) | Retira `puede-marcar-online` |
+| `2026_12_04` | 17a (#599) | Farmacia por permisos |
+| `2026_12_05` | 17b (#600) | Agenda y triaje por permisos |
+| `2026_12_06` | 17c (#601) | Consultas y exámenes por permisos |
+| `2026_12_07` | 17d (#602) | Salud ocupacional, reportes y tableros por permisos |
+
+- **Se detiene al subir:** la `2026_11_27`, si encuentra usuarios con los roles retirados. Hay que
+  darles otro rol antes.
+- **Se detienen al revertir:** la `2026_11_30` y la `2026_12_01`, si alguien tiene el rol que crean.
+- **Antes de desplegar el PR 3** (sin migración): dar un rol de Talento Humano a quien solo tenga
+  admin-ti y haga trabajo de Talento Humano.
+- **Después:** el menú nuevo aparece al volver a iniciar sesión o al pasar por `/portal`, que
+  refresca los permisos de la sesión.
+
+Las `2026_12_08` a `2026_12_10` no son de este plan: vienen de `docs/revision-permisos-sin-uso.md`.
