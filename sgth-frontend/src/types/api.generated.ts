@@ -1018,7 +1018,7 @@ export interface paths {
         /**
          * Los resultados que nadie ha leído todavía (D3), los más antiguos primero.
          *     `solicitante` deja los de un médico: los de sus órdenes y, sin orden,
-         *     los de sus consultas. Es el enlace de su «Mi jornada»
+         *     los de sus consultas. Le sirve a la administración, que ve los de todos
          */
         get: operations["bandejaExamenes.porRevisar"];
         put?: never;
@@ -4608,25 +4608,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["historiaClinica.index"];
+        get?: never;
         put?: never;
         post: operations["historiaClinica.store"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/dispensario/historias-clinicas/buscar-por-cedula": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["historiaClinica.buscarPorCedula"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4643,22 +4627,6 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["historiaClinica.crearPorCedula"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/dispensario/historias-clinicas/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["historiaClinica.show"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -6778,6 +6746,10 @@ export interface paths {
         /**
          * Las órdenes de UN paciente, y de una consulta suya si se pide. Como el
          *     listado de resultados: sin paciente no hay listado
+         * @description `abiertas` deja las que esperan resultado y quien pregunta puede
+         *     registrar: las de su especialidad, sin las de una ficha FEMO, que son de
+         *     la evaluación ocupacional. Es lo que la consulta le enseña de otros
+         *     colegas, ahora que cada bandeja tiene solo las propias (2026-10-29).
          */
         get: operations["ordenExamen.index"];
         put?: never;
@@ -10564,22 +10536,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/disciplinario/vistos-buenos/{vistoBueno}/transicionar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put: operations["vistoBueno.transicionar"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/disciplinario/vistos-buenos/{vistoBueno}/documento": {
         parameters: {
             query?: never;
@@ -10592,6 +10548,22 @@ export interface paths {
         put?: never;
         /** Sube (o reemplaza) el PDF de la resolución del Inspector */
         post: operations["vistoBueno.adjuntarDocumento"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/disciplinario/vistos-buenos/{vistoBueno}/transicionar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["vistoBueno.transicionar"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -20401,7 +20373,30 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Bandeja de exámenes.";
-                        datos: components["schemas"]["LengthAwarePaginator"];
+                        datos: {
+                            current_page: number;
+                            data: components["schemas"]["OrdenExamen"][];
+                            first_page_url: string | null;
+                            from: number | null;
+                            last_page_url: string | null;
+                            last_page: number;
+                            /** @description Generated paginator links. */
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            next_page_url: string | null;
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            prev_page_url: string | null;
+                            /** @description Number of the last item in the slice. */
+                            to: number | null;
+                            /** @description Total number of items being paginated. */
+                            total: number;
+                        };
                         meta: {
                             resumen: {
                                 /**
@@ -31061,32 +31056,6 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
         };
     };
-    "historiaClinica.index": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Listado de historias.";
-                        datos: Record<string, never>;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-        };
-    };
     "historiaClinica.store": {
         parameters: {
             query?: never;
@@ -31116,52 +31085,6 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             422: components["responses"]["ValidationException"];
-        };
-    };
-    "historiaClinica.buscarPorCedula": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Operación exitosa.";
-                        datos: string;
-                        meta: null;
-                    } | {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "No se encontró historia clínica.";
-                        datos: null;
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Ingrese al menos 5 caracteres de la cédula.";
-                        datos: null;
-                        errores: null;
-                    };
-                };
-            };
         };
     };
     "historiaClinica.crearPorCedula": {
@@ -31197,34 +31120,6 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             422: components["responses"]["ValidationException"];
-        };
-    };
-    "historiaClinica.show": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        /** @constant */
-                        mensaje: "Operación exitosa.";
-                        datos: components["schemas"]["HistoriaClinica"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
         };
     };
     "historiaClinica.contextoConsulta": {
@@ -34469,7 +34364,7 @@ export interface operations {
                                 }[];
                                 /**
                                  * @description Evaluaciones ocupacionales con el triaje hecho, listas para
-                                 *     que cualquier médico las inicie.
+                                 *     que cualquier médico ocupacional las inicie.
                                  */
                                 evaluaciones_listas: string | 0;
                             };
@@ -36482,6 +36377,7 @@ export interface operations {
                 historia_clinica_id?: number | null;
                 consulta_medica_id?: number | null;
                 ficha_salud_ocupacional_id?: number | null;
+                abiertas?: boolean;
             };
             header?: never;
             path?: never;
@@ -46520,40 +46416,6 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
-    "vistoBueno.transicionar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The visto bueno ID */
-                vistoBueno: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TransicionarVistoBuenoRequest"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        exito: boolean;
-                        mensaje: string | "Visto bueno concedido. Se generó la Cesación de Funciones en borrador para revisión de Talento Humano.";
-                        datos: components["schemas"]["VistoBueno"];
-                        meta: null;
-                    };
-                };
-            };
-            401: components["responses"]["AuthenticationException"];
-            404: components["responses"]["ModelNotFoundException"];
-            422: components["responses"]["ValidationException"];
-        };
-    };
     "vistoBueno.descargarDocumento": {
         parameters: {
             query?: never;
@@ -46603,6 +46465,40 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Resolución del Inspector adjuntada.";
+                        datos: components["schemas"]["VistoBueno"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "vistoBueno.transicionar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The visto bueno ID */
+                vistoBueno: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransicionarVistoBuenoRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string | "Visto bueno concedido. Se generó la Cesación de Funciones en borrador para revisión de Talento Humano.";
                         datos: components["schemas"]["VistoBueno"];
                         meta: null;
                     };

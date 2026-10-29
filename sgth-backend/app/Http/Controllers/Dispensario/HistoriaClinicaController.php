@@ -15,15 +15,6 @@ final class HistoriaClinicaController extends Controller
         private readonly HistoriaClinicaServiceInterface $historiaService
     ) {}
 
-    public function index(Request $request): JsonResponse
-    {
-        $historias = $this->historiaService->listar(
-            $request->all()
-        );
-
-        return ApiResponse::ok($historias, 'Listado de historias.');
-    }
-
     public function store(
         StoreHistoriaClinicaRequest $request
     ): JsonResponse {
@@ -34,33 +25,6 @@ final class HistoriaClinicaController extends Controller
         return ApiResponse::created(
             $historia, 'Historia clínica creada.'
         );
-    }
-
-    public function show(int $id): JsonResponse
-    {
-        $historia = $this->historiaService->obtener($id);
-
-        return ApiResponse::ok($historia);
-    }
-
-    public function buscarPorCedula(
-        Request $request
-    ): JsonResponse {
-        $cedula = $request->string('cedula')->trim()->value();
-
-        if (strlen($cedula) < 5) {
-            return ApiResponse::error(
-                'Ingrese al menos 5 caracteres de la cédula.', null, 422
-            );
-        }
-
-        $historia = $this->historiaService->buscarPorCedula($cedula);
-
-        if (!$historia) {
-            return ApiResponse::ok(null, 'No se encontró historia clínica.');
-        }
-
-        return ApiResponse::ok($historia);
     }
 
     public function crearPorCedula(Request $request): JsonResponse

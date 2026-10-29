@@ -2010,14 +2010,17 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         });
 
         // Historias clínicas — SOLO personal médico. Por permiso desde el PR 17b.
+        //
+        // Sin el listado, el detalle ni la búsqueda por cédula: ninguna pantalla
+        // los pedía desde el 2026-10-21, y mandaban la ficha entera del paciente
+        // —el listado, de cien en cien— y el detalle, las últimas consultas
+        // descifradas a quien no las lee (docs/revision-ficha-paciente-
+        // dispensario.md, D1). Al paciente se le busca por `pacientes/buscar`.
         Route::prefix('historias-clinicas')
             ->middleware('permission:ver-historia-clinica')
             ->group(function () {
-                Route::get('/', [HistoriaClinicaController::class, 'index']);
                 Route::post('/', [HistoriaClinicaController::class, 'store']);
-                Route::get('buscar-por-cedula', [HistoriaClinicaController::class, 'buscarPorCedula']);
                 Route::post('crear-por-cedula', [HistoriaClinicaController::class, 'crearPorCedula']);
-                Route::get('{id}', [HistoriaClinicaController::class, 'show']);
                 Route::get('{id}/contexto-consulta', [HistoriaClinicaController::class, 'contextoConsulta']);
 
                 // Alergias

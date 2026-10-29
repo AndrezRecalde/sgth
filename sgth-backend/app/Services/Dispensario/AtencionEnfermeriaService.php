@@ -14,13 +14,20 @@ final class AtencionEnfermeriaService implements AtencionEnfermeriaServiceInterf
      * Relaciones de cada fila. Enfermera y anulador van con su servidor y las
      * columnas que pide `nombre_completo`: el accesor lee `servidor` y, sin
      * cargarlo, hacía dos consultas más por fila del listado.
+     *
+     * Del paciente, el nombre, que es lo que pinta la lista. Sin columnas salía
+     * su ficha entera a los cuatro roles clínicos, y la del titular de la
+     * carga, que nadie lee (docs/revision-ficha-paciente-dispensario.md,
+     * carga 6).
      */
     private const RELACIONES = [
         'enfermera:id,usuario_ti,email,servidor_id',
         'enfermera.servidor:id,nombre,apellido',
         'anulador:id,usuario_ti,email,servidor_id',
         'anulador.servidor:id,nombre,apellido',
-        'servidor', 'cargaFamiliar.servidor', 'catalogoServicio',
+        'servidor:id,nombre,apellido',
+        'cargaFamiliar:id,nombres,apellidos',
+        'catalogoServicio',
     ];
 
     public function listar(array $filtros): LengthAwarePaginator

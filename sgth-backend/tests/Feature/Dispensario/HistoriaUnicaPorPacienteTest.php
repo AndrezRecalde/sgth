@@ -81,7 +81,8 @@ test('corregir la cédula del servidor la lleva a su historia, y con la nueva se
     expect($historia->fresh()->cedula_paciente)->toBe('0812500099')
         ->and($historia->fresh()->numero_historia)->toBe('0812500099');
 
-    $this->getJson('/api/v1/dispensario/historias-clinicas/buscar-por-cedula?cedula=0812500099')
+    // Por la cédula sola, como la busca la ficha ocupacional.
+    $this->postJson('/api/v1/dispensario/historias-clinicas/crear-por-cedula', ['cedula_paciente' => '0812500099'])
         ->assertOk()
         ->assertJsonPath('datos.id', $historia->id);
 
