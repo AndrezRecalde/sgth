@@ -7,6 +7,8 @@ use App\Enums\NivelAlertaTriaje;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Dispensario\AgendaMedica;
 use App\Models\Dispensario\HistoriaClinica;
+use App\Models\Expediente\CargaFamiliar;
+use App\Models\Expediente\Servidor;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -32,6 +34,21 @@ final class AgendaService implements AgendaServiceInterface
         'medico.servidor:id,nombre,apellido',
     ];
 
+    /**
+     * Del paciente del turno, lo que pintan la agenda, la cola y el triaje: el
+     * nombre y la fecha de nacimiento, que da la edad para valorar los signos.
+     *
+     * Sin columnas salía la ficha entera —`Servidor` no oculta nada— a todo el
+     * que abre la agenda: cédula, tipo de sangre, pasaporte, celular, correo
+     * personal, dirección, discapacidad y contacto de emergencia (revisión de
+     * las cuentas de prueba, 2026-10-29; el patrón de #595 y #597).
+     */
+    public const PACIENTE = [
+        'servidor:id,nombre,apellido,fecha_nacimiento',
+        'cargaFamiliar:id,servidor_id,nombres,apellidos,fecha_nacimiento',
+        'cargaFamiliar.servidor:id,nombre,apellido',
+    ];
+
     /** Horas durante las que un «no se presentó» se puede deshacer. */
     private const HORAS_PARA_REACTIVAR = 6;
 
@@ -42,7 +59,7 @@ final class AgendaService implements AgendaServiceInterface
         // que más llevaban esperando. El id desempata dos registros del mismo
         // segundo, que sin él cambian de sitio entre una recarga y otra.
         $query = AgendaMedica::with([
-            ...self::MEDICO, 'servidor', 'cargaFamiliar.servidor', 'triaje',
+            ...self::MEDICO, ...self::PACIENTE, 'triaje',
         ])->orderBy('registrado_en')->orderBy('id');
 
         if (!empty($filtros['medico_id'])) {
@@ -66,7 +83,7 @@ final class AgendaService implements AgendaServiceInterface
     public function obtener(int $id): AgendaMedica
     {
         return AgendaMedica::with([
-            ...self::MEDICO, 'servidor', 'cargaFamiliar.servidor', 'triaje',
+            ...self::MEDICO, ...self::PACIENTE, 'triaje',
         ])->findOrFail($id);
     }
 
@@ -93,7 +110,7 @@ final class AgendaService implements AgendaServiceInterface
 
             // Quien lo crea pasa directo a tomarle el triaje, y esa pantalla
             // muestra el nombre del paciente: sin las relaciones salía «—».
-            return $agenda->load([...self::MEDICO, 'servidor', 'cargaFamiliar.servidor']);
+            return $agenda->load([...self::MEDICO, ...self::PACIENTE]);
         });
     }
 
@@ -166,7 +183,7 @@ final class AgendaService implements AgendaServiceInterface
         $hasta = $fechaHasta ? Carbon::parse($fechaHasta) : $desde;
 
         $turnos = AgendaMedica::with([
-            'servidor', 'cargaFamiliar.servidor',
+            ...self::PACIENTE,
             'triaje', 'consultaMedica',
         ])
             ->where('medico_id', $medicoId)
@@ -384,7 +401,7 @@ final class AgendaService implements AgendaServiceInterface
         int $medicoId
     ): AgendaMedica {
         $turno = AgendaMedica::with([
-            'servidor', 'cargaFamiliar.servidor', 'triaje',
+            ...self::PACIENTE, 'triaje',
             'consultaMedica',
         ])
             ->where('folio', $folio)
@@ -433,7 +450,13 @@ final class AgendaService implements AgendaServiceInterface
      */
     private function adjuntarHistoriaPorCedula(Collection $turnos): void
     {
-        $cedulaDe = fn (AgendaMedica $t) => $t->servidor?->cedula ?? $t->cargaFamiliar?->cedula;
+        // La cédula se lee aquí y no de la relación cargada: la agenda carga
+        // del paciente solo lo que se pinta (self::PACIENTE), sin la cédula.
+        $deServidores = Servidor::whereIn('id', $turnos->pluck('servidor_id')->filter())->pluck('cedula', 'id');
+        $deCargas = CargaFamiliar::whereIn('id', $turnos->pluck('carga_familiar_id')->filter())->pluck('cedula', 'id');
+        $cedulaDe = fn (AgendaMedica $t) => $t->servidor_id
+            ? $deServidores->get($t->servidor_id)
+            : $deCargas->get($t->carga_familiar_id);
 
         $cedulas = $turnos->map($cedulaDe)->filter()->unique()->values();
 

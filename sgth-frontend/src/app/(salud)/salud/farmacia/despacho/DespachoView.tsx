@@ -231,7 +231,11 @@ export function DespachoView() {
           title: 'Sin recetas',
           description: hayFiltros
             ? 'Ninguna receta coincide con los filtros aplicados.'
-            : 'Aún no se han emitido recetas desde el Dispensario.',
+            // El médico y el odontólogo ven solo las suyas (PR 5): para ellos
+            // el Dispensario puede tener recetas aunque la lista esté vacía.
+            : puedeDespachar
+              ? 'Aún no se han emitido recetas desde el Dispensario.'
+              : 'Usted aún no ha emitido recetas.',
         }}
         page={page}
       >
