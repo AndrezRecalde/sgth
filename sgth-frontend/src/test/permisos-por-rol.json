@@ -79,7 +79,6 @@
     ],
     "admin-uath": [
         "acceso-autoservicio",
-        "activar-usuario",
         "anular-accion-personal",
         "anular-permiso",
         "anular-permiso-pendiente",
