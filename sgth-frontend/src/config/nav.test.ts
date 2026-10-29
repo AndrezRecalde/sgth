@@ -21,6 +21,12 @@ type Rol = keyof typeof permisosPorRol
 
 const ROLES = Object.keys(permisosPorRol) as Rol[]
 
+// Se dan junto con su rol base y no traen los permisos de todo servidor:
+// `medico-ocupacional` va siempre con `medico` (2026-10-29).
+const COMPLEMENTARIOS: Rol[] = ['medico-ocupacional']
+
+const ROLES_CON_BASE = ROLES.filter((rol) => !COMPLEMENTARIOS.includes(rol))
+
 const SUBSISTEMAS: Subsistema[] = ['sgth', 'salud', 'tic', 'comunicacion', 'portal']
 
 /** Lo que trae la sesión de alguien con estos roles: sus permisos, sumados. */
@@ -93,7 +99,7 @@ describe('buildNav', () => {
 
   it('ofrece el directorio a todos en el Portal y su gestión solo a TIC', () => {
     // PR 11: salió del SGTH, donde lo editaba también Talento Humano.
-    for (const rol of ROLES) {
+    for (const rol of ROLES_CON_BASE) {
       expect(pantallas('portal', rol), rol).toContain(ROUTES.PORTAL.DIRECTORIO)
     }
 
@@ -127,7 +133,7 @@ describe('buildNav', () => {
     expect(soloAutoservicio).not.toContain(ROUTES.PORTAL.DOCUMENTOS)
     expect(soloAutoservicio).not.toContain(ROUTES.PORTAL.MIS_MARCACIONES)
 
-    for (const rol of ROLES) {
+    for (const rol of ROLES_CON_BASE) {
       const portal = pantallas('portal', rol)
       expect(portal, rol).toContain(ROUTES.PORTAL.MI_PERFIL)
       expect(portal, rol).toContain(ROUTES.PORTAL.DOCUMENTOS)
@@ -196,9 +202,21 @@ describe('buildNav', () => {
     expect(flattenNav('salud', ['ver-tablero-dispensario'], []).map((p) => p.href)).toEqual([ROUTES.SALUD.HOME])
     expect(flattenNav('salud', ['ver-reportes-dispensario'], []).map((p) => p.href)).toEqual([ROUTES.SALUD.REPORTES])
     expect(flattenNav('salud', ['ver-fichas-sso-med'], []).map((p) => p.href)).toContain(ROUTES.SALUD.FEMO)
-    expect(pantallas('salud', 'medico')).toContain(ROUTES.SALUD.FEMO)
     expect(pantallas('salud', 'odontologo')).not.toContain(ROUTES.SALUD.FEMO)
     expect(inicioDelSubsistema('salud', ...sesion('admin-dispensario'))).toBe(ROUTES.SALUD.HOME)
+  })
+
+  it('la salud ocupacional es del médico ocupacional, no de todo médico (2026-10-29)', () => {
+    const general = pantallas('salud', 'medico')
+    const ocupacional = pantallas('salud', 'medico', 'medico-ocupacional')
+
+    for (const ruta of [ROUTES.SALUD.SSO, ROUTES.SALUD.FEMO, ROUTES.SALUD.SSO_COBERTURA, ROUTES.SALUD.SSO_TABLERO]) {
+      expect(general, ruta).not.toContain(ruta)
+      expect(ocupacional, ruta).toContain(ruta)
+    }
+    // Sigue siendo médico: su cola y su inicio no cambian.
+    expect(ocupacional).toContain(ROUTES.SALUD.CONSULTAS)
+    expect(inicioDelSubsistema('salud', ...sesion('medico', 'medico-ocupacional'))).toBe(ROUTES.SALUD.CONSULTAS)
   })
 
   it('al auxiliar de farmacia le ofrece el inventario y el despacho, nada clínico', () => {
@@ -226,6 +244,9 @@ describe('getSubsistemasDisponibles', () => {
     'jefe-tic':              ['tic', 'portal'],
     'jefe-unidad':           ['sgth', 'portal'],
     'medico':                ['salud', 'portal'],
+    // Complementario: solo, sin `medico`, ni siquiera trae el Portal. El
+    // backend no deja asignarlo así (RolesComplementariosConSuBase).
+    'medico-ocupacional':    ['salud'],
     'odontologo':            ['salud', 'portal'],
     'recepcion':             ['sgth', 'portal'],
     'responsable-identidad': ['comunicacion', 'portal'],

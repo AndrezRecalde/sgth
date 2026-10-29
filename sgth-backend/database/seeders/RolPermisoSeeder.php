@@ -135,16 +135,26 @@ class RolPermisoSeeder extends Seeder
         Permiso::VER_HISTORIA_CLINICA,
         Permiso::CREAR_CONSULTA,
         Permiso::EMITIR_RECETA,
-        Permiso::GESTIONAR_FICHAS_SSO_MED,
         // Farmacia (PR 17a): consulta el inventario y sus recetas.
         Permiso::VER_INVENTARIO_MED,
         Permiso::VER_RECETAS,
         // Exámenes (PR 17c): la bandeja, las órdenes y los resultados.
         Permiso::VER_EXAMENES,
-        // Salud ocupacional y reportes (PR 17d).
-        Permiso::VER_FICHAS_SSO_MED,
-        Permiso::VER_CERTIFICACIONES_MEDICAS,
+        // Reportes (PR 17d). La salud ocupacional es de `medico-ocupacional`.
         Permiso::VER_REPORTES_DISPENSARIO,
+    ];
+
+    /**
+     * El médico que hace las evaluaciones ocupacionales: inicia, llena y
+     * dictamina la FEMO, y ve las solicitudes y la cobertura. Es un rol
+     * complementario, sin los permisos base ni los de consulta: se da junto
+     * con `medico`, que sigue decidiendo la cola, la especialidad y «Mi
+     * jornada» (decisión del 2026-10-29). Hasta entonces lo tenía todo médico.
+     */
+    public const PERMISOS_MEDICO_OCUPACIONAL = [
+        Permiso::VER_FICHAS_SSO_MED,
+        Permiso::GESTIONAR_FICHAS_SSO_MED,
+        Permiso::VER_CERTIFICACIONES_MEDICAS,
     ];
 
     public const PERMISOS_ODONTOLOGO = [
@@ -393,6 +403,8 @@ class RolPermisoSeeder extends Seeder
 
         // El Dispensario, de sus constantes.
         $this->crearRol(Rol::MEDICO, array_merge($permisosBase, self::PERMISOS_MEDICO));
+        // Complementario de `medico`: sin los permisos base, que ya trae aquel.
+        $this->crearRol(Rol::MEDICO_OCUPACIONAL, self::PERMISOS_MEDICO_OCUPACIONAL);
         $this->crearRol(Rol::ODONTOLOGO, array_merge($permisosBase, self::PERMISOS_ODONTOLOGO));
         $this->crearRol(Rol::ENFERMERA, array_merge($permisosBase, self::PERMISOS_ENFERMERA));
         $this->crearRol(Rol::ADMIN_DISPENSARIO, array_merge($permisosBase, self::PERMISOS_ADMIN_DISPENSARIO));

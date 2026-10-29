@@ -404,18 +404,15 @@
         "crear-ticket",
         "emitir-receta",
         "exportar-informe-actividades",
-        "gestionar-fichas-sso-med",
         "inscribirse-curso",
         "registrar-actividades",
         "responder-encuesta-clima",
         "solicitar-viatico",
         "ver-agenda-dispensario",
         "ver-asistencia-propia",
-        "ver-certificaciones-medicas",
         "ver-evaluacion-propia",
         "ver-examenes",
         "ver-expediente-propio",
-        "ver-fichas-sso-med",
         "ver-historia-clinica",
         "ver-historia-clinica-propia",
         "ver-inventario-med",
@@ -424,6 +421,11 @@
         "ver-recetas",
         "ver-reportes-dispensario",
         "ver-ticket-propio"
+    ],
+    "medico-ocupacional": [
+        "gestionar-fichas-sso-med",
+        "ver-certificaciones-medicas",
+        "ver-fichas-sso-med"
     ],
     "odontologo": [
         "acceso-autoservicio",

@@ -94,8 +94,9 @@ test('asistente-uath puede solicitar certificaciones en lote desde Expediente', 
         ->toBeTrue();
 });
 
-test('el médico sigue leyendo el listado que trabaja', function () {
+test('el médico ocupacional sigue leyendo el listado que trabaja', function () {
     $usuario = usuarioDeRolCertificacion('medico');
+    $usuario->assignRole('medico-ocupacional');
 
     solicitudDePruebaCertificacion($usuario);
 

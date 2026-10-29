@@ -143,7 +143,7 @@ test('el endpoint sirve el catálogo oficial de riesgos', function () {
     $rol = \Spatie\Permission\Models\Role::firstOrCreate(
         ['name' => 'medico', 'guard_name' => 'sanctum']
     );
-    $this->medico->assignRole($rol);
+    $this->medico->assignRole([$rol, 'medico-ocupacional']);
     $this->actingAs($this->medico, 'sanctum');
 
     $catalogo = $this->getJson('/api/v1/dispensario/fichas-sso/catalogo-riesgos')
@@ -183,7 +183,7 @@ test('se rechaza un factor de riesgo que no está en el catálogo del MSP', func
     $rol = \Spatie\Permission\Models\Role::firstOrCreate(
         ['name' => 'medico', 'guard_name' => 'sanctum']
     );
-    $this->medico->assignRole($rol);
+    $this->medico->assignRole([$rol, 'medico-ocupacional']);
     $this->actingAs($this->medico, 'sanctum');
 
     $respuesta = $this->postJson('/api/v1/dispensario/fichas-sso', [
@@ -297,7 +297,7 @@ test('la lateralidad solo admite derecha o izquierda', function () {
     $rol = \Spatie\Permission\Models\Role::firstOrCreate(
         ['name' => 'medico', 'guard_name' => 'sanctum']
     );
-    $this->medico->assignRole($rol);
+    $this->medico->assignRole([$rol, 'medico-ocupacional']);
     $this->actingAs($this->medico, 'sanctum');
 
     $this->postJson('/api/v1/dispensario/fichas-sso', [

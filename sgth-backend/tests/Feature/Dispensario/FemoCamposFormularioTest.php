@@ -23,7 +23,7 @@ test('las observaciones de C, F y J y el resultado reproductivo se guardan y se 
         'cedula' => '0804258986', 'nombre' => 'Ana', 'apellido' => 'Cortez', 'genero' => 'femenino',
     ]);
     $medico = User::factory()->create();
-    $medico->assignRole(Role::firstOrCreate(['name' => 'medico', 'guard_name' => 'sanctum']));
+    $medico->assignRole([Role::firstOrCreate(['name' => 'medico', 'guard_name' => 'sanctum']), 'medico-ocupacional']);
     $solicitud = SolicitudCertificacionMedica::create([
         'tipo_evento' => 'periodica', 'origen' => 'expediente',
         'servidor_id' => $servidor->id, 'cedula_paciente' => $servidor->cedula,

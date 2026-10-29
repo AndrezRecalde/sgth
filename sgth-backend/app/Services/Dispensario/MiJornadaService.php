@@ -4,6 +4,7 @@ namespace App\Services\Dispensario;
 
 use App\Enums\EstadoRevisionResultado;
 use App\Enums\InterpretacionResultado;
+use App\Enums\Permiso;
 use App\Models\Dispensario\ResultadoMedico;
 use App\Models\User;
 use Illuminate\Support\Carbon;
@@ -47,6 +48,10 @@ final class MiJornadaService
 
     private function clinico(User $usuario, string $perfil): array
     {
+        // La salud ocupacional es del médico ocupacional; el general la ve en 0
+        // y la franja no la pinta (decisión del 2026-10-29).
+        $ocupacional = $perfil === 'medico' && $usuario->can(Permiso::GESTIONAR_FICHAS_SSO_MED->value);
+
         $turnos = DB::table('agendas_medicas as a')
             ->whereNull('a.deleted_at')
             ->where('a.medico_id', $usuario->id)
@@ -104,7 +109,7 @@ final class MiJornadaService
                 'borradores' => $borradores,
                 // Las fichas FEMO que este médico dejó como borrador: la
                 // solicitud sigue en curso con su ficha enlazada.
-                'fichas_femo' => $perfil === 'medico'
+                'fichas_femo' => $ocupacional
                     ? DB::table('solicitudes_certificacion_medica as s')
                         ->join('fichas_salud_ocupacional as f', 'f.id', '=', 's.ficha_femo_id')
                         ->where('s.estado', 'en_proceso')
@@ -120,8 +125,8 @@ final class MiJornadaService
                     ->count(),
                 'criticos' => $this->criticosSinVer($usuario),
                 // Evaluaciones ocupacionales con el triaje hecho, listas para
-                // que cualquier médico las inicie.
-                'evaluaciones_listas' => $perfil === 'medico'
+                // que cualquier médico ocupacional las inicie.
+                'evaluaciones_listas' => $ocupacional
                     ? DB::table('solicitudes_certificacion_medica as s')
                         ->where('s.estado', 'pendiente')
                         ->whereExists(fn ($q) => $q->from('solicitud_constantes_vitales as v')->whereColumn('v.solicitud_id', 's.id'))

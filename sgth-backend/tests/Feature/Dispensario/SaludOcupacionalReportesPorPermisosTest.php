@@ -28,7 +28,9 @@ beforeEach(function () {
 });
 
 test('cada rol entra a salud ocupacional, reportes y tableros como antes', function (string $metodo, string $ruta, array $entran) {
-    foreach (['medico', 'odontologo', 'enfermera', 'admin-dispensario', 'auxiliar-farmacia', 'admin-uath', 'asistente-uath', 'servidor'] as $rol) {
+    // `medico-ocupacional` va aquí solo para ver lo que suma; en la vida real
+    // se da junto con `medico` (MedicoOcupacionalTest).
+    foreach (['medico', 'medico-ocupacional', 'odontologo', 'enfermera', 'admin-dispensario', 'auxiliar-farmacia', 'admin-uath', 'asistente-uath', 'servidor'] as $rol) {
         $respuesta = $this->actingAs(($this->conRol)($rol), 'sanctum')->json($metodo, "/api/v1/dispensario/{$ruta}");
 
         in_array($rol, $entran, true)
@@ -39,14 +41,14 @@ test('cada rol entra a salud ocupacional, reportes y tableros como antes', funct
     'tablero del Dispensario' => ['GET', 'dashboard/kpis', ['admin-dispensario']],
     'reportes'                => ['GET', 'reportes', ['medico', 'odontologo', 'enfermera', 'admin-dispensario']],
     'mi jornada'              => ['GET', 'mi-jornada', ['medico', 'odontologo', 'enfermera']],
-    'solicitudes'             => ['GET', 'solicitudes-certificacion', ['medico', 'admin-dispensario', 'admin-uath', 'asistente-uath']],
-    'cobertura'               => ['GET', 'certificaciones/cobertura', ['medico', 'admin-dispensario', 'admin-uath', 'asistente-uath']],
-    'iniciar la evaluación'   => ['PATCH', 'solicitudes-certificacion/999999/iniciar', ['medico']],
+    'solicitudes'             => ['GET', 'solicitudes-certificacion', ['medico-ocupacional', 'admin-dispensario', 'admin-uath', 'asistente-uath']],
+    'cobertura'               => ['GET', 'certificaciones/cobertura', ['medico-ocupacional', 'admin-dispensario', 'admin-uath', 'asistente-uath']],
+    'iniciar la evaluación'   => ['PATCH', 'solicitudes-certificacion/999999/iniciar', ['medico-ocupacional']],
     'solicitud en lote'       => ['POST', 'solicitudes-certificacion/lote', ['admin-uath', 'asistente-uath']],
     'confirmar incorporación' => ['POST', 'solicitudes-certificacion/999999/confirmar-incorporacion', ['admin-uath']],
-    'tablero SSO'             => ['GET', 'salud-ocupacional/tablero', ['medico', 'admin-dispensario']],
-    'fichas FEMO'             => ['GET', 'fichas-sso', ['medico', 'admin-dispensario']],
-    'llenar una ficha'        => ['POST', 'fichas-sso', ['medico']],
+    'tablero SSO'             => ['GET', 'salud-ocupacional/tablero', ['medico-ocupacional', 'admin-dispensario']],
+    'fichas FEMO'             => ['GET', 'fichas-sso', ['medico-ocupacional', 'admin-dispensario']],
+    'llenar una ficha'        => ['POST', 'fichas-sso', ['medico-ocupacional']],
 ]);
 
 test('un permiso suelto basta, sin el rol', function () {
@@ -68,13 +70,16 @@ test('la migracion da los permisos de salud ocupacional y reportes a los mismos 
     ])->all();
 
     $delSeeder = $titulares();
-    expect($delSeeder['ver-certificaciones-medicas'])->toBe(['admin-dispensario', 'admin-uath', 'asistente-uath', 'medico']);
+    expect($delSeeder['ver-certificaciones-medicas'])->toBe(['admin-dispensario', 'admin-uath', 'asistente-uath', 'medico-ocupacional']);
 
     $migracion->down();
     app(PermissionRegistrar::class)->forgetCachedPermissions();
 
     $migracion->up();
     $migracion->up(); // idempotente
+    // La 2026_12_11 pasó la salud ocupacional de `medico` a
+    // `medico-ocupacional`; sin ella, esta deja a todo médico con las fichas.
+    (require database_path('migrations/2026_12_11_000000_crear_rol_medico_ocupacional.php'))->up();
     app(PermissionRegistrar::class)->forgetCachedPermissions();
 
     expect($titulares())->toBe($delSeeder);

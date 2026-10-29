@@ -146,7 +146,7 @@ test('Talento Humano descarga el certificado de aptitud', function (string $rol)
     expect($respuesta->headers->get('content-type'))->toContain('application/pdf')
         ->and($respuesta->headers->get('content-disposition'))
         ->toContain('certificado-aptitud-0804455661-'.$solicitud->id.'.pdf');
-})->with(['admin-uath', 'asistente-uath', 'medico']);
+})->with(['admin-uath', 'asistente-uath', 'medico-ocupacional']);
 
 test('el certificado lleva la aptitud, las restricciones y quién firma', function () {
     ['solicitud' => $solicitud] = escenarioCertificado();

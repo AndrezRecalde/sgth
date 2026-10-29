@@ -24,6 +24,7 @@ function medicoFemoEdicion(): User
     $usuario->assignRole(
         Role::firstOrCreate(['name' => 'medico', 'guard_name' => 'sanctum'])
     );
+    $usuario->assignRole('medico-ocupacional');
 
     return $usuario;
 }

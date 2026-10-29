@@ -23,7 +23,7 @@ beforeEach(function () {
     Model::unguard();
 
     $this->medico = User::factory()->create();
-    $this->medico->assignRole(Role::firstOrCreate(['name' => 'medico', 'guard_name' => 'sanctum']));
+    $this->medico->assignRole([Role::firstOrCreate(['name' => 'medico', 'guard_name' => 'sanctum']), 'medico-ocupacional']);
 
     $this->servidor = Servidor::create(['cedula' => '0812510001', 'nombre' => 'Ana', 'apellido' => 'Vera']);
     $this->historia = HistoriaClinica::create([
