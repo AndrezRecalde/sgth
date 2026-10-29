@@ -91,8 +91,9 @@ final class ResultadoMedicoController extends Controller
 
     public function store(StoreResultadoMedicoRequest $request): JsonResponse
     {
-        // El resultado de una orden lo registra quien la ve en su bandeja: la
-        // de su especialidad (docs/plan-roles-y-accesos.md, PR 5).
+        // El resultado de una orden lo registra cualquiera de su especialidad
+        // (docs/plan-roles-y-accesos.md, PR 5): quien la pidió, desde su
+        // bandeja, o un colega, desde la consulta del paciente (2026-10-29).
         $orden = $request->integer('orden_examen_id');
         if ($orden && ! AlcanceClinico::veOrden($request->user(), $orden)) {
             return ApiResponse::error('Esta orden es de otra especialidad.', null, 403);

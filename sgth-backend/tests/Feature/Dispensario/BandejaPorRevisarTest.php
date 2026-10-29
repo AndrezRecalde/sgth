@@ -15,9 +15,9 @@ use Spatie\Permission\Models\Role;
 
 /*
  * La bandeja «Por revisar» (5.4 y D3 de docs/diseno-examenes-medicos.md): los
- * resultados que nadie ha leído, los más antiguos primero, filtrables por el
- * médico que responde por ellos (el que pidió la orden o, sin orden, el de la
- * consulta).
+ * resultados que nadie ha leído, los más antiguos primero. Cada médico ve los
+ * suyos —los de lo que pidió o, sin orden, los de sus consultas— y la
+ * administración, los de todos, filtrables por quien responde (2026-10-29).
  */
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
@@ -114,11 +114,23 @@ test('por_medico_salen_los_de_sus_ordenes_y_sin_orden_los_de_sus_consultas', fun
     // Subido en la consulta de B pero de una orden de A: responde A.
     resultadoPorRevisar($this->consultaB, ordenPorRevisar($this->consultaA), 'orden-de-a-en-consulta-de-b', 2);
 
-    $this->actingAs($this->medicoB, 'sanctum');
+    // El filtro es de la administración, que ve los de todos (2026-10-29).
+    $administracion = User::create([
+        'email' => 'por-revisar-admin@example.com', 'usuario_ti' => 'por-revisar-admin',
+        'password' => bcrypt('123456'), 'primer_login' => false,
+    ]);
+    $administracion->assignRole('admin-dispensario');
+    $this->actingAs($administracion, 'sanctum');
 
     expect(descripcionesPorRevisar("solicitante={$this->medicoA->id}"))
         ->toBe(['orden-de-a', 'consulta-de-a', 'orden-de-a-en-consulta-de-b'])
         ->and(descripcionesPorRevisar("solicitante={$this->medicoB->id}"))->toBe(['orden-de-b']);
+
+    // Un médico ve solo lo suyo, aunque pida lo de un colega.
+    $this->actingAs($this->medicoB, 'sanctum');
+
+    expect(descripcionesPorRevisar())->toBe(['orden-de-b'])
+        ->and(descripcionesPorRevisar("solicitante={$this->medicoA->id}"))->toBe([]);
 });
 
 test('busca_por_folio_cedula_o_nombre', function () {

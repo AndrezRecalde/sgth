@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dispensario;
 
 use App\Contracts\Dispensario\OrdenExamenServiceInterface;
+use App\Enums\EstadoOrdenExamen;
 use App\Enums\Permiso;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dispensario\StoreOrdenExamenRequest;
@@ -43,6 +44,11 @@ final class OrdenExamenController extends Controller
     /**
      * Las órdenes de UN paciente, y de una consulta suya si se pide. Como el
      * listado de resultados: sin paciente no hay listado.
+     *
+     * `abiertas` deja las que esperan resultado y quien pregunta puede
+     * registrar: las de su especialidad, sin las de una ficha FEMO, que son de
+     * la evaluación ocupacional. Es lo que la consulta le enseña de otros
+     * colegas, ahora que cada bandeja tiene solo las propias (2026-10-29).
      */
     public function index(Request $request): JsonResponse
     {
@@ -51,11 +57,15 @@ final class OrdenExamenController extends Controller
             'historia_clinica_id'        => ['required_without:ficha_salud_ocupacional_id', 'nullable', 'integer'],
             'consulta_medica_id'         => ['nullable', 'integer'],
             'ficha_salud_ocupacional_id' => ['nullable', 'integer'],
+            'abiertas'                   => ['sometimes', 'boolean'],
         ], [
             'historia_clinica_id.required_without' => 'Indique de qué paciente son las órdenes.',
         ]);
 
         $ordenes = OrdenExamen::with(self::RELACIONES)
+            ->when($request->boolean('abiertas'), fn ($q) => AlcanceClinico::ordenesDe($q, AlcanceClinico::especialidadDe($request->user()))
+                ->whereIn('estado', [EstadoOrdenExamen::EMITIDA, EstadoOrdenExamen::PARCIAL])
+                ->whereNull('ficha_salud_ocupacional_id'))
             ->when($request->filled('historia_clinica_id'), fn ($q) => $q->where(
                 'historia_clinica_id', $request->integer('historia_clinica_id')
             ))

@@ -58,6 +58,8 @@ export interface OrdenExamen {
   motivo_anulacion:       string | null
   items:                  ItemOrdenExamen[]
   diagnostico_cie10?:     { id: number; codigo: string; descripcion: string } | null
+  /** Quién la pidió: lo trae el listado, para las de otro colega. */
+  solicitante?:           { id: number; servidor?: { nombre: string; apellido: string } | null } | null
 }
 
 export interface EmitirOrdenExamenData {
@@ -92,6 +94,15 @@ export const examenService = {
   ordenes: (historiaClinicaId: number, consultaId?: number) =>
     api.get<ApiResponse<OrdenExamen[]>>('/dispensario/ordenes-examen', {
       params: { historia_clinica_id: historiaClinicaId, consulta_medica_id: consultaId },
+    }).then(r => r.data.datos ?? []),
+
+  /**
+   * Las del paciente que esperan resultado y quien pregunta puede registrar:
+   * de su especialidad y sin las de una ficha FEMO. El servidor decide cuáles.
+   */
+  ordenesAbiertas: (historiaClinicaId: number) =>
+    api.get<ApiResponse<OrdenExamen[]>>('/dispensario/ordenes-examen', {
+      params: { historia_clinica_id: historiaClinicaId, abiertas: 1 },
     }).then(r => r.data.datos ?? []),
 
   /** Las que pidió una ficha ocupacional. */
