@@ -13,7 +13,6 @@ use App\Models\Dispensario\VersionConsultaMedica;
 use App\Models\Expediente\CargaFamiliar;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use App\Contracts\Dispensario\AgendaServiceInterface;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -24,64 +23,23 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
         private readonly AgendaServiceInterface $agendaService,
         private readonly CondicionDeclaradaService $condicionDeclarada,
     ) {}
-    public function listar(array $filtros): LengthAwarePaginator
-    {
-        $query = HistoriaClinica::with([
-            'servidor', 'cargaFamiliar.servidor',
-        ])->orderBy('created_at', 'desc');
 
-        if (!empty($filtros['servidor_id'])) {
-            $query->where('servidor_id', $filtros['servidor_id']);
-        }
-
-        if (!empty($filtros['carga_familiar_id'])) {
-            $query->where(
-                'carga_familiar_id', $filtros['carga_familiar_id']
-            );
-        }
-
-        if (!empty($filtros['cedula_paciente'])) {
-            $query->where(
-                'cedula_paciente', $filtros['cedula_paciente']
-            );
-        }
-
-        if (!empty($filtros['search'])) {
-            $search = $filtros['search'];
-            $query->where(function ($q) use ($search) {
-                $q->where('cedula_paciente', 'ilike', "%{$search}%")
-                  ->orWhereHas('servidor', fn($sq) =>
-                      $sq->where('nombre', 'ilike', "%{$search}%")
-                         ->orWhere('apellido', 'ilike', "%{$search}%")
-                         ->orWhere('cedula', 'ilike', "%{$search}%")
-                  )
-                  ->orWhereHas('cargaFamiliar', fn($sq) =>
-                      $sq->where('nombres', 'ilike', "%{$search}%")
-                         ->orWhere('apellidos', 'ilike', "%{$search}%")
-                         ->orWhere('cedula', 'ilike', "%{$search}%")
-                  );
-            });
-        }
-
-        // Con techo y suelo, como el listado de consultas: `limit()` ignora los
-        // negativos, así que `?per_page=-1` devolvía todas las historias del
-        // dispensario de una vez, y `?per_page=100000` lo mismo.
-        return $query->paginate(
-            min(max((int) ($filtros['per_page'] ?? 20), 1), 100)
-        );
-    }
-
-    public function obtener(int $id): HistoriaClinica
-    {
-        return HistoriaClinica::with([
-            'servidor', 'cargaFamiliar.servidor',
-            'alergias' => fn($q) => $q->whereNull('anulado_en'),
-            'antecedentes' => fn($q) => $q->whereNull('anulado_en'),
-            'consultasMedicas' => fn($q) => $q
-                ->orderBy('fecha_consulta', 'desc')
-                ->limit(10),
-        ])->findOrFail($id);
-    }
+    /**
+     * De la consulta, lo que pintan el historial, el detalle y la respuesta al
+     * guardarla: el nombre del paciente y el del médico.
+     *
+     * Sin columnas salía la ficha entera del paciente —`Servidor` no oculta
+     * nada— y también la del médico, que `nombre_completo` cargaba por su
+     * cuenta (docs/revision-ficha-paciente-dispensario.md, cargas 4, 5, 10 y
+     * 11). Ninguna pantalla lee el paciente desde aquí: ya está en la cabecera
+     * de la atención.
+     */
+    public const PACIENTE_Y_MEDICO_DE_LA_CONSULTA = [
+        'historiaClinica.servidor:id,nombre,apellido',
+        'historiaClinica.cargaFamiliar:id,nombres,apellidos',
+        'medico:id,usuario_ti,email,servidor_id',
+        'medico.servidor:id,nombre,apellido',
+    ];
 
     public function crearHistoria(array $datos): HistoriaClinica
     {
@@ -170,16 +128,6 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
         }
 
         return $historia;
-    }
-
-    public function buscarPorCedula(string $cedula): ?HistoriaClinica
-    {
-        return HistoriaClinica::with([
-            'servidor',
-            'cargaFamiliar.servidor',
-            'alergias'    => fn($q) => $q->whereNull('anulado_en'),
-            'antecedentes'=> fn($q) => $q->whereNull('anulado_en'),
-        ])->where('cedula_paciente', $cedula)->first();
     }
 
     public function buscarOCrearPorCedula(
@@ -332,9 +280,7 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
             }
 
             return $consulta->load([
-                'historiaClinica.servidor',
-                'historiaClinica.cargaFamiliar',
-                'medico',
+                ...self::PACIENTE_Y_MEDICO_DE_LA_CONSULTA,
                 // La pantalla parte de esta respuesta para corregir: sin el
                 // principal, la corrección lo mandaba vacío y se borraba.
                 'diagnosticoCie10Principal',
@@ -494,9 +440,7 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
             }
 
             return $consulta->load([
-                'historiaClinica.servidor',
-                'historiaClinica.cargaFamiliar',
-                'medico',
+                ...self::PACIENTE_Y_MEDICO_DE_LA_CONSULTA,
                 // La pantalla parte de esta respuesta para corregir: sin el
                 // principal, la corrección lo mandaba vacío y se borraba.
                 'diagnosticoCie10Principal',
@@ -543,9 +487,12 @@ final class HistoriaClinicaService implements HistoriaClinicaServiceInterface
         int $historiaClinicaId,
         ?int $agendaMedicaId = null
     ): array {
+        // Del paciente, el nombre: el panel no pinta nada más de él, y la
+        // discapacidad y la enfermedad catastrófica las trae
+        // `condicion_declarada`, que busca al paciente por su cuenta.
         $historia = HistoriaClinica::with([
-            'servidor',
-            'cargaFamiliar.servidor',
+            'servidor:id,nombre,apellido',
+            'cargaFamiliar:id,nombres,apellidos',
             'alergias' => fn($q) => $q->whereNull('anulado_en'),
             'antecedentes' => fn($q) => $q->whereNull('anulado_en'),
         ])->findOrFail($historiaClinicaId);

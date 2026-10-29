@@ -44,7 +44,7 @@ test('cada rol entra a la agenda, el triaje y las historias como antes', functio
     'pacientes'           => ['GET', 'pacientes/buscar?cedula=0800000000', ['medico', 'odontologo', 'enfermera', 'admin-dispensario']],
     'atenciones'          => ['GET', 'atenciones-enfermeria', ['medico', 'odontologo', 'enfermera', 'admin-dispensario']],
     'registrar atención'  => ['POST', 'atenciones-enfermeria', ['enfermera', 'admin-dispensario']],
-    'historias'           => ['GET', 'historias-clinicas', ['medico', 'odontologo', 'enfermera', 'admin-dispensario']],
+    'historias'           => ['GET', 'historias-clinicas/999999/contexto-consulta', ['medico', 'odontologo', 'enfermera', 'admin-dispensario']],
     'anular alergia'      => ['PATCH', 'historias-clinicas/999999/alergias/999999/anular', ['medico', 'odontologo']],
     'disponibilidad'      => ['GET', 'disponibilidad/personal', ['medico', 'odontologo', 'enfermera', 'admin-dispensario']],
     'mi disponibilidad'   => ['GET', 'disponibilidad/mi-estado', ['medico', 'odontologo']],
@@ -56,7 +56,7 @@ test('un permiso suelto basta, sin el rol', function () {
     $triaje->givePermissionTo('registrar-triaje');
 
     $this->actingAs($triaje, 'sanctum')->getJson('/api/v1/dispensario/solicitudes-certificacion/pendientes-triaje')->assertOk();
-    $this->actingAs($triaje, 'sanctum')->getJson('/api/v1/dispensario/historias-clinicas')->assertForbidden();
+    $this->actingAs($triaje, 'sanctum')->getJson('/api/v1/dispensario/historias-clinicas/999999/contexto-consulta')->assertForbidden();
 });
 
 test('la migracion da los permisos de agenda y triaje a los mismos roles que el seeder', function () {

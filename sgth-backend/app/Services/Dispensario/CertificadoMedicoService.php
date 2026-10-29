@@ -211,11 +211,12 @@ class CertificadoMedicoService
      */
     public function generarPdf(int $id): array
     {
+        // Lo del listado, más el titular de un familiar, que el PDF nombra en
+        // la condición. Antes iba todo sin columnas: no salía del PDF, pero
+        // cargaba la ficha entera del paciente, del titular y del médico.
         $certificado = CertificadoMedico::with([
-            'consultaMedica.historiaClinica.servidor',
-            'consultaMedica.historiaClinica.cargaFamiliar.servidor',
-            'emisor.servidor', 'anulador.servidor',
-            'diagnosticoCie10',
+            ...self::RELACIONES,
+            'consultaMedica.historiaClinica.cargaFamiliar.servidor:id,nombre,apellido',
         ])->findOrFail($id);
 
         $pdf = Pdf::loadView('pdf.dispensario.certificado-medico', [

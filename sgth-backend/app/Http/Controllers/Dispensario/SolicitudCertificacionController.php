@@ -275,14 +275,21 @@ final class SolicitudCertificacionController extends Controller
         // expediente del servidor (periódicas, reintegros y retiros), o la
         // convocatoria formal. Se cargan los tres para que el formulario no
         // tenga que salir a buscarlos con peticiones adicionales.
+        //
+        // Del paciente, lo que usa el FEMO: el género decide el bloque
+        // reproductivo, el tipo de sangre llena el grupo sanguíneo y la
+        // discapacidad nace marcada. Sin columnas salía la ficha entera —el
+        // contacto de emergencia, la dirección, el celular— también a la
+        // administración del Dispensario, que no ve el Expediente
+        // (docs/revision-ficha-paciente-dispensario.md, carga 7).
         $solicitud = SolicitudCertificacionMedica::with([
-            'servidor',
+            'servidor:id,nombre,apellido,cedula,genero,tipo_sangre,tiene_discapacidad,puesto_id',
             'servidor.puesto.cargo:id,nombre,codigo_ciuo',
             'servidor.puesto.unidadAdministrativa:id,nombre',
             // La discapacidad del Expediente, para que el FEMO nazca con ella
             // en vez de pedírsela otra vez al médico. Solo el porcentaje.
             'servidor.discapacidades:id,servidor_id,porcentaje',
-            'postulante',
+            'postulante:id,nombres,apellidos,cedula,correo,genero,tipo_sangre,puesto_id',
             'postulante.puesto.cargo:id,nombre,codigo_ciuo',
             'postulante.puesto.unidadAdministrativa:id,nombre',
             'convocatoria.puesto.cargo:id,nombre,codigo_ciuo',

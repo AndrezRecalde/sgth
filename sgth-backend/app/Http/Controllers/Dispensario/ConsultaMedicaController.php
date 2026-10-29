@@ -11,6 +11,7 @@ use App\Http\Responses\ApiResponse;
 use App\Models\Dispensario\ConsultaMedica;
 use App\Models\Dispensario\DiagnosticoCie10;
 use App\Services\Dispensario\AlcanceClinico;
+use App\Services\Dispensario\HistoriaClinicaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -68,9 +69,7 @@ final class ConsultaMedicaController extends Controller
         $this->validarFiltros($request);
 
         $query = ConsultaMedica::with([
-            'historiaClinica.servidor',
-            'historiaClinica.cargaFamiliar',
-            'medico',
+            ...HistoriaClinicaService::PACIENTE_Y_MEDICO_DE_LA_CONSULTA,
             'recetasMedicas',
             'diagnosticoCie10Principal',
             'diagnosticosSecundarios.diagnostico',
@@ -252,11 +251,9 @@ final class ConsultaMedicaController extends Controller
         }
 
         $consulta = ConsultaMedica::with([
-            'historiaClinica.servidor',
-            'historiaClinica.cargaFamiliar',
+            ...HistoriaClinicaService::PACIENTE_Y_MEDICO_DE_LA_CONSULTA,
             'historiaClinica.alergias',
             'historiaClinica.antecedentes',
-            'medico',
             'recetasMedicas.items.inventario',
             'diagnosticoCie10Principal',
             'diagnosticosSecundarios.diagnostico',

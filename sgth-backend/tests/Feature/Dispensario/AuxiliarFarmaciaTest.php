@@ -179,7 +179,7 @@ test('el auxiliar no entra a historias, consultas, agenda ni pacientes', functio
     $this->actingAs($this->auxiliar, 'sanctum');
 
     foreach ([
-        'historias-clinicas', 'consultas', 'agenda/turnos-del-dia',
+        'historias-clinicas/999999/contexto-consulta', 'consultas', 'agenda/turnos-del-dia',
         'pacientes/buscar?cedula=0809292901', 'pacientes/buscar-por-nombre?nombre=Paciente',
         'atenciones-enfermeria', 'reportes',
     ] as $ruta) {

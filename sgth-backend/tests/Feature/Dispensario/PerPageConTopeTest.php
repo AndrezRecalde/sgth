@@ -11,6 +11,9 @@ use Spatie\Permission\Models\Role;
  * `?per_page=-1` salía sin LIMIT y devolvía la tabla entera de una vez; y
  * cualquier número grande, lo mismo. El listado de consultas ya tenía techo y
  * suelo; estos dos, no.
+ *
+ * El de historias clínicas se retiró el 2026-10-29: ninguna pantalla lo pedía
+ * (docs/revision-ficha-paciente-dispensario.md, D1).
  */
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
@@ -28,7 +31,6 @@ beforeEach(function () {
 });
 
 dataset('listados con tope', [
-    'historias clínicas' => ['/api/v1/dispensario/historias-clinicas'],
     'certificados médicos' => ['/api/v1/dispensario/certificados-medicos'],
 ]);
 
