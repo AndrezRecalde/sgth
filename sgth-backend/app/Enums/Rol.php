@@ -32,8 +32,9 @@ enum Rol: string
     case ODONTOLOGO = 'odontologo';
     case ENFERMERA = 'enfermera';
     case ADMIN_DISPENSARIO = 'admin-dispensario';
-    // Lleva el inventario y entrega los medicamentos, sin historias clínicas
-    // ni consultas (docs/plan-roles-y-accesos.md, PR 13).
+    // Lleva toda la Farmacia —inventario, catálogo, adquisiciones, despacho y
+    // sus dos reportes— sin historias clínicas ni consultas
+    // (docs/plan-roles-y-accesos.md, PR 13; ampliado el 2026-10-29).
     case AUXILIAR_FARMACIA = 'auxiliar-farmacia';
 
     // Tecnología

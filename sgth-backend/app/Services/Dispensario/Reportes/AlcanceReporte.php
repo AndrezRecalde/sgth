@@ -11,6 +11,8 @@ use App\Models\User;
  * - La administración del Dispensario ve todo.
  * - Médicos, odontólogos y enfermeras ven sus propios reportes, filtrados a
  *   sus atenciones: el informe mensual de actividades de cada uno.
+ * - El auxiliar de farmacia ve los reportes de Farmacia, de toda la farmacia:
+ *   no son atenciones suyas sino el inventario (decisión del 2026-10-29).
  *
  * Hubo un perfil más, el de la máxima autoridad, que veía solo los agregados.
  * Se retiró con su rol el 2026-10-26 (docs/plan-roles-y-accesos.md, PR 7).
@@ -24,6 +26,7 @@ final class AlcanceReporte
     public const MEDICO         = 'medico';
     public const ODONTOLOGO     = 'odontologo';
     public const ENFERMERIA     = 'enfermeria';
+    public const FARMACIA       = 'farmacia';
 
     private function __construct(
         public readonly string $perfil,
@@ -40,6 +43,7 @@ final class AlcanceReporte
             $usuario->hasRole('medico')            => new self(self::MEDICO, $usuario->id),
             $usuario->hasRole('odontologo')        => new self(self::ODONTOLOGO, $usuario->id),
             $usuario->hasRole('enfermera')         => new self(self::ENFERMERIA, $usuario->id),
+            $usuario->hasRole('auxiliar-farmacia') => new self(self::FARMACIA, null),
             default                                => null,
         };
     }

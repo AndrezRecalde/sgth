@@ -39,7 +39,8 @@ test('cada rol entra a salud ocupacional, reportes y tableros como antes', funct
     }
 })->with([
     'tablero del Dispensario' => ['GET', 'dashboard/kpis', ['admin-dispensario']],
-    'reportes'                => ['GET', 'reportes', ['medico', 'odontologo', 'enfermera', 'admin-dispensario']],
+    // El auxiliar de farmacia, solo los de Farmacia (2026-10-29; AuxiliarFarmaciaTest).
+    'reportes'                => ['GET', 'reportes', ['medico', 'odontologo', 'enfermera', 'admin-dispensario', 'auxiliar-farmacia']],
     'mi jornada'              => ['GET', 'mi-jornada', ['medico', 'odontologo', 'enfermera']],
     'solicitudes'             => ['GET', 'solicitudes-certificacion', ['medico-ocupacional', 'admin-dispensario', 'admin-uath', 'asistente-uath']],
     'cobertura'               => ['GET', 'certificaciones/cobertura', ['medico-ocupacional', 'admin-dispensario', 'admin-uath', 'asistente-uath']],
@@ -80,6 +81,8 @@ test('la migracion da los permisos de salud ocupacional y reportes a los mismos 
     // La 2026_12_11 pasó la salud ocupacional de `medico` a
     // `medico-ocupacional`; sin ella, esta deja a todo médico con las fichas.
     (require database_path('migrations/2026_12_11_000000_crear_rol_medico_ocupacional.php'))->up();
+    // Y la 2026_12_12 le dio los reportes de Farmacia al auxiliar.
+    (require database_path('migrations/2026_12_12_000000_auxiliar_farmacia_toda_la_farmacia.php'))->up();
     app(PermissionRegistrar::class)->forgetCachedPermissions();
 
     expect($titulares())->toBe($delSeeder);

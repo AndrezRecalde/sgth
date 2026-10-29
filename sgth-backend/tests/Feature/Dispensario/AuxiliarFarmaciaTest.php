@@ -111,14 +111,32 @@ test('el auxiliar da de baja existencias', function () {
     expect($this->paracetamol->fresh()->stock_actual)->toBe(45);
 });
 
-test('el catalogo, el ajuste y las adquisiciones siguen siendo de la administracion', function () {
+test('el auxiliar lleva el catalogo, el ajuste y las adquisiciones', function () {
+    // Toda la Farmacia desde el 2026-10-29; hasta entonces era de la
+    // administración. Sin datos, un 422 prueba que el permiso pasó.
     $this->actingAs($this->auxiliar, 'sanctum');
 
-    $this->postJson('/api/v1/dispensario/inventario/medicinas', [])->assertForbidden();
-    $this->putJson("/api/v1/dispensario/inventario/medicinas/{$this->paracetamol->id}", [])->assertForbidden();
+    $this->postJson('/api/v1/dispensario/inventario/medicinas', [])->assertUnprocessable();
+    $this->putJson("/api/v1/dispensario/inventario/medicinas/{$this->paracetamol->id}", ['stock_minimo' => -1])
+        ->assertUnprocessable();
     $this->postJson("/api/v1/dispensario/inventario/medicinas/{$this->paracetamol->id}/ajustar-inventario", [])
-        ->assertForbidden();
-    $this->getJson('/api/v1/dispensario/adquisiciones')->assertForbidden();
+        ->assertUnprocessable();
+    $this->getJson('/api/v1/dispensario/adquisiciones')->assertOk();
+});
+
+test('el auxiliar ve solo los reportes de Farmacia', function () {
+    $this->actingAs($this->auxiliar, 'sanctum');
+
+    $catalogo = $this->getJson('/api/v1/dispensario/reportes')->assertOk()->json('datos');
+
+    expect($catalogo['alcance'])->toBe('farmacia')
+        ->and(collect($catalogo['reportes'])->pluck('clave')->sort()->values()->all())
+        ->toBe(['farmacia_existencias', 'farmacia_movimiento']);
+
+    $periodo = '?desde=2026-10-01&hasta=2026-10-31';
+    $this->getJson("/api/v1/dispensario/reportes/farmacia_existencias{$periodo}")->assertOk();
+    $this->getJson("/api/v1/dispensario/reportes/farmacia_movimiento{$periodo}")->assertOk();
+    $this->getJson("/api/v1/dispensario/reportes/morbilidad{$periodo}")->assertForbidden();
 });
 
 // ── Despacho ──────────────────────────────────────────────────────────────
@@ -181,7 +199,7 @@ test('el auxiliar no entra a historias, consultas, agenda ni pacientes', functio
     foreach ([
         'historias-clinicas/999999/contexto-consulta', 'consultas', 'agenda/turnos-del-dia',
         'pacientes/buscar?cedula=0809292901', 'pacientes/buscar-por-nombre?nombre=Paciente',
-        'atenciones-enfermeria', 'reportes',
+        'atenciones-enfermeria',
     ] as $ruta) {
         $this->getJson("/api/v1/dispensario/{$ruta}")->assertForbidden();
     }
@@ -205,8 +223,10 @@ test('la migracion crea el rol como el seeder', function () {
 
     $migracion->up();
     $migracion->up(); // idempotente
-    // Las lecturas de farmacia se las da la migración del PR 17a.
+    // Las lecturas de farmacia se las da la migración del PR 17a, y el resto
+    // de la Farmacia y sus reportes, la del 2026-10-29.
     (require database_path('migrations/2026_12_04_000000_dispensario_permisos_de_farmacia.php'))->up();
+    (require database_path('migrations/2026_12_12_000000_auxiliar_farmacia_toda_la_farmacia.php'))->up();
     app(PermissionRegistrar::class)->forgetCachedPermissions();
 
     expect($permisos())->toBe($delSeeder);
