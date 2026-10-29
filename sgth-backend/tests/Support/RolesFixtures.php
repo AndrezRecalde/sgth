@@ -7,9 +7,12 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
- * Los cinco roles del Dispensario con los permisos del Dispensario que les da
+ * Los roles del Dispensario con los permisos del Dispensario que les da
  * `RolPermisoSeeder`, sin los permisos base; y admin-uath y asistente-uath con
  * el único permiso del Dispensario que tienen, `ver-certificaciones-medicas`.
+ *
+ * Desde el 2026-10-29 la FEMO es de `medico-ocupacional`, que se da junto con
+ * `medico`: una prueba que evalúa con un médico le asigna los dos.
  *
  * El Dispensario pasa de `role:` a `permission:` por partes
  * (docs/plan-roles-y-accesos.md, PR 17), y unas 70 pruebas creaban el rol
@@ -23,6 +26,7 @@ function rolesDelDispensario(): void
 {
     $porRol = [
         'medico'            => RolPermisoSeeder::PERMISOS_MEDICO,
+        'medico-ocupacional' => RolPermisoSeeder::PERMISOS_MEDICO_OCUPACIONAL,
         'odontologo'        => RolPermisoSeeder::PERMISOS_ODONTOLOGO,
         'enfermera'         => RolPermisoSeeder::PERMISOS_ENFERMERA,
         'admin-dispensario' => RolPermisoSeeder::PERMISOS_ADMIN_DISPENSARIO,

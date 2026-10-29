@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use App\Models\User;
+use App\Rules\RolesComplementariosConSuBase;
 use Illuminate\Foundation\Http\FormRequest;
 
 final class StoreUsuarioRequest extends FormRequest
@@ -23,7 +24,7 @@ final class StoreUsuarioRequest extends FormRequest
                 'unique:users,usuario_ti',
                 'regex:/^[a-z0-9]+$/',
             ],
-            'roles'       => ['required', 'array'],
+            'roles'       => ['required', 'array', new RolesComplementariosConSuBase()],
             'roles.*'     => ['string', 'exists:roles,name'],
             'servidor_id' => ['nullable', 'integer', 'exists:servidores,id'],
             'cedula'      => ['nullable', 'string', 'regex:/^\d{10}$/'],

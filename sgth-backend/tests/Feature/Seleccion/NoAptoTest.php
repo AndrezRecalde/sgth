@@ -31,8 +31,9 @@ beforeEach(function () {
 
     $this->th = User::factory()->create();
     $this->th->assignRole(Role::firstOrCreate(['name' => 'admin-uath', 'guard_name' => 'sanctum']));
+    // Dictamina la FEMO: desde el 2026-10-29 eso es del médico ocupacional.
     $this->medico = User::factory()->create();
-    $this->medico->assignRole(Role::firstOrCreate(['name' => 'medico', 'guard_name' => 'sanctum']));
+    $this->medico->assignRole(['medico', 'medico-ocupacional']);
 
     $unidad = UnidadAdministrativa::create(['codigo' => 'NOAPTO-01', 'nombre' => 'Unidad No Apto', 'nivel' => 1]);
     $grupo = GrupoOcupacional::create([

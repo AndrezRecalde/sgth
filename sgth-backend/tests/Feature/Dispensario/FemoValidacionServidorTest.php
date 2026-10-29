@@ -69,6 +69,7 @@ function postFichaValidacionFemo($test, User $medico, SolicitudCertificacionMedi
 
 beforeEach(function () {
     $this->medico = usuarioValidacionFemo('medico');
+    $this->medico->assignRole('medico-ocupacional');
     $this->enfermera = usuarioValidacionFemo('enfermera');
     $this->solicitud = solicitudValidacionFemo($this->medico);
 });

@@ -20,7 +20,7 @@ uses(Tests\TestCase::class, RefreshDatabase::class);
 
 beforeEach(function () {
     $this->medico = User::factory()->create();
-    $this->medico->assignRole(Role::firstOrCreate(['name' => 'medico', 'guard_name' => 'sanctum']));
+    $this->medico->assignRole([Role::firstOrCreate(['name' => 'medico', 'guard_name' => 'sanctum']), 'medico-ocupacional']);
 
     $unidad = unidadDePrueba(['nombre' => 'Unidad Declarada']);
     $this->servidor = Servidor::forceCreate([

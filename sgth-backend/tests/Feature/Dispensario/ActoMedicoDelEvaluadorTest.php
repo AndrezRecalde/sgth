@@ -34,8 +34,12 @@ beforeEach(function () {
         return $usuario;
     };
 
+    // Los dos hacen evaluaciones ocupacionales (2026-10-29): así el colega
+    // choca con la regla del evaluador y no con la falta del permiso.
     $this->medico = ($this->conRol)('medico');
+    $this->medico->assignRole('medico-ocupacional');
     $this->colega = ($this->conRol)('medico');
+    $this->colega->assignRole('medico-ocupacional');
     $this->administracion = ($this->conRol)('admin-dispensario');
 
     $this->paciente = Servidor::forceCreate([

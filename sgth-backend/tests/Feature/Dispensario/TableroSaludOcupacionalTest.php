@@ -56,7 +56,9 @@ function fichaCerradaTableroSso(User $medico, string $aptitud, string $fecha): F
 }
 
 beforeEach(function () {
+    // El tablero de salud ocupacional es del médico ocupacional (2026-10-29).
     $this->medico = usuarioTableroSso('medico');
+    $this->medico->assignRole('medico-ocupacional');
 });
 
 test('la bandeja en cifras: por atender, vencidas, sin triaje y retiros', function () {

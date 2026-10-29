@@ -36,6 +36,7 @@ function guardarRiesgo(User $quien, string $categoria, string $factor, array $ex
 
 test('el_medico_asigna_los_examenes_de_un_factor_y_se_reemplazan', function () {
     $medico = usuarioDeRiesgos('medico');
+    $medico->assignRole('medico-ocupacional');
 
     guardarRiesgo($medico, 'fisico', 'Ruido', ['Audiometría tonal'])->assertOk();
     guardarRiesgo($medico, 'quimico', 'Polvos', ['Espirometría', 'Rx estándar de tórax'])->assertOk();
@@ -59,6 +60,7 @@ test('el_medico_asigna_los_examenes_de_un_factor_y_se_reemplazan', function () {
 
 test('solo_factores_del_catalogo_del_msp_y_nunca_examenes_sensibles', function () {
     $medico = usuarioDeRiesgos('medico');
+    $medico->assignRole('medico-ocupacional');
 
     guardarRiesgo($medico, 'fisico', 'Trabajo en alturas', ['Audiometría tonal'])
         ->assertStatus(422)

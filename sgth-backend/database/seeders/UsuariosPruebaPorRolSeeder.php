@@ -27,7 +27,9 @@ use Spatie\Permission\Models\Role;
  *   se escribe aquí, como sí hace AdminTiSeeder con la suya.
  * - Cada usuario es `prueba.<rol>`, con el correo `prueba.<rol>@gadpe.test`: el
  *   dominio no existe, así que ningún aviso llega a un buzón real. Tiene un
- *   solo rol y no se le pide cambiar la clave al entrar.
+ *   solo rol y no se le pide cambiar la clave al entrar. Un rol complementario
+ *   va con su rol base (`Rol::rolBase()`): `prueba.medico-ocupacional` también
+ *   es `medico`, porque solo no sirve.
  * - Cada uno queda vinculado a su ficha «Usuario PRUEBA <ROL>» (cédula
  *   0999000xxx), en Talento Humano. Sin la ficha, el Portal le cerraba casi
  *   todo. La que crea este seeder no tiene contrato ni marcación biométrica: la
@@ -103,7 +105,7 @@ class UsuariosPruebaPorRolSeeder extends Seeder
         $usuario->servidor_id ??= $this->ficha($rol, $unidad)->id;
         $usuario->save();
 
-        $usuario->syncRoles([$rol->value]);
+        $usuario->syncRoles(array_values(array_filter([$rol->rolBase()?->value, $rol->value])));
 
         return $usuario;
     }

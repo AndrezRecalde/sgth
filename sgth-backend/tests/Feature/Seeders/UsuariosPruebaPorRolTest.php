@@ -36,7 +36,9 @@ it('crea un usuario por rol, con ese rol solo y su ficha de prueba', function ()
     foreach (Rol::cases() as $rol) {
         $usuario = User::where('usuario_ti', 'prueba.'.$rol->value)->sole();
 
-        expect($usuario->getRoleNames()->all())->toBe([$rol->value])
+        // Un rol complementario va con su base: medico-ocupacional, con medico.
+        expect($usuario->getRoleNames()->all())
+            ->toEqualCanonicalizing(array_values(array_filter([$rol->rolBase()?->value, $rol->value])))
             ->and($usuario->email)->toBe('prueba.'.$rol->value.'@gadpe.test')
             ->and($usuario->primer_login)->toBeFalse()
             ->and($usuario->activo)->toBeTrue()

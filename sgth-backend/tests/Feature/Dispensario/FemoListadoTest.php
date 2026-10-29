@@ -27,7 +27,7 @@ function fichaListadoFemo(User $medico, string $cedula, string $apellido): Ficha
 
 beforeEach(function () {
     $this->medico = User::factory()->create();
-    $this->medico->assignRole(Role::firstOrCreate(['name' => 'medico', 'guard_name' => 'sanctum']));
+    $this->medico->assignRole([Role::firstOrCreate(['name' => 'medico', 'guard_name' => 'sanctum']), 'medico-ocupacional']);
 });
 
 test('se busca por cédula o por apellido', function () {

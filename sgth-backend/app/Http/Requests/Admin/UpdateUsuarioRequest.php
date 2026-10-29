@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use App\Models\User;
+use App\Rules\RolesComplementariosConSuBase;
 use Illuminate\Foundation\Http\FormRequest;
 
 final class UpdateUsuarioRequest extends FormRequest
@@ -33,7 +34,7 @@ final class UpdateUsuarioRequest extends FormRequest
                 'unique:users,usuario_ti,' . $usuarioId,
                 'regex:/^[a-z0-9]+$/',
             ],
-            'roles'      => ['sometimes', 'array'],
+            'roles'      => ['sometimes', 'array', new RolesComplementariosConSuBase()],
             'roles.*'    => ['string', 'exists:roles,name'],
         ];
     }

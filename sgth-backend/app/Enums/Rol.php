@@ -25,6 +25,10 @@ enum Rol: string
 
     // Personal médico del dispensario
     case MEDICO = 'medico';
+    // Complementario: se da junto con `medico` al que hace las evaluaciones
+    // ocupacionales (FEMO). Solo suma esos permisos; la cola, la especialidad y
+    // «Mi jornada» los sigue dando `medico` (decisión del 2026-10-29).
+    case MEDICO_OCUPACIONAL = 'medico-ocupacional';
     case ODONTOLOGO = 'odontologo';
     case ENFERMERA = 'enfermera';
     case ADMIN_DISPENSARIO = 'admin-dispensario';
@@ -53,6 +57,20 @@ enum Rol: string
     // Control y auditoría
     case AUDITOR = 'auditor';
 
+    /**
+     * El rol sin el que este no se asigna, si es complementario.
+     *
+     * `medico-ocupacional` solo suma la salud ocupacional: sin `medico` la
+     * persona quedaría sin cola, sin especialidad y sin los permisos base.
+     */
+    public function rolBase(): ?self
+    {
+        return match ($this) {
+            self::MEDICO_OCUPACIONAL => self::MEDICO,
+            default => null,
+        };
+    }
+
     public function etiqueta(): string
     {
         return match ($this) {
@@ -65,6 +83,7 @@ enum Rol: string
             self::TRABAJO_SOCIAL => 'Trabajo Social',
             self::FINANCIERO => 'Financiero',
             self::MEDICO => 'Médico',
+            self::MEDICO_OCUPACIONAL => 'Médico ocupacional',
             self::ODONTOLOGO => 'Odontólogo',
             self::ENFERMERA => 'Enfermera',
             self::ADMIN_DISPENSARIO => 'Administrativo Dispensario',

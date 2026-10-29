@@ -39,7 +39,11 @@ test('Talento Humano no descarga el PDF de la ficha FEMO', function (string $rol
 test('quien evalúa no queda bloqueado por el rol en esa misma ruta', function () {
     // La ficha 1 no existe, así que lo que importa es que la respuesta no sea
     // el 403 del middleware: el rol pasa y el fallo es de datos.
-    $respuesta = $this->actingAs(usuarioDeRolFemoPdf('medico'), 'sanctum')
+    // Quien evalúa es el médico ocupacional (2026-10-29).
+    $medico = usuarioDeRolFemoPdf('medico');
+    $medico->assignRole('medico-ocupacional');
+
+    $respuesta = $this->actingAs($medico, 'sanctum')
         ->get('/api/v1/dispensario/fichas-sso/1/pdf');
 
     expect($respuesta->status())->not->toBe(403);
