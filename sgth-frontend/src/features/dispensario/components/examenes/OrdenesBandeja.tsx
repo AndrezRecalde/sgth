@@ -24,8 +24,10 @@ interface Props {
 }
 
 /**
- * Las órdenes que esperan resultados. El médico registra desde aquí lo que trae
- * el paciente sin abrir una consulta; la administración la ve.
+ * Las órdenes que esperan resultados. El médico ve aquí las que él pidió y
+ * registra lo que trae el paciente sin abrir una consulta; las de un colega se
+ * registran desde la consulta del paciente (2026-10-29). La administración las
+ * ve todas.
  */
 export function OrdenesBandeja({ vencidas, buscar, pagina, cargando, error, onReintentar, page, porPagina, onPage }: Props) {
   const { hasPermiso } = useAuthStore()
@@ -48,7 +50,9 @@ export function OrdenesBandeja({ vencidas, buscar, pagina, cargando, error, onRe
             ? 'Ninguna orden coincide con la búsqueda.'
             : vencidas
               ? 'Ninguna orden pasó los 90 días sin sus resultados.'
-              : 'No hay órdenes esperando resultados.',
+              : hasPermiso('supervisar-dispensario')
+                ? 'No hay órdenes esperando resultados.'
+                : 'Ninguna de las órdenes que usted pidió espera resultados.',
         }}>
         <SgthTable
           {...PAGINACION_ES}

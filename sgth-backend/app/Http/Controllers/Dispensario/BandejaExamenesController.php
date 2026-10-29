@@ -4,11 +4,11 @@ namespace App\Http\Controllers\Dispensario;
 
 use App\Enums\EstadoOrdenExamen;
 use App\Enums\EstadoRevisionResultado;
+use App\Enums\Permiso;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\Dispensario\OrdenExamen;
 use App\Models\Dispensario\ResultadoMedico;
-use App\Services\Dispensario\AlcanceClinico;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,6 +22,12 @@ use Illuminate\Validation\Rule;
  * Las vencidas —abiertas y con más de 90 días (D5)— van aparte: dejan de
  * contar como pendientes, pero no desaparecen, para que alguien las mire
  * (riesgos del diseño: que no sea otra cola sin dueño).
+ *
+ * Cada médico y odontólogo ve aquí solo lo suyo: las órdenes que pidió y los
+ * resultados de los que responde. La administración las ve todas, para
+ * supervisar. Lo de un colega se atiende desde la consulta del paciente, que
+ * enseña sus órdenes abiertas y todos sus resultados (decisión del
+ * 2026-10-29). Hasta entonces cada uno veía las de su especialidad.
  */
 final class BandejaExamenesController extends Controller
 {
@@ -68,7 +74,7 @@ final class BandejaExamenesController extends Controller
     /**
      * Los resultados que nadie ha leído todavía (D3), los más antiguos primero.
      * `solicitante` deja los de un médico: los de sus órdenes y, sin orden,
-     * los de sus consultas. Es el enlace de su «Mi jornada».
+     * los de sus consultas. Le sirve a la administración, que ve los de todos.
      */
     public function porRevisar(Request $request): JsonResponse
     {
@@ -98,16 +104,27 @@ final class BandejaExamenesController extends Controller
     }
 
     /**
+     * De quién es la bandeja: el id de quien pregunta, o `null` para la
+     * administración, que supervisa y las ve todas.
+     */
+    private function propiasDe(Request $request): ?int
+    {
+        $usuario = $request->user();
+
+        return $usuario->can(Permiso::SUPERVISAR_DISPENSARIO->value) ? null : $usuario->id;
+    }
+
+    /**
      * Emitidas o parciales, con la búsqueda por folio, cédula o nombre del
-     * paciente. Cada profesional ve las de su especialidad; la administración,
-     * todas. Antes el odontólogo veía —y registraba— las de medicina general
-     * (docs/plan-roles-y-accesos.md, PR 5).
+     * paciente: las que pidió quien pregunta.
      */
     private function abiertas(Request $request): Builder
     {
         $like = $this->patron($request);
+        $solicitante = $this->propiasDe($request);
 
-        return AlcanceClinico::ordenesDe(OrdenExamen::query(), AlcanceClinico::especialidadDe($request->user()))
+        return OrdenExamen::query()
+            ->when($solicitante !== null, fn (Builder $q) => $q->where('solicitado_por', $solicitante))
             ->whereIn('estado', [EstadoOrdenExamen::EMITIDA, EstadoOrdenExamen::PARCIAL])
             ->when($like !== null, fn (Builder $q) => $q->where(fn (Builder $w) => $this
                 ->delPaciente($w->where('folio', 'ilike', $like), $like)));
@@ -115,13 +132,16 @@ final class BandejaExamenesController extends Controller
 
     /**
      * Por revisar, con la misma búsqueda: el folio de su orden, la cédula o el
-     * nombre. También por especialidad, como las órdenes.
+     * nombre. Los de quien pregunta, como las órdenes: los de lo que pidió y,
+     * sin orden, los de sus consultas.
      */
     private function sinRevisar(Request $request): Builder
     {
         $like = $this->patron($request);
+        $responsable = $this->propiasDe($request);
 
-        return AlcanceClinico::resultadosDe(ResultadoMedico::query(), AlcanceClinico::especialidadDe($request->user()))
+        return ResultadoMedico::query()
+            ->when($responsable !== null, fn (Builder $q) => $q->deResponsable($responsable))
             ->where('estado_revision', EstadoRevisionResultado::POR_REVISAR)
             ->when($like !== null, fn (Builder $q) => $q->where(fn (Builder $w) => $this
                 ->delPaciente($w->whereHas('ordenExamen', fn (Builder $o) => $o->where('folio', 'ilike', $like)), $like)));

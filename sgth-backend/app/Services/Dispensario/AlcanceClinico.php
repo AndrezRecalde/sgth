@@ -114,8 +114,8 @@ final class AlcanceClinico
 
     /**
      * Si atiende a ese paciente: tuvo un turno con él, le firmó una consulta o
-     * el paciente tiene una orden de exámenes de su especialidad, que es lo que
-     * le enseña su bandeja y desde donde registra el resultado.
+     * el paciente tiene una orden de exámenes de su especialidad, a la que
+     * puede registrarle el resultado.
      */
     public static function atiendeHistoria(User $usuario, int $historiaClinicaId): bool
     {

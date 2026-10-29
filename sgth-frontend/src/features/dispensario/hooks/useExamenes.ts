@@ -38,6 +38,19 @@ export function useOrdenesExamen(historiaClinicaId: number, consultaId?: number)
   })
 }
 
+/**
+ * Las órdenes abiertas del paciente que puede registrar quien atiende, de
+ * cualquier colega. Cuelga de la misma raíz: registrar un resultado la refresca.
+ */
+export function useOrdenesAbiertasDelPaciente(historiaClinicaId: number, enabled = true) {
+  return useQuery({
+    queryKey: ['examenes', 'ordenes', historiaClinicaId, 'abiertas'],
+    queryFn:  () => examenService.ordenesAbiertas(historiaClinicaId),
+    enabled:  enabled && !!historiaClinicaId,
+    staleTime: 1000 * 30,
+  })
+}
+
 /** Las órdenes de una ficha ocupacional; cuelga de la misma raíz que las de la consulta. */
 export function useOrdenesDeFicha(fichaId: number | null) {
   return useQuery({
