@@ -39,10 +39,11 @@ test('cada rol entra a la farmacia como antes', function (string $metodo, string
 })->with([
     'inventario'      => ['GET', 'inventario/medicinas', ['medico', 'odontologo', 'enfermera', 'admin-dispensario', 'auxiliar-farmacia']],
     'kárdex'          => ['GET', 'inventario/medicinas/999999/kardex', ['medico', 'odontologo', 'enfermera', 'admin-dispensario', 'auxiliar-farmacia']],
-    'alta de medicina' => ['POST', 'inventario/medicinas', ['admin-dispensario']],
-    'ajuste de stock' => ['POST', 'inventario/medicinas/999999/ajustar-inventario', ['admin-dispensario']],
+    // El catálogo, el ajuste y las adquisiciones, también del auxiliar desde el 2026-10-29.
+    'alta de medicina' => ['POST', 'inventario/medicinas', ['admin-dispensario', 'auxiliar-farmacia']],
+    'ajuste de stock' => ['POST', 'inventario/medicinas/999999/ajustar-inventario', ['admin-dispensario', 'auxiliar-farmacia']],
     'baja'            => ['POST', 'inventario/medicinas/999999/baja', ['enfermera', 'admin-dispensario', 'auxiliar-farmacia']],
-    'adquisiciones'   => ['GET', 'adquisiciones', ['admin-dispensario']],
+    'adquisiciones'   => ['GET', 'adquisiciones', ['admin-dispensario', 'auxiliar-farmacia']],
     'recetas'         => ['GET', 'recetas', ['medico', 'odontologo', 'enfermera', 'admin-dispensario', 'auxiliar-farmacia']],
     'emitir receta'   => ['POST', 'recetas', ['medico', 'odontologo']],
     'despachar'       => ['POST', 'recetas/999999/despachar', ['enfermera', 'admin-dispensario', 'auxiliar-farmacia']],

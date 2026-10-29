@@ -219,11 +219,14 @@ describe('buildNav', () => {
     expect(inicioDelSubsistema('salud', ...sesion('medico', 'medico-ocupacional'))).toBe(ROUTES.SALUD.CONSULTAS)
   })
 
-  it('al auxiliar de farmacia le ofrece el inventario y el despacho, nada clínico', () => {
-    // PR 13: el mostrador, sin historias, consultas, agenda ni exámenes.
+  it('al auxiliar de farmacia le ofrece toda la Farmacia y sus reportes, nada clínico', () => {
+    // PR 13: el mostrador, sin historias, consultas, agenda ni exámenes. Desde
+    // el 2026-10-29, también las adquisiciones y los reportes de Farmacia.
     expect(pantallas('salud', 'auxiliar-farmacia')).toEqual([
       ROUTES.SALUD.FARMACIA,
+      ROUTES.SALUD.FARMACIA_ADQUISICIONES,
       ROUTES.SALUD.FARMACIA_DESPACHO,
+      ROUTES.SALUD.REPORTES,
     ])
     expect(inicioDelSubsistema('salud', ...sesion('auxiliar-farmacia'))).toBe(ROUTES.SALUD.FARMACIA)
   })

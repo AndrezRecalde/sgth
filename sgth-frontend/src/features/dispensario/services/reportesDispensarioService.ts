@@ -31,7 +31,7 @@ export interface OpcionReporte {
 }
 
 export interface CatalogoReportes {
-  alcance:  'administracion' | 'medico' | 'odontologo' | 'enfermeria'
+  alcance:  'administracion' | 'medico' | 'odontologo' | 'enfermeria' | 'farmacia'
   /** Solo las atenciones de quien pregunta. */
   propio:   boolean
   reportes: ReporteDisponible[]

@@ -237,6 +237,7 @@
         "crear-ticket",
         "despachar-medicamento",
         "exportar-informe-actividades",
+        "gestionar-inventario-med",
         "inscribirse-curso",
         "registrar-actividades",
         "responder-encuesta-clima",
@@ -249,6 +250,7 @@
         "ver-permisos",
         "ver-plan-capacitacion",
         "ver-recetas",
+        "ver-reportes-dispensario",
         "ver-ticket-propio"
     ],
     "comunicacion-social": [

@@ -205,13 +205,19 @@ class RolPermisoSeeder extends Seeder
     ];
 
     /**
-     * El inventario y el mostrador. Sin `ver-historia-clinica` ni la agenda, a
-     * diferencia de Enfermería (docs/plan-roles-y-accesos.md, PR 13).
+     * Toda la Farmacia, sin nada clínico: el inventario y el mostrador
+     * (docs/plan-roles-y-accesos.md, PR 13) y, desde el 2026-10-29, también
+     * el catálogo de medicamentos, los ajustes, las adquisiciones y los dos
+     * reportes de Farmacia (existencias y movimiento). Sin
+     * `ver-historia-clinica` ni la agenda, a diferencia de Enfermería.
      */
     public const PERMISOS_AUXILIAR_FARMACIA = [
         Permiso::DESPACHAR_MEDICAMENTO,
         Permiso::VER_INVENTARIO_MED,
         Permiso::VER_RECETAS,
+        Permiso::GESTIONAR_INVENTARIO_MED,
+        // Solo los de Farmacia: su perfil en AlcanceReporte no ve otros.
+        Permiso::VER_REPORTES_DISPENSARIO,
     ];
 
     public function run(): void
