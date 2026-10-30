@@ -2,6 +2,7 @@ import api from '@/lib/axios'
 import type {
   ApiResponse,
   Servidor,
+  ServidorBusqueda,
   ServidorConRelaciones,
   ServidorParams,
 } from '@/types/api'
@@ -9,6 +10,18 @@ import type { ServidorBasicoFormData } from '../schemas/servidorBasico.schema'
 import type { ServidorLaboralFormData } from '../schemas/servidorLaboral.schema'
 
 export const servidorService = {
+  // Lista lo justo para elegir a una persona, sin abrir su expediente: quien
+  // registra permisos o vacaciones a nombre de otro no tiene por qué verlo.
+  listarParaElegir: (params: {
+    unidad_administrativa_id?: number
+    es_jefe?: 1
+    en_funciones?: 1
+    per_page: number
+  }) =>
+    api
+      .get<ApiResponse<ServidorBusqueda[]>>('/expediente/servidores/buscar', { params })
+      .then((r) => r.data.datos),
+
   listar: (params?: ServidorParams) =>
     api
       .get<{

@@ -315,15 +315,16 @@ class ExpedienteService implements ExpedienteServiceInterface
     ];
 
     /**
-     * El buscador de los formularios: por nombre o cédula, con las mismas
-     * reglas que el listado, sin paginar y con tope. El id desempata el orden:
-     * dos homónimos salían cada vez en un orden distinto.
+     * El buscador de los formularios: por nombre o cédula, o una unidad o los
+     * jefes para quien registra a nombre de otro, con las mismas reglas que el
+     * listado, sin paginar y con tope. El id desempata el orden: dos homónimos
+     * salían cada vez en un orden distinto.
      */
-    public function buscarServidores(string $termino, int $limite): Collection
+    public function buscarServidores(array $filtros, int $limite): Collection
     {
         return $this->filtrarServidores(
             Servidor::query()->with(self::RELACIONES_BUSCADOR),
-            ['search' => $termino],
+            $filtros,
         )
             ->orderBy('apellido')->orderBy('nombre')->orderBy('id')
             ->limit($limite)

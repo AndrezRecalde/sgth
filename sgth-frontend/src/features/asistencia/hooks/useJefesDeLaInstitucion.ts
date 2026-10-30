@@ -1,6 +1,5 @@
-import { useServidores } from '@/features/expediente/hooks/useServidores'
+import { useJefesEnFunciones } from '@/features/expediente/hooks/useServidores'
 import { nombreServidor } from './useOpcionesSolicitante'
-import type { ServidorConRelaciones } from '@/types/api'
 
 /**
  * Los jefes en funciones de toda la institución, para que Talento Humano elija
@@ -12,8 +11,7 @@ import type { ServidorConRelaciones } from '@/types/api'
  * así que se piden de una vez y se reusan unos minutos.
  */
 export function useJefesDeLaInstitucion() {
-  const { data } = useServidores({ es_jefe: true, en_funciones: true, per_page: 500 })
-  const jefes = (data?.data ?? []) as ServidorConRelaciones[]
+  const { data: jefes = [] } = useJefesEnFunciones()
 
   return jefes.map((s) => ({
     value: String(s.id),

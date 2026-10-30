@@ -5,11 +5,10 @@ import { DatePickerInput } from '@mantine/dates'
 import { IconSearch } from '@tabler/icons-react'
 import { Toolbar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { useUnidades } from '@/features/estructura/hooks/useUnidades'
+import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
 import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 import { BuscarServidorSelect } from '@/features/expediente/components/BuscarServidorSelect'
 import { TIPO_OPCIONES_CONSOLIDADO } from './permisos.constants'
-import type { UnidadConRelaciones } from '@/types/api'
 
 export interface FiltrosConsolidado {
   fechaInicio: string | null
@@ -44,9 +43,11 @@ export function ConsolidadoFiltros({
   filtros, onCambiar, onConsultar, puedeConsultar, consultando, acciones,
 }: Props) {
   const contained = useContainedInput('sm')
-  const { data: unidadesRaw } = useUnidades({ nivel: 2 })
+  // La lista pública de unidades y no el listado de Estructura, que exige
+  // `ver-estructura`: el técnico de Asistencia no lo tiene.
+  const { data: unidades = [] } = useTodasUnidades({ nivel: 2 })
 
-  const unidadOptions = ((unidadesRaw ?? []) as UnidadConRelaciones[]).map((u) => ({
+  const unidadOptions = unidades.map((u) => ({
     value: String(u.id),
     label: u.nombre ?? `Unidad ${u.id}`,
   }))

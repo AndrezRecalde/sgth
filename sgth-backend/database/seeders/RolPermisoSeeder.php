@@ -66,6 +66,27 @@ class RolPermisoSeeder extends Seeder
     ];
 
     /**
+     * El técnico de Asistencia: marcaciones, permisos, vacaciones, licencias,
+     * períodos y consolidado de toda la institución, con sus acciones, y buscar
+     * a la persona en los formularios. Nada más de Talento Humano (decisión del
+     * 2026-10-30). Validar enfermedad y calamidad sigue siendo de Trabajo Social.
+     */
+    public const PERMISOS_TECNICO_ASISTENCIA = [
+        Permiso::VER_ASISTENCIA_TODOS,
+        Permiso::VER_PERMISOS_TODOS,
+        Permiso::REGISTRAR_PERMISOS_SERVIDORES,
+        Permiso::CONFIRMAR_RECEPCION,
+        Permiso::ANULAR_PERMISO_PENDIENTE,
+        Permiso::ANULAR_PERMISO,
+        Permiso::APROBAR_PERMISO_SIRHA7,
+        Permiso::VER_VACACIONES_UNIDAD,
+        Permiso::GESTIONAR_VACACIONES,
+        Permiso::APROBAR_VACACIONES,
+        Permiso::GESTIONAR_LICENCIAS,
+        Permiso::BUSCAR_SERVIDORES,
+    ];
+
+    /**
      * El técnico de seguridad y salud ocupacional: todo Riesgos laborales, y
      * buscar a la persona de un accidente o una entrega de EPP. Nada más de
      * Talento Humano (docs/plan-roles-y-accesos.md, PR 12).
@@ -395,6 +416,9 @@ class RolPermisoSeeder extends Seeder
         $this->crearRol(Rol::TRABAJO_SOCIAL, array_merge($permisosBase, [
             Permiso::VALIDAR_TRABAJO_SOCIAL,
         ]));
+
+        // TECNICO_ASISTENCIA
+        $this->crearRol(Rol::TECNICO_ASISTENCIA, array_merge($permisosBase, self::PERMISOS_TECNICO_ASISTENCIA));
 
         // FINANCIERO
         // Gestión Financiera: aprueba las solicitudes y los vuelos, entrega el

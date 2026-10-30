@@ -9822,6 +9822,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * Los turnos de hoy que esperan triaje. Los de todos, para quien lleva la
+         *     cola (`gestionar-agenda`: Enfermería y la administración); el médico y
+         *     el odontólogo, los suyos, como en la agenda. Antes cualquiera con la
+         *     agenda veía los pacientes de los demás (revisión de las cuentas de
+         *     prueba, 2026-10-29)
+         */
         get: operations["dispensario.triaje.pendientes"];
         put?: never;
         post?: never;
@@ -14945,6 +14952,8 @@ export interface components {
              */
             estado: boolean;
             puede_marcar: boolean;
+            /** @description Permisos y vacaciones ofrecen como firmante solo a los jefes. */
+            es_jefe: boolean;
             unidad_administrativa?: {
                 id: number;
                 nombre: string;
@@ -20939,12 +20948,19 @@ export interface operations {
     };
     "servidores.buscar": {
         parameters: {
-            query: {
+            query?: {
                 /**
                  * @description Desde dos letras, como el buscador: con una sola, media
-                 *     institución coincide.
+                 *     institución coincide. Sin texto solo se pide una lista.
                  */
-                search: string;
+                search?: string | null;
+                unidad_administrativa_id?: number | null;
+                /**
+                 * @description Solo «sí»: `es_jefe=0` sería casi toda la institución. Con
+                 *     `sometimes`: `accepted` se evalúa aunque el campo no venga.
+                 */
+                es_jefe?: string;
+                en_funciones?: boolean | null;
                 per_page?: number | null;
             };
             header?: never;
@@ -20968,6 +20984,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
         };
     };

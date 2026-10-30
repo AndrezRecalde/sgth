@@ -29,7 +29,7 @@ class BuscarServidorController extends Controller
     public function index(BuscarServidoresRequest $request): JsonResponse
     {
         $servidores = $this->expedienteService->buscarServidores(
-            $request->validated('search'),
+            $request->safe()->only(['search', 'unidad_administrativa_id', 'es_jefe', 'en_funciones']),
             (int) ($request->validated('per_page') ?? self::POR_DEFECTO),
         );
 

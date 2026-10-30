@@ -125,6 +125,19 @@ describe('buildNav', () => {
     }
   })
 
+  it('al técnico de Asistencia le ofrece Asistencia entera y nada más del SGTH', () => {
+    // Decisión del 2026-10-30: el módulo con sus acciones, sin el resto de TH.
+    expect(pantallas('sgth', 'tecnico-asistencia')).toEqual([
+      ROUTES.SGTH.ASISTENCIA,
+      ROUTES.SGTH.ASISTENCIA_PERMISOS,
+      ROUTES.SGTH.ASISTENCIA_VACACIONES,
+      ROUTES.SGTH.ASISTENCIA_LICENCIAS,
+      ROUTES.SGTH.ASISTENCIA_PERIODOS,
+      ROUTES.SGTH.ASISTENCIA_CONSOLIDADO,
+    ])
+    expect(inicioDelSubsistema('sgth', ...sesion('tecnico-asistencia'))).toBe(ROUTES.SGTH.ASISTENCIA)
+  })
+
   it('el expediente y la asistencia propios del Portal van con sus permisos', () => {
     // PR 16: `ver-expediente-propio` y `ver-asistencia-propia` estaban en
     // todos los roles y no los miraba nadie.
@@ -254,6 +267,7 @@ describe('getSubsistemasDisponibles', () => {
     'recepcion':             ['sgth', 'portal'],
     'responsable-identidad': ['comunicacion', 'portal'],
     'servidor':              ['portal'],
+    'tecnico-asistencia':    ['sgth', 'portal'],
     'tecnico-dtic':          ['tic', 'portal'],
     'tecnico-sso':           ['sgth', 'portal'],
     'trabajo-social':        ['sgth', 'portal'],
