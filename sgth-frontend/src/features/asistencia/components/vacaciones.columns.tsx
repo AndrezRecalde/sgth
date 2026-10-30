@@ -1,6 +1,6 @@
 'use client'
 
-import { Text } from '@mantine/core'
+import { Stack, Text } from '@mantine/core'
 import { IconBan, IconCheck, IconPrinter, IconX } from '@tabler/icons-react'
 import { StatusBadge, TableActions, confirmar } from '@/components/ui'
 import { formatFecha, hoyIso } from '@/lib/fecha'
@@ -42,11 +42,19 @@ export function getVacacionesColumns(
     {
       accessor: 'servidor',
       title: 'Servidor',
-      render: ({ servidor }) =>
+      // Como en permisos: la unidad más larga (55 letras) cabe en dos líneas.
+      width: 210,
+      render: ({ servidor, unidad_administrativa }) =>
         servidor ? (
-          <Text size="sm">
-            {[servidor.apellido, servidor.nombre].filter(Boolean).join(' ')}
-          </Text>
+          <Stack gap={0}>
+            <Text size="sm">
+              {[servidor.apellido, servidor.nombre].filter(Boolean).join(' ')}
+            </Text>
+            {/* La grabada en la solicitud: si cambia de unidad, su historial no cambia. */}
+            {unidad_administrativa?.nombre && (
+              <Text size="xs" c="dimmed" lineClamp={2}>{unidad_administrativa.nombre}</Text>
+            )}
+          </Stack>
         ) : (
           <Text size="sm" c="dimmed">—</Text>
         ),

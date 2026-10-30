@@ -27,11 +27,22 @@ export function getPermisosColumns(
     {
       accessor: 'servidor',
       title: 'Servidor',
+      // Sin ancho se quedaba con lo que dejan las demás: 114 px a 1019 de
+      // pantalla. Con 210 la unidad más larga (55 letras) cabe en dos líneas.
+      width: 210,
       render: (p) => {
         const s = p.servidor
         if (!s) return <Text size="sm" c="dimmed">—</Text>
 
-        return <Text size="sm">{[s.apellido, s.nombre].filter(Boolean).join(' ')}</Text>
+        return (
+          <Stack gap={0}>
+            <Text size="sm">{[s.apellido, s.nombre].filter(Boolean).join(' ')}</Text>
+            {/* La grabada en el permiso: si cambia de unidad, su historial no cambia. */}
+            {p.unidad_administrativa?.nombre && (
+              <Text size="xs" c="dimmed" lineClamp={2}>{p.unidad_administrativa.nombre}</Text>
+            )}
+          </Stack>
+        )
       },
     },
     {
