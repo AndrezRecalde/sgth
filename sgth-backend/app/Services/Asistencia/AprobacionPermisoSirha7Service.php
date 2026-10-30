@@ -118,7 +118,8 @@ class AprobacionPermisoSirha7Service
 
             $permiso->save();
 
-            return $permiso->load('filasSirha7');
+            // El servidor se cargó para leer su cédula: no sale con la respuesta.
+            return $permiso->unsetRelation('servidor')->load('filasSirha7');
         });
     }
 

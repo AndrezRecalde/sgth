@@ -24,6 +24,17 @@ use Illuminate\Support\Facades\DB;
 class VacacionService implements VacacionServiceInterface
 {
     /**
+     * Lo que leen las pantallas de cada relación. `Servidor` no oculta nada: sin
+     * columnas, a quien pedía sus vacaciones le llegaba la ficha entera de su
+     * jefe y de quien lo reemplaza, y a quien abría el listado, la de todos. El
+     * jefe y quien la registró salen del todo: ninguna pantalla los usa.
+     */
+    public const RELACIONES = [
+        'servidor:id,nombre,apellido',
+        'unidadAdministrativa:id,nombre',
+    ];
+
+    /**
      * Motor de cálculo según la jurisprudencia aplicable al servidor.
      *
      * Se decide con un `match` sobre los tres regímenes y no descartando el
@@ -206,7 +217,7 @@ class VacacionService implements VacacionServiceInterface
                 'codigo_qr'        => Vacacion::urlVerificacion($folio),
             ]);
 
-            return $vacacion->fresh(['servidor', 'jefe', 'creadoPor', 'personaReemplaza']);
+            return $vacacion->fresh([...self::RELACIONES, 'personaReemplaza:id,nombre,apellido']);
         });
     }
 
@@ -268,7 +279,7 @@ class VacacionService implements VacacionServiceInterface
             $vacacion->estado = $nuevoEstado;
             $vacacion->save();
 
-            return $vacacion->fresh(['servidor', 'jefe', 'creadoPor']);
+            return $vacacion->fresh(self::RELACIONES);
         });
     }
 
@@ -334,7 +345,7 @@ class VacacionService implements VacacionServiceInterface
             );
 
             return [
-                'vacacion'       => $vacacion->fresh(['servidor', 'jefe', 'creadoPor']),
+                'vacacion'       => $vacacion->fresh(self::RELACIONES),
                 'dias_devueltos' => $devueltos,
             ];
         });

@@ -21,6 +21,26 @@ class PermisoServidorController extends Controller
     /** Techo del paginador: `?per_page=100000` traía la tabla entera. */
     private const PER_PAGE_MAX = 100;
 
+    /**
+     * Lo que leen las pantallas de cada relación. `Servidor` no oculta nada: sin
+     * columnas, a quien abría el listado le llegaba la ficha entera —celular,
+     * correo, dirección, contacto de emergencia, discapacidad— del servidor, de
+     * su jefe y de quien lo registró, y ninguna pantalla usa a esos dos últimos.
+     *
+     * `unidad_administrativa_id` no se muestra: es la unidad a la que cae
+     * `PermisoServidorPolicy` cuando el permiso nació sin ella.
+     */
+    private const RELACIONES_LISTADO = [
+        'servidor:id,nombre,apellido,unidad_administrativa_id',
+        'unidadAdministrativa:id,nombre',
+    ];
+
+    /** El detalle también lleva la cédula: con ella se coteja el papel del QR. */
+    private const RELACIONES_DETALLE = [
+        'servidor:id,nombre,apellido,cedula,unidad_administrativa_id',
+        'unidadAdministrativa:id,nombre',
+    ];
+
     public function __construct(private PermisoServiceInterface $permisoService) {}
 
     public function index(Request $request)
@@ -42,12 +62,7 @@ class PermisoServidorController extends Controller
             'per_page'                 => ['nullable', 'integer'],
         ]);
 
-        $query = PermisoServidor::with([
-            'servidor',
-            'jefe',
-            'creadoPor',
-            'unidadAdministrativa',
-        ])
+        $query = PermisoServidor::with(self::RELACIONES_LISTADO)
             // created_at es timestamp(0): sin desempate por id, dos páginas
             // del mismo resultado pueden solaparse.
             ->orderBy('created_at', 'desc')
@@ -156,7 +171,7 @@ class PermisoServidorController extends Controller
     public function show(int $id, Request $request)
     {
         return $this->detalle(
-            PermisoServidor::with(['servidor'])->findOrFail($id),
+            PermisoServidor::with(self::RELACIONES_DETALLE)->findOrFail($id),
             $request
         );
     }
@@ -177,7 +192,7 @@ class PermisoServidorController extends Controller
     public function showPorFolio(string $folio, Request $request)
     {
         return $this->detalle(
-            PermisoServidor::with(['servidor', 'unidadAdministrativa', 'jefe'])
+            PermisoServidor::with(self::RELACIONES_DETALLE)
                 ->where('folio', $folio)
                 ->firstOrFail(),
             $request
@@ -199,7 +214,7 @@ class PermisoServidorController extends Controller
 
         // Confirmación por Recepción escaneando el código
         $permiso = $this->permisoService->confirmarRecepcion($folio, $request->user()->id);
-        return ApiResponse::ok($permiso, 'Permiso confirmado exitosamente por Recepción.');
+        return ApiResponse::ok($this->trasLaAccion($permiso, $request->user()), 'Permiso confirmado exitosamente por Recepción.');
     }
 
     public function validar(int $id, Request $request)
@@ -208,7 +223,7 @@ class PermisoServidorController extends Controller
 
         // Validación de Trabajo Social para Enfermedad y Calamidad
         $permiso = $this->permisoService->validarTrabajoSocial($id, $request->user()->id);
-        return ApiResponse::ok($permiso, 'Permiso validado por Trabajo Social.');
+        return ApiResponse::ok($this->trasLaAccion($permiso, $request->user()), 'Permiso validado por Trabajo Social.');
     }
 
     public function rechazar(int $id, MotivoPermisoRequest $request)
@@ -219,7 +234,7 @@ class PermisoServidorController extends Controller
             $id, $request->user()->id, $request->validated()['motivo']
         );
 
-        return ApiResponse::ok($permiso, 'Permiso rechazado por Recepción.');
+        return ApiResponse::ok($this->trasLaAccion($permiso, $request->user()), 'Permiso rechazado por Recepción.');
     }
 
     public function revertirConfirmacion(int $id, MotivoPermisoRequest $request)
@@ -231,7 +246,7 @@ class PermisoServidorController extends Controller
         );
 
         return ApiResponse::ok(
-            $permiso,
+            $this->trasLaAccion($permiso, $request->user()),
             'Confirmación revertida. El permiso vuelve a PENDIENTE y se devolvió el saldo descontado.'
         );
     }
@@ -250,7 +265,7 @@ class PermisoServidorController extends Controller
         // sin bloqueo y podía pisar una confirmación simultánea.
         $permiso = $this->permisoService->anular($id, $request->user()->id, $datos['motivo']);
 
-        return ApiResponse::ok($permiso, 'Permiso anulado correctamente.');
+        return ApiResponse::ok($this->trasLaAccion($permiso, $request->user()), 'Permiso anulado correctamente.');
     }
 
     public function exportar(int $id, Request $request): mixed
@@ -341,6 +356,22 @@ class PermisoServidorController extends Controller
                 ]);
             }
         });
+    }
+
+    /**
+     * El permiso que devuelven las acciones: sin relaciones y bajo la misma
+     * regla del motivo que el listado.
+     *
+     * Las pantallas vuelven a pedirlo, no leen esto. Pero confirmar y revertir
+     * dejan el servidor cargado —el saldo depende de su régimen— y salía con la
+     * ficha entera. Y a Recepción, que en el listado no ve el motivo de un
+     * permiso por enfermedad, se lo contaba la respuesta al confirmarlo.
+     */
+    private function trasLaAccion(PermisoServidor $permiso, User $user): PermisoServidor
+    {
+        $this->ocultarObservacionSiCorresponde($permiso, $user);
+
+        return $permiso->withoutRelations();
     }
 
     private function ocultarObservacionSiCorresponde(PermisoServidor $permiso, User $user): void
