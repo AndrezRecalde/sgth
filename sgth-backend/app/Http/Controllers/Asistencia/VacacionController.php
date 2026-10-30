@@ -11,6 +11,7 @@ use App\Models\Asistencia\Vacacion;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
 use App\Services\Asistencia\ConteoDeVacaciones;
+use App\Services\Asistencia\VacacionService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -25,12 +26,7 @@ class VacacionController extends Controller
     {
         $this->authorize('verAny', Vacacion::class);
 
-        $query = Vacacion::with([
-            'servidor',
-            'jefe',
-            'creadoPor',
-            'unidadAdministrativa',
-        ])
+        $query = Vacacion::with(VacacionService::RELACIONES)
             // created_at es timestamp(0): sin desempate por id, dos páginas
             // del mismo resultado pueden solaparse.
             ->orderBy('created_at', 'desc')

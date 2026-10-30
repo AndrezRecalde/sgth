@@ -103,6 +103,17 @@ function aprobarEnSirha7(User $quien, PermisoServidor $p, int $leaveId = 19)
         ->postJson("/api/v1/asistencia/permisos/{$p->id}/aprobar-sirha7", ['leave_id' => $leaveId]);
 }
 
+test('la respuesta de aprobar no lleva la ficha del servidor, que se cargó para leer su cédula', function () {
+    $p = permisoAprobacionSirha7($this->servidor, TipoPermiso::OFICIAL);
+
+    $this->sirha7->shouldReceive('registrar')->once()->andReturn(registroSirha7());
+
+    aprobarEnSirha7($this->uath, $p)
+        ->assertOk()
+        ->assertJsonPath('datos.sirha7_leave_nombre', 'OFICIAL')
+        ->assertJsonMissingPath('datos.servidor');
+});
+
 // ── Quién aprueba ────────────────────────────────────────────────────
 
 test('Talento Humano aprueba un oficial: se registra por horas con la referencia del folio', function () {

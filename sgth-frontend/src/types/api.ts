@@ -1765,6 +1765,17 @@ export type CompaneroDeUnidad = {
   es_jefe: boolean
 }
 
+/**
+ * La persona de un permiso o una vacación: lo que manda el API, no la ficha.
+ * La cédula solo viene en el detalle del permiso.
+ */
+export type PersonaDeAsistencia = {
+  id:       number
+  nombre:   string
+  apellido: string
+  cedula?:  string | null
+}
+
 export type PermisoServidor = {
   id:               number
   servidor_id:      number
@@ -1799,11 +1810,9 @@ export type PermisoServidor = {
   sirha7_dias_omitidos?: { dia: string; motivo: string }[] | null
   /** Activo, confirmado desde la fecha de corte y sin aprobar todavía. */
   pendiente_sirha7?:     boolean
-  servidor?:        ServidorConRelaciones
+  servidor?:        PersonaDeAsistencia
   unidad_administrativa_id?: number | null
   unidad_administrativa?:    { id: number; nombre?: string } | null
-  jefe?:            ServidorConRelaciones | null
-  creadoPor?:       { id: number; name?: string } | null
 }
 
 /** Un tipo de permiso de Sirha7 (dbo.LeaveClass). */
@@ -1927,12 +1936,11 @@ export type Vacacion = {
   tipo_dias:        'habiles' | 'calendario'
   estado:           EstadoVacacion
   aprobado_por?:    number | null
-  servidor?:        ServidorConRelaciones
-  jefe?:            ServidorConRelaciones | null
+  servidor?:        PersonaDeAsistencia
   unidad_administrativa_id?: number | null
   unidad_administrativa?:    { id: number; nombre?: string } | null
   persona_reemplaza_id?: number | null
-  persona_reemplaza?:    ServidorConRelaciones | null
+  persona_reemplaza?:    PersonaDeAsistencia | null
   periodo_vacacion?:     PeriodoVacacion | null
   anulado_por?:          number | null
   anulado_en?:           string | null
