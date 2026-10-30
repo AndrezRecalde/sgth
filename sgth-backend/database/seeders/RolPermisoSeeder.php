@@ -256,9 +256,11 @@ class RolPermisoSeeder extends Seeder
             Permiso::VINCULAR_SERVIDOR_INICIAL,
         ]));
 
-        // ADMIN_UATH
+        // ADMIN_UATH. Sin `activar-usuario` desde el 2026-10-29: las cuentas
+        // las activa y desactiva TIC desde Usuarios, y con él Talento Humano
+        // podía desactivar cualquiera —también las de TIC— por el API, sin
+        // pantalla.
         $this->crearRol(Rol::ADMIN_UATH, array_merge($permisosBase, [
-            Permiso::ACTIVAR_USUARIO,
             Permiso::VER_ESTRUCTURA,
             Permiso::GESTIONAR_PUESTOS,
             Permiso::GESTIONAR_ORGANIGRAMA,
