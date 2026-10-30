@@ -6,7 +6,7 @@ import { IconCubePlus, IconX } from '@tabler/icons-react'
 import { Toolbar } from '@/components/ui'
 import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { useUnidades } from '@/features/estructura/hooks/useUnidades'
+import { useTodasUnidades } from '@/features/estructura/hooks/useUnidades'
 import { fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 import {
   ESTADO_LABELS,
@@ -14,7 +14,7 @@ import {
   MOTIVO_LABELS,
   TONO_ESTADO,
 } from './vacaciones.constants'
-import type { EstadoVacacion, UnidadConRelaciones } from '@/types/api'
+import type { EstadoVacacion } from '@/types/api'
 
 /*
 | Los filtros del listado de vacaciones.
@@ -51,9 +51,11 @@ interface Props {
 
 export function VacacionesFiltros({ filtros, onCambiar, onNueva }: Props) {
   const contained = useContainedInput('sm')
-  const { data: unidadesRaw } = useUnidades({ nivel: 2 })
+  // La lista pública de unidades y no el listado de Estructura, que exige
+  // `ver-estructura`: el técnico de Asistencia no lo tiene.
+  const { data: unidades = [] } = useTodasUnidades({ nivel: 2 })
 
-  const unidadOptions = ((unidadesRaw ?? []) as UnidadConRelaciones[]).map((u) => ({
+  const unidadOptions = unidades.map((u) => ({
     value: String(u.id),
     label: u.nombre ?? `Unidad ${u.id}`,
   }))

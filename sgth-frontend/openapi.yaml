@@ -6811,12 +6811,42 @@
                     {
                         "name": "search",
                         "in": "query",
-                        "required": true,
-                        "description": "Desde dos letras, como el buscador: con una sola, media\ninstituci\u00f3n coincide.",
+                        "description": "Desde dos letras, como el buscador: con una sola, media\ninstituci\u00f3n coincide. Sin texto solo se pide una lista.",
                         "schema": {
-                            "type": "string",
+                            "type": [
+                                "string",
+                                "null"
+                            ],
                             "minLength": 2,
                             "maxLength": 100
+                        }
+                    },
+                    {
+                        "name": "unidad_administrativa_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "es_jefe",
+                        "in": "query",
+                        "description": "Solo \u00abs\u00ed\u00bb: `es_jefe=0` ser\u00eda casi toda la instituci\u00f3n. Con\n`sometimes`: `accepted` se eval\u00faa aunque el campo no venga.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "en_funciones",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "boolean",
+                                "null"
+                            ]
                         }
                     },
                     {
@@ -6867,11 +6897,14 @@
                             }
                         }
                     },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 }
             }
@@ -62995,6 +63028,7 @@
         "/v1/dispensario/triaje/pendientes": {
             "get": {
                 "operationId": "dispensario.triaje.pendientes",
+                "summary": "Los turnos de hoy que esperan triaje. Los de todos, para quien lleva la\ncola (`gestionar-agenda`: Enfermer\u00eda y la administraci\u00f3n); el m\u00e9dico y\nel odont\u00f3logo, los suyos, como en la agenda. Antes cualquiera con la\nagenda ve\u00eda los pacientes de los dem\u00e1s (revisi\u00f3n de las cuentas de\nprueba, 2026-10-29)",
                 "tags": [
                     "Triaje"
                 ],
@@ -83852,6 +83886,10 @@
                     "puede_marcar": {
                         "type": "boolean"
                     },
+                    "es_jefe": {
+                        "type": "boolean",
+                        "description": "Permisos y vacaciones ofrecen como firmante solo a los jefes."
+                    },
                     "unidad_administrativa": {
                         "type": [
                             "object",
@@ -83925,7 +83963,8 @@
                     "segundo_apellido",
                     "regimen_laboral",
                     "estado",
-                    "puede_marcar"
+                    "puede_marcar",
+                    "es_jefe"
                 ],
                 "title": "ServidorBusquedaResource"
             },

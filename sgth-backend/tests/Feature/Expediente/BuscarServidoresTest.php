@@ -140,13 +140,98 @@ it('pide al menos dos letras y no devuelve más de veinte', function () {
         ->assertJsonValidationErrors(['per_page'], 'errores');
 });
 
+// ── Las listas de los formularios de Asistencia ───────────────────────────
+//
+// Permisos y vacaciones llenaban sus selectores con el listado del Expediente,
+// que pide `ver-expediente-todos`: el técnico de Asistencia recibía 403, y darle
+// ese permiso le abría el expediente de la institución.
+
+it('quien registra a nombre de otro lista una unidad, sin contacto ni vínculo', function (string $rol) {
+    $datos = $this->actingAs(($this->conRol)($rol), 'sanctum')
+        ->getJson("/api/v1/expediente/servidores/buscar?unidad_administrativa_id={$this->unidad->id}&per_page=100")
+        ->assertOk()
+        ->assertJsonCount(2, 'datos')
+        ->json('datos');
+
+    expect($datos[0])->not->toHaveKeys(['telefono_celular', 'direccion_domicilio'])
+        ->and($datos[0]['es_jefe'])->toBeFalse();
+})->with(['admin-uath', 'asistente-uath', 'tecnico-asistencia']);
+
+it('al técnico de Asistencia no le llega lo del vínculo', function () {
+    $juan = $this->actingAs(($this->conRol)('tecnico-asistencia'), 'sanctum')
+        ->getJson("/api/v1/expediente/servidores/buscar?unidad_administrativa_id={$this->unidad->id}&per_page=100")
+        ->assertOk()
+        ->json('datos.0');
+
+    expect($juan)->not->toHaveKeys(['contrato_vigente', 'puesto', 'pendiente_vinculacion', 'ultimo_nombramiento']);
+});
+
+it('lista a los jefes en funciones, y no a un jefe sin contrato', function () {
+    $otraUnidad = unidadDePrueba(['nombre' => 'Otra Unidad del Buscador']);
+    $puestoDeJefe = puestoJefeDePrueba($otraUnidad);
+
+    $conContrato = Servidor::forceCreate([
+        'cedula' => '0807171703', 'nombre' => 'Ana', 'apellido' => 'Jefa',
+        'unidad_administrativa_id' => $otraUnidad->id, 'puesto_id' => $puestoDeJefe->id,
+        'regimen_laboral' => 'losep', 'estado' => true,
+    ]);
+    ContratoServidor::create([
+        'servidor_id'              => $conContrato->id,
+        'tipo_nombramiento'        => TipoNombramiento::PERMANENTE->value,
+        'unidad_administrativa_id' => $otraUnidad->id,
+        'puesto_id'                => $puestoDeJefe->id,
+        'fecha_inicio'             => '2020-01-01',
+        'estado'                   => 'vigente',
+        'remuneracion'             => 1212.00,
+    ]);
+    Servidor::forceCreate([
+        'cedula' => '0807171704', 'nombre' => 'Eva', 'apellido' => 'Sincontrato',
+        'unidad_administrativa_id' => $otraUnidad->id, 'puesto_id' => $puestoDeJefe->id,
+        'regimen_laboral' => 'losep', 'estado' => true,
+    ]);
+
+    $jefes = $this->actingAs(($this->conRol)('tecnico-asistencia'), 'sanctum')
+        ->getJson('/api/v1/expediente/servidores/buscar?es_jefe=1&en_funciones=1&per_page=500')
+        ->assertOk()
+        ->json('datos');
+
+    expect(collect($jefes)->pluck('id')->all())->toBe([$conContrato->id])
+        ->and($jefes[0]['es_jefe'])->toBeTrue()
+        ->and($jefes[0]['unidad_administrativa']['nombre'])->toBe('Otra Unidad del Buscador');
+});
+
+it('TIC y el auditor siguen buscando solo por texto', function (string $rol) {
+    $this->actingAs(($this->conRol)($rol), 'sanctum');
+
+    $this->getJson("/api/v1/expediente/servidores/buscar?unidad_administrativa_id={$this->unidad->id}")->assertForbidden();
+    $this->getJson('/api/v1/expediente/servidores/buscar?es_jefe=1')->assertForbidden();
+    $this->getJson('/api/v1/expediente/servidores/buscar?search=juan')->assertOk();
+})->with(['tecnico-dtic', 'jefe-tic', 'admin-ti', 'auditor', 'tecnico-sso']);
+
+it('sin texto ni lista responde 422, y no lista a los que no son jefes', function () {
+    $this->actingAs(($this->conRol)('tecnico-asistencia'), 'sanctum');
+
+    $this->getJson('/api/v1/expediente/servidores/buscar')
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['search'], 'errores');
+
+    $this->getJson('/api/v1/expediente/servidores/buscar?en_funciones=1&per_page=500')
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['search', 'per_page'], 'errores');
+
+    $this->getJson('/api/v1/expediente/servidores/buscar?es_jefe=0&per_page=500')
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['es_jefe'], 'errores');
+});
+
 it('el seeder da el permiso a los mismos roles que la migración', function () {
     $migracion = require database_path('migrations/2026_11_26_000000_permiso_buscar_servidores.php');
     $roles = (new ReflectionClassConstant($migracion, 'ROLES'))->getValue();
 
     // Los roles que nacieron después ya con el permiso no los toca esta
-    // migración: se lo da la suya. El técnico de SSO, en la 2026_11_30 (PR 12).
-    $posteriores = ['tecnico-sso'];
+    // migración: se lo da la suya. El técnico de SSO, en la 2026_11_30 (PR 12);
+    // el de Asistencia, en la 2026_12_14.
+    $posteriores = ['tecnico-sso', 'tecnico-asistencia'];
 
     $conPermiso = Role::where('guard_name', 'sanctum')
         ->whereHas('permissions', fn ($q) => $q->where('name', 'buscar-servidores'))

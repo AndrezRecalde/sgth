@@ -40,6 +40,8 @@ class ServidorBusquedaResource extends JsonResource
             // el historial de quien ya no está.
             'estado'           => $this->estado,
             'puede_marcar'     => $this->puede_marcar,
+            // Permisos y vacaciones ofrecen como firmante solo a los jefes.
+            'es_jefe'          => (bool) $this->puesto?->es_jefe,
 
             'unidad_administrativa' => $this->whenLoaded('unidadAdministrativa', fn () => $this->unidadAdministrativa ? [
                 'id'     => $this->unidadAdministrativa->id,

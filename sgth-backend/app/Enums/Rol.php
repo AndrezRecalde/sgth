@@ -55,6 +55,10 @@ enum Rol: string
     // Talento Humano (docs/plan-roles-y-accesos.md, PR 12).
     case TECNICO_SSO = 'tecnico-sso';
 
+    // Asistencia entera, con sus acciones, y nada más de Talento Humano
+    // (decisión del 2026-10-30).
+    case TECNICO_ASISTENCIA = 'tecnico-asistencia';
+
     // Control y auditoría
     case AUDITOR = 'auditor';
 
@@ -95,6 +99,7 @@ enum Rol: string
             self::COMUNICACION_SOCIAL => 'Comunicación Social',
             self::RESPONSABLE_IDENTIDAD => 'Responsable de Identidad Institucional',
             self::TECNICO_SSO => 'Técnico de Seguridad y Salud Ocupacional',
+            self::TECNICO_ASISTENCIA => 'Técnico de Asistencia',
             self::AUDITOR => 'Auditor',
         };
     }
