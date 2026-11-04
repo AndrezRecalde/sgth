@@ -1414,6 +1414,22 @@ export type CargoParams = {
   search?: string
 }
 
+/** Un grado de la escala, con su RMU. Lo usan el puesto, la revisión y la escala nueva. */
+export type GrupoOcupacional = {
+  id: number
+  grado_codigo: string
+  grado_numerico: number | null
+  grupo: string
+  denominacion_generica: string | null
+  rmu: number
+  regimen: 'losep' | 'codigo_trabajo'
+  nivel_complejidad: string | null
+  rol_puesto: string | null
+  activo: boolean
+  /** Si sube con la nueva escala: la LOSEP, sin autoridades electas ni obreros (fase 7.3b). */
+  admite_escala: boolean
+}
+
 // ── Partidas presupuestarias ─────────────────────
 // Catálogo puro: sin monto asignado ni saldo por año fiscal. 'disponible'
 // es el hint de disponibilidad que el área presupuestaria mantiene a mano

@@ -5,7 +5,7 @@ import { IconAlertTriangle } from '@tabler/icons-react'
 import { DetailList, SectionHeading } from '@/components/ui'
 import { formatFecha } from '@/lib/fecha'
 import type { MovimientoPersonal } from '@/types/api'
-import { dinero } from '../utils/dinero'
+import { dinero } from '@/lib/dinero'
 import { BloqueDetalle } from './BloqueDetalle'
 
 /**

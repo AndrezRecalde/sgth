@@ -15,7 +15,7 @@ import {
   terminacionObreroService,
   type TerminacionObrero,
 } from '../services/terminacionObreroService'
-import { dinero } from '../utils/dinero'
+import { dinero } from '@/lib/dinero'
 import { ActaFiniquitoModal } from './ActaFiniquitoModal'
 
 /**

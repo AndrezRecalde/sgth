@@ -5,7 +5,7 @@ import { IconBan } from '@tabler/icons-react'
 import { DetailList, SectionHeading } from '@/components/ui'
 import { BloqueDetalle } from './BloqueDetalle'
 import { etiquetaNombramiento } from '../utils/tipoNombramientoOptions'
-import { dinero } from '../utils/dinero'
+import { dinero } from '@/lib/dinero'
 import type { MovimientoPersonal } from '@/types/api'
 import { formatFecha, formatFechaHora } from '@/lib/fecha'
 

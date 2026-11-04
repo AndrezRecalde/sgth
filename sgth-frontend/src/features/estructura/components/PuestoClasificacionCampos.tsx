@@ -4,9 +4,9 @@ import { Alert, Grid, Select } from '@mantine/core'
 import { IconInfoCircle } from '@tabler/icons-react'
 import { Controller, type Control, type FieldErrors } from 'react-hook-form'
 import { useContainedInput } from '@/hooks/useContainedInput'
-import { dinero } from '@/features/expediente/utils/dinero'
+import { dinero } from '@/lib/dinero'
 import { COMPLEJIDADES, rolesDelRegimen, type RegimenPuesto } from '../constants/clasificacionPuesto'
-import type { GrupoOcupacional } from '../hooks/useGruposOcupacionales'
+import type { GrupoOcupacional } from '@/types/api'
 import type { PuestoFormData } from '../schemas/puesto.schema'
 
 interface Props {

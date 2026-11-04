@@ -1,15 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { Stack, Text } from '@mantine/core'
-import { IconArrowBackUp, IconScale } from '@tabler/icons-react'
-import type { DataTableColumn } from 'mantine-datatable'
-import { DataState, MotivoModal, SectionHeading, SgthTable, StatusBadge, TableActions } from '@/components/ui'
+import { Stack } from '@mantine/core'
+import { IconScale } from '@tabler/icons-react'
+import { DataState, MotivoModal, SectionHeading, SgthTable } from '@/components/ui'
 import { useAuth } from '@/hooks/useAuth'
-import { formatFecha } from '@/lib/fecha'
-import { dinero } from '@/features/expediente/utils/dinero'
 import { useEscalasRemuneracion, useRevertirEscala } from '../hooks/useEscalaRemuneracion'
 import type { EscalaRemuneracion } from '../services/escalaRemuneracionService'
+import { getEscalaRemuneracionColumns } from './escalaRemuneracion.columns'
 
 /**
  * Las escalas de remuneraciones registradas (fase 7.3b), con lo que subió cada
@@ -23,49 +21,7 @@ export function EscalasRemuneracionSection() {
   const revertir = useRevertirEscala()
   const [aRevertir, setARevertir] = useState<EscalaRemuneracion | null>(null)
 
-  const columnas: DataTableColumn<EscalaRemuneracion>[] = [
-    {
-      accessor: 'instrumento',
-      title: 'Resolución',
-      render: (e) => (
-        <Stack gap={0}>
-          <Text size="sm" fw={500}>{e.instrumento}</Text>
-          <Text size="xs" c="dimmed">del {formatFecha(e.fecha_instrumento)} · dictamen {e.dictamen_presupuestario_ref}</Text>
-        </Stack>
-      ),
-    },
-    { accessor: 'rige_desde', title: 'Rige desde', render: (e) => formatFecha(e.rige_desde) },
-    {
-      accessor: 'grados',
-      title: 'Grados',
-      render: (e) => (
-        <Stack gap={0}>
-          {e.grados.map((g) => (
-            <Text key={g.grado ?? ''} size="xs">{g.grado} · {dinero(g.rmu_anterior)} → <b>{dinero(g.rmu_nueva)}</b></Text>
-          ))}
-        </Stack>
-      ),
-    },
-    { accessor: 'vinculos', title: 'Servidores que subieron', textAlign: 'right' },
-    {
-      accessor: 'revertida_en',
-      title: 'Estado',
-      render: (e) => e.revertida_en
-        ? <StatusBadge tone="neutral">Revertida</StatusBadge>
-        : <StatusBadge tone="success">Aplicada</StatusBadge>,
-    },
-    {
-      accessor: 'acciones',
-      title: '',
-      render: (e) => (
-        <TableActions
-          actions={puedeRevertir && !e.revertida_en
-            ? [{ label: 'Revertir la escala', icon: <IconArrowBackUp size={14} />, color: 'red', onClick: () => setARevertir(e) }]
-            : []}
-        />
-      ),
-    },
-  ]
+  const columnas = getEscalaRemuneracionColumns({ alRevertir: setARevertir, puedeRevertir })
 
   return (
     <Stack gap="sm">

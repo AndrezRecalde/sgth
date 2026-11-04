@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { Alert, Group, NumberInput, Paper, Stack, Text, TextInput, Textarea } from '@mantine/core'
+import { Alert, Grid, Stack, Text, TextInput, Textarea } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
 import { useDebouncedValue } from '@mantine/hooks'
 import { IconAlertTriangle, IconInfoCircle } from '@tabler/icons-react'
@@ -12,10 +12,12 @@ import { useAuth } from '@/hooks/useAuth'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { erroresDeCampo } from '@/lib/erroresDeCampo'
 import { fromDateValueOrNull, hoyIso, toDateValue } from '@/lib/fecha'
-import { dinero } from '@/features/expediente/utils/dinero'
-import { useGruposOcupacionales, type GrupoOcupacional } from '../hooks/useGruposOcupacionales'
+import { dinero } from '@/lib/dinero'
+import type { GrupoOcupacional } from '@/types/api'
+import { useGruposOcupacionales } from '../hooks/useGruposOcupacionales'
 import { useRegistrarEscala, useVistaPreviaEscala } from '../hooks/useEscalaRemuneracion'
 import { escalaRemuneracionSchema, type EscalaRemuneracionFormData } from '../schemas/escalaRemuneracion.schema'
+import { EscalaGradosCampos } from './EscalaGradosCampos'
 
 interface Props {
   opened: boolean
@@ -101,39 +103,7 @@ function Formulario({ grados, onClose }: { grados: GrupoOcupacional[]; onClose: 
           {!puedeRegistrar && ' La registra el Director de Talento Humano: aquí puede revisar a quién sube.'}
         </Alert>
 
-        <Paper withBorder p="sm" radius="md">
-          <Stack gap={6}>
-            <Text size="sm" fw={600}>RMU nueva de cada grado</Text>
-            <Text size="xs" c="dimmed">Deje en blanco los grados que no cambian.</Text>
-            {grados.map((g, i) => (
-              <Group key={g.id} justify="space-between" wrap="nowrap" gap="sm">
-                <Text size="sm" style={{ flex: 1, minWidth: 0 }}>
-                  <b>{g.grado_codigo}</b> · {g.denominacion_generica ?? g.grupo} · hoy {dinero(g.rmu)}
-                </Text>
-                <Controller
-                  name={`grados.${i}.rmu_nueva`}
-                  control={control}
-                  render={({ field }) => (
-                    <NumberInput
-                      aria-label={`RMU nueva del grado ${g.grado_codigo}`}
-                      placeholder="Igual"
-                      min={0}
-                      decimalScale={2}
-                      hideControls
-                      prefix="$ "
-                      value={field.value ?? ''}
-                      onChange={(v) => field.onChange(typeof v === 'number' ? v : null)}
-                      w={140}
-                      {...contained}
-                    />
-                  )}
-                />
-              </Group>
-            ))}
-            {errors.grados?.root?.message && <Text size="xs" c="red">{errors.grados.root.message}</Text>}
-            {errors.grados?.message && <Text size="xs" c="red">{errors.grados.message}</Text>}
-          </Stack>
-        </Paper>
+        <EscalaGradosCampos control={control} errors={errors} grados={grados} />
 
         {previa.data && pedidos.length > 0 && (
           <Stack gap={4}>
@@ -159,58 +129,65 @@ function Formulario({ grados, onClose }: { grados: GrupoOcupacional[]; onClose: 
           </Alert>
         )}
 
-        <Group grow align="flex-start">
-          <TextInput
-            label="Resolución que fija la escala"
-            withAsterisk
-            error={errors.instrumento?.message}
-            {...contained}
-            {...register('instrumento')}
-          />
-          <Controller
-            name="fecha_instrumento"
-            control={control}
-            render={({ field }) => (
-              <DatePickerInput
-                label="Fecha de la resolución"
-                withAsterisk
-                valueFormat="DD/MM/YYYY"
-                maxDate={hoyIso()}
-                value={toDateValue(field.value)}
-                onChange={(d) => field.onChange(fromDateValueOrNull(d) ?? '')}
-                error={errors.fecha_instrumento?.message}
-                {...contained}
-              />
-            )}
-          />
-        </Group>
-        <Group grow align="flex-start">
-          <Controller
-            name="rige_desde"
-            control={control}
-            render={({ field }) => (
-              <DatePickerInput
-                label="Rige desde"
-                description="Hoy o antes."
-                withAsterisk
-                valueFormat="DD/MM/YYYY"
-                maxDate={hoyIso()}
-                value={toDateValue(field.value)}
-                onChange={(d) => field.onChange(fromDateValueOrNull(d) ?? '')}
-                error={errors.rige_desde?.message}
-                {...contained}
-              />
-            )}
-          />
-          <TextInput
-            label="Dictamen presupuestario"
-            description="Sube el gasto: es obligatorio."
-            withAsterisk
-            error={errors.dictamen_presupuestario_ref?.message}
-            {...contained}
-            {...register('dictamen_presupuestario_ref')}
-          />
-        </Group>
+        {/* En rejilla y no en `Group grow`: en un teléfono, un campo por fila (regla 07). */}
+        <Grid gap="sm">
+          <Grid.Col span={{ base: 12, sm: 6 }}>
+            <TextInput
+              label="Resolución que fija la escala"
+              withAsterisk
+              error={errors.instrumento?.message}
+              {...contained}
+              {...register('instrumento')}
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, sm: 6 }}>
+            <Controller
+              name="fecha_instrumento"
+              control={control}
+              render={({ field }) => (
+                <DatePickerInput
+                  label="Fecha de la resolución"
+                  withAsterisk
+                  valueFormat="DD/MM/YYYY"
+                  maxDate={hoyIso()}
+                  value={toDateValue(field.value)}
+                  onChange={(d) => field.onChange(fromDateValueOrNull(d) ?? '')}
+                  error={errors.fecha_instrumento?.message}
+                  {...contained}
+                />
+              )}
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, sm: 6 }}>
+            <Controller
+              name="rige_desde"
+              control={control}
+              render={({ field }) => (
+                <DatePickerInput
+                  label="Rige desde"
+                  description="Hoy o antes."
+                  withAsterisk
+                  valueFormat="DD/MM/YYYY"
+                  maxDate={hoyIso()}
+                  value={toDateValue(field.value)}
+                  onChange={(d) => field.onChange(fromDateValueOrNull(d) ?? '')}
+                  error={errors.rige_desde?.message}
+                  {...contained}
+                />
+              )}
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, sm: 6 }}>
+            <TextInput
+              label="Dictamen presupuestario"
+              description="Sube el gasto: es obligatorio."
+              withAsterisk
+              error={errors.dictamen_presupuestario_ref?.message}
+              {...contained}
+              {...register('dictamen_presupuestario_ref')}
+            />
+          </Grid.Col>
+        </Grid>
         <Textarea
           label="Explicación"
           autosize

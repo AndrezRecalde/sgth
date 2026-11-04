@@ -14,7 +14,7 @@ import { fromDateValue, fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 import { useContratoColectivo, usePrepararIncremento, usePrevisualizarIncremento } from '../hooks/useContratoColectivo'
 import { incrementoEnLoteSchema, type IncrementoEnLoteFormData } from '../schemas/contratoColectivo.schema'
 import type { FilaDelIncremento } from '../services/contratoColectivoService'
-import { dinero } from '../utils/dinero'
+import { dinero } from '@/lib/dinero'
 
 const MODOS = [
   { value: 'porcentaje', label: 'Porcentaje' },

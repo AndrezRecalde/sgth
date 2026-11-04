@@ -15,6 +15,12 @@ import { CompetenciaModal } from './CompetenciaModal'
 
 const RETARDO_BUSQUEDA_MS = 300
 
+/** Decía «Los 1 puestos» y «Los 0 puestos». */
+function conservan(puestos: number): string {
+  if (puestos === 0) return 'Ningún puesto la exige todavía.'
+  return puestos === 1 ? 'El puesto que ya la exige la conserva.' : `Los ${puestos} puestos que ya la exigen la conservan.`
+}
+
 /**
  * El diccionario de competencias del Ministerio, de donde salen las del perfil
  * de cada puesto. Se cargó desde el libro FOR-02 de Talento Humano, que trae
@@ -23,7 +29,7 @@ const RETARDO_BUSQUEDA_MS = 300
 export function CompetenciasTab() {
   const { hasPermiso } = useAuth()
   const puedeGestionar = hasPermiso('gestionar-puestos')
-  const contained = useContainedInput()
+  const filtro = useContainedInput('sm')
 
   const [tipo, setTipo] = useState<string | null>(null)
   const [buscar, setBuscar] = useState('')
@@ -48,10 +54,7 @@ export function CompetenciasTab() {
     onRetirar: (c) => c.activo
       ? confirmar({
           title:   'Retirar competencia',
-          message: <>
-            <b>{c.nombre}</b> dejará de ofrecerse para los puestos. Los
-            {' '}{c.puestos_count ?? 0} puestos que ya la exigen la conservan.
-          </>,
+          message: <><b>{c.nombre}</b> dejará de ofrecerse para los puestos. {conservan(c.puestos_count ?? 0)}</>,
           onConfirm: () => editar.mutate({ id: c.id, data: { activo: false } }),
         })
       : editar.mutate({ id: c.id, data: { activo: true } }),
@@ -83,7 +86,7 @@ export function CompetenciasTab() {
           placeholder="Todas"
           data={TIPOS_COMPETENCIA.map(({ value, plural }) => ({ value, label: plural }))}
           clearable
-          {...contained}
+          {...filtro}
           value={tipo}
           onChange={setTipo}
           style={{ minWidth: 240 }}
@@ -91,7 +94,7 @@ export function CompetenciasTab() {
         <TextInput
           label="Competencia"
           placeholder="Buscar por nombre…"
-          {...contained}
+          {...filtro}
           value={buscar}
           onChange={(e) => setBuscar(e.currentTarget.value)}
           style={{ minWidth: 260 }}

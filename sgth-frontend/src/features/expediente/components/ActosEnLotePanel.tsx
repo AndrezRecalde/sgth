@@ -23,7 +23,7 @@ import {
   loteAccionService, type FiltrosLotes, type LoteAccion, type NotificacionDelLote, type ResultadoDelLote,
 } from '../services/contratoColectivoService'
 import { ESTADO_LABELS } from '../utils/estadoAccionPersonal'
-import { dinero } from '../utils/dinero'
+import { dinero } from '@/lib/dinero'
 import { ActosDelLoteModal } from './ActosDelLoteModal'
 import { IncrementoEnLoteModal } from './IncrementoEnLoteModal'
 
