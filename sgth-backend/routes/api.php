@@ -343,12 +343,16 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 ->name('puestos.buscar.show');
         });
         Route::apiResource('puestos', PuestoController::class);
+        // `whereNumber` en los dos ids, como en las competencias: los
+        // controladores los reciben como `int`, y uno que no es número
+        // reventaba con un 500 en vez de dar 404.
         Route::prefix('puestos/{puestoId}/actividades')
+            ->whereNumber('puestoId')
             ->group(function () {
                 Route::get('/', [PuestoActividadController::class, 'index']);
                 Route::post('/', [PuestoActividadController::class, 'store']);
-                Route::patch('{actividadId}', [PuestoActividadController::class, 'update']);
-                Route::delete('{actividadId}', [PuestoActividadController::class, 'destroy']);
+                Route::patch('{actividadId}', [PuestoActividadController::class, 'update'])->whereNumber('actividadId');
+                Route::delete('{actividadId}', [PuestoActividadController::class, 'destroy'])->whereNumber('actividadId');
                 Route::post('reordenar', [PuestoActividadController::class, 'reordenar']);
             });
         // El perfil del puesto para la evaluación del desempeño: el
@@ -377,8 +381,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::post('cargos', [CargoController::class, 'store'])
             ->name('estructura.cargos.store');
         Route::put('cargos/{id}', [CargoController::class, 'update'])
+            ->whereNumber('id')
             ->name('estructura.cargos.update');
         Route::delete('cargos/{id}', [CargoController::class, 'destroy'])
+            ->whereNumber('id')
             ->name('estructura.cargos.destroy');
 
         Route::get('grupos-ocupacionales', [GrupoOcupacionalController::class, 'index'])

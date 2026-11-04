@@ -100,6 +100,7 @@ function Formulario({ puesto, onClose }: { puesto: PuestoConRelaciones; onClose:
               label="Unidad de destino"
               withAsterisk
               searchable
+              allowDeselect={false}
               data={unidades}
               value={field.value ? String(field.value) : null}
               onChange={(v) => field.onChange(v ? Number(v) : undefined)}
@@ -116,6 +117,7 @@ function Formulario({ puesto, onClose }: { puesto: PuestoConRelaciones; onClose:
               label="Criterio del traspaso"
               description="Reglamento a la LOSEP, Art. 69, numeral 1: el que dice el informe de la UATH."
               withAsterisk
+              allowDeselect={false}
               data={previa.data?.criterios ?? []}
               value={field.value ?? null}
               onChange={(v) => field.onChange(v ?? '')}

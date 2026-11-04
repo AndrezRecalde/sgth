@@ -433,7 +433,9 @@ final class EstructuraService implements EstructuraServiceInterface
                 fn($q) => $this->filtrarPuestosPorTexto($q, $filtros['search'])
             )
             ->orderBy('cargos.nombre', 'asc')
-            ->paginate($filtros['per_page'] ?? 15);
+            // Con tope: sin él, `per_page=100000` traía la institución entera
+            // con sus ocupantes. El formulario de subrogación pide 100.
+            ->paginate(min(max((int) ($filtros['per_page'] ?? 15), 1), 100));
     }
 
     public function buscarPuestos(string $termino, int $limite): Collection
@@ -482,6 +484,14 @@ final class EstructuraService implements EstructuraServiceInterface
         return $query;
     }
 
+    /**
+     * Cuenta también la jefatura desactivada: el índice único de la base no
+     * mira `activo`. El mensaje decía «activo», y quien lo leía buscaba una
+     * jefatura activa que no existía.
+     */
+    private const UNIDAD_CON_JEFATURA = 'La unidad ya tiene un puesto de jefatura, aunque esté desactivado. '
+        .'Desmarque «Es jefe de unidad» en ese puesto antes de marcarlo en otro.';
+
     public function crearPuesto(array $datos): Puesto
     {
         return DB::transaction(function () use ($datos) {
@@ -492,7 +502,7 @@ final class EstructuraService implements EstructuraServiceInterface
                     ->exists();
 
                 if ($existeJefe) {
-                    throw new ReglaNegocioException('La unidad administrativa seleccionada ya posee un puesto de conducción o jefatura activo.');
+                    throw new ReglaNegocioException(self::UNIDAD_CON_JEFATURA);
                 }
             }
 
@@ -531,12 +541,15 @@ final class EstructuraService implements EstructuraServiceInterface
                     ->exists();
 
                 if ($existeJefe) {
-                    throw new ReglaNegocioException('La unidad administrativa ya posee un puesto de conducción asignado.');
+                    throw new ReglaNegocioException(self::UNIDAD_CON_JEFATURA);
                 }
             }
 
             $puesto->update($datos);
-            return $puesto;
+
+            // Con las relaciones de ahora: devolvía el cargo, el grupo y la RMU
+            // de antes del cambio, que es lo que había cargado `obtenerPuesto`.
+            return $puesto->refresh();
         });
     }
 

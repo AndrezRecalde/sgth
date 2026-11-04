@@ -16,6 +16,15 @@ export const puestoSchema = z.object({
   regimen_laboral: z.enum(['losep', 'codigo_trabajo']).default('losep'),
   es_jefe:  z.boolean().default(false),
   activo:   z.boolean().default(true),
+}).superRefine((p, ctx) => {
+  // Las mismas reglas que `CoherenciaDelPuesto` en el backend: aquí se dicen
+  // en el campo antes de enviar.
+  if (p.es_jefe && p.plazas !== 1) {
+    ctx.addIssue({ code: 'custom', path: ['plazas'], message: 'Una jefatura tiene una sola plaza' })
+  }
+  if (p.rol_puesto && (p.rol_puesto === 'codigo_trabajo') !== (p.regimen_laboral === 'codigo_trabajo')) {
+    ctx.addIssue({ code: 'custom', path: ['rol_puesto'], message: 'El rol no corresponde al régimen' })
+  }
 })
 
 export type PuestoFormData = z.infer<typeof puestoSchema>

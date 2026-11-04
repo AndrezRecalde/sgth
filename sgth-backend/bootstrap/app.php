@@ -151,7 +151,20 @@ return Application::configure(basePath: dirname(__DIR__))
                 );
             }
 
-            return null; // no es una violación de unicidad: sigue al handler genérico
+            // check_violation: una regla que la base exige y que ninguna
+            // validación atrapó antes. Pasó con la jefatura de dos plazas
+            // (`puesto_jefe_una_sola_plaza_check`), que salía como un 500
+            // genérico. El arreglo va en la validación; esto es la red.
+            if ($sqlState === '23514') {
+                \Illuminate\Support\Facades\Log::warning('Restricción CHECK sin validación previa: ' . $e->getMessage());
+
+                return ApiResponse::error(
+                    'Los datos no cumplen una regla del registro y no se guardaron. Revise los campos e inténtelo de nuevo.',
+                    null, 422
+                );
+            }
+
+            return null; // ni unicidad ni CHECK: sigue al handler genérico
         });
 
         // El `throttle` de las rutas responde «Too Many Attempts.», en inglés

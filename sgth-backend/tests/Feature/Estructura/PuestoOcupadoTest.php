@@ -90,7 +90,7 @@ test('una jefatura no se lleva a una unidad que ya tiene la suya', function () {
 
     ($this->editar)($jefatura, ['unidad_administrativa_id' => $this->otra->id])
         ->assertStatus(422)
-        ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'conducción'));
+        ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'ya tiene un puesto de jefatura'));
 });
 
 test('no se elimina el ocupado ni el que tiene historia; el que nunca se usó, sí', function () {
