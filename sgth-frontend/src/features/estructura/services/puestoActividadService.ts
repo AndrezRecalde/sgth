@@ -1,13 +1,10 @@
 import api from '@/lib/axios'
-import type { ApiResponse } from '@/types/api'
+import type { ApiResponse, PuestoActividad } from '@/types/api'
 
-export interface PuestoActividad {
-  id:          number
-  puesto_id:   number
-  descripcion: string
-  orden:       number
-  activo:      boolean
-}
+export type { PuestoActividad }
+
+/** Lo que se escribe de una actividad: el FEMO usa la descripción; el FOR-02, todo. */
+export type PuestoActividadDatos = Pick<PuestoActividad, 'descripcion' | 'producto' | 'conocimientos' | 'frecuencia'>
 
 export const puestoActividadService = {
   listar: (puestoId: number) =>
@@ -15,16 +12,16 @@ export const puestoActividadService = {
       `/estructura/puestos/${puestoId}/actividades`
     ).then(r => r.data.datos),
 
-  crear: (puestoId: number, descripcion: string) =>
+  crear: (puestoId: number, data: PuestoActividadDatos) =>
     api.post<ApiResponse<PuestoActividad>>(
       `/estructura/puestos/${puestoId}/actividades`,
-      { descripcion }
+      data
     ).then(r => r.data.datos),
 
   actualizar: (
     puestoId: number,
     actividadId: number,
-    data: Partial<Pick<PuestoActividad, 'descripcion' | 'orden' | 'activo'>>
+    data: Partial<PuestoActividadDatos & Pick<PuestoActividad, 'orden' | 'activo'>>
   ) =>
     api.patch<ApiResponse<PuestoActividad>>(
       `/estructura/puestos/${puestoId}/actividades/${actividadId}`,

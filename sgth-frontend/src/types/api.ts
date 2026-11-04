@@ -83,6 +83,14 @@ export type Puesto               = components['schemas']['PuestoResource']
 export type TipoUnidad           = components['schemas']['TipoUnidad']
 export type ExtensionTelefonica  = components['schemas']['ExtensionTelefonicaResource']
 
+// El perfil del puesto que pide la evaluación del desempeño (FOR-02).
+export type PuestoActividad      = components['schemas']['PuestoActividad']
+export type FrecuenciaActividad  = components['schemas']['FrecuenciaActividad']
+export type Competencia          = components['schemas']['CompetenciaResource']
+export type TipoCompetencia      = components['schemas']['TipoCompetencia']
+export type NivelCompetencia     = components['schemas']['NivelCompetencia']
+export type PuestoCompetencia    = components['schemas']['PuestoCompetenciaResource']
+
 // ── Expediente ───────────────────────────────
 export type Servidor                       = components['schemas']['ServidorResource']
 /**

@@ -13059,6 +13059,372 @@
                 }
             }
         },
+        "/v1/estructura/competencias": {
+            "get": {
+                "operationId": "estructura.competencias.index",
+                "tags": [
+                    "Competencia"
+                ],
+                "parameters": [
+                    {
+                        "name": "tipo",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/TipoCompetencia"
+                        }
+                    },
+                    {
+                        "name": "solo_activas",
+                        "in": "query",
+                        "description": "axios manda el booleano como \u00abtrue\u00bb; la regla `boolean` no lo\nacepta en una consulta, y `$request->boolean()` s\u00ed lo lee.",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "0",
+                                "1",
+                                "true",
+                                "false"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "buscar",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Diccionario de competencias."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/CompetenciaResource"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "estructura.competencias.store",
+                "tags": [
+                    "Competencia"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "tipo": {
+                                        "$ref": "#/components/schemas/TipoCompetencia"
+                                    },
+                                    "nombre": {
+                                        "type": "string",
+                                        "maxLength": 150
+                                    },
+                                    "definicion": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 2000
+                                    },
+                                    "comportamiento_alto": {
+                                        "type": "string",
+                                        "maxLength": 2000
+                                    },
+                                    "comportamiento_medio": {
+                                        "type": "string",
+                                        "maxLength": 2000
+                                    },
+                                    "comportamiento_bajo": {
+                                        "type": "string",
+                                        "maxLength": 2000
+                                    }
+                                },
+                                "required": [
+                                    "tipo",
+                                    "nombre",
+                                    "comportamiento_alto",
+                                    "comportamiento_medio",
+                                    "comportamiento_bajo"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Competencia agregada al diccionario."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/CompetenciaResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/estructura/competencias/{id}": {
+            "put": {
+                "operationId": "estructura.competencias.update",
+                "tags": [
+                    "Competencia"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string",
+                                        "maxLength": 150
+                                    },
+                                    "definicion": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 2000
+                                    },
+                                    "comportamiento_alto": {
+                                        "type": "string",
+                                        "maxLength": 2000
+                                    },
+                                    "comportamiento_medio": {
+                                        "type": "string",
+                                        "maxLength": 2000
+                                    },
+                                    "comportamiento_bajo": {
+                                        "type": "string",
+                                        "maxLength": 2000
+                                    },
+                                    "activo": {
+                                        "type": "boolean"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Competencia actualizada."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/CompetenciaResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "estructura.competencias.destroy",
+                "tags": [
+                    "Competencia"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Competencia eliminada."
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "La competencia la exige alg\u00fan puesto: ret\u00edrela del diccionario en vez de eliminarla."
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "errores": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "errores"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/comunicados": {
             "get": {
                 "operationId": "comunicados.index",
@@ -51030,6 +51396,23 @@
                                         "type": "string",
                                         "maxLength": 200
                                     },
+                                    "producto": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 300
+                                    },
+                                    "conocimientos": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    },
+                                    "frecuencia": {
+                                        "$ref": "#/components/schemas/FrecuenciaActividad"
+                                    },
                                     "orden": {
                                         "type": [
                                             "integer",
@@ -51122,6 +51505,23 @@
                                     "descripcion": {
                                         "type": "string",
                                         "maxLength": 200
+                                    },
+                                    "producto": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 300
+                                    },
+                                    "conocimientos": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    },
+                                    "frecuencia": {
+                                        "$ref": "#/components/schemas/FrecuenciaActividad"
                                     },
                                     "orden": {
                                         "type": "integer",
@@ -51326,6 +51726,295 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/estructura/puestos/{puestoId}/competencias": {
+            "get": {
+                "operationId": "puestoCompetencia.index",
+                "tags": [
+                    "PuestoCompetencia"
+                ],
+                "parameters": [
+                    {
+                        "name": "puestoId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Competencias del puesto."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/PuestoCompetenciaResource"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "puestoCompetencia.store",
+                "tags": [
+                    "PuestoCompetencia"
+                ],
+                "parameters": [
+                    {
+                        "name": "puestoId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "competencia_id": {
+                                        "type": "integer"
+                                    },
+                                    "nivel": {
+                                        "$ref": "#/components/schemas/NivelCompetencia"
+                                    }
+                                },
+                                "required": [
+                                    "competencia_id",
+                                    "nivel"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Competencia agregada al puesto."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/PuestoCompetenciaResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/estructura/puestos/{puestoId}/competencias/{id}": {
+            "patch": {
+                "operationId": "puestoCompetencia.update",
+                "tags": [
+                    "PuestoCompetencia"
+                ],
+                "parameters": [
+                    {
+                        "name": "puestoId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "nivel": {
+                                        "$ref": "#/components/schemas/NivelCompetencia"
+                                    }
+                                },
+                                "required": [
+                                    "nivel"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Nivel actualizado."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/PuestoCompetenciaResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "puestoCompetencia.destroy",
+                "tags": [
+                    "PuestoCompetencia"
+                ],
+                "parameters": [
+                    {
+                        "name": "puestoId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Competencia quitada del puesto."
+                                        },
+                                        "datos": {
+                                            "type": "null"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
                     },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
@@ -71297,6 +71986,86 @@
                 ],
                 "title": "ComentarioTicketResource"
             },
+            "CompetenciaResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "tipo": {
+                        "$ref": "#/components/schemas/TipoCompetencia"
+                    },
+                    "tipo_label": {
+                        "type": "string",
+                        "enum": [
+                            "T\u00e9cnica",
+                            "Conductual"
+                        ]
+                    },
+                    "numero": {
+                        "type": "integer"
+                    },
+                    "nombre": {
+                        "type": "string"
+                    },
+                    "definicion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "comportamiento_alto": {
+                        "type": "string"
+                    },
+                    "comportamiento_medio": {
+                        "type": "string"
+                    },
+                    "comportamiento_bajo": {
+                        "type": "string"
+                    },
+                    "numeros_comportamiento": {
+                        "type": "object",
+                        "description": "Los n\u00fameros del FOR-02, para quien todav\u00eda llena el Excel.",
+                        "properties": {
+                            "alto": {
+                                "type": "integer"
+                            },
+                            "medio": {
+                                "type": "integer"
+                            },
+                            "bajo": {
+                                "type": "integer"
+                            }
+                        },
+                        "required": [
+                            "alto",
+                            "medio",
+                            "bajo"
+                        ]
+                    },
+                    "activo": {
+                        "type": "boolean"
+                    },
+                    "puestos_count": {
+                        "type": "integer",
+                        "description": "Cu\u00e1ntos puestos la exigen: con alguno, se retira en vez de borrarse."
+                    }
+                },
+                "required": [
+                    "id",
+                    "tipo",
+                    "tipo_label",
+                    "numero",
+                    "nombre",
+                    "definicion",
+                    "comportamiento_alto",
+                    "comportamiento_medio",
+                    "comportamiento_bajo",
+                    "numeros_comportamiento",
+                    "activo"
+                ],
+                "title": "CompetenciaResource"
+            },
             "ComunicadoAdjuntoResource": {
                 "type": "object",
                 "properties": {
@@ -75454,6 +76223,21 @@
                 ],
                 "title": "FotografiaServidorResource"
             },
+            "FrecuenciaActividad": {
+                "type": "string",
+                "description": "Cada cu\u00e1nto se entrega el producto de una actividad. Son las opciones de la columna \u00abFrecuencia\u00bb del formato de asignaci\u00f3n de responsabilidades (IN-GEP-02-02-FOR-02), con los mismos nombres.\n",
+                "enum": [
+                    "diario_mes_integral",
+                    "diario_ordinario",
+                    "semanal",
+                    "quincenal",
+                    "mensual",
+                    "trimestral",
+                    "semestral",
+                    "anual"
+                ],
+                "title": "FrecuenciaActividad"
+            },
             "GravedadAccidente": {
                 "type": "string",
                 "description": "Gravedad de un accidente de trabajo. La columna naci\u00f3 como texto libre (`string, 50`) y los Form Requests la validaban igual \u2014`['required','string','max:50']`\u2014, as\u00ed que el API aceptaba cualquier cosa: la tabla pintaba lo que llegara y el mapa de tonos le daba el neutro a lo que no reconoc\u00eda. Los cuatro valores son los que el formulario ofrece desde siempre.  NOTA: el modelo todav\u00eda NO castea esta columna a enum. Las filas anteriores a esta validaci\u00f3n pueden tener cualquier texto, y un cast har\u00eda reventar la lectura del listado entero con un `ValueError` por una sola fila rara. Normalizar lo que haya \u2014y reci\u00e9n entonces castear\u2014 necesita mirar los datos reales de producci\u00f3n, que es una decisi\u00f3n de Talento Humano y no del c\u00f3digo.\n",
@@ -79479,6 +80263,16 @@
                 ],
                 "title": "NivelAlertaTriaje"
             },
+            "NivelCompetencia": {
+                "type": "string",
+                "description": "El nivel en que el puesto exige una competencia. Cada competencia del diccionario describe un comportamiento observable por nivel.\n",
+                "enum": [
+                    "alto",
+                    "medio",
+                    "bajo"
+                ],
+                "title": "NivelCompetencia"
+            },
             "NivelComplejidadPuesto": {
                 "type": "string",
                 "enum": [
@@ -81552,6 +82346,28 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "producto": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "conocimientos": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "frecuencia": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/FrecuenciaActividad"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -81561,7 +82377,10 @@
                     "orden",
                     "activo",
                     "created_at",
-                    "updated_at"
+                    "updated_at",
+                    "producto",
+                    "conocimientos",
+                    "frecuencia"
                 ],
                 "title": "PuestoActividad"
             },
@@ -81608,6 +82427,67 @@
                     "regimen_laboral"
                 ],
                 "title": "PuestoBusquedaResource"
+            },
+            "PuestoCompetenciaResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "puesto_id": {
+                        "type": "integer"
+                    },
+                    "competencia_id": {
+                        "type": "integer"
+                    },
+                    "tipo": {
+                        "$ref": "#/components/schemas/TipoCompetencia"
+                    },
+                    "nombre": {
+                        "type": "string"
+                    },
+                    "definicion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "nivel": {
+                        "$ref": "#/components/schemas/NivelCompetencia"
+                    },
+                    "nivel_label": {
+                        "type": "string",
+                        "enum": [
+                            "Alto",
+                            "Medio",
+                            "Bajo"
+                        ]
+                    },
+                    "numero_comportamiento": {
+                        "type": "integer"
+                    },
+                    "comportamiento": {
+                        "type": "string"
+                    },
+                    "competencia_activa": {
+                        "type": "boolean",
+                        "description": "Retirada del diccionario despu\u00e9s de asignarla: el puesto la\nconserva, pero la pantalla lo avisa."
+                    }
+                },
+                "required": [
+                    "id",
+                    "puesto_id",
+                    "competencia_id",
+                    "tipo",
+                    "nombre",
+                    "definicion",
+                    "nivel",
+                    "nivel_label",
+                    "numero_comportamiento",
+                    "comportamiento",
+                    "competencia_activa"
+                ],
+                "title": "PuestoCompetenciaResource"
             },
             "PuestoEpp": {
                 "type": "object",
@@ -90144,6 +91024,15 @@
                     "bienes_count"
                 ],
                 "title": "TipoBienResource"
+            },
+            "TipoCompetencia": {
+                "type": "string",
+                "description": "Las dos partes del diccionario de competencias del Ministerio, que el formato de asignaci\u00f3n de responsabilidades (IN-GEP-02-02-FOR-02) pide por separado: las t\u00e9cnicas, que dependen de las actividades del puesto, y las conductuales, que tienen que ver con la manera de trabajar.\n",
+                "enum": [
+                    "tecnica",
+                    "conductual"
+                ],
+                "title": "TipoCompetencia"
             },
             "TipoComunicado": {
                 "type": "string",

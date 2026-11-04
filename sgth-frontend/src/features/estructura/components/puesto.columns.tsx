@@ -8,12 +8,12 @@ import { REGIMEN_LABELS } from '@/lib/regimen'
 type Handlers = {
   onEdit:        (puesto: PuestoConRelaciones) => void
   onDelete:      (puesto: PuestoConRelaciones) => void
-  onActividades: (puesto: PuestoConRelaciones) => void
+  onPerfil:      (puesto: PuestoConRelaciones) => void
   /** Pasarlo ocupado a otra unidad, con el acto de cada ocupante (fase 7.1a). */
   onTraspasar:   (puesto: PuestoConRelaciones) => void
   /** Cambiarle ocupado el grado o la denominación (fase 7.1b). */
   onRevisar:     (puesto: PuestoConRelaciones) => void
-  /** `gestionar-puestos`. Sin él, solo se consultan las actividades. */
+  /** `gestionar-puestos`. Sin él, el perfil del puesto solo se consulta. */
   puedeGestionar: boolean
   /** `preparar-accion-personal`: el traspaso y la revisión son lotes de acciones. */
   puedeTraspasar: boolean
@@ -29,7 +29,7 @@ function ocupantesDe(puesto: PuestoConRelaciones): string {
 }
 
 export const getPuestoColumns = (
-  { onEdit, onDelete, onActividades, onTraspasar, onRevisar, puedeGestionar, puedeTraspasar }: Handlers
+  { onEdit, onDelete, onPerfil, onTraspasar, onRevisar, puedeGestionar, puedeTraspasar }: Handlers
 ): DataTableColumn<PuestoConRelaciones>[] => [
   {
     accessor: 'cargo',
@@ -94,9 +94,9 @@ export const getPuestoColumns = (
     render: (puesto) => (
       <TableActions actions={[
         {
-          label: 'Actividades del puesto',
+          label: 'Perfil del puesto',
           icon: <IconList size={14} />,
-          onClick: () => onActividades(puesto),
+          onClick: () => onPerfil(puesto),
         },
         {
           label: 'Editar puesto',
