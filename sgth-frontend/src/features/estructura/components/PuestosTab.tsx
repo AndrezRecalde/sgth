@@ -16,7 +16,7 @@ import {
 } from '../hooks/useUnidades'
 import { getPuestoColumns } from "./puesto.columns";
 import { PuestoModal } from "./PuestoModal";
-import { PuestoActividadesDrawer } from "./PuestoActividadesDrawer";
+import { PuestoPerfilDrawer } from "./PuestoPerfilDrawer";
 import { TraspasoPuestoModal } from "./TraspasoPuestoModal";
 import { RevisionClasificacionModal } from "./RevisionClasificacionModal";
 import { useContainedInput } from "@/hooks/useContainedInput";
@@ -24,7 +24,7 @@ import type { PuestoConRelaciones, UnidadConRelaciones } from "@/types/api";
 import { useAuth } from "@/hooks/useAuth";
 
 export function PuestosTab() {
-  // Crear, editar y borrar puestos y actividades pide `gestionar-puestos`;
+  // Crear, editar y borrar puestos y su perfil pide `gestionar-puestos`;
   // quien solo tiene `ver-estructura` (dirección, jefaturas, auditoría)
   // consulta sin ver botones que el backend le negaría.
   const { hasPermiso } = useAuth();
@@ -38,7 +38,7 @@ export function PuestosTab() {
   const [page, setPage] = useState(1);
   const [unidadIds, setUnidadIds] = useState<string[]>([]);
   const [editPuesto, setEditPuesto] = useState<PuestoConRelaciones | null>(null);
-  const [actividadesPuesto, setActividadesPuesto] =
+  const [perfilPuesto, setPerfilPuesto] =
     useState<PuestoConRelaciones | null>(null);
   const [modalOpened, { open, close }] = useDisclosure(false);
   const [drawerOpened,
@@ -78,8 +78,8 @@ export function PuestosTab() {
       onConfirm: () => eliminar.mutate(Number(puesto.id)),
     });
 
-  const handleActividades = (puesto: PuestoConRelaciones) => {
-    setActividadesPuesto(puesto);
+  const handlePerfil = (puesto: PuestoConRelaciones) => {
+    setPerfilPuesto(puesto);
     abrirDrawer();
   };
 
@@ -89,7 +89,7 @@ export function PuestosTab() {
   };
 
   const handleCerrarDrawer = () => {
-    setActividadesPuesto(null);
+    setPerfilPuesto(null);
     cerrarDrawer();
   };
 
@@ -147,7 +147,7 @@ export function PuestosTab() {
           columns={getPuestoColumns({
             onEdit: handleEdit,
             onDelete: handleDelete,
-            onActividades: handleActividades,
+            onPerfil: handlePerfil,
             onTraspasar: setATraspasar,
             onRevisar: setARevisar,
             puedeGestionar,
@@ -177,10 +177,10 @@ export function PuestosTab() {
         onClose={() => setARevisar(null)}
       />
 
-      <PuestoActividadesDrawer
+      <PuestoPerfilDrawer
         opened={drawerOpened}
         onClose={handleCerrarDrawer}
-        puesto={actividadesPuesto}
+        puesto={perfilPuesto}
         soloLectura={!puedeGestionar}
       />
     </Stack>

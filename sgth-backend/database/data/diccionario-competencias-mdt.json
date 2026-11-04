@@ -1,0 +1,380 @@
+[
+    {
+        "tipo": "tecnica",
+        "numero": 1,
+        "nombre": "Desarrollo estratégico del Talento Humano",
+        "definicion": "Es la capacidad para dirigir, analizar y evaluar el desempeño actual y potencial de los colaboradores y definir e implementar acciones de desarrollo para las personas y equipos en el marco de las estrategias de la organización, adoptando un rol de facilitador y guía",
+        "comportamiento_alto": "Realiza una proyección de posibles necesidades de recursos humanos considerando distintos escenarios a largo plazo. Tiene un papel activo en la definición de las políticas en función del análisis estratégico.",
+        "comportamiento_medio": "Utiliza herramientas existentes o nuevas en la organización para el desarrollo de los colaboradores en función de las estrategias de la organización. Promueve acciones de desarrollo.",
+        "comportamiento_bajo": "Aplica las herramientas de desarrollo disponibles. Define acciones para el desarrollo de las competencias críticas. Esporádicamente hace un seguimiento de las mismas."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 2,
+        "nombre": "Orientación / Asesoramiento",
+        "definicion": "Ofrecer guías / sugerencias a los demás para que tomen decisiones.",
+        "comportamiento_alto": "Asesora a las autoridades de la institución en materia de su competencia, generando políticas y estrategias que permitan tomar decisiones acertadas.",
+        "comportamiento_medio": "Ofrece guías a equipos de trabajo para el desarrollo de planes, programas y otros.",
+        "comportamiento_bajo": "Orienta a un compañero en la forma de realizar ciertas actividades de complejidad baja."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 3,
+        "nombre": "Pensamiento Estratégico",
+        "definicion": "Es la habilidad para comprender rápidamente los cambios del entorno, con el propósito de identificar acciones estratégicas. Incluye la capacidad para saber cuándo hay que mejorar planes, programas y proyectos.",
+        "comportamiento_alto": "Comprende rápidamente los cambios del entorno, las oportunidades, amenazas, fortalezas y debilidades de su organización / unidad o proceso/ proyecto y establece directrices estratégicas para la aprobación de planes, programas y otros.",
+        "comportamiento_medio": "Comprende los cambios del entorno y esta en la capacidad de proponer planes y programas de mejoramiento continuo.",
+        "comportamiento_bajo": "Puede adecuarse a los cambios y participa en el desarrollo de planes y programas de mejoramiento continuo."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 4,
+        "nombre": "Planificación y Gestión",
+        "definicion": "Es la capacidad de determinar eficazmente las metas y prioridades de sus planes o proyectos, estipulando la acción, los plazos y los recursos requeridos. Incluye la instrumentación de mecanismos de seguimiento y verificación de la información.",
+        "comportamiento_alto": "Anticipa los puntos críticos de una situación o problema, desarrollando estrategias a largo plazo, acciones de control, mecanismos de coordinación y verificando información para la aprobación de diferentes proyectos, programas y otros. Es capaz de administrar simultáneamente diversos proyectos complejos.",
+        "comportamiento_medio": "Es capaz de administrar simultáneamente diversos proyectos de complejidad media, estableciendo estrategias de corto y mediano plazo, mecanismos de coordinación y control de la información.",
+        "comportamiento_bajo": "Establece objetivos y plazos para la realización de las tareas o actividades, define prioridades, controlando la calidad del trabajo y verificando la información para asegurarse de que se han ejecutado las acciones previstas."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 5,
+        "nombre": "Generación de Ideas",
+        "definicion": "Generar varias formas o alternativas para desarrollar planes, programas, proyectos y solucionar problemas.",
+        "comportamiento_alto": "Desarrolla planes, programas o proyectos alternativos para solucionar problemas estratégicos organizacionales.",
+        "comportamiento_medio": "Desarrolla estrategias para la optimización de los recursos humanos, materiales y económicos.",
+        "comportamiento_bajo": "Identifica procedimientos alternativos para apoyar en la entrega de productos o servicios a los clientes usuarios."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 6,
+        "nombre": "Monitoreo y Control",
+        "definicion": "Evaluar cuan bien está algo o alguien aprendiendo o haciendo algo.",
+        "comportamiento_alto": "Desarrolla mecanismos de monitoreo y control de la eficiencia, eficacia y productividad organizacional.",
+        "comportamiento_medio": "Monitorea el progreso de los planes y proyectos de la unidad administrativa y asegura el cumplimiento de los mismos.",
+        "comportamiento_bajo": "Analiza y corrige documentos."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 7,
+        "nombre": "Pensamiento Conceptual",
+        "definicion": "Aplicar o crear nuevos conceptos para la solución de problemas complejos, así como para el desarrollo de proyectos, planes organizacionales y otros. Incluye la utilización de razonamiento creativo, inductivo o conceptual.",
+        "comportamiento_alto": "Desarrolla conceptos nuevos para solucionar conflictos o para el desarrollo de proyectos, planes organizacionales y otros . Hace que las situaciones o ideas complejas estén claras, sean simples y comprensibles. Integra ideas, datos clave y observaciones, presentándolos en forma clara y útil.",
+        "comportamiento_medio": "Capacidad para proponer proyectos de modelos, enfoques y normas de desarrollo institucional y talento humano con visión sistémica, sobre la base de análisis de información de legislación comparada y normas técnicas vigentes.",
+        "comportamiento_bajo": "Utiliza conceptos básicos, sentido común y la experiencias vividas en la solución de problemas inherentes al desarrollo de las actividades del puesto."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 8,
+        "nombre": "Habilidad Analítica (análisis de prioridad, criterio lógico, sentido común)",
+        "definicion": "Es la capacidad de reconocer la información significativa, buscar y coordinar los datos relevantes. Se puede incluir aquí la habilidad para analizar y presentar datos financieros y estadísticos y para establecer conexiones relevantes entre datos numéricos.",
+        "comportamiento_alto": "Realiza análisis lógicos para identificar los problemas fundamentales de la organización.",
+        "comportamiento_medio": "Reconoce la información significativa, busca y coordina los datos relevantes para el desarrollo de programas y proyectos.",
+        "comportamiento_bajo": "Presenta datos estadísticos y/o financieros."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 9,
+        "nombre": "Organización de la Información",
+        "definicion": "Encontrar formas de estructurar o clasificar distintos niveles de información.",
+        "comportamiento_alto": "Define niveles de información para la gestión de una unidad o proceso.",
+        "comportamiento_medio": "Clasifica y captura información técnica para consolidarlos.",
+        "comportamiento_bajo": "Clasifica documentos para su registro."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 10,
+        "nombre": "Recopilación de Información",
+        "definicion": "Conocer cómo localizar e identificar información esencial.",
+        "comportamiento_alto": "Pone en marcha personalmente sistemas o prácticas que permiten recoger información esencial de forma habitual (ejemplo reuniones informales periódicas). Analiza la información recopilada.",
+        "comportamiento_medio": "Realiza un trabajo sistemático en un determinado lapso de tiempo para obtener la máxima y mejor información posible de todas las fuentes disponibles. (Obtiene información en periódicos, bases de datos, estudios técnicos etc.)",
+        "comportamiento_bajo": "Busca información con un objetivo concreto a través de preguntas rutinarias."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 11,
+        "nombre": "Manejo de Recursos Materiales",
+        "definicion": "Obtener y cuidar el uso apropiado de equipos, locales, accesorios y materiales necesarios para realizar ciertas actividades.",
+        "comportamiento_alto": "Evalúa los contratos de provisión de recursos materiales para la institución.",
+        "comportamiento_medio": "Determina las necesidades de recursos materiales de la institución y controla el uso de los mismos.",
+        "comportamiento_bajo": "Provee y maneja recursos materiales para las distintas unidades o procesos organizacionales, así como para determinados eventos."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 12,
+        "nombre": "Pensamiento Crítico",
+        "definicion": "Utilizar la lógica y el análisis para identificar la fortaleza o debilidad de enfoques o proposiciones.",
+        "comportamiento_alto": "Analiza, determina y cuestiona la viabilidad de aplicación de leyes, reglamentos, normas, sistemas y otros, aplicando la lógica.",
+        "comportamiento_medio": "Elabora reportes jurídicos, técnicos o administrativos aplicando el análisis y la lógica.",
+        "comportamiento_bajo": "Discrimina y prioriza entre las actividades asignadas aplicando la lógica."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 13,
+        "nombre": "Pensamiento Analítico",
+        "definicion": "Analizar o descomponer información y detectar tendencias, patrones, relaciones, causas, efectos, etc.",
+        "comportamiento_alto": "Realiza análisis extremadamente complejos, organizando y secuenciando un problema o situación, estableciendo causas de hecho, o varias consecuencias de acción. Anticipa los obstáculos y planifica los siguientes pasos.",
+        "comportamiento_medio": "Capacidad de analizar la información disponible (legislación comparada, normas vigentes, leyes y reglamentos sobre la materia) y estructurar las partes y contenidos normativos, modelos y enfoques que permita simular una relación causal (diagnósticos situacional actual) y el efecto de su aplicación (nueva propuesta).",
+        "comportamiento_bajo": "Realiza una lista de asuntos a tratar asignando un orden o prioridad determinados. Establece prioridades en las actividades que realiza."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 14,
+        "nombre": "Identificación de Problemas",
+        "definicion": "Identificar la naturaleza de un problema.",
+        "comportamiento_alto": "Identifica los problemas que impiden el cumplimiento de los objetivos y metas planteados en el plan operativo institucional y redefine las estrategias.",
+        "comportamiento_medio": "Identifica los problemas en la entrega de los productos o servicios que genera la unidad o proceso; determina posibles soluciones.",
+        "comportamiento_bajo": "Compara información sencilla para identificar problemas."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 15,
+        "nombre": "Percepción de Sistemas y Entorno",
+        "definicion": "Determinar cuándo han ocurrido cambios importantes en un sistema organizacional o cuándo ocurrirán.",
+        "comportamiento_alto": "Identifica la manera en cómo un cambio de leyes o de situaciones distintas afectará a la organización.",
+        "comportamiento_medio": "Identifica situaciones que pueden alterar el desenvolvimiento normal de los colaboradores de una unidad o proceso organizacional. Implica la habilidad de observar y aprovechar los comportamientos de los colaboradores y compañeros.",
+        "comportamiento_bajo": "Identifica cómo una discusión entre los miembros de un equipo de trabajo podría alterar el trabajo del día."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 16,
+        "nombre": "Organización de Sistemas",
+        "definicion": "Diseñar o rediseñar tareas, estructuras y flujos de trabajo.",
+        "comportamiento_alto": "Diseña o rediseña la estructura, los procesos organizacionales y las atribuciones y responsabilidades de los puestos de trabajo.",
+        "comportamiento_medio": "Diseña o rediseña los procesos de elaboración de los productos o servicios que generan las unidades organizacionales.",
+        "comportamiento_bajo": "Identifica el flujo de trabajo. Propone cambios para eliminar agilitar las actividades laborales."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 17,
+        "nombre": "Mantenimiento de Equipos",
+        "definicion": "Ejecutar rutinas de mantenimiento y determinar cuándo y qué tipo de mantenimiento es requerido.",
+        "comportamiento_alto": "Implementa programas de mantenimiento preventivo y correctivo. Determina el tipo de mantenimiento que requieren los equipos informáticos, maquinarias y otros de las unidades o procesos organizacionales.",
+        "comportamiento_medio": "Depura y actualiza el software de los equipos informáticos. Incluye despejar las partes móviles de los equipos informáticos, maquinarias y otros.",
+        "comportamiento_bajo": "Realiza la limpieza de equipos computarizados, fotocopiadoras y otros equipos."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 18,
+        "nombre": "Instrucción",
+        "definicion": "Enseñar a otros cómo realizar alguna actividad.",
+        "comportamiento_alto": "Capacita a los colaboradores y compañeros de la institución",
+        "comportamiento_medio": "Instruye sobre procedimientos técnicos, legales o administrativos a los compañeros de la unidad o proceso .",
+        "comportamiento_bajo": "Instruye a un compañero sobre la forma de operar un programa de computación."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 19,
+        "nombre": "Operación y Control",
+        "definicion": "Operar y controlar el funcionamiento y manejo de equipos, sistemas, redes y otros.",
+        "comportamiento_alto": "Controla la operación de los sistemas informáticos implementados en la institución. Establece ajustes a las fallas que presenten los sistemas.",
+        "comportamiento_medio": "Opera los sistemas informáticos, redes y otros e implementa los ajustes para solucionar fallas en la operación de los mismos.",
+        "comportamiento_bajo": "Ajusta los controles de una máquina copiadora para lograr fotocopias de menor tamaño."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 20,
+        "nombre": "Selección de Equipos",
+        "definicion": "Determinar el tipo de equipos, herramientas e instrumentos necesarios para realizar un trabajo.",
+        "comportamiento_alto": "Identifica el equipo necesario que debe adquirir una institución para cumplir con los planes, programas y proyectos.",
+        "comportamiento_medio": "Escoge un nuevo programa informático para la automatización de ciertas actividades.",
+        "comportamiento_bajo": "Selecciona los instrumentos necesarios para una reunión de trabajo."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 21,
+        "nombre": "Inspección de Productos o Servicios",
+        "definicion": "Inspeccionar y evaluar la calidad de los productos o servicios.",
+        "comportamiento_alto": "Establece procedimientos de control de calidad para los productos o servicios que genera la institución.",
+        "comportamiento_medio": "Realiza el control de calidad de los informes técnicos, legales o administrativos para detectar errores. Incluye proponer ajustes.",
+        "comportamiento_bajo": "Chequea el borrador de un documento para detectar errores mecanográficos."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 22,
+        "nombre": "Manejo de Recursos Financieros",
+        "definicion": "Determinar cómo debe gastarse el dinero para realizar el trabajo y contabilizar los gastos.",
+        "comportamiento_alto": "Planifica y aprueba el presupuesto anual de una institución o de un proyecto a largo plazo. Incluye gestionar el financiamiento necesario.",
+        "comportamiento_medio": "Prepara y maneja el presupuesto de un proyecto a corto plazo .",
+        "comportamiento_bajo": "Utiliza dinero de caja chica para adquirir suministros de oficina y lleva un registro de los gastos."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 23,
+        "nombre": "Diseño de Tecnología",
+        "definicion": "Generar o adaptar equipos y tecnología para atender las necesidades del cliente interno y externo.",
+        "comportamiento_alto": "Crea nueva tecnología.",
+        "comportamiento_medio": "Diseña los mecanismos de implementación de nuevas tecnologías que permiten mejorar la gestión de la organización.",
+        "comportamiento_bajo": "Rediseña el portal web institucional, base de datos y otros para mejorar el acceso a la información."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 24,
+        "nombre": "Análisis de Operaciones",
+        "definicion": "Analizar demandas y requerimientos de producto o servicio para crear un diseño.",
+        "comportamiento_alto": "Identificar el sistema de control requerido por una nueva unidad organizacional.",
+        "comportamiento_medio": "Sugerir cambios en un programa de computación para que su uso resulte más fácil al usuario.",
+        "comportamiento_bajo": "Seleccionar un equipo para la oficina"
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 25,
+        "nombre": "Destreza Matemática",
+        "definicion": "Utilizar las matemáticas para ejecutar actividades y solucionar problemas.",
+        "comportamiento_alto": "Desarrolla un modelo matemático para simular y resolver problemas.",
+        "comportamiento_medio": "Utiliza las matemáticas para realizar cálculos de complejidad media. (Ejemplo liquidaciones, conciliaciones bancarias, etc.)",
+        "comportamiento_bajo": "Contar dinero para entregar cambios."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 26,
+        "nombre": "Comprensión Oral",
+        "definicion": "Es la capacidad de escuchar y comprender información o ideas presentadas.",
+        "comportamiento_alto": "Comprende las ideas presentadas en forma oral en las reuniones de trabajo y desarrolla propuestas en base a los requerimientos.",
+        "comportamiento_medio": "Escucha y comprende los requerimientos de los clientes internos y externos y elabora informes.",
+        "comportamiento_bajo": "Escucha y comprende la información o disposiciones que se le provee y realiza las acciones pertinentes para el cumplimiento."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 27,
+        "nombre": "Expresión Oral",
+        "definicion": "Es la capacidad de comunicar información o ideas en forma hablada de manera clara y comprensible.",
+        "comportamiento_alto": "Expone programas, proyectos y otros ante las autoridades y personal de otras instituciones.",
+        "comportamiento_medio": "Comunica información relevante. Organiza la información para que sea comprensible a los receptores.",
+        "comportamiento_bajo": "Comunica en forma clara y oportuna información sencilla."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 28,
+        "nombre": "Expresión Escrita",
+        "definicion": "Es la capacidad de comunicar información o ideas por escrito de modo que otros entiendan.",
+        "comportamiento_alto": "Escribir documentos de complejidad alta, donde se establezcan parámetros que tengan impacto directo sobre el funcionamiento de una organización, proyectos u otros. Ejemplo (Informes de procesos legales, técnicos, administrativos)",
+        "comportamiento_medio": "Escribir documentos de mediana complejidad, ejemplo (oficios, circulares)",
+        "comportamiento_bajo": "Escribir documentos sencillos en forma clara y concisa. Ejemplo (memorando)"
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 29,
+        "nombre": "Juicio y Toma de Decisiones",
+        "definicion": "Es la capacidad de valorar las ventajas y desventajas de una acción potencial.",
+        "comportamiento_alto": "Toma decisiones de complejidad alta sobre la base de la misión y objetivos de la institución, y de la satisfacción del problema del cliente. Idea soluciones a problemáticas futuras de la institución.",
+        "comportamiento_medio": "Toma decisiones de complejidad media sobre la base de sus conocimientos, de los productos o servicios de la unidad o proceso organizacional, y de la experiencia previa.",
+        "comportamiento_bajo": "Toma decisiones de complejidad baja, las situaciones que se presentan permiten comparar patrones de hechos ocurridos con anterioridad."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 30,
+        "nombre": "Detección de Averías",
+        "definicion": "Determinar qué causa un error de operación y decidir qué hacer al respecto.",
+        "comportamiento_alto": "Detecta fallas en sistemas o equipos de alta complejidad de operación como por ejemplo, depurar el código de control de un nuevo sistema operativo.",
+        "comportamiento_medio": "Identifica el circuito causante de una falla eléctrica o de equipos o sistemas de operación compleja.",
+        "comportamiento_bajo": "Busca la fuente que ocasiona errores en la operación de máquinas, automóviles y otros equipos de operación sencilla."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 31,
+        "nombre": "Reparación",
+        "definicion": "Inspeccionar las fuentes que ocasionan daños en maquinaria, equipos y otros para repararlos.",
+        "comportamiento_alto": "Repara los daños de maquinarias, equipos y otros, realizando una inspección previa.",
+        "comportamiento_medio": "Reemplaza las piezas deterioradas de maquinarias, equipos y otros; observando las especificaciones técnicas.",
+        "comportamiento_bajo": "Ajusta las piezas sencillas de maquinarias, equipos y otros."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 32,
+        "nombre": "Instalación",
+        "definicion": "Instalar equipos, maquinaria, cableado o programas que cumplan con las especificaciones requeridas.",
+        "comportamiento_alto": "Instala maquinarias, programas y equipos de alta complejidad.",
+        "comportamiento_medio": "Instala cableados y equipos sencillos.",
+        "comportamiento_bajo": "Instala piezas sencillas de maquinarias, equipos y otros."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 33,
+        "nombre": "Comprobación",
+        "definicion": "Conducir pruebas y ensayos para determinar si los equipos, programas de computación o procedimientos técnicos - administrativos están funcionando correctamente.",
+        "comportamiento_alto": "Realiza pruebas y ensayos de naturaleza compleja para comprobar si un nuevo sistema, equipo o procedimiento técnico - administrativo, funcionará correctamente. Identifica claramente los errores y propone los correctivos",
+        "comportamiento_medio": "Enciende máquinas o equipos por primera vez para verificar su funcionamiento. Constata la calidad de los productos.",
+        "comportamiento_bajo": "Verifica el funcionamiento de máquinas o equipos, frecuentemente."
+    },
+    {
+        "tipo": "tecnica",
+        "numero": 34,
+        "nombre": "Comprensión Escrita",
+        "definicion": "La capacidad de leer y entender información e ideas presentadas de manera escrita.",
+        "comportamiento_alto": "Lee y comprende documentos de alta complejidad. Elabora propuestas de solución o mejoramiento sobre la base del nivel de comprensión",
+        "comportamiento_medio": "Lee y comprende documentos de complejidad media, y posteriormente presenta informes.",
+        "comportamiento_bajo": "Lee y comprende la información sencilla que se le presenta en forma escrita y realiza las acciones pertinentes que indican el nivel de comprensión."
+    },
+    {
+        "tipo": "conductual",
+        "numero": 1,
+        "nombre": "Trabajo en Equipo",
+        "definicion": "Es el interés de cooperar y trabajar de manera coordinada con los demás.",
+        "comportamiento_alto": "Crea un buen clima de trabajo y espíritu de cooperación. Resuelve los conflictos que se puedan producir dentro del equipo. Se considera que es un referente en el manejo de equipos de trabajo. Promueve el trabajo en equipo con otras áreas de la organización.",
+        "comportamiento_medio": "Promueve la colaboración de los distintos integrantes del equipo. Valora sinceramente las ideas y experiencias de los demás; mantiene un actitud abierta para aprender de los demás.",
+        "comportamiento_bajo": "Coopera, participa activamente en el equipo, apoya a las decisiones. Realiza la parte del trabajo que le corresponde. Como miembro de un equipo, mantiene informados a los demás. Comparte información."
+    },
+    {
+        "tipo": "conductual",
+        "numero": 2,
+        "nombre": "Orientación de Servicio",
+        "definicion": "Implica un deseo de ayudar o de servir a los demás, satisfaciendo sus necesidades. Significa focalizar los esfuerzos en el descubrimiento y las satisfacción de las necesidades de los clientes, tanto internos como externos.",
+        "comportamiento_alto": "Demuestra interés en atender a los clientes internos o externos con rapidez, diagnostica correctamente la necesidad y plantea soluciones adecuadas.",
+        "comportamiento_medio": "Identifica las necesidades del cliente interno o externo; en ocasiones se anticipa a ellos, aportando soluciones a la medida de sus requerimientos.",
+        "comportamiento_bajo": "Actúa a partir de los requerimientos de los clientes, ofreciendo propuestas estandarizadas a sus demandas."
+    },
+    {
+        "tipo": "conductual",
+        "numero": 3,
+        "nombre": "Orientación a los Resultados",
+        "definicion": "Es el esfuerzo por trabajar adecuadamente, tendiendo al logro de estándares de excelencia.",
+        "comportamiento_alto": "Realiza las acciones necesarias para cumplir con las metas propuestas. Desarrolla y modifica procesos organizacionales que contribuyan a mejorar la eficiencia.",
+        "comportamiento_medio": "Modifica los métodos de trabajo para conseguir mejoras. Actúa para lograr y superar niveles de desempeño y plazos establecidos.",
+        "comportamiento_bajo": "Realiza bien o correctamente su trabajo."
+    },
+    {
+        "tipo": "conductual",
+        "numero": 4,
+        "nombre": "Flexibilidad",
+        "definicion": "Es la capacidad para adaptarse y trabajar en distintas y variadas situaciones y con personas o grupos diversos.",
+        "comportamiento_alto": "Modifica las acciones para responder a los cambios organizacionales o de prioridades. Propone mejoras para la organización.",
+        "comportamiento_medio": "Modifica su comportamiento para adaptarse a la situación o a las personas. Decide qué hacer en función de la situación.",
+        "comportamiento_bajo": "Aplica normas que dependen a cada situación o procedimientos para cumplir con sus responsabilidades."
+    },
+    {
+        "tipo": "conductual",
+        "numero": 5,
+        "nombre": "Construcción de Relaciones",
+        "definicion": "Es la habilidad de construir y mantener relaciones cordiales con personas internas o externas a la organización.",
+        "comportamiento_alto": "Construye relaciones beneficiosas para el cliente externo y la institución, que le permiten alcanzar los objetivos organizacionales. Identifica y crea nuevas oportunidades en beneficio de la institución.",
+        "comportamiento_medio": "Construye relaciones, tanto dentro como fuera de la institución que le proveen información. Establece un ambiente cordial con personas desconocidas, desde el primer encuentro.",
+        "comportamiento_bajo": "Entabla relaciones a nivel laboral. Inicia y mantiene relaciones sociales con compañeros, clientes y proveedores."
+    },
+    {
+        "tipo": "conductual",
+        "numero": 6,
+        "nombre": "Conocimiento del Entorno Organizacional",
+        "definicion": "Es la capacidad para comprender e interpretar las relaciones de poder e influencia en la institución o en otras instituciones, clientes o proveedores, etc. Incluye la capacidad de preveer la forma que los nuevo acontecimientos o situaciones afectarán a las personas y grupos de la institución.",
+        "comportamiento_alto": "Identifica las razones que motivan determinados comportamientos en los grupos de trabajo, los problemas de fondo de las unidades o procesos, oportunidades o fuerzas de poder que los afectan.",
+        "comportamiento_medio": "Identifica, describe y utiliza las relaciones de poder e influencia existentes dentro de la institución, con un sentido claro de lo que que es influir en la institución.",
+        "comportamiento_bajo": "Utiliza las normas, la cadena de mando y los procedimiento establecidos para cumplir con sus responsabilidades. Responde a los requerimientos explícitos."
+    },
+    {
+        "tipo": "conductual",
+        "numero": 7,
+        "nombre": "Iniciativa",
+        "definicion": "Es la predisposición para actual proactivamente. Los niveles de Actuación van desde concretar decisiones tomadas en el pasado, hasta la búsqueda de nuevas oportunidades o soluciones a problemas.",
+        "comportamiento_alto": "Se anticipa a las situaciones con una visión de largo plazo; actúa para crear oportunidades o evitar problemas que no son evidentes para los demás. Elabora planes de contingencia. Es promotor de ideas innovadoras.",
+        "comportamiento_medio": "Se adelanta y se prepara para los acontecimientos que pueden ocurrir en el corto plazo. Crea oportunidades o minimiza problemas potenciales. Aplica distintas formas de trabajo con una visión de mediano plazo.",
+        "comportamiento_bajo": "Reconoce las oportunidades o problemas del momento. Cuestiona las formas convencionales de trabajar."
+    },
+    {
+        "tipo": "conductual",
+        "numero": 8,
+        "nombre": "Aprendizaje Continuo",
+        "definicion": "Es la habilidad para buscar y compartir información útil, comprometiéndose con el aprendizaje. Incluye la capacidad de aprovechar la experiencia de otros y la propia.",
+        "comportamiento_alto": "Realiza trabajos de investigación y comparte con sus compañeros. Brinda sus conocimientos y experiencias, actuando como agente de cambio y propagador de nuevas ideas y tecnologías.",
+        "comportamiento_medio": "Mantiene su formación técnica. Realiza una gran esfuerzo por adquirir nuevas habilidades y conocimientos.",
+        "comportamiento_bajo": "Busca información sólo cuando la necesita, lee manuales, libros y otro, para aumentar sus conocimiento básicos."
+    }
+]

@@ -312,6 +312,17 @@ return [
         'documento' => 'documento',
         'archivo' => 'archivo',
 
+        // Perfil del puesto
+        'producto' => 'producto o servicio',
+        'conocimientos' => 'conocimientos',
+        'frecuencia' => 'frecuencia',
+        'competencia_id' => 'competencia',
+        'nivel' => 'nivel',
+        'definicion' => 'definición',
+        'comportamiento_alto' => 'comportamiento del nivel alto',
+        'comportamiento_medio' => 'comportamiento del nivel medio',
+        'comportamiento_bajo' => 'comportamiento del nivel bajo',
+
         // Régimen disciplinario
         'tipo_falta' => 'gravedad de la falta',
         'tipo_sancion' => 'sanción',

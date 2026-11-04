@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { puestoActividadService } from '../services/puestoActividadService'
+import { puestoActividadService, type PuestoActividadDatos } from '../services/puestoActividadService'
 import { notificar } from '@/components/ui'
 
 export function usePuestoActividades(puestoId: number | null) {
@@ -14,13 +14,27 @@ export function usePuestoActividades(puestoId: number | null) {
 export function useCrearActividad(puestoId: number) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (descripcion: string) =>
-      puestoActividadService.crear(puestoId, descripcion),
+    mutationFn: (data: PuestoActividadDatos) =>
+      puestoActividadService.crear(puestoId, data),
     onSuccess: () => {
       notificar.exito('Actividad agregada', 'La actividad fue registrada correctamente.')
       qc.invalidateQueries({ queryKey: ['puesto-actividades', puestoId] })
     },
-    onError: notificar.alFallar('No se pudo agregar la actividad'),
+    onError: notificar.alFallarSalvoCampos('No se pudo agregar la actividad'),
+  })
+}
+
+/** Cambiar el contenido de una actividad desde su formulario. */
+export function useEditarActividad(puestoId: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: PuestoActividadDatos }) =>
+      puestoActividadService.actualizar(puestoId, id, data),
+    onSuccess: () => {
+      notificar.exito('Actividad actualizada', 'Los cambios de la actividad fueron guardados.')
+      qc.invalidateQueries({ queryKey: ['puesto-actividades', puestoId] })
+    },
+    onError: notificar.alFallarSalvoCampos('No se pudo actualizar la actividad'),
   })
 }
 
@@ -37,6 +51,7 @@ export function useEliminarActividad(puestoId: number) {
   })
 }
 
+/** Activar o desactivar una actividad: el interruptor ya muestra el resultado. */
 export function useActualizarActividad(puestoId: number) {
   const qc = useQueryClient()
   return useMutation({

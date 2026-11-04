@@ -144,6 +144,12 @@ class Puesto extends Model
             ->orderBy('orden');
     }
 
+    /** Las competencias técnicas y conductuales que exige, con su nivel. */
+    public function competencias(): HasMany
+    {
+        return $this->hasMany(PuestoCompetencia::class);
+    }
+
     public function equiposProteccionRequeridos(): HasMany
     {
         return $this->hasMany(\App\Models\Sso\PuestoEpp::class);

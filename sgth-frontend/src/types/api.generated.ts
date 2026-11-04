@@ -2112,6 +2112,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/estructura/competencias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["estructura.competencias.index"];
+        put?: never;
+        post: operations["estructura.competencias.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/estructura/competencias/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["estructura.competencias.update"];
+        post?: never;
+        delete: operations["estructura.competencias.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/comunicados": {
         parameters: {
             query?: never;
@@ -8019,6 +8051,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/estructura/puestos/{puestoId}/competencias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["puestoCompetencia.index"];
+        put?: never;
+        post: operations["puestoCompetencia.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/estructura/puestos/{puestoId}/competencias/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["puestoCompetencia.destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["puestoCompetencia.update"];
+        trace?: never;
+    };
     "/v1/sso/puestos/{puestoId}/equipos-proteccion": {
         parameters: {
             query?: never;
@@ -11603,6 +11667,28 @@ export interface components {
             /** Format: date-time */
             created_at: string | null;
         };
+        /** CompetenciaResource */
+        CompetenciaResource: {
+            id: number;
+            tipo: components["schemas"]["TipoCompetencia"];
+            /** @enum {string} */
+            tipo_label: "Técnica" | "Conductual";
+            numero: number;
+            nombre: string;
+            definicion: string | null;
+            comportamiento_alto: string;
+            comportamiento_medio: string;
+            comportamiento_bajo: string;
+            /** @description Los números del FOR-02, para quien todavía llena el Excel. */
+            numeros_comportamiento: {
+                alto: number;
+                medio: number;
+                bajo: number;
+            };
+            activo: boolean;
+            /** @description Cuántos puestos la exigen: con alguno, se retira en vez de borrarse. */
+            puestos_count?: number;
+        };
         /** ComunicadoAdjuntoResource */
         ComunicadoAdjuntoResource: {
             id: number;
@@ -12707,6 +12793,12 @@ export interface components {
             } | null;
         };
         /**
+         * FrecuenciaActividad
+         * @description Cada cuánto se entrega el producto de una actividad. Son las opciones de la columna «Frecuencia» del formato de asignación de responsabilidades (IN-GEP-02-02-FOR-02), con los mismos nombres.
+         * @enum {string}
+         */
+        FrecuenciaActividad: "diario_mes_integral" | "diario_ordinario" | "semanal" | "quincenal" | "mensual" | "trimestral" | "semestral" | "anual";
+        /**
          * GravedadAccidente
          * @description Gravedad de un accidente de trabajo. La columna nació como texto libre (`string, 50`) y los Form Requests la validaban igual —`['required','string','max:50']`—, así que el API aceptaba cualquier cosa: la tabla pintaba lo que llegara y el mapa de tonos le daba el neutro a lo que no reconocía. Los cuatro valores son los que el formulario ofrece desde siempre.  NOTA: el modelo todavía NO castea esta columna a enum. Las filas anteriores a esta validación pueden tener cualquier texto, y un cast haría reventar la lectura del listado entero con un `ValueError` por una sola fila rara. Normalizar lo que haya —y recién entonces castear— necesita mirar los datos reales de producción, que es una decisión de Talento Humano y no del código.
          * @enum {string}
@@ -13738,6 +13830,12 @@ export interface components {
          */
         NivelAlertaTriaje: "normal" | "atencion" | "critico" | "no_evaluado";
         /**
+         * NivelCompetencia
+         * @description El nivel en que el puesto exige una competencia. Cada competencia del diccionario describe un comportamiento observable por nivel.
+         * @enum {string}
+         */
+        NivelCompetencia: "alto" | "medio" | "bajo";
+        /**
          * NivelComplejidadPuesto
          * @enum {string}
          */
@@ -14292,6 +14390,9 @@ export interface components {
             created_at: string | null;
             /** Format: date-time */
             updated_at: string | null;
+            producto: string | null;
+            conocimientos: string | null;
+            frecuencia: components["schemas"]["FrecuenciaActividad"] | null;
         };
         /** PuestoBusquedaResource */
         PuestoBusquedaResource: {
@@ -14303,6 +14404,25 @@ export interface components {
             unidad_administrativa?: {
                 nombre: string;
             } | null;
+        };
+        /** PuestoCompetenciaResource */
+        PuestoCompetenciaResource: {
+            id: number;
+            puesto_id: number;
+            competencia_id: number;
+            tipo: components["schemas"]["TipoCompetencia"];
+            nombre: string;
+            definicion: string | null;
+            nivel: components["schemas"]["NivelCompetencia"];
+            /** @enum {string} */
+            nivel_label: "Alto" | "Medio" | "Bajo";
+            numero_comportamiento: number;
+            comportamiento: string;
+            /**
+             * @description Retirada del diccionario después de asignarla: el puesto la
+             *     conserva, pero la pantalla lo avisa.
+             */
+            competencia_activa: boolean;
         };
         /** PuestoEpp */
         PuestoEpp: {
@@ -16728,6 +16848,12 @@ export interface components {
                 nombre: string;
             }[];
         };
+        /**
+         * TipoCompetencia
+         * @description Las dos partes del diccionario de competencias del Ministerio, que el formato de asignación de responsabilidades (IN-GEP-02-02-FOR-02) pide por separado: las técnicas, que dependen de las actividades del puesto, y las conductuales, que tienen que ver con la manera de trabajar.
+         * @enum {string}
+         */
+        TipoCompetencia: "tecnica" | "conductual";
         /**
          * TipoComunicado
          * @description Lo que publica Talento Humano (docs/diseno-noticias-comunicados.md, 3.1). La noticia informa. El comunicado es oficial: puede llevar el número de su circular o memorando y pedir confirmación de lectura.
@@ -23604,6 +23730,165 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
             404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "estructura.competencias.index": {
+        parameters: {
+            query?: {
+                tipo?: components["schemas"]["TipoCompetencia"];
+                /**
+                 * @description axios manda el booleano como «true»; la regla `boolean` no lo
+                 *     acepta en una consulta, y `$request->boolean()` sí lo lee.
+                 */
+                solo_activas?: "0" | "1" | "true" | "false" | null;
+                buscar?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Diccionario de competencias.";
+                        datos: components["schemas"]["CompetenciaResource"][];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "estructura.competencias.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    tipo: components["schemas"]["TipoCompetencia"];
+                    nombre: string;
+                    definicion?: string | null;
+                    comportamiento_alto: string;
+                    comportamiento_medio: string;
+                    comportamiento_bajo: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Competencia agregada al diccionario.";
+                        datos: components["schemas"]["CompetenciaResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "estructura.competencias.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    nombre?: string;
+                    definicion?: string | null;
+                    comportamiento_alto?: string;
+                    comportamiento_medio?: string;
+                    comportamiento_bajo?: string;
+                    activo?: boolean;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Competencia actualizada.";
+                        datos: components["schemas"]["CompetenciaResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "estructura.competencias.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Competencia eliminada.";
+                        datos: null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "La competencia la exige algún puesto: retírela del diccionario en vez de eliminarla.";
+                        datos: null;
+                        errores: null;
+                    };
+                };
+            };
         };
     };
     "comunicados.index": {
@@ -39609,6 +39894,9 @@ export interface operations {
             content: {
                 "application/json": {
                     descripcion: string;
+                    producto?: string | null;
+                    conocimientos?: string | null;
+                    frecuencia?: components["schemas"]["FrecuenciaActividad"];
                     orden?: number | null;
                 };
             };
@@ -39677,6 +39965,9 @@ export interface operations {
             content: {
                 "application/json": {
                     descripcion?: string;
+                    producto?: string | null;
+                    conocimientos?: string | null;
+                    frecuencia?: components["schemas"]["FrecuenciaActividad"];
                     orden?: number;
                     activo?: boolean;
                 };
@@ -39729,6 +40020,139 @@ export interface operations {
                         /** @constant */
                         mensaje: "Orden actualizado.";
                         datos: string[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "puestoCompetencia.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                puestoId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Competencias del puesto.";
+                        datos: components["schemas"]["PuestoCompetenciaResource"][];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "puestoCompetencia.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                puestoId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    competencia_id: number;
+                    nivel: components["schemas"]["NivelCompetencia"];
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Competencia agregada al puesto.";
+                        datos: components["schemas"]["PuestoCompetenciaResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "puestoCompetencia.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                puestoId: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Competencia quitada del puesto.";
+                        datos: null;
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "puestoCompetencia.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                puestoId: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    nivel: components["schemas"]["NivelCompetencia"];
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Nivel actualizado.";
+                        datos: components["schemas"]["PuestoCompetenciaResource"];
                         meta: null;
                     };
                 };

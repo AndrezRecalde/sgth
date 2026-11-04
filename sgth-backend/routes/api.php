@@ -73,6 +73,7 @@ use App\Http\Controllers\Dispensario\SolicitudCertificacionController;
 use App\Http\Controllers\Dispensario\TriajeController;
 use App\Http\Controllers\Estructura\BuscarPuestoController;
 use App\Http\Controllers\Estructura\CargoController;
+use App\Http\Controllers\Estructura\CompetenciaController;
 use App\Http\Controllers\Estructura\ExtensionTelefonicaController;
 use App\Http\Controllers\Estructura\EscalaRemuneracionController;
 use App\Http\Controllers\Estructura\GrupoOcupacionalController;
@@ -80,6 +81,7 @@ use App\Http\Controllers\Estructura\OrganigramaController;
 use App\Http\Controllers\Estructura\OrganigramaPdfController;
 use App\Http\Controllers\Estructura\PartidaPresupuestariaController;
 use App\Http\Controllers\Estructura\PuestoActividadController;
+use App\Http\Controllers\Estructura\PuestoCompetenciaController;
 use App\Http\Controllers\Estructura\PlantillaController;
 use App\Http\Controllers\Estructura\PuestoController;
 use App\Http\Controllers\Estructura\UnidadAdministrativaController;
@@ -349,6 +351,26 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 Route::delete('{actividadId}', [PuestoActividadController::class, 'destroy']);
                 Route::post('reordenar', [PuestoActividadController::class, 'reordenar']);
             });
+        // El perfil del puesto para la evaluación del desempeño: el
+        // diccionario de competencias y las que exige cada puesto.
+        Route::prefix('puestos/{puestoId}/competencias')
+            ->whereNumber('puestoId')
+            ->group(function () {
+                Route::get('/', [PuestoCompetenciaController::class, 'index']);
+                Route::post('/', [PuestoCompetenciaController::class, 'store']);
+                Route::patch('{id}', [PuestoCompetenciaController::class, 'update'])->whereNumber('id');
+                Route::delete('{id}', [PuestoCompetenciaController::class, 'destroy'])->whereNumber('id');
+            });
+        Route::get('competencias', [CompetenciaController::class, 'index'])
+            ->name('estructura.competencias.index');
+        Route::post('competencias', [CompetenciaController::class, 'store'])
+            ->name('estructura.competencias.store');
+        Route::put('competencias/{id}', [CompetenciaController::class, 'update'])
+            ->whereNumber('id')
+            ->name('estructura.competencias.update');
+        Route::delete('competencias/{id}', [CompetenciaController::class, 'destroy'])
+            ->whereNumber('id')
+            ->name('estructura.competencias.destroy');
 
         Route::get('cargos', [CargoController::class, 'index'])
             ->name('estructura.cargos.index');
