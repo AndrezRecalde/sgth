@@ -1,142 +1,70 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { Button, Stack, TextInput } from "@mantine/core";
-import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
-import { IconBriefcase, IconPlus } from "@tabler/icons-react";
-import {
-  DataState,
-  SgthTable,
-  StatusBadge,
-  TableActions,
-  Toolbar,
-  confirmar,
-} from "@/components/ui";
-import { IconEdit, IconTrash } from "@tabler/icons-react";
-import { useCargos } from "../hooks/useCargos";
-import { useCargoMutations } from "../hooks/useCargoMutations";
-import { CargoModal } from "./CargoModal";
-import { useContainedInput } from "@/hooks/useContainedInput";
-import { useAuth } from "@/hooks/useAuth";
-import type { Cargo } from "@/types/api";
-import { Text } from "@mantine/core";
-import type { DataTableColumn } from "mantine-datatable";
+import { useState } from 'react'
+import { Button, Stack, TextInput } from '@mantine/core'
+import { useDebouncedValue, useDisclosure } from '@mantine/hooks'
+import { IconBriefcase, IconPlus } from '@tabler/icons-react'
+import { DataState, SgthTable, Toolbar, confirmar } from '@/components/ui'
+import { useContainedInput } from '@/hooks/useContainedInput'
+import { useAuth } from '@/hooks/useAuth'
+import type { Cargo } from '@/types/api'
+import { useCargos } from '../hooks/useCargos'
+import { useCargoMutations } from '../hooks/useCargoMutations'
+import { getCargoColumns } from './cargo.columns'
+import { CargoModal } from './CargoModal'
 
 // El texto escrito entraba directo en la clave de consulta, así que cada tecla
 // pedía la lista de cargos entera y solo importaba la última.
-const RETARDO_BUSQUEDA_MS = 300;
+const RETARDO_BUSQUEDA_MS = 300
 
 export function CargosTab() {
   // El catálogo se consulta con sesión; crearlo o cambiarlo pide
   // `gestionar-puestos`, igual que en el backend.
-  const { hasPermiso } = useAuth();
-  const puedeGestionar = hasPermiso("gestionar-puestos");
-  const [search, setSearch] = useState("");
-  const [editCargo, setEditCargo] = useState<Cargo | null>(null);
-  const [modalOpened, { open, close }] = useDisclosure(false);
+  const { hasPermiso } = useAuth()
+  const puedeGestionar = hasPermiso('gestionar-puestos')
+  const filtro = useContainedInput('sm')
 
-  const contained = useContainedInput();
-  const { eliminar } = useCargoMutations();
-  const [searchConRetardo] = useDebouncedValue(search, RETARDO_BUSQUEDA_MS);
+  const [busqueda, setBusqueda] = useState('')
+  const [busquedaConRetardo] = useDebouncedValue(busqueda, RETARDO_BUSQUEDA_MS)
+  const [enEdicion, setEnEdicion] = useState<Cargo | null>(null)
+  const [modalAbierto, modal] = useDisclosure(false)
+
+  const { eliminar } = useCargoMutations()
   const { data: cargos = [], isLoading, error } = useCargos(
-    searchConRetardo ? { search: searchConRetardo } : undefined,
-  );
+    busquedaConRetardo ? { search: busquedaConRetardo } : undefined,
+  )
 
-  const handleEdit = (cargo: Cargo) => {
-    setEditCargo(cargo);
-    open();
-  };
+  const abrir = (cargo: Cargo | null) => {
+    setEnEdicion(cargo)
+    modal.open()
+  }
 
-  const handleClose = () => {
-    setEditCargo(null);
-    close();
-  };
+  const nuevoCargo = puedeGestionar && (
+    <Button leftSection={<IconPlus size={16} />} variant="light" onClick={() => abrir(null)}>
+      Nuevo cargo
+    </Button>
+  )
 
-  const columns: DataTableColumn<Cargo>[] = [
-    {
-      accessor: "nombre",
-      title: "Cargo",
-      render: ({ nombre, denominacion_generica }) => (
-        <div>
-          <Text size="sm" fw={500}>
-            {nombre}
-          </Text>
-          {denominacion_generica && (
-            <Text size="xs" c="dimmed">
-              {denominacion_generica}
-            </Text>
-          )}
-        </div>
-      ),
-    },
-    {
-      accessor: "activo",
-      title: "Estado",
-      width: 90,
-      render: ({ activo }) => (
-        <StatusBadge tone={activo ? "success" : "neutral"}>
-          {activo ? "Activo" : "Inactivo"}
-        </StatusBadge>
-      ),
-    },
-    {
-      accessor: "acciones",
-      title: "",
-      width: 50,
-      render: (cargo) => (
-        <TableActions
-          actions={[
-            {
-              label: "Editar cargo",
-              icon: <IconEdit size={14} />,
-              hidden: !puedeGestionar,
-              onClick: () => handleEdit(cargo),
-            },
-            {
-              label: "Eliminar cargo",
-              icon: <IconTrash size={14} />,
-              color: "red",
-              hidden: !puedeGestionar,
-              onClick: () =>
-                confirmar({
-                  title: "Eliminar cargo",
-                  message: (
-                    <>
-                      Se eliminará el cargo <b>{cargo.nombre}</b>. No se puede
-                      deshacer.
-                    </>
-                  ),
-                  destructiva: true,
-                  onConfirm: () => eliminar.mutate(cargo.id),
-                }),
-            },
-          ]}
-        />
-      ),
-    },
-  ];
+  const columnas = getCargoColumns({
+    puedeGestionar,
+    alEditar: abrir,
+    alEliminar: (cargo) => confirmar({
+      title: 'Eliminar cargo',
+      message: <>Se eliminará el cargo <b>{cargo.nombre}</b>. No se puede deshacer.</>,
+      destructiva: true,
+      onConfirm: () => eliminar.mutate(cargo.id),
+    }),
+  })
 
   return (
     <Stack gap="md">
-      <Toolbar
-        actions={puedeGestionar && (
-          <Button
-            leftSection={<IconPlus size={16} />}
-            variant="light"
-            onClick={() => {
-              setEditCargo(null);
-              open();
-            }}
-          >
-            Nuevo cargo
-          </Button>
-        )}
-      >
+      <Toolbar actions={nuevoCargo}>
         <TextInput
           label="Cargo"
-          placeholder="Buscar cargo..."
-          onChange={(e) => setSearch(e.currentTarget.value)}
-          {...contained}
+          placeholder="Buscar cargo…"
+          {...filtro}
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.currentTarget.value)}
           style={{ minWidth: 280 }}
         />
       </Toolbar>
@@ -147,23 +75,21 @@ export function CargosTab() {
         empty={!cargos.length}
         emptyProps={{
           icon: IconBriefcase,
-          title: "Sin cargos",
-          description: search
-            ? "Ningún cargo coincide con la búsqueda."
-            : "Aún no hay cargos registrados en el catálogo.",
+          title: 'Sin cargos',
+          description: busqueda
+            ? 'Ningún cargo coincide con la búsqueda. Pruebe con otra palabra.'
+            : 'Aún no hay cargos en el catálogo. Cree el primero con «Nuevo cargo».',
+          action: busqueda ? undefined : nuevoCargo || undefined,
         }}
       >
-        <SgthTable
-          records={cargos as Cargo[]}
-          columns={columns}
-          minHeight={200}
-        />
+        <SgthTable records={cargos} columns={columnas} minHeight={200} />
       </DataState>
+
       <CargoModal
-        opened={modalOpened}
-        onClose={handleClose}
-        cargo={editCargo}
+        opened={modalAbierto}
+        onClose={() => { setEnEdicion(null); modal.close() }}
+        cargo={enEdicion}
       />
     </Stack>
-  );
+  )
 }

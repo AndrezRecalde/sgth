@@ -7,6 +7,7 @@ use App\Http\Responses\ApiResponse;
 use App\Models\Estructura\Cargo;
 use App\Models\Estructura\Puesto;
 use App\Services\Estructura\ProteccionDePuestoOcupado;
+use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -15,7 +16,9 @@ use Illuminate\Validation\ValidationException;
  * El catálogo de cargos institucionales.
  *
  * La lectura queda abierta a cualquier usuario autenticado: alimenta los
- * selectores de Puestos. Crear, cambiar o borrar un cargo pide
+ * selectores de Puestos. Solo los activos; desde la pantalla no se desactiva
+ * ninguno (el `activo` que aceptaba la edición no lo mandaba nadie): el que
+ * sobra se elimina, y el que tiene puestos se reclasifica. Crear, cambiar o borrar un cargo pide
  * `gestionar-puestos`, igual que un puesto; antes no pedía nada, y el código
  * CIUO del cargo es el que hereda la ficha médica ocupacional (FEMO).
  */
@@ -36,9 +39,32 @@ class CargoController extends Controller
         );
     }
 
+    /**
+     * Dos cargos con el mismo nombre son dos opciones iguales en el selector
+     * de Puestos, y nadie sabe cuál elegir. No había ninguna restricción. Sin
+     * distinguir mayúsculas ni los espacios de los extremos; el cargo borrado
+     * no cuenta.
+     */
+    private function nombreLibre(?int $ignorar = null): Closure
+    {
+        return function (string $atributo, mixed $valor, Closure $fallar) use ($ignorar) {
+            $repetido = Cargo::query()
+                ->whereRaw('lower(trim(nombre)) = lower(trim(?))', [(string) $valor])
+                ->when($ignorar, fn ($q) => $q->whereKeyNot($ignorar))
+                ->exists();
+
+            if ($repetido) {
+                $fallar('Ya hay un cargo con ese nombre en el catálogo.');
+            }
+        };
+    }
+
     public function index(Request $request): JsonResponse
     {
         $cargos = Cargo::query()
+            // Cuántos puestos lo usan: con alguno no se elimina, y la pantalla
+            // apaga «Eliminar» en vez de ofrecer lo que el backend rechaza.
+            ->withCount('puestos')
             ->when(
                 $request->filled('search'),
                 fn($q) => $q->where('nombre', 'ilike', "%{$request->search}%")
@@ -67,7 +93,7 @@ class CargoController extends Controller
         $this->exigirGestion($request);
 
         $validated = $request->validate([
-            'nombre'                 => ['required', 'string', 'max:200'],
+            'nombre'                 => ['required', 'string', 'max:200', $this->nombreLibre()],
             'denominacion_generica'  => ['nullable', 'string', 'max:100'],
             // Código CIUO-08 (adaptación INEC). Se define aquí, en el cargo, y lo
             // heredan las fichas médicas ocupacionales de todos sus puestos.
@@ -84,14 +110,16 @@ class CargoController extends Controller
         $this->exigirGestion($request);
 
         $cargo = Cargo::findOrFail($id);
+        // Solo si cambia el nombre: si ya hay dos iguales de antes, corregir el
+        // código CIUO de uno no puede quedar bloqueado por el otro.
+        $nombreNuevo = $request->filled('nombre') && trim((string) $request->input('nombre')) !== $cargo->nombre;
         $validated = $request->validate([
-            'nombre'                 => ['sometimes', 'string', 'max:200'],
+            'nombre'                 => ['sometimes', 'string', 'max:200', ...($nombreNuevo ? [$this->nombreLibre($cargo->id)] : [])],
             'denominacion_generica'  => ['nullable', 'string', 'max:100'],
             // Código CIUO-08 (adaptación INEC). Se define aquí, en el cargo, y lo
             // heredan las fichas médicas ocupacionales de todos sus puestos.
             'codigo_ciuo'            => ['nullable', 'string', 'max:10', 'regex:/^[0-9]+$/'],
             'mision'                 => ['nullable', 'string'],
-            'activo' => ['boolean'],
             // Corregir cómo está escrito un cargo con puestos ocupados pide el
             // motivo (fase 7.1b); cambiar la denominación es reclasificar.
             'motivo_correccion'      => ['nullable', 'string', 'min:5', 'max:300'],

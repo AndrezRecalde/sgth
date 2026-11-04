@@ -1406,13 +1406,8 @@ export type Cargo = {
    * sus ocupantes, y pide el motivo de la corrección (fase 7.1b).
    */
   con_puestos_ocupados?: boolean
-}
-
-export type CargoFormData = {
-  nombre: string
-  denominacion_generica?: string
-  codigo_ciuo?: string
-  mision?: string
+  /** Cuántos puestos lo usan: con alguno no se elimina. */
+  puestos_count?: number
 }
 
 export type CargoParams = {

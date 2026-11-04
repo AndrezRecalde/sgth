@@ -9,6 +9,7 @@ import { FormModal } from '@/components/ui'
 import { useForm, useWatch, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useContainedInput } from '@/hooks/useContainedInput'
+import { erroresDeCampo } from '@/lib/erroresDeCampo'
 import { useCargoMutations } from '../hooks/useCargoMutations'
 import { cargoSchema, type CargoFormData } from '../schemas/cargo.schema'
 import type { Cargo } from '@/types/api'
@@ -22,7 +23,7 @@ interface Props {
 export function CargoModal({ opened, onClose, cargo }: Props) {
   const contained         = useContainedInput()
   const { crear, editar } = useCargoMutations()
-  const isEditing         = !!cargo
+  const editando          = !!cargo
 
   const {
     register,
@@ -50,7 +51,7 @@ export function CargoModal({ opened, onClose, cargo }: Props) {
     })
   }, [cargo, reset])
 
-  const handleClose = () => {
+  const cerrar = () => {
     reset()
     onClose()
   }
@@ -58,32 +59,37 @@ export function CargoModal({ opened, onClose, cargo }: Props) {
   // Renombrar un cargo con puestos ocupados cambia la denominación de sus
   // ocupantes: solo se corrige cómo está escrito, y se dice por qué (7.1b).
   const nombre = useWatch({ control, name: 'nombre' })
-  const pideMotivo = isEditing && !!cargo?.con_puestos_ocupados && (nombre ?? '').trim() !== cargo?.nombre
+  const pideMotivo = editando && !!cargo?.con_puestos_ocupados && (nombre ?? '').trim() !== cargo?.nombre
 
-  const onSubmit = (values: CargoFormData) => {
-    if (pideMotivo && (values.motivo_correccion?.trim().length ?? 0) < 5) {
+  const guardar = async (valores: CargoFormData) => {
+    if (pideMotivo && (valores.motivo_correccion?.trim().length ?? 0) < 5) {
       setError('motivo_correccion', { type: 'manual', message: 'Diga por qué se corrige el nombre' })
       return
     }
-    if (!pideMotivo) delete values.motivo_correccion
+    if (!pideMotivo) delete valores.motivo_correccion
 
-    const mutation = isEditing
-      ? editar.mutateAsync({ id: cargo!.id, data: values })
-      : crear.mutateAsync(values)
-    mutation.then(handleClose).catch(() => {})
+    try {
+      if (cargo) await editar.mutateAsync({ id: cargo.id, data: valores })
+      else await crear.mutateAsync(valores)
+      cerrar()
+    } catch (error) {
+      // El 422 va a su campo (regla 07): el nombre repetido o el motivo que
+      // falta. Lo demás ya lo notificó la mutación.
+      for (const [campo, mensaje] of Object.entries(erroresDeCampo(error) ?? {})) {
+        if (campo in cargoSchema.shape) setError(campo as keyof CargoFormData, { type: 'server', message: mensaje })
+      }
+    }
   }
-
-  const isPending = crear.isPending || editar.isPending
 
   return (
     <FormModal
       opened={opened}
-      onClose={handleClose}
-      title={isEditing ? 'Editar cargo' : 'Nuevo cargo'}
+      onClose={cerrar}
+      title={editando ? 'Editar cargo' : 'Nuevo cargo'}
       size="md"
-      onSubmit={handleSubmit(onSubmit)}
-      submitLabel={isEditing ? 'Actualizar' : 'Crear cargo'}
-      submitting={isPending}
+      onSubmit={handleSubmit(guardar)}
+      submitLabel={editando ? 'Guardar cambios' : 'Crear cargo'}
+      submitting={crear.isPending || editar.isPending}
     >
       <Stack gap="sm">
         <TextInput
@@ -134,7 +140,8 @@ export function CargoModal({ opened, onClose, cargo }: Props) {
         <Textarea
           label="Misión del cargo"
           placeholder="Describa la misión del cargo (opcional)"
-          rows={3}
+          autosize
+          minRows={3}
           {...contained}
           {...register('mision')}
           error={errors.mision?.message}

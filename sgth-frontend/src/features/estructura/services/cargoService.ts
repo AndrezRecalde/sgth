@@ -1,5 +1,6 @@
 import api from '@/lib/axios'
-import type { ApiResponse, Cargo, CargoFormData, CargoParams } from '@/types/api'
+import type { ApiResponse, Cargo, CargoParams } from '@/types/api'
+import type { CargoFormData } from '../schemas/cargo.schema'
 
 export const cargoService = {
   listar: (params?: CargoParams) =>
