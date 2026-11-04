@@ -35,7 +35,10 @@ export function PuestoCompetenciaModal({
 }: Props) {
   const contained = useContainedInput()
   const { agregar, cambiarNivel } = usePuestoCompetenciaMutations(puestoId)
-  const { data: diccionario = [], isLoading, isError } = useCompetencias({ tipo, solo_activas: true }, opened)
+  // Al cambiar el nivel de una ya asignada, el diccionario entero: si se
+  // retiró después, no estaba entre las vigentes, y el recuadro mostraba el
+  // comportamiento del nivel guardado en vez del elegido.
+  const { data: diccionario = [], isLoading, isError } = useCompetencias({ tipo, solo_activas: !asignada }, opened)
   const etiquetaTipo = TIPOS_COMPETENCIA.find(t => t.value === tipo)?.label.toLowerCase()
 
   const iniciales: DefaultValues<PuestoCompetenciaFormData> = asignada

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { puestoActividadService, type PuestoActividadDatos } from '../services/puestoActividadService'
+import { puestoActividadService, type PuestoActividad, type PuestoActividadDatos } from '../services/puestoActividadService'
 import { notificar } from '@/components/ui'
 
 export function usePuestoActividades(puestoId: number | null) {
@@ -63,5 +63,31 @@ export function useActualizarActividad(puestoId: number) {
       qc.invalidateQueries({ queryKey: ['puesto-actividades', puestoId] })
     },
     onError: notificar.alFallar('No se pudo actualizar la actividad'),
+  })
+}
+
+/**
+ * El orden nuevo se pinta en seguida y se guarda detrás. Si el guardado
+ * falla, la lista vuelve a como estaba y se avisa: antes volvía sola, sin
+ * decir nada, y parecía que el arrastre no había funcionado.
+ */
+export function useReordenarActividades(puestoId: number) {
+  const qc = useQueryClient()
+  const clave = ['puesto-actividades', puestoId]
+
+  return useMutation({
+    mutationFn: (ordenadas: PuestoActividad[]) =>
+      puestoActividadService.reordenar(puestoId, ordenadas.map(a => a.id)),
+    onMutate: async (ordenadas) => {
+      await qc.cancelQueries({ queryKey: clave })
+      const antes = qc.getQueryData<PuestoActividad[]>(clave)
+      qc.setQueryData(clave, ordenadas)
+      return { antes }
+    },
+    onError: (error, _ordenadas, contexto) => {
+      qc.setQueryData(clave, contexto?.antes)
+      notificar.alFallar('No se pudo guardar el orden de las actividades')(error)
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: clave }),
   })
 }

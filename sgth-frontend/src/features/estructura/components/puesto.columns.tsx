@@ -4,15 +4,16 @@ import { StatusBadge, TableActions } from '@/components/ui'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { PuestoConRelaciones } from '@/types/api'
 import { REGIMEN_LABELS } from '@/lib/regimen'
+import { dinero } from '@/features/expediente/utils/dinero'
 
-type Handlers = {
-  onEdit:        (puesto: PuestoConRelaciones) => void
-  onDelete:      (puesto: PuestoConRelaciones) => void
-  onPerfil:      (puesto: PuestoConRelaciones) => void
+type Acciones = {
+  alEditar:     (puesto: PuestoConRelaciones) => void
+  alEliminar:   (puesto: PuestoConRelaciones) => void
+  alVerPerfil:  (puesto: PuestoConRelaciones) => void
   /** Pasarlo ocupado a otra unidad, con el acto de cada ocupante (fase 7.1a). */
-  onTraspasar:   (puesto: PuestoConRelaciones) => void
+  alTraspasar:  (puesto: PuestoConRelaciones) => void
   /** Cambiarle ocupado el grado o la denominación (fase 7.1b). */
-  onRevisar:     (puesto: PuestoConRelaciones) => void
+  alRevisar:    (puesto: PuestoConRelaciones) => void
   /** `gestionar-puestos`. Sin él, el perfil del puesto solo se consulta. */
   puedeGestionar: boolean
   /** `preparar-accion-personal`: el traspaso y la revisión son lotes de acciones. */
@@ -28,18 +29,26 @@ function ocupantesDe(puesto: PuestoConRelaciones): string {
   return nombres.length > 2 ? `${nombres.slice(0, 2).join(', ')} y ${nombres.length - 2} más` : nombres.join(', ')
 }
 
+/*
+| En el menú de cada fila, `hidden` es por permiso y `disabled` por el estado
+| del puesto (regla 06): quien puede traspasar ve la acción también en un
+| puesto vacante, apagada, en vez de preguntarse por qué no aparece.
+*/
 export const getPuestoColumns = (
-  { onEdit, onDelete, onPerfil, onTraspasar, onRevisar, puedeGestionar, puedeTraspasar }: Handlers
+  { alEditar, alEliminar, alVerPerfil, alTraspasar, alRevisar, puedeGestionar, puedeTraspasar }: Acciones,
 ): DataTableColumn<PuestoConRelaciones>[] => [
   {
     accessor: 'cargo',
     title: 'Cargo',
-    render: ({ cargo, es_jefe }) => (
+    render: ({ cargo, es_jefe, activo }) => (
       <div>
-        <Text size="sm" fw={500}>{cargo?.nombre ?? '-'}</Text>
-        {es_jefe && (
+        <Text size="sm" fw={500} c={activo === false ? 'dimmed' : undefined}>{cargo?.nombre ?? '-'}</Text>
+        {(es_jefe || activo === false) && (
           <Group gap={4} mt={2}>
-            <StatusBadge tone="success" size="xs">Jefe</StatusBadge>
+            {/* «Jefe» es una categoría: va neutra (regla 06). */}
+            {es_jefe && <StatusBadge size="xs">Jefe</StatusBadge>}
+            {/* Desactivado en vez de eliminado: se veía igual que uno vigente. */}
+            {activo === false && <StatusBadge size="xs" variant="dot">Inactivo</StatusBadge>}
           </Group>
         )}
       </div>
@@ -73,19 +82,15 @@ export const getPuestoColumns = (
     accessor: 'plazas',
     title: 'Plazas',
     width: 90,
-    render: ({ plazas }) => (
-      <Text size="sm" ta="center">{plazas ?? 1}</Text>
-    ),
+    textAlign: 'center',
+    render: ({ plazas }) => <Text size="sm">{plazas ?? 1}</Text>,
   },
   {
     accessor: 'rmu',
     title: 'RMU',
-    width: 100,
-    render: ({ rmu }) => (
-      <Text size="sm">
-        {rmu ? `$${Number(rmu).toFixed(2)}` : '-'}
-      </Text>
-    ),
+    width: 110,
+    textAlign: 'right',
+    render: ({ rmu }) => <Text size="sm">{dinero(rmu)}</Text>,
   },
   {
     accessor: 'acciones',
@@ -96,38 +101,41 @@ export const getPuestoColumns = (
         {
           label: 'Perfil del puesto',
           icon: <IconList size={14} />,
-          onClick: () => onPerfil(puesto),
+          onClick: () => alVerPerfil(puesto),
         },
         {
           label: 'Editar puesto',
           icon: <IconEdit size={14} />,
           hidden: !puedeGestionar,
-          onClick: () => onEdit(puesto),
+          onClick: () => alEditar(puesto),
         },
         {
           // Ocupado, cambia de unidad con el acto de cada ocupante (fase 7.1a).
           // La autoridad electa y la jefatura no se traspasan: la jefatura va
-          // con su unidad.
+          // con su unidad. Vacante, la unidad se cambia al editarlo.
           label: 'Traspasar a otra unidad',
           icon: <IconArrowsExchange size={14} />,
-          hidden: !puedeTraspasar || !puesto.ocupado || puesto.admite_traspaso === false,
-          onClick: () => onTraspasar(puesto),
+          hidden: !puedeTraspasar,
+          disabled: !puesto.ocupado || puesto.admite_traspaso === false,
+          onClick: () => alTraspasar(puesto),
         },
         {
           // Ocupado, el grado y la denominación cambian con el acto de cada
           // ocupante (fase 7.1b). La autoridad y el obrero, no.
           label: 'Revisar la clasificación',
           icon: <IconScale size={14} />,
-          hidden: !puedeTraspasar || !puesto.ocupado || puesto.admite_revision === false,
-          onClick: () => onRevisar(puesto),
+          hidden: !puedeTraspasar,
+          disabled: !puesto.ocupado || puesto.admite_revision === false,
+          onClick: () => alRevisar(puesto),
         },
         {
           // Ni ocupado ni con historia: si no, se desactiva.
           label: 'Eliminar puesto',
           icon: <IconTrash size={14} />,
           color: 'red',
-          hidden: !puedeGestionar || puesto.puede_eliminar === false,
-          onClick: () => onDelete(puesto),
+          hidden: !puedeGestionar,
+          disabled: puesto.puede_eliminar === false,
+          onClick: () => alEliminar(puesto),
         },
       ]} />
     ),

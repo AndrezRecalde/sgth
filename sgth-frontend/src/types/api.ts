@@ -476,6 +476,8 @@ export type PuestoParams = {
   per_page?: number
   search?: string
   unidad_administrativa_id?: number
+  /** Sin él, activos e inactivos: el puesto con historia se desactiva en vez de borrarse. */
+  activo?: boolean
 }
 
 export type ExtensionTelefonicaParams = {
@@ -503,8 +505,8 @@ export type UnidadConRelaciones = Omit<UnidadAdministrativa, 'id' | 'codigo' | '
     acronimo?: string
     descripcion?: string
   }
+  /** Los puestos no viajan con la unidad: el cajón del organigrama los pide al listado. */
   puestos_count?: number
-  puestos?: PuestoConRelaciones[]
   hijos?: UnidadConRelaciones[]
   // Anclajes de los firmantes de las Acciones de Personal: el jefe de la
   // unidad marcada es quien firma. Solo una unidad lleva cada bandera.
@@ -1295,7 +1297,6 @@ export type UsuarioUpdateData = {
 export type PuestoConRelaciones = {
   id: number
   cargo_id?: number | null
-  denominacion?: string | null
   unidad_administrativa_id?: number
   grupo_ocupacional_id?: number | null
   partida_presupuestaria_id?: number | null
