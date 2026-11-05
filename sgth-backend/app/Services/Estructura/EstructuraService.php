@@ -416,17 +416,13 @@ final class EstructuraService implements EstructuraServiceInterface
                     $filtros['unidad_administrativa_id']
                 )
             )
-            ->when(
-                isset($filtros['regimen_laboral']),
-                fn($q) => $q->where('puestos.regimen_laboral', $filtros['regimen_laboral'])
-            )
-            ->when(
-                isset($filtros['es_jefe']),
-                fn($q) => $q->where('puestos.es_jefe', $filtros['es_jefe'])
-            )
+            // Activos o inactivos: el puesto con historia se desactiva en vez
+            // de borrarse, y la pantalla los separa. Axios manda «true» o
+            // «false» como texto. (Los filtros por régimen y por jefatura se
+            // fueron: ninguna pantalla los mandaba.)
             ->when(
                 isset($filtros['activo']),
-                fn($q) => $q->where('puestos.activo', $filtros['activo'])
+                fn($q) => $q->where('puestos.activo', filter_var($filtros['activo'], FILTER_VALIDATE_BOOLEAN))
             )
             ->when(
                 filled($filtros['search'] ?? null),

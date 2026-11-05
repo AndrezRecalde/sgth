@@ -4,8 +4,10 @@ import { Stack, Text, Group, Skeleton } from '@mantine/core'
 import {
   IconBuilding, IconBriefcase, IconSitemap,
 } from '@tabler/icons-react'
-import type { UnidadConRelaciones, PuestoConRelaciones } from '@/types/api'
+import type { UnidadConRelaciones } from '@/types/api'
 import { SectionHeading, SgthDrawer, StatusBadge } from '@/components/ui'
+import { REGIMEN_LABELS } from '@/lib/regimen'
+import { usePuestos } from '../hooks/usePuestos'
 
 interface Props {
   opened: boolean
@@ -17,7 +19,14 @@ interface Props {
 export function UnidadDrawer({ opened, onClose, unidad, isLoading }: Props) {
 
   const hijos    = unidad?.hijos ?? []
-  const puestos  = unidad?.puestos ?? []
+  // El detalle de la unidad no trae sus puestos —solo cuántos son—, así que
+  // esta sección no aparecía nunca, y una unidad sin subprocesos decía que no
+  // tenía puestos aunque los tuviera. Se piden al listado, que trae el cargo.
+  const { data: datosPuestos, isLoading: cargandoPuestos } = usePuestos(
+    unidad ? { unidad_administrativa_id: unidad.id, per_page: 100 } : undefined,
+    { habilitado: opened && !!unidad },
+  )
+  const puestos  = datosPuestos?.data ?? []
   const tipoAcronimo = unidad?.tipo_unidad?.acronimo ?? ''
 
   return (
@@ -76,11 +85,10 @@ export function UnidadDrawer({ opened, onClose, unidad, isLoading }: Props) {
                   icon={<IconBriefcase size={14} />}
                 />
                 <Stack gap="xs">
-                  {puestos.map((puesto, i) => {
-                    const p = puesto as PuestoConRelaciones
+                  {puestos.map((p) => {
                     return (
                       <Group
-                        key={p.id ?? i}
+                        key={p.id}
                         justify="space-between"
                         p="xs"
                         style={{
@@ -93,14 +101,13 @@ export function UnidadDrawer({ opened, onClose, unidad, isLoading }: Props) {
                             size={14}
                             color="var(--mantine-color-dimmed)"
                           />
-                          <Text size="sm">{p.denominacion ?? '-'}</Text>
+                          <Text size="sm">{p.cargo?.nombre ?? '-'}</Text>
+                          {p.es_jefe && <StatusBadge size="xs">Jefe</StatusBadge>}
                         </Group>
                         <Group gap="xs">
                           {p.regimen_laboral && (
                             <StatusBadge size="xs">
-                              {p.regimen_laboral === 'losep'
-                                ? 'LOSEP'
-                                : 'CT'}
+                              {REGIMEN_LABELS[p.regimen_laboral] ?? p.regimen_laboral}
                             </StatusBadge>
                           )}
                           {p.plazas && p.plazas > 1 && (
@@ -116,7 +123,7 @@ export function UnidadDrawer({ opened, onClose, unidad, isLoading }: Props) {
               </>
             )}
 
-            {hijos.length === 0 && puestos.length === 0 && (
+            {hijos.length === 0 && puestos.length === 0 && !cargandoPuestos && (
               <Text size="sm" c="dimmed" ta="center" mt="xl">
                 Esta unidad no tiene subprocesos ni puestos registrados.
               </Text>

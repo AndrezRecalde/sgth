@@ -4,6 +4,7 @@ import { Card, Group, Stack, Tabs } from '@mantine/core'
 import { IconList, IconStars } from '@tabler/icons-react'
 import { SgthDrawer, StatusBadge } from '@/components/ui'
 import type { PuestoConRelaciones } from '@/types/api'
+import { REGIMEN_LABELS } from '@/lib/regimen'
 import { complejidadEnFemenino } from '../constants/perfilPuesto'
 import { PuestoActividadesPanel } from './PuestoActividadesPanel'
 import { PuestoCompetenciasPanel } from './PuestoCompetenciasPanel'
@@ -37,7 +38,11 @@ export function PuestoPerfilDrawer({ opened, onClose, puesto, soloLectura = fals
           <Group gap="xs" wrap="wrap">
             {puesto?.unidad_administrativa?.nombre && <StatusBadge>{puesto.unidad_administrativa.nombre}</StatusBadge>}
             {puesto?.grupo_ocupacional?.grupo && <StatusBadge>{puesto.grupo_ocupacional.grupo}</StatusBadge>}
-            {puesto?.regimen_laboral && <StatusBadge variant="outline">{puesto.regimen_laboral.toUpperCase()}</StatusBadge>}
+            {/* El régimen es una categoría: neutra y con su nombre. Salía como
+                «CODIGO_TRABAJO», el valor guardado en mayúsculas. */}
+            {puesto?.regimen_laboral && (
+              <StatusBadge>{REGIMEN_LABELS[puesto.regimen_laboral] ?? puesto.regimen_laboral}</StatusBadge>
+            )}
             {puesto?.nivel_complejidad && <StatusBadge>Complejidad {complejidadEnFemenino(puesto.nivel_complejidad)}</StatusBadge>}
           </Group>
         </Card>
