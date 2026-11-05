@@ -100,7 +100,8 @@ test('los correos del trámite: al técnico al asignar y reabrir, al solicitante
     $paso($this->tecnico, 'tomar');
     $paso($this->tecnico, 'pedir-informacion', ['pregunta' => '¿Qué modelo de impresora es?']);
     $this->actingAs($this->usuarioPaola, 'sanctum')->postJson("/api/v1/helpdesk/tickets/{$id}/comentarios", ['comentario' => 'Una HP LaserJet.'])->assertCreated();
-    $paso($this->tecnico, 'resolver', ['solucion' => 'Se cambió el tóner y se limpió el rodillo.']);
+    // De hardware y sin equipo: se dice por qué (2026-11-05).
+    $paso($this->tecnico, 'resolver', ['solucion' => 'Se cambió el tóner y se limpió el rodillo.', 'motivo_sin_equipo' => 'Impresora prestada por otra entidad.']);
     $paso($this->usuarioPaola, 'reabrir', ['motivo' => 'Volvió a salir en blanco.']);
 
     $avisos = fn (string $correo) => Mail::sent(TicketAvisoMail::class)->filter(fn ($m) => $m->hasTo($correo))->map(fn ($m) => $m->aviso)->values()->all();

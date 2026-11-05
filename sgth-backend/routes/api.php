@@ -1536,7 +1536,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::post('tickets/{ticket}/asignar', [TicketController::class, 'asignar'])->middleware('permission:asignar-ticket');
             Route::middleware('permission:gestionar-tickets')->group(function () {
                 foreach (['tomar' => 'tomar', 'pedir-informacion' => 'pedirInformacion', 'resolver' => 'resolver',
-                    'escalar' => 'escalar', 'vincular-bien' => 'vincularBien'] as $paso => $metodo) {
+                    'escalar' => 'escalar', 'vincular-bien' => 'vincularBien', 'cambiar-categoria' => 'cambiarCategoria'] as $paso => $metodo) {
                     Route::post("tickets/{ticket}/{$paso}", [TicketController::class, $metodo]);
                 }
             });

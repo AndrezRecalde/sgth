@@ -61,6 +61,8 @@ export type Ticket = {
   unidad_tic?: { id: number; nombre: string } | null
   tecnico?: { id: number; nombre: string } | null
   bien?: { id: number; codigo_institucional: string; tipo: string | null; marca: string | null; modelo: string | null } | null
+  /** Resuelto sin un equipo del inventario: por qué. */
+  motivo_sin_equipo?: string | null
   registrado_por?: string | null
   resuelto_por?: string | null
   anulado_por?: string | null
@@ -200,7 +202,14 @@ export type ResumenTickets = { sin_asignar: number; mios: number; en_curso: numb
 
 export type AsignarTicketData = { tecnico_id: number | null; unidad_tic_id: number | null; prioridad: PrioridadTicket | null }
 
-export type ResolverTicketData = { solucion: string; registrar_mantenimiento: boolean; estado_equipo: string | null }
+export type ResolverTicketData = {
+  solucion: string
+  registrar_mantenimiento: boolean
+  estado_equipo: string | null
+  /** Uno de hardware sin equipo: el que se atendió, o por qué no es del inventario (2026-11-05). */
+  bien_informatico_id?: number | null
+  motivo_sin_equipo?: string | null
+}
 
 /**
  * Abrir un ticket. Con un problema frecuente, la categoría, el asunto, la

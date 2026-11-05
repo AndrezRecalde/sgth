@@ -24,6 +24,8 @@ interface Props {
   /** Solo equipos principales: para elegir de quién es componente uno. */
   soloPrincipales?: boolean
   placeholder?: string
+  /** Pinta el asterisco: lo obligatorio lo decide el formulario. */
+  required?: boolean
 }
 
 const textoDe = (b: Pick<BienInformatico, 'codigo_institucional' | 'modelo' | 'tipo'>) =>
@@ -36,7 +38,7 @@ const textoDe = (b: Pick<BienInformatico, 'codigo_institucional' | 'modelo' | 't
  */
 export function BuscarEquipoSelect({
   label, value, textoInicial, excluirId, onChange, error, soloPrincipales = true,
-  placeholder = 'Código, serie o modelo del equipo principal',
+  placeholder = 'Código, serie o modelo del equipo principal', required = false,
 }: Props) {
   const contained = useContainedInput()
   const combobox = useCombobox()
@@ -73,6 +75,7 @@ export function BuscarEquipoSelect({
       <Combobox.Target>
         <InputBase
           label={label}
+          withAsterisk={required}
           error={error}
           placeholder={placeholder}
           rightSection={buscando ? <Loader size="xs" /> : <Combobox.Chevron />}
