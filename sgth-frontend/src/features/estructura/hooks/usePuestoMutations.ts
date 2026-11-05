@@ -6,8 +6,14 @@ import { notificar } from '@/components/ui'
 export function usePuestoMutations() {
   const qc = useQueryClient()
 
-  const invalidar = () =>
-    qc.invalidateQueries({ queryKey: ['puestos'] })
+  // Un puesto cambia también la plantilla, el organigrama y el detalle de su
+  // unidad: solo se refrescaba la lista, y la plantilla seguía con las plazas
+  // de antes hasta cinco minutos después.
+  const invalidar = () => {
+    for (const queryKey of [['puestos'], ['plantilla'], ['organigrama'], ['unidad']]) {
+      qc.invalidateQueries({ queryKey })
+    }
+  }
 
   const crear = useMutation({
     mutationFn: (data: PuestoFormData) =>
@@ -16,7 +22,8 @@ export function usePuestoMutations() {
       notificar.exito('Puesto creado', 'El puesto fue registrado correctamente.')
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo crear el puesto'),
+    // El formulario pone en su campo el error de validación; el resto se notifica.
+    onError: notificar.alFallarSalvoCampos('No se pudo crear el puesto'),
   })
 
   const editar = useMutation({
@@ -26,7 +33,7 @@ export function usePuestoMutations() {
       notificar.exito('Puesto actualizado', 'Los datos fueron actualizados.')
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo actualizar el puesto'),
+    onError: notificar.alFallarSalvoCampos('No se pudo actualizar el puesto'),
   })
 
   const eliminar = useMutation({

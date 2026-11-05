@@ -1300,8 +1300,10 @@ export type PuestoConRelaciones = {
   grupo_ocupacional_id?: number | null
   partida_presupuestaria_id?: number | null
   plazas?: number
-  rol_puesto?: string | null
-  nivel_complejidad?: string | null
+  rol_puesto?:
+    | 'dignatario' | 'ejecucion_coordinacion' | 'ejecucion_procesos'
+    | 'ejecucion_procesos_apoyo' | 'administrativo' | 'codigo_trabajo' | null
+  nivel_complejidad?: 'bajo' | 'medio' | 'alto' | null
   regimen_laboral?: 'losep' | 'codigo_trabajo'
   es_jefe?: boolean
   activo?: boolean
@@ -1414,19 +1416,6 @@ export type CargoFormData = {
 
 export type CargoParams = {
   search?: string
-}
-
-export type GrupoOcupacional = {
-  id: number
-  grado_codigo?: string
-  grado_numerico?: number | null
-  grupo?: string
-  denominacion_generica?: string | null
-  rmu?: string | number
-  regimen?: 'losep' | 'codigo_trabajo'
-  nivel_complejidad?: string | null
-  rol_puesto?: string | null
-  activo?: boolean
 }
 
 // ── Partidas presupuestarias ─────────────────────

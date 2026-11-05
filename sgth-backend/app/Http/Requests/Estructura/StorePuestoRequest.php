@@ -8,6 +8,7 @@ use App\Models\Estructura\Puesto;
 use App\Rules\GrupoOcupacionalDelRegimen;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
+use Illuminate\Validation\Validator;
 
 final class StorePuestoRequest extends FormRequest
 {
@@ -32,6 +33,19 @@ final class StorePuestoRequest extends FormRequest
             'regimen_laboral'           => ['required', 'string', 'in:losep,codigo_trabajo'],
             'es_jefe'                   => ['boolean'],
             'activo'                    => ['boolean'],
+        ];
+    }
+
+    /** Lo que el puesto cumple entre sus campos: ver `CoherenciaDelPuesto`. */
+    public function after(): array
+    {
+        return [
+            fn (Validator $validator) => CoherenciaDelPuesto::validar($validator, [
+                'es_jefe'         => $this->input('es_jefe', false),
+                'plazas'          => $this->input('plazas'),
+                'regimen_laboral' => $this->input('regimen_laboral'),
+                'rol_puesto'      => $this->input('rol_puesto'),
+            ]),
         ];
     }
 

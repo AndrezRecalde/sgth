@@ -38,6 +38,11 @@ final class PuestoActividadController extends Controller
         Request $request,
         int $puestoId
     ): JsonResponse {
+        // Primero el permiso: quien no lo tiene recibía un 422 por los datos
+        // en vez del 403, y se enteraba de las reglas de un formulario que no
+        // le toca.
+        $this->authorize('update', Puesto::findOrFail($puestoId));
+
         $request->validate([
             'descripcion'   => ['required', 'string', 'max:200'],
             'producto'      => ['nullable', 'string', 'max:300'],
@@ -45,8 +50,6 @@ final class PuestoActividadController extends Controller
             'frecuencia'    => ['nullable', Rule::enum(FrecuenciaActividad::class)],
             'orden'         => ['nullable', 'integer', 'min:1'],
         ]);
-
-        $this->authorize('update', Puesto::findOrFail($puestoId));
 
         $ultimoOrden = PuestoActividad::where('puesto_id', $puestoId)
             ->max('orden') ?? 0;
@@ -71,6 +74,8 @@ final class PuestoActividadController extends Controller
         int $puestoId,
         int $actividadId
     ): JsonResponse {
+        $this->authorize('update', Puesto::findOrFail($puestoId));
+
         $request->validate([
             'descripcion'   => ['sometimes', 'string', 'max:200'],
             'producto'      => ['sometimes', 'nullable', 'string', 'max:300'],
@@ -79,8 +84,6 @@ final class PuestoActividadController extends Controller
             'orden'         => ['sometimes', 'integer', 'min:1'],
             'activo'        => ['sometimes', 'boolean'],
         ]);
-
-        $this->authorize('update', Puesto::findOrFail($puestoId));
 
         $actividad = PuestoActividad::where('puesto_id', $puestoId)
             ->findOrFail($actividadId);
@@ -110,12 +113,12 @@ final class PuestoActividadController extends Controller
         Request $request,
         int $puestoId
     ): JsonResponse {
+        $this->authorize('update', Puesto::findOrFail($puestoId));
+
         $request->validate([
             'orden'    => ['required', 'array'],
             'orden.*'  => ['integer', 'exists:puesto_actividades,id'],
         ]);
-
-        $this->authorize('update', Puesto::findOrFail($puestoId));
 
         foreach ($request->input('orden') as $posicion => $id) {
             PuestoActividad::where('puesto_id', $puestoId)

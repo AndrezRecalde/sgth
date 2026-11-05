@@ -1,113 +1,96 @@
 'use client'
 
-import {
-  Select, Grid, Switch, NumberInput,
-  Box, LoadingOverlay, Alert,
-} from '@mantine/core'
+import { Alert, Box, Grid, LoadingOverlay, Select } from '@mantine/core'
 import { IconInfoCircle } from '@tabler/icons-react'
-import { useForm, Controller, useWatch, type Resolver } from 'react-hook-form'
+import { Controller, useForm, useWatch, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { notificar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
+import { erroresDeCampo } from '@/lib/erroresDeCampo'
+import { getApiErrorMessage } from '@/types/api'
 import { useTodasUnidades } from '../hooks/useUnidades'
 import { useGruposOcupacionales } from '../hooks/useGruposOcupacionales'
 import { useCargos } from '../hooks/useCargos'
+import { REGIMENES_PUESTO, type RegimenPuesto } from '../constants/clasificacionPuesto'
 import { SelectPartidaPresupuestaria } from './SelectPartidaPresupuestaria'
+import { PuestoClasificacionCampos } from './PuestoClasificacionCampos'
+import { PuestoPlazasCampos } from './PuestoPlazasCampos'
 import { puestoSchema, type PuestoFormData } from '../schemas/puesto.schema'
-import type { UnidadConRelaciones, Cargo, GrupoOcupacional } from '@/types/api'
-
-const ROL_OPTIONS = [
-  { value: 'dignatario',               label: 'Dignatario' },
-  { value: 'ejecucion_coordinacion',   label: 'Ejecución y Coordinación' },
-  { value: 'ejecucion_procesos',       label: 'Ejecución de Procesos' },
-  { value: 'ejecucion_procesos_apoyo', label: 'Ejecución de Procesos de Apoyo' },
-  { value: 'administrativo',           label: 'Administrativo' },
-  { value: 'codigo_trabajo',           label: 'Código del Trabajo' },
-]
-
-const COMPLEJIDAD_OPTIONS = [
-  { value: 'bajo',  label: 'Nivel Bajo' },
-  { value: 'medio', label: 'Nivel Medio' },
-  { value: 'alto',  label: 'Nivel Alto' },
-]
-
-const REGIMEN_OPTIONS = [
-  { value: 'losep',          label: 'LOSEP' },
-  { value: 'codigo_trabajo', label: 'Código del Trabajo' },
-]
 
 interface Props {
-  initialValues?: Partial<PuestoFormData>
+  valoresIniciales?: Partial<PuestoFormData>
   /**
    * Con un ocupante, la unidad cambia con el traspaso de puesto, el régimen no
    * cambia y no se desactiva (fase 7.1a). El backend lo exige igual.
    */
   ocupado?: boolean
-  onSubmit: (values: PuestoFormData) => void
+  /** Guarda; si el backend rechaza un campo, el error vuelve a ese campo. */
+  onSubmit: (valores: PuestoFormData) => Promise<unknown>
+  /** El título de la notificación cuando el error no es de un campo. */
+  tituloDelFallo: string
 }
 
 const SOLO_CON_TRASPASO = 'Ocupado: pasa a otra unidad con «Traspasar a otra unidad».'
 const SOLO_CON_REVISION = 'Ocupado: cambia con «Revisar la clasificación».'
 
-export function PuestoForm({ initialValues, ocupado = false, onSubmit }: Props) {
+export function PuestoForm({ valoresIniciales, ocupado = false, onSubmit, tituloDelFallo }: Props) {
   const contained = useContainedInput()
-  const { data: unidadesRaw } = useTodasUnidades({ nivel: 2 })
-  const { data: gruposRaw }   = useGruposOcupacionales()
-  const { data: cargosRaw }   = useCargos()
+  const unidades = useTodasUnidades({ nivel: 2 })
+  const grupos   = useGruposOcupacionales()
+  const cargos   = useCargos()
+  const cargando = unidades.isLoading || grupos.isLoading || cargos.isLoading
 
-  const unidades = (unidadesRaw ?? []) as UnidadConRelaciones[]
-  const grupos   = (gruposRaw   ?? []) as GrupoOcupacional[]
-  const cargos   = (cargosRaw   ?? []) as Cargo[]
-
-  const isReady = Array.isArray(unidadesRaw) &&
-                  Array.isArray(gruposRaw)   &&
-                  Array.isArray(cargosRaw)
-
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<PuestoFormData>({
+  const { control, handleSubmit, setValue, getValues, setError, formState: { errors } } = useForm<PuestoFormData>({
     resolver: zodResolver(puestoSchema) as Resolver<PuestoFormData>,
     defaultValues: {
-      cargo_id:                  initialValues?.cargo_id                  ?? undefined,
-      unidad_administrativa_id:  initialValues?.unidad_administrativa_id  ?? undefined,
-      grupo_ocupacional_id:      initialValues?.grupo_ocupacional_id      ?? null,
-      partida_presupuestaria_id: initialValues?.partida_presupuestaria_id ?? null,
-      plazas:                    initialValues?.plazas                    ?? 1,
-      rol_puesto:                initialValues?.rol_puesto                ?? null,
-      nivel_complejidad:         initialValues?.nivel_complejidad         ?? null,
-      regimen_laboral:           initialValues?.regimen_laboral           ?? 'losep',
-      es_jefe:                   initialValues?.es_jefe                   ?? false,
-      activo:                    initialValues?.activo                    ?? true,
+      cargo_id:                  valoresIniciales?.cargo_id                  ?? undefined,
+      unidad_administrativa_id:  valoresIniciales?.unidad_administrativa_id  ?? undefined,
+      grupo_ocupacional_id:      valoresIniciales?.grupo_ocupacional_id      ?? null,
+      partida_presupuestaria_id: valoresIniciales?.partida_presupuestaria_id ?? null,
+      plazas:                    valoresIniciales?.plazas                    ?? 1,
+      rol_puesto:                valoresIniciales?.rol_puesto                ?? null,
+      nivel_complejidad:         valoresIniciales?.nivel_complejidad         ?? null,
+      regimen_laboral:           valoresIniciales?.regimen_laboral           ?? 'losep',
+      es_jefe:                   valoresIniciales?.es_jefe                   ?? false,
+      activo:                    valoresIniciales?.activo                    ?? true,
     },
   })
 
-  const regimenActual = useWatch({
-    control,
-    name: 'regimen_laboral',
-    defaultValue: 'losep',
-  })
+  const regimen = useWatch({ control, name: 'regimen_laboral', defaultValue: 'losep' })
 
-  const cargoOptions = cargos.map(c => ({
-    value: String(c.id),
-    label: c.nombre ?? '',
-  }))
+  /**
+   * Al cambiar de régimen se va lo que no le corresponde. El grupo LOSEP de un
+   * puesto que pasa a Código del Trabajo quedaba oculto pero se enviaba, y el
+   * backend lo rechazaba sobre un campo que no se veía.
+   */
+  const limpiarSegunRegimen = (nuevo: RegimenPuesto) => {
+    if (nuevo === 'codigo_trabajo') setValue('grupo_ocupacional_id', null)
+    const rol = getValues('rol_puesto')
+    if (rol && (rol === 'codigo_trabajo') !== (nuevo === 'codigo_trabajo')) setValue('rol_puesto', null)
+  }
 
-  const unidadOptions = unidades.map(u => ({
-    value: String(u.id),
-    label: u.nombre ?? `Unidad ${u.id}`,
-  }))
+  const guardar = async (valores: PuestoFormData) => {
+    try {
+      await onSubmit(valores)
+    } catch (error) {
+      // El 422 del backend va a su campo (regla 07); lo que no tiene campo
+      // en el formulario se notifica, para que no falle en silencio.
+      const campos = Object.entries(erroresDeCampo(error) ?? {})
+      const delFormulario = campos.filter(([campo]) => campo in puestoSchema.shape)
+      for (const [campo, mensaje] of delFormulario) {
+        setError(campo as keyof PuestoFormData, { type: 'server', message: mensaje })
+      }
+      if (campos.length > delFormulario.length) notificar.error(tituloDelFallo, getApiErrorMessage(error))
+    }
+  }
 
-  type GrupoItem = { id: number; grado_codigo?: string; grupo?: string; rmu?: string | number }
-  const grupoOptions = ((grupos ?? []) as GrupoItem[]).map(g => ({
-    value: String(g.id),
-    label: `${g.grado_codigo ?? ''} — ${g.grupo ?? ''} ($${g.rmu ?? 0})`,
-  }))
+  const opcionesCargo = (cargos.data ?? []).map((c) => ({ value: String(c.id), label: c.nombre }))
+  const opcionesUnidad = (unidades.data ?? []).map((u) => ({ value: String(u.id), label: u.nombre ?? `Unidad ${u.id}` }))
 
   return (
-    <Box style={{ position: 'relative' }}>
-      <LoadingOverlay visible={!isReady} zIndex={10} />
-      <form id="puesto-form" onSubmit={handleSubmit(onSubmit)} noValidate>
+    <Box pos="relative">
+      <LoadingOverlay visible={cargando} zIndex={10} />
+      <form id="puesto-form" onSubmit={handleSubmit(guardar)} noValidate>
         <Grid>
           {ocupado && (
             <Grid.Col span={12}>
@@ -126,13 +109,14 @@ export function PuestoForm({ initialValues, ocupado = false, onSubmit }: Props) 
               render={({ field }) => (
                 <Select
                   label="Cargo"
-                  placeholder="Seleccionar cargo"
+                  placeholder="Seleccione el cargo"
                   description={ocupado ? SOLO_CON_REVISION : undefined}
-                  data={cargoOptions}
+                  data={opcionesCargo}
                   searchable
+                  allowDeselect={false}
                   disabled={ocupado}
                   {...contained}
-                  value={field.value ? String(field.value) : ''}
+                  value={field.value ? String(field.value) : null}
                   onChange={(v) => field.onChange(v ? Number(v) : undefined)}
                   error={errors.cargo_id?.message}
                 />
@@ -146,13 +130,19 @@ export function PuestoForm({ initialValues, ocupado = false, onSubmit }: Props) 
               render={({ field }) => (
                 <Select
                   label="Régimen laboral"
-                  data={REGIMEN_OPTIONS}
+                  data={REGIMENES_PUESTO}
+                  // Sin esto, pulsar el régimen ya elegido lo quitaba, y el
+                  // valor caía a LOSEP sin que nadie lo pidiera.
+                  allowDeselect={false}
                   disabled={ocupado}
                   {...contained}
-                  value={field.value ?? 'losep'}
-                  onChange={(v) =>
-                    field.onChange((v ?? 'losep') as 'losep' | 'codigo_trabajo')
-                  }
+                  value={field.value}
+                  onChange={(v) => {
+                    const elegido = REGIMENES_PUESTO.find((r) => r.value === v)?.value
+                    if (!elegido) return
+                    field.onChange(elegido)
+                    limpiarSegunRegimen(elegido)
+                  }}
                   error={errors.regimen_laboral?.message}
                 />
               )}
@@ -165,55 +155,27 @@ export function PuestoForm({ initialValues, ocupado = false, onSubmit }: Props) 
               render={({ field }) => (
                 <Select
                   label="Unidad administrativa"
-                  placeholder="Seleccionar gestión"
+                  placeholder="Seleccione la unidad"
                   description={ocupado ? SOLO_CON_TRASPASO : undefined}
-                  data={unidadOptions}
+                  data={opcionesUnidad}
                   searchable
+                  allowDeselect={false}
                   disabled={ocupado}
                   {...contained}
-                  value={field.value ? String(field.value) : ''}
+                  value={field.value ? String(field.value) : null}
                   onChange={(v) => field.onChange(v ? Number(v) : undefined)}
                   error={errors.unidad_administrativa_id?.message}
                 />
               )}
             />
           </Grid.Col>
-          {/* La escala de grupos ocupacionales es del régimen LOSEP: fija el
-              grado y la RMU del puesto. Bajo Código del Trabajo la
-              remuneración se negocia en cada contrato, así que pedir aquí un
-              grupo ocupacional invita a cargar un dato que no aplica. */}
-          {regimenActual === 'losep' && (
-            <Grid.Col span={12}>
-              <Controller
-                name="grupo_ocupacional_id"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    label="Grupo ocupacional (LOSEP)"
-                    description={ocupado ? SOLO_CON_REVISION : 'Define el grado y la RMU del puesto.'}
-                    placeholder="Seleccionar grupo"
-                    data={grupoOptions}
-                    searchable
-                    clearable
-                    disabled={ocupado}
-                    {...contained}
-                    value={field.value ? String(field.value) : ''}
-                    onChange={(v) => field.onChange(v ? Number(v) : null)}
-                  />
-                )}
-              />
-            </Grid.Col>
-          )}
-
-          {regimenActual === 'codigo_trabajo' && (
-            <Grid.Col span={12}>
-              <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>
-                Bajo Código del Trabajo la remuneración se pacta en cada contrato,
-                no se deriva de una escala. Se ingresa al aprobar la acción de
-                personal de ingreso.
-              </Alert>
-            </Grid.Col>
-          )}
+          <PuestoClasificacionCampos
+            control={control}
+            errors={errors}
+            regimen={regimen}
+            grupos={grupos.data ?? []}
+            ocupado={ocupado}
+          />
           <Grid.Col span={12}>
             <Controller
               name="partida_presupuestaria_id"
@@ -228,91 +190,7 @@ export function PuestoForm({ initialValues, ocupado = false, onSubmit }: Props) 
               )}
             />
           </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 4 }}>
-            <Controller
-              name="plazas"
-              control={control}
-              render={({ field }) => (
-                <NumberInput
-                  label="Plazas"
-                  placeholder="1"
-                  min={1}
-                  {...contained}
-                  value={field.value ?? 1}
-                  onChange={(v) => field.onChange(typeof v === 'number' ? v : 1)}
-                  error={errors.plazas?.message}
-                />
-              )}
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 4 }}>
-            <Controller
-              name="nivel_complejidad"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  label="Complejidad"
-                  placeholder="Seleccionar"
-                  data={COMPLEJIDAD_OPTIONS}
-                  clearable
-                  {...contained}
-                  value={field.value ?? ''}
-                  onChange={(v) =>
-                    field.onChange((v as PuestoFormData['nivel_complejidad']) ?? null)
-                  }
-                />
-              )}
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 4 }}>
-            <Controller
-              name="rol_puesto"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  label="Rol del puesto"
-                  placeholder="Seleccionar rol"
-                  data={ROL_OPTIONS}
-                  clearable
-                  {...contained}
-                  value={field.value ?? ''}
-                  onChange={(v) =>
-                    field.onChange((v as PuestoFormData['rol_puesto']) ?? null)
-                  }
-                />
-              )}
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 6 }}>
-            <Controller
-              name="es_jefe"
-              control={control}
-              render={({ field }) => (
-                <Switch
-                  label="Es jefe de unidad"
-                  checked={field.value}
-                  onChange={(e) => field.onChange(e.currentTarget.checked)}
-                  mt="xs"
-                />
-              )}
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 6 }}>
-            <Controller
-              name="activo"
-              control={control}
-              render={({ field }) => (
-                <Switch
-                  label="Puesto activo"
-                  description={ocupado ? 'Ocupado: no se desactiva.' : undefined}
-                  disabled={ocupado && field.value}
-                  checked={field.value}
-                  onChange={(e) => field.onChange(e.currentTarget.checked)}
-                  mt="xs"
-                />
-              )}
-            />
-          </Grid.Col>
+          <PuestoPlazasCampos control={control} errors={errors} ocupado={ocupado} />
         </Grid>
       </form>
     </Box>
