@@ -20,8 +20,15 @@ interface TicketEstadoServiceInterface
     /** El solicitante respondió: vuelve a quien lo atiende. */
     public function reanudar(Ticket $ticket, User $user): Ticket;
 
-    /** @param  array{solucion: string, registrar_mantenimiento?: bool, estado_equipo?: ?string}  $datos */
+    /**
+     * Uno de hardware pide el equipo atendido o el motivo de no tenerlo.
+     *
+     * @param  array{solucion: string, registrar_mantenimiento?: bool, estado_equipo?: ?string, bien_informatico_id?: ?int, motivo_sin_equipo?: ?string}  $datos
+     */
     public function resolver(Ticket $ticket, User $tecnico, array $datos): Ticket;
+
+    /** Corrige la categoría con un motivo; la subunidad y el plazo pasan a ser los de la nueva. */
+    public function cambiarCategoria(Ticket $ticket, int $categoriaId, string $motivo): Ticket;
 
     /** El solicitante confirma la solución y, si quiere, la califica. */
     public function confirmar(Ticket $ticket, ?int $calificacion, ?string $comentario): Ticket;

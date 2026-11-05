@@ -62,6 +62,8 @@ class TicketResource extends JsonResource
             ] : null),
             'unidad_tic'          => $this->whenLoaded('unidadTic', fn () => $this->unidadTic ? ['id' => $this->unidadTic->id, 'nombre' => $this->unidadTic->nombre] : null),
             'tecnico'             => $this->whenLoaded('tecnico', fn () => $this->tecnico ? ['id' => $this->tecnico->id, 'nombre' => $this->tecnico->nombre_completo] : null),
+            // Resuelto sin un equipo del inventario: por qué (2026-11-05).
+            'motivo_sin_equipo'   => $this->motivo_sin_equipo,
             'bien'                => $this->whenLoaded('bien', fn () => $this->bien ? [
                 'id' => $this->bien->id, 'codigo_institucional' => $this->bien->codigo_institucional,
                 'tipo' => $this->bien->tipo?->nombre, 'marca' => $this->bien->marca?->nombre, 'modelo' => $this->bien->modelo,

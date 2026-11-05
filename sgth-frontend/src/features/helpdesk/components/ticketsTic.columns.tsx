@@ -1,4 +1,4 @@
-import { Stack, Text } from '@mantine/core'
+import { Box, Stack, Text } from '@mantine/core'
 import type { DataTableColumn } from 'mantine-datatable'
 import { StatusBadge } from '@/components/ui'
 import { TONO_ESTADO_TICKET, TONO_PRIORIDAD } from '../constants/estados'
@@ -6,9 +6,24 @@ import type { Ticket } from '../services/tipos'
 import { SlaBadge } from './SlaBadge'
 import { celdaAsuntoTicket } from './tickets.columns'
 
+const EN_CURSO = ['abierto', 'asignado', 'en_proceso', 'pendiente_usuario']
+
+/**
+ * Uno de hardware en curso que todavía no tiene equipo: al resolverlo se
+ * pedirá el atendido, así que conviene identificarlo en el sitio (2026-11-05).
+ */
+const sinEquipo = (t: Ticket) =>
+  Boolean(t.categoria?.es_hardware && !t.categoria?.es_consumibles && !t.bien && EN_CURSO.includes(t.estado))
+
 /** La bandeja de TIC: quién pide, a qué área va, su prioridad, quién lo tiene y su SLA. */
 export const columnasBandejaTickets: DataTableColumn<Ticket>[] = [
-  { accessor: 'asunto', title: 'Ticket', render: celdaAsuntoTicket },
+  {
+    accessor: 'asunto',
+    title: 'Ticket',
+    render: (t) => (sinEquipo(t)
+      ? <Stack gap={4} align="flex-start">{celdaAsuntoTicket(t)}<Box><StatusBadge tone="warning">Sin equipo</StatusBadge></Box></Stack>
+      : celdaAsuntoTicket(t)),
+  },
   {
     accessor: 'solicitante',
     title: 'Solicitante',

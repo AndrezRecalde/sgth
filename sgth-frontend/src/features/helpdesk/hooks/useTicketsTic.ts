@@ -64,5 +64,12 @@ export function useTicketTicMutations() {
     onError: notificar.alFallarSalvoCampos('No se pudo vincular el equipo'),
   })
 
-  return { registrar, asignar, tomar, pedirInformacion, resolver, escalar, anular, vincularBien }
+  const cambiarCategoria = useMutation({
+    mutationFn: ({ id, categoriaId, motivo }: { id: number; categoriaId: number; motivo: string }) =>
+      ticketsService.cambiarCategoria(id, categoriaId, motivo),
+    onSuccess: (t) => hecho('Categoría cambiada', `${t.folio} queda en ${t.categoria?.nombre ?? 'la nueva categoría'}${t.unidad_tic ? `, con ${t.unidad_tic.nombre}` : ''}.`),
+    onError: notificar.alFallarSalvoCampos('No se pudo cambiar la categoría'),
+  })
+
+  return { registrar, asignar, tomar, pedirInformacion, resolver, escalar, anular, vincularBien, cambiarCategoria }
 }

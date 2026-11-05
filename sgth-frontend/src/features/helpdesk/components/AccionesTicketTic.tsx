@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Button, Group, Menu } from '@mantine/core'
 import {
-  IconArrowUpRight, IconBan, IconChevronDown, IconCircleCheck, IconDevices, IconHandGrab, IconMessageQuestion, IconUserShare,
+  IconArrowUpRight, IconBan, IconCategory, IconChevronDown, IconCircleCheck, IconDevices, IconHandGrab, IconMessageQuestion, IconUserShare,
 } from '@tabler/icons-react'
 import { FormModal, MotivoModal } from '@/components/ui'
 import { useAuth } from '@/hooks/useAuth'
@@ -11,10 +11,11 @@ import { BuscarEquipoSelect } from '@/features/inventario-ti/components/BuscarEq
 import { useTicketTicMutations } from '../hooks/useTicketsTic'
 import type { Ticket } from '../services/tipos'
 import { AsignarTicketModal } from './AsignarTicketModal'
+import { CambiarCategoriaModal } from './CambiarCategoriaModal'
 import { EscalarTicketModal } from './EscalarTicketModal'
 import { ResolverTicketModal } from './ResolverTicketModal'
 
-type Accion = 'asignar' | 'preguntar' | 'resolver' | 'escalar' | 'anular' | 'equipo' | null
+type Accion = 'asignar' | 'preguntar' | 'resolver' | 'escalar' | 'anular' | 'equipo' | 'categoria' | null
 
 /**
  * Los pasos de TIC sobre un ticket, según su estado y quién mira: el principal
@@ -41,6 +42,8 @@ export function AccionesTicketTic({ ticket: t }: { ticket: Ticket }) {
     { key: 'preguntar', label: 'Pedir información', icon: IconMessageQuestion, visible: trabajando && t.estado === 'en_proceso' },
     { key: 'escalar', label: 'Escalar', icon: IconArrowUpRight, visible: atiende && ['asignado', 'en_proceso'].includes(t.estado) && t.nivel < 3 && (esMio || reparte) },
     { key: 'equipo', label: t.bien ? 'Cambiar el equipo' : 'Vincular un equipo', icon: IconDevices, visible: atiende && enCurso },
+    // Quien lo atiende corrige un ticket mal clasificado (2026-11-05).
+    { key: 'categoria', label: 'Cambiar la categoría', icon: IconCategory, visible: atiende && enCurso && (esMio || reparte || !t.tecnico_id) },
     { key: 'anular', label: 'Anular', icon: IconBan, visible: reparte && enCurso },
   ].filter((a) => a.visible)
 
@@ -69,6 +72,7 @@ export function AccionesTicketTic({ ticket: t }: { ticket: Ticket }) {
       {accion === 'asignar' && <AsignarTicketModal ticket={t} onClose={cerrar} />}
       {accion === 'resolver' && <ResolverTicketModal ticket={t} onClose={cerrar} />}
       {accion === 'escalar' && <EscalarTicketModal ticket={t} onClose={cerrar} />}
+      {accion === 'categoria' && <CambiarCategoriaModal ticket={t} onClose={cerrar} />}
       <MotivoModal
         opened={accion === 'preguntar'}
         onClose={cerrar}

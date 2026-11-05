@@ -63173,6 +63173,21 @@
                                             "en_mantenimiento",
                                             "en_garantia"
                                         ]
+                                    },
+                                    "bien_informatico_id": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ],
+                                        "description": "El de hardware sin equipo: el que se atendi\u00f3, o por qu\u00e9 no es uno del inventario."
+                                    },
+                                    "motivo_sin_equipo": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "minLength": 5,
+                                        "maxLength": 300
                                     }
                                 },
                                 "required": [
@@ -63375,6 +63390,95 @@
                                         "mensaje": {
                                             "type": "string",
                                             "const": "Equipo vinculado al ticket."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/TicketResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/helpdesk/tickets/{ticket}/cambiar-categoria": {
+            "post": {
+                "operationId": "ticket.cambiarCategoria",
+                "summary": "Corregir la categor\u00eda de un ticket mal clasificado; el motivo queda en la l\u00ednea de tiempo",
+                "tags": [
+                    "Ticket"
+                ],
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "required": true,
+                        "description": "The ticket ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "categoria_id": {
+                                        "type": "integer"
+                                    },
+                                    "motivo": {
+                                        "type": "string",
+                                        "minLength": 5,
+                                        "maxLength": 500
+                                    }
+                                },
+                                "required": [
+                                    "categoria_id",
+                                    "motivo"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Categor\u00eda cambiada."
                                         },
                                         "datos": {
                                             "$ref": "#/components/schemas/TicketResource"
@@ -91292,6 +91396,13 @@
                             "nombre"
                         ]
                     },
+                    "motivo_sin_equipo": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Resuelto sin un equipo del inventario: por qu\u00e9 (2026-11-05)."
+                    },
                     "bien": {
                         "type": [
                             "object",
@@ -91430,7 +91541,8 @@
                     "anulado_en",
                     "sla",
                     "solicitante_id",
-                    "tecnico_id"
+                    "tecnico_id",
+                    "motivo_sin_equipo"
                 ],
                 "title": "TicketResource"
             },

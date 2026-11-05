@@ -100,7 +100,13 @@ final class TicketController extends Controller
             'estado_equipo'           => ['nullable', Rule::enum(EstadoBien::class)->only([
                 EstadoBien::DISPONIBLE, EstadoBien::EN_USO, EstadoBien::EN_MANTENIMIENTO, EstadoBien::EN_GARANTIA,
             ])],
-        ], [], ['solucion' => 'solución', 'estado_equipo' => 'estado en que queda el equipo']);
+            // El de hardware sin equipo: el que se atendió, o por qué no es uno del inventario.
+            'bien_informatico_id'     => ['nullable', 'integer'],
+            'motivo_sin_equipo'       => ['nullable', 'string', 'min:5', 'max:300'],
+        ], [], [
+            'solucion' => 'solución', 'estado_equipo' => 'estado en que queda el equipo',
+            'bien_informatico_id' => 'equipo', 'motivo_sin_equipo' => 'motivo',
+        ]);
 
         return $this->respuesta($request, $this->estados->resolver($ticket, $request->user(), $datos), 'Ticket resuelto.');
     }
@@ -150,6 +156,18 @@ final class TicketController extends Controller
         $datos = $request->validate(['bien_informatico_id' => ['nullable', 'integer']], [], ['bien_informatico_id' => 'equipo']);
 
         return $this->respuesta($request, $this->estados->vincularBien($ticket, $datos['bien_informatico_id'] ?? null), 'Equipo vinculado al ticket.');
+    }
+
+    /** Corregir la categoría de un ticket mal clasificado; el motivo queda en la línea de tiempo. */
+    public function cambiarCategoria(Request $request, Ticket $ticket): JsonResponse
+    {
+        $this->authorize('atender', $ticket);
+        $datos = $request->validate([
+            'categoria_id' => ['required', 'integer'],
+            'motivo'       => ['required', 'string', 'min:5', 'max:500'],
+        ], [], ['categoria_id' => 'categoría', 'motivo' => 'motivo']);
+
+        return $this->respuesta($request, $this->estados->cambiarCategoria($ticket, (int) $datos['categoria_id'], trim($datos['motivo'])), 'Categoría cambiada.');
     }
 
     private function respuesta(Request $request, Ticket $ticket, string $mensaje): JsonResponse

@@ -11,12 +11,34 @@ export const asignarSchema = z.object({
 })
 export type AsignarFormData = z.infer<typeof asignarSchema>
 
+/**
+ * Resolver. Uno de hardware que llega sin equipo pide el equipo atendido o
+ * marcar «No es un equipo del inventario» con su motivo (2026-11-05); que el
+ * equipo exista lo comprueba el backend.
+ */
 export const resolverSchema = z.object({
   solucion: z.string().trim().min(10, 'Escriba la solución (mínimo 10 caracteres)').max(5000, 'Máximo 5000 caracteres'),
   registrar_mantenimiento: z.boolean(),
   estado_equipo: z.enum(['disponible', 'en_mantenimiento', 'en_garantia']).nullable(),
+  pide_equipo: z.boolean(),
+  bien_informatico_id: z.number().nullable(),
+  sin_equipo: z.boolean(),
+  motivo_sin_equipo: z.string().trim().max(300, 'Máximo 300 caracteres'),
+}).superRefine((v, ctx) => {
+  if (!v.pide_equipo) return
+  if (v.sin_equipo) {
+    if (v.motivo_sin_equipo.length < 5) ctx.addIssue({ code: 'custom', message: 'Diga por qué (mínimo 5 caracteres)', path: ['motivo_sin_equipo'] })
+  } else if (!v.bien_informatico_id) {
+    ctx.addIssue({ code: 'custom', message: 'Elija el equipo atendido, o marque que no es del inventario', path: ['bien_informatico_id'] })
+  }
 })
 export type ResolverFormData = z.infer<typeof resolverSchema>
+
+export const cambiarCategoriaSchema = z.object({
+  categoria_id: z.number({ message: 'Elija la categoría' }),
+  motivo: z.string().trim().min(5, 'Diga por qué se cambia (mínimo 5 caracteres)').max(500, 'Máximo 500 caracteres'),
+})
+export type CambiarCategoriaFormData = z.infer<typeof cambiarCategoriaSchema>
 
 export const escalarSchema = z.object({
   nivel: z.number().int().min(2).max(3),

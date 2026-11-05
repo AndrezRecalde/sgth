@@ -7,6 +7,7 @@ use App\Contracts\InventarioTi\MantenimientoServiceInterface;
 use App\Enums\EstadoTicket;
 use App\Enums\Permiso;
 use App\Exceptions\ReglaNegocioException;
+use App\Models\Helpdesk\CategoriaTicket;
 use App\Models\Helpdesk\ComentarioTicket;
 use App\Models\Helpdesk\EncuestaSatisfaccion;
 use App\Models\Helpdesk\Ticket;
@@ -108,11 +109,12 @@ final class TicketEstadoService implements TicketEstadoServiceInterface
             $t->forceFill(['solucion' => $datos['solucion'], 'resuelto_en' => now(), 'resuelto_por' => $tecnico->id]);
             $this->sla->marcarRespuesta($t);
             $t->loadMissing('categoria');
+            $deHardware = ($t->categoria?->es_hardware ?? false) && ! ($t->categoria?->es_consumibles ?? false);
+            $sinEquipo = $this->equipoAtendido($t, $datos, $deHardware);
 
             // El ticket de hardware con equipo deja el correctivo en la ficha (4.3);
             // el de consumibles lleva equipo, pero no es un mantenimiento (5.4c).
-            $registrar = $datos['registrar_mantenimiento']
-                ?? (($t->categoria?->es_hardware ?? false) && ! ($t->categoria?->es_consumibles ?? false));
+            $registrar = $datos['registrar_mantenimiento'] ?? $deHardware;
             if ($t->bien_informatico_id && $registrar) {
                 $this->mantenimientos->registrar([
                     'bien_informatico_id' => $t->bien_informatico_id,
@@ -128,8 +130,78 @@ final class TicketEstadoService implements TicketEstadoServiceInterface
                 return 'Resuelto; el mantenimiento quedó en la ficha del equipo.';
             }
 
-            return null;
+            return $sinEquipo ? "Resuelto sin equipo del inventario: {$sinEquipo}" : null;
         }, 'resuelto');
+    }
+
+    /**
+     * El equipo atendido al resolver (2026-11-05). Para el servidor es
+     * opcional; un ticket de hardware —con la categoría con que se cierra, no
+     * la de apertura— no se resuelve sin decir qué equipo se atendió o por qué
+     * no es uno del inventario. Así nadie elige cualquier equipo para cerrar.
+     * Devuelve el motivo cuando se resuelve sin equipo.
+     *
+     * @param  array<string, mixed>  $datos
+     */
+    private function equipoAtendido(Ticket $t, array $datos, bool $deHardware): ?string
+    {
+        if (! empty($datos['bien_informatico_id'])) {
+            if (! BienInformatico::whereKey($datos['bien_informatico_id'])->exists()) {
+                throw ValidationException::withMessages(['bien_informatico_id' => 'Ese equipo no está en el inventario.']);
+            }
+            $t->forceFill(['bien_informatico_id' => (int) $datos['bien_informatico_id'], 'motivo_sin_equipo' => null]);
+        }
+        if (! $deHardware || $t->bien_informatico_id) {
+            return null;
+        }
+
+        $motivo = trim((string) ($datos['motivo_sin_equipo'] ?? ''));
+        if ($motivo === '') {
+            throw ValidationException::withMessages([
+                'bien_informatico_id' => 'Indique el equipo atendido, o marque que no es un equipo del inventario y diga por qué.',
+            ]);
+        }
+        $t->forceFill(['motivo_sin_equipo' => $motivo]);
+
+        return $motivo;
+    }
+
+    /**
+     * Corregir la categoría de un ticket mal clasificado (2026-11-05,
+     * pregunta 10): quien lo atiende, con un motivo que queda en la línea de
+     * tiempo. La subunidad y el plazo pasan a ser los de la nueva categoría,
+     * contados desde que se abrió. El problema frecuente con que se abrió no
+     * cambia: el reporte de uso muestra lo que el servidor eligió.
+     */
+    public function cambiarCategoria(Ticket $ticket, int $categoriaId, string $motivo): Ticket
+    {
+        DB::transaction(function () use ($ticket, $categoriaId, $motivo) {
+            $t = Ticket::with('categoria')->lockForUpdate()->findOrFail($ticket->id);
+            if (! in_array($t->estado->value, EstadoTicket::enCurso(), true)) {
+                throw new ReglaNegocioException("El ticket {$t->codigo_ticket} está " . mb_strtolower($t->estado->etiqueta()) . ': ya no se cambia su categoría.');
+            }
+
+            $nueva = CategoriaTicket::where('activa', true)->find($categoriaId);
+            if (! $nueva) {
+                throw ValidationException::withMessages(['categoria_id' => 'Elija una categoría activa.']);
+            }
+            if ($nueva->id === $t->categoria_id) {
+                throw ValidationException::withMessages(['categoria_id' => 'El ticket ya tiene esa categoría.']);
+            }
+
+            $anterior = $t->categoria?->nombre ?? 'sin categoría';
+            $t->categoria_id = $nueva->id;
+            $t->setRelation('categoria', $nueva);
+            if ($nueva->unidad_tic_id) {
+                $t->unidad_tic_id = $nueva->unidad_tic_id;
+            }
+            $this->sla->aplicar($t);
+            $t->save();
+
+            $this->carga->anotar($t, $t->estado, "Categoría: {$anterior} → {$nueva->nombre}. {$motivo}");
+        });
+
+        return $this->carga->cargar($ticket->id);
     }
 
     /**

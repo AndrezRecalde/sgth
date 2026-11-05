@@ -67,6 +67,10 @@ export const ticketsService = {
   escalar: (id: number, nivel: number, motivo: string, tecnico_id: number | null) =>
     api.post<ApiResponse<Ticket>>(`${URL}/${id}/escalar`, { nivel, motivo, tecnico_id }).then((r) => r.data.datos),
 
+  /** Corregir la categoría; la subunidad y el plazo pasan a ser los de la nueva. */
+  cambiarCategoria: (id: number, categoria_id: number, motivo: string) =>
+    api.post<ApiResponse<Ticket>>(`${URL}/${id}/cambiar-categoria`, { categoria_id, motivo }).then((r) => r.data.datos),
+
   vincularBien: (id: number, bien_informatico_id: number | null) =>
     api.post<ApiResponse<Ticket>>(`${URL}/${id}/vincular-bien`, { bien_informatico_id }).then((r) => r.data.datos),
 }

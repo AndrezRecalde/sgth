@@ -9831,6 +9831,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/helpdesk/tickets/{ticket}/cambiar-categoria": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Corregir la categoría de un ticket mal clasificado; el motivo queda en la línea de tiempo */
+        post: operations["ticket.cambiarCategoria"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/helpdesk/tickets/{ticket}/confirmar": {
         parameters: {
             query?: never;
@@ -16853,6 +16870,8 @@ export interface components {
                 id: number;
                 nombre: string;
             } | null;
+            /** @description Resuelto sin un equipo del inventario: por qué (2026-11-05). */
+            motivo_sin_equipo: string | null;
             bien?: {
                 id: number;
                 codigo_institucional: string;
@@ -44888,6 +44907,9 @@ export interface operations {
                     registrar_mantenimiento?: boolean | null;
                     /** @enum {string} */
                     estado_equipo?: "en_uso" | "disponible" | "en_mantenimiento" | "en_garantia";
+                    /** @description El de hardware sin equipo: el que se atendió, o por qué no es uno del inventario. */
+                    bien_informatico_id?: number | null;
+                    motivo_sin_equipo?: string | null;
                 };
             };
         };
@@ -44980,6 +45002,45 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Equipo vinculado al ticket.";
+                        datos: components["schemas"]["TicketResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "ticket.cambiarCategoria": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ticket ID */
+                ticket: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    categoria_id: number;
+                    motivo: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Categoría cambiada.";
                         datos: components["schemas"]["TicketResource"];
                         meta: null;
                     };
