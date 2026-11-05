@@ -98,6 +98,36 @@ export type GuardarCategoriaData = Partial<{
   activa: boolean
 }>
 
+export type TipoTicket = 'incidente' | 'solicitud'
+
+/**
+ * Un problema frecuente de «Pedir ayuda a TIC» (`ProblemaFrecuenteService::fila`):
+ * el nombre es también el asunto del ticket, y la descripción la escribe TIC.
+ */
+export type ProblemaFrecuenteConfig = {
+  id: number
+  nombre: string
+  descripcion: string
+  categoria_id: number
+  categoria: string | null
+  /** Con la categoría inactiva deja de ofrecerse, aunque esté activo. */
+  categoria_activa: boolean
+  unidad_tic: string | null
+  tipo_ticket: TipoTicket
+  prioridad: PrioridadTicket
+  orden: number
+  activo: boolean
+}
+
+export type GuardarProblemaData = Partial<{
+  nombre: string
+  descripcion: string
+  categoria_id: number
+  tipo_ticket: TipoTicket
+  prioridad: PrioridadTicket
+  activo: boolean
+}>
+
 /** Una fila de `slas`: sin categoría es la regla general de la prioridad (D7). */
 export type SlaRegla = {
   id: number

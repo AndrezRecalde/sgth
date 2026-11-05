@@ -1,5 +1,5 @@
 import type { SemanticTone } from '@/config/design.tokens'
-import type { EstadoSla, EstadoTicket, PrioridadTicket } from '../services/tipos'
+import type { EstadoSla, EstadoTicket, PrioridadTicket, TipoTicket } from '../services/tipos'
 
 /**
  * El tono de cada estado (regla 06): lo que está en manos de TIC informa, lo
@@ -30,6 +30,14 @@ export const ESTADO_PARA_EL_SOLICITANTE: Record<EstadoTicket, string> = {
 export const ETIQUETA_PRIORIDAD: Record<PrioridadTicket, string> = {
   urgente: 'Urgente', alta: 'Alta', media: 'Media', baja: 'Baja',
 }
+
+/** El tipo de ticket: lo pone el problema frecuente, nunca el servidor. */
+export const TIPOS_TICKET: { value: TipoTicket; label: string; descripcion: string }[] = [
+  { value: 'incidente', label: 'Incidente', descripcion: 'Algo dejó de funcionar' },
+  { value: 'solicitud', label: 'Solicitud', descripcion: 'Se pide algo nuevo: una instalación, un acceso' },
+]
+
+export const ETIQUETA_TIPO_TICKET: Record<TipoTicket, string> = { incidente: 'Incidente', solicitud: 'Solicitud' }
 
 /** De la más a la menos urgente, como se leen las tablas del SLA. */
 export const PRIORIDADES: PrioridadTicket[] = ['urgente', 'alta', 'media', 'baja']

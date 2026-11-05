@@ -4621,8 +4621,9 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Lista todos los grupos ocupacionales.
-         *     Opcionalmente filtra por régimen laboral
+         * Los grupos ocupacionales activos, los dos regímenes. La pantalla filtra
+         *     en el navegador; el filtro por `regimen` que había aquí no lo mandaba
+         *     nadie
          */
         get: operations["estructura.grupos-ocupacionales"];
         put?: never;
@@ -7885,6 +7886,54 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["prestamoEquipo.recibir"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/helpdesk/problemas-frecuentes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["problemaFrecuente.index"];
+        put?: never;
+        post: operations["problemaFrecuente.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/helpdesk/problemas-frecuentes/orden": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["problemaFrecuente.ordenar"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/helpdesk/problemas-frecuentes/{problema}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["problemaFrecuente.update"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -12914,6 +12963,22 @@ export interface components {
             admite_amonestacion_escrita?: boolean;
             admite_multa?: boolean;
             porcentaje_maximo_multa?: number | null;
+            activo?: boolean;
+        };
+        /**
+         * GuardarProblemaFrecuenteRequest
+         * @description Un problema frecuente: lo que ve el servidor (el nombre, que es también el
+         *     asunto del ticket) y lo que lleva el ticket. La categoría tiene que estar
+         *     activa; el nombre no se repite, sin distinguir mayúsculas. Al editar, cada
+         *     campo es opcional: activar o desactivar manda solo `activo`.
+         */
+        GuardarProblemaFrecuenteRequest: {
+            nombre: string;
+            categoria_id: number;
+            /** @enum {string} */
+            tipo_ticket: "incidente" | "solicitud";
+            prioridad: components["schemas"]["PrioridadTicket"];
+            descripcion: string;
             activo?: boolean;
         };
         /**
@@ -22219,7 +22284,6 @@ export interface operations {
                      */
                     codigo_ciuo?: string | null;
                     mision?: string | null;
-                    activo?: boolean;
                     /**
                      * @description Corregir cómo está escrito un cargo con puestos ocupados pide el
                      *     motivo (fase 7.1b); cambiar la denominación es reclasificar.
@@ -39446,6 +39510,195 @@ export interface operations {
                         /** @constant */
                         mensaje: "Devolución registrada.";
                         datos: components["schemas"]["PrestamoEquipoResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "problemaFrecuente.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Problemas frecuentes.";
+                        datos: {
+                            id: number;
+                            nombre: string;
+                            descripcion: string;
+                            categoria_id: number;
+                            categoria: string;
+                            /**
+                             * @description Con la categoría inactiva, el problema deja de ofrecerse aunque
+                             *     esté activo: la pantalla lo avisa.
+                             */
+                            categoria_activa: boolean;
+                            unidad_tic: string;
+                            tipo_ticket: string;
+                            prioridad: string;
+                            orden: number;
+                            activo: boolean;
+                        }[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "problemaFrecuente.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuardarProblemaFrecuenteRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Problema frecuente registrado.";
+                        datos: {
+                            id: number;
+                            nombre: string;
+                            descripcion: string;
+                            categoria_id: number;
+                            categoria: string;
+                            /**
+                             * @description Con la categoría inactiva, el problema deja de ofrecerse aunque
+                             *     esté activo: la pantalla lo avisa.
+                             */
+                            categoria_activa: boolean;
+                            unidad_tic: string;
+                            tipo_ticket: string;
+                            prioridad: string;
+                            orden: number;
+                            activo: boolean;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "problemaFrecuente.ordenar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    ids: number[];
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Orden guardado.";
+                        datos: {
+                            id: number;
+                            nombre: string;
+                            descripcion: string;
+                            categoria_id: number;
+                            categoria: string;
+                            /**
+                             * @description Con la categoría inactiva, el problema deja de ofrecerse aunque
+                             *     esté activo: la pantalla lo avisa.
+                             */
+                            categoria_activa: boolean;
+                            unidad_tic: string;
+                            tipo_ticket: string;
+                            prioridad: string;
+                            orden: number;
+                            activo: boolean;
+                        }[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "problemaFrecuente.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The problema ID */
+                problema: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuardarProblemaFrecuenteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @enum {string} */
+                        mensaje: "Problema frecuente actualizado." | "Problema frecuente desactivado: ya no se ofrece al pedir ayuda.";
+                        datos: {
+                            id: number;
+                            nombre: string;
+                            descripcion: string;
+                            categoria_id: number;
+                            categoria: string;
+                            /**
+                             * @description Con la categoría inactiva, el problema deja de ofrecerse aunque
+                             *     esté activo: la pantalla lo avisa.
+                             */
+                            categoria_activa: boolean;
+                            unidad_tic: string;
+                            tipo_ticket: string;
+                            prioridad: string;
+                            orden: number;
+                            activo: boolean;
+                        };
                         meta: null;
                     };
                 };

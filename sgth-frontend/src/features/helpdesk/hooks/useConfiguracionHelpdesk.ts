@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { notificar } from '@/components/ui'
 import { clavesHelpdesk } from '../constants/claves'
 import { configuracionHelpdeskService as servicio } from '../services/configuracionService'
+import type { GuardarProblemaData } from '../services/tipos'
 
 export const useCategoriasTicket = () =>
   useQuery({ queryKey: clavesHelpdesk.config.categorias, queryFn: servicio.categorias })
@@ -11,6 +12,39 @@ export const useTablaSla = () =>
 
 export const useTecnicosHelpdesk = () =>
   useQuery({ queryKey: clavesHelpdesk.config.tecnicos, queryFn: servicio.tecnicos })
+
+export const useProblemasFrecuentes = () =>
+  useQuery({ queryKey: clavesHelpdesk.config.problemas, queryFn: servicio.problemas })
+
+/**
+ * Guardar un problema frecuente y cambiar el orden en que los ve el servidor.
+ * Al ordenar, la lista que vuelve reemplaza la guardada: la flecha no espera
+ * a una segunda consulta.
+ */
+export function useProblemaFrecuenteMutations() {
+  const qc = useQueryClient()
+
+  const guardar = useMutation({
+    mutationFn: ({ id, data }: { id?: number; data: GuardarProblemaData }) =>
+      (id ? servicio.problema.actualizar(id, data) : servicio.problema.crear(data)),
+    onSuccess: (p) => {
+      notificar.exito('Problema frecuente guardado', p?.activo ? 'Los activos se ofrecen al pedir ayuda.' : 'Ya no se ofrece al pedir ayuda.')
+      qc.invalidateQueries({ queryKey: clavesHelpdesk.raiz })
+    },
+    onError: notificar.alFallarSalvoCampos('No se pudo guardar el problema frecuente'),
+  })
+
+  const ordenar = useMutation({
+    mutationFn: servicio.problema.ordenar,
+    onSuccess: (lista) => qc.setQueryData(clavesHelpdesk.config.problemas, lista),
+    onError: (e) => {
+      notificar.alFallar('No se pudo guardar el orden')(e)
+      qc.invalidateQueries({ queryKey: clavesHelpdesk.config.problemas })
+    },
+  })
+
+  return { guardar, ordenar }
+}
 
 type Recurso = 'categoria' | 'sla' | 'tecnico'
 

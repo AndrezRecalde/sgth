@@ -14,6 +14,21 @@ export const categoriaSchema = z.object({
 })
 export type CategoriaFormData = z.infer<typeof categoriaSchema>
 
+/**
+ * Un problema frecuente: el nombre es el botón que ve el servidor y el asunto
+ * del ticket; la descripción, el texto que lleva. Que el nombre no se repita y
+ * que la categoría esté activa lo comprueba el backend.
+ */
+export const problemaSchema = z.object({
+  nombre: z.string().trim().min(5, 'Mínimo 5 caracteres').max(80, 'Máximo 80 caracteres'),
+  categoria_id: z.number({ message: 'Elija la categoría' }),
+  tipo_ticket: z.enum(['incidente', 'solicitud']),
+  prioridad: z.enum(['baja', 'media', 'alta', 'urgente'], { message: 'Elija la prioridad' }),
+  descripcion: z.string().trim().min(10, 'Mínimo 10 caracteres').max(1000, 'Máximo 1000 caracteres'),
+  activo: z.boolean(),
+})
+export type ProblemaFormData = z.infer<typeof problemaSchema>
+
 export const slaSchema = z.object({
   prioridad: z.enum(['baja', 'media', 'alta', 'urgente'], { message: 'Elija la prioridad' }),
   categoria_id: z.number().nullable(),

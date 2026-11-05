@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Stack, Tabs } from '@mantine/core'
 import {
-  IconBuilding, IconCategory, IconClockHour4, IconFileCertificate, IconLifebuoy, IconPresentation, IconTag, IconUsersGroup,
+  IconBuilding, IconBulb, IconCategory, IconClockHour4, IconFileCertificate, IconLifebuoy, IconPresentation, IconTag, IconUsersGroup,
 } from '@tabler/icons-react'
 import { PageHeader, PageShell } from '@/components/ui'
 import { useAuth } from '@/hooks/useAuth'
@@ -13,6 +13,7 @@ import { TiposPanel } from '@/features/inventario-ti/components/TiposPanel'
 import { UbicacionesPorUnidadPanel } from '@/features/inventario-ti/components/UbicacionesPorUnidadPanel'
 import { ReglasPrestamoPanel } from '@/features/prestamos-ti/components/ReglasPrestamoPanel'
 import { CategoriasTicketPanel } from '@/features/helpdesk/components/CategoriasTicketPanel'
+import { ProblemasFrecuentesPanel } from '@/features/helpdesk/components/ProblemasFrecuentesPanel'
 import { SlaPanel } from '@/features/helpdesk/components/SlaPanel'
 import { TecnicosPanel } from '@/features/helpdesk/components/TecnicosPanel'
 
@@ -26,7 +27,10 @@ export function ConfiguracionTicView() {
   const inventario = hasPermiso('gestionar-inventario-ti')
   const sla = hasPermiso('configurar-sla')
   const tecnicos = hasPermiso('gestionar-tecnicos')
-  const [pestana, setPestana] = useState<string | null>(inventario ? 'tipos' : sla ? 'categorias-ticket' : 'tecnicos')
+  const problemas = hasPermiso('gestionar-problemas-frecuentes')
+  const [pestana, setPestana] = useState<string | null>(
+    inventario ? 'tipos' : sla ? 'categorias-ticket' : problemas ? 'problemas' : 'tecnicos',
+  )
 
   return (
     <PageShell>
@@ -51,6 +55,7 @@ export function ConfiguracionTicView() {
               <Tabs.Tab value="sla" leftSection={<IconClockHour4 size={14} />}>SLA</Tabs.Tab>
             </>
           )}
+          {problemas && <Tabs.Tab value="problemas" leftSection={<IconBulb size={14} />}>Problemas frecuentes</Tabs.Tab>}
           {tecnicos && <Tabs.Tab value="tecnicos" leftSection={<IconUsersGroup size={14} />}>Técnicos</Tabs.Tab>}
         </Tabs.List>
         {inventario && (
@@ -73,6 +78,7 @@ export function ConfiguracionTicView() {
             <Tabs.Panel value="sla" pt="lg"><SlaPanel /></Tabs.Panel>
           </>
         )}
+        {problemas && <Tabs.Panel value="problemas" pt="lg"><ProblemasFrecuentesPanel /></Tabs.Panel>}
         {tecnicos && <Tabs.Panel value="tecnicos" pt="lg"><TecnicosPanel /></Tabs.Panel>}
       </Tabs>
     </PageShell>

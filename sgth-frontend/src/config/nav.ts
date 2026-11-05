@@ -608,11 +608,12 @@ export const NAV_TIC: NavGroup[] = [
         permisos: ['ver-inventario-ti', 'gestionar-inventario-ti', 'ver-tickets-todos'],
       },
       {
-        // Cada pestaña lleva su permiso: inventario, SLA y categorías, técnicos.
+        // Cada pestaña lleva su permiso: inventario, SLA y categorías,
+        // problemas frecuentes, técnicos.
         label:    'Configuración',
         href:     ROUTES.TIC.CONFIGURACION,
         icon:     'IconSettings',
-        permisos: ['gestionar-inventario-ti', 'configurar-sla', 'gestionar-tecnicos'],
+        permisos: ['gestionar-inventario-ti', 'configurar-sla', 'gestionar-problemas-frecuentes', 'gestionar-tecnicos'],
       },
       {
         // Las cuentas de acceso son trabajo de TI, no de Talento Humano
