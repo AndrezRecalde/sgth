@@ -69,9 +69,23 @@ export type Ticket = {
   encuesta?: { calificacion: number; comentarios: string | null } | null
 }
 
+/** Un problema frecuente tal como se ofrece al pedir ayuda (`TicketService::catalogos`). */
+export type ProblemaOfrecido = {
+  id: number
+  nombre: string
+  descripcion: string
+  categoria_id: number
+  categoria: string | null
+  unidad_tic: string | null
+  prioridad: PrioridadTicket
+  tipo_ticket: TipoTicket
+}
+
 /** `GET helpdesk/tickets/catalogos`. */
 export type CatalogosHelpdesk = {
   categorias: { id: number; nombre: string; es_hardware: boolean; descripcion: string | null; unidad_tic_id: number | null }[]
+  /** Los botones de «Pedir ayuda a TIC», en el orden de TIC. */
+  problemas: ProblemaOfrecido[]
   prioridades: { valor: PrioridadTicket; etiqueta: string }[]
   subunidades: { id: number; nombre: string }[]
   /** Los usuarios que atienden tickets, con su ficha de técnico si la tienen (D6). */
@@ -117,6 +131,8 @@ export type ProblemaFrecuenteConfig = {
   prioridad: PrioridadTicket
   orden: number
   activo: boolean
+  /** Los tickets abiertos con él en los últimos tres meses. */
+  tickets_recientes: number
 }
 
 export type GuardarProblemaData = Partial<{
@@ -186,12 +202,19 @@ export type AsignarTicketData = { tecnico_id: number | null; unidad_tic_id: numb
 
 export type ResolverTicketData = { solucion: string; registrar_mantenimiento: boolean; estado_equipo: string | null }
 
+/**
+ * Abrir un ticket. Con un problema frecuente, la categoría, el asunto, la
+ * descripción y el tipo salen de él, y solo va un comentario opcional; sin
+ * él, se mandan como siempre.
+ */
 export type NuevoTicketData = {
-  categoria_id: number
-  asunto: string
-  descripcion: string
+  problema_frecuente_id?: number | null
+  comentario?: string | null
+  categoria_id?: number
+  asunto?: string
+  descripcion?: string
   bien_informatico_id: number | null
-  archivo: File | null
+  archivo?: File | null
   /** Solo TIC: a nombre de quién y con qué prioridad. */
   servidor_id?: number
   prioridad?: PrioridadTicket

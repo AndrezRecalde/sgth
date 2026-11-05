@@ -5,6 +5,7 @@ namespace App\Models\Helpdesk;
 use App\Enums\PrioridadTicket;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Un problema frecuente de «Pedir ayuda a TIC»: el servidor lo elige y el
@@ -37,5 +38,10 @@ class ProblemaFrecuente extends Model
     public function categoria(): BelongsTo
     {
         return $this->belongsTo(CategoriaTicket::class, 'categoria_id')->withTrashed();
+    }
+
+    public function tickets(): HasMany
+    {
+        return $this->hasMany(Ticket::class);
     }
 }

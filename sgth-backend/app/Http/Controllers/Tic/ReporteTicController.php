@@ -72,7 +72,7 @@ final class ReporteTicController extends Controller
 
         return $this->responder($request, $reporte, [
             'archivo'   => "mesa-de-ayuda-{$reporte['desde']}-a-{$reporte['hasta']}",
-            'titulo'    => 'Mesa de ayuda por técnico y categoría',
+            'titulo'    => 'Mesa de ayuda por técnico, categoría y problema',
             'subtitulo' => 'Del ' . $desde->format('d/m/Y') . ' al ' . $hasta->format('d/m/Y'),
             'vista'     => 'pdf.tic.tickets',
             'excel'     => fn () => ReportesTicExcel::tickets($reporte),

@@ -50515,6 +50515,10 @@
                                                     },
                                                     "activo": {
                                                         "type": "boolean"
+                                                    },
+                                                    "tickets_recientes": {
+                                                        "type": "integer",
+                                                        "description": "Los abiertos con \u00e9l en los \u00faltimos tres meses."
                                                     }
                                                 },
                                                 "required": [
@@ -50528,7 +50532,8 @@
                                                     "tipo_ticket",
                                                     "prioridad",
                                                     "orden",
-                                                    "activo"
+                                                    "activo",
+                                                    "tickets_recientes"
                                                 ]
                                             }
                                         },
@@ -50617,6 +50622,10 @@
                                                 },
                                                 "activo": {
                                                     "type": "boolean"
+                                                },
+                                                "tickets_recientes": {
+                                                    "type": "integer",
+                                                    "description": "Los abiertos con \u00e9l en los \u00faltimos tres meses."
                                                 }
                                             },
                                             "required": [
@@ -50630,7 +50639,8 @@
                                                 "tipo_ticket",
                                                 "prioridad",
                                                 "orden",
-                                                "activo"
+                                                "activo",
+                                                "tickets_recientes"
                                             ]
                                         },
                                         "meta": {
@@ -50737,6 +50747,10 @@
                                                     },
                                                     "activo": {
                                                         "type": "boolean"
+                                                    },
+                                                    "tickets_recientes": {
+                                                        "type": "integer",
+                                                        "description": "Los abiertos con \u00e9l en los \u00faltimos tres meses."
                                                     }
                                                 },
                                                 "required": [
@@ -50750,7 +50764,8 @@
                                                     "tipo_ticket",
                                                     "prioridad",
                                                     "orden",
-                                                    "activo"
+                                                    "activo",
+                                                    "tickets_recientes"
                                                 ]
                                             }
                                         },
@@ -50858,6 +50873,10 @@
                                                 },
                                                 "activo": {
                                                     "type": "boolean"
+                                                },
+                                                "tickets_recientes": {
+                                                    "type": "integer",
+                                                    "description": "Los abiertos con \u00e9l en los \u00faltimos tres meses."
                                                 }
                                             },
                                             "required": [
@@ -50871,7 +50890,8 @@
                                                 "tipo_ticket",
                                                 "prioridad",
                                                 "orden",
-                                                "activo"
+                                                "activo",
+                                                "tickets_recientes"
                                             ]
                                         },
                                         "meta": {
@@ -62767,7 +62787,6 @@
                     "Ticket"
                 ],
                 "requestBody": {
-                    "required": true,
                     "content": {
                         "multipart/form-data": {
                             "schema": {
@@ -73631,7 +73650,7 @@
             },
             "CrearTicketRequest": {
                 "type": "object",
-                "description": "Abrir un ticket (fase 3.1). Desde el Portal, a nombre de quien lo abre;\nTIC lo registra a nombre de otro con `servidor_id` y puede poner la\nprioridad. Que el equipo sea suyo lo comprueba el servicio.",
+                "description": "Abrir un ticket (fase 3.1). Desde el Portal, a nombre de quien lo abre;\nTIC lo registra a nombre de otro con `servidor_id` y puede poner la\nprioridad. Que el equipo sea suyo lo comprueba el servicio.\n\nCon un problema frecuente (2026-11-05), la categor\u00eda, el asunto, la\ndescripci\u00f3n y el tipo salen de \u00e9l: solo se manda, si se quiere, un\ncomentario. Sin \u00e9l, es el formulario libre de siempre.",
                 "properties": {
                     "servidor_id": {
                         "type": [
@@ -73639,8 +73658,24 @@
                             "null"
                         ]
                     },
+                    "problema_frecuente_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "comentario": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 2000
+                    },
                     "categoria_id": {
-                        "type": "integer"
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     },
                     "tipo_ticket": {
                         "type": [
@@ -73656,12 +73691,18 @@
                         "$ref": "#/components/schemas/PrioridadTicket"
                     },
                     "asunto": {
-                        "type": "string",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
                         "minLength": 5,
                         "maxLength": 200
                     },
                     "descripcion": {
-                        "type": "string",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
                         "minLength": 10,
                         "maxLength": 5000
                     },
@@ -73681,11 +73722,6 @@
                         "maxLength": 10240
                     }
                 },
-                "required": [
-                    "categoria_id",
-                    "asunto",
-                    "descripcion"
-                ],
                 "title": "CrearTicketRequest"
             },
             "CredencialResource": {

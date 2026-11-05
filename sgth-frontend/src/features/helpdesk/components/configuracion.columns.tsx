@@ -64,6 +64,8 @@ export const columnasProblemas = (accionesDe: Acciones<ProblemaFrecuenteConfig>)
     ),
   },
   { accessor: 'tipo_ticket', title: 'Tipo', width: 110, render: (p) => ETIQUETA_TIPO_TICKET[p.tipo_ticket] },
+  // Para la revisión trimestral de TIC (pregunta 12).
+  { accessor: 'tickets_recientes', title: 'Últimos 3 meses', width: 130, render: (p) => <CountBadge>{p.tickets_recientes}</CountBadge> },
   {
     accessor: 'prioridad',
     title: 'Prioridad',

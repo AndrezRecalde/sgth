@@ -14,10 +14,14 @@ use Illuminate\Support\Facades\DB;
  */
 final class ProblemaFrecuenteService
 {
+    /** Cuántos meses mira el uso de cada problema: TIC revisa la lista cada trimestre (pregunta 12). */
+    public const MESES_DE_USO = 3;
+
     /** @return list<array<string, mixed>> */
     public function listar(): array
     {
         return ProblemaFrecuente::with('categoria:id,nombre,activa,deleted_at,unidad_tic_id', 'categoria.unidadTic:id,nombre')
+            ->withCount(['tickets as tickets_recientes' => fn ($q) => $q->where('created_at', '>=', now()->subMonths(self::MESES_DE_USO))])
             ->orderByDesc('activo')->orderBy('orden')->orderBy('id')
             ->get()
             ->map(fn (ProblemaFrecuente $p) => $this->fila($p))
@@ -84,6 +88,8 @@ final class ProblemaFrecuenteService
             'prioridad'        => $p->prioridad->value,
             'orden'            => $p->orden,
             'activo'           => $p->activo,
+            // Los abiertos con él en los últimos tres meses.
+            'tickets_recientes' => (int) ($p->tickets_recientes ?? $p->tickets()->where('created_at', '>=', now()->subMonths(self::MESES_DE_USO))->count()),
         ];
     }
 }

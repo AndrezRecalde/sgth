@@ -32,7 +32,7 @@ class Ticket extends Model
     protected $table = 'tickets';
 
     protected $fillable = [
-        'codigo_ticket', 'solicitante_id', 'tipo_ticket', 'categoria_id', 'sla_id', 'estado', 'prioridad', 'canal',
+        'codigo_ticket', 'solicitante_id', 'tipo_ticket', 'categoria_id', 'problema_frecuente_id', 'sla_id', 'estado', 'prioridad', 'canal',
         'asunto', 'descripcion', 'bien_informatico_id', 'tecnico_id', 'unidad_tic_id', 'nivel', 'registrado_por',
         'solucion', 'resuelto_en', 'resuelto_por', 'reabierto_veces',
         'anulado_en', 'anulado_por', 'motivo_anulacion', 'fecha_vencimiento_sla', 'fecha_cierre',
@@ -66,6 +66,12 @@ class Ticket extends Model
     public function categoria(): BelongsTo
     {
         return $this->belongsTo(CategoriaTicket::class);
+    }
+
+    /** Con cuál se abrió; sin él, se abrió con el formulario libre. */
+    public function problemaFrecuente(): BelongsTo
+    {
+        return $this->belongsTo(ProblemaFrecuente::class);
     }
 
     public function solicitante(): BelongsTo
