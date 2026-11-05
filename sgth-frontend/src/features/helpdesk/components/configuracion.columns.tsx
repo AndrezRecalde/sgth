@@ -1,8 +1,9 @@
 import { Stack, Text } from '@mantine/core'
 import type { DataTableColumn } from 'mantine-datatable'
 import { CountBadge, StatusBadge, TableActions, type TableAction } from '@/components/ui'
-import { ETIQUETA_PRIORIDAD, TONO_PRIORIDAD } from '../constants/estados'
-import type { CategoriaTicketConfig, PrioridadTicket, SlaRegla, TecnicoHelpdesk } from '../services/tipos'
+import { SEMANTIC_COLOR } from '@/config/design.tokens'
+import { ETIQUETA_PRIORIDAD, ETIQUETA_TIPO_TICKET, TONO_PRIORIDAD } from '../constants/estados'
+import type { CategoriaTicketConfig, PrioridadTicket, ProblemaFrecuenteConfig, SlaRegla, TecnicoHelpdesk } from '../services/tipos'
 
 type Acciones<T> = (registro: T) => TableAction[]
 
@@ -34,6 +35,46 @@ export const columnasCategorias = (accionesDe: Acciones<CategoriaTicketConfig>):
     title: 'Estado',
     width: 120,
     render: (c) => <StatusBadge tone={c.activa ? 'success' : 'neutral'}>{c.activa ? 'Activa' : 'Inactiva'}</StatusBadge>,
+  },
+  accionesCol(accionesDe),
+]
+
+export const columnasProblemas = (accionesDe: Acciones<ProblemaFrecuenteConfig>): DataTableColumn<ProblemaFrecuenteConfig>[] => [
+  {
+    accessor: 'nombre',
+    title: 'Problema',
+    render: (p) => (
+      <Stack gap={0}>
+        <Text size="sm" fw={500}>{p.nombre}</Text>
+        <Text size="xs" c="dimmed" lineClamp={1}>{p.descripcion}</Text>
+      </Stack>
+    ),
+  },
+  {
+    accessor: 'categoria',
+    title: 'Categoría',
+    width: 220,
+    render: (p) => (
+      <Stack gap={0}>
+        <Text size="sm">{p.categoria ?? '—'}</Text>
+        {p.categoria_activa
+          ? p.unidad_tic && <Text size="xs" c="dimmed">{p.unidad_tic}</Text>
+          : <Text size="xs" c={SEMANTIC_COLOR.warning}>Categoría inactiva: no se ofrece</Text>}
+      </Stack>
+    ),
+  },
+  { accessor: 'tipo_ticket', title: 'Tipo', width: 110, render: (p) => ETIQUETA_TIPO_TICKET[p.tipo_ticket] },
+  {
+    accessor: 'prioridad',
+    title: 'Prioridad',
+    width: 110,
+    render: (p) => <StatusBadge tone={TONO_PRIORIDAD[p.prioridad]}>{ETIQUETA_PRIORIDAD[p.prioridad]}</StatusBadge>,
+  },
+  {
+    accessor: 'activo',
+    title: 'Estado',
+    width: 110,
+    render: (p) => <StatusBadge tone={p.activo ? 'success' : 'neutral'}>{p.activo ? 'Activo' : 'Inactivo'}</StatusBadge>,
   },
   accionesCol(accionesDe),
 ]

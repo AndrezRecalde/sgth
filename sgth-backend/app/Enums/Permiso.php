@@ -248,6 +248,9 @@ enum Permiso: string
     case ASIGNAR_TICKET = 'asignar-ticket';
     case GESTIONAR_TECNICOS = 'gestionar-tecnicos';
     case CONFIGURAR_SLA = 'configurar-sla';
+    // El catálogo de problemas frecuentes de «Pedir ayuda a TIC»: el jefe de
+    // TIC y los técnicos que él designe (respuestas de TIC del 2026-11-05).
+    case GESTIONAR_PROBLEMAS_FRECUENTES = 'gestionar-problemas-frecuentes';
     // Módulo futuro: la base de conocimiento es la fase 5.5 de
     // docs/diseno-subsistema-tic.md, con tickets reales. `tic/base-conocimiento`
     // devuelve una lista vacía y no la pide ninguna pantalla (D7).

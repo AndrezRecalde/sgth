@@ -9749,9 +9749,6 @@
                                             "null"
                                         ]
                                     },
-                                    "activo": {
-                                        "type": "boolean"
-                                    },
                                     "motivo_correccion": {
                                         "type": [
                                             "string",
@@ -31252,7 +31249,7 @@
         "/v1/estructura/grupos-ocupacionales": {
             "get": {
                 "operationId": "estructura.grupos-ocupacionales",
-                "summary": "Lista todos los grupos ocupacionales.\nOpcionalmente filtra por r\u00e9gimen laboral",
+                "summary": "Los grupos ocupacionales activos, los dos reg\u00edmenes. La pantalla filtra\nen el navegador; el filtro por `regimen` que hab\u00eda aqu\u00ed no lo mandaba\nnadie",
                 "tags": [
                     "GrupoOcupacional"
                 ],
@@ -50459,6 +50456,450 @@
                 }
             }
         },
+        "/v1/helpdesk/problemas-frecuentes": {
+            "get": {
+                "operationId": "problemaFrecuente.index",
+                "tags": [
+                    "ProblemaFrecuente"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Problemas frecuentes."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "nombre": {
+                                                        "type": "string"
+                                                    },
+                                                    "descripcion": {
+                                                        "type": "string"
+                                                    },
+                                                    "categoria_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "categoria": {
+                                                        "type": "string"
+                                                    },
+                                                    "categoria_activa": {
+                                                        "type": "boolean",
+                                                        "description": "Con la categor\u00eda inactiva, el problema deja de ofrecerse aunque\nest\u00e9 activo: la pantalla lo avisa."
+                                                    },
+                                                    "unidad_tic": {
+                                                        "type": "string"
+                                                    },
+                                                    "tipo_ticket": {
+                                                        "type": "string"
+                                                    },
+                                                    "prioridad": {
+                                                        "type": "string"
+                                                    },
+                                                    "orden": {
+                                                        "type": "integer"
+                                                    },
+                                                    "activo": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "nombre",
+                                                    "descripcion",
+                                                    "categoria_id",
+                                                    "categoria",
+                                                    "categoria_activa",
+                                                    "unidad_tic",
+                                                    "tipo_ticket",
+                                                    "prioridad",
+                                                    "orden",
+                                                    "activo"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "problemaFrecuente.store",
+                "tags": [
+                    "ProblemaFrecuente"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GuardarProblemaFrecuenteRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Problema frecuente registrado."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "nombre": {
+                                                    "type": "string"
+                                                },
+                                                "descripcion": {
+                                                    "type": "string"
+                                                },
+                                                "categoria_id": {
+                                                    "type": "integer"
+                                                },
+                                                "categoria": {
+                                                    "type": "string"
+                                                },
+                                                "categoria_activa": {
+                                                    "type": "boolean",
+                                                    "description": "Con la categor\u00eda inactiva, el problema deja de ofrecerse aunque\nest\u00e9 activo: la pantalla lo avisa."
+                                                },
+                                                "unidad_tic": {
+                                                    "type": "string"
+                                                },
+                                                "tipo_ticket": {
+                                                    "type": "string"
+                                                },
+                                                "prioridad": {
+                                                    "type": "string"
+                                                },
+                                                "orden": {
+                                                    "type": "integer"
+                                                },
+                                                "activo": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "nombre",
+                                                "descripcion",
+                                                "categoria_id",
+                                                "categoria",
+                                                "categoria_activa",
+                                                "unidad_tic",
+                                                "tipo_ticket",
+                                                "prioridad",
+                                                "orden",
+                                                "activo"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/helpdesk/problemas-frecuentes/orden": {
+            "put": {
+                "operationId": "problemaFrecuente.ordenar",
+                "tags": [
+                    "ProblemaFrecuente"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "minItems": 1
+                                    }
+                                },
+                                "required": [
+                                    "ids"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Orden guardado."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "nombre": {
+                                                        "type": "string"
+                                                    },
+                                                    "descripcion": {
+                                                        "type": "string"
+                                                    },
+                                                    "categoria_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "categoria": {
+                                                        "type": "string"
+                                                    },
+                                                    "categoria_activa": {
+                                                        "type": "boolean",
+                                                        "description": "Con la categor\u00eda inactiva, el problema deja de ofrecerse aunque\nest\u00e9 activo: la pantalla lo avisa."
+                                                    },
+                                                    "unidad_tic": {
+                                                        "type": "string"
+                                                    },
+                                                    "tipo_ticket": {
+                                                        "type": "string"
+                                                    },
+                                                    "prioridad": {
+                                                        "type": "string"
+                                                    },
+                                                    "orden": {
+                                                        "type": "integer"
+                                                    },
+                                                    "activo": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "nombre",
+                                                    "descripcion",
+                                                    "categoria_id",
+                                                    "categoria",
+                                                    "categoria_activa",
+                                                    "unidad_tic",
+                                                    "tipo_ticket",
+                                                    "prioridad",
+                                                    "orden",
+                                                    "activo"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/helpdesk/problemas-frecuentes/{problema}": {
+            "put": {
+                "operationId": "problemaFrecuente.update",
+                "tags": [
+                    "ProblemaFrecuente"
+                ],
+                "parameters": [
+                    {
+                        "name": "problema",
+                        "in": "path",
+                        "required": true,
+                        "description": "The problema ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GuardarProblemaFrecuenteRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Problema frecuente actualizado.",
+                                                "Problema frecuente desactivado: ya no se ofrece al pedir ayuda."
+                                            ]
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "nombre": {
+                                                    "type": "string"
+                                                },
+                                                "descripcion": {
+                                                    "type": "string"
+                                                },
+                                                "categoria_id": {
+                                                    "type": "integer"
+                                                },
+                                                "categoria": {
+                                                    "type": "string"
+                                                },
+                                                "categoria_activa": {
+                                                    "type": "boolean",
+                                                    "description": "Con la categor\u00eda inactiva, el problema deja de ofrecerse aunque\nest\u00e9 activo: la pantalla lo avisa."
+                                                },
+                                                "unidad_tic": {
+                                                    "type": "string"
+                                                },
+                                                "tipo_ticket": {
+                                                    "type": "string"
+                                                },
+                                                "prioridad": {
+                                                    "type": "string"
+                                                },
+                                                "orden": {
+                                                    "type": "integer"
+                                                },
+                                                "activo": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "nombre",
+                                                "descripcion",
+                                                "categoria_id",
+                                                "categoria",
+                                                "categoria_activa",
+                                                "unidad_tic",
+                                                "tipo_ticket",
+                                                "prioridad",
+                                                "orden",
+                                                "activo"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/v1/sso/programa-drogas/actividades": {
             "get": {
                 "operationId": "programaDrogaActividad.index",
@@ -51460,11 +51901,11 @@
                             }
                         }
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -51567,11 +52008,11 @@
                             }
                         }
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -51724,11 +52165,11 @@
                             }
                         }
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -76626,6 +77067,46 @@
                     "descripcion"
                 ],
                 "title": "GuardarFaltaReglamentoRequest"
+            },
+            "GuardarProblemaFrecuenteRequest": {
+                "type": "object",
+                "description": "Un problema frecuente: lo que ve el servidor (el nombre, que es tambi\u00e9n el\nasunto del ticket) y lo que lleva el ticket. La categor\u00eda tiene que estar\nactiva; el nombre no se repite, sin distinguir may\u00fasculas. Al editar, cada\ncampo es opcional: activar o desactivar manda solo `activo`.",
+                "properties": {
+                    "nombre": {
+                        "type": "string",
+                        "minLength": 5,
+                        "maxLength": 80
+                    },
+                    "categoria_id": {
+                        "type": "integer"
+                    },
+                    "tipo_ticket": {
+                        "type": "string",
+                        "enum": [
+                            "incidente",
+                            "solicitud"
+                        ]
+                    },
+                    "prioridad": {
+                        "$ref": "#/components/schemas/PrioridadTicket"
+                    },
+                    "descripcion": {
+                        "type": "string",
+                        "minLength": 10,
+                        "maxLength": 1000
+                    },
+                    "activo": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "nombre",
+                    "categoria_id",
+                    "tipo_ticket",
+                    "prioridad",
+                    "descripcion"
+                ],
+                "title": "GuardarProblemaFrecuenteRequest"
             },
             "GuardarSalarioBasicoRequest": {
                 "type": "object",

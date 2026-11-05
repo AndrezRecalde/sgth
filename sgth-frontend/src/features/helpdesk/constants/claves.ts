@@ -12,5 +12,6 @@ export const clavesHelpdesk = {
     categorias: ['helpdesk', 'config', 'categorias'] as const,
     slas: ['helpdesk', 'config', 'slas'] as const,
     tecnicos: ['helpdesk', 'config', 'tecnicos'] as const,
+    problemas: ['helpdesk', 'config', 'problemas'] as const,
   },
 }

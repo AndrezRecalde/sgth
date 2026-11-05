@@ -1,7 +1,8 @@
 import api from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
 import type {
-  CategoriaTicketConfig, GuardarCategoriaData, GuardarSlaData, GuardarTecnicoData, SlaRegla, TablaSla, TecnicoHelpdesk,
+  CategoriaTicketConfig, GuardarCategoriaData, GuardarProblemaData, GuardarSlaData, GuardarTecnicoData, ProblemaFrecuenteConfig,
+  SlaRegla, TablaSla, TecnicoHelpdesk,
 } from './tipos'
 
 const URL = '/helpdesk'
@@ -15,8 +16,8 @@ const crud = <T, D>(recurso: string) => ({
 
 /**
  * La configuración de la mesa de ayuda (fase 3.5): `CategoriaTicketController`,
- * `SlaController` y `TecnicoDticController`. Las categorías no se eliminan: se
- * desactivan.
+ * `SlaController`, `TecnicoDticController` y `ProblemaFrecuenteController`.
+ * Las categorías y los problemas frecuentes no se eliminan: se desactivan.
  */
 export const configuracionHelpdeskService = {
   categorias: () =>
@@ -29,4 +30,16 @@ export const configuracionHelpdeskService = {
   categoria: crud<CategoriaTicketConfig, GuardarCategoriaData>('categorias'),
   sla: crud<SlaRegla, GuardarSlaData>('slas'),
   tecnico: crud<TecnicoHelpdesk, GuardarTecnicoData>('tecnicos'),
+
+  /** Los problemas frecuentes no se eliminan (se desactivan) y se ordenan con la lista completa. */
+  problemas: () =>
+    api.get<ApiResponse<ProblemaFrecuenteConfig[]>>(`${URL}/problemas-frecuentes`).then((r) => r.data.datos ?? []),
+  problema: {
+    crear: (data: GuardarProblemaData) =>
+      api.post<ApiResponse<ProblemaFrecuenteConfig>>(`${URL}/problemas-frecuentes`, data).then((r) => r.data.datos),
+    actualizar: (id: number, data: GuardarProblemaData) =>
+      api.put<ApiResponse<ProblemaFrecuenteConfig>>(`${URL}/problemas-frecuentes/${id}`, data).then((r) => r.data.datos),
+    ordenar: (ids: number[]) =>
+      api.put<ApiResponse<ProblemaFrecuenteConfig[]>>(`${URL}/problemas-frecuentes/orden`, { ids }).then((r) => r.data.datos ?? []),
+  },
 }

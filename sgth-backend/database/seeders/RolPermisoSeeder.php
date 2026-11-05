@@ -32,6 +32,7 @@ class RolPermisoSeeder extends Seeder
         Permiso::ASIGNAR_TICKET,
         Permiso::GESTIONAR_TECNICOS,
         Permiso::CONFIGURAR_SLA,
+        Permiso::GESTIONAR_PROBLEMAS_FRECUENTES,
         Permiso::DAR_BAJA_BIEN,
     ];
 
