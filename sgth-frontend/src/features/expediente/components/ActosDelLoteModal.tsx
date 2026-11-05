@@ -6,7 +6,7 @@ import { DataState, SgthModal, SgthTable } from '@/components/ui'
 import { useLoteAccion } from '../hooks/useContratoColectivo'
 import type { ActoDelLote } from '../services/contratoColectivoService'
 import { ESTADO_LABELS } from '../utils/estadoAccionPersonal'
-import { dinero } from '../utils/dinero'
+import { dinero } from '@/lib/dinero'
 
 /**
  * Los actos de un lote, con su estado y su número. Lo abren la pestaña «Actos

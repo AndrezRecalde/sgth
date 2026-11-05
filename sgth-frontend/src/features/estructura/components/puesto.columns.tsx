@@ -4,7 +4,7 @@ import { StatusBadge, TableActions } from '@/components/ui'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { PuestoConRelaciones } from '@/types/api'
 import { REGIMEN_LABELS } from '@/lib/regimen'
-import { dinero } from '@/features/expediente/utils/dinero'
+import { dinero } from '@/lib/dinero'
 
 type Acciones = {
   alEditar:     (puesto: PuestoConRelaciones) => void

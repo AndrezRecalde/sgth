@@ -15,7 +15,7 @@ import { useContratoColectivo } from '../hooks/useContratoColectivo'
 import {
   contratoColectivoService, type ContratoColectivo, type SalarioBasico,
 } from '../services/contratoColectivoService'
-import { dinero } from '../utils/dinero'
+import { dinero } from '@/lib/dinero'
 import { BloqueDetalle } from './BloqueDetalle'
 import { ClausulasDeLicenciaDrawer } from './ClausulasDeLicenciaDrawer'
 import { ContratoColectivoModal } from './ContratoColectivoModal'

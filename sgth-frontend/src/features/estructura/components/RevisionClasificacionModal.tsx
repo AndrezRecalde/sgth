@@ -1,21 +1,21 @@
 'use client'
 
-import { Alert, Button, Group, Input, Paper, SegmentedControl, Select, Stack, Text, Textarea, TextInput } from '@mantine/core'
+import { Button, Grid, Group, Input, SegmentedControl, Stack, Textarea, TextInput } from '@mantine/core'
 import { DatePickerInput } from '@mantine/dates'
-import { IconAlertTriangle, IconPlus, IconTrash } from '@tabler/icons-react'
+import { IconPlus } from '@tabler/icons-react'
 import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormModal } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { erroresDeCampo } from '@/lib/erroresDeCampo'
 import { fromDateValueOrNull, hoyIso, toDateValue } from '@/lib/fecha'
-import { dinero } from '@/features/expediente/utils/dinero'
+import { dinero } from '@/lib/dinero'
 import { useCargos } from '../hooks/useCargos'
 import { useGruposOcupacionales } from '../hooks/useGruposOcupacionales'
 import { usePrepararRevision, useVistaPreviaRevision } from '../hooks/useRevisionClasificacion'
 import { revisionClasificacionSchema, type RevisionClasificacionFormData } from '../schemas/revisionClasificacion.schema'
-import type { CausalRevision, VistaPreviaRevision } from '../services/revisionClasificacionService'
-import { BuscarPuestoSelect } from './BuscarPuestoSelect'
+import type { CausalRevision } from '../services/revisionClasificacionService'
+import { RevisionClasificacionRenglon } from './RevisionClasificacionRenglon'
 import type { Cargo, PuestoConRelaciones } from '@/types/api'
 
 const CAUSALES: { value: CausalRevision; label: string; ayuda: string }[] = [
@@ -114,65 +114,16 @@ function Formulario({ puesto, onClose }: { puesto: PuestoConRelaciones; onClose:
         </Input.Wrapper>
 
         {fields.map((f, i) => (
-          <Paper key={f.id} withBorder p="sm" radius="md">
-            <Stack gap="xs">
-              <Group justify="space-between" align="flex-end" wrap="nowrap">
-                {i === 0 ? (
-                  <Text size="sm" fw={600}>{puesto.cargo?.nombre ?? 'Puesto'} · {puesto.unidad_administrativa?.nombre ?? ''}</Text>
-                ) : (
-                  <Controller
-                    name={`puestos.${i}.puesto_id`}
-                    control={control}
-                    render={({ field }) => (
-                      <div style={{ flex: 1 }}>
-                        <BuscarPuestoSelect label="Otro puesto" value={field.value > 0 ? field.value : null} onChange={(id) => field.onChange(id ?? 0)} />
-                      </div>
-                    )}
-                  />
-                )}
-                {i > 0 && (
-                  <Button variant="subtle" color="red" size="xs" leftSection={<IconTrash size={14} />} onClick={() => remove(i)}>
-                    Quitar
-                  </Button>
-                )}
-              </Group>
-              <Group grow align="flex-start">
-                <Controller
-                  name={`puestos.${i}.grupo_ocupacional_id`}
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      label="Grado nuevo"
-                      placeholder="El mismo"
-                      data={grupos}
-                      searchable
-                      clearable
-                      value={field.value ? String(field.value) : null}
-                      onChange={(v) => field.onChange(v ? Number(v) : null)}
-                      {...contained}
-                    />
-                  )}
-                />
-                <Controller
-                  name={`puestos.${i}.cargo_id`}
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      label="Denominación nueva"
-                      placeholder="La misma"
-                      data={cargos}
-                      searchable
-                      clearable
-                      value={field.value ? String(field.value) : null}
-                      onChange={(v) => field.onChange(v ? Number(v) : null)}
-                      {...contained}
-                    />
-                  )}
-                />
-              </Group>
-              <ResumenDelPuesto fila={filaDe(puestos?.[i]?.puesto_id ?? 0)} />
-            </Stack>
-          </Paper>
+          <RevisionClasificacionRenglon
+            key={f.id}
+            control={control}
+            indice={i}
+            puesto={puesto}
+            grupos={grupos}
+            cargos={cargos}
+            fila={filaDe(puestos?.[i]?.puesto_id ?? 0)}
+            onQuitar={() => remove(i)}
+          />
         ))}
 
         <Group>
@@ -186,24 +137,28 @@ function Formulario({ puesto, onClose }: { puesto: PuestoConRelaciones; onClose:
           </Button>
         </Group>
 
-        <Group grow align="flex-start">
-          <TextInput
-            label="Resolución que la aprueba"
-            description="La de la autoridad nominadora (Reglamento a la LOSEP, Art. 173)."
-            withAsterisk
-            error={errors.documento_origen?.message}
-            {...contained}
-            {...register('documento_origen')}
-          />
-          <TextInput
-            label="Dictamen presupuestario"
-            description={pideDictamen ? 'Sube la remuneración de alguien: es obligatorio.' : 'Solo si sube la remuneración.'}
-            withAsterisk={pideDictamen}
-            error={errors.dictamen_presupuestario_ref?.message}
-            {...contained}
-            {...register('dictamen_presupuestario_ref')}
-          />
-        </Group>
+        <Grid gap="sm">
+          <Grid.Col span={{ base: 12, sm: 6 }}>
+            <TextInput
+              label="Resolución que la aprueba"
+              description="La de la autoridad nominadora (Reglamento a la LOSEP, Art. 173)."
+              withAsterisk
+              error={errors.documento_origen?.message}
+              {...contained}
+              {...register('documento_origen')}
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, sm: 6 }}>
+            <TextInput
+              label="Dictamen presupuestario"
+              description={pideDictamen ? 'Sube la remuneración de alguien: es obligatorio.' : 'Solo si sube la remuneración.'}
+              withAsterisk={pideDictamen}
+              error={errors.dictamen_presupuestario_ref?.message}
+              {...contained}
+              {...register('dictamen_presupuestario_ref')}
+            />
+          </Grid.Col>
+        </Grid>
         <Controller
           name="fecha_efectiva"
           control={control}
@@ -234,28 +189,3 @@ function Formulario({ puesto, onClose }: { puesto: PuestoConRelaciones; onClose:
   )
 }
 
-/** De cómo está a cómo quedaría el puesto, y cuánto cobraría cada ocupante. */
-function ResumenDelPuesto({ fila }: { fila?: VistaPreviaRevision['puestos'][number] }) {
-  if (!fila) return null
-
-  const describe = (s: VistaPreviaRevision['puestos'][number]['antes']) =>
-    [s.denominacion, s.grado, s.rmu != null ? dinero(s.rmu) : null].filter(Boolean).join(' · ')
-
-  return (
-    <Stack gap={4}>
-      <Text size="xs" c="dimmed">De {describe(fila.antes)} a {describe(fila.despues)}</Text>
-      {fila.ocupantes.map((o) => (
-        <Text key={o.servidor_id} size="xs">
-          {o.nombre} · {dinero(o.remuneracion_actual)} → <b>{dinero(o.remuneracion_nueva)}</b>
-        </Text>
-      ))}
-      {fila.impedimentos.length > 0 && (
-        <Alert variant="light" color="amber" icon={<IconAlertTriangle size={16} />} p="xs">
-          <Stack gap={2}>
-            {fila.impedimentos.map((i) => <Text key={i} size="xs">{i}</Text>)}
-          </Stack>
-        </Alert>
-      )}
-    </Stack>
-  )
-}

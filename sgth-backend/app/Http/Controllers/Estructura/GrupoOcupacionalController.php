@@ -7,21 +7,17 @@ use App\Http\Responses\ApiResponse;
 use App\Models\Estructura\GrupoOcupacional;
 use App\Services\Estructura\EscalaRemuneracionService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class GrupoOcupacionalController extends Controller
 {
     /**
-     * Lista todos los grupos ocupacionales.
-     * Opcionalmente filtra por régimen laboral.
+     * Los grupos ocupacionales activos, los dos regímenes. La pantalla filtra
+     * en el navegador; el filtro por `regimen` que había aquí no lo mandaba
+     * nadie.
      */
-    public function index(Request $request, EscalaRemuneracionService $escalas): JsonResponse
+    public function index(EscalaRemuneracionService $escalas): JsonResponse
     {
         $grupos = GrupoOcupacional::query()
-            ->when(
-                $request->filled('regimen'),
-                fn($q) => $q->where('regimen', $request->regimen)
-            )
             ->where('activo', true)
             ->orderByRaw("CASE WHEN regimen = 'codigo_trabajo' THEN 1 ELSE 0 END")
             ->orderByDesc('rmu')

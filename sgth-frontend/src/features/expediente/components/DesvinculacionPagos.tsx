@@ -6,7 +6,7 @@ import { DatePickerInput } from '@mantine/dates'
 import { IconCash, IconCheck, IconReceiptRefund } from '@tabler/icons-react'
 import { SgthModal, confirmar } from '@/components/ui'
 import { fromDateValueOrNull, hoyIso, toDateValue } from '@/lib/fecha'
-import { dinero } from '../utils/dinero'
+import { dinero } from '@/lib/dinero'
 import { usePagosDeLaSalida } from '../hooks/useDesvinculaciones'
 import type { ConceptoIndemnizacion, PasoDeLaDesvinculacion } from '../services/desvinculacionService'
 

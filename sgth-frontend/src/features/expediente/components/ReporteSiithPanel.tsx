@@ -12,7 +12,7 @@ import { useContainedInput } from '@/hooks/useContainedInput'
 import { guardarArchivo } from '@/lib/archivo'
 import { formatFecha } from '@/lib/fecha'
 import { getApiErrorMessage } from '@/types/api'
-import { dinero } from '../utils/dinero'
+import { dinero } from '@/lib/dinero'
 import {
   useActualizarConfiguracionSiith, useConfiguracionSiith, useReporteSiith, useTranscribir,
 } from '../hooks/useReporteSiith'

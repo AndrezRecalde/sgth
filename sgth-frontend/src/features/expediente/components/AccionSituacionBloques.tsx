@@ -3,7 +3,7 @@
 import { Grid, Text } from '@mantine/core'
 import { DetailList, SectionHeading } from '@/components/ui'
 import { BloqueDetalle } from './BloqueDetalle'
-import { dinero } from '../utils/dinero'
+import { dinero } from '@/lib/dinero'
 import type { MovimientoPersonal } from '@/types/api'
 import { formatFecha } from '@/lib/fecha'
 
