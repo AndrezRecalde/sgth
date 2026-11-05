@@ -11999,15 +11999,21 @@ export interface components {
          * @description Abrir un ticket (fase 3.1). Desde el Portal, a nombre de quien lo abre;
          *     TIC lo registra a nombre de otro con `servidor_id` y puede poner la
          *     prioridad. Que el equipo sea suyo lo comprueba el servicio.
+         *
+         *     Con un problema frecuente (2026-11-05), la categoría, el asunto, la
+         *     descripción y el tipo salen de él: solo se manda, si se quiere, un
+         *     comentario. Sin él, es el formulario libre de siempre.
          */
         CrearTicketRequest: {
             servidor_id?: number | null;
-            categoria_id: number;
+            problema_frecuente_id?: number | null;
+            comentario?: string | null;
+            categoria_id?: number | null;
             /** @enum {string|null} */
             tipo_ticket?: "incidente" | "solicitud" | null;
             prioridad?: components["schemas"]["PrioridadTicket"];
-            asunto: string;
-            descripcion: string;
+            asunto?: string | null;
+            descripcion?: string | null;
             bien_informatico_id?: number | null;
             /** Format: binary */
             archivo?: string | null;
@@ -39553,6 +39559,8 @@ export interface operations {
                             prioridad: string;
                             orden: number;
                             activo: boolean;
+                            /** @description Los abiertos con él en los últimos tres meses. */
+                            tickets_recientes: number;
                         }[];
                         meta: null;
                     };
@@ -39599,6 +39607,8 @@ export interface operations {
                             prioridad: string;
                             orden: number;
                             activo: boolean;
+                            /** @description Los abiertos con él en los últimos tres meses. */
+                            tickets_recientes: number;
                         };
                         meta: null;
                     };
@@ -39648,6 +39658,8 @@ export interface operations {
                             prioridad: string;
                             orden: number;
                             activo: boolean;
+                            /** @description Los abiertos con él en los últimos tres meses. */
+                            tickets_recientes: number;
                         }[];
                         meta: null;
                     };
@@ -39698,6 +39710,8 @@ export interface operations {
                             prioridad: string;
                             orden: number;
                             activo: boolean;
+                            /** @description Los abiertos con él en los últimos tres meses. */
+                            tickets_recientes: number;
                         };
                         meta: null;
                     };
@@ -44695,7 +44709,7 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
                 "multipart/form-data": components["schemas"]["CrearTicketRequest"];
             };

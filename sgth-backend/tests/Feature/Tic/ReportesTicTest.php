@@ -200,5 +200,7 @@ test('cada reporte se descarga en Excel y en PDF', function () {
     Excel::assertDownloaded('obsolescencia-2026-10-14.xlsx', fn ($libro) => count($libro->sheets()) === 2
         && $libro->sheets()[1]->array()[0][0] === $viejo->codigo_institucional);
     reporteTic($this->jefe, 'tickets', [...$rango, 'formato' => 'excel'])->assertOk();
-    Excel::assertDownloaded('mesa-de-ayuda-2026-10-01-a-2026-10-14.xlsx', fn ($libro) => count($libro->sheets()) === 2);
+    // Por técnico, por categoría y por problema frecuente (2026-11-05).
+    Excel::assertDownloaded('mesa-de-ayuda-2026-10-01-a-2026-10-14.xlsx', fn ($libro) => count($libro->sheets()) === 3
+        && $libro->sheets()[2]->title() === 'Por problema');
 });

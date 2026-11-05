@@ -12,6 +12,7 @@ use App\Exceptions\ReglaNegocioException;
 use App\Models\Expediente\Servidor;
 use App\Models\Helpdesk\CategoriaTicket;
 use App\Models\Helpdesk\ComentarioTicket;
+use App\Models\Helpdesk\ProblemaFrecuente;
 use App\Models\Helpdesk\TecnicoDtic;
 use App\Models\Helpdesk\Ticket;
 use App\Models\InventarioTi\AsignacionBien;
@@ -102,20 +103,28 @@ final class TicketService implements TicketServiceInterface
         }
 
         $solicitante = Servidor::findOrFail($solicitanteId);
+        $problema = $this->problemaElegido($datos);
+        if ($problema) {
+            $datos = $this->desdeProblema($problema, $datos);
+        }
         $categoria = CategoriaTicket::where('activa', true)->findOrFail($datos['categoria_id']);
         if (! empty($datos['bien_informatico_id']) && ! $porTic) {
             $this->exigirEquipoPropio($solicitante->id, (int) $datos['bien_informatico_id']);
         }
 
-        $ticket = DB::transaction(function () use ($user, $datos, $porTic, $solicitante, $categoria, $archivo) {
+        $ticket = DB::transaction(function () use ($user, $datos, $porTic, $solicitante, $categoria, $problema, $archivo) {
             $ticket = Ticket::create([
                 'codigo_ticket'       => $this->siguienteFolio(),
                 'solicitante_id'      => $solicitante->id,
                 'tipo_ticket'         => $datos['tipo_ticket'] ?? 'incidente',
                 'categoria_id'        => $categoria->id,
+                'problema_frecuente_id' => $problema?->id,
                 'estado'              => EstadoTicket::ABIERTO,
-                // La prioridad la pone TIC; quien abre desde el Portal no la elige.
-                'prioridad'           => $porTic ? ($datos['prioridad'] ?? PrioridadTicket::MEDIA->value) : PrioridadTicket::MEDIA,
+                // La prioridad la pone TIC: al registrar, o de antemano en el
+                // problema frecuente. Quien abre desde el Portal no la elige.
+                'prioridad'           => ($porTic ? ($datos['prioridad'] ?? null) : null)
+                    ?? $problema?->prioridad
+                    ?? PrioridadTicket::MEDIA,
                 'canal'               => $porTic ? CanalTicket::TIC : CanalTicket::PORTAL,
                 'asunto'              => $datos['asunto'],
                 'descripcion'         => $datos['descripcion'],
@@ -179,6 +188,20 @@ final class TicketService implements TicketServiceInterface
         return [
             'categorias'  => CategoriaTicket::where('activa', true)->orderBy('nombre')
                 ->get(['id', 'nombre', 'es_hardware', 'es_consumibles', 'descripcion', 'unidad_tic_id']),
+            // Los botones de «Pedir ayuda a TIC», en el orden de TIC. Con la
+            // categoría inactiva, el problema no se ofrece.
+            'problemas'   => ProblemaFrecuente::with('categoria:id,nombre,unidad_tic_id', 'categoria.unidadTic:id,nombre')
+                ->where('activo', true)
+                ->whereHas('categoria', fn (Builder $q) => $q->where('activa', true)->whereNull('deleted_at'))
+                ->orderBy('orden')->orderBy('id')
+                ->get()
+                ->map(fn (ProblemaFrecuente $p) => [
+                    'id' => $p->id, 'nombre' => $p->nombre, 'descripcion' => $p->descripcion,
+                    'categoria_id' => $p->categoria_id, 'categoria' => $p->categoria?->nombre,
+                    'unidad_tic' => $p->categoria?->unidadTic?->nombre,
+                    'prioridad' => $p->prioridad->value, 'tipo_ticket' => $p->tipo_ticket,
+                ])
+                ->all(),
             'prioridades' => collect(PrioridadTicket::cases())->map(fn ($p) => ['valor' => $p->value, 'etiqueta' => $p->etiqueta()])->all(),
             'subunidades' => $this->subunidades->todas(),
             'tecnicos'    => User::permission(Permiso::GESTIONAR_TICKETS->value)->where('activo', true)
@@ -189,6 +212,46 @@ final class TicketService implements TicketServiceInterface
                     'unidad_tic_id' => $fichas[$u->id]->unidad_tic_id ?? null, 'nivel' => $fichas[$u->id]->nivel ?? null,
                 ])
                 ->sortBy('nombre')->values()->all(),
+        ];
+    }
+
+    /**
+     * El problema frecuente elegido, si se eligió. Uno cuya categoría se
+     * desactivó ya no se ofrece, aunque siga activo.
+     */
+    private function problemaElegido(array $datos): ?ProblemaFrecuente
+    {
+        if (empty($datos['problema_frecuente_id'])) {
+            return null;
+        }
+
+        $problema = ProblemaFrecuente::with('categoria')->where('activo', true)->find($datos['problema_frecuente_id']);
+        if (! $problema || ! $problema->categoria?->activa || $problema->categoria->trashed()) {
+            throw ValidationException::withMessages([
+                'problema_frecuente_id' => 'Ese problema ya no se ofrece: elija otro o «Otro problema».',
+            ]);
+        }
+
+        return $problema;
+    }
+
+    /**
+     * Lo que lleva el ticket sale del problema: su nombre es el asunto, y la
+     * descripción es la de TIC más lo que el servidor quiso agregar.
+     *
+     * @param  array<string, mixed>  $datos
+     * @return array<string, mixed>
+     */
+    private function desdeProblema(ProblemaFrecuente $problema, array $datos): array
+    {
+        $comentario = trim((string) ($datos['comentario'] ?? ''));
+
+        return [
+            ...$datos,
+            'categoria_id' => $problema->categoria_id,
+            'tipo_ticket'  => $problema->tipo_ticket,
+            'asunto'       => $problema->nombre,
+            'descripcion'  => $comentario === '' ? $problema->descripcion : "{$problema->descripcion}\n\n{$comentario}",
         ];
     }
 

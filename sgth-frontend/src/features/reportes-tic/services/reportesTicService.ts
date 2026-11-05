@@ -70,6 +70,8 @@ export type ReporteTickets = {
   totales: CifrasTickets
   por_tecnico: (CifrasTickets & { tecnico: string; en_curso: number })[]
   por_categoria: (CifrasTickets & { categoria: string })[]
+  /** Los problemas frecuentes usados o activos, y al final «Otro problema (formulario libre)». */
+  por_problema: (CifrasTickets & { problema: string })[]
 }
 
 /** `ReporteSatisfaccionService`. */

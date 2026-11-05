@@ -8,14 +8,15 @@ import { hoyIso } from '@/lib/fecha'
 import { useReporteTic } from '../hooks/useReportesTic'
 import { DescargasReporte } from './DescargasReporte'
 import { RangoFechas, type Rango } from './RangoFechas'
-import { columnasPorCategoria, columnasPorTecnico } from './reportes.columns'
+import { columnasPorCategoria, columnasPorProblema, columnasPorTecnico } from './reportes.columns'
 
 const numero = (v: number | null | undefined, sufijo = '') =>
   v === null || v === undefined ? '—' : `${v.toLocaleString('es-EC', { maximumFractionDigits: 1 })}${sufijo}`
 
 /**
- * El trabajo de la mesa de ayuda en un rango, por técnico y por categoría.
- * Recibidos son los abiertos en el rango; resueltos, los resueltos en él.
+ * El trabajo de la mesa de ayuda en un rango, por técnico, por categoría y
+ * por problema frecuente. Recibidos son los abiertos en el rango; resueltos,
+ * los resueltos en él.
  */
 export function ReporteTicketsPanel() {
   const [rango, setRango] = useState<Rango>(() => ({ desde: `${hoyIso().slice(0, 8)}01`, hasta: hoyIso() }))
@@ -46,6 +47,10 @@ export function ReporteTicketsPanel() {
           </SectionCard>
           <SectionCard title="Por categoría">
             <SgthTable idAccessor="categoria" records={data?.por_categoria ?? []} columns={columnasPorCategoria} />
+          </SectionCard>
+          <SectionCard title="Por problema frecuente"
+            description="Los activos aparecen aunque nadie los haya usado. Si «Otro problema» crece, falta un botón.">
+            <SgthTable idAccessor="problema" records={data?.por_problema ?? []} columns={columnasPorProblema} />
           </SectionCard>
         </Stack>
       </DataState>

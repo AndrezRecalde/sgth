@@ -74,10 +74,12 @@ final class ReportesTicExcel
         $tecnicos = array_map(fn (array $t) => [...$fila($t['tecnico'], $t), $t['en_curso']], $r['por_tecnico']);
         $categorias = array_map(fn (array $c) => $fila($c['categoria'], $c), $r['por_categoria']);
         $categorias[] = $fila('Total', $r['totales']);
+        $problemas = array_map(fn (array $p) => $fila($p['problema'], $p), $r['por_problema']);
 
         return new LibroReporteTic([
             new HojaReporteTic('Por técnico', [...$encabezados('Técnico'), 'En curso hoy'], $tecnicos),
             new HojaReporteTic('Por categoría', $encabezados('Categoría'), $categorias),
+            new HojaReporteTic('Por problema', $encabezados('Problema'), $problemas),
         ]);
     }
 

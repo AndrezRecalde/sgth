@@ -92,6 +92,11 @@ export const columnasPorCategoria: DataTableColumn<CifrasTickets & { categoria: 
   ...cifras<CifrasTickets & { categoria: string }>(),
 ]
 
+export const columnasPorProblema: DataTableColumn<CifrasTickets & { problema: string }>[] = [
+  { accessor: 'problema', title: 'Problema' },
+  ...cifras<CifrasTickets & { problema: string }>(),
+]
+
 type Comentario = ReporteSatisfaccion['comentarios'][number]
 
 export const columnasComentarios: DataTableColumn<Comentario>[] = [

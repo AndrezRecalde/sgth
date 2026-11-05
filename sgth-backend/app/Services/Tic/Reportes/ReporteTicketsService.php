@@ -4,6 +4,7 @@ namespace App\Services\Tic\Reportes;
 
 use App\Enums\EstadoTicket;
 use App\Models\Helpdesk\CategoriaTicket;
+use App\Models\Helpdesk\ProblemaFrecuente;
 use App\Models\Helpdesk\TecnicoDtic;
 use App\Models\Helpdesk\Ticket;
 use App\Models\User;
@@ -11,16 +12,16 @@ use App\Services\Helpdesk\Tickets\MetricasTickets;
 use Carbon\CarbonInterface;
 
 /**
- * La mesa de ayuda en un rango, por técnico y por categoría (fase 4.2):
- * cuántos tickets recibió cada uno, cuántos resolvió, cuántos dentro del
- * plazo, cuánto tardó y cómo lo calificaron. Las cifras salen de
- * `MetricasTickets`, las mismas del tablero.
+ * La mesa de ayuda en un rango, por técnico, por categoría (fase 4.2) y por
+ * problema frecuente (2026-11-05): cuántos tickets recibió cada uno, cuántos
+ * resolvió, cuántos dentro del plazo, cuánto tardó y cómo lo calificaron. Las
+ * cifras salen de `MetricasTickets`, las mismas del tablero.
  */
 final class ReporteTicketsService
 {
     public function __construct(private readonly MetricasTickets $metricas) {}
 
-    /** @return array{desde: string, hasta: string, totales: array<string, mixed>, por_tecnico: list<array<string, mixed>>, por_categoria: list<array<string, mixed>>} */
+    /** @return array{desde: string, hasta: string, totales: array<string, mixed>, por_tecnico: list<array<string, mixed>>, por_categoria: list<array<string, mixed>>, por_problema: list<array<string, mixed>>} */
     public function generar(CarbonInterface $desde, CarbonInterface $hasta): array
     {
         $enRango = fn () => Ticket::where(fn ($q) => $q->whereBetween('created_at', [$desde, $hasta])->orWhereBetween('resuelto_en', [$desde, $hasta]));
@@ -43,12 +44,23 @@ final class ReporteTicketsService
             ->map(fn (CategoriaTicket $c) => ['categoria' => $c->nombre, ...$this->cifras(Ticket::where('categoria_id', $c->id), $desde, $hasta)])
             ->values();
 
+        // Para la revisión trimestral de TIC: los usados en el rango y los
+        // activos aunque nadie los haya usado, y al final el formulario libre.
+        // Si «Otro problema» crece, falta un botón.
+        $problemas = ProblemaFrecuente::whereIn('id', $enRango()->whereNotNull('problema_frecuente_id')->select('problema_frecuente_id'))
+            ->orWhere('activo', true)
+            ->orderBy('orden')->orderBy('id')->get(['id', 'nombre'])
+            ->map(fn (ProblemaFrecuente $p) => ['problema' => $p->nombre, ...$this->cifras(Ticket::where('problema_frecuente_id', $p->id), $desde, $hasta)])
+            ->push(['problema' => 'Otro problema (formulario libre)', ...$this->cifras(Ticket::whereNull('problema_frecuente_id'), $desde, $hasta)])
+            ->values();
+
         return [
             'desde'         => $desde->toDateString(),
             'hasta'         => $hasta->toDateString(),
             'totales'       => $this->cifras(Ticket::query(), $desde, $hasta),
             'por_tecnico'   => $tecnicos->all(),
             'por_categoria' => $categorias->all(),
+            'por_problema'  => $problemas->all(),
         ];
     }
 

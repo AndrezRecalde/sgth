@@ -6,6 +6,7 @@
     $secciones = [
         ['Por técnico', 'tecnico', 'Técnico', $reporte['por_tecnico']],
         ['Por categoría', 'categoria', 'Categoría', $reporte['por_categoria']],
+        ['Por problema frecuente', 'problema', 'Problema', $reporte['por_problema']],
     ];
 @endphp
 
