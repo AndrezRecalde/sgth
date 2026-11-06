@@ -210,6 +210,9 @@ test('las vistas de la bandeja y «Mis tickets»', function () {
 
     expect($ids($this->tecnico, 'vista=sin_asignar'))->toBe([$sinAsignar])
         ->and($ids($this->tecnico, 'vista=mios'))->toBe([$mio])
+        // En la bandeja, «En curso» no repite lo sin asignar; en el Portal, el servidor ve todo lo suyo.
+        ->and($ids($this->tecnico, 'vista=en_curso'))->toBe([$mio])
+        ->and($ids($this->usuarioPaola, 'propios=1&vista=en_curso'))->toBe([$sinAsignar])
         ->and($ids($this->usuarioPaola, 'propios=1'))->toBe([$sinAsignar])
         ->and($ids($this->jefe, 'search=2026-00002'))->toBe([$mio]);
 });
@@ -240,6 +243,7 @@ test('el resumen de la bandeja cuenta lo que ve cada uno', function () {
     pasoTicket($this->tecnico, $mio, 'tomar')->assertOk();
 
     expect($this->actingAs($this->tecnico, 'sanctum')->getJson('/api/v1/helpdesk/tickets/resumen')->assertOk()->json('datos'))
-        ->toMatchArray(['sin_asignar' => 1, 'mios' => 1, 'en_curso' => 2, 'vencidos' => 0, 'resueltos' => 0]);
+        // «En curso» cuenta solo lo que ya tiene técnico: el sin asignar no se repite.
+        ->toMatchArray(['sin_asignar' => 1, 'mios' => 1, 'en_curso' => 1, 'vencidos' => 0, 'resueltos' => 0]);
     $this->actingAs($this->usuarioPaola, 'sanctum')->getJson('/api/v1/helpdesk/tickets/resumen')->assertForbidden();
 });
