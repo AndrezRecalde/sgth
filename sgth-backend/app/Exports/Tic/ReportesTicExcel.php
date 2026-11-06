@@ -66,10 +66,10 @@ final class ReportesTicExcel
     public static function tickets(array $r): LibroReporteTic
     {
         $encabezados = fn (string $primero) => [
-            $primero, 'Recibidos', 'Resueltos', 'Dentro del plazo (%)', 'Tiempo de resolución (h hábiles)', 'Reabiertos', 'Satisfacción (1-5)', 'Encuestas',
+            $primero, 'Recibidos', 'Resueltos', 'Dentro del plazo (%)', 'Hasta la asignación (h hábiles)', 'Tiempo de resolución (h hábiles)', 'Reabiertos', 'Satisfacción (1-5)', 'Encuestas',
         ];
         $fila = fn (string $nombre, array $c) => [
-            $nombre, $c['abiertos'], $c['resueltos'], $c['cumplimiento_sla'], $c['horas_resolucion'], $c['reabiertos'], $c['satisfaccion'], $c['encuestas'],
+            $nombre, $c['abiertos'], $c['resueltos'], $c['cumplimiento_sla'], $c['horas_asignacion'], $c['horas_resolucion'], $c['reabiertos'], $c['satisfaccion'], $c['encuestas'],
         ];
         $tecnicos = array_map(fn (array $t) => [...$fila($t['tecnico'], $t), $t['en_curso']], $r['por_tecnico']);
         $categorias = array_map(fn (array $c) => $fila($c['categoria'], $c), $r['por_categoria']);

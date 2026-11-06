@@ -61476,6 +61476,12 @@
                                                                         "null"
                                                                     ]
                                                                 },
+                                                                "horas_asignacion": {
+                                                                    "type": [
+                                                                        "number",
+                                                                        "null"
+                                                                    ]
+                                                                },
                                                                 "satisfaccion": {
                                                                     "type": [
                                                                         "number",
@@ -61492,6 +61498,7 @@
                                                                 "resueltos",
                                                                 "cumplimiento_sla",
                                                                 "horas_resolucion",
+                                                                "horas_asignacion",
                                                                 "satisfaccion",
                                                                 "encuestas"
                                                             ]

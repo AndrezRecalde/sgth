@@ -337,6 +337,11 @@ final class TicketEstadoService implements TicketEstadoServiceInterface
             }
 
             $detalle = $cambio($t);
+            // La primera vez que tiene dueño: asignado, o tomado por quien
+            // reparte. Reasignar no la cambia (2026-11-06).
+            if ($t->tecnico_id && ! $t->asignado_en) {
+                $t->forceFill(['asignado_en' => now()]);
+            }
             // Esperando al usuario, el reloj del SLA se detiene (4.3).
             if ($anterior === EstadoTicket::PENDIENTE_USUARIO && $destino !== EstadoTicket::PENDIENTE_USUARIO) {
                 $this->sla->reanudar($t);

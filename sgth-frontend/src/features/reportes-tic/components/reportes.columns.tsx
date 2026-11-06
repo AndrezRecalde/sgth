@@ -76,6 +76,7 @@ const cifras = <T extends CifrasTickets>(): DataTableColumn<T>[] => [
   { accessor: 'abiertos', title: 'Recibidos', width: 100 },
   { accessor: 'resueltos', title: 'Resueltos', width: 100 },
   { accessor: 'cumplimiento_sla', title: 'En plazo', width: 100, render: (c) => numero(c.cumplimiento_sla, ' %') },
+  { accessor: 'horas_asignacion', title: 'Hasta asignar', width: 120, render: (c) => numero(c.horas_asignacion, ' h') },
   { accessor: 'horas_resolucion', title: 'Tiempo', width: 100, render: (c) => numero(c.horas_resolucion, ' h') },
   { accessor: 'reabiertos', title: 'Reabiertos', width: 100 },
   { accessor: 'satisfaccion', title: 'Satisfacción', width: 120, render: (c) => (c.encuestas ? `${numero(c.satisfaccion)} (${c.encuestas})` : '—') },

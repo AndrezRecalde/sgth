@@ -44238,6 +44238,7 @@ export interface operations {
                                     resueltos: string;
                                     cumplimiento_sla: number | null;
                                     horas_resolucion: number | null;
+                                    horas_asignacion: number | null;
                                     satisfaccion: number | null;
                                     encuestas: number;
                                 };

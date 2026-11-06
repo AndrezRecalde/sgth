@@ -58,6 +58,8 @@ export type CifrasTickets = {
   resueltos: number
   cumplimiento_sla: number | null
   horas_resolucion: number | null
+  /** Horas hábiles desde que se abrió hasta que tuvo técnico (2026-11-06). */
+  horas_asignacion: number | null
   satisfaccion: number | null
   encuestas: number
   reabiertos: number
