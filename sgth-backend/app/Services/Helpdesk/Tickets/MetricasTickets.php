@@ -15,7 +15,9 @@ use Illuminate\Database\Eloquent\Builder;
  * antes devolvían números fijos.
  *
  * El tiempo de resolución va en horas hábiles y sin la espera del usuario,
- * como el SLA: lo que mide es cuánto tardó TIC.
+ * como el SLA: lo que mide es cuánto tardó TIC. El tiempo hasta la asignación
+ * (2026-11-06), también en horas hábiles, es cuánto tardó en tener dueño: con
+ * la mesa de ayuda centralizada, lo que demora el coordinador en repartir.
  */
 final class MetricasTickets
 {
@@ -23,7 +25,7 @@ final class MetricasTickets
 
     /**
      * @param  Builder<Ticket>  $base
-     * @return array{abiertos: int, resueltos: int, cumplimiento_sla: ?int, horas_resolucion: ?float, satisfaccion: ?float, encuestas: int}
+     * @return array{abiertos: int, resueltos: int, cumplimiento_sla: ?int, horas_resolucion: ?float, horas_asignacion: ?float, satisfaccion: ?float, encuestas: int}
      */
     public function delPeriodo(Builder $base, CarbonInterface $desde, CarbonInterface $hasta): array
     {
@@ -34,6 +36,10 @@ final class MetricasTickets
         $enPlazo = $conPlazo->filter(fn (Ticket $t) => $t->resuelto_en->lte($t->fecha_vencimiento_sla))->count();
         $horas = $resueltos->map(fn (Ticket $t) => max(0, $this->calendario->horasEntre($t->created_at, $t->resuelto_en) - $t->minutos_pausados / 60));
 
+        // Los que tuvieron dueño en el período, por primera vez.
+        $asignacion = (clone $base)->whereBetween('asignado_en', [$desde, $hasta])->get(['id', 'created_at', 'asignado_en'])
+            ->map(fn (Ticket $t) => $this->calendario->horasEntre($t->created_at, $t->asignado_en));
+
         $encuestas = EncuestaSatisfaccion::whereIn('ticket_id', (clone $base)->select('tickets.id'))
             ->whereBetween('created_at', [$desde, $hasta]);
         $promedio = (clone $encuestas)->avg('calificacion');
@@ -43,6 +49,7 @@ final class MetricasTickets
             'resueltos'        => $resueltos->count(),
             'cumplimiento_sla' => $conPlazo->isEmpty() ? null : (int) round(100 * $enPlazo / $conPlazo->count()),
             'horas_resolucion' => $horas->isEmpty() ? null : round($horas->avg(), 1),
+            'horas_asignacion' => $asignacion->isEmpty() ? null : round($asignacion->avg(), 1),
             'satisfaccion'     => $promedio === null ? null : round((float) $promedio, 1),
             'encuestas'        => $encuestas->count(),
         ];

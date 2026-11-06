@@ -16,11 +16,12 @@
             <td><div class="cifra">{{ $t['abiertos'] }}</div><div class="rotulo">Recibidos</div></td>
             <td><div class="cifra">{{ $t['resueltos'] }}</div><div class="rotulo">Resueltos</div></td>
             <td><div class="cifra">{{ $valor($t['cumplimiento_sla'], ' %') }}</div><div class="rotulo">Dentro del plazo</div></td>
+            <td><div class="cifra">{{ $valor($t['horas_asignacion'], ' h') }}</div><div class="rotulo">Hasta la asignación</div></td>
             <td><div class="cifra">{{ $valor($t['horas_resolucion'], ' h') }}</div><div class="rotulo">Tiempo de resolución</div></td>
             <td><div class="cifra">{{ $valor($t['satisfaccion'], ' / 5') }}</div><div class="rotulo">Satisfacción</div></td>
         </tr>
     </table>
-    <p class="nota">Recibidos: abiertos en el período. Resueltos: resueltos en el período. Tiempo de resolución: promedio en horas hábiles, sin contar la espera del usuario.</p>
+    <p class="nota">Recibidos: abiertos en el período. Resueltos: resueltos en el período. Hasta la asignación: promedio en horas hábiles desde que se abrió hasta que tuvo técnico. Tiempo de resolución: promedio en horas hábiles, sin contar la espera del usuario.</p>
 
     @foreach($secciones as [$seccion, $campo, $columna, $filas])
         <div class="grupo">{{ $seccion }}</div>
@@ -34,6 +35,7 @@
                         <th class="num">Recibidos</th>
                         <th class="num">Resueltos</th>
                         <th class="num">En plazo</th>
+                        <th class="num">Hasta asignar</th>
                         <th class="num">Tiempo de resolución</th>
                         <th class="num">Reabiertos</th>
                         <th class="num">Satisfacción</th>
@@ -48,6 +50,7 @@
                             <td class="num">{{ $f['abiertos'] }}</td>
                             <td class="num">{{ $f['resueltos'] }}</td>
                             <td class="num">{{ $valor($f['cumplimiento_sla'], ' %') }}</td>
+                            <td class="num">{{ $valor($f['horas_asignacion'], ' h') }}</td>
                             <td class="num">{{ $valor($f['horas_resolucion'], ' h') }}</td>
                             <td class="num">{{ $f['reabiertos'] }}</td>
                             <td class="num">{{ $valor($f['satisfaccion']) }}</td>

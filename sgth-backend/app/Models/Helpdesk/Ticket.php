@@ -33,7 +33,7 @@ class Ticket extends Model
 
     protected $fillable = [
         'codigo_ticket', 'solicitante_id', 'tipo_ticket', 'categoria_id', 'problema_frecuente_id', 'sla_id', 'estado', 'prioridad', 'canal',
-        'asunto', 'descripcion', 'bien_informatico_id', 'motivo_sin_equipo', 'tecnico_id', 'unidad_tic_id', 'nivel', 'registrado_por',
+        'asunto', 'descripcion', 'bien_informatico_id', 'motivo_sin_equipo', 'tecnico_id', 'asignado_en', 'unidad_tic_id', 'nivel', 'registrado_por',
         'solucion', 'resuelto_en', 'resuelto_por', 'reabierto_veces',
         'anulado_en', 'anulado_por', 'motivo_anulacion', 'fecha_vencimiento_sla', 'fecha_cierre',
         'sla_respuesta_horas', 'sla_resolucion_horas', 'vence_respuesta_en', 'primera_respuesta_en',
@@ -49,6 +49,7 @@ class Ticket extends Model
             'nivel'                 => 'integer',
             'reabierto_veces'       => 'integer',
             'resuelto_en'           => 'datetime',
+            'asignado_en'           => 'datetime',
             'anulado_en'            => 'datetime',
             'fecha_vencimiento_sla' => 'datetime',
             'fecha_cierre'          => 'datetime',

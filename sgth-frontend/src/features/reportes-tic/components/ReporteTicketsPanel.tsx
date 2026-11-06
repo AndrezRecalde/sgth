@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { SimpleGrid, Stack } from '@mantine/core'
-import { IconCircleCheck, IconClockHour4, IconInbox, IconLifebuoy, IconStar } from '@tabler/icons-react'
+import { IconCircleCheck, IconClockHour4, IconInbox, IconLifebuoy, IconStar, IconUserShare } from '@tabler/icons-react'
 import { DataState, SectionCard, SgthTable, StatCard, Toolbar } from '@/components/ui'
 import { hoyIso } from '@/lib/fecha'
 import { useReporteTic } from '../hooks/useReportesTic'
@@ -29,10 +29,13 @@ export function ReporteTicketsPanel() {
         <RangoFechas rango={rango} onChange={setRango} />
       </Toolbar>
 
-      <SimpleGrid cols={{ base: 2, md: 4 }}>
+      <SimpleGrid cols={{ base: 2, md: 5 }}>
         <StatCard label="Recibidos" value={t?.abiertos ?? 0} icon={IconInbox} loading={isLoading} />
         <StatCard label="Resueltos" value={t?.resueltos ?? 0} icon={IconCircleCheck} loading={isLoading}
           hint={t?.cumplimiento_sla !== null && t ? `${t.cumplimiento_sla} % dentro del plazo` : undefined} />
+        {/* Lo que tarda en tener técnico consume el plazo del técnico (2026-11-06). */}
+        <StatCard label="Hasta la asignación" value={numero(t?.horas_asignacion, ' h')} icon={IconUserShare} loading={isLoading}
+          hint="Promedio en horas hábiles" />
         <StatCard label="Tiempo de resolución" value={numero(t?.horas_resolucion, ' h')} icon={IconClockHour4} loading={isLoading}
           hint="Promedio en horas hábiles" />
         <StatCard label="Satisfacción" value={t?.satisfaccion ? `${numero(t.satisfaccion)} / 5` : '—'} icon={IconStar} loading={isLoading}
