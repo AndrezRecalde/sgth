@@ -104,7 +104,7 @@ test('quienes ya entraban siguen entrando', function () {
 });
 
 test('sin los permisos de sso el prefijo responde 403', function () {
-    foreach (['servidor', 'director', 'admin-ti', 'medico', 'tecnico-dtic'] as $rol) {
+    foreach (['servidor', 'jefe-unidad', 'admin-ti', 'medico', 'tecnico-dtic'] as $rol) {
         $this->actingAs(($this->conRol)($rol), 'sanctum')
             ->getJson('/api/v1/sso/riesgos')
             ->assertForbidden();
@@ -144,7 +144,7 @@ test('el tecnico de sso no abre el consolidado de asistencia', function () {
 });
 
 test('sin los permisos de sso el ausentismo responde 403', function () {
-    foreach (['servidor', 'director', 'admin-ti'] as $rol) {
+    foreach (['servidor', 'jefe-unidad', 'admin-ti'] as $rol) {
         $this->actingAs(($this->conRol)($rol), 'sanctum')
             ->getJson('/api/v1/sso/ausentismo?' . http_build_query($this->periodo))
             ->assertForbidden();
@@ -179,7 +179,7 @@ test('el tecnico de sso busca puestos sin ver la estructura', function () {
 });
 
 test('talento humano y el auditor siguen buscando puestos', function () {
-    foreach (['admin-uath', 'asistente-uath', 'auditor', 'director'] as $rol) {
+    foreach (['admin-uath', 'asistente-uath', 'auditor', 'jefe-unidad'] as $rol) {
         $this->actingAs(($this->conRol)($rol), 'sanctum')
             ->getJson('/api/v1/estructura/puestos/buscar?search=Inspector')
             ->assertOk()

@@ -2538,7 +2538,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 [EncuestaClimaController::class, 'responder']);
             Route::get('encuestas/{encuesta}/resultados',
                 [EncuestaClimaController::class, 'resultados'])
-                ->middleware('role:admin-uath|director');
+                ->middleware('role:admin-uath');
         });
 
     // Comunicación Social: las fotografías de los servidores
@@ -2646,26 +2646,26 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         ->group(function () {
             Route::get('dashboard',
                 [DashboardController::class, 'kpis'])
-                ->middleware('role:admin-uath|auditor|director');
+                ->middleware('role:admin-uath|auditor');
 
             // Reportes Ad Hoc y Configuración
             Route::get('configuraciones',
                 [ReporteController::class, 'indexConfiguraciones'])
-                ->middleware('role:admin-uath|auditor|director');
+                ->middleware('role:admin-uath|auditor');
             Route::post('configuraciones',
                 [ReporteController::class, 'storeConfiguracion'])
-                ->middleware('role:admin-uath|auditor|director');
+                ->middleware('role:admin-uath|auditor');
             Route::post('ad-hoc',
                 [ReporteController::class, 'generarAdHoc'])
-                ->middleware('role:admin-uath|auditor|director');
+                ->middleware('role:admin-uath|auditor');
 
             // Reportes Asíncronos (Background)
             Route::post('background',
                 [ReporteController::class, 'solicitarFondo'])
-                ->middleware('role:admin-uath|auditor|director');
+                ->middleware('role:admin-uath|auditor');
             Route::get('background/{job_id}',
                 [ReporteController::class, 'estadoFondo'])
-                ->middleware('role:admin-uath|auditor|director');
+                ->middleware('role:admin-uath|auditor');
         });
 
 });

@@ -408,16 +408,9 @@ class RolPermisoSeeder extends Seeder
         // usuarios ni subsistema donde entrar. Su lectura la conservan
         // admin-uath, asistente-uath y el auditor.
 
-        // DIRECTOR
-        $this->crearRol(Rol::DIRECTOR, array_merge($permisosBase, [
-            Permiso::VER_ESTRUCTURA,
-            Permiso::VER_ASISTENCIA_UNIDAD,
-            Permiso::VER_VACACIONES_UNIDAD,
-            Permiso::VER_DASHBOARD_EJECUTIVO,
-            Permiso::GENERAR_REPORTES,
-        ]));
-
-        // JEFE_UNIDAD
+        // JEFE_UNIDAD: también el director de área. `director` se fundió aquí
+        // el 2026-11-06: veía lo mismo, y lo que tenía de más no lo usaba
+        // ninguna pantalla.
         $this->crearRol(Rol::JEFE_UNIDAD, array_merge($permisosBase, [
             Permiso::VER_ESTRUCTURA,
             Permiso::VER_ASISTENCIA_UNIDAD,

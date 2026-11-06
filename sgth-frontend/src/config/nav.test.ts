@@ -80,9 +80,9 @@ describe('buildNav', () => {
 
   it('no le da al rol lo que el backend le quitó', () => {
     // admin-ti es solo técnico desde el PR 3, y el Consolidado le respondía
-    // 403 al director.
+    // 403 al jefe de unidad.
     expect(pantallas('sgth', 'admin-ti')).not.toContain(ROUTES.SGTH.ESTRUCTURA)
-    expect(pantallas('sgth', 'director')).not.toContain(ROUTES.SGTH.ASISTENCIA_CONSOLIDADO)
+    expect(pantallas('sgth', 'jefe-unidad')).not.toContain(ROUTES.SGTH.ASISTENCIA_CONSOLIDADO)
     expect(pantallas('sgth', 'trabajo-social')).toEqual([
       ROUTES.SGTH.ASISTENCIA_PERMISOS,
       ROUTES.SGTH.ASISTENCIA_LICENCIAS,
@@ -255,7 +255,6 @@ describe('getSubsistemasDisponibles', () => {
     'auxiliar-farmacia':     ['salud', 'portal'],
     'comunicacion-social':   ['comunicacion', 'portal'],
     'coordinador-mesa-ayuda': ['tic', 'portal'],
-    'director':              ['sgth', 'portal'],
     'enfermera':             ['salud', 'portal'],
     'financiero':            ['portal'],
     'jefe-tic':              ['tic', 'portal'],
@@ -351,7 +350,7 @@ describe('puedeAbrirPantalla', () => {
   it('no abre la que el menú no le ofrece', () => {
     expect(puedeAbrirPantalla('salud', ROUTES.SALUD.CONSULTAS, ...sesion('enfermera'))).toBe(false)
     expect(puedeAbrirPantalla('sgth', ROUTES.SGTH.ESTRUCTURA, ...sesion('recepcion'))).toBe(false)
-    expect(puedeAbrirPantalla('sgth', ROUTES.SGTH.ASISTENCIA_CONSOLIDADO, ...sesion('director'))).toBe(false)
+    expect(puedeAbrirPantalla('sgth', ROUTES.SGTH.ASISTENCIA_CONSOLIDADO, ...sesion('jefe-unidad'))).toBe(false)
     expect(puedeAbrirPantalla('portal', ROUTES.PORTAL.MARCACION_ONLINE, ...sesion('servidor'))).toBe(false)
   })
 

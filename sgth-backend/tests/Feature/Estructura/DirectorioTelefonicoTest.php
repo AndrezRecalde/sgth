@@ -99,4 +99,4 @@ it('al resto le responde 403, también a Talento Humano', function (string $rol)
     $this->deleteJson("/api/v1/estructura/extensiones/{$this->activa->id}")->assertForbidden();
 
     expect($this->activa->fresh()->numero_extension)->toBe('1201');
-})->with(['admin-uath', 'asistente-uath', 'servidor', 'director', 'auditor', 'comunicacion-social']);
+})->with(['admin-uath', 'asistente-uath', 'servidor', 'jefe-unidad', 'auditor', 'comunicacion-social']);

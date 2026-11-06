@@ -193,9 +193,9 @@ test('validacion_acumulacion_losep_falla_si_supera_60_dias', function () {
         ]);
     }
 
-    // Assign role to bypass middleware
-    \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'director', 'guard_name' => 'sanctum']);
-    $this->userJefe->assignRole('director');
+    // El tablero de reportería va por rol: admin-uath o auditor.
+    \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'auditor', 'guard_name' => 'sanctum']);
+    $this->userJefe->assignRole('auditor');
 
     // Simularemos que hacemos una solicitud de dashboard KPI
     // Como el user especificó verificar en el KPI vacaciones_proximas_vencer:

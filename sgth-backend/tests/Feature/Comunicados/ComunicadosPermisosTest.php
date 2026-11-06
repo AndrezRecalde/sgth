@@ -109,7 +109,7 @@ test('un servidor no entra a la gestión', function (string $rol) {
     $this->actingAs($usuario, 'sanctum')->getJson('/api/v1/comunicados')->assertForbidden();
     $this->actingAs($usuario, 'sanctum')->getJson("/api/v1/comunicados/{$comunicado->id}")->assertForbidden();
     $this->actingAs($usuario, 'sanctum')->postJson('/api/v1/comunicados', datosDeComunicado())->assertForbidden();
-})->with(['servidor', 'jefe-unidad', 'director', 'comunicacion-social']);
+})->with(['servidor', 'jefe-unidad', 'comunicacion-social']);
 
 test('la migración da los permisos a los roles que ya existen, y publicar no va al asistente', function () {
     foreach (['admin-ti', 'admin-uath', 'asistente-uath', 'auditor'] as $rol) {

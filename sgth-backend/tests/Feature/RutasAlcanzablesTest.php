@@ -33,7 +33,7 @@ beforeEach(function () {
         'activo' => true,
     ]);
 
-    foreach (['admin-uath', 'asistente-uath', 'jefe-unidad', 'director'] as $rol) {
+    foreach (['admin-uath', 'asistente-uath', 'jefe-unidad'] as $rol) {
         $this->usuario->assignRole(Role::firstOrCreate(
             ['name' => $rol, 'guard_name' => 'sanctum']
         ));
