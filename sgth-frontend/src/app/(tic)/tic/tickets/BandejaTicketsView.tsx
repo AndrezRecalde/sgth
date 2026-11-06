@@ -25,9 +25,10 @@ const PESTANAS: { value: VistaBandejaTickets; label: string; tono?: 'warning' | 
 ]
 
 /**
- * La bandeja de la mesa de ayuda: lo que nadie tiene, lo propio, todo lo que
- * sigue en curso, lo vencido y lo resuelto que espera al usuario. El técnico
- * ve su cola y lo sin asignar; el jefe, todo.
+ * La bandeja de la mesa de ayuda: lo que nadie tiene, lo propio, lo que ya
+ * tiene técnico y sigue en curso (sin repetir lo sin asignar, 2026-11-06), lo
+ * vencido y lo resuelto que espera al usuario. El técnico ve su cola y lo sin
+ * asignar; el jefe, todo.
  */
 export function BandejaTicketsView() {
   const router = useRouter()

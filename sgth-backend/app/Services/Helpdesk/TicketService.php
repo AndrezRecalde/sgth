@@ -54,7 +54,11 @@ final class TicketService implements TicketServiceInterface
             ->when(! empty($filtros['propios']), fn (Builder $q) => $q->where('solicitante_id', $user->servidor_id ?? 0))
             ->when($vista === 'sin_asignar', fn (Builder $q) => $q->whereNull('tecnico_id')->whereIn('estado', EstadoTicket::enCurso()))
             ->when($vista === 'mios', fn (Builder $q) => $q->where('tecnico_id', $user->id)->whereIn('estado', EstadoTicket::enCurso()))
-            ->when($vista === 'en_curso', fn (Builder $q) => $q->whereIn('estado', EstadoTicket::enCurso()))
+            // En la bandeja, «En curso» es lo que ya tiene técnico: lo que nadie
+            // tiene está en «Sin asignar» y las pestañas no se repiten
+            // (2026-11-06). En «Mis tickets» del Portal, todo lo suyo sin resolver.
+            ->when($vista === 'en_curso', fn (Builder $q) => $q->whereIn('estado', EstadoTicket::enCurso())
+                ->when(empty($filtros['propios']), fn (Builder $c) => $c->whereNotNull('tecnico_id')))
             ->when($vista === 'vencidos', fn (Builder $q) => $q->vencidos())
             ->when($vista === 'resueltos', fn (Builder $q) => $q->where('estado', EstadoTicket::RESUELTO))
             ->when($vista === 'cerrados', fn (Builder $q) => $q->whereIn('estado', [EstadoTicket::CERRADO, EstadoTicket::ANULADO]))
@@ -88,7 +92,7 @@ final class TicketService implements TicketServiceInterface
         return [
             'sin_asignar' => $base()->whereNull('tecnico_id')->whereIn('estado', EstadoTicket::enCurso())->count(),
             'mios'        => $base()->where('tecnico_id', $user->id)->whereIn('estado', EstadoTicket::enCurso())->count(),
-            'en_curso'    => $base()->whereIn('estado', EstadoTicket::enCurso())->count(),
+            'en_curso'    => $base()->whereNotNull('tecnico_id')->whereIn('estado', EstadoTicket::enCurso())->count(),
             'vencidos'    => $base()->vencidos()->count(),
             'resueltos'   => $base()->where('estado', EstadoTicket::RESUELTO)->count(),
         ];
