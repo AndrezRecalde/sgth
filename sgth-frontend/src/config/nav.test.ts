@@ -254,6 +254,7 @@ describe('getSubsistemasDisponibles', () => {
     'auditor':               ['sgth', 'tic', 'comunicacion', 'portal'],
     'auxiliar-farmacia':     ['salud', 'portal'],
     'comunicacion-social':   ['comunicacion', 'portal'],
+    'coordinador-mesa-ayuda': ['tic', 'portal'],
     'director':              ['sgth', 'portal'],
     'enfermera':             ['salud', 'portal'],
     'financiero':            ['portal'],

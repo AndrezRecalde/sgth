@@ -110,14 +110,16 @@ test('el ticket se valida y el equipo tiene que ser suyo', function () {
 });
 
 test('TIC registra un ticket a nombre de quien llamó, con su prioridad', function () {
-    $datos = abrirTicket($this->tecnico, ['servidor_id' => $this->diego->id, 'prioridad' => 'alta'])->assertCreated()->json('datos');
+    $datos = abrirTicket($this->jefe, ['servidor_id' => $this->diego->id, 'prioridad' => 'alta'])->assertCreated()->json('datos');
 
     expect($datos['canal'])->toBe('tic')
         ->and($datos['prioridad'])->toBe('alta')
         ->and($datos['solicitante_id'])->toBe($this->diego->id);
 
-    // Un servidor no abre tickets a nombre de otro.
+    // Ni un servidor ni el técnico abren tickets a nombre de otro: es del
+    // coordinador y del jefe (mesa de ayuda centralizada, 2026-11-06).
     abrirTicket($this->usuarioPaola, ['servidor_id' => $this->diego->id])->assertForbidden();
+    abrirTicket($this->tecnico, ['servidor_id' => $this->diego->id])->assertForbidden();
 });
 
 test('el trámite completo deja su historial y la calificación', function () {
@@ -150,6 +152,7 @@ test('el trámite completo deja su historial y la calificación', function () {
 
 test('las transiciones que no existen se rechazan', function () {
     $id = abrirTicket($this->usuarioPaola)->json('datos.id');
+    asignarTicketA($id, $this->tecnico);
 
     pasoTicket($this->tecnico, $id, 'resolver', ['solucion' => 'Sin haberlo tomado nunca.'])->assertStatus(422);
     pasoTicket($this->usuarioPaola, $id, 'confirmar')->assertStatus(422);
@@ -161,6 +164,7 @@ test('las transiciones que no existen se rechazan', function () {
 
 test('reabrir lo devuelve al técnico; escalar sube el nivel', function () {
     $id = abrirTicket($this->usuarioPaola)->json('datos.id');
+    asignarTicketA($id, $this->tecnico);
     pasoTicket($this->tecnico, $id, 'tomar')->assertOk();
     pasoTicket($this->tecnico, $id, 'resolver', ['solucion' => 'Se reinició el punto de acceso.'])->assertOk();
 
@@ -178,6 +182,7 @@ test('el solicitante anula el suyo mientras nadie lo atiende; el jefe, en cualqu
     pasoTicket($this->usuarioPaola, $propio, 'anular', ['motivo' => 'Ya se arregló solo.'])->assertOk()->assertJsonPath('datos.estado', 'anulado');
 
     $otro = abrirTicket($this->usuarioPaola, ['asunto' => 'Impresora atascada'])->json('datos.id');
+    asignarTicketA($otro, $this->tecnico);
     pasoTicket($this->tecnico, $otro, 'tomar')->assertOk();
     pasoTicket($this->usuarioPaola, $otro, 'anular', ['motivo' => 'Ya no lo necesito.'])->assertStatus(422);
     pasoTicket($this->jefe, $otro, 'anular', ['motivo' => 'Duplicado del TIC-2026-00001.'])->assertOk();
@@ -189,7 +194,8 @@ test('al resolver uno de hardware con equipo queda el mantenimiento en la ficha'
         'tipo_bien_id' => TipoBien::create(['nombre' => 'Computador'])->id, 'marca_id' => Marca::create(['nombre' => 'DELL'])->id,
         'estado_operativo' => 'en_uso', 'condicion_fisica' => 'bueno',
     ]);
-    $id = abrirTicket($this->tecnico, ['servidor_id' => $this->paola->id, 'categoria_id' => $this->hardware->id, 'bien_informatico_id' => $equipo->id])->json('datos.id');
+    $id = abrirTicket($this->jefe, ['servidor_id' => $this->paola->id, 'categoria_id' => $this->hardware->id, 'bien_informatico_id' => $equipo->id])->json('datos.id');
+    asignarTicketA($id, $this->tecnico);
     pasoTicket($this->tecnico, $id, 'tomar')->assertOk();
 
     pasoTicket($this->tecnico, $id, 'resolver', ['solucion' => 'Se cambió la fuente de poder.', 'estado_equipo' => 'en_garantia'])->assertOk();
@@ -204,11 +210,14 @@ test('al resolver uno de hardware con equipo queda el mantenimiento en la ficha'
 test('las vistas de la bandeja y «Mis tickets»', function () {
     $sinAsignar = abrirTicket($this->usuarioPaola)->json('datos.id');
     $mio = abrirTicket($this->usuarioDiego)->json('datos.id');
+    asignarTicketA($mio, $this->tecnico);
     pasoTicket($this->tecnico, $mio, 'tomar')->assertOk();
 
     $ids = fn (User $u, string $q) => collect($this->actingAs($u, 'sanctum')->getJson("/api/v1/helpdesk/tickets?{$q}")->assertOk()->json('datos'))->pluck('id')->all();
 
-    expect($ids($this->tecnico, 'vista=sin_asignar'))->toBe([$sinAsignar])
+    // Lo sin asignar lo ve quien reparte, no el técnico (2026-11-06).
+    expect($ids($this->tecnico, 'vista=sin_asignar'))->toBe([])
+        ->and($ids($this->jefe, 'vista=sin_asignar'))->toBe([$sinAsignar])
         ->and($ids($this->tecnico, 'vista=mios'))->toBe([$mio])
         // En la bandeja, «En curso» no repite lo sin asignar; en el Portal, el servidor ve todo lo suyo.
         ->and($ids($this->tecnico, 'vista=en_curso'))->toBe([$mio])
@@ -219,6 +228,7 @@ test('las vistas de la bandeja y «Mis tickets»', function () {
 
 test('la nota interna y su archivo no los ve el solicitante', function () {
     $id = abrirTicket($this->usuarioPaola)->json('datos.id');
+    asignarTicketA($id, $this->tecnico);
     $nota = $this->actingAs($this->tecnico, 'sanctum')->post("/api/v1/helpdesk/tickets/{$id}/comentarios", [
         'comentario' => 'Revisar el log del switch.', 'es_interno' => '1', 'archivo' => UploadedFile::fake()->create('switch.log', 4, 'text/plain'),
     ], ['Accept' => 'application/json'])->assertCreated()->json('datos');
@@ -240,10 +250,14 @@ test('los catálogos traen las categorías sembradas, las prioridades y los téc
 test('el resumen de la bandeja cuenta lo que ve cada uno', function () {
     abrirTicket($this->usuarioPaola)->assertCreated();
     $mio = abrirTicket($this->usuarioDiego)->json('datos.id');
+    asignarTicketA($mio, $this->tecnico);
     pasoTicket($this->tecnico, $mio, 'tomar')->assertOk();
 
+    // El técnico no ve lo sin asignar; quien reparte, sí. «En curso» cuenta
+    // solo lo que ya tiene técnico: el sin asignar no se repite.
     expect($this->actingAs($this->tecnico, 'sanctum')->getJson('/api/v1/helpdesk/tickets/resumen')->assertOk()->json('datos'))
-        // «En curso» cuenta solo lo que ya tiene técnico: el sin asignar no se repite.
-        ->toMatchArray(['sin_asignar' => 1, 'mios' => 1, 'en_curso' => 1, 'vencidos' => 0, 'resueltos' => 0]);
+        ->toMatchArray(['sin_asignar' => 0, 'mios' => 1, 'en_curso' => 1, 'vencidos' => 0, 'resueltos' => 0])
+        ->and($this->actingAs($this->jefe, 'sanctum')->getJson('/api/v1/helpdesk/tickets/resumen')->json('datos'))
+        ->toMatchArray(['sin_asignar' => 1, 'mios' => 0, 'en_curso' => 1]);
     $this->actingAs($this->usuarioPaola, 'sanctum')->getJson('/api/v1/helpdesk/tickets/resumen')->assertForbidden();
 });

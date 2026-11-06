@@ -61,6 +61,7 @@ function ticketTomado(string $problema): int
     $id = test()->actingAs(test()->usuarioPaola, 'sanctum')->postJson('/api/v1/helpdesk/tickets', [
         'problema_frecuente_id' => ProblemaFrecuente::where('nombre', $problema)->value('id'),
     ])->assertCreated()->json('datos.id');
+    asignarTicketA($id, test()->tecnico);
     test()->actingAs(test()->tecnico, 'sanctum')->postJson("/api/v1/helpdesk/tickets/{$id}/tomar")->assertOk();
 
     return $id;
@@ -109,6 +110,7 @@ test('si ya tiene equipo, no se pide nada más; y los que no son de hardware, ta
         'categoria_id' => $this->hardware->id, 'asunto' => 'El monitor parpadea', 'descripcion' => 'Desde ayer el monitor se apaga solo.',
     ])->assertCreated()->json('datos.id');
     Ticket::whereKey($conEquipo)->update(['bien_informatico_id' => $this->equipo->id]);
+    asignarTicketA($conEquipo, $this->tecnico);
     $this->actingAs($this->tecnico, 'sanctum')->postJson("/api/v1/helpdesk/tickets/{$conEquipo}/tomar")->assertOk();
     resolverTicket($conEquipo)->assertOk();
 

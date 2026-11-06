@@ -246,6 +246,10 @@ enum Permiso: string
     case VER_TICKETS_TODOS = 'ver-tickets-todos';
     case GESTIONAR_TICKETS = 'gestionar-tickets';
     case ASIGNAR_TICKET = 'asignar-ticket';
+    // Registrar un ticket a nombre de otro servidor, el que llamó o vino al
+    // mostrador. Antes iba con «atender»; con la mesa de ayuda centralizada
+    // (2026-11-06) es del coordinador y del jefe, no del técnico.
+    case REGISTRAR_TICKET_A_NOMBRE = 'registrar-ticket-a-nombre';
     case GESTIONAR_TECNICOS = 'gestionar-tecnicos';
     case CONFIGURAR_SLA = 'configurar-sla';
     // El catálogo de problemas frecuentes de «Pedir ayuda a TIC»: el jefe de

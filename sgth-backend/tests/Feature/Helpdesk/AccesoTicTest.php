@@ -96,10 +96,9 @@ test('el servidor solo ve sus tickets', function () {
     expect(codigosVisiblesTic($this, $this->usuarioAna))->toBe([$this->deAna->id]);
 });
 
-test('el tecnico ve su cola y los sin asignar, no los de otro tecnico', function () {
-    expect(codigosVisiblesTic($this, $this->tecnico))->toBe(collect([
-        $this->deAna->id, $this->deLuisSinAsignar->id, $this->deLuisDelTecnico->id,
-    ])->sort()->values()->all());
+test('el tecnico ve solo lo que le asignaron: lo sin asignar lo reparte el coordinador', function () {
+    // Mesa de ayuda centralizada (2026-11-06): ni los sin asignar ni los de otro.
+    expect(codigosVisiblesTic($this, $this->tecnico))->toBe([$this->deLuisDelTecnico->id]);
 });
 
 test('el jefe de tic ve todos los tickets', function () {
@@ -135,12 +134,12 @@ test('el solicitante abre su ticket sin las notas internas', function () {
 
     expect(collect($comentarios)->pluck('comentario')->all())->toBe(['Respuesta para la usuaria']);
 
-    $deTecnico = $this->actingAs($this->tecnico, 'sanctum')
+    $deQuienAtiende = $this->actingAs($this->jefe, 'sanctum')
         ->getJson("/api/v1/helpdesk/tickets/{$this->deAna->id}/comentarios")
         ->assertOk()
         ->json('datos');
 
-    expect($deTecnico)->toHaveCount(2);
+    expect($deQuienAtiende)->toHaveCount(2);
 });
 
 // ── Atender y asignar ──────────────────────────────────────────────────────
@@ -235,7 +234,7 @@ test('la migracion crea el jefe de tic y deja los roles como el seeder', functio
     // buscador de servidores, 2026-10-26; el directorio telefónico,
     // 2026-10-27; los problemas frecuentes, 2026-11-05) no lo recrea esta: el
     // jefe de TIC lo recibe al correr la suya.
-    $posteriores = ['gestionar-prestamos', 'buscar-servidores', 'gestionar-directorio', 'gestionar-problemas-frecuentes'];
+    $posteriores = ['gestionar-prestamos', 'buscar-servidores', 'gestionar-directorio', 'gestionar-problemas-frecuentes', 'registrar-ticket-a-nombre'];
     foreach ($delSeeder as $rol => $esperados) {
         $tiene = $permisos($rol);
         expect(array_values(array_diff($tiene, $posteriores)))->toBe(array_values(array_diff($esperados, $posteriores)));

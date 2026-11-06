@@ -174,8 +174,10 @@ class Ticket extends Model
 
     /**
      * Los tickets que el usuario puede ver, con la regla de `TicketPolicy::view`:
-     * todos con `ver-tickets-todos`; los de su cola y los sin asignar con
-     * `gestionar-tickets`; y siempre los que abrió él.
+     * todos con `ver-tickets-todos`; los que tiene asignados con
+     * `gestionar-tickets`, y los sin asignar solo si además reparte
+     * (`asignar-ticket`: la mesa de ayuda centralizada, 2026-11-06); y siempre
+     * los que abrió él.
      */
     public function scopeVisiblesPara(Builder $query, User $user): Builder
     {
@@ -190,9 +192,14 @@ class Ticket extends Model
             return $query->whereRaw('1 = 0');
         }
 
-        return $query->where(function (Builder $q) use ($user, $atiende, $propios) {
+        $reparte = $user->can(Permiso::ASIGNAR_TICKET->value);
+
+        return $query->where(function (Builder $q) use ($user, $atiende, $propios, $reparte) {
             if ($atiende) {
-                $q->orWhereNull('tecnico_id')->orWhere('tecnico_id', $user->id);
+                $q->orWhere('tecnico_id', $user->id);
+                if ($reparte) {
+                    $q->orWhereNull('tecnico_id');
+                }
             }
             if ($propios) {
                 $q->orWhere('solicitante_id', $user->servidor_id);

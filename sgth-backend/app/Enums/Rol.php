@@ -43,6 +43,10 @@ enum Rol: string
     // ayuda y aprueba las bajas. No es admin-ti, que es el superadministrador
     // del sistema (docs/diseno-subsistema-tic.md, D5).
     case JEFE_TIC = 'jefe-tic';
+    // Recibe todos los pedidos de ayuda y los reparte entre los técnicos;
+    // resuelve lo simple y se encarga del inventario (decisión de TIC del
+    // 2026-11-06). Lo designa el jefe de TIC y lo asigna admin-ti.
+    case COORDINADOR_MESA_AYUDA = 'coordinador-mesa-ayuda';
     case ADMIN_TI = 'admin-ti';
 
     // Comunicación Social (docs/diseno-comunicacion-social.md, 7.3): el equipo
@@ -95,6 +99,7 @@ enum Rol: string
             self::AUXILIAR_FARMACIA => 'Auxiliar de Farmacia',
             self::TECNICO_DTIC => 'Técnico DTIC',
             self::JEFE_TIC => 'Jefe de TIC',
+            self::COORDINADOR_MESA_AYUDA => 'Coordinador de la mesa de ayuda',
             self::ADMIN_TI => 'Administrador TI',
             self::COMUNICACION_SOCIAL => 'Comunicación Social',
             self::RESPONSABLE_IDENTIDAD => 'Responsable de Identidad Institucional',

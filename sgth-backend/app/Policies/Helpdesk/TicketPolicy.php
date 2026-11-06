@@ -14,10 +14,12 @@ use App\Models\User;
  * y cualquier técnico podía mover el ticket de otro.
  *
  * - El servidor ve los suyos (`ver-ticket-propio`).
- * - El técnico (`gestionar-tickets`) ve y atiende los que tiene asignados y los
- *   que nadie tiene todavía, además de los suyos como solicitante.
- * - El jefe de TIC (`ver-tickets-todos`) ve y atiende todos, y reparte con
- *   `asignar-ticket`.
+ * - El técnico (`gestionar-tickets`) ve y atiende los que tiene asignados,
+ *   además de los suyos como solicitante. Desde la mesa de ayuda centralizada
+ *   (2026-11-06) no toma los que nadie tiene: los reparte el coordinador.
+ * - El jefe de TIC y el coordinador de la mesa de ayuda (`ver-tickets-todos`)
+ *   ven y atienden todos, reparten con `asignar-ticket` y registran a nombre
+ *   de otro con `registrar-ticket-a-nombre`.
  *
  * El alcance del listado sale de `Ticket::scopeVisiblesPara`, con la misma
  * regla. En qué estado se puede hacer cada cosa lo decide el servicio. admin-ti
@@ -52,10 +54,13 @@ class TicketPolicy
         return $user->can(Permiso::CREAR_TICKET->value);
     }
 
-    /** Registrar un ticket a nombre de un servidor que llamó o vino (canal TIC). */
+    /**
+     * Registrar un ticket a nombre de un servidor que llamó o vino (canal TIC):
+     * el coordinador y el jefe, no el técnico (2026-11-06).
+     */
     public function registrarANombre(User $user): bool
     {
-        return $user->can(Permiso::GESTIONAR_TICKETS->value);
+        return $user->can(Permiso::REGISTRAR_TICKET_A_NOMBRE->value);
     }
 
     /** Confirmar la solución, calificar o reabrir: solo quien lo abrió. */
@@ -101,9 +106,14 @@ class TicketPolicy
         return $user->can(Permiso::GESTIONAR_TICKETS->value) && $this->view($user, $ticket);
     }
 
+    /** Lo suyo; lo que nadie tiene, solo para quien reparte. */
     private function esDeSuCola(User $user, Ticket $ticket): bool
     {
-        return $ticket->tecnico_id === null || (int) $ticket->tecnico_id === (int) $user->id;
+        if ($ticket->tecnico_id === null) {
+            return $user->can(Permiso::ASIGNAR_TICKET->value);
+        }
+
+        return (int) $ticket->tecnico_id === (int) $user->id;
     }
 
     private function esSolicitante(User $user, Ticket $ticket): bool
