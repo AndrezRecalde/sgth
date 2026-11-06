@@ -294,9 +294,9 @@ enum Permiso: string
 
     // ── MÓDULO 18: Reportería ────────────────────────────────────
     // Módulo futuro: `reporteria` tiene backend y no pantalla, y sus rutas van
-    // por `role:admin-uath|auditor|director`. Cuando tenga pantalla pasan a
-    // estos permisos. Ojo: `exportar-reportes` lo tiene solo admin-uath, así
-    // que entonces hay que decidir si el director y el auditor exportan (D10).
+    // por `role:admin-uath|auditor`. Cuando tenga pantalla pasan a estos
+    // permisos. Ojo: `exportar-reportes` lo tiene solo admin-uath, así que
+    // entonces hay que decidir si el auditor exporta (D10).
     // `ver-dashboard-ejecutivo` sí se usa: en las encuestas de la mesa de ayuda.
     case VER_DASHBOARD_EJECUTIVO = 'ver-dashboard-ejecutivo';
     case GENERAR_REPORTES = 'generar-reportes';

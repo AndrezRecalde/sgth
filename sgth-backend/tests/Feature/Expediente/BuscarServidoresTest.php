@@ -72,7 +72,7 @@ it('al resto le responde 403', function (string $rol) {
         ->assertForbidden();
 
     $this->getJson("/api/v1/expediente/servidores/buscar/{$this->juan->id}")->assertForbidden();
-})->with(['servidor', 'director', 'jefe-unidad', 'medico', 'financiero', 'recepcion', 'comunicacion-social']);
+})->with(['servidor', 'jefe-unidad', 'medico', 'financiero', 'recepcion', 'comunicacion-social']);
 
 it('a TIC le devuelve lo justo para elegir: sin contacto ni vínculo', function () {
     $respuesta = $this->actingAs(($this->conRol)('tecnico-dtic'), 'sanctum')

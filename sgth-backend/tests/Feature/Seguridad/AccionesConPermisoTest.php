@@ -52,7 +52,7 @@ test('admin-uath crea, edita y elimina partidas', function () {
 test('quien ve la estructura sin gestionar el distributivo no escribe partidas', function () {
     $partida = PartidaPresupuestaria::create(['codigo' => '510106', 'descripcion' => 'Salarios de prueba']);
 
-    foreach (['asistente-uath', 'director', 'jefe-unidad', 'auditor', 'admin-ti'] as $rol) {
+    foreach (['asistente-uath', 'jefe-unidad', 'auditor', 'admin-ti'] as $rol) {
         $this->actingAs(($this->conRol)($rol), 'sanctum');
 
         $this->getJson('/api/v1/estructura/partidas-presupuestarias')->assertOk();
@@ -82,7 +82,7 @@ test('el permiso del distributivo basta, sin el rol', function () {
 test('solo admin-uath registra fichas de servidores', function () {
     expect(($this->conRol)('admin-uath')->can('crear', Servidor::class))->toBeTrue();
 
-    foreach (['asistente-uath', 'director', 'auditor', 'admin-ti', 'servidor'] as $rol) {
+    foreach (['asistente-uath', 'jefe-unidad', 'auditor', 'admin-ti', 'servidor'] as $rol) {
         expect(($this->conRol)($rol)->can('crear', Servidor::class))->toBeFalse("{$rol} no debería registrar fichas");
     }
 });

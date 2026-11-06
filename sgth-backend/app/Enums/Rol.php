@@ -9,8 +9,8 @@ enum Rol: string
     case ASISTENTE_UATH = 'asistente-uath';
 
     // Autoridades. `analista-uath` y `maxima-autoridad` se retiraron el
-    // 2026-10-26 (docs/plan-roles-y-accesos.md, PR 7).
-    case DIRECTOR = 'director';
+    // 2026-10-26 (docs/plan-roles-y-accesos.md, PR 7). `director` se fundió en
+    // `jefe-unidad` el 2026-11-06: los dos veían solo su unidad y el mismo menú.
     case JEFE_UNIDAD = 'jefe-unidad';
 
     // Servidor público
@@ -85,8 +85,7 @@ enum Rol: string
         return match ($this) {
             self::ADMIN_UATH => 'Administrador UATH',
             self::ASISTENTE_UATH => 'Asistente UATH',
-            self::DIRECTOR => 'Director de Área',
-            self::JEFE_UNIDAD => 'Jefe de Unidad',
+            self::JEFE_UNIDAD => 'Jefe de Unidad o Director',
             self::SERVIDOR => 'Servidor Público',
             self::RECEPCION => 'Recepción',
             self::TRABAJO_SOCIAL => 'Trabajo Social',
