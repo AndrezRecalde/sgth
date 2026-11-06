@@ -4,6 +4,7 @@ import { SegmentedControl, Select, Stack, Text, Textarea } from '@mantine/core'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormModal } from '@/components/ui'
+import { useAuth } from '@/hooks/useAuth'
 import { SEMANTIC_COLOR } from '@/config/design.tokens'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { erroresAlFormulario } from '@/lib/erroresAlFormulario'
@@ -15,11 +16,13 @@ import { tecnicosPorSubunidad } from '../utils/tecnicos'
 
 /**
  * Escalar a especialista (nivel 2) o al proveedor (nivel 3, el contrato de
- * vigencia del equipo). Con otro técnico queda asignado a él; sin técnico,
- * vuelve a la cola.
+ * vigencia del equipo). Quien reparte puede pasarlo a otro técnico; el técnico
+ * lo devuelve al coordinador, que decide quién sigue (2026-11-06).
  */
 export function EscalarTicketModal({ ticket, onClose }: { ticket: Ticket; onClose: () => void }) {
   const contained = useContainedInput()
+  const { hasPermiso } = useAuth()
+  const reparte = hasPermiso('asignar-ticket')
   const { escalar } = useTicketTicMutations()
   const { data: catalogos } = useCatalogosHelpdesk()
   const { register, control, handleSubmit, setError, formState: { errors } } = useForm<EscalarFormData>({
@@ -49,11 +52,15 @@ export function EscalarTicketModal({ ticket, onClose }: { ticket: Ticket; onClos
         <Textarea label="Por qué" withAsterisk autosize minRows={2} placeholder="Ej.: Parece falla del switch del piso; requiere a Infraestructura."
           error={errors.motivo?.message} {...contained}
           {...register('motivo')} />
-        <Controller name="tecnico_id" control={control} render={({ field }) => (
-          <Select label="A quién" placeholder="De vuelta a la cola" clearable searchable {...contained} error={errors.tecnico_id?.message}
-            data={tecnicosPorSubunidad(catalogos)}
-            value={field.value ? String(field.value) : null} onChange={(v) => field.onChange(v ? Number(v) : null)} />
-        )} />
+        {reparte ? (
+          <Controller name="tecnico_id" control={control} render={({ field }) => (
+            <Select label="A quién" placeholder="De vuelta a la cola" clearable searchable {...contained} error={errors.tecnico_id?.message}
+              data={tecnicosPorSubunidad(catalogos)}
+              value={field.value ? String(field.value) : null} onChange={(v) => field.onChange(v ? Number(v) : null)} />
+          )} />
+        ) : (
+          <Text size="sm" c="dimmed">El ticket vuelve al coordinador de la mesa de ayuda, que decide quién sigue.</Text>
+        )}
       </Stack>
     </FormModal>
   )

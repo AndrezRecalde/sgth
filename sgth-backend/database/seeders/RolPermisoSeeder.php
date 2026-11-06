@@ -25,11 +25,12 @@ class RolPermisoSeeder extends Seeder
         Permiso::GESTIONAR_DIRECTORIO,
     ];
 
-    /** El jefe de TIC: lo del técnico, más asignar, configurar y dar de baja. */
+    /** El jefe de TIC: lo del técnico, más asignar, registrar, configurar y dar de baja. */
     public const PERMISOS_JEFE_TIC = [
         ...self::PERMISOS_TECNICO_TIC,
         Permiso::VER_TICKETS_TODOS,
         Permiso::ASIGNAR_TICKET,
+        Permiso::REGISTRAR_TICKET_A_NOMBRE,
         Permiso::GESTIONAR_TECNICOS,
         Permiso::CONFIGURAR_SLA,
         Permiso::GESTIONAR_PROBLEMAS_FRECUENTES,
@@ -64,6 +65,25 @@ class RolPermisoSeeder extends Seeder
         Permiso::REDACTAR_COMUNICADOS,
         Permiso::PUBLICAR_COMUNICADOS,
         Permiso::VER_LECTURAS_COMUNICADOS,
+    ];
+
+    /**
+     * El coordinador de la mesa de ayuda (decisión de TIC del 2026-11-06):
+     * recibe todo, reparte, registra a nombre de otros y resuelve lo simple;
+     * se encarga del inventario —propone bajas, no las aprueba—. Préstamos,
+     * el directorio y lo demás, solo con permisos adicionales desde Usuarios.
+     */
+    public const PERMISOS_COORDINADOR_MESA_AYUDA = [
+        Permiso::GESTIONAR_TICKETS,
+        Permiso::VER_TICKETS_TODOS,
+        Permiso::ASIGNAR_TICKET,
+        Permiso::REGISTRAR_TICKET_A_NOMBRE,
+        Permiso::GESTIONAR_PROBLEMAS_FRECUENTES,
+        Permiso::VER_INVENTARIO_TI,
+        Permiso::GESTIONAR_INVENTARIO_TI,
+        Permiso::REGISTRAR_MANTENIMIENTO,
+        // A quién se le registra un ticket.
+        Permiso::BUSCAR_SERVIDORES,
     ];
 
     /**
@@ -443,12 +463,16 @@ class RolPermisoSeeder extends Seeder
         $this->crearRol(Rol::ADMIN_DISPENSARIO, array_merge($permisosBase, self::PERMISOS_ADMIN_DISPENSARIO));
         $this->crearRol(Rol::AUXILIAR_FARMACIA, array_merge($permisosBase, self::PERMISOS_AUXILIAR_FARMACIA));
 
-        // TECNICO_DTIC: atiende su cola y la de nadie, y lleva el inventario.
-        // Asignar tickets y ver los de todos es del jefe (diseño TIC, 4.4).
+        // TECNICO_DTIC: atiende lo que le asignan y lleva el inventario.
+        // Asignar, registrar a nombre de otro y ver los de todos es del jefe
+        // y del coordinador (diseño TIC, 4.4; centralización, 2026-11-06).
         $this->crearRol(Rol::TECNICO_DTIC, array_merge($permisosBase, self::PERMISOS_TECNICO_TIC));
 
         // JEFE_TIC
         $this->crearRol(Rol::JEFE_TIC, array_merge($permisosBase, self::PERMISOS_JEFE_TIC));
+
+        // COORDINADOR_MESA_AYUDA: reparte la mesa de ayuda y lleva el inventario.
+        $this->crearRol(Rol::COORDINADOR_MESA_AYUDA, array_merge($permisosBase, self::PERMISOS_COORDINADOR_MESA_AYUDA));
 
         // COMUNICACION_SOCIAL
         $this->crearRol(Rol::COMUNICACION_SOCIAL, array_merge($permisosBase, self::PERMISOS_COMUNICACION_SOCIAL));

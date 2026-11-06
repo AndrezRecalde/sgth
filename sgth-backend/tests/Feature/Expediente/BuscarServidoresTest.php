@@ -230,8 +230,9 @@ it('el seeder da el permiso a los mismos roles que la migración', function () {
 
     // Los roles que nacieron después ya con el permiso no los toca esta
     // migración: se lo da la suya. El técnico de SSO, en la 2026_11_30 (PR 12);
-    // el de Asistencia, en la 2026_12_14.
-    $posteriores = ['tecnico-sso', 'tecnico-asistencia'];
+    // el de Asistencia, en la 2026_12_14; el coordinador de la mesa de ayuda,
+    // en la 2026_12_19.
+    $posteriores = ['tecnico-sso', 'tecnico-asistencia', 'coordinador-mesa-ayuda'];
 
     $conPermiso = Role::where('guard_name', 'sanctum')
         ->whereHas('permissions', fn ($q) => $q->where('name', 'buscar-servidores'))

@@ -34,7 +34,9 @@ export function AccionesTicketTic({ ticket: t }: { ticket: Ticket }) {
   const enCurso = ['abierto', 'asignado', 'en_proceso', 'pendiente_usuario'].includes(t.estado)
   const cerrar = () => setAccion(null)
 
-  const puedeTomar = atiende && ['abierto', 'asignado'].includes(t.estado) && (!t.tecnico_id || esMio || reparte)
+  // El técnico toma solo lo que le asignaron; lo que nadie tiene lo reparte el
+  // coordinador, que también puede tomarlo para resolverlo él (2026-11-06).
+  const puedeTomar = atiende && ['abierto', 'asignado'].includes(t.estado) && (esMio || reparte)
   const trabajando = atiende && ['en_proceso', 'pendiente_usuario'].includes(t.estado) && (esMio || reparte)
 
   const secundarias = [
@@ -43,7 +45,7 @@ export function AccionesTicketTic({ ticket: t }: { ticket: Ticket }) {
     { key: 'escalar', label: 'Escalar', icon: IconArrowUpRight, visible: atiende && ['asignado', 'en_proceso'].includes(t.estado) && t.nivel < 3 && (esMio || reparte) },
     { key: 'equipo', label: t.bien ? 'Cambiar el equipo' : 'Vincular un equipo', icon: IconDevices, visible: atiende && enCurso },
     // Quien lo atiende corrige un ticket mal clasificado (2026-11-05).
-    { key: 'categoria', label: 'Cambiar la categoría', icon: IconCategory, visible: atiende && enCurso && (esMio || reparte || !t.tecnico_id) },
+    { key: 'categoria', label: 'Cambiar la categoría', icon: IconCategory, visible: atiende && enCurso && (esMio || reparte) },
     { key: 'anular', label: 'Anular', icon: IconBan, visible: reparte && enCurso },
   ].filter((a) => a.visible)
 

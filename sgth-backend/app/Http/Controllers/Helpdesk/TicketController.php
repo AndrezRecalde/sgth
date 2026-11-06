@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Helpdesk;
 use App\Contracts\Helpdesk\TicketEstadoServiceInterface;
 use App\Contracts\Helpdesk\TicketServiceInterface;
 use App\Enums\EstadoBien;
+use App\Enums\Permiso;
 use App\Enums\PrioridadTicket;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Helpdesk\CrearTicketRequest;
@@ -14,6 +15,7 @@ use App\Models\Helpdesk\Ticket;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Los tickets de la mesa de ayuda (fase 3.1). El alcance lo pone
@@ -138,6 +140,14 @@ final class TicketController extends Controller
             'motivo'     => ['required', 'string', 'min:5', 'max:1000'],
             'tecnico_id' => ['nullable', 'integer'],
         ], [], ['tecnico_id' => 'técnico']);
+
+        // Quien no reparte escala de vuelta al coordinador, que decide quién
+        // sigue (mesa de ayuda centralizada, 2026-11-06).
+        if (! empty($datos['tecnico_id']) && ! $request->user()->can(Permiso::ASIGNAR_TICKET->value)) {
+            throw ValidationException::withMessages([
+                'tecnico_id' => 'El ticket vuelve al coordinador de la mesa de ayuda: él decide quién sigue.',
+            ]);
+        }
 
         return $this->respuesta($request, $this->estados->escalar($ticket, (int) $datos['nivel'], $datos['motivo'], $datos['tecnico_id'] ?? null), 'Ticket escalado.');
     }

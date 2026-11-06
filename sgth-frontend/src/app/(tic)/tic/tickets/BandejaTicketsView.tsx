@@ -27,16 +27,19 @@ const PESTANAS: { value: VistaBandejaTickets; label: string; tono?: 'warning' | 
 /**
  * La bandeja de la mesa de ayuda: lo que nadie tiene, lo propio, lo que ya
  * tiene técnico y sigue en curso (sin repetir lo sin asignar, 2026-11-06), lo
- * vencido y lo resuelto que espera al usuario. El técnico ve su cola y lo sin
- * asignar; el jefe, todo.
+ * vencido y lo resuelto que espera al usuario. Con la mesa de ayuda
+ * centralizada (2026-11-06) el técnico ve solo lo que le asignaron: «Sin
+ * asignar» y «Registrar ticket» son de quien reparte, el coordinador y el jefe.
  */
 export function BandejaTicketsView() {
   const router = useRouter()
   const compacto = useContainedInput('sm')
   const { hasPermiso } = useAuth()
+  const reparte = hasPermiso('asignar-ticket')
+  const pestanas = PESTANAS.filter((p) => reparte || p.value !== 'sin_asignar')
   const { data: catalogos } = useCatalogosHelpdesk()
   const { data: resumen } = useResumenTickets()
-  const [vista, setVista] = useState<VistaBandejaTickets>('sin_asignar')
+  const [vista, setVista] = useState<VistaBandejaTickets>(reparte ? 'sin_asignar' : 'mios')
   const [filtros, setFiltros] = useState<Omit<FiltrosTickets, 'vista' | 'search'>>({})
   const [busqueda, setBusqueda] = useState('')
   const [search] = useDebouncedValue(busqueda.trim(), 300)
@@ -53,13 +56,13 @@ export function BandejaTicketsView() {
       <PageHeader
         title="Mesa de ayuda"
         description="Los pedidos de ayuda de los servidores: repartir, atender y resolver dentro del SLA"
-        actions={hasPermiso('gestionar-tickets') ? (
+        actions={hasPermiso('registrar-ticket-a-nombre') ? (
           <Button variant="light" leftSection={<IconPlus size={16} />} onClick={() => setRegistrar(true)}>Registrar ticket</Button>
         ) : undefined}
       />
-      <Tabs value={vista} onChange={(v) => { setVista(PESTANAS.find((p) => p.value === v)?.value ?? 'sin_asignar'); setPage(1) }}>
+      <Tabs value={vista} onChange={(v) => { setVista(pestanas.find((p) => p.value === v)?.value ?? pestanas[0].value); setPage(1) }}>
         <Tabs.List>
-          {PESTANAS.map((p) => (
+          {pestanas.map((p) => (
             <Tabs.Tab key={p.value} value={p.value}
               rightSection={contador(p.value) > 0 ? <CountBadge tone={p.tono ?? 'neutral'} destacado={p.tono !== undefined}>{contador(p.value)}</CountBadge> : undefined}>
               {p.label}

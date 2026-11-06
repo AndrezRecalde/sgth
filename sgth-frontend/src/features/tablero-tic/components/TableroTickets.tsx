@@ -25,7 +25,10 @@ export function TableroTickets({ datos }: { datos: Datos }) {
   return (
     <Stack gap="md">
       <SimpleGrid cols={{ base: 1, xs: 2, lg: 4 }} spacing="md">
-        <StatCard label="Sin asignar" value={datos.sin_asignar} icon={IconInbox} hint="Esperan que alguien los tome" />
+        {/* Lo sin asignar lo reparte quien ve toda la mesa (2026-11-06): al técnico no le llega. */}
+        {datos.alcance === 'todos' && (
+          <StatCard label="Sin asignar" value={datos.sin_asignar} icon={IconInbox} hint="Esperan que se los reparta" />
+        )}
         <StatCard label="En su cola" value={datos.mios} icon={IconUserCheck} hint="Asignados a usted, en curso" />
         <StatCard label="Por vencer" value={datos.por_vencer} icon={IconAlarm} tone={datos.por_vencer ? 'warning' : undefined}
           hint="Queda la cuarta parte del plazo" />
@@ -59,7 +62,7 @@ export function TableroTickets({ datos }: { datos: Datos }) {
           )}
         </SectionCard>
 
-        <SectionCard title="En curso por estado" description={datos.alcance === 'todos' ? 'Toda la mesa de ayuda.' : 'Los suyos y los sin asignar.'}>
+        <SectionCard title="En curso por estado" description={datos.alcance === 'todos' ? 'Toda la mesa de ayuda.' : 'Los que tiene asignados.'}>
           <Reparto filas={estados} vacio="No hay tickets en curso." />
         </SectionCard>
 

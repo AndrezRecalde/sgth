@@ -72,7 +72,10 @@ beforeEach(function () {
         'sla_id'         => $this->sla->id,
         'solicitante_id' => $this->servidor->id,
         'tipo_ticket'    => 'incidente',
-        'estado'         => EstadoTicket::ABIERTO->value,
+        // Asignado al técnico: desde la mesa de ayuda centralizada
+        // (2026-11-06) el técnico no ve lo que nadie tiene.
+        'estado'         => EstadoTicket::ASIGNADO->value,
+        'tecnico_id'     => $this->tecnico->id,
         'asunto'         => 'No hay internet',
         'descripcion'    => 'Desconectado desde la mañana',
     ]);

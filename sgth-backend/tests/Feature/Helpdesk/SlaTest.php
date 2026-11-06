@@ -100,6 +100,7 @@ test('cambiar la prioridad al asignar recalcula el plazo', function () {
 
 test('esperando al usuario el reloj se detiene y el vencimiento se corre', function () {
     $t = ticketConSla();
+    asignarTicketA($t->id, $this->tecnico);
     pasoSla($this->tecnico, $t, 'tomar')->assertOk();
     expect($t->fresh()->primera_respuesta_en)->not->toBeNull();
 
@@ -121,6 +122,7 @@ test('el seguimiento alerta una vez, escala el vencido y deja tranquilo al que e
     $t = ticketConSla(['asunto' => 'Sin internet en el piso 3']);
     pasoSla($this->jefe, $t, 'asignar', ['tecnico_id' => $this->tecnico->id])->assertOk();
     $enEspera = ticketConSla(['asunto' => 'Correo no sincroniza']);
+    asignarTicketA($enEspera->id, $this->tecnico);
     pasoSla($this->tecnico, $enEspera, 'tomar')->assertOk();
     pasoSla($this->tecnico, $enEspera, 'pedir-informacion', ['pregunta' => '¿Desde qué equipo?'])->assertOk();
 
@@ -150,6 +152,7 @@ test('el seguimiento alerta una vez, escala el vencido y deja tranquilo al que e
 
 test('el resuelto sin respuesta se cierra solo a los 3 días hábiles', function () {
     $t = ticketConSla();
+    asignarTicketA($t->id, $this->tecnico);
     pasoSla($this->tecnico, $t, 'tomar')->assertOk();
     pasoSla($this->tecnico, $t, 'resolver', ['solucion' => 'Se cambió el cable de red del puesto.'])->assertOk();
     expect($t->fresh()->estadoSla())->toBe('cumplido');
@@ -168,6 +171,7 @@ test('el resuelto sin respuesta se cierra solo a los 3 días hábiles', function
 
 test('reabrir corre un plazo nuevo desde ese momento', function () {
     $t = ticketConSla();
+    asignarTicketA($t->id, $this->tecnico);
     pasoSla($this->tecnico, $t, 'tomar')->assertOk();
     pasoSla($this->tecnico, $t, 'resolver', ['solucion' => 'Se reinició el punto de acceso del piso.'])->assertOk();
 

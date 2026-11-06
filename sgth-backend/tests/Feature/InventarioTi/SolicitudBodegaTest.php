@@ -37,6 +37,9 @@ beforeEach(function () {
 
     $this->tecnico = User::factory()->create(['primer_login' => false, 'activo' => true]);
     $this->tecnico->assignRole('tecnico-dtic');
+    // Registra a nombre de otro y reparte (mesa de ayuda centralizada, 2026-11-06).
+    $this->coordinador = User::factory()->create(['primer_login' => false, 'activo' => true]);
+    $this->coordinador->assignRole('coordinador-mesa-ayuda');
     $this->auditor = User::factory()->create(['primer_login' => false]);
     $this->auditor->assignRole('auditor');
 
@@ -119,13 +122,18 @@ function despacharSolicitud(int $id, array $cantidades, string $fecha = '2026-10
     ]);
 }
 
+/** El coordinador lo registra a nombre de Ana y se lo asigna al técnico, que sigue en sesión. */
 function ticketDeConsumibles(array $datos = []): int
 {
-    return test()->post('/api/v1/helpdesk/tickets', array_merge([
+    $id = test()->actingAs(test()->coordinador, 'sanctum')->post('/api/v1/helpdesk/tickets', array_merge([
         'servidor_id' => test()->ana->id, 'categoria_id' => CategoriaTicket::where('es_consumibles', true)->sole()->id,
         'bien_informatico_id' => test()->impresora->id,
         'asunto' => 'Tóner para la impresora', 'descripcion' => 'Pidió por teléfono el tóner de la impresora de su unidad.',
     ], $datos), ['Accept' => 'application/json'])->assertCreated()->json('datos.id');
+    asignarTicketA($id, test()->tecnico);
+    test()->actingAs(test()->tecnico, 'sanctum');
+
+    return $id;
 }
 
 test('se genera sin ticket con número por año y los jefes del organigrama sellados', function () {

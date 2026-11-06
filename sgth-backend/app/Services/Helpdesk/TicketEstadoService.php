@@ -78,8 +78,12 @@ final class TicketEstadoService implements TicketEstadoServiceInterface
     public function tomar(Ticket $ticket, User $tecnico): Ticket
     {
         return $this->pasar($ticket, EstadoTicket::EN_PROCESO, function (Ticket $t) use ($tecnico) {
-            if ($t->tecnico_id && (int) $t->tecnico_id !== (int) $tecnico->id && ! $tecnico->can(Permiso::ASIGNAR_TICKET->value)) {
-                throw new ReglaNegocioException('Este ticket lo tiene otro técnico.');
+            // Lo que nadie tiene lo reparte el coordinador (2026-11-06): el
+            // técnico toma solo lo que le asignaron.
+            if (! $tecnico->can(Permiso::ASIGNAR_TICKET->value) && (int) $t->tecnico_id !== (int) $tecnico->id) {
+                throw new ReglaNegocioException($t->tecnico_id
+                    ? 'Este ticket lo tiene otro técnico.'
+                    : 'Este ticket todavía no está asignado: lo reparte el coordinador de la mesa de ayuda.');
             }
             $t->forceFill(['tecnico_id' => $tecnico->id]);
             $this->sla->marcarRespuesta($t);
