@@ -11,6 +11,7 @@ import type { PuestoConRelaciones } from '@/types/api'
 import { usePuestos } from '../hooks/usePuestos'
 import { usePuestoMutations } from '../hooks/usePuestoMutations'
 import { useTodasUnidades } from '../hooks/useUnidades'
+import { TIPOS_PUESTO, type TipoPuesto } from '../constants/clasificacionPuesto'
 import { getPuestoColumns } from './puesto.columns'
 import { PuestoModal } from './PuestoModal'
 import { PuestoPerfilDrawer } from './PuestoPerfilDrawer'
@@ -40,6 +41,7 @@ export function PuestosTab() {
   const [pagina, setPagina] = useState(1)
   const [unidadId, setUnidadId] = useState<string | null>(null)
   const [estado, setEstado] = useState<string | null>(null)
+  const [tipo, setTipo] = useState<TipoPuesto | null>(null)
   const [enEdicion, setEnEdicion] = useState<PuestoConRelaciones | null>(null)
   const [modalAbierto, modal] = useDisclosure(false)
   const [enPerfil, setEnPerfil] = useState<PuestoConRelaciones | null>(null)
@@ -54,8 +56,10 @@ export function PuestosTab() {
     per_page: POR_PAGINA,
     unidad_administrativa_id: unidadId ? Number(unidadId) : undefined,
     activo: estado ? estado === 'activos' : undefined,
+    tipo: tipo ?? undefined,
   })
   const puestos = data?.data ?? []
+  const hayFiltro = Boolean(unidadId || estado || tipo)
   const opcionesUnidad = unidades.map((u) => ({ value: String(u.id), label: u.nombre ?? `Unidad ${u.id}` }))
 
   // Volver a la primera página al filtrar: si no, se pedía esa misma página
@@ -101,6 +105,16 @@ export function PuestosTab() {
           value={estado}
           onChange={(v) => filtrar(() => setEstado(v))}
         />
+        <Select
+          label="Tipo"
+          placeholder="Todos"
+          data={TIPOS_PUESTO}
+          clearable
+          {...filtro}
+          style={{ minWidth: 160 }}
+          value={tipo}
+          onChange={(v) => filtrar(() => setTipo(TIPOS_PUESTO.find((t) => t.value === v)?.value ?? null))}
+        />
       </Toolbar>
 
       <DataState
@@ -110,10 +124,10 @@ export function PuestosTab() {
         emptyProps={{
           icon: IconCubePlus,
           title: 'Sin puestos',
-          description: unidadId || estado
+          description: hayFiltro
             ? 'Ningún puesto coincide con el filtro. Quite el filtro para ver los demás.'
             : 'Aún no hay puestos en la plantilla institucional. Cree el primero con «Nuevo puesto».',
-          action: !unidadId && !estado ? nuevoPuesto || undefined : undefined,
+          action: !hayFiltro ? nuevoPuesto || undefined : undefined,
         }}
         page={pagina}
       >

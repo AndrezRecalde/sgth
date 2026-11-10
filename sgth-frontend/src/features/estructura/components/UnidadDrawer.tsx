@@ -103,6 +103,7 @@ export function UnidadDrawer({ opened, onClose, unidad, isLoading }: Props) {
                           />
                           <Text size="sm">{p.cargo?.nombre ?? '-'}</Text>
                           {p.es_jefe && <StatusBadge size="xs">Jefe</StatusBadge>}
+                          {p.tipo === 'contrato' && <StatusBadge size="xs">De contrato</StatusBadge>}
                         </Group>
                         <Group gap="xs">
                           {p.regimen_laboral && (

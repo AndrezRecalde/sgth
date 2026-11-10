@@ -478,6 +478,8 @@ export type PuestoParams = {
   unidad_administrativa_id?: number
   /** Sin él, activos e inactivos: el puesto con historia se desactiva en vez de borrarse. */
   activo?: boolean
+  /** De plantilla o de contrato (P9). Sin él, los dos. */
+  tipo?: 'plantilla' | 'contrato'
 }
 
 export type ExtensionTelefonicaParams = {
@@ -1300,7 +1302,13 @@ export type PuestoConRelaciones = {
   unidad_administrativa_id?: number
   grupo_ocupacional_id?: number | null
   partida_presupuestaria_id?: number | null
-  plazas?: number
+  /** De plantilla o de contrato (P9): el de contrato no tiene plazas ni es jefatura. */
+  tipo?: 'plantilla' | 'contrato'
+  tipo_label?: string
+  /** Nulas en un puesto de contrato. */
+  plazas?: number | null
+  /** Las que llenan sus contratos vigentes y la reserva de un ascendido en prueba. */
+  plazas_ocupadas?: number
   rol_puesto?:
     | 'dignatario' | 'ejecucion_coordinacion' | 'ejecucion_procesos'
     | 'ejecucion_procesos_apoyo' | 'administrativo' | 'codigo_trabajo' | null
@@ -1335,6 +1343,13 @@ export type PuestoConRelaciones = {
     id: number
     nombre?: string | null
     cedula?: string | null
+    tipo_nombramiento?: string
+    /** «Servicios profesionales», «Nombramiento permanente»… */
+    modalidad?: string | null
+    /** No la llenan el ocasional, el profesional, la autoridad electa ni el reemplazo. */
+    ocupa_plaza?: boolean
+    /** Cubre la ausencia del titular, en su mismo puesto (D13). */
+    es_reemplazo?: boolean
   }[]
   /**
    * Ocupado —un contrato vigente, la reserva de un ascendido o una acción que

@@ -132,15 +132,17 @@ class Puesto extends Model
                 or exists (select 1 from subrogaciones s where s.puesto_subrogado_id = puestos.id)
             ) as con_historia
             SQL)
-            // Las plazas ocupadas, con el mismo criterio que
-            // `ContratoServidor::scopeQueOcupanPlaza()`: la pantalla las muestra
-            // como «2 de 5», y una consulta por fila serían quince más (P9).
+            // Las plazas llenas, con el criterio de la Plantilla
+            // (`TipoNombramiento::llenaLaPlaza()`): la pantalla las muestra como
+            // «2 de 5», y una consulta por fila serían quince más (P9). Con
+            // tope en las plazas, porque el día del relevo coinciden la
+            // autoridad saliente y la entrante.
             ->selectRaw(
-                '(select count(*) from contratos_servidor c'
+                'least(puestos.plazas, (select count(*) from contratos_servidor c'
                     .' where c.deleted_at is null and c.estado = ? and c.cubre_movimiento_id is null'
-                    .' and c.tipo_nombramiento not in ('.implode(', ', array_fill(0, count(TipoNombramiento::valoresSinPlaza()), '?')).')'
-                    .' and (c.puesto_id = puestos.id or c.puesto_reservado_id = puestos.id)) as plazas_ocupadas',
-                ['vigente', ...TipoNombramiento::valoresSinPlaza()],
+                    .' and c.tipo_nombramiento not in ('.implode(', ', array_fill(0, count(TipoNombramiento::valoresQueNoLlenanLaPlaza()), '?')).')'
+                    .' and (c.puesto_id = puestos.id or c.puesto_reservado_id = puestos.id))) as plazas_ocupadas',
+                ['vigente', ...TipoNombramiento::valoresQueNoLlenanLaPlaza()],
             );
     }
 
@@ -181,6 +183,23 @@ class Puesto extends Model
         // el mismo criterio que usa la validación de vacante al contratar. El
         // ascendido en prueba la sigue ocupando aquí: se le reserva (fase 3.3).
         return \App\Models\Expediente\ContratoServidor::queOcupanPlazaDe($this->id)->count();
+    }
+
+    /**
+     * Las plazas llenas, como las cuenta la Plantilla: también la de la
+     * autoridad electa, con tope en las plazas. Es lo que muestra el listado
+     * (`conOcupacion()`); la validación de vacante sigue con `plazasOcupadas()`.
+     */
+    public function plazasLlenas(): int
+    {
+        $llenas = \App\Models\Expediente\ContratoServidor::query()
+            ->where('estado', 'vigente')
+            ->whereNull('cubre_movimiento_id')
+            ->whereNotIn('tipo_nombramiento', TipoNombramiento::valoresQueNoLlenanLaPlaza())
+            ->where(fn (Builder $q) => $q->where('puesto_id', $this->id)->orWhere('puesto_reservado_id', $this->id))
+            ->count();
+
+        return $this->plazas === null ? $llenas : min($llenas, (int) $this->plazas);
     }
 
     /** El de contrato no tiene plazas, así que tampoco tiene disponibles. */
