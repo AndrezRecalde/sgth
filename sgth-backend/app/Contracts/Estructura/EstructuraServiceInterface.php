@@ -34,8 +34,11 @@ interface EstructuraServiceInterface
     // Puestos
     public function listarPuestos(array $filtros): LengthAwarePaginator;
 
-    /** El buscador de los formularios: cargo y unidad, sin nada del listado de TH. */
-    public function buscarPuestos(string $termino, int $limite): Collection;
+    /**
+     * El buscador de los formularios: cargo y unidad, sin nada del listado de
+     * TH. Con `$tipo`, solo los de ese tipo (P9).
+     */
+    public function buscarPuestos(string $termino, int $limite, ?\App\Enums\TipoPuesto $tipo = null): Collection;
 
     /** El que ya está elegido, para que el formulario enseñe su nombre. */
     public function puestoParaBuscador(int $id): Puesto;

@@ -3,6 +3,9 @@
 import { useState } from 'react'
 import { useDebouncedValue } from '@mantine/hooks'
 import type { PuestoConRelaciones } from '@/types/api'
+import {
+  SOLO_PUESTOS_DE_CONTRATO, avisoDelTipoDePuesto, tipoDePuestoPara,
+} from '../constants/clasificacionPuesto'
 import { usePuestos } from './usePuestos'
 
 /**
@@ -20,6 +23,13 @@ const RETARDO_BUSQUEDA_MS = 300
 interface Opciones {
   /** Puesto elegido hoy en el formulario, para no perderlo de vista. */
   seleccionadoId?: number | string | null
+  /**
+   * La modalidad del vínculo: se ofrecen solo los puestos del tipo que admite
+   * (P9). Sin ella, todos.
+   */
+  modalidad?: string | null
+  /** Cubre la ausencia de un servidor: entra al puesto del titular, de cualquier tipo [TH D13]. */
+  esReemplazo?: boolean
 }
 
 /**
@@ -40,7 +50,7 @@ interface Opciones {
  */
 export function usePuestosDeUnidad(
   unidadId?: number | string | null,
-  { seleccionadoId }: Opciones = {},
+  { seleccionadoId, modalidad, esReemplazo = false }: Opciones = {},
 ) {
   const [texto, setTexto] = useState('')
   const [termino] = useDebouncedValue(texto, RETARDO_BUSQUEDA_MS)
@@ -87,11 +97,23 @@ export function usePuestosDeUnidad(
     ? undefined
     : [...enPagina, ...encontrados].find((p) => p.id === Number(seleccionadoId))
 
-  const puestos = seleccionado && !recibidos.some((p) => p.id === seleccionado.id)
-    ? [seleccionado, ...recibidos]
-    : recibidos
+  /*
+  | Solo los del tipo que admite la modalidad (P9). Se filtra aquí y no en el
+  | servidor: el listado ya trae el tipo, cambiar de modalidad no pide nada, y
+  | el elegido sigue encontrándose aunque no sea del tipo. Ese se queda a la
+  | vista con su aviso, en vez de leerse «57».
+  */
+  const admitido = tipoDePuestoPara(modalidad, esReemplazo)
+  const delTipo = recibidos.filter((p) => !admitido || (p.tipo ?? 'plantilla') === admitido)
+
+  const puestos = seleccionado && !delTipo.some((p) => p.id === seleccionado.id)
+    ? [seleccionado, ...delTipo]
+    : delTipo
 
   const truncados = total > recibidos.length
+  const descripcionRecorte = truncados
+    ? `Se muestran ${recibidos.length} de ${total} puestos. Escriba para buscar entre todos.`
+    : undefined
 
   return {
     puestos,
@@ -99,9 +121,11 @@ export function usePuestosDeUnidad(
     truncados,
     buscando: isFetching,
     /** Texto del aviso de recorte, o undefined si no hay nada que avisar. */
-    descripcionRecorte: truncados
-      ? `Se muestran ${recibidos.length} de ${total} puestos. Escriba para buscar entre todos.`
-      : undefined,
+    descripcionRecorte,
+    /** La descripción del campo: el recorte, o que solo se ven los de contrato. */
+    descripcion: descripcionRecorte ?? (admitido === 'contrato' ? SOLO_PUESTOS_DE_CONTRATO : undefined),
+    /** Si el puesto elegido no es del tipo que admite la modalidad, por qué. */
+    avisoDelTipo: avisoDelTipoDePuesto(seleccionado?.tipo, admitido),
     searchValue: texto,
     onSearchChange: setTexto,
   }

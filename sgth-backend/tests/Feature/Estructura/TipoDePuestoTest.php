@@ -166,6 +166,23 @@ test('el concurso formal va sobre un puesto de plantilla, y el express según su
     $convocatoria($this->contrato, $express(TipoNombramiento::SERVICIOS_OCASIONALES))->assertCreated();
 });
 
+test('el buscador de los formularios filtra por tipo y dice el de cada puesto', function () {
+    // Los dos se llaman «Consultor…» o son de la misma unidad: la búsqueda
+    // por texto los encuentra a ambos.
+    $buscar = fn (string $tipo = '') => collect($this->getJson(
+        '/api/v1/estructura/puestos/buscar?search=Tipo de Puesto'.($tipo ? "&tipo={$tipo}" : ''),
+    )->assertOk()->json('datos'));
+
+    expect($buscar()->pluck('id')->sort()->values()->all())
+        ->toBe(collect([$this->plantilla->id, $this->contrato->id])->sort()->values()->all());
+    expect($buscar('contrato')->pluck('id')->all())->toBe([$this->contrato->id])
+        ->and($buscar('contrato')->first()['tipo'])->toBe('contrato');
+    expect($buscar('plantilla')->pluck('id')->all())->toBe([$this->plantilla->id]);
+
+    $this->getJson('/api/v1/estructura/puestos/buscar?search=Tipo&tipo=otro')
+        ->assertStatus(422)->assertJsonStructure(['errores' => ['tipo']]);
+});
+
 test('el listado filtra por tipo y dice las plazas ocupadas y la modalidad de cada ocupante', function () {
     ($this->vinculo)($this->plantilla, TipoNombramiento::PERMANENTE);
     ($this->vinculo)($this->contrato, TipoNombramiento::SERVICIOS_PROFESIONALES);

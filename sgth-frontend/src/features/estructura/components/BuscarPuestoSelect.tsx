@@ -10,6 +10,7 @@ import { useDebouncedValue } from '@mantine/hooks'
 import { useContainedInput, type ContainedSize } from '@/hooks/useContainedInput'
 import api from '@/lib/axios'
 import { StatusBadge } from '@/components/ui'
+import { avisoDelTipoDePuesto, type TipoPuesto } from '../constants/clasificacionPuesto'
 
 // Cada tecla pedía una lista: escribir «Analista» disparaba siete peticiones y
 // solo importaba la última. Contra el servidor de desarrollo, que atiende de
@@ -19,6 +20,7 @@ const RETARDO_BUSQUEDA_MS = 300
 /** Lo que da el buscador de puestos: sin RMU, partida ni ocupante. */
 interface Puesto {
   id:    number
+  tipo?: TipoPuesto
   cargo?: { nombre: string } | null
   unidad_administrativa?: { nombre: string } | null
   regimen_laboral?: string | null
@@ -33,10 +35,15 @@ interface Props {
   description?: string
   /** `sm` para la variante compacta de una barra de filtros (regla 06). */
   size?:       ContainedSize
+  /**
+   * Solo los de ese tipo (P9): el concurso formal va sobre uno de plantilla, y
+   * un contenedor de ocasionales, sobre uno de contrato. Sin él, todos.
+   */
+  tipo?:       TipoPuesto | null
 }
 
 export function BuscarPuestoSelect({
-  label, value, onChange, required, error, description, size = 'md',
+  label, value, onChange, required, error, description, size = 'md', tipo = null,
 }: Props) {
   const contained  = useContainedInput(size)
   const combobox   = useCombobox()
@@ -89,10 +96,10 @@ export function BuscarPuestoSelect({
   | `all: false` se va con ello: tampoco lo leía nadie.
   */
   const { data: puestos = [], isFetching } = useQuery({
-    queryKey: ['estructura', 'puestos', 'buscar', termino],
+    queryKey: ['estructura', 'puestos', 'buscar', termino, tipo],
     queryFn: async () => {
       const res = await api.get('/estructura/puestos/buscar', {
-        params: { search: termino, per_page: 10 },
+        params: { search: termino, per_page: 10, tipo: tipo ?? undefined },
       })
       const datos = res.data?.datos
       return (Array.isArray(datos) ? datos : []) as Puesto[]
@@ -126,7 +133,8 @@ export function BuscarPuestoSelect({
         <InputBase
           label={label}
           required={required}
-          error={error}
+          // El elegido se sigue viendo aunque no sea del tipo: el campo dice por qué no sirve.
+          error={error ?? avisoDelTipoDePuesto(puestoSel?.tipo, tipo)}
           description={description}
           placeholder="Buscar por cargo o unidad..."
           rightSection={buscando

@@ -13,6 +13,7 @@ import { BuscarPuestoSelect } from '@/features/estructura/components/BuscarPuest
 import { useInscribirPostulante } from '../hooks/useConvocatoria'
 import { CAMPOS_INSCRIPCION, esquemaInscripcion, type InscripcionFormData } from '../schemas/postulante.schema'
 import { DatosPostulanteCampos } from './inscripcion/DatosPostulanteCampos'
+import { tipoDePuestoPara } from '@/features/estructura/constants/clasificacionPuesto'
 
 interface Props {
   opened:         boolean
@@ -24,6 +25,12 @@ interface Props {
    * el puesto lo fija la convocatoria y enviarlo es un error de validación.
    */
   requierePuesto?: boolean
+  /**
+   * La modalidad prevista del contenedor: el puesto que trae el aspirante es
+   * del tipo que ella admite (P9). Sin modalidad, de plantilla, como pide el
+   * backend (`PuestoAdmiteModalidad`).
+   */
+  modalidad?: string | null
 }
 
 // Sin género a propósito: es obligatorio y nadie debe elegirlo por el usuario.
@@ -34,7 +41,7 @@ const vacio = (): DefaultValues<InscripcionFormData> => ({
 })
 
 /** Inscribir a un candidato en una convocatoria formal o en un contenedor express. */
-export function InscribirPostulanteModal({ opened, onClose, convocatoriaId, requierePuesto = false }: Props) {
+export function InscribirPostulanteModal({ opened, onClose, convocatoriaId, requierePuesto = false, modalidad }: Props) {
   const contained = useContainedInput()
   const inscribir = useInscribirPostulante(convocatoriaId)
 
@@ -71,6 +78,7 @@ export function InscribirPostulanteModal({ opened, onClose, convocatoriaId, requ
               <Grid.Col span={{ base: 12, md: 8 }}>
                 <Controller name="puesto_id" control={control} render={({ field }) => (
                   <BuscarPuestoSelect label="Puesto" required value={field.value}
+                    tipo={tipoDePuestoPara(modalidad) ?? 'plantilla'}
                     onChange={(id) => field.onChange(id)} error={errors.puesto_id?.message} />
                 )} />
               </Grid.Col>

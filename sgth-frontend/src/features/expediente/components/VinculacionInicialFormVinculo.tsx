@@ -32,8 +32,10 @@ export function VinculacionInicialFormVinculo() {
   const unidades = (unidadesRaw ?? []) as UnidadConRelaciones[]
 
   const {
-    puestos, descripcionRecorte, searchValue, onSearchChange,
-  } = usePuestosDeUnidad(unidadId, { seleccionadoId: puestoId })
+    puestos, descripcion, avisoDelTipo, searchValue, onSearchChange,
+    // Solo los puestos que admite la modalidad (P9): la carga inicial no
+    // registra reemplazos.
+  } = usePuestosDeUnidad(unidadId, { seleccionadoId: puestoId, modalidad: nombramiento })
 
   const puestoSel = puestos.find((p) => p.id === Number(puestoId))
   const rmuPuesto = puestoSel?.rmu ? Number(puestoSel.rmu) : null
@@ -102,7 +104,7 @@ export function VinculacionInicialFormVinculo() {
           render={({ field }) => (
             <Select
               label="Puesto"
-              description={descripcionRecorte}
+              description={descripcion}
               placeholder={unidadId ? 'Seleccionar' : 'Elija primero la unidad'}
               data={puestos.map((p) => ({ value: String(p.id), label: p.cargo?.nombre ?? `Puesto ${p.id}` }))}
               searchable
@@ -115,7 +117,7 @@ export function VinculacionInicialFormVinculo() {
                 const sel = puestos.find((p) => String(p.id) === v)
                 if (sel?.rmu) setValue('vinculo.remuneracion', Number(sel.rmu))
               }}
-              error={errVinculo?.puesto_id?.message}
+              error={errVinculo?.puesto_id?.message ?? avisoDelTipo}
               {...contained}
             />
           )}
