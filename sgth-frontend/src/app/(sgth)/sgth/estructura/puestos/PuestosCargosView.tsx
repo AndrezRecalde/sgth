@@ -1,12 +1,15 @@
 'use client'
 
 import { Tabs } from '@mantine/core'
-import { IconBriefcase, IconId, IconScale, IconStars } from '@tabler/icons-react'
-import { PageHeader, PageShell } from '@/components/ui'
+import { IconBriefcase, IconClipboardCheck, IconId, IconScale, IconStars } from '@tabler/icons-react'
+import { CountBadge, PageHeader, PageShell } from '@/components/ui'
+import { useAuth } from '@/hooks/useAuth'
 import { PuestosTab } from '@/features/estructura/components/PuestosTab'
 import { CargosTab } from '@/features/estructura/components/CargosTab'
 import { GruposOcupacionalesTab } from '@/features/estructura/components/GruposOcupacionalesTab'
 import { CompetenciasTab } from '@/features/estructura/components/CompetenciasTab'
+import { RegularizacionTipoTab } from '@/features/estructura/components/RegularizacionTipoTab'
+import { usePorRevisarTipo } from '@/features/estructura/hooks/useRegularizacionTipo'
 
 /**
  * Las tablas del catálogo de puestos, juntas y con pestañas.
@@ -18,6 +21,13 @@ import { CompetenciasTab } from '@/features/estructura/components/CompetenciasTa
  * porque de él sale el perfil de cada puesto.
  */
 export function PuestosCargosView() {
+  // «Por revisar» es de quien gestiona puestos (P9, PR 4). El contador dice si
+  // queda algo, sin tener que abrir la pestaña para saberlo.
+  const { hasPermiso } = useAuth()
+  const puedeRevisar = hasPermiso('gestionar-puestos')
+  const { data: porRevisar } = usePorRevisarTipo(puedeRevisar)
+  const pendientes = (porRevisar?.puestos.length ?? 0) + (porRevisar?.contratos.length ?? 0)
+
   return (
     <PageShell>
       <PageHeader
@@ -39,6 +49,15 @@ export function PuestosCargosView() {
           <Tabs.Tab value="competencias" leftSection={<IconStars size={16} />}>
             Competencias
           </Tabs.Tab>
+          {puedeRevisar && (
+            <Tabs.Tab
+              value="por-revisar"
+              leftSection={<IconClipboardCheck size={16} />}
+              rightSection={pendientes > 0 ? <CountBadge tone="warning" destacado>{pendientes}</CountBadge> : undefined}
+            >
+              Por revisar
+            </Tabs.Tab>
+          )}
         </Tabs.List>
 
         <Tabs.Panel value="puestos">
@@ -56,6 +75,12 @@ export function PuestosCargosView() {
         <Tabs.Panel value="competencias">
           <CompetenciasTab />
         </Tabs.Panel>
+
+        {puedeRevisar && (
+          <Tabs.Panel value="por-revisar">
+            <RegularizacionTipoTab />
+          </Tabs.Panel>
+        )}
       </Tabs>
     </PageShell>
   )

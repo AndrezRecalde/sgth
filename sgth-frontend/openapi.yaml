@@ -53573,6 +53573,202 @@
                 }
             }
         },
+        "/v1/estructura/tipo-de-puesto/por-revisar": {
+            "get": {
+                "operationId": "estructura.tipo-de-puesto.por-revisar",
+                "summary": "Los puestos que parecen de contrato y los contratos en un puesto de plantilla",
+                "tags": [
+                    "RegularizacionTipoDePuesto"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Lo que queda por revisar del tipo de puesto."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "puestos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/PuestoPorRegularizarResource"
+                                                    }
+                                                },
+                                                "contratos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/ContratoPorRegularizarResource"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "puestos",
+                                                "contratos"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/estructura/tipo-de-puesto/puestos/{puestoId}/pasar-a-contrato": {
+            "post": {
+                "operationId": "estructura.tipo-de-puesto.pasar-a-contrato",
+                "tags": [
+                    "RegularizacionTipoDePuesto"
+                ],
+                "parameters": [
+                    {
+                        "name": "puestoId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "El puesto pas\u00f3 a ser de contrato."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/PuestoResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/estructura/tipo-de-puesto/contratos/{contratoId}/reubicar": {
+            "post": {
+                "operationId": "estructura.tipo-de-puesto.reubicar",
+                "tags": [
+                    "RegularizacionTipoDePuesto"
+                ],
+                "parameters": [
+                    {
+                        "name": "contratoId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ReubicarContratoRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "El contrato qued\u00f3 en el puesto de contrato."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "puesto_id": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "puesto_id"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/v1/reporteria/configuraciones": {
             "get": {
                 "operationId": "reporte.indexConfiguraciones",
@@ -73353,6 +73549,83 @@
                 ],
                 "title": "ContratoColectivo"
             },
+            "ContratoPorRegularizarResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "servidor_id": {
+                        "type": "integer"
+                    },
+                    "servidor": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "tipo_nombramiento": {
+                        "$ref": "#/components/schemas/TipoNombramiento"
+                    },
+                    "modalidad": {
+                        "type": "string"
+                    },
+                    "puesto": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "cargo": {
+                                "type": "string"
+                            },
+                            "unidad": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "cargo",
+                            "unidad"
+                        ]
+                    },
+                    "destinos": {
+                        "type": "array",
+                        "description": "Los de su misma unidad, con su r\u00e9gimen y, si es ocasional, su\ngrupo ocupacional. Vac\u00edo: hay que crear el puesto de contrato.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "integer"
+                                },
+                                "cargo": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "cargo"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "servidor_id",
+                    "servidor",
+                    "tipo_nombramiento",
+                    "modalidad",
+                    "puesto",
+                    "destinos"
+                ],
+                "title": "ContratoPorRegularizarResource"
+            },
             "ContratoServidor": {
                 "type": "object",
                 "properties": {
@@ -83273,6 +83546,62 @@
                 ],
                 "title": "PuestoEppResource"
             },
+            "PuestoPorRegularizarResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "cargo": {
+                        "type": "string"
+                    },
+                    "unidad": {
+                        "type": "string"
+                    },
+                    "regimen_laboral": {
+                        "type": "string"
+                    },
+                    "plazas": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "Las que hoy cuenta la Plantilla como vacantes."
+                    },
+                    "ocupantes": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "contrato_id": {
+                                    "type": "integer"
+                                },
+                                "nombre": {
+                                    "type": "string",
+                                    "description": "Las columnas del nombre, y no `nombre_completo`: un\nservidor sin ellas cargadas tra\u00eda el expediente entero."
+                                },
+                                "modalidad": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "contrato_id",
+                                "nombre",
+                                "modalidad"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "cargo",
+                    "unidad",
+                    "regimen_laboral",
+                    "plazas",
+                    "ocupantes"
+                ],
+                "title": "PuestoPorRegularizarResource"
+            },
             "PuestoResource": {
                 "type": "object",
                 "properties": {
@@ -84780,6 +85109,19 @@
                     "motivo"
                 ],
                 "title": "RetirarComunicadoRequest"
+            },
+            "ReubicarContratoRequest": {
+                "type": "object",
+                "description": "El puesto de contrato al que pasa un ocasional o un profesional (P9, PR 4).",
+                "properties": {
+                    "puesto_destino_id": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "puesto_destino_id"
+                ],
+                "title": "ReubicarContratoRequest"
             },
             "ReutilizarRecursoIdentidadRequest": {
                 "type": "object",
