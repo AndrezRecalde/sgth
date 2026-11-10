@@ -59,7 +59,7 @@ class GrupoOcupacionalSeeder extends Seeder
                 'rmu'                 => 2967.00,
                 'regimen'             => 'losep',
                 'nivel_complejidad'   => 'alto',
-                'rol_puesto'          => 'ejecucion_coordinacion',
+                'rol_puesto'          => 'direccion_unidad',
             ],
             [
                 'grado_codigo'        => 'NJS-1',
@@ -100,7 +100,7 @@ class GrupoOcupacionalSeeder extends Seeder
                 'rmu'                 => 1676.00,
                 'regimen'             => 'losep',
                 'nivel_complejidad'   => 'alto',
-                'rol_puesto'          => 'ejecucion_procesos',
+                'rol_puesto'          => 'ejecucion_supervision',
             ],
             [
                 'grado_codigo'        => 'SP6',
@@ -110,7 +110,7 @@ class GrupoOcupacionalSeeder extends Seeder
                 'rmu'                 => 1412.00,
                 'regimen'             => 'losep',
                 'nivel_complejidad'   => 'alto',
-                'rol_puesto'          => 'ejecucion_procesos',
+                'rol_puesto'          => 'ejecucion_supervision',
             ],
             [
                 'grado_codigo'        => 'SP5',
@@ -171,7 +171,7 @@ class GrupoOcupacionalSeeder extends Seeder
                 'rmu'                 => 733.00,
                 'regimen'             => 'losep',
                 'nivel_complejidad'   => 'bajo',
-                'rol_puesto'          => 'administrativo',
+                'rol_puesto'          => 'ejecucion_procesos_apoyo',
             ],
             [
                 'grado_codigo'        => 'SPA3',
@@ -181,7 +181,7 @@ class GrupoOcupacionalSeeder extends Seeder
                 'rmu'                 => 675.00,
                 'regimen'             => 'losep',
                 'nivel_complejidad'   => 'bajo',
-                'rol_puesto'          => 'administrativo',
+                'rol_puesto'          => 'ejecucion_procesos_apoyo',
             ],
             [
                 'grado_codigo'        => 'SPA2',
@@ -191,7 +191,7 @@ class GrupoOcupacionalSeeder extends Seeder
                 'rmu'                 => 622.00,
                 'regimen'             => 'losep',
                 'nivel_complejidad'   => 'bajo',
-                'rol_puesto'          => 'administrativo',
+                'rol_puesto'          => 'ejecucion_procesos_apoyo',
             ],
             [
                 'grado_codigo'        => 'SPA1',
@@ -201,7 +201,7 @@ class GrupoOcupacionalSeeder extends Seeder
                 'rmu'                 => 585.00,
                 'regimen'             => 'losep',
                 'nivel_complejidad'   => 'bajo',
-                'rol_puesto'          => 'administrativo',
+                'rol_puesto'          => 'ejecucion_procesos_apoyo',
             ],
             // ── Servidor Público de Servicios ────────────
             [

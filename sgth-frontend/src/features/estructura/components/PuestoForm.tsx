@@ -174,7 +174,7 @@ export function PuestoForm({ valoresIniciales, ocupado = false, onSubmit, titulo
           <PuestoClasificacionCampos
             control={control}
             errors={errors}
-            regimen={regimen}
+            setValue={setValue} regimen={regimen}
             grupos={grupos.data ?? []}
             ocupado={ocupado}
           />

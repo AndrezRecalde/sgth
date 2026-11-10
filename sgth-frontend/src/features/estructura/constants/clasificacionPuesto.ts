@@ -61,14 +61,22 @@ export const REGIMENES_PUESTO: { value: RegimenPuesto; label: string }[] = [
 ]
 
 export type RolPuesto =
-  | 'dignatario' | 'ejecucion_coordinacion' | 'ejecucion_procesos'
-  | 'ejecucion_procesos_apoyo' | 'administrativo' | 'codigo_trabajo'
+  | 'dignatario' | 'direccion_unidad' | 'ejecucion_coordinacion' | 'ejecucion_supervision'
+  | 'ejecucion_procesos' | 'ejecucion_procesos_apoyo' | 'administrativo' | 'codigo_trabajo'
 
+/**
+ * Del más alto al más bajo, como el Manual de Puestos. «Dirección de unidad» y
+ * «Ejecución y supervisión» entraron con D3 (docs/diseno-manual-de-puestos.md,
+ * P2), y el de apoyo se llama como en el manual. «Dignatario» sigue siendo el
+ * de las autoridades electas.
+ */
 export const ROLES_PUESTO: { value: RolPuesto; label: string }[] = [
   { value: 'dignatario',               label: 'Dignatario' },
+  { value: 'direccion_unidad',         label: 'Dirección de unidad organizacional' },
   { value: 'ejecucion_coordinacion',   label: 'Ejecución y coordinación de procesos' },
+  { value: 'ejecucion_supervision',    label: 'Ejecución y supervisión de procesos' },
   { value: 'ejecucion_procesos',       label: 'Ejecución de procesos' },
-  { value: 'ejecucion_procesos_apoyo', label: 'Ejecución de procesos de apoyo' },
+  { value: 'ejecucion_procesos_apoyo', label: 'Ejecución de procesos de apoyo y tecnológico' },
   { value: 'administrativo',           label: 'Administrativo' },
   { value: 'codigo_trabajo',           label: 'Código del Trabajo' },
 ]
@@ -80,6 +88,14 @@ export const ROLES_PUESTO: { value: RolPuesto; label: string }[] = [
  */
 export function rolesDelRegimen(regimen: RegimenPuesto) {
   return ROLES_PUESTO.filter((r) => (r.value === 'codigo_trabajo') === (regimen === 'codigo_trabajo'))
+}
+
+/**
+ * El rol que sugiere un grupo ocupacional, si cabe en el régimen del puesto.
+ * Cada grupo trae el que más usa el manual en su grado (D3).
+ */
+export function rolSugeridoDelGrupo(rolDelGrupo: string | null | undefined, regimen: RegimenPuesto): RolPuesto | null {
+  return rolesDelRegimen(regimen).find((r) => r.value === rolDelGrupo)?.value ?? null
 }
 
 export type ComplejidadPuesto = 'bajo' | 'medio' | 'alto'

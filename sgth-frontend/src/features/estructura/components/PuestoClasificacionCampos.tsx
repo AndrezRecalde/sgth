@@ -2,16 +2,18 @@
 
 import { Alert, Grid, Select } from '@mantine/core'
 import { IconInfoCircle } from '@tabler/icons-react'
-import { Controller, type Control, type FieldErrors } from 'react-hook-form'
+import { Controller, useWatch, type Control, type FieldErrors, type UseFormSetValue } from 'react-hook-form'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { dinero } from '@/lib/dinero'
-import { COMPLEJIDADES, rolesDelRegimen, type RegimenPuesto } from '../constants/clasificacionPuesto'
+import { COMPLEJIDADES, rolSugeridoDelGrupo, rolesDelRegimen, type RegimenPuesto } from '../constants/clasificacionPuesto'
 import type { GrupoOcupacional } from '@/types/api'
 import type { PuestoFormData } from '../schemas/puesto.schema'
 
 interface Props {
   control:  Control<PuestoFormData>
   errors:   FieldErrors<PuestoFormData>
+  /** Para poner el rol que sugiere el grupo elegido. */
+  setValue: UseFormSetValue<PuestoFormData>
   regimen:  RegimenPuesto
   grupos:   GrupoOcupacional[]
   /** Ocupado, el grado cambia con «Revisar la clasificación». */
@@ -25,8 +27,19 @@ const SOLO_CON_REVISION = 'Ocupado: cambia con «Revisar la clasificación».'
  * régimen: la escala de grupos ocupacionales es la de la LOSEP, y el rol
  * «Código del Trabajo» es el de los obreros.
  */
-export function PuestoClasificacionCampos({ control, errors, regimen, grupos, ocupado }: Props) {
+export function PuestoClasificacionCampos({ control, errors, setValue, regimen, grupos, ocupado }: Props) {
   const contained = useContainedInput()
+  const rol = useWatch({ control, name: 'rol_puesto' })
+
+  /**
+   * Cada grupo sugiere el rol que más usa el Manual de Puestos en su grado
+   * (D3). Solo llena un rol vacío: el que ya eligió Talento Humano se respeta.
+   */
+  const sugerirRol = (grupoId: number | null) => {
+    if (rol) return
+    const sugerido = rolSugeridoDelGrupo(grupos.find((g) => g.id === grupoId)?.rol_puesto, regimen)
+    if (sugerido) setValue('rol_puesto', sugerido, { shouldDirty: true })
+  }
 
   // Solo los grados del régimen del puesto: el backend rechaza los de la otra
   // escala, y antes se ofrecían todos.
@@ -59,7 +72,10 @@ export function PuestoClasificacionCampos({ control, errors, regimen, grupos, oc
                 disabled={ocupado}
                 {...contained}
                 value={field.value ? String(field.value) : null}
-                onChange={(v) => field.onChange(v ? Number(v) : null)}
+                onChange={(v) => {
+                  field.onChange(v ? Number(v) : null)
+                  sugerirRol(v ? Number(v) : null)
+                }}
                 error={errors.grupo_ocupacional_id?.message}
               />
             )}
@@ -99,6 +115,7 @@ export function PuestoClasificacionCampos({ control, errors, regimen, grupos, oc
           render={({ field }) => (
             <Select
               label="Rol del puesto"
+              description="Al elegir el grupo ocupacional se sugiere el suyo."
               placeholder="Seleccione el rol"
               data={rolesDelRegimen(regimen)}
               clearable
