@@ -51,8 +51,9 @@ export function MovimientoDatosCambioObrero({ form, servidorId, clase }: Props) 
 
   const { data: unidades = [] } = useTodasUnidades({ nivel: 2 })
   const {
-    puestos, descripcionRecorte, searchValue, onSearchChange,
-  } = usePuestosDeUnidad(unidadId, { seleccionadoId: puestoId })
+    puestos, descripcionRecorte, avisoDelTipo, searchValue, onSearchChange,
+    // Los de obreros son de plantilla (P9).
+  } = usePuestosDeUnidad(unidadId, { seleccionadoId: puestoId, modalidad: 'codigo_trabajo' })
 
   // Solo el catálogo de obreros: un puesto de la LOSEP no es una ocupación
   // que el Código del Trabajo pueda dar.
@@ -125,7 +126,7 @@ export function MovimientoDatosCambioObrero({ form, servidorId, clase }: Props) 
                         disabled={!unidadId}
                         value={field.value ? String(field.value) : null}
                         onChange={(v) => field.onChange(v ? Number(v) : null)}
-                        error={errors.puesto_destino_id?.message}
+                        error={errors.puesto_destino_id?.message ?? avisoDelTipo}
                         {...contained}
                       />
                     )}

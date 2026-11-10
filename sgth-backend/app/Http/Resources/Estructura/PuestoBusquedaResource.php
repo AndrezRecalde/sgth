@@ -21,6 +21,9 @@ class PuestoBusquedaResource extends JsonResource
     {
         return [
             'id'              => $this->id,
+            // Para avisar si el puesto ya elegido no es del tipo que pide el
+            // formulario (P9).
+            'tipo'            => $this->tipo,
             'regimen_laboral' => $this->regimen_laboral,
             'cargo'           => $this->whenLoaded('cargo', fn () => $this->cargo ? [
                 'nombre' => $this->cargo->nombre,

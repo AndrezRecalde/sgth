@@ -441,7 +441,7 @@ final class EstructuraService implements EstructuraServiceInterface
             ->paginate(min(max((int) ($filtros['per_page'] ?? 15), 1), 100));
     }
 
-    public function buscarPuestos(string $termino, int $limite): Collection
+    public function buscarPuestos(string $termino, int $limite, ?TipoPuesto $tipo = null): Collection
     {
         $query = Puesto::query()
             ->with(['cargo:id,nombre', 'unidadAdministrativa:id,nombre'])
@@ -452,7 +452,8 @@ final class EstructuraService implements EstructuraServiceInterface
                 '=',
                 'puestos.unidad_administrativa_id'
             )
-            ->select('puestos.*');
+            ->select('puestos.*')
+            ->when($tipo, fn ($q, TipoPuesto $t) => $q->where('puestos.tipo', $t->value));
 
         return $this->filtrarPuestosPorTexto($query, $termino)
             ->orderBy('cargos.nombre')

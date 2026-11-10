@@ -38,8 +38,9 @@ export function MovimientoDatosAdenda({ form, servidorId, clase }: Props) {
 
   const { data: unidades = [] } = useTodasUnidades({ nivel: 2 })
   const {
-    puestos, descripcionRecorte, searchValue, onSearchChange,
-  } = usePuestosDeUnidad(unidadId, { seleccionadoId: puestoId })
+    puestos, descripcion, avisoDelTipo, searchValue, onSearchChange,
+    // El profesional se reubica en otro puesto de contrato (P9).
+  } = usePuestosDeUnidad(unidadId, { seleccionadoId: puestoId, modalidad: 'servicios_profesionales' })
 
   return (
     <>
@@ -86,7 +87,7 @@ export function MovimientoDatosAdenda({ form, servidorId, clase }: Props) {
                 render={({ field }) => (
                   <Select
                     label="Puesto"
-                    description={descripcionRecorte}
+                    description={descripcion}
                     placeholder={unidadId ? 'Seleccionar' : 'Elija primero la unidad'}
                     data={puestos.map((p) => ({ value: String(p.id), label: p.cargo?.nombre ?? `Puesto ${p.id}` }))}
                     searchable
@@ -96,7 +97,7 @@ export function MovimientoDatosAdenda({ form, servidorId, clase }: Props) {
                     disabled={!unidadId}
                     value={field.value ? String(field.value) : null}
                     onChange={(v) => field.onChange(v ? Number(v) : null)}
-                    error={errors.puesto_destino_id?.message}
+                    error={errors.puesto_destino_id?.message ?? avisoDelTipo}
                     {...contained}
                   />
                 )}
