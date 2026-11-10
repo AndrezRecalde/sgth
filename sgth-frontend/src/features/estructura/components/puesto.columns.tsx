@@ -5,6 +5,7 @@ import type { DataTableColumn } from 'mantine-datatable'
 import type { PuestoConRelaciones } from '@/types/api'
 import { REGIMEN_LABELS } from '@/lib/regimen'
 import { dinero } from '@/lib/dinero'
+import { PuestoOcupantes, PuestoPlazas } from './PuestoOcupacionCeldas'
 
 type Acciones = {
   alEditar:     (puesto: PuestoConRelaciones) => void
@@ -20,15 +21,6 @@ type Acciones = {
   puedeTraspasar: boolean
 }
 
-/** «Vacante», o quiénes lo ocupan: los dos primeros y cuántos más. */
-function ocupantesDe(puesto: PuestoConRelaciones): string {
-  const nombres = (puesto.ocupantes ?? []).map((o) => o.nombre).filter(Boolean) as string[]
-
-  if (!nombres.length) return puesto.ocupado ? 'Reservado o por regir' : 'Vacante'
-
-  return nombres.length > 2 ? `${nombres.slice(0, 2).join(', ')} y ${nombres.length - 2} más` : nombres.join(', ')
-}
-
 /*
 | En el menú de cada fila, `hidden` es por permiso y `disabled` por el estado
 | del puesto (regla 06): quien puede traspasar ve la acción también en un
@@ -40,13 +32,14 @@ export const getPuestoColumns = (
   {
     accessor: 'cargo',
     title: 'Cargo',
-    render: ({ cargo, es_jefe, activo }) => (
+    render: ({ cargo, es_jefe, activo, tipo }) => (
       <div>
         <Text size="sm" fw={500} c={activo === false ? 'dimmed' : undefined}>{cargo?.nombre ?? '-'}</Text>
-        {(es_jefe || activo === false) && (
+        {(es_jefe || activo === false || tipo === 'contrato') && (
           <Group gap={4} mt={2}>
-            {/* «Jefe» es una categoría: va neutra (regla 06). */}
+            {/* «Jefe» y «De contrato» son categorías: van neutras (regla 06). */}
             {es_jefe && <StatusBadge size="xs">Jefe</StatusBadge>}
+            {tipo === 'contrato' && <StatusBadge size="xs">De contrato</StatusBadge>}
             {/* Desactivado en vez de eliminado: se veía igual que uno vigente. */}
             {activo === false && <StatusBadge size="xs" variant="dot">Inactivo</StatusBadge>}
           </Group>
@@ -74,16 +67,13 @@ export const getPuestoColumns = (
   {
     accessor: 'ocupantes',
     title: 'Ocupantes',
-    render: (puesto) => (
-      <Text size="sm" c={puesto.ocupado ? undefined : 'dimmed'} lineClamp={2}>{ocupantesDe(puesto)}</Text>
-    ),
+    render: (puesto) => <PuestoOcupantes puesto={puesto} />,
   },
   {
     accessor: 'plazas',
     title: 'Plazas',
-    width: 90,
-    textAlign: 'center',
-    render: ({ plazas }) => <Text size="sm">{plazas ?? 1}</Text>,
+    width: 130,
+    render: (puesto) => <PuestoPlazas puesto={puesto} />,
   },
   {
     accessor: 'rmu',

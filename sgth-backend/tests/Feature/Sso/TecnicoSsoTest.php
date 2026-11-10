@@ -166,6 +166,8 @@ test('el tecnico de sso busca puestos sin ver la estructura', function () {
     expect($encontrados)->toHaveCount(1)
         ->and($encontrados[0])->toBe([
             'id'                    => $this->puesto->id,
+            // De plantilla o de contrato (P9): no dice nada de quién lo ocupa.
+            'tipo'                  => 'plantilla',
             'regimen_laboral'       => $this->puesto->fresh()->regimen_laboral,
             'cargo'                 => ['nombre' => 'Inspector de Prueba de Riesgos'],
             'unidad_administrativa' => ['nombre' => 'Gestión de Prueba de Seguridad'],

@@ -23,8 +23,9 @@ export function MovimientoPuestoDelReintegro({ form }: { form: UseFormReturn<Mov
 
   const { data: unidades = [] } = useTodasUnidades({ nivel: 2 })
   const {
-    puestos, descripcionRecorte, searchValue, onSearchChange,
-  } = usePuestosDeUnidad(unidadId, { seleccionadoId: puestoId })
+    puestos, descripcionRecorte, avisoDelTipo, searchValue, onSearchChange,
+    // Los de obreros son de plantilla (P9).
+  } = usePuestosDeUnidad(unidadId, { seleccionadoId: puestoId, modalidad: 'codigo_trabajo' })
 
   const puestosDeObreros = puestos.filter((p) => p.regimen_laboral === 'codigo_trabajo')
 
@@ -79,7 +80,7 @@ export function MovimientoPuestoDelReintegro({ form }: { form: UseFormReturn<Mov
                 disabled={!unidadId}
                 value={field.value ? String(field.value) : null}
                 onChange={(v) => field.onChange(v ? Number(v) : null)}
-                error={errors.puesto_destino_id?.message}
+                error={errors.puesto_destino_id?.message ?? avisoDelTipo}
                 {...contained}
               />
             )}

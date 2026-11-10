@@ -193,6 +193,7 @@ export function ReclutamientoExpressView() {
           onClose={cerrarInscribir}
           convocatoriaId={seleccionado.convocatoria_id}
           requierePuesto
+          modalidad={seleccionado.tipo_nombramiento_previsto}
         />
       )}
     </Box>

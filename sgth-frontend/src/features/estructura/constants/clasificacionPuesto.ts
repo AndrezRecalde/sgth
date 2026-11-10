@@ -8,6 +8,51 @@
  * al principio, como el resto de la aplicación.
  */
 
+/**
+ * Espeja `TipoPuesto` del backend (docs/diseno-manual-de-puestos.md, P9). El de
+ * plantilla es el del distributivo: tiene plazas, se concursa y cuenta en las
+ * vacantes. El de contrato sostiene a los ocasionales y a los de servicios
+ * profesionales: no tiene plazas ni es jefatura.
+ */
+export type TipoPuesto = 'plantilla' | 'contrato'
+
+export const TIPOS_PUESTO: { value: TipoPuesto; label: string }[] = [
+  { value: 'plantilla', label: 'De plantilla' },
+  { value: 'contrato',  label: 'De contrato' },
+]
+
+/** Las modalidades que no ocupan plaza y van en un puesto de contrato [TH D11, D12]. */
+const MODALIDADES_DE_CONTRATO = ['servicios_ocasionales', 'servicios_profesionales']
+
+/**
+ * El tipo de puesto que admite una modalidad. Espeja
+ * `TipoNombramiento::admitePuesto()`: el ocasional y el profesional, en uno de
+ * contrato; el resto, en uno de plantilla. El reemplazo de un ausente entra al
+ * puesto del titular [TH D13], así que admite los dos y no se filtra (`null`).
+ * Sin modalidad, tampoco.
+ */
+export function tipoDePuestoPara(modalidad?: string | null, esReemplazo = false): TipoPuesto | null {
+  if (!modalidad) return null
+  if (MODALIDADES_DE_CONTRATO.includes(modalidad)) return esReemplazo ? null : 'contrato'
+  return 'plantilla'
+}
+
+/**
+ * Por qué el puesto elegido no sirve, si no sirve. El selector lo deja a la
+ * vista —un puesto que desaparece de la lista se lee como un número—, y el
+ * campo lo dice antes de que lo rechace el backend.
+ */
+export function avisoDelTipoDePuesto(tipoDelPuesto?: TipoPuesto | null, admitido?: TipoPuesto | null): string | undefined {
+  if (!tipoDelPuesto || !admitido || tipoDelPuesto === admitido) return undefined
+
+  return admitido === 'contrato'
+    ? 'Es un puesto de plantilla; aquí corresponde uno de contrato.'
+    : 'Es un puesto de contrato; aquí corresponde uno de plantilla.'
+}
+
+/** Lo que el selector avisa cuando solo muestra los puestos de contrato. */
+export const SOLO_PUESTOS_DE_CONTRATO = 'Solo los de contrato: los ocasionales y los profesionales no ocupan plaza.'
+
 export type RegimenPuesto = 'losep' | 'codigo_trabajo'
 
 export const REGIMENES_PUESTO: { value: RegimenPuesto; label: string }[] = [

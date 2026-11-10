@@ -119,6 +119,17 @@ test('la Plantilla cuenta solo los puestos de plantilla, y la plaza de la autori
         ->assertJsonPath('datos.plazas.ocupadas', 2)
         ->assertJsonPath('datos.plazas.vacantes', 2)
         ->assertJsonPath('datos.sin_plaza.servicios_profesionales', 2);
+
+    // El listado de puestos dice lo mismo: la plaza del Prefecto no sale
+    // «0 de 1 ocupadas» con la Prefecta en ella.
+    $fila = collect($this->getJson('/api/v1/estructura/puestos?per_page=50')->json('datos'))
+        ->firstWhere('id', $prefectura->id);
+    expect($fila['plazas_ocupadas'])->toBe(1)
+        ->and($fila['ocupantes'][0]['ocupa_plaza'])->toBeTrue()
+        ->and($prefectura->fresh()->plazasLlenas())->toBe(1)
+        // La validación de vacante sigue sin contarla: el día del relevo
+        // coinciden la autoridad saliente y la entrante.
+        ->and($prefectura->fresh()->plazasOcupadas())->toBe(0);
 });
 
 test('el tipo no cambia si lo que el puesto tiene no cabe en el nuevo', function () {
@@ -153,6 +164,23 @@ test('el concurso formal va sobre un puesto de plantilla, y el express según su
     $convocatoria($this->plantilla, $express(TipoNombramiento::SERVICIOS_OCASIONALES))
         ->assertStatus(422)->assertJsonStructure(['errores' => ['puesto_id']]);
     $convocatoria($this->contrato, $express(TipoNombramiento::SERVICIOS_OCASIONALES))->assertCreated();
+});
+
+test('el buscador de los formularios filtra por tipo y dice el de cada puesto', function () {
+    // Los dos se llaman «Consultor…» o son de la misma unidad: la búsqueda
+    // por texto los encuentra a ambos.
+    $buscar = fn (string $tipo = '') => collect($this->getJson(
+        '/api/v1/estructura/puestos/buscar?search=Tipo de Puesto'.($tipo ? "&tipo={$tipo}" : ''),
+    )->assertOk()->json('datos'));
+
+    expect($buscar()->pluck('id')->sort()->values()->all())
+        ->toBe(collect([$this->plantilla->id, $this->contrato->id])->sort()->values()->all());
+    expect($buscar('contrato')->pluck('id')->all())->toBe([$this->contrato->id])
+        ->and($buscar('contrato')->first()['tipo'])->toBe('contrato');
+    expect($buscar('plantilla')->pluck('id')->all())->toBe([$this->plantilla->id]);
+
+    $this->getJson('/api/v1/estructura/puestos/buscar?search=Tipo&tipo=otro')
+        ->assertStatus(422)->assertJsonStructure(['errores' => ['tipo']]);
 });
 
 test('el listado filtra por tipo y dice las plazas ocupadas y la modalidad de cada ocupante', function () {

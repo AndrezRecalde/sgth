@@ -47,7 +47,9 @@ export function PuestoForm({ valoresIniciales, ocupado = false, onSubmit, titulo
       unidad_administrativa_id:  valoresIniciales?.unidad_administrativa_id  ?? undefined,
       grupo_ocupacional_id:      valoresIniciales?.grupo_ocupacional_id      ?? null,
       partida_presupuestaria_id: valoresIniciales?.partida_presupuestaria_id ?? null,
-      plazas:                    valoresIniciales?.plazas                    ?? 1,
+      tipo:                      valoresIniciales?.tipo                      ?? 'plantilla',
+      // `undefined` es un puesto nuevo; `null`, uno de contrato, que no tiene.
+      plazas:                    valoresIniciales?.plazas === undefined ? 1 : valoresIniciales.plazas,
       rol_puesto:                valoresIniciales?.rol_puesto                ?? null,
       nivel_complejidad:         valoresIniciales?.nivel_complejidad         ?? null,
       regimen_laboral:           valoresIniciales?.regimen_laboral           ?? 'losep',
@@ -190,7 +192,7 @@ export function PuestoForm({ valoresIniciales, ocupado = false, onSubmit, titulo
               )}
             />
           </Grid.Col>
-          <PuestoPlazasCampos control={control} errors={errors} ocupado={ocupado} />
+          <PuestoPlazasCampos control={control} errors={errors} setValue={setValue} ocupado={ocupado} />
         </Grid>
       </form>
     </Box>

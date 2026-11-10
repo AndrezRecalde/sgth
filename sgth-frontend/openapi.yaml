@@ -6700,6 +6700,14 @@
                             "minimum": 1,
                             "maximum": 20
                         }
+                    },
+                    {
+                        "name": "tipo",
+                        "in": "query",
+                        "description": "Solo los de ese tipo (P9): una convocatoria formal se busca entre\nlos de plantilla, y un contenedor de ocasionales, entre los de\ncontrato.",
+                        "schema": {
+                            "$ref": "#/components/schemas/TipoPuesto"
+                        }
                     }
                 ],
                 "responses": {
@@ -83037,6 +83045,10 @@
                     "id": {
                         "type": "integer"
                     },
+                    "tipo": {
+                        "description": "Para avisar si el puesto ya elegido no es del tipo que pide el\nformulario (P9).",
+                        "$ref": "#/components/schemas/TipoPuesto"
+                    },
                     "regimen_laboral": {
                         "type": "string"
                     },
@@ -83071,6 +83083,7 @@
                 },
                 "required": [
                     "id",
+                    "tipo",
                     "regimen_laboral"
                 ],
                 "title": "PuestoBusquedaResource"
@@ -83454,7 +83467,8 @@
                                             "type": "string"
                                         },
                                         "ocupa_plaza": {
-                                            "type": "string"
+                                            "type": "boolean",
+                                            "description": "Si llena una plaza: no la llenan el ocasional, el profesional\nni el reemplazo de un ausente (`llenaLaPlaza()`)."
                                         },
                                         "es_reemplazo": {
                                             "type": "boolean"

@@ -36,6 +36,7 @@ export function PuestoModal({ opened, onClose, puesto }: Props) {
           unidad_administrativa_id:  puesto.unidad_administrativa_id,
           grupo_ocupacional_id:      puesto.grupo_ocupacional_id,
           partida_presupuestaria_id: puesto.partida_presupuestaria_id,
+          tipo:                      puesto.tipo,
           plazas:                    puesto.plazas,
           rol_puesto:                puesto.rol_puesto,
           nivel_complejidad:         puesto.nivel_complejidad,

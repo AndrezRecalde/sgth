@@ -26,7 +26,7 @@ class PuestoResource extends JsonResource
             'partida_presupuestaria_id' => $this->partida_presupuestaria_id,
             'plazas'                    => $this->plazas,
             // Lo trae el listado (`conOcupacion()`); fuera de él, se consulta.
-            'plazas_ocupadas'           => (int) ($this->resource->getAttributes()['plazas_ocupadas'] ?? $this->resource->plazasOcupadas()),
+            'plazas_ocupadas'           => (int) ($this->resource->getAttributes()['plazas_ocupadas'] ?? $this->resource->plazasLlenas()),
             'rol_puesto'                => $this->rol_puesto,
             'nivel_complejidad'         => $this->nivel_complejidad,
             'regimen_laboral'           => $this->regimen_laboral,
@@ -92,7 +92,13 @@ class PuestoResource extends JsonResource
                         // profesional, y no se distinguían (P9).
                         'tipo_nombramiento' => $c->tipo_nombramiento,
                         'modalidad'         => $c->tipo_nombramiento?->etiqueta(),
-                        'ocupa_plaza'       => (bool) $c->tipo_nombramiento?->ocupaPlaza() && $c->cubre_movimiento_id === null,
+                        /**
+                         * Si llena una plaza: no la llenan el ocasional, el profesional
+                         * ni el reemplazo de un ausente (`llenaLaPlaza()`).
+                         *
+                         * @var bool
+                         */
+                        'ocupa_plaza'       => $c->cubre_movimiento_id === null && $c->tipo_nombramiento?->llenaLaPlaza() === true,
                         'es_reemplazo'      => $c->cubre_movimiento_id !== null,
                         'id'     => $c->servidor->id,
                         'nombre' => trim(implode(' ', array_filter([

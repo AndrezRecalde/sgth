@@ -51,8 +51,9 @@ export function ConvocatoriaForm({ valoresIniciales, onSubmit, enviando, textoEn
               render={({ field }) => (
                 <BuscarPuestoSelect
                   label="Puesto del organigrama"
-                  description="Busque el puesto por nombre del cargo o unidad administrativa"
+                  description="Busque el puesto por nombre del cargo o unidad administrativa. Solo los de plantilla: los de contrato no se concursan."
                   required
+                  tipo="plantilla"
                   value={field.value ?? null}
                   onChange={(id) => field.onChange(id)}
                   error={errors.puesto_id?.message}

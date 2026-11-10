@@ -14488,6 +14488,11 @@ export interface components {
         /** PuestoBusquedaResource */
         PuestoBusquedaResource: {
             id: number;
+            /**
+             * @description Para avisar si el puesto ya elegido no es del tipo que pide el
+             *     formulario (P9).
+             */
+            tipo: components["schemas"]["TipoPuesto"];
             regimen_laboral: string;
             cargo?: {
                 nombre: string;
@@ -14618,7 +14623,11 @@ export interface components {
                  */
                 tipo_nombramiento: components["schemas"]["TipoNombramiento"];
                 modalidad: string;
-                ocupa_plaza: string;
+                /**
+                 * @description Si llena una plaza: no la llenan el ocasional, el profesional
+                 *     ni el reemplazo de un ausente (`llenaLaPlaza()`).
+                 */
+                ocupa_plaza: boolean;
                 es_reemplazo: boolean;
                 id: number;
                 nombre: string;
@@ -21141,6 +21150,12 @@ export interface operations {
                 /** @description Desde dos letras, como el buscador. */
                 search: string;
                 per_page?: number | null;
+                /**
+                 * @description Solo los de ese tipo (P9): una convocatoria formal se busca entre
+                 *     los de plantilla, y un contenedor de ocasionales, entre los de
+                 *     contrato.
+                 */
+                tipo?: components["schemas"]["TipoPuesto"];
             };
             header?: never;
             path?: never;

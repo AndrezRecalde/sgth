@@ -40,12 +40,9 @@ export function MovimientoSituacionPropuesta({ form, esIngreso, tipoNombramiento
   const unidadDestinoId = useWatch({ control, name: 'unidad_destino_id' })
   const puestoDestinoId = useWatch({ control, name: 'puesto_destino_id' })
   const nombramiento = useWatch({ control, name: 'tipo_nombramiento_propuesto' })
+  const cubreId = useWatch({ control, name: 'cubre_movimiento_id' })
 
   const { data: unidades = [] } = useTodasUnidades({ nivel: 2 })
-
-  const {
-    puestos, descripcionRecorte, searchValue, onSearchChange,
-  } = usePuestosDeUnidad(unidadDestinoId, { seleccionadoId: puestoDestinoId })
 
   /**
    * Qué régimen decide si la R.M.U. se hereda o se teclea.
@@ -62,6 +59,14 @@ export function MovimientoSituacionPropuesta({ form, esIngreso, tipoNombramiento
    * acciones no cambian de nombramiento, reubican dentro del que ya tiene.
    */
   const regimenDeLaRmu = esIngreso ? nombramiento : tipoNombramiento
+
+  // Solo los puestos que admite esa misma modalidad (P9). El reemplazo entra
+  // al puesto del ausente, que `MovimientoDatosContratacion` ya preselecciona.
+  const {
+    puestos, descripcion, avisoDelTipo, searchValue, onSearchChange,
+  } = usePuestosDeUnidad(unidadDestinoId, {
+    seleccionadoId: puestoDestinoId, modalidad: regimenDeLaRmu, esReemplazo: Boolean(cubreId),
+  })
 
   const puestoDestino = puestos.find((p) => p.id === Number(puestoDestinoId))
   const rmuHeredada = remuneracionEsHeredada(
@@ -115,7 +120,7 @@ export function MovimientoSituacionPropuesta({ form, esIngreso, tipoNombramiento
               // recortaba en silencio: el puesto que falta era indistinguible
               // de uno que no existe. Ya no es un callejón — lo que se teclea
               // viaja como `search` al servidor.
-              description={descripcionRecorte}
+              description={descripcion}
               placeholder={unidadDestinoId ? 'Seleccionar' : 'Elija primero la unidad'}
               data={puestos.map((p) => ({
                 value: String(p.id), label: p.cargo?.nombre ?? `Puesto ${p.id}`,
@@ -139,7 +144,7 @@ export function MovimientoSituacionPropuesta({ form, esIngreso, tipoNombramiento
                   )
                 }
               }}
-              error={errors.puesto_destino_id?.message}
+              error={errors.puesto_destino_id?.message ?? avisoDelTipo}
               {...contained}
             />
           )}

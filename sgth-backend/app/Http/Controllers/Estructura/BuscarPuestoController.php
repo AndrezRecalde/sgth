@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Estructura;
 
 use App\Contracts\Estructura\EstructuraServiceInterface;
+use App\Enums\TipoPuesto;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Estructura\BuscarPuestosRequest;
 use App\Http\Resources\Estructura\PuestoBusquedaResource;
@@ -32,6 +33,7 @@ class BuscarPuestoController extends Controller
         $puestos = $this->estructuraService->buscarPuestos(
             $request->validated('search'),
             (int) ($request->validated('per_page') ?? self::POR_DEFECTO),
+            TipoPuesto::tryFrom((string) $request->validated('tipo')),
         );
 
         return ApiResponse::ok(PuestoBusquedaResource::collection($puestos), 'Puestos encontrados.');
