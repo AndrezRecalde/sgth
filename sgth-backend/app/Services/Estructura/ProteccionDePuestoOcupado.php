@@ -2,8 +2,12 @@
 
 namespace App\Services\Estructura;
 
+use App\Enums\TipoNombramiento;
+use App\Enums\TipoPuesto;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Estructura\Puesto;
+use App\Models\Expediente\ContratoServidor;
+use App\Models\Expediente\MovimientoPersonal;
 
 /**
  * Lo que no se hace a mano con un puesto ocupado (diseño de Acciones de
@@ -52,6 +56,8 @@ class ProteccionDePuestoOcupado
      */
     public static function validarEdicion(Puesto $puesto, array $datos): void
     {
+        self::validarCambioDeTipo($puesto, $datos);
+
         $plazasOcupadas = $puesto->plazasOcupadas();
 
         if (array_key_exists('plazas', $datos) && (int) $datos['plazas'] < $plazasOcupadas) {
@@ -90,6 +96,48 @@ class ProteccionDePuestoOcupado
 
         if (array_key_exists('activo', $datos) && ! filter_var($datos['activo'], FILTER_VALIDATE_BOOLEAN) && $puesto->activo) {
             throw new ReglaNegocioException('El puesto está ocupado: no se desactiva mientras lo esté.');
+        }
+    }
+
+    /**
+     * El tipo cambia solo si todo lo que el puesto tiene cabe en el nuevo (P9):
+     * un puesto con un nombramiento no pasa a contrato, y uno con un contrato
+     * de servicios profesionales no pasa a plantilla, salvo que sea el
+     * reemplazo de un servidor ausente. Mira los vínculos vigentes —también
+     * la reserva del ascendido en prueba— y las acciones que todavía no rigen.
+     *
+     * @param  array<string, mixed>  $datos
+     */
+    private static function validarCambioDeTipo(Puesto $puesto, array $datos): void
+    {
+        $nuevo = isset($datos['tipo']) ? TipoPuesto::tryFrom((string) $datos['tipo']) : null;
+
+        if (! $nuevo || $nuevo === ($puesto->tipo ?? TipoPuesto::PLANTILLA)) {
+            return;
+        }
+
+        $vinculos = ContratoServidor::query()
+            ->where('estado', 'vigente')
+            ->where(fn ($q) => $q->where('puesto_id', $puesto->id)->orWhere('puesto_reservado_id', $puesto->id))
+            ->get(['tipo_nombramiento', 'cubre_movimiento_id'])
+            ->map(fn (ContratoServidor $c) => [$c->tipo_nombramiento, $c->cubre_movimiento_id !== null]);
+
+        $porRegir = MovimientoPersonal::pendientesDeVigencia()
+            ->where('puesto_destino_id', $puesto->id)
+            ->whereNotNull('tipo_nombramiento_propuesto')
+            ->get(['tipo_nombramiento_propuesto', 'cubre_movimiento_id'])
+            ->map(fn (MovimientoPersonal $m) => [$m->tipo_nombramiento_propuesto, $m->cubre_movimiento_id !== null]);
+
+        $noCaben = $vinculos->concat($porRegir)
+            ->reject(fn (array $v) => ! $v[0] instanceof TipoNombramiento || $v[0]->admitePuesto($nuevo, $v[1]))
+            ->map(fn (array $v) => $v[0]->etiqueta())
+            ->unique();
+
+        if ($noCaben->isNotEmpty()) {
+            throw new ReglaNegocioException(
+                "El puesto no pasa a «{$nuevo->etiqueta()}»: tiene vínculos que no caben en ese tipo ("
+                    .$noCaben->implode(', ').'). Muévalos antes a un puesto que les corresponda.'
+            );
         }
     }
 

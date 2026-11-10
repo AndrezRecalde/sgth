@@ -39,8 +39,10 @@ beforeEach(function () {
 
     $unidad = UnidadAdministrativa::create(['codigo' => 'SEG-REC', 'nombre' => 'Unidad Seguridad Rec', 'nivel' => 1]);
     $cargo  = Cargo::create(['nombre' => 'Analista Seguridad']);
+    // Se inscriben en el contenedor de servicios profesionales: el puesto es de
+    // contrato (P9).
     $this->puesto = Puesto::create([
-        'unidad_administrativa_id' => $unidad->id, 'cargo_id' => $cargo->id, 'plazas' => 5, 'rmu' => 1000,
+        'tipo' => 'contrato', 'plazas' => null, 'unidad_administrativa_id' => $unidad->id, 'cargo_id' => $cargo->id,
     ]);
     $this->contenedor = Convocatoria::where('codigo', 'EXP-PROFESIONALES')->firstOrFail();
     $this->base = "/api/v1/seleccion/convocatorias/{$this->contenedor->id}/postulantes";

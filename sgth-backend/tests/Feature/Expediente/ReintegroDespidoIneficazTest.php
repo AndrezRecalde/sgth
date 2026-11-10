@@ -251,8 +251,24 @@ test('si su puesto ya no tiene plaza, Talento Humano elige otro de obreros, sin 
         ->assertStatus(422)
         ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'vuelve a él'));
 
-    // Sin plaza, hay que elegir otro, y de obreros.
-    $this->puesto->update(['plazas' => 0]);
+    // Sin plaza, hay que elegir otro, y de obreros. Un puesto de plantilla tiene
+    // al menos una plaza (CHECK de la base): se queda sin ella porque otro
+    // obrero la ocupó mientras el despedido estaba fuera.
+    $this->puesto->update(['plazas' => 1]);
+    $quienLaOcupa = Servidor::create([
+        'cedula' => '8899999999', 'nombre' => 'Obrero', 'apellido' => 'Que Ocupa la Plaza',
+        'regimen_laboral' => 'codigo_trabajo',
+    ]);
+    ContratoServidor::create([
+        'servidor_id'              => $quienLaOcupa->id,
+        'tipo_nombramiento'        => TipoNombramiento::CODIGO_TRABAJO->value,
+        'numero_contrato'          => 'CT-2026-031',
+        'unidad_administrativa_id' => $this->unidad->id,
+        'puesto_id'                => $this->puesto->id,
+        'fecha_inicio'             => '2026-05-20',
+        'remuneracion'             => 620,
+        'estado'                   => 'vigente',
+    ]);
 
     ($this->reintegrar)($obrero)
         ->assertStatus(422)

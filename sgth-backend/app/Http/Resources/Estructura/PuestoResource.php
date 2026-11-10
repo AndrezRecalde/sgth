@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Resources\Estructura;
 
+use App\Enums\TipoPuesto;
 use App\Services\Estructura\ProteccionDePuestoOcupado;
 use App\Services\Expediente\RevisionDeClasificacionService;
 use App\Services\Expediente\TraspasoDePuestoService;
@@ -16,11 +17,16 @@ class PuestoResource extends JsonResource
     {
         return [
             'id'                        => $this->id,
+            // De plantilla o de contrato (P9): el de contrato no tiene plazas.
+            'tipo'                      => $this->tipo ?? TipoPuesto::PLANTILLA,
+            'tipo_label'                => ($this->tipo ?? TipoPuesto::PLANTILLA)->etiqueta(),
             'cargo_id'                  => $this->cargo_id,
             'unidad_administrativa_id'  => $this->unidad_administrativa_id,
             'grupo_ocupacional_id'      => $this->grupo_ocupacional_id,
             'partida_presupuestaria_id' => $this->partida_presupuestaria_id,
             'plazas'                    => $this->plazas,
+            // Lo trae el listado (`conOcupacion()`); fuera de él, se consulta.
+            'plazas_ocupadas'           => (int) ($this->resource->getAttributes()['plazas_ocupadas'] ?? $this->resource->plazasOcupadas()),
             'rol_puesto'                => $this->rol_puesto,
             'nivel_complejidad'         => $this->nivel_complejidad,
             'regimen_laboral'           => $this->regimen_laboral,
@@ -81,6 +87,13 @@ class PuestoResource extends JsonResource
                 fn() => $this->contratosVigentes
                     ->filter(fn ($c) => $c->servidor !== null)
                     ->map(fn ($c) => [
+                        // Con qué modalidad lo ocupa, y si llena una plaza: en
+                        // «Analista de TIC» había dos permanentes y un
+                        // profesional, y no se distinguían (P9).
+                        'tipo_nombramiento' => $c->tipo_nombramiento,
+                        'modalidad'         => $c->tipo_nombramiento?->etiqueta(),
+                        'ocupa_plaza'       => (bool) $c->tipo_nombramiento?->ocupaPlaza() && $c->cubre_movimiento_id === null,
+                        'es_reemplazo'      => $c->cubre_movimiento_id !== null,
                         'id'     => $c->servidor->id,
                         'nombre' => trim(implode(' ', array_filter([
                             $c->servidor->apellido,

@@ -11,6 +11,7 @@ use App\Enums\TipoEventoVinculo;
 use App\Enums\TipoMovimientoPersonal;
 use App\Enums\SupuestoProvisional;
 use App\Enums\TipoNombramiento;
+use App\Enums\TipoPuesto;
 use App\Exceptions\ReglaNegocioException;
 use App\Models\Estructura\Puesto;
 use App\Models\Expediente\ContratoServidor;
@@ -643,6 +644,10 @@ class ContratoServidorService
      * comisión o licencia — su contrato continúa vigente y es el que la
      * ocupa. Contarlas dos veces dejaría el puesto bloqueado justo cuando
      * Talento Humano necesita cubrir el hueco.
+     *
+     * Antes que nada, que la modalidad quepa en el tipo de puesto (P9): este
+     * es el paso común del contrato directo, de las acciones de personal —
+     * también las que rigen después—, de los obreros y de las restituciones.
      */
     public function validarVacante(
         int $puestoId,
@@ -651,15 +656,18 @@ class ContratoServidorService
         ?int $cubreMovimientoId = null,
         ?int $exceptoMovimientoId = null
     ): void {
-        if (! TipoNombramiento::from($tipoNombramiento)->ocupaPlaza()) {
+        $puesto = Puesto::with('cargo:id,nombre')->findOrFail($puestoId);
+        $modalidad = TipoNombramiento::from($tipoNombramiento);
+
+        $this->validarTipoDePuesto($puesto, $modalidad, $cubreMovimientoId !== null);
+
+        if (! $modalidad->ocupaPlaza()) {
             return;
         }
 
         if ($cubreMovimientoId !== null) {
             return;
         }
-
-        $puesto = Puesto::findOrFail($puestoId);
 
         // Con el ascendido en prueba que lo dejó: se le reserva (fase 3.3).
         $ocupadas = ContratoServidor::queOcupanPlazaDe($puestoId)
@@ -685,6 +693,29 @@ class ContratoServidorService
                 'El puesto seleccionado no tiene plazas disponibles.'
             );
         }
+    }
+
+    /**
+     * La modalidad tiene que caber en el tipo de puesto (P9 del diseño del
+     * Manual de Puestos; `TipoNombramiento::admitePuesto()`). El reemplazo de
+     * un servidor ausente entra al puesto del titular aunque sea de plantilla
+     * [TH D13].
+     */
+    public function validarTipoDePuesto(Puesto $puesto, TipoNombramiento $modalidad, bool $esReemplazo = false): void
+    {
+        $tipo = $puesto->tipo ?? TipoPuesto::PLANTILLA;
+
+        if ($modalidad->admitePuesto($tipo, $esReemplazo)) {
+            return;
+        }
+
+        $cual = $puesto->cargo?->nombre ? "«{$puesto->cargo->nombre}»" : 'elegido';
+
+        throw new ReglaNegocioException($tipo === TipoPuesto::CONTRATO
+            ? "El puesto {$cual} es de contrato: no tiene plazas, y un vínculo «{$modalidad->etiqueta()}» ocupa una. "
+                .'Elija un puesto de plantilla.'
+            : "El puesto {$cual} es de plantilla, y un vínculo «{$modalidad->etiqueta()}» va en un puesto de contrato. "
+                .'Solo entra a uno de plantilla si reemplaza a un servidor ausente.');
     }
 
     /**
@@ -1236,6 +1267,14 @@ class ContratoServidorService
         $cambios = [];
 
         if ($adenda->puesto_destino_id) {
+            // La adenda cambia de puesto sin pasar por `validarVacante()`,
+            // porque el contrato civil no ocupa plaza; el tipo sí se mira (P9).
+            $this->validarTipoDePuesto(
+                Puesto::with('cargo:id,nombre')->findOrFail($adenda->puesto_destino_id),
+                TipoNombramiento::SERVICIOS_PROFESIONALES,
+                $vigente->cubre_movimiento_id !== null,
+            );
+
             $cambios['puesto_id'] = $adenda->puesto_destino_id;
             $cambios['unidad_administrativa_id'] = $adenda->unidad_destino_id ?? $vigente->unidad_administrativa_id;
         }

@@ -38,6 +38,8 @@ beforeEach(function () {
     $this->puesto = Puesto::create([
         'codigo' => 'P-BORR', 'unidad_administrativa_id' => $this->unidad->id, 'plazas' => 10,
     ]);
+    // El ocasional y el profesional, en un puesto de contrato (P9).
+    $this->puestoDeContrato = puestoDeContratoDePrueba($this->unidad, 'Asistente Ocasional');
 
     $this->partida = PartidaPresupuestaria::create([
         'codigo' => '510105', 'descripcion' => 'Remuneraciones Unificadas',
@@ -68,7 +70,9 @@ beforeEach(function () {
             'tipo_movimiento'             => TipoMovimientoPersonal::INGRESO->value,
             'tipo_nombramiento_propuesto' => TipoNombramiento::PERMANENTE->value,
             'remuneracion_propuesta'      => 1200,
-            'puesto_destino_id'           => $this->puesto->id,
+            'puesto_destino_id'           => puestoParaLaModalidad(
+                $extra['tipo_nombramiento_propuesto'] ?? TipoNombramiento::PERMANENTE, $this->puesto, $this->puestoDeContrato,
+            )->id,
             'unidad_destino_id'           => $this->unidad->id,
             'requiere_dictamen_medico'    => false,
             'descripcion'                 => 'Ingreso por concurso',
@@ -361,7 +365,7 @@ test('la fecha de fin pactada llega al contrato', function () {
     $movimiento = $this->service->registrar($servidor->id, [
         'tipo_movimiento'             => TipoMovimientoPersonal::INGRESO->value,
         'tipo_nombramiento_propuesto' => TipoNombramiento::SERVICIOS_OCASIONALES->value,
-        'puesto_destino_id'           => $this->puesto->id,
+        'puesto_destino_id'           => $this->puestoDeContrato->id,
         'unidad_destino_id'           => $this->unidad->id,
         'requiere_dictamen_medico'    => false,
         'descripcion'                 => 'Contrato ocasional con plazo pactado',

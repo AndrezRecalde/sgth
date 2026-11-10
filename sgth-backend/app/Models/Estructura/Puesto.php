@@ -3,6 +3,8 @@ namespace App\Models\Estructura;
 
 use App\Enums\NivelComplejidadPuesto;
 use App\Enums\RolPuesto;
+use App\Enums\TipoNombramiento;
+use App\Enums\TipoPuesto;
 use App\Observers\PuestoObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
@@ -20,6 +22,7 @@ class Puesto extends Model
     protected $table = 'puestos';
 
     protected $fillable = [
+        'tipo',
         'cargo_id',
         'unidad_administrativa_id',
         'grupo_ocupacional_id',
@@ -40,7 +43,14 @@ class Puesto extends Model
             'plazas'            => 'integer',
             'nivel_complejidad' => NivelComplejidadPuesto::class,
             'rol_puesto'        => RolPuesto::class,
+            'tipo'              => TipoPuesto::class,
         ];
+    }
+
+    /** ¿Es del distributivo, con plazas? El de contrato no tiene (P9). */
+    public function esDePlantilla(): bool
+    {
+        return ($this->tipo ?? TipoPuesto::PLANTILLA) === TipoPuesto::PLANTILLA;
     }
 
     public function cargo(): BelongsTo
@@ -121,7 +131,17 @@ class Puesto extends Model
                 )
                 or exists (select 1 from subrogaciones s where s.puesto_subrogado_id = puestos.id)
             ) as con_historia
-            SQL);
+            SQL)
+            // Las plazas ocupadas, con el mismo criterio que
+            // `ContratoServidor::scopeQueOcupanPlaza()`: la pantalla las muestra
+            // como «2 de 5», y una consulta por fila serían quince más (P9).
+            ->selectRaw(
+                '(select count(*) from contratos_servidor c'
+                    .' where c.deleted_at is null and c.estado = ? and c.cubre_movimiento_id is null'
+                    .' and c.tipo_nombramiento not in ('.implode(', ', array_fill(0, count(TipoNombramiento::valoresSinPlaza()), '?')).')'
+                    .' and (c.puesto_id = puestos.id or c.puesto_reservado_id = puestos.id)) as plazas_ocupadas',
+                ['vigente', ...TipoNombramiento::valoresSinPlaza()],
+            );
     }
 
     public function contratosVigentes(): HasMany
@@ -163,9 +183,10 @@ class Puesto extends Model
         return \App\Models\Expediente\ContratoServidor::queOcupanPlazaDe($this->id)->count();
     }
 
+    /** El de contrato no tiene plazas, así que tampoco tiene disponibles. */
     public function plazasDisponibles(): int
     {
-        return max(0, $this->plazas - $this->plazasOcupadas());
+        return $this->esDePlantilla() ? max(0, (int) $this->plazas - $this->plazasOcupadas()) : 0;
     }
 
     public function tieneVacantes(): bool

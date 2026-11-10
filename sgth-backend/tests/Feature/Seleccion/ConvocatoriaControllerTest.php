@@ -79,8 +79,12 @@ test('formal: si igual envían tipo_nombramiento_previsto, responde 422 (no 500 
 });
 
 test('express: crea la convocatoria sin fechas, autocompletadas con hoy, con el tipo_nombramiento_previsto declarado', function () {
+    // El ocasional va en un puesto de contrato (P9).
+    $deContrato = puestoDeContratoDePrueba($this->puesto->unidadAdministrativa, 'Asistente Ocasional');
+
     $response = $this->actingAs($this->user, 'sanctum')->postJson('/api/v1/seleccion/convocatorias', [
         ...$this->payloadBase,
+        'puesto_id' => $deContrato->id,
         'tipo_proceso' => 'express',
         'tipo_nombramiento_previsto' => 'servicios_ocasionales',
     ]);

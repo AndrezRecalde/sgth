@@ -26,6 +26,8 @@ beforeEach(function () {
 
     $unidad = unidadDePrueba();
     $this->puesto = puestoDePrueba($unidad, 'Consultor');
+    // El ocasional y el profesional, en un puesto de contrato (P9).
+    $this->puestoDeContrato = puestoDeContratoDePrueba($unidad, 'Consultor Externo');
 
     $this->servidor = Servidor::create([
         'cedula' => '0800000301', 'nombre' => 'Prueba', 'apellido' => 'Marcación',
@@ -38,7 +40,7 @@ beforeEach(function () {
         $this->servicio->crear($this->servidor->id, [
             'tipo_nombramiento'        => $nombramiento->value,
             'unidad_administrativa_id' => $this->puesto->unidad_administrativa_id,
-            'puesto_id'                => $this->puesto->id,
+            'puesto_id'                => puestoParaLaModalidad($nombramiento, $this->puesto, $this->puestoDeContrato)->id,
             'fecha_inicio'             => '2026-01-01',
             'fecha_fin'                => '2026-12-31',
             'estado'                   => 'vigente',

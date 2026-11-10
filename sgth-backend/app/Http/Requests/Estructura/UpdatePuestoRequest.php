@@ -4,9 +4,11 @@ namespace App\Http\Requests\Estructura;
 
 use App\Enums\NivelComplejidadPuesto;
 use App\Enums\RolPuesto;
+use App\Enums\TipoPuesto;
 use App\Models\Estructura\Puesto;
 use App\Rules\GrupoOcupacionalDelRegimen;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\Validator;
 
@@ -29,7 +31,8 @@ final class UpdatePuestoRequest extends FormRequest
                 new GrupoOcupacionalDelRegimen($this->regimenDelPuesto()),
             ],
             'partida_presupuestaria_id' => ['nullable', 'integer', 'exists:partidas_presupuestarias,id'],
-            'plazas'                    => ['sometimes', 'integer', 'min:1'],
+            'tipo'                      => ['sometimes', Rule::enum(TipoPuesto::class)],
+            'plazas'                    => ['sometimes', 'nullable', 'integer', 'min:1'],
             'rol_puesto'                => ['nullable', new Enum(RolPuesto::class)],
             'nivel_complejidad'         => ['nullable', new Enum(NivelComplejidadPuesto::class)],
             'regimen_laboral'           => ['sometimes', 'string', 'in:losep,codigo_trabajo'],
@@ -47,11 +50,19 @@ final class UpdatePuestoRequest extends FormRequest
     public function after(): array
     {
         $guardado = $this->puestoGuardado();
+        $tipo = $this->has('tipo') ? $this->input('tipo') : $guardado?->tipo;
+
+        // Al pasar a contrato, las plazas guardadas no cuentan: el servicio
+        // las deja nulas. Solo se rechazan si se envían.
+        $plazasGuardadas = TipoPuesto::tryFrom($tipo instanceof TipoPuesto ? $tipo->value : (string) $tipo) === TipoPuesto::CONTRATO
+            ? null
+            : $guardado?->plazas;
 
         return [
             fn (Validator $validator) => CoherenciaDelPuesto::validar($validator, [
+                'tipo'            => $tipo,
                 'es_jefe'         => $this->has('es_jefe') ? $this->input('es_jefe') : $guardado?->es_jefe,
-                'plazas'          => $this->has('plazas') ? $this->input('plazas') : $guardado?->plazas,
+                'plazas'          => $this->has('plazas') ? $this->input('plazas') : $plazasGuardadas,
                 'regimen_laboral' => $this->regimenDelPuesto(),
                 'rol_puesto'      => $this->has('rol_puesto') ? $this->input('rol_puesto') : $guardado?->rol_puesto,
             ]),

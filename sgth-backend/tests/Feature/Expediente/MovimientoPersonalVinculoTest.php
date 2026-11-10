@@ -380,36 +380,21 @@ test('una prestación de servicios reubica al servidor conservando el mismo cont
 });
 
 // Era la prestación de servicios hasta la fase 4.2; ahora es la adenda del
-// contrato civil, que también lo reubica.
-test('la adenda de Servicios Profesionales no compite por la plaza', function () {
-    $puestoUnico = Puesto::create([
+// contrato civil, que también lo reubica. Desde P9 del diseño del Manual de
+// Puestos, a otro puesto de contrato: uno de plantilla es del distributivo, y
+// un contrato civil no entra ahí aunque no consuma plaza [TH D12].
+test('la adenda de Servicios Profesionales lo reubica en otro puesto de contrato, no en uno de plantilla', function () {
+    $dePlantilla = Puesto::create([
         'codigo' => 'P-UNICO', 'unidad_administrativa_id' => $this->unidad->id, 'plazas' => 1,
     ]);
-
-    // La única plaza ya está tomada por un permanente.
-    $titular = Servidor::create([
-        'user_id' => User::factory()->create()->id,
-        'cedula' => '1414141414', 'nombre' => 'Titular', 'apellido' => 'DeLaPlaza',
-        'regimen_laboral' => 'losep',
-        'puesto_id' => $puestoUnico->id,
-        'unidad_administrativa_id' => $this->unidad->id,
-    ]);
-
-    ContratoServidor::create([
-        'servidor_id' => $titular->id,
-        'tipo_nombramiento' => 'nombramiento_permanente',
-        'numero_contrato' => 'CT-2019-0050',
-        'unidad_administrativa_id' => $this->unidad->id,
-        'puesto_id' => $puestoUnico->id,
-        'fecha_inicio' => '2019-01-01',
-        'estado' => 'vigente',
-    ]);
+    $deContrato = puestoDeContratoDePrueba($this->unidad, 'Consultor de Proyectos');
+    $otroDeContrato = puestoDeContratoDePrueba($this->unidad, 'Consultor Jurídico');
 
     $profesional = Servidor::create([
         'user_id' => User::factory()->create()->id,
         'cedula' => '1515151515', 'nombre' => 'Servicios', 'apellido' => 'Profesionales',
         'regimen_laboral' => 'servicios_profesionales',
-        'puesto_id' => $this->puestoA->id,
+        'puesto_id' => $deContrato->id,
         'unidad_administrativa_id' => $this->unidad->id,
     ]);
 
@@ -418,32 +403,33 @@ test('la adenda de Servicios Profesionales no compite por la plaza', function ()
         'tipo_nombramiento' => 'servicios_profesionales',
         'numero_contrato' => 'CT-2025-0300',
         'unidad_administrativa_id' => $this->unidad->id,
-        'puesto_id' => $this->puestoA->id,
+        'puesto_id' => $deContrato->id,
         'fecha_inicio' => '2025-01-01',
         'fecha_fin' => '2026-12-31',
         'estado' => 'vigente',
     ]);
     $profesional->refresh();
 
-    $movimiento = app(\App\Services\Expediente\MovimientoPersonalService::class)
-        ->registrar($profesional->id, [
+    $adenda = fn (Puesto $destino) => $this->stateService->transicionar(
+        app(\App\Services\Expediente\MovimientoPersonalService::class)->registrar($profesional->id, [
             'tipo_movimiento'   => TipoMovimientoPersonal::ADENDA->value,
-            'resolucion_numero' => 'ADENDA-PRUEBA',
-            'descripcion'       => 'Adenda al puesto único',
+            'resolucion_numero' => 'ADENDA-'.$destino->id,
+            'descripcion'       => 'Adenda que cambia el puesto',
             'fecha_efectiva'    => '2026-08-01',
-            'puesto_destino_id' => $puestoUnico->id,
+            'puesto_destino_id' => $destino->id,
             'unidad_destino_id' => $this->unidad->id,
-        ]);
+        ]),
+        EstadoAccionPersonal::SUSCRITA,
+    );
 
-    $movimiento = $this->stateService->transicionar($movimiento, EstadoAccionPersonal::SUSCRITA);
-    $this->stateService->transicionar($movimiento->fresh(), EstadoAccionPersonal::REGISTRADA);
+    $haciaPlantilla = $adenda($dePlantilla);
+    expect(fn () => $this->stateService->transicionar($haciaPlantilla->fresh(), EstadoAccionPersonal::REGISTRADA))
+        ->toThrow(\App\Exceptions\ReglaNegocioException::class, 'es de plantilla');
+    expect($contrato->fresh()->puesto_id)->toBe($deContrato->id);
 
-    // Servicios Profesionales no ocupa plaza (TipoNombramiento::ocupaPlaza()),
-    // así que la plaza única del permanente no le estorba: es justamente el
-    // caso que la adenda tiene que poder resolver.
-    $contrato->refresh();
-    expect($contrato->puesto_id)->toBe($puestoUnico->id)
-        ->and($contrato->estado->value)->toBe('vigente');
+    $this->stateService->transicionar($adenda($otroDeContrato)->fresh(), EstadoAccionPersonal::REGISTRADA);
+    expect($contrato->fresh()->puesto_id)->toBe($otroDeContrato->id)
+        ->and($contrato->fresh()->estado->value)->toBe('vigente');
 });
 
 // ── PUT /expediente/servidores/{id} rechaza puesto/unidad/tipo_nombramiento ──

@@ -50,6 +50,10 @@ beforeEach(function () {
         'codigo' => 'P-RC', 'unidad_administrativa_id' => $this->unidad->id, 'plazas' => 5,
         'partida_presupuestaria_id' => $this->partida->id,
     ]);
+    // El ocasional y el profesional, en un puesto de contrato (P9).
+    $this->puestoDeContrato = puestoDeContratoDePrueba($this->unidad, 'Asistente Ocasional', [
+        'partida_presupuestaria_id' => $this->partida->id,
+    ]);
 
     $this->estados = app(MovimientoPersonalStateService::class);
     $this->hoy = now()->toDateString();
@@ -75,7 +79,7 @@ beforeEach(function () {
             'fecha_efectiva'              => $this->hoy,
             'tipo_nombramiento_propuesto' => $nombramiento,
             'unidad_destino_id'           => $this->unidad->id,
-            'puesto_destino_id'           => $this->puesto->id,
+            'puesto_destino_id'           => puestoParaLaModalidad($nombramiento, $this->puesto, $this->puestoDeContrato)->id,
             'numero_contrato'             => 'CSO-2026-0'.$this->contador,
             'remuneracion_propuesta'      => 1200,
             'fecha_fin_propuesta'         => now()->addMonths(11)->toDateString(),
@@ -208,13 +212,14 @@ test('pide el plazo, la partida y un número que no esté ya registrado', functi
     expect(fn () => ($this->registrar)($sinPlazo))
         ->toThrow(ReglaNegocioException::class, 'el plazo del contrato');
 
-    $this->puesto->update(['partida_presupuestaria_id' => null]);
+    // El ocasional va en el puesto de contrato: es el que se queda sin partida.
+    $this->puestoDeContrato->update(['partida_presupuestaria_id' => null]);
     $sinPartida = ($this->ingreso)(($this->persona)(), 'servicios_ocasionales')->json('datos.id');
 
     expect(fn () => ($this->registrar)($sinPartida))
         ->toThrow(ReglaNegocioException::class, 'la partida presupuestaria');
 
-    $this->puesto->update(['partida_presupuestaria_id' => $this->partida->id]);
+    $this->puestoDeContrato->update(['partida_presupuestaria_id' => $this->partida->id]);
     ($this->registrar)(($this->ingreso)(($this->persona)(), 'servicios_ocasionales', ['numero_contrato' => 'CSO-1'])->json('datos.id'));
     $repetido = ($this->ingreso)(($this->persona)(), 'servicios_ocasionales', ['numero_contrato' => 'CSO-1'])->json('datos.id');
 

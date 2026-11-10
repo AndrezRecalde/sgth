@@ -11,6 +11,7 @@ use App\Models\Expediente\Servidor;
 use App\Models\Seleccion\Convocatoria;
 use App\Models\Seleccion\DocumentoPostulante;
 use App\Models\Seleccion\Postulante;
+use App\Rules\PuestoAdmiteModalidad;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -56,6 +57,9 @@ final class PostulanteController extends Controller
             'puesto_id' => [
                 $esContenedor ? 'required' : 'prohibited',
                 'nullable', 'integer', 'exists:puestos,id',
+                // El puesto que trae el aspirante, del tipo que pide la
+                // modalidad del contenedor (P9).
+                new PuestoAdmiteModalidad($convocatoria->tipo_nombramiento_previsto),
             ],
             'fecha_inscripcion' => ['nullable', 'date'],
             // Diez dígitos, como en el Expediente (StoreServidorBasicoRequest):

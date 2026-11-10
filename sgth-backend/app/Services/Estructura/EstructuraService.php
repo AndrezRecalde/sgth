@@ -4,6 +4,7 @@ namespace App\Services\Estructura;
 
 use App\Contracts\Estructura\EstructuraServiceInterface;
 use App\Models\Estructura\UnidadAdministrativa;
+use App\Enums\TipoPuesto;
 use App\Models\Estructura\Puesto;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -424,6 +425,12 @@ final class EstructuraService implements EstructuraServiceInterface
                 isset($filtros['activo']),
                 fn($q) => $q->where('puestos.activo', filter_var($filtros['activo'], FILTER_VALIDATE_BOOLEAN))
             )
+            // De plantilla o de contrato (P9). Un valor que no es ninguno de
+            // los dos no filtra.
+            ->when(
+                TipoPuesto::tryFrom((string) ($filtros['tipo'] ?? '')),
+                fn($q, TipoPuesto $tipo) => $q->where('puestos.tipo', $tipo->value)
+            )
             ->when(
                 filled($filtros['search'] ?? null),
                 fn($q) => $this->filtrarPuestosPorTexto($q, $filtros['search'])
@@ -488,8 +495,20 @@ final class EstructuraService implements EstructuraServiceInterface
     private const UNIDAD_CON_JEFATURA = 'La unidad ya tiene un puesto de jefatura, aunque esté desactivado. '
         .'Desmarque «Es jefe de unidad» en ese puesto antes de marcarlo en otro.';
 
+    /** El de contrato no tiene plazas (P9): sin esto, la columna pondría su `DEFAULT 1`. */
+    private function plazasSegunTipo(array $datos): array
+    {
+        if (($datos['tipo'] ?? null) === TipoPuesto::CONTRATO->value) {
+            $datos['plazas'] = null;
+        }
+
+        return $datos;
+    }
+
     public function crearPuesto(array $datos): Puesto
     {
+        $datos = $this->plazasSegunTipo($datos);
+
         return DB::transaction(function () use ($datos) {
             // Regla de Negocio: Solo puede haber un Jefe por Unidad Administrativa
             if (isset($datos['es_jefe']) && $datos['es_jefe']) {
@@ -517,6 +536,8 @@ final class EstructuraService implements EstructuraServiceInterface
 
     public function actualizarPuesto(int $id, array $datos): Puesto
     {
+        $datos = $this->plazasSegunTipo($datos);
+
         return DB::transaction(function () use ($id, $datos) {
             $puesto = $this->obtenerPuesto($id);
 
