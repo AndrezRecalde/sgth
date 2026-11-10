@@ -139,19 +139,16 @@ test('llega el titular al puesto y el encargo termina la víspera', function () 
     $encargo = ($this->encargar)($this->director);
     ($this->registrarAccion)($encargo->movimientoPersonal);
 
-    // Un ingreso al puesto, registrado: rige el 1 de noviembre.
+    // Un ingreso al puesto, registrado: rige el 1 de noviembre. De libre
+    // nombramiento, como un director: un ocasional ya no entra a un puesto de
+    // plantilla (P9 del diseño del Manual de Puestos).
     $nuevo = ($this->servidor)();
-    $partida = PartidaPresupuestaria::create([
-        'codigo' => '510510', 'descripcion' => 'Servicios ocasionales',
-        'grupo_gasto' => 'Gastos en Personal', 'activo' => true, 'disponible' => true,
-    ]);
     $id = $this->postJson("/api/v1/expediente/servidores/{$nuevo->id}/movimientos", [
         'clase' => 'ingreso', 'descripcion' => 'Designación del titular', 'fecha_efectiva' => '2026-11-01',
-        'tipo_nombramiento_propuesto' => TipoNombramiento::SERVICIOS_OCASIONALES->value,
+        'tipo_nombramiento_propuesto' => TipoNombramiento::LIBRE_NOMBRAMIENTO->value,
         'unidad_destino_id' => $this->unidad->id, 'puesto_destino_id' => $this->director->id,
-        'numero_contrato' => 'CSO-2026-077', 'remuneracion_propuesta' => 2500,
-        'fecha_fin_propuesta' => '2026-12-31', 'requiere_dictamen_medico' => false,
-        'partida_presupuestaria_id' => $partida->id,
+        'numero_contrato' => 'LNR-2026-077', 'remuneracion_propuesta' => 2500,
+        'requiere_dictamen_medico' => false,
     ])->assertCreated()->json('datos.id');
 
     $this->travelTo(Carbon::parse('2026-11-01 09:00'));

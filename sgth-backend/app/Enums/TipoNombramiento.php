@@ -128,6 +128,30 @@ enum TipoNombramiento: string
     }
 
     /**
+     * ¿Este vínculo cabe en un puesto de ese tipo? (P9 del diseño del Manual de
+     * Puestos.)
+     *
+     * - Los nombramientos, los obreros y las autoridades electas van en
+     *   puestos de plantilla: son el distributivo.
+     * - Los servicios ocasionales [TH D11] y los profesionales [TH D12] van en
+     *   puestos de contrato. Su contrato no ocupa plaza, y en uno de plantilla
+     *   sus plazas se contaban como vacantes.
+     * - Salvo el reemplazo [TH D13]: quien cubre la ausencia de un servidor
+     *   entra al puesto del titular, hace sus funciones y no consume su plaza,
+     *   porque queda ligado a la ausencia (`cubre_movimiento_id`). Solo un
+     *   ocasional o un profesional puede ser reemplazo
+     *   (`MovimientoPersonalService::validarReemplazo()`).
+     */
+    public function admitePuesto(TipoPuesto $tipo, bool $esReemplazo = false): bool
+    {
+        return match ($this) {
+            self::SERVICIOS_OCASIONALES,
+            self::SERVICIOS_PROFESIONALES => $tipo === TipoPuesto::CONTRATO || ($esReemplazo && $tipo === TipoPuesto::PLANTILLA),
+            default                       => $tipo === TipoPuesto::PLANTILLA,
+        };
+    }
+
+    /**
      * Los valores de los nombramientos que NO ocupan plaza, para las consultas
      * que necesitan excluirlos en SQL.
      *

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Estructura;
 
 use App\Enums\RolPuesto;
+use App\Enums\TipoPuesto;
 use Illuminate\Validation\Validator;
 
 /**
@@ -17,17 +18,33 @@ use Illuminate\Validation\Validator;
  * - El rol «Código del Trabajo» es el de los obreros, y solo cabe en un puesto
  *   de ese régimen; un puesto de ese régimen no lleva un rol de la LOSEP. Del
  *   rol sale, por ejemplo, si el puesto admite traspaso o revisión.
+ * - Un puesto de plantilla tiene al menos una plaza; uno de contrato no tiene
+ *   ninguna, porque nada de lo que lo ocupa consume una, y no es jefatura (P9
+ *   del diseño del Manual de Puestos).
  */
 final class CoherenciaDelPuesto
 {
     /**
-     * @param  array{es_jefe: mixed, plazas: mixed, regimen_laboral: mixed, rol_puesto: mixed}  $puesto
+     * @param  array{tipo: mixed, es_jefe: mixed, plazas: mixed, regimen_laboral: mixed, rol_puesto: mixed}  $puesto
      */
     public static function validar(Validator $validator, array $puesto): void
     {
         $errores = $validator->errors();
 
         $esJefe = filter_var($puesto['es_jefe'], FILTER_VALIDATE_BOOLEAN);
+        $tipo = $puesto['tipo'] instanceof TipoPuesto ? $puesto['tipo'] : TipoPuesto::tryFrom((string) $puesto['tipo']);
+        $tipo ??= TipoPuesto::PLANTILLA;
+
+        if ($tipo === TipoPuesto::CONTRATO) {
+            if (filled($puesto['plazas']) && ! $errores->has('plazas')) {
+                $errores->add('plazas', 'Un puesto de contrato no tiene plazas: lo que lo ocupa no consume ninguna.');
+            }
+            if ($esJefe && ! $errores->has('es_jefe')) {
+                $errores->add('es_jefe', 'Una jefatura es un puesto de plantilla, no de contrato.');
+            }
+        } elseif (blank($puesto['plazas']) && ! $errores->has('plazas')) {
+            $errores->add('plazas', 'Un puesto de plantilla tiene al menos una plaza.');
+        }
         if ($esJefe && is_numeric($puesto['plazas']) && (int) $puesto['plazas'] !== 1 && ! $errores->has('plazas')) {
             $errores->add(
                 'plazas',

@@ -49,8 +49,9 @@ beforeEach(function () {
         'codigo' => 'OBR-CC', 'nombre' => 'Dirección de Obras Públicas', 'nivel' => 1,
     ]);
 
-    $this->puesto = Puesto::create(['codigo' => 'P-CC1', 'unidad_administrativa_id' => $this->unidad->id, 'plazas' => 1]);
-    $this->otroPuesto = Puesto::create(['codigo' => 'P-CC2', 'unidad_administrativa_id' => $this->otraUnidad->id, 'plazas' => 1]);
+    // El contrato civil va en un puesto de contrato (P9).
+    $this->puesto = puestoDeContratoDePrueba($this->unidad, 'Consultor Civil');
+    $this->otroPuesto = puestoDeContratoDePrueba($this->otraUnidad, 'Consultor de Obras');
 
     $this->estados = app(MovimientoPersonalStateService::class);
     $this->contador = 0;

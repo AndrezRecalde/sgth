@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\Seleccion\Convocatoria;
 use App\Services\Seleccion\CalificacionService;
+use App\Rules\PuestoAdmiteModalidad;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -65,7 +66,16 @@ final class ConvocatoriaController extends Controller
     public function store(Request $request): JsonResponse
     {
         $datos = $request->validate([
-            'puesto_id'       => ['required', 'integer', 'exists:puestos,id'],
+            // Que el puesto admita la modalidad: el concurso formal va sobre
+            // uno de plantilla, y el express según su modalidad prevista (P9).
+            'puesto_id'       => [
+                'required', 'integer', 'exists:puestos,id',
+                new PuestoAdmiteModalidad(
+                    $request->input('tipo_proceso') === TipoProcesoConvocatoria::EXPRESS->value
+                        ? TipoNombramiento::tryFrom((string) $request->input('tipo_nombramiento_previsto'))
+                        : null
+                ),
+            ],
             'titulo'          => ['required', 'string', 'max:255'],
             'descripcion'     => ['required', 'string'],
             'bases_concurso'  => ['nullable', 'array'],
@@ -151,7 +161,10 @@ final class ConvocatoriaController extends Controller
         }
 
         $datos = $request->validate([
-            'puesto_id'      => ['sometimes', 'integer', 'exists:puestos,id'],
+            'puesto_id'      => [
+                'sometimes', 'integer', 'exists:puestos,id',
+                new PuestoAdmiteModalidad($convocatoria->tipo_nombramiento_previsto),
+            ],
             'titulo'         => ['sometimes', 'string', 'max:255'],
             'descripcion'    => ['sometimes', 'string'],
             'bases_concurso' => ['nullable', 'array'],

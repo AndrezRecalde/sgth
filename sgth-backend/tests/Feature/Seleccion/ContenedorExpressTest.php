@@ -36,11 +36,13 @@ beforeEach(function () {
 
     $cargo = Cargo::create(['nombre' => 'Analista']);
 
+    // Los aspirantes de esta prueba son de servicios profesionales: su puesto
+    // es de contrato (P9 del diseño del Manual de Puestos).
     $this->puesto = Puesto::create([
+        'tipo' => 'contrato',
+        'plazas' => null,
         'unidad_administrativa_id' => $this->unidad->id,
         'cargo_id' => $cargo->id,
-        'plazas' => 30,
-        'rmu' => 1200,
     ]);
 
     $this->profesionales = Convocatoria::where('codigo', 'EXP-PROFESIONALES')->firstOrFail();

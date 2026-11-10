@@ -44,9 +44,10 @@ beforeEach(function () {
 
     $this->unidad = UnidadAdministrativa::create(['codigo' => 'UATH-POS', 'nombre' => 'Unidad de Talento Humano', 'nivel' => 1]);
     $this->puesto = Puesto::create(['codigo' => 'P-POS', 'unidad_administrativa_id' => $this->unidad->id, 'plazas' => 20]);
-    // El ocasional va con la partida de los contratos.
+    // El ocasional va con la partida de los contratos, en un puesto de
+    // contrato (P9).
     $this->puestoOcasional = Puesto::create([
-        'codigo' => 'P-POS-OC', 'unidad_administrativa_id' => $this->unidad->id, 'plazas' => 20,
+        'tipo' => 'contrato', 'plazas' => null, 'unidad_administrativa_id' => $this->unidad->id,
         'partida_presupuestaria_id' => PartidaPresupuestaria::create([
             'codigo' => '510510', 'descripcion' => 'Servicios Personales por Contrato',
             'grupo_gasto' => 'Gastos en Personal', 'activo' => true, 'disponible' => true,

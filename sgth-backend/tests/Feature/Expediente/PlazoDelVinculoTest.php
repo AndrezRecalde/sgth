@@ -32,9 +32,13 @@ beforeEach(function () {
         'regimen_laboral' => 'losep', 'estado' => true,
     ]);
     $this->contratos = app(ContratoServidorService::class);
+    // El ocasional, en un puesto de contrato; el provisional, en el de
+    // plantilla (P9).
+    $this->puestoDeContrato = puestoDeContratoDePrueba($this->unidad, 'Ocasional Plazos');
     $this->datos = fn (array $extra) => [
         'tipo_nombramiento' => 'servicios_ocasionales',
-        'unidad_administrativa_id' => $this->unidad->id, 'puesto_id' => $this->puesto->id,
+        'unidad_administrativa_id' => $this->unidad->id,
+        'puesto_id' => puestoParaLaModalidad($extra['tipo_nombramiento'] ?? 'servicios_ocasionales', $this->puesto, $this->puestoDeContrato)->id,
         'fecha_inicio' => '2026-01-01', 'estado' => 'vigente', ...$extra,
     ];
 });

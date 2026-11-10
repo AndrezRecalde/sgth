@@ -87,3 +87,36 @@ function puestoJefeDePrueba(
 ): Puesto {
     return puestoDePrueba($unidad, $cargo, ['es_jefe' => true]);
 }
+
+/**
+ * Puesto de contrato: el de los servicios ocasionales y profesionales (P9 del
+ * diseño del Manual de Puestos). No tiene plazas: lo que lo ocupa no consume
+ * ninguna. Fuera del reemplazo de un servidor ausente, un ocasional o un
+ * profesional ya no entra a un puesto de plantilla.
+ */
+function puestoDeContratoDePrueba(
+    UnidadAdministrativa $unidad,
+    string $cargo = 'Consultor',
+    array $atributos = [],
+): Puesto {
+    return Puesto::create(array_merge([
+        'tipo'                     => 'contrato',
+        'plazas'                   => null,
+        'unidad_administrativa_id' => $unidad->id,
+        'cargo_id'                 => Cargo::firstOrCreate(['nombre' => $cargo])->id,
+        'regimen_laboral'          => 'losep',
+        'activo'                   => true,
+    ], $atributos));
+}
+
+/**
+ * El puesto que le corresponde a una modalidad, para las pruebas que crean
+ * vínculos de varias sobre la misma unidad: el de plantilla si la admite, si no
+ * el de contrato (`TipoNombramiento::admitePuesto()`).
+ */
+function puestoParaLaModalidad(\App\Enums\TipoNombramiento|string $modalidad, Puesto $plantilla, Puesto $contrato): Puesto
+{
+    $modalidad = $modalidad instanceof \App\Enums\TipoNombramiento ? $modalidad : \App\Enums\TipoNombramiento::from($modalidad);
+
+    return $modalidad->admitePuesto(\App\Enums\TipoPuesto::PLANTILLA) ? $plantilla : $contrato;
+}

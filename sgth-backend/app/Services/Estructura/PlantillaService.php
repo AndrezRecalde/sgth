@@ -3,6 +3,7 @@
 namespace App\Services\Estructura;
 
 use App\Enums\TipoNombramiento;
+use App\Enums\TipoPuesto;
 use App\Models\Expediente\ContratoServidor;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -75,8 +76,11 @@ class PlantillaService
                     // El reemplazo no consume plaza: la sigue teniendo el
                     // titular en comisión, cuyo contrato continúa vigente.
                     ->whereNull('c.cubre_movimiento_id')
-                    ->whereNotIn('c.tipo_nombramiento', TipoNombramiento::valoresSinPlaza());
+                    ->whereNotIn('c.tipo_nombramiento', self::modalidadesQueNoLlenanLaPlaza());
             })
+            // Solo los del distributivo (P9): las plazas de un puesto de
+            // contrato no existen, y antes se contaban como vacantes.
+            ->where('p.tipo', TipoPuesto::PLANTILLA->value)
             ->where('p.activo', true)
             ->whereNull('p.deleted_at')
             ->groupBy('p.id', 'p.regimen_laboral', 'p.plazas', 'u.id', 'u.nombre')
@@ -87,8 +91,26 @@ class PlantillaService
                 'u.id as unidad_id',
                 'u.nombre as unidad',
             ])
-            ->selectRaw('count(c.id) as ocupadas')
+            // Con tope en las plazas: el día del relevo, la autoridad saliente
+            // y la entrante coinciden en el mismo puesto.
+            ->selectRaw('least(count(c.id), p.plazas) as ocupadas')
             ->get();
+    }
+
+    /**
+     * Lo que no llena la plaza en la Plantilla. Es lo que no la consume
+     * (`TipoNombramiento::valoresSinPlaza()`), menos la elección popular: el
+     * Prefecto no pasa por el control de plazas, para que el saliente y el
+     * entrante puedan coincidir, pero su plaza no está vacante.
+     *
+     * @return list<string>
+     */
+    private static function modalidadesQueNoLlenanLaPlaza(): array
+    {
+        return array_values(array_diff(
+            TipoNombramiento::valoresSinPlaza(),
+            [TipoNombramiento::ELECCION_POPULAR->value],
+        ));
     }
 
     /**

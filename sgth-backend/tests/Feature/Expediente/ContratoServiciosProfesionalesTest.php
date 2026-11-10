@@ -36,7 +36,10 @@ beforeEach(function () {
         'codigo' => 'UATH-01', 'nombre' => 'Unidad de Talento Humano', 'nivel' => 1,
     ]);
 
-    $this->puesto = Puesto::create([
+    // Los contratos de esta prueba son ocasionales y profesionales: van en un
+    // puesto de contrato (P9). El nombramiento permanente, en uno de plantilla.
+    $this->puesto = puestoDeContratoDePrueba($this->unidad, 'Consultor');
+    $this->puestoDePlantilla = Puesto::create([
         'unidad_administrativa_id' => $this->unidad->id, 'plazas' => 20,
     ]);
 
@@ -112,7 +115,7 @@ test('los demás nombramientos no reciben fecha de fin automática', function ()
     $contrato = $this->contratoService->crear($servidor->id, [
         'tipo_nombramiento'        => TipoNombramiento::PERMANENTE->value,
         'unidad_administrativa_id' => $this->unidad->id,
-        'puesto_id'                => $this->puesto->id,
+        'puesto_id'                => $this->puestoDePlantilla->id,
         'fecha_inicio'             => '2026-07-01',
         'estado'                   => 'vigente',
     ]);
@@ -242,7 +245,7 @@ test('los contratos de otros nombramientos no se tocan', function () {
     $this->contratoService->crear($servidor->id, [
         'tipo_nombramiento'        => TipoNombramiento::PROVISIONAL->value,
         'unidad_administrativa_id' => $this->unidad->id,
-        'puesto_id'                => $this->puesto->id,
+        'puesto_id'                => $this->puestoDePlantilla->id,
         'fecha_inicio'             => '2025-01-01',
         'fecha_fin'                => '2025-12-31',
         'estado'                   => 'vigente',

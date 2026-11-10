@@ -4,9 +4,11 @@ namespace App\Http\Requests\Estructura;
 
 use App\Enums\NivelComplejidadPuesto;
 use App\Enums\RolPuesto;
+use App\Enums\TipoPuesto;
 use App\Models\Estructura\Puesto;
 use App\Rules\GrupoOcupacionalDelRegimen;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\Validator;
 
@@ -27,7 +29,11 @@ final class StorePuestoRequest extends FormRequest
                 new GrupoOcupacionalDelRegimen($this->input('regimen_laboral')),
             ],
             'partida_presupuestaria_id' => ['nullable', 'integer', 'exists:partidas_presupuestarias,id'],
-            'plazas'                    => ['required', 'integer', 'min:1'],
+            // Sin tipo, de plantilla: como nacían todos los puestos (P9).
+            'tipo'                      => ['sometimes', Rule::enum(TipoPuesto::class)],
+            // Obligatorias en uno de plantilla, prohibidas en uno de contrato:
+            // lo decide `CoherenciaDelPuesto`.
+            'plazas'                    => ['nullable', 'integer', 'min:1'],
             'rol_puesto'                => ['nullable', new Enum(RolPuesto::class)],
             'nivel_complejidad'         => ['nullable', new Enum(NivelComplejidadPuesto::class)],
             'regimen_laboral'           => ['required', 'string', 'in:losep,codigo_trabajo'],
@@ -41,6 +47,7 @@ final class StorePuestoRequest extends FormRequest
     {
         return [
             fn (Validator $validator) => CoherenciaDelPuesto::validar($validator, [
+                'tipo'            => $this->input('tipo', TipoPuesto::PLANTILLA->value),
                 'es_jefe'         => $this->input('es_jefe', false),
                 'plazas'          => $this->input('plazas'),
                 'regimen_laboral' => $this->input('regimen_laboral'),
@@ -56,7 +63,6 @@ final class StorePuestoRequest extends FormRequest
             'cargo_id.exists'                    => 'El cargo seleccionado no existe.',
             'unidad_administrativa_id.required'  => 'La unidad administrativa es obligatoria.',
             'unidad_administrativa_id.exists'    => 'La unidad administrativa no existe.',
-            'plazas.required'                    => 'El número de plazas es obligatorio.',
             'plazas.min'                         => 'Debe haber al menos 1 plaza.',
             'regimen_laboral.required'           => 'El régimen laboral es obligatorio.',
         ];
