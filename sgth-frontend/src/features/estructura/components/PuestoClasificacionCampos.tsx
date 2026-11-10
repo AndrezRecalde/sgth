@@ -64,7 +64,7 @@ export function PuestoClasificacionCampos({ control, errors, setValue, regimen, 
             render={({ field }) => (
               <Select
                 label="Grupo ocupacional (LOSEP)"
-                description={ocupado ? SOLO_CON_REVISION : 'Define el grado y la RMU del puesto.'}
+                description={ocupado ? SOLO_CON_REVISION : 'Define el grado y la RMU del puesto, y sugiere su rol.'}
                 placeholder="Seleccione el grupo"
                 data={opcionesGrupo}
                 searchable
@@ -115,7 +115,6 @@ export function PuestoClasificacionCampos({ control, errors, setValue, regimen, 
           render={({ field }) => (
             <Select
               label="Rol del puesto"
-              description="Al elegir el grupo ocupacional se sugiere el suyo."
               placeholder="Seleccione el rol"
               data={rolesDelRegimen(regimen)}
               clearable
