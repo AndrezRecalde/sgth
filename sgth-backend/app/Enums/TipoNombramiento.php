@@ -128,6 +128,32 @@ enum TipoNombramiento: string
     }
 
     /**
+     * ¿Llena la plaza a la vista de Talento Humano? Es `ocupaPlaza()` más la
+     * autoridad electa: no pasa por el control de plazas, porque el día del
+     * relevo coinciden la saliente y la entrante, pero su plaza no está
+     * vacante. Lo usan la Plantilla y las plazas ocupadas del listado de
+     * puestos, que cuentan; la validación de vacante sigue con `ocupaPlaza()`.
+     */
+    public function llenaLaPlaza(): bool
+    {
+        return $this->ocupaPlaza() || $this === self::ELECCION_POPULAR;
+    }
+
+    /**
+     * Los valores de las modalidades que no llenan la plaza (`llenaLaPlaza()`),
+     * para excluirlas en SQL.
+     *
+     * @return list<string>
+     */
+    public static function valoresQueNoLlenanLaPlaza(): array
+    {
+        return array_values(array_map(
+            fn (self $caso) => $caso->value,
+            array_filter(self::cases(), fn (self $caso) => ! $caso->llenaLaPlaza())
+        ));
+    }
+
+    /**
      * ¿Este vínculo cabe en un puesto de ese tipo? (P9 del diseño del Manual de
      * Puestos.)
      *

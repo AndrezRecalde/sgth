@@ -18,6 +18,14 @@ describe('puestoSchema', () => {
     expect(camposConError({ es_jefe: false, plazas: 5 })).toEqual([])
   })
 
+  it('uno de plantilla tiene plazas; uno de contrato, ni plazas ni jefatura (P9)', () => {
+    expect(camposConError({ plazas: null })).toEqual(['plazas'])
+    expect(camposConError({ tipo: 'contrato', plazas: null })).toEqual([])
+    expect(camposConError({ tipo: 'contrato', plazas: null, es_jefe: true })).toEqual(['es_jefe'])
+    // Sin tipo, de plantilla, como nacían todos.
+    expect(puestoSchema.parse(base).tipo).toBe('plantilla')
+  })
+
   it('el rol «Código del Trabajo» va solo con ese régimen', () => {
     expect(camposConError({ rol_puesto: 'codigo_trabajo' })).toEqual(['rol_puesto'])
     expect(camposConError({ regimen_laboral: 'codigo_trabajo', rol_puesto: 'administrativo' })).toEqual(['rol_puesto'])
