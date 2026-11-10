@@ -84,6 +84,7 @@ use App\Http\Controllers\Estructura\PuestoActividadController;
 use App\Http\Controllers\Estructura\PuestoCompetenciaController;
 use App\Http\Controllers\Estructura\PlantillaController;
 use App\Http\Controllers\Estructura\PuestoController;
+use App\Http\Controllers\Estructura\RegularizacionTipoDePuestoController;
 use App\Http\Controllers\Estructura\UnidadAdministrativaController;
 use App\Http\Controllers\Evaluacion\EvaluacionController;
 use App\Http\Controllers\Expediente\CargaFamiliarController;
@@ -320,6 +321,21 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::get('plantilla', [PlantillaController::class, 'resumen'])
             ->middleware('permission:ver-estructura')
             ->name('estructura.plantilla');
+
+        // La regularización del tipo de puesto (docs/diseno-manual-de-puestos.md,
+        // P9, PR 4): «Por revisar» en Puestos y cargos. Reubicar un contrato
+        // pide además `gestionar-expediente`: cambia el vínculo de un servidor.
+        Route::prefix('tipo-de-puesto')->middleware('permission:gestionar-puestos')->group(function () {
+            Route::get('por-revisar', [RegularizacionTipoDePuestoController::class, 'index'])
+                ->name('estructura.tipo-de-puesto.por-revisar');
+            Route::post('puestos/{puestoId}/pasar-a-contrato', [RegularizacionTipoDePuestoController::class, 'pasarAContrato'])
+                ->whereNumber('puestoId')
+                ->name('estructura.tipo-de-puesto.pasar-a-contrato');
+            Route::post('contratos/{contratoId}/reubicar', [RegularizacionTipoDePuestoController::class, 'reubicar'])
+                ->whereNumber('contratoId')
+                ->middleware('permission:gestionar-expediente')
+                ->name('estructura.tipo-de-puesto.reubicar');
+        });
         Route::get(
             'unidades-administrativas/todas',
             [UnidadAdministrativaController::class, 'todas']

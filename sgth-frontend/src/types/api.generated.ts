@@ -8312,6 +8312,55 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/estructura/tipo-de-puesto/por-revisar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Los puestos que parecen de contrato y los contratos en un puesto de plantilla */
+        get: operations["estructura.tipo-de-puesto.por-revisar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/estructura/tipo-de-puesto/puestos/{puestoId}/pasar-a-contrato": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["estructura.tipo-de-puesto.pasar-a-contrato"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/estructura/tipo-de-puesto/contratos/{contratoId}/reubicar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["estructura.tipo-de-puesto.reubicar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/reporteria/configuraciones": {
         parameters: {
             query?: never;
@@ -11923,6 +11972,27 @@ export interface components {
             tiene_documento: string;
             tiene_dictamen: string;
         };
+        /** ContratoPorRegularizarResource */
+        ContratoPorRegularizarResource: {
+            id: number;
+            servidor_id: number;
+            servidor: string | null;
+            tipo_nombramiento: components["schemas"]["TipoNombramiento"];
+            modalidad: string;
+            puesto: {
+                id: number;
+                cargo: string;
+                unidad: string;
+            } | null;
+            /**
+             * @description Los de su misma unidad, con su régimen y, si es ocasional, su
+             *     grupo ocupacional. Vacío: hay que crear el puesto de contrato.
+             */
+            destinos: {
+                id: number;
+                cargo: string | null;
+            }[];
+        };
         /** ContratoServidor */
         ContratoServidor: {
             id: number;
@@ -14551,6 +14621,24 @@ export interface components {
             /** Format: date-time */
             updated_at: string | null;
         };
+        /** PuestoPorRegularizarResource */
+        PuestoPorRegularizarResource: {
+            id: number;
+            cargo: string;
+            unidad: string;
+            regimen_laboral: string;
+            /** @description Las que hoy cuenta la Plantilla como vacantes. */
+            plazas: number | null;
+            ocupantes: {
+                contrato_id: number;
+                /**
+                 * @description Las columnas del nombre, y no `nombre_completo`: un
+                 *     servidor sin ellas cargadas traía el expediente entero.
+                 */
+                nombre: string;
+                modalidad: string;
+            }[];
+        };
         /** PuestoResource */
         PuestoResource: {
             id: number;
@@ -15023,6 +15111,13 @@ export interface components {
          */
         RetirarComunicadoRequest: {
             motivo: string;
+        };
+        /**
+         * ReubicarContratoRequest
+         * @description El puesto de contrato al que pasa un ocasional o un profesional (P9, PR 4).
+         */
+        ReubicarContratoRequest: {
+            puesto_destino_id: number;
         };
         /**
          * ReutilizarRecursoIdentidadRequest
@@ -40973,6 +41068,99 @@ export interface operations {
                         /** @constant */
                         mensaje: "Reglas del préstamo actualizadas.";
                         datos: components["schemas"]["ReglasPrestamoResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "estructura.tipo-de-puesto.por-revisar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Lo que queda por revisar del tipo de puesto.";
+                        datos: {
+                            puestos: components["schemas"]["PuestoPorRegularizarResource"][];
+                            contratos: components["schemas"]["ContratoPorRegularizarResource"][];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "estructura.tipo-de-puesto.pasar-a-contrato": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                puestoId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "El puesto pasó a ser de contrato.";
+                        datos: components["schemas"]["PuestoResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "estructura.tipo-de-puesto.reubicar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contratoId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReubicarContratoRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "El contrato quedó en el puesto de contrato.";
+                        datos: {
+                            id: number;
+                            puesto_id: number;
+                        };
                         meta: null;
                     };
                 };
