@@ -13876,12 +13876,13 @@ export interface components {
                 /** Format: date-time */
                 deleted_at: string | null;
                 grupo_ocupacional_id: number | null;
-                plazas: number;
+                plazas: number | null;
                 rol_puesto: components["schemas"]["RolPuesto"] | null;
                 nivel_complejidad: components["schemas"]["NivelComplejidadPuesto"] | null;
                 regimen_laboral: string;
                 partida_presupuestaria_id: number | null;
                 cargo_id: number | null;
+                tipo: components["schemas"]["TipoPuesto"];
                 rmu: string;
             };
             partida_origen?: components["schemas"]["PartidaPresupuestaria"];
@@ -13942,9 +13943,10 @@ export interface components {
         NivelDeficienciaRiesgo: "muy_deficiente" | "deficiente" | "mejorable" | "aceptable";
         /**
          * NivelEstudio
+         * @description El nivel de un título del historial académico, de menor a mayor. El técnico superior y el tecnológico superior entraron el 2026-11-10 (docs/diseno-manual-de-puestos.md, P2): unas 60 fichas del Manual de Puestos los piden, y sin ellos no había con qué comparar el título de un servidor con lo que exige su puesto. Son tercer nivel técnico-tecnológico (LOES, Art. 118); el tercer nivel de grado es el de las carreras universitarias.
          * @enum {string}
          */
-        NivelEstudio: "primaria" | "secundaria" | "tercer_nivel" | "cuarto_nivel";
+        NivelEstudio: "primaria" | "secundaria" | "tecnico_superior" | "tecnologico_superior" | "tercer_nivel" | "cuarto_nivel";
         /**
          * NivelExposicionRiesgo
          * @description Nivel de Exposición (NE) — NTP 330 (INSHT).
@@ -14460,12 +14462,13 @@ export interface components {
             /** Format: date-time */
             deleted_at: string | null;
             grupo_ocupacional_id: number | null;
-            plazas: number;
+            plazas: number | null;
             rol_puesto: components["schemas"]["RolPuesto"] | null;
             nivel_complejidad: components["schemas"]["NivelComplejidadPuesto"] | null;
             regimen_laboral: string;
             partida_presupuestaria_id: number | null;
             cargo_id: number | null;
+            tipo: components["schemas"]["TipoPuesto"];
         };
         /** PuestoActividad */
         PuestoActividad: {
@@ -14546,11 +14549,17 @@ export interface components {
         /** PuestoResource */
         PuestoResource: {
             id: number;
+            /** @description De plantilla o de contrato (P9): el de contrato no tiene plazas. */
+            tipo: components["schemas"]["TipoPuesto"];
+            /** @enum {string} */
+            tipo_label: "De plantilla" | "De contrato";
             cargo_id: number | null;
             unidad_administrativa_id: number;
             grupo_ocupacional_id: number | null;
             partida_presupuestaria_id: number | null;
-            plazas: number;
+            plazas: number | null;
+            /** @description Lo trae el listado (`conOcupacion()`); fuera de él, se consulta. */
+            plazas_ocupadas: number;
             rol_puesto: components["schemas"]["RolPuesto"] | null;
             nivel_complejidad: components["schemas"]["NivelComplejidadPuesto"] | null;
             regimen_laboral: string;
@@ -14602,6 +14611,15 @@ export interface components {
              *     y entonces la figura que corresponde es el encargo.
              */
             ocupantes: {
+                /**
+                 * @description Con qué modalidad lo ocupa, y si llena una plaza: en
+                 *     «Analista de TIC» había dos permanentes y un
+                 *     profesional, y no se distinguían (P9).
+                 */
+                tipo_nombramiento: components["schemas"]["TipoNombramiento"];
+                modalidad: string;
+                ocupa_plaza: string;
+                es_reemplazo: boolean;
                 id: number;
                 nombre: string;
                 cedula: string;
@@ -15273,12 +15291,13 @@ export interface components {
                 /** Format: date-time */
                 deleted_at: string | null;
                 grupo_ocupacional_id: number | null;
-                plazas: number;
+                plazas: number | null;
                 rol_puesto: components["schemas"]["RolPuesto"] | null;
                 nivel_complejidad: components["schemas"]["NivelComplejidadPuesto"] | null;
                 regimen_laboral: string;
                 partida_presupuestaria_id: number | null;
                 cargo_id: number | null;
+                tipo: components["schemas"]["TipoPuesto"];
                 rmu: string;
             };
             contrato_vigente?: components["schemas"]["ContratoServidor"];
@@ -16312,7 +16331,13 @@ export interface components {
             unidad_administrativa_id: number;
             grupo_ocupacional_id?: number | null;
             partida_presupuestaria_id?: number | null;
-            plazas: number;
+            /** @description Sin tipo, de plantilla: como nacían todos los puestos (P9). */
+            tipo?: components["schemas"]["TipoPuesto"];
+            /**
+             * @description Obligatorias en uno de plantilla, prohibidas en uno de contrato:
+             *     lo decide `CoherenciaDelPuesto`.
+             */
+            plazas?: number | null;
             rol_puesto?: components["schemas"]["RolPuesto"];
             nivel_complejidad?: components["schemas"]["NivelComplejidadPuesto"];
             /** @enum {string} */
@@ -17044,6 +17069,12 @@ export interface components {
          */
         TipoProcesoConvocatoria: "formal" | "express";
         /**
+         * TipoPuesto
+         * @description Si el puesto es del distributivo o solo sostiene contratos que no ocupan plaza (docs/diseno-manual-de-puestos.md, P9). - **De plantilla**: el del Manual de Puestos. Tiene plazas y partida, se   concursa y cuenta en las vacantes. Lo ocupan los nombramientos, los   obreros y las autoridades electas. - **De contrato**: sostiene contratos de servicios ocasionales y de servicios   profesionales [TH D11, D12]. No tiene plazas, no se concursa ni cuenta en   las vacantes. Al de un ocasional le hacen falta grado y perfil, porque cobra   según la escala y se evalúa (Reg. LOSEP 217 y 146 g).  Qué modalidad cabe en cada uno lo decide `TipoNombramiento::admitePuesto()`.
+         * @enum {string}
+         */
+        TipoPuesto: "plantilla" | "contrato";
+        /**
          * TipoSancion
          * @description Sanciones disciplinarias del Art. 43 de la LOSEP, en orden de gravedad. La destitución es la única que termina el vínculo, y por eso es la única que genera una Cesación de Funciones.
          * @enum {string}
@@ -17739,7 +17770,8 @@ export interface components {
             unidad_administrativa_id?: number;
             grupo_ocupacional_id?: number | null;
             partida_presupuestaria_id?: number | null;
-            plazas?: number;
+            tipo?: components["schemas"]["TipoPuesto"];
+            plazas?: number | null;
             rol_puesto?: components["schemas"]["RolPuesto"];
             nivel_complejidad?: components["schemas"]["NivelComplejidadPuesto"];
             /** @enum {string} */
@@ -26023,6 +26055,10 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /**
+                     * @description Que el puesto admita la modalidad: el concurso formal va sobre
+                     *     uno de plantilla, y el express según su modalidad prevista (P9).
+                     */
                     puesto_id: number;
                     titulo: string;
                     descripcion: string;
@@ -38963,7 +38999,7 @@ export interface operations {
                      * @description En un contenedor express el puesto lo trae el aspirante; en un
                      *     concurso formal lo fija la convocatoria y enviarlo es un error.
                      */
-                    puesto_id?: number | null;
+                    puesto_id: number | null;
                     /** Format: date-time */
                     fecha_inscripcion?: string | null;
                     /**

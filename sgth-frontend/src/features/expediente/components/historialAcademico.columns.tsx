@@ -3,12 +3,7 @@ import { IconCheck, IconEdit, IconFileTypePdf, IconTrash, IconX } from '@tabler/
 import type { DataTableColumn } from 'mantine-datatable'
 import { StatusBadge, TableActions, confirmar } from '@/components/ui'
 import type { HistorialAcademicoServidor } from '@/types/api'
-import { ESTADO_FORMACION_LABELS, TONO_ESTADO_FORMACION } from '../constants/formacion'
-
-const NIVEL_LABELS: Record<string, string> = {
-  primaria: 'Primaria', secundaria: 'Secundaria',
-  tercer_nivel: 'Tercer nivel (Pregrado)', cuarto_nivel: 'Cuarto nivel (Posgrado)',
-}
+import { ESTADO_FORMACION_LABELS, TONO_ESTADO_FORMACION, etiquetaNivelEstudio } from '../constants/formacion'
 
 /** Solo el año: el período de un título se lee «2018 - 2022». */
 const anio = (fecha?: string | null) => (fecha ? fecha.substring(0, 4) : null)
@@ -33,7 +28,7 @@ export const getHistorialAcademicoColumns = (
         <Text size="sm" fw={500}>{titulo_capacitacion ?? '—'}</Text>
         {nivel_estudio && (
           <Text size="xs" c="dimmed">
-            {NIVEL_LABELS[nivel_estudio] ?? nivel_estudio}
+            {etiquetaNivelEstudio(nivel_estudio) ?? nivel_estudio}
           </Text>
         )}
       </div>

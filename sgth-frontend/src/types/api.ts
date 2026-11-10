@@ -1135,7 +1135,8 @@ export type CuentaBancariaConRelaciones = CuentaBancariaServidor & {
 
 // ── Historial Académico ───────────────────────
 export type TipoEstudio = 'estudio' | 'capacitacion'
-export type NivelEstudio = 'primaria' | 'secundaria' | 'tercer_nivel' | 'cuarto_nivel'
+export type NivelEstudio =
+  | 'primaria' | 'secundaria' | 'tecnico_superior' | 'tecnologico_superior' | 'tercer_nivel' | 'cuarto_nivel'
 export type NacionalidadEstudio = 'nacional' | 'internacional'
 
 export type HistorialAcademicoServidor = {

@@ -18290,7 +18290,8 @@
                                 "type": "object",
                                 "properties": {
                                     "puesto_id": {
-                                        "type": "integer"
+                                        "type": "integer",
+                                        "description": "Que el puesto admita la modalidad: el concurso formal va sobre\nuno de plantilla, y el express seg\u00fan su modalidad prevista (P9)."
                                     },
                                     "titulo": {
                                         "type": "string",
@@ -49237,6 +49238,7 @@
                                     }
                                 },
                                 "required": [
+                                    "puesto_id",
                                     "cedula",
                                     "nombres",
                                     "apellidos",
@@ -80640,7 +80642,10 @@
                                 ]
                             },
                             "plazas": {
-                                "type": "integer"
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
                             },
                             "rol_puesto": {
                                 "anyOf": [
@@ -80677,6 +80682,9 @@
                                     "null"
                                 ]
                             },
+                            "tipo": {
+                                "$ref": "#/components/schemas/TipoPuesto"
+                            },
                             "rmu": {
                                 "type": "string"
                             }
@@ -80696,6 +80704,7 @@
                             "regimen_laboral",
                             "partida_presupuestaria_id",
                             "cargo_id",
+                            "tipo",
                             "rmu"
                         ]
                     },
@@ -80934,9 +80943,12 @@
             },
             "NivelEstudio": {
                 "type": "string",
+                "description": "El nivel de un t\u00edtulo del historial acad\u00e9mico, de menor a mayor. El t\u00e9cnico superior y el tecnol\u00f3gico superior entraron el 2026-11-10 (docs/diseno-manual-de-puestos.md, P2): unas 60 fichas del Manual de Puestos los piden, y sin ellos no hab\u00eda con qu\u00e9 comparar el t\u00edtulo de un servidor con lo que exige su puesto. Son tercer nivel t\u00e9cnico-tecnol\u00f3gico (LOES, Art. 118); el tercer nivel de grado es el de las carreras universitarias.\n",
                 "enum": [
                     "primaria",
                     "secundaria",
+                    "tecnico_superior",
+                    "tecnologico_superior",
                     "tercer_nivel",
                     "cuarto_nivel"
                 ],
@@ -82887,7 +82899,10 @@
                         ]
                     },
                     "plazas": {
-                        "type": "integer"
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     },
                     "rol_puesto": {
                         "anyOf": [
@@ -82923,6 +82938,9 @@
                             "integer",
                             "null"
                         ]
+                    },
+                    "tipo": {
+                        "$ref": "#/components/schemas/TipoPuesto"
                     }
                 },
                 "required": [
@@ -82939,7 +82957,8 @@
                     "nivel_complejidad",
                     "regimen_laboral",
                     "partida_presupuestaria_id",
-                    "cargo_id"
+                    "cargo_id",
+                    "tipo"
                 ],
                 "title": "Puesto"
             },
@@ -83247,6 +83266,17 @@
                     "id": {
                         "type": "integer"
                     },
+                    "tipo": {
+                        "description": "De plantilla o de contrato (P9): el de contrato no tiene plazas.",
+                        "$ref": "#/components/schemas/TipoPuesto"
+                    },
+                    "tipo_label": {
+                        "type": "string",
+                        "enum": [
+                            "De plantilla",
+                            "De contrato"
+                        ]
+                    },
                     "cargo_id": {
                         "type": [
                             "integer",
@@ -83269,7 +83299,14 @@
                         ]
                     },
                     "plazas": {
-                        "type": "integer"
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "plazas_ocupadas": {
+                        "type": "integer",
+                        "description": "Lo trae el listado (`conOcupacion()`); fuera de \u00e9l, se consulta."
                     },
                     "rol_puesto": {
                         "anyOf": [
@@ -83409,6 +83446,19 @@
                                 "items": {
                                     "type": "object",
                                     "properties": {
+                                        "tipo_nombramiento": {
+                                            "description": "Con qu\u00e9 modalidad lo ocupa, y si llena una plaza: en\n\u00abAnalista de TIC\u00bb hab\u00eda dos permanentes y un\nprofesional, y no se distingu\u00edan (P9).",
+                                            "$ref": "#/components/schemas/TipoNombramiento"
+                                        },
+                                        "modalidad": {
+                                            "type": "string"
+                                        },
+                                        "ocupa_plaza": {
+                                            "type": "string"
+                                        },
+                                        "es_reemplazo": {
+                                            "type": "boolean"
+                                        },
                                         "id": {
                                             "type": "integer"
                                         },
@@ -83420,6 +83470,10 @@
                                         }
                                     },
                                     "required": [
+                                        "tipo_nombramiento",
+                                        "modalidad",
+                                        "ocupa_plaza",
+                                        "es_reemplazo",
                                         "id",
                                         "nombre",
                                         "cedula"
@@ -83440,11 +83494,14 @@
                 },
                 "required": [
                     "id",
+                    "tipo",
+                    "tipo_label",
                     "cargo_id",
                     "unidad_administrativa_id",
                     "grupo_ocupacional_id",
                     "partida_presupuestaria_id",
                     "plazas",
+                    "plazas_ocupadas",
                     "rol_puesto",
                     "nivel_complejidad",
                     "regimen_laboral",
@@ -85774,7 +85831,10 @@
                                 ]
                             },
                             "plazas": {
-                                "type": "integer"
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
                             },
                             "rol_puesto": {
                                 "anyOf": [
@@ -85811,6 +85871,9 @@
                                     "null"
                                 ]
                             },
+                            "tipo": {
+                                "$ref": "#/components/schemas/TipoPuesto"
+                            },
                             "rmu": {
                                 "type": "string"
                             }
@@ -85830,6 +85893,7 @@
                             "regimen_laboral",
                             "partida_presupuestaria_id",
                             "cargo_id",
+                            "tipo",
                             "rmu"
                         ]
                     },
@@ -89506,8 +89570,16 @@
                             "null"
                         ]
                     },
+                    "tipo": {
+                        "description": "Sin tipo, de plantilla: como nac\u00edan todos los puestos (P9).",
+                        "$ref": "#/components/schemas/TipoPuesto"
+                    },
                     "plazas": {
-                        "type": "integer",
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "Obligatorias en uno de plantilla, prohibidas en uno de contrato:\nlo decide `CoherenciaDelPuesto`.",
                         "minimum": 1
                     },
                     "rol_puesto": {
@@ -89533,7 +89605,6 @@
                 "required": [
                     "cargo_id",
                     "unidad_administrativa_id",
-                    "plazas",
                     "regimen_laboral"
                 ],
                 "title": "StorePuestoRequest"
@@ -91860,6 +91931,15 @@
                     "express"
                 ],
                 "title": "TipoProcesoConvocatoria"
+            },
+            "TipoPuesto": {
+                "type": "string",
+                "description": "Si el puesto es del distributivo o solo sostiene contratos que no ocupan plaza (docs/diseno-manual-de-puestos.md, P9). - **De plantilla**: el del Manual de Puestos. Tiene plazas y partida, se   concursa y cuenta en las vacantes. Lo ocupan los nombramientos, los   obreros y las autoridades electas. - **De contrato**: sostiene contratos de servicios ocasionales y de servicios   profesionales [TH D11, D12]. No tiene plazas, no se concursa ni cuenta en   las vacantes. Al de un ocasional le hacen falta grado y perfil, porque cobra   seg\u00fan la escala y se eval\u00faa (Reg. LOSEP 217 y 146 g).  Qu\u00e9 modalidad cabe en cada uno lo decide `TipoNombramiento::admitePuesto()`.\n",
+                "enum": [
+                    "plantilla",
+                    "contrato"
+                ],
+                "title": "TipoPuesto"
             },
             "TipoSancion": {
                 "type": "string",
@@ -94590,8 +94670,14 @@
                             "null"
                         ]
                     },
+                    "tipo": {
+                        "$ref": "#/components/schemas/TipoPuesto"
+                    },
                     "plazas": {
-                        "type": "integer",
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
                         "minimum": 1
                     },
                     "rol_puesto": {

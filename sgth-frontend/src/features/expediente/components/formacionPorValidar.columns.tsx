@@ -4,17 +4,13 @@ import type { DataTableColumn } from 'mantine-datatable'
 import { StatusBadge, TableActions } from '@/components/ui'
 import { formatFecha } from '@/lib/fecha'
 import type { FormacionPorValidar } from '@/types/api'
+import { etiquetaNivelEstudio } from '../constants/formacion'
 
 interface Acciones {
   onDocumento:  (r: FormacionPorValidar) => void
   onValidar:    (r: FormacionPorValidar) => void
   onRechazar:   (r: FormacionPorValidar) => void
   onExpediente: (r: FormacionPorValidar) => void
-}
-
-const NIVEL: Record<string, string> = {
-  primaria: 'Primaria', secundaria: 'Secundaria',
-  tercer_nivel: 'Tercer nivel', cuarto_nivel: 'Cuarto nivel',
 }
 
 const anio = (fecha?: string | null) => (fecha ? fecha.substring(0, 4) : null)
@@ -44,7 +40,7 @@ export function getFormacionPorValidarColumns(a: Acciones): DataTableColumn<Form
         <div>
           <Text size="sm">{titulo_capacitacion}</Text>
           <Text size="xs" c="dimmed">
-            {tipo_estudio === 'estudio' ? (NIVEL[nivel_estudio ?? ''] ?? 'Título académico') : 'Capacitación'}
+            {tipo_estudio === 'estudio' ? (etiquetaNivelEstudio(nivel_estudio) ?? 'Título académico') : 'Capacitación'}
           </Text>
         </div>
       ),
