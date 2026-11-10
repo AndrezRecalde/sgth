@@ -80951,9 +80951,12 @@
             },
             "NivelEstudio": {
                 "type": "string",
+                "description": "El nivel de un t\u00edtulo del historial acad\u00e9mico, de menor a mayor. El t\u00e9cnico superior y el tecnol\u00f3gico superior entraron el 2026-11-10 (docs/diseno-manual-de-puestos.md, P2): unas 60 fichas del Manual de Puestos los piden, y sin ellos no hab\u00eda con qu\u00e9 comparar el t\u00edtulo de un servidor con lo que exige su puesto. Son tercer nivel t\u00e9cnico-tecnol\u00f3gico (LOES, Art. 118); el tercer nivel de grado es el de las carreras universitarias.\n",
                 "enum": [
                     "primaria",
                     "secundaria",
+                    "tecnico_superior",
+                    "tecnologico_superior",
                     "tercer_nivel",
                     "cuarto_nivel"
                 ],

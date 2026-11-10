@@ -6,17 +6,11 @@ import { Controller, useWatch, type UseFormReturn } from 'react-hook-form'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { fromDateValue, fromDateValueOrNull, toDateValue } from '@/lib/fecha'
 import type { HistorialAcademicoFormData } from '../schemas/historialAcademico.schema'
+import { NIVELES_ESTUDIO } from '../constants/formacion'
 
 const TIPO_OPTIONS = [
   { value: 'estudio',      label: 'Título Académico' },
   { value: 'capacitacion', label: 'Capacitación / Curso' },
-]
-
-const NIVEL_OPTIONS = [
-  { value: 'primaria',     label: 'Primaria' },
-  { value: 'secundaria',   label: 'Secundaria' },
-  { value: 'tercer_nivel', label: 'Tercer nivel (Pregrado)' },
-  { value: 'cuarto_nivel', label: 'Cuarto nivel (Posgrado)' },
 ]
 
 const NACIONALIDAD_OPTIONS = [
@@ -56,7 +50,7 @@ export function HistorialAcademicoCampos({ form, conDocumento = false }: Props) 
         <Controller name="nivel_estudio" control={control}
           render={({ field }) => (
             <Select label="Nivel de instrucción"
-              data={NIVEL_OPTIONS} {...contained}
+              data={NIVELES_ESTUDIO} {...contained}
               value={field.value ?? ''} onChange={field.onChange}
               error={errors.nivel_estudio?.message} />
           )} />

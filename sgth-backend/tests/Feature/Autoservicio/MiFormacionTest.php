@@ -209,3 +209,24 @@ test('a la hoja de vida solo llega lo validado', function () {
     expect($datos['estudios'])->toHaveCount(1)
         ->and($datos['estudios'][0]['titulo'])->toBe('Licenciada en Administración');
 });
+
+test('el técnico y el tecnológico superior se registran, y la hoja de vida dice su nivel', function () {
+    // Unas 60 fichas del Manual de Puestos los piden; antes el historial
+    // académico no los admitía (docs/diseno-manual-de-puestos.md, P2).
+    ($this->registrar)(['nivel_estudio' => 'tecnico_superior'])->assertCreated();
+
+    $this->actingAs($this->analista, 'sanctum')
+        ->postJson("/api/v1/expediente/servidores/{$this->titular->id}/historial-academico", [
+            ...$this->titulo, 'nivel_estudio' => 'tecnologico_superior', 'titulo_capacitacion' => 'Tecnólogo en Redes',
+        ])
+        ->assertCreated()
+        ->assertJsonPath('datos.nivel_estudio', 'tecnologico_superior');
+
+    $datos = app(HojaDeVidaService::class)->datos($this->titular->fresh());
+    expect(collect($datos['estudios'])->pluck('nivel')->all())->toContain('Tecnológico superior');
+
+    // Lo que no es un nivel sigue sin entrar.
+    $this->postJson("/api/v1/expediente/servidores/{$this->titular->id}/historial-academico", [
+        ...$this->titulo, 'nivel_estudio' => 'doctorado',
+    ])->assertStatus(422)->assertJsonStructure(['errores' => ['nivel_estudio']]);
+});

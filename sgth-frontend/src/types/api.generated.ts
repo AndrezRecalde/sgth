@@ -13943,9 +13943,10 @@ export interface components {
         NivelDeficienciaRiesgo: "muy_deficiente" | "deficiente" | "mejorable" | "aceptable";
         /**
          * NivelEstudio
+         * @description El nivel de un título del historial académico, de menor a mayor. El técnico superior y el tecnológico superior entraron el 2026-11-10 (docs/diseno-manual-de-puestos.md, P2): unas 60 fichas del Manual de Puestos los piden, y sin ellos no había con qué comparar el título de un servidor con lo que exige su puesto. Son tercer nivel técnico-tecnológico (LOES, Art. 118); el tercer nivel de grado es el de las carreras universitarias.
          * @enum {string}
          */
-        NivelEstudio: "primaria" | "secundaria" | "tercer_nivel" | "cuarto_nivel";
+        NivelEstudio: "primaria" | "secundaria" | "tecnico_superior" | "tecnologico_superior" | "tercer_nivel" | "cuarto_nivel";
         /**
          * NivelExposicionRiesgo
          * @description Nivel de Exposición (NE) — NTP 330 (INSHT).
