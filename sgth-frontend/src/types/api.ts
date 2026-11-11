@@ -1329,6 +1329,8 @@ export type PuestoConRelaciones = {
     denominacion_generica?: string | null
     rmu?: number
     regimen?: string
+    /** El nivel en que se propone una competencia nueva, según el grado (D5). */
+    nivel_competencia_sugerido?: NivelCompetencia | null
   } | null
   partida_presupuestaria?: {
     id: number

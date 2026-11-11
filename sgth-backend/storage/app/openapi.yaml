@@ -83746,6 +83746,17 @@
                             },
                             "regimen": {
                                 "type": "string"
+                            },
+                            "nivel_competencia_sugerido": {
+                                "description": "El nivel que se propone al agregar una competencia (D5).",
+                                "anyOf": [
+                                    {
+                                        "$ref": "#/components/schemas/NivelCompetencia"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ]
                             }
                         },
                         "required": [
@@ -83754,7 +83765,8 @@
                             "grupo",
                             "denominacion_generica",
                             "rmu",
-                            "regimen"
+                            "regimen",
+                            "nivel_competencia_sugerido"
                         ]
                     },
                     "partida_presupuestaria": {

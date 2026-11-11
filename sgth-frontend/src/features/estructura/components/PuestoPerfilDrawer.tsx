@@ -59,6 +59,8 @@ export function PuestoPerfilDrawer({ opened, onClose, puesto, soloLectura = fals
             <Tabs.Panel value="competencias">
               <PuestoCompetenciasPanel
                 puestoId={puestoId}
+                grado={puesto?.grupo_ocupacional?.grado_codigo}
+                porGrado={puesto?.grupo_ocupacional?.nivel_competencia_sugerido}
                 complejidad={puesto?.nivel_complejidad}
                 soloLectura={soloLectura}
               />

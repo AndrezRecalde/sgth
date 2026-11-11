@@ -13,7 +13,10 @@ import { PuestoCompetenciaModal } from './PuestoCompetenciaModal'
 
 interface Props {
   puestoId:    number
-  /** La complejidad del puesto (bajo, medio o alto): el nivel que se propone. */
+  /** El grado del puesto («SP6») y el nivel que le corresponde (D5): el que se propone. */
+  grado?:      string | null
+  porGrado?:   string | null
+  /** Sin grado —un puesto de obreros—, se propone el de la complejidad. */
   complejidad: string | null | undefined
   soloLectura: boolean
 }
@@ -25,7 +28,7 @@ type Edicion = { tipo: TipoCompetencia; asignada: PuestoCompetencia | null }
  * diccionario del Ministerio, con su nivel. Son las que el jefe copia en el
  * FOR-02 de quien ocupa el puesto.
  */
-export function PuestoCompetenciasPanel({ puestoId, complejidad, soloLectura }: Props) {
+export function PuestoCompetenciasPanel({ puestoId, grado, porGrado, complejidad, soloLectura }: Props) {
   const { data: competencias = [], isLoading, error, refetch } = usePuestoCompetencias(puestoId)
   const { quitar } = usePuestoCompetenciaMutations(puestoId)
   const [edicion, setEdicion] = useState<Edicion | null>(null)
@@ -43,8 +46,9 @@ export function PuestoCompetenciasPanel({ puestoId, complejidad, soloLectura }: 
     >
       <Stack gap="lg">
         <Text size="xs" c="dimmed">
-          Al agregar una, se propone el nivel de la complejidad del puesto
-          {complejidad ? ` (${complejidadEnFemenino(complejidad)})` : ''}; se puede cambiar.
+          {porGrado
+            ? `Al agregar una, se propone el nivel que corresponde al grado del puesto (${grado ? `${grado}: ` : ''}${porGrado}); se puede cambiar.`
+            : `Al agregar una, se propone el nivel de la complejidad del puesto${complejidad ? ` (${complejidadEnFemenino(complejidad)})` : ''}; se puede cambiar.`}
         </Text>
 
         {TIPOS_COMPETENCIA.map(({ value: tipo, plural }) => {
@@ -126,7 +130,7 @@ export function PuestoCompetenciasPanel({ puestoId, complejidad, soloLectura }: 
             onClose={() => setEdicion(null)}
             puestoId={puestoId}
             tipo={edicion.tipo}
-            nivelInicial={nivelSugerido(complejidad)}
+            nivelInicial={nivelSugerido(porGrado, complejidad)}
             yaAsignadas={competencias.map(c => c.competencia_id)}
             asignada={edicion.asignada}
           />

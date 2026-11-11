@@ -14689,6 +14689,8 @@ export interface components {
                 denominacion_generica: string | null;
                 rmu: string;
                 regimen: string;
+                /** @description El nivel que se propone al agregar una competencia (D5). */
+                nivel_competencia_sugerido: components["schemas"]["NivelCompetencia"] | null;
             };
             partida_presupuestaria?: {
                 id: number;

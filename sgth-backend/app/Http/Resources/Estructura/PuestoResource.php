@@ -64,6 +64,8 @@ class PuestoResource extends JsonResource
                     'denominacion_generica' => $this->grupoOcupacional->denominacion_generica,
                     'rmu'          => $this->grupoOcupacional->rmu,
                     'regimen'      => $this->grupoOcupacional->regimen,
+                    // El nivel que se propone al agregar una competencia (D5).
+                    'nivel_competencia_sugerido' => $this->grupoOcupacional->nivelDeCompetenciaSugerido(),
                 ]
             ),
 

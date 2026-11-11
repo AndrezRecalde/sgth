@@ -37,9 +37,18 @@ export function complejidadEnFemenino(complejidad: string): string {
   return COMPLEJIDAD_EN_FEMENINO[complejidad] ?? complejidad
 }
 
-/** La complejidad del puesto usa la misma escala: de ahí sale el nivel propuesto. */
-export function nivelSugerido(complejidad: string | null | undefined): NivelCompetencia {
-  return NIVELES_COMPETENCIA.find(n => n.value === complejidad)?.value ?? 'medio'
+/**
+ * El nivel con que se propone una competencia nueva. Sale del grado del puesto
+ * (D5: hasta el 7, bajo; del 8 al 13, medio; del 14 en adelante, alto), que lo
+ * calcula el backend. Sin grado —un puesto de obreros— queda la complejidad,
+ * que usa la misma escala, y si tampoco hay, medio.
+ */
+export function nivelSugerido(
+  porGrado: string | null | undefined,
+  complejidad: string | null | undefined,
+): NivelCompetencia {
+  const deLaEscala = (valor: string | null | undefined) => NIVELES_COMPETENCIA.find(n => n.value === valor)?.value
+  return deLaEscala(porGrado) ?? deLaEscala(complejidad) ?? 'medio'
 }
 
 /** El formato de asignación de responsabilidades trae tres filas de cada tipo. */
