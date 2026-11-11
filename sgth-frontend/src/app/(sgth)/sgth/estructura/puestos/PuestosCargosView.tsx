@@ -1,7 +1,7 @@
 'use client'
 
 import { Tabs } from '@mantine/core'
-import { IconBriefcase, IconClipboardCheck, IconId, IconScale, IconStars } from '@tabler/icons-react'
+import { IconBook, IconBriefcase, IconClipboardCheck, IconId, IconScale, IconStars } from '@tabler/icons-react'
 import { CountBadge, PageHeader, PageShell } from '@/components/ui'
 import { useAuth } from '@/hooks/useAuth'
 import { PuestosTab } from '@/features/estructura/components/PuestosTab'
@@ -9,7 +9,9 @@ import { CargosTab } from '@/features/estructura/components/CargosTab'
 import { GruposOcupacionalesTab } from '@/features/estructura/components/GruposOcupacionalesTab'
 import { CompetenciasTab } from '@/features/estructura/components/CompetenciasTab'
 import { RegularizacionTipoTab } from '@/features/estructura/components/RegularizacionTipoTab'
+import { ManualPuestosTab } from '@/features/estructura/components/ManualPuestosTab'
 import { usePorRevisarTipo } from '@/features/estructura/hooks/useRegularizacionTipo'
+import { useFichasManual } from '@/features/estructura/hooks/useManualPuestos'
 
 /**
  * Las tablas del catálogo de puestos, juntas y con pestañas.
@@ -27,6 +29,10 @@ export function PuestosCargosView() {
   const puedeRevisar = hasPermiso('gestionar-puestos')
   const { data: porRevisar } = usePorRevisarTipo(puedeRevisar)
   const pendientes = (porRevisar?.puestos.length ?? 0) + (porRevisar?.contratos.length ?? 0)
+  // «Manual» aparece cuando hay fichas importadas (P4, PR 12). El contador,
+  // las que faltan por cargar.
+  const { data: manual } = useFichasManual(puedeRevisar)
+  const porCargar = manual ? manual.fichas.length - manual.resumen.cargada : 0
 
   return (
     <PageShell>
@@ -58,6 +64,15 @@ export function PuestosCargosView() {
               Por revisar
             </Tabs.Tab>
           )}
+          {puedeRevisar && !!manual?.fichas.length && (
+            <Tabs.Tab
+              value="manual"
+              leftSection={<IconBook size={16} />}
+              rightSection={porCargar > 0 ? <CountBadge>{porCargar}</CountBadge> : undefined}
+            >
+              Manual
+            </Tabs.Tab>
+          )}
         </Tabs.List>
 
         <Tabs.Panel value="puestos">
@@ -79,6 +94,12 @@ export function PuestosCargosView() {
         {puedeRevisar && (
           <Tabs.Panel value="por-revisar">
             <RegularizacionTipoTab />
+          </Tabs.Panel>
+        )}
+
+        {puedeRevisar && !!manual?.fichas.length && (
+          <Tabs.Panel value="manual">
+            <ManualPuestosTab />
           </Tabs.Panel>
         )}
       </Tabs>

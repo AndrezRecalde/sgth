@@ -9,9 +9,9 @@ const nivel = z.enum(['alto', 'medio', 'bajo'], { message: 'Seleccione el nivel'
 
 export const puestoActividadSchema = z.object({
   /** Lo que lee la matriz de riesgos del FEMO. */
-  descripcion:   z.string().trim().min(3, 'Mínimo 3 caracteres').max(200, 'Máximo 200 caracteres'),
+  descripcion:   z.string().trim().min(3, 'Mínimo 3 caracteres').max(3000, 'Máximo 3000 caracteres'),
   producto:      z.string().trim().max(300, 'Máximo 300 caracteres'),
-  conocimientos: z.string().trim().max(500, 'Máximo 500 caracteres'),
+  conocimientos: z.string().trim().max(1000, 'Máximo 1000 caracteres'),
   frecuencia:    frecuencia.nullable(),
 })
 export type PuestoActividadFormData = z.infer<typeof puestoActividadSchema>

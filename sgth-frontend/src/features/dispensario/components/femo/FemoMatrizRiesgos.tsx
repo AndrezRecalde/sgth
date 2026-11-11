@@ -12,6 +12,14 @@ import { FemoSeccion } from './FemoSeccion'
 import { FemoCategoriaRiesgo } from './FemoCategoriaRiesgo'
 import { confirmar, StatusBadge } from '@/components/ui'
 
+/**
+ * La matriz guarda 200 caracteres por actividad. Las del Manual de Puestos
+ * pueden ser más largas (PR 12): va el comienzo, que es el que la nombra.
+ */
+const LARGO_ACTIVIDAD = 200
+const recortarActividad = (texto: string) =>
+  texto.length <= LARGO_ACTIVIDAD ? texto : `${texto.slice(0, LARGO_ACTIVIDAD - 1).trimEnd()}…`
+
 interface Props {
   puestoId:            number | null
   actividadesRiesgo:   ActividadRiesgoForm[]
@@ -58,7 +66,7 @@ export function FemoMatrizRiesgos({
         ...actividadesRiesgo,
         {
           puesto_actividad_id: pa.id,
-          actividad: pa.descripcion,
+          actividad: recortarActividad(pa.descripcion),
           medida_preventiva: null,
           orden: actividadesRiesgo.length + 1,
         },

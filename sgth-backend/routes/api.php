@@ -81,6 +81,7 @@ use App\Http\Controllers\Estructura\OrganigramaController;
 use App\Http\Controllers\Estructura\OrganigramaPdfController;
 use App\Http\Controllers\Estructura\PartidaPresupuestariaController;
 use App\Http\Controllers\Estructura\PuestoActividadController;
+use App\Http\Controllers\Estructura\ManualDePuestosController;
 use App\Http\Controllers\Estructura\PuestoCompetenciaController;
 use App\Http\Controllers\Estructura\PlantillaController;
 use App\Http\Controllers\Estructura\PuestoController;
@@ -336,6 +337,26 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 ->whereNumber('contratoId')
                 ->middleware('permission:gestionar-expediente')
                 ->name('estructura.tipo-de-puesto.reubicar');
+        });
+        // La revisión de las fichas del Manual de Puestos 2018-2019
+        // (docs/diseno-manual-de-puestos.md, P4, PR 12): «Manual» en Puestos y
+        // cargos. Con `gestionar-puestos`, que es quien edita el perfil (D6).
+        Route::prefix('manual-de-puestos')->middleware('permission:gestionar-puestos')->group(function () {
+            Route::get('fichas', [ManualDePuestosController::class, 'index'])
+                ->name('estructura.manual.fichas');
+            Route::get('fichas/{fichaId}', [ManualDePuestosController::class, 'show'])
+                ->whereNumber('fichaId')
+                ->name('estructura.manual.ficha');
+            Route::post('fichas/{fichaId}/cargar', [ManualDePuestosController::class, 'cargar'])
+                ->whereNumber('fichaId')
+                ->name('estructura.manual.cargar');
+            Route::delete('fichas/{fichaId}/puesto', [ManualDePuestosController::class, 'desvincular'])
+                ->whereNumber('fichaId')
+                ->name('estructura.manual.desvincular');
+            Route::get('equivalencias', [ManualDePuestosController::class, 'equivalencias'])
+                ->name('estructura.manual.equivalencias');
+            Route::put('equivalencias', [ManualDePuestosController::class, 'guardarEquivalencia'])
+                ->name('estructura.manual.equivalencias.guardar');
         });
         Route::get(
             'unidades-administrativas/todas',

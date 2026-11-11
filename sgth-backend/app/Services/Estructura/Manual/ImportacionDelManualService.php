@@ -166,9 +166,33 @@ class ImportacionDelManualService
      */
     public static function subproceso(string $unidad): ?string
     {
-        $partes = array_values(array_filter(array_map('trim', explode('/', $unidad)), fn ($p) => $p !== ''));
+        return self::partes($unidad)['subproceso'];
+    }
 
-        return count($partes) > 1 ? Str::limit(implode(' / ', array_slice($partes, 1)), 200, '') : null;
+    /**
+     * La gestión y el subproceso de la unidad que escribe la ficha. El manual
+     * los separa con una barra, y tres fichas con paréntesis: «Gestión de
+     * Planificación (Planificación Institucional)».
+     *
+     * @return array{gestion: string, subproceso: ?string}
+     */
+    public static function partes(string $unidad): array
+    {
+        $unidad     = trim($unidad);
+        $subproceso = null;
+        if (preg_match('/^(.+?)\s*\(([^()]+)\)\s*\.?$/u', $unidad, $m)) {
+            [$unidad, $subproceso] = [trim($m[1]), trim($m[2])];
+        }
+
+        $partes = array_values(array_filter(array_map('trim', explode('/', $unidad)), fn ($p) => $p !== ''));
+        if (count($partes) > 1) {
+            $subproceso = implode(' / ', array_slice($partes, 1));
+        }
+
+        return [
+            'gestion'    => $partes[0] ?? '',
+            'subproceso' => $subproceso === null ? null : Str::limit($subproceso, 200, ''),
+        ];
     }
 
     /**
