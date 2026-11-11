@@ -51,14 +51,18 @@ return new class extends Migration
         });
         DB::statement("ALTER TABLE puesto_requisitos_instruccion ADD CONSTRAINT puesto_requisitos_nivel_check CHECK (nivel_instruccion IN ('bachiller', 'tecnico_superior', 'tecnologico_superior', 'estudios_superiores_en_curso', 'tercer_nivel', 'cuarto_nivel'))");
 
-        // La misión de cada cargo, a todos sus puestos.
+        // La misión de cada cargo, a todos sus puestos. La fecha, de la
+        // aplicación y no el `now()` de PostgreSQL: la base está en UTC y la
+        // aplicación guarda la hora de Ecuador, así que un perfil migrado de
+        // noche salía «actualizado» al día siguiente.
+        $ahora = now()->toDateTimeString();
         DB::statement(<<<'SQL'
             INSERT INTO puesto_perfiles (puesto_id, mision, created_at, updated_at)
-            SELECT p.id, c.mision, now(), now()
+            SELECT p.id, c.mision, ?, ?
             FROM puestos p
             JOIN cargos c ON c.id = p.cargo_id
             WHERE c.mision IS NOT NULL AND btrim(c.mision) <> ''
-            SQL);
+            SQL, [$ahora, $ahora]);
 
         Schema::table('cargos', fn (Blueprint $table) => $table->dropColumn('mision'));
     }
