@@ -1,13 +1,14 @@
 'use client'
 
-import { Card, Group, Stack, Tabs } from '@mantine/core'
-import { IconFileDescription, IconList, IconStars } from '@tabler/icons-react'
+import { Button, Card, Group, Stack, Tabs } from '@mantine/core'
+import { IconFileDescription, IconList, IconPrinter, IconStars } from '@tabler/icons-react'
 import { SgthDrawer, StatusBadge } from '@/components/ui'
 import type { PuestoConRelaciones } from '@/types/api'
 import { REGIMEN_LABELS } from '@/lib/regimen'
 import { complejidadEnFemenino } from '../constants/perfilPuesto'
 import { PuestoActividadesPanel } from './PuestoActividadesPanel'
 import { PuestoDescripcionPanel } from './PuestoDescripcionPanel'
+import { useFichaDelPuestoPdf } from '../hooks/useDescripcionPuesto'
 import { PuestoCompetenciasPanel } from './PuestoCompetenciasPanel'
 
 interface Props {
@@ -27,6 +28,7 @@ interface Props {
  */
 export function PuestoPerfilDrawer({ opened, onClose, puesto, soloLectura = false }: Props) {
   const puestoId = puesto?.id ? Number(puesto.id) : null
+  const ficha = useFichaDelPuestoPdf()
 
   return (
     <SgthDrawer
@@ -38,15 +40,24 @@ export function PuestoPerfilDrawer({ opened, onClose, puesto, soloLectura = fals
     >
       <Stack gap="md">
         <Card withBorder radius="md" p="sm">
-          <Group gap="xs" wrap="wrap">
-            {puesto?.unidad_administrativa?.nombre && <StatusBadge>{puesto.unidad_administrativa.nombre}</StatusBadge>}
-            {puesto?.grupo_ocupacional?.grupo && <StatusBadge>{puesto.grupo_ocupacional.grupo}</StatusBadge>}
-            {/* El régimen es una categoría: neutra y con su nombre. Salía como
-                «CODIGO_TRABAJO», el valor guardado en mayúsculas. */}
-            {puesto?.regimen_laboral && (
-              <StatusBadge>{REGIMEN_LABELS[puesto.regimen_laboral] ?? puesto.regimen_laboral}</StatusBadge>
+          <Group justify="space-between" align="flex-start" wrap="nowrap">
+            <Group gap="xs" wrap="wrap">
+              {puesto?.unidad_administrativa?.nombre && <StatusBadge>{puesto.unidad_administrativa.nombre}</StatusBadge>}
+              {puesto?.grupo_ocupacional?.grupo && <StatusBadge>{puesto.grupo_ocupacional.grupo}</StatusBadge>}
+              {/* El régimen es una categoría: neutra y con su nombre. Salía como
+                  «CODIGO_TRABAJO», el valor guardado en mayúsculas. */}
+              {puesto?.regimen_laboral && (
+                <StatusBadge>{REGIMEN_LABELS[puesto.regimen_laboral] ?? puesto.regimen_laboral}</StatusBadge>
+              )}
+              {puesto?.nivel_complejidad && <StatusBadge>Complejidad {complejidadEnFemenino(puesto.nivel_complejidad)}</StatusBadge>}
+            </Group>
+            {/* La ficha «Descripción y perfil del puesto», como la del Manual de Puestos (P5). */}
+            {puestoId && (
+              <Button size="xs" variant="light" leftSection={<IconPrinter size={14} />} loading={ficha.abriendo}
+                style={{ flexShrink: 0 }} onClick={() => ficha.abrir(puestoId, puesto?.cargo?.nombre ?? `puesto-${puestoId}`)}>
+                Imprimir ficha
+              </Button>
             )}
-            {puesto?.nivel_complejidad && <StatusBadge>Complejidad {complejidadEnFemenino(puesto.nivel_complejidad)}</StatusBadge>}
           </Group>
         </Card>
 

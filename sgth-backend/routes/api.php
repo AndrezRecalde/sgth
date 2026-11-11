@@ -369,6 +369,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::put('puestos/{puestoId}/perfil', [PuestoPerfilController::class, 'update'])
             ->whereNumber('puestoId')
             ->name('estructura.puestos.perfil.guardar');
+        // La ficha «Descripción y perfil del puesto» en PDF (P5).
+        Route::get('puestos/{puestoId}/perfil/pdf', [PuestoPerfilController::class, 'pdf'])
+            ->whereNumber('puestoId')
+            ->name('estructura.puestos.perfil.pdf');
         // `whereNumber` en los dos ids, como en las competencias: los
         // controladores los reciben como `int`, y uno que no es número
         // reventaba con un 500 en vez de dar 404.
