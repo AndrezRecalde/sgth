@@ -15200,9 +15200,10 @@ export interface components {
         };
         /**
          * RolPuesto
+         * @description El rol del puesto, del más alto al más bajo, como el Manual de Puestos. `direccion_unidad` y `ejecucion_supervision` entraron el 2026-11-10 con la respuesta de Talento Humano a D3 (docs/diseno-manual-de-puestos.md, P2): el manual los usa en 16 y 34 fichas. El de apoyo se llama como en el manual. `dignatario` queda para las autoridades electas aunque el manual las ponga en «Dirección de unidad»: con él, el sistema sabe que su puesto no se traspasa ni se reclasifica con una acción de personal.
          * @enum {string}
          */
-        RolPuesto: "dignatario" | "ejecucion_coordinacion" | "ejecucion_procesos" | "ejecucion_procesos_apoyo" | "administrativo" | "codigo_trabajo";
+        RolPuesto: "dignatario" | "direccion_unidad" | "ejecucion_coordinacion" | "ejecucion_supervision" | "ejecucion_procesos" | "ejecucion_procesos_apoyo" | "administrativo" | "codigo_trabajo";
         /** SalarioBasico */
         SalarioBasico: {
             id: number;

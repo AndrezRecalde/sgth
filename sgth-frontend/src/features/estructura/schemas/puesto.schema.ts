@@ -10,8 +10,8 @@ export const puestoSchema = z.object({
   // Nulas en uno de contrato: el formulario las vacía al elegirlo.
   plazas:                   z.number().min(1, 'Mínimo 1 plaza').nullable().default(1),
   rol_puesto: z.enum([
-    'dignatario', 'ejecucion_coordinacion', 'ejecucion_procesos',
-    'ejecucion_procesos_apoyo', 'administrativo', 'codigo_trabajo',
+    'dignatario', 'direccion_unidad', 'ejecucion_coordinacion', 'ejecucion_supervision',
+    'ejecucion_procesos', 'ejecucion_procesos_apoyo', 'administrativo', 'codigo_trabajo',
   ]).optional().nullable(),
   nivel_complejidad: z.enum([
     'bajo', 'medio', 'alto',

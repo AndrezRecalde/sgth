@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { avisoDelTipoDePuesto, rolesDelRegimen, tipoDePuestoPara } from '../constants/clasificacionPuesto'
+import {
+  avisoDelTipoDePuesto, rolSugeridoDelGrupo, rolesDelRegimen, tipoDePuestoPara,
+} from '../constants/clasificacionPuesto'
 import { puestoSchema } from './puesto.schema'
 
 /*
@@ -38,7 +40,13 @@ describe('rolesDelRegimen', () => {
   it('ofrece a cada régimen solo los roles que le caben', () => {
     expect(rolesDelRegimen('codigo_trabajo').map((r) => r.value)).toEqual(['codigo_trabajo'])
     expect(rolesDelRegimen('losep').map((r) => r.value)).not.toContain('codigo_trabajo')
-    expect(rolesDelRegimen('losep')).toHaveLength(5)
+    expect(rolesDelRegimen('losep')).toHaveLength(7)
+  })
+
+  it('el grupo sugiere su rol solo si cabe en el régimen del puesto (D3)', () => {
+    expect(rolSugeridoDelGrupo('ejecucion_supervision', 'losep')).toBe('ejecucion_supervision')
+    expect(rolSugeridoDelGrupo('codigo_trabajo', 'losep')).toBeNull()
+    expect(rolSugeridoDelGrupo(null, 'losep')).toBeNull()
   })
 })
 

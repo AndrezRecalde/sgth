@@ -1310,9 +1310,7 @@ export type PuestoConRelaciones = {
   plazas?: number | null
   /** Las que llenan sus contratos vigentes y la reserva de un ascendido en prueba. */
   plazas_ocupadas?: number
-  rol_puesto?:
-    | 'dignatario' | 'ejecucion_coordinacion' | 'ejecucion_procesos'
-    | 'ejecucion_procesos_apoyo' | 'administrativo' | 'codigo_trabajo' | null
+  rol_puesto?: components['schemas']['RolPuesto'] | null
   nivel_complejidad?: 'bajo' | 'medio' | 'alto' | null
   regimen_laboral?: 'losep' | 'codigo_trabajo'
   es_jefe?: boolean
