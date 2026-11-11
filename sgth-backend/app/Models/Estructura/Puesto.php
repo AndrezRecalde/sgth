@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[ObservedBy(PuestoObserver::class)]
 class Puesto extends Model
@@ -170,6 +171,12 @@ class Puesto extends Model
     public function competencias(): HasMany
     {
         return $this->hasMany(PuestoCompetencia::class);
+    }
+
+    /** La descripción del puesto como en el Manual de Puestos: misión, requisitos y capacitación. */
+    public function perfil(): HasOne
+    {
+        return $this->hasOne(PuestoPerfil::class);
     }
 
     public function equiposProteccionRequeridos(): HasMany

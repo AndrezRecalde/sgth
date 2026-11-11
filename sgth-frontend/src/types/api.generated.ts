@@ -8164,6 +8164,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/estructura/puestos/{puestoId}/perfil": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["estructura.puestos.perfil"];
+        /** El permiso lo comprueba la petición, antes de validar */
+        put: operations["estructura.puestos.perfil.guardar"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/dispensario/recetas": {
         parameters: {
             query?: never;
@@ -11469,7 +11486,6 @@ export interface components {
             id: number;
             nombre: string;
             denominacion_generica: string | null;
-            mision: string | null;
             activo: boolean;
             /** Format: date-time */
             created_at: string | null;
@@ -13059,6 +13075,28 @@ export interface components {
             activo?: boolean;
         };
         /**
+         * GuardarPerfilPuestoRequest
+         * @description La descripción del puesto (docs/diseno-manual-de-puestos.md, P1). Lo que no
+         *     llega se queda como está; `requisitos`, si llega, reemplaza las alternativas.
+         */
+        GuardarPerfilPuestoRequest: {
+            mision?: string | null;
+            relaciones?: string | null;
+            nivel?: components["schemas"]["NivelDelPuesto"];
+            area_conocimiento?: string | null;
+            especificidad_experiencia?: string | null;
+            capacitacion?: string | null;
+            /** @description El subproceso como texto: el puesto sigue en la gestión (TH, D2). */
+            subproceso?: string | null;
+            /** @description El manual da hasta tres alternativas; cinco dejan margen. */
+            requisitos?: {
+                nivel_instruccion: components["schemas"]["NivelInstruccion"];
+                /** @description Los estudios en curso no son un título: lo aprobado va con texto. */
+                detalle?: string | null;
+                meses_experiencia: number;
+            }[];
+        };
+        /**
          * GuardarProblemaFrecuenteRequest
          * @description Un problema frecuente: lo que ve el servidor (el nombre, que es también el
          *     asunto del ticket) y lo que lleva el ticket. La categoría tiene que estar
@@ -14012,6 +14050,12 @@ export interface components {
          */
         NivelDeficienciaRiesgo: "muy_deficiente" | "deficiente" | "mejorable" | "aceptable";
         /**
+         * NivelDelPuesto
+         * @description El nivel del puesto en la ficha del Manual de Puestos: profesional o no profesional (docs/diseno-manual-de-puestos.md, P1). Se propone desde la instrucción —si alguna alternativa pide tercer o cuarto nivel, profesional— y Talento Humano lo puede cambiar: en el grado 7 el manual tiene de los dos.
+         * @enum {string}
+         */
+        NivelDelPuesto: "profesional" | "no_profesional";
+        /**
          * NivelEstudio
          * @description El nivel de un título del historial académico, de menor a mayor. El técnico superior y el tecnológico superior entraron el 2026-11-10 (docs/diseno-manual-de-puestos.md, P2): unas 60 fichas del Manual de Puestos los piden, y sin ellos no había con qué comparar el título de un servidor con lo que exige su puesto. Son tercer nivel técnico-tecnológico (LOES, Art. 118); el tercer nivel de grado es el de las carreras universitarias.
          * @enum {string}
@@ -14023,6 +14067,12 @@ export interface components {
          * @enum {string}
          */
         NivelExposicionRiesgo: "continuada" | "frecuente" | "ocasional" | "esporadica";
+        /**
+         * NivelInstruccion
+         * @description La instrucción formal que pide un puesto, como la escribe el Manual de Puestos (docs/diseno-manual-de-puestos.md, P2). Es el nivel de cada alternativa de los requisitos del perfil (PR 8), de menor a mayor. No es `NivelEstudio`, que es lo que tiene un servidor: el manual pide además «estudios superiores en curso» —el tercer año o sexto semestre aprobado—, que no es un título, y no pide primaria. `nivelDeEstudio()` dice con qué título se compara cada uno.
+         * @enum {string}
+         */
+        NivelInstruccion: "bachiller" | "tecnico_superior" | "tecnologico_superior" | "estudios_superiores_en_curso" | "tercer_nivel" | "cuarto_nivel";
         /**
          * NivelIntervencionRiesgo
          * @description Nivel de Intervención — NTP 330 (INSHT), derivado del Nivel de Riesgo (NR = NP × NC).
@@ -14620,6 +14670,27 @@ export interface components {
             created_at: string | null;
             /** Format: date-time */
             updated_at: string | null;
+        };
+        /** PuestoPerfilResource */
+        PuestoPerfilResource: {
+            puesto_id: number;
+            mision: string | null;
+            relaciones: string | null;
+            nivel: components["schemas"]["NivelDelPuesto"] | null;
+            nivel_label: string;
+            nivel_sugerido: components["schemas"]["NivelDelPuesto"] | null;
+            area_conocimiento: string | null;
+            especificidad_experiencia: string | null;
+            capacitacion: string | null;
+            subproceso: string | null;
+            /** @description Las alternativas de instrucción y experiencia, en el orden de la ficha. */
+            requisitos: {
+                nivel_instruccion: components["schemas"]["NivelInstruccion"];
+                nivel_instruccion_label: string;
+                detalle: string | null;
+                meses_experiencia: number;
+            }[];
+            actualizado_en: string;
         };
         /** PuestoPorRegularizarResource */
         PuestoPorRegularizarResource: {
@@ -22411,7 +22482,6 @@ export interface operations {
                      *     heredan las fichas médicas ocupacionales de todos sus puestos.
                      */
                     codigo_ciuo?: string | null;
-                    mision?: string | null;
                 };
             };
         };
@@ -22453,9 +22523,9 @@ export interface operations {
                      *     heredan las fichas médicas ocupacionales de todos sus puestos.
                      */
                     codigo_ciuo?: string | null;
-                    mision?: string | null;
                     /**
-                     * @description Corregir cómo está escrito un cargo con puestos ocupados pide el
+                     * @description La misión es de cada puesto, en su perfil (TH, D1, 2026-11-10).
+                     *     Corregir cómo está escrito un cargo con puestos ocupados pide el
                      *     motivo (fase 7.1b); cambiar la denominación es reclasificar.
                      */
                     motivo_correccion?: string | null;
@@ -40689,6 +40759,69 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "estructura.puestos.perfil": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                puestoId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Perfil del puesto.";
+                        datos: components["schemas"]["PuestoPerfilResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "estructura.puestos.perfil.guardar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                puestoId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["GuardarPerfilPuestoRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Perfil del puesto guardado.";
+                        datos: components["schemas"]["PuestoPerfilResource"];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "receta.index": {

@@ -42,7 +42,7 @@ class PuestoTicSeeder extends Seeder
 
         $grupoOcupacional = GrupoOcupacional::where('grado_codigo', 'SP6')->firstOrFail();
 
-        Puesto::updateOrCreate(
+        $puesto = Puesto::updateOrCreate(
             [
                 'unidad_administrativa_id' => $unidad->id,
                 'cargo_id' => $cargo->id,
@@ -59,5 +59,12 @@ class PuestoTicSeeder extends Seeder
                 'activo' => true,
             ]
         );
+
+        // La misión es de cada puesto, en su perfil (TH, D1, 2026-11-10).
+        $puesto->perfil()->firstOrCreate([], [
+            'mision' => 'Administrar, dar soporte y garantizar la disponibilidad de la '
+                . 'infraestructura tecnológica, sistemas de información y comunicaciones '
+                . 'del GADPE.',
+        ]);
     }
 }

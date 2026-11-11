@@ -9653,12 +9653,6 @@
                                         "description": "C\u00f3digo CIUO-08 (adaptaci\u00f3n INEC). Se define aqu\u00ed, en el cargo, y lo\nheredan las fichas m\u00e9dicas ocupacionales de todos sus puestos.",
                                         "pattern": "^[0-9]+$",
                                         "maxLength": 10
-                                    },
-                                    "mision": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ]
                                     }
                                 },
                                 "required": [
@@ -9751,18 +9745,12 @@
                                         "pattern": "^[0-9]+$",
                                         "maxLength": 10
                                     },
-                                    "mision": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ]
-                                    },
                                     "motivo_correccion": {
                                         "type": [
                                             "string",
                                             "null"
                                         ],
-                                        "description": "Corregir c\u00f3mo est\u00e1 escrito un cargo con puestos ocupados pide el\nmotivo (fase 7.1b); cambiar la denominaci\u00f3n es reclasificar.",
+                                        "description": "La misi\u00f3n es de cada puesto, en su perfil (TH, D1, 2026-11-10).\nCorregir c\u00f3mo est\u00e1 escrito un cargo con puestos ocupados pide el\nmotivo (fase 7.1b); cambiar la denominaci\u00f3n es reclasificar.",
                                         "minLength": 5,
                                         "maxLength": 300
                                     }
@@ -52702,6 +52690,131 @@
                 }
             }
         },
+        "/v1/estructura/puestos/{puestoId}/perfil": {
+            "get": {
+                "operationId": "estructura.puestos.perfil",
+                "tags": [
+                    "PuestoPerfil"
+                ],
+                "parameters": [
+                    {
+                        "name": "puestoId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Perfil del puesto."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/PuestoPerfilResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "estructura.puestos.perfil.guardar",
+                "summary": "El permiso lo comprueba la petici\u00f3n, antes de validar",
+                "tags": [
+                    "PuestoPerfil"
+                ],
+                "parameters": [
+                    {
+                        "name": "puestoId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GuardarPerfilPuestoRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Perfil del puesto guardado."
+                                        },
+                                        "datos": {
+                                            "$ref": "#/components/schemas/PuestoPerfilResource"
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
         "/v1/dispensario/recetas": {
             "get": {
                 "operationId": "receta.index",
@@ -71426,12 +71539,6 @@
                             "null"
                         ]
                     },
-                    "mision": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
                     "activo": {
                         "type": "boolean"
                     },
@@ -71467,7 +71574,6 @@
                     "id",
                     "nombre",
                     "denominacion_generica",
-                    "mision",
                     "activo",
                     "created_at",
                     "updated_at",
@@ -77498,6 +77604,89 @@
                 ],
                 "title": "GuardarFaltaReglamentoRequest"
             },
+            "GuardarPerfilPuestoRequest": {
+                "type": "object",
+                "description": "La descripci\u00f3n del puesto (docs/diseno-manual-de-puestos.md, P1). Lo que no\nllega se queda como est\u00e1; `requisitos`, si llega, reemplaza las alternativas.",
+                "properties": {
+                    "mision": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 3000
+                    },
+                    "relaciones": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 3000
+                    },
+                    "nivel": {
+                        "$ref": "#/components/schemas/NivelDelPuesto"
+                    },
+                    "area_conocimiento": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 1000
+                    },
+                    "especificidad_experiencia": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 1000
+                    },
+                    "capacitacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 3000
+                    },
+                    "subproceso": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "El subproceso como texto: el puesto sigue en la gesti\u00f3n (TH, D2).",
+                        "maxLength": 200
+                    },
+                    "requisitos": {
+                        "type": "array",
+                        "description": "El manual da hasta tres alternativas; cinco dejan margen.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "nivel_instruccion": {
+                                    "$ref": "#/components/schemas/NivelInstruccion"
+                                },
+                                "detalle": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "description": "Los estudios en curso no son un t\u00edtulo: lo aprobado va con texto.",
+                                    "maxLength": 200
+                                },
+                                "meses_experiencia": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 600
+                                }
+                            },
+                            "required": [
+                                "nivel_instruccion",
+                                "meses_experiencia"
+                            ]
+                        },
+                        "maxItems": 5
+                    }
+                },
+                "title": "GuardarPerfilPuestoRequest"
+            },
             "GuardarProblemaFrecuenteRequest": {
                 "type": "object",
                 "description": "Un problema frecuente: lo que ve el servidor (el nombre, que es tambi\u00e9n el\nasunto del ticket) y lo que lleva el ticket. La categor\u00eda tiene que estar\nactiva; el nombre no se repite, sin distinguir may\u00fasculas. Al editar, cada\ncampo es opcional: activar o desactivar manda solo `activo`.",
@@ -81222,6 +81411,15 @@
                 ],
                 "title": "NivelDeficienciaRiesgo"
             },
+            "NivelDelPuesto": {
+                "type": "string",
+                "description": "El nivel del puesto en la ficha del Manual de Puestos: profesional o no profesional (docs/diseno-manual-de-puestos.md, P1). Se propone desde la instrucci\u00f3n \u2014si alguna alternativa pide tercer o cuarto nivel, profesional\u2014 y Talento Humano lo puede cambiar: en el grado 7 el manual tiene de los dos.\n",
+                "enum": [
+                    "profesional",
+                    "no_profesional"
+                ],
+                "title": "NivelDelPuesto"
+            },
             "NivelEstudio": {
                 "type": "string",
                 "description": "El nivel de un t\u00edtulo del historial acad\u00e9mico, de menor a mayor. El t\u00e9cnico superior y el tecnol\u00f3gico superior entraron el 2026-11-10 (docs/diseno-manual-de-puestos.md, P2): unas 60 fichas del Manual de Puestos los piden, y sin ellos no hab\u00eda con qu\u00e9 comparar el t\u00edtulo de un servidor con lo que exige su puesto. Son tercer nivel t\u00e9cnico-tecnol\u00f3gico (LOES, Art. 118); el tercer nivel de grado es el de las carreras universitarias.\n",
@@ -81245,6 +81443,19 @@
                     "esporadica"
                 ],
                 "title": "NivelExposicionRiesgo"
+            },
+            "NivelInstruccion": {
+                "type": "string",
+                "description": "La instrucci\u00f3n formal que pide un puesto, como la escribe el Manual de Puestos (docs/diseno-manual-de-puestos.md, P2). Es el nivel de cada alternativa de los requisitos del perfil (PR 8), de menor a mayor. No es `NivelEstudio`, que es lo que tiene un servidor: el manual pide adem\u00e1s \u00abestudios superiores en curso\u00bb \u2014el tercer a\u00f1o o sexto semestre aprobado\u2014, que no es un t\u00edtulo, y no pide primaria. `nivelDeEstudio()` dice con qu\u00e9 t\u00edtulo se compara cada uno.\n",
+                "enum": [
+                    "bachiller",
+                    "tecnico_superior",
+                    "tecnologico_superior",
+                    "estudios_superiores_en_curso",
+                    "tercer_nivel",
+                    "cuarto_nivel"
+                ],
+                "title": "NivelInstruccion"
             },
             "NivelIntervencionRiesgo": {
                 "type": "string",
@@ -83545,6 +83756,122 @@
                     "updated_at"
                 ],
                 "title": "PuestoEppResource"
+            },
+            "PuestoPerfilResource": {
+                "type": "object",
+                "properties": {
+                    "puesto_id": {
+                        "type": "integer"
+                    },
+                    "mision": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "relaciones": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "nivel": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/NivelDelPuesto"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "nivel_label": {
+                        "type": "string"
+                    },
+                    "nivel_sugerido": {
+                        "anyOf": [
+                            {
+                                "description": "Lo que propone la instrucci\u00f3n, para que la pantalla lo ofrezca.",
+                                "$ref": "#/components/schemas/NivelDelPuesto"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "area_conocimiento": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "especificidad_experiencia": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "capacitacion": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "subproceso": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "requisitos": {
+                        "type": "array",
+                        "description": "Las alternativas de instrucci\u00f3n y experiencia, en el orden de la ficha.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "nivel_instruccion": {
+                                    "$ref": "#/components/schemas/NivelInstruccion"
+                                },
+                                "nivel_instruccion_label": {
+                                    "type": "string"
+                                },
+                                "detalle": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "meses_experiencia": {
+                                    "type": "integer"
+                                }
+                            },
+                            "required": [
+                                "nivel_instruccion",
+                                "nivel_instruccion_label",
+                                "detalle",
+                                "meses_experiencia"
+                            ]
+                        }
+                    },
+                    "actualizado_en": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "puesto_id",
+                    "mision",
+                    "relaciones",
+                    "nivel",
+                    "nivel_label",
+                    "nivel_sugerido",
+                    "area_conocimiento",
+                    "especificidad_experiencia",
+                    "capacitacion",
+                    "subproceso",
+                    "requisitos",
+                    "actualizado_en"
+                ],
+                "title": "PuestoPerfilResource"
             },
             "PuestoPorRegularizarResource": {
                 "type": "object",

@@ -16,7 +16,6 @@ class Cargo extends Model
         'nombre',
         'denominacion_generica',
         'codigo_ciuo',
-        'mision',
         'activo',
     ];
 
