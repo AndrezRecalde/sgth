@@ -31,4 +31,8 @@ export const descripcionPuestoService = {
 
   guardar: (puestoId: number, datos: DescripcionPuestoDatos) =>
     api.put<ApiResponse<DescripcionPuesto>>(url(puestoId), datos).then((r) => r.data.datos),
+
+  /** La ficha «Descripción y perfil del puesto» en PDF, con las diez secciones del manual. */
+  pdf: (puestoId: number) =>
+    api.get<Blob>(`${url(puestoId)}/pdf`, { responseType: 'blob' }).then((r) => r.data),
 }

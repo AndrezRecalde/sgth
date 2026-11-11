@@ -52815,6 +52815,50 @@
                 }
             }
         },
+        "/v1/estructura/puestos/{puestoId}/perfil/pdf": {
+            "get": {
+                "operationId": "estructura.puestos.perfil.pdf",
+                "summary": "La ficha \u00abDescripci\u00f3n y perfil del puesto\u00bb en PDF (P5): la ve quien ve el puesto",
+                "tags": [
+                    "PuestoPerfil"
+                ],
+                "parameters": [
+                    {
+                        "name": "puestoId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/dispensario/recetas": {
             "get": {
                 "operationId": "receta.index",

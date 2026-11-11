@@ -8181,6 +8181,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/estructura/puestos/{puestoId}/perfil/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** La ficha «Descripción y perfil del puesto» en PDF (P5): la ve quien ve el puesto */
+        get: operations["estructura.puestos.perfil.pdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/dispensario/recetas": {
         parameters: {
             query?: never;
@@ -40822,6 +40839,30 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
+        };
+    };
+    "estructura.puestos.perfil.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                puestoId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
         };
     };
     "receta.index": {
