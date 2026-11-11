@@ -98,7 +98,6 @@ class CargoController extends Controller
             // Código CIUO-08 (adaptación INEC). Se define aquí, en el cargo, y lo
             // heredan las fichas médicas ocupacionales de todos sus puestos.
             'codigo_ciuo'            => ['nullable', 'string', 'max:10', 'regex:/^[0-9]+$/'],
-            'mision'                 => ['nullable', 'string'],
         ]);
 
         $cargo = Cargo::create($validated);
@@ -119,7 +118,7 @@ class CargoController extends Controller
             // Código CIUO-08 (adaptación INEC). Se define aquí, en el cargo, y lo
             // heredan las fichas médicas ocupacionales de todos sus puestos.
             'codigo_ciuo'            => ['nullable', 'string', 'max:10', 'regex:/^[0-9]+$/'],
-            'mision'                 => ['nullable', 'string'],
+            // La misión es de cada puesto, en su perfil (TH, D1, 2026-11-10).
             // Corregir cómo está escrito un cargo con puestos ocupados pide el
             // motivo (fase 7.1b); cambiar la denominación es reclasificar.
             'motivo_correccion'      => ['nullable', 'string', 'min:5', 'max:300'],

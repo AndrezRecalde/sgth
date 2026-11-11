@@ -84,6 +84,7 @@ use App\Http\Controllers\Estructura\PuestoActividadController;
 use App\Http\Controllers\Estructura\PuestoCompetenciaController;
 use App\Http\Controllers\Estructura\PlantillaController;
 use App\Http\Controllers\Estructura\PuestoController;
+use App\Http\Controllers\Estructura\PuestoPerfilController;
 use App\Http\Controllers\Estructura\RegularizacionTipoDePuestoController;
 use App\Http\Controllers\Estructura\UnidadAdministrativaController;
 use App\Http\Controllers\Evaluacion\EvaluacionController;
@@ -360,6 +361,14 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 ->name('puestos.buscar.show');
         });
         Route::apiResource('puestos', PuestoController::class);
+        // La descripción del puesto como en el Manual de Puestos: misión,
+        // requisitos y capacitación (docs/diseno-manual-de-puestos.md, P1).
+        Route::get('puestos/{puestoId}/perfil', [PuestoPerfilController::class, 'show'])
+            ->whereNumber('puestoId')
+            ->name('estructura.puestos.perfil');
+        Route::put('puestos/{puestoId}/perfil', [PuestoPerfilController::class, 'update'])
+            ->whereNumber('puestoId')
+            ->name('estructura.puestos.perfil.guardar');
         // `whereNumber` en los dos ids, como en las competencias: los
         // controladores los reciben como `int`, y uno que no es número
         // reventaba con un 500 en vez de dar 404.

@@ -13,9 +13,7 @@ class CargoTicSeeder extends Seeder
             ['nombre' => 'Analista de Tecnologías de la Información y Comunicación'],
             [
                 'denominacion_generica' => 'Analista',
-                'mision' => 'Administrar, dar soporte y garantizar la disponibilidad de la '
-                    . 'infraestructura tecnológica, sistemas de información y comunicaciones '
-                    . 'del GADPE.',
+                // La misión es del puesto, en su perfil (PuestoTicSeeder).
                 'activo' => true,
             ]
         );
