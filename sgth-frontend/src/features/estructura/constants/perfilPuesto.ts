@@ -51,5 +51,37 @@ export function nivelSugerido(
   return deLaEscala(porGrado) ?? deLaEscala(complejidad) ?? 'medio'
 }
 
+/**
+ * `NivelInstruccion` del backend: lo que pide un puesto, como lo escribe el
+ * Manual de Puestos. Los estudios en curso son el «tercer año o sexto semestre
+ * aprobado», que va con texto.
+ */
+export const NIVELES_INSTRUCCION = [
+  { value: 'bachiller',                    label: 'Bachiller' },
+  { value: 'tecnico_superior',             label: 'Técnico superior' },
+  { value: 'tecnologico_superior',         label: 'Tecnológico superior' },
+  { value: 'estudios_superiores_en_curso', label: 'Estudios superiores en curso' },
+  { value: 'tercer_nivel',                 label: 'Tercer nivel de grado' },
+  { value: 'cuarto_nivel',                 label: 'Cuarto nivel (posgrado)' },
+] as const
+
+/** `NivelDelPuesto` del backend. */
+export const NIVELES_DEL_PUESTO = [
+  { value: 'profesional',    label: 'Profesional' },
+  { value: 'no_profesional', label: 'No profesional' },
+] as const
+
+/** «2 años y 6 meses», «6 años», «sin experiencia»: como lo escribe el manual. */
+export function textoExperiencia(meses: number): string {
+  if (meses <= 0) return 'sin experiencia'
+  const anios = Math.floor(meses / 12)
+  const resto = meses % 12
+  const partes = [
+    anios > 0 ? `${anios} ${anios === 1 ? 'año' : 'años'}` : null,
+    resto > 0 ? `${resto} ${resto === 1 ? 'mes' : 'meses'}` : null,
+  ].filter(Boolean)
+  return partes.join(' y ')
+}
+
 /** El formato de asignación de responsabilidades trae tres filas de cada tipo. */
 export const ESPACIOS_POR_TIPO_EN_LA_ASIGNACION = 3

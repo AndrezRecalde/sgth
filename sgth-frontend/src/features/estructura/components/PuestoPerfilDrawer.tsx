@@ -1,12 +1,13 @@
 'use client'
 
 import { Card, Group, Stack, Tabs } from '@mantine/core'
-import { IconList, IconStars } from '@tabler/icons-react'
+import { IconFileDescription, IconList, IconStars } from '@tabler/icons-react'
 import { SgthDrawer, StatusBadge } from '@/components/ui'
 import type { PuestoConRelaciones } from '@/types/api'
 import { REGIMEN_LABELS } from '@/lib/regimen'
 import { complejidadEnFemenino } from '../constants/perfilPuesto'
 import { PuestoActividadesPanel } from './PuestoActividadesPanel'
+import { PuestoDescripcionPanel } from './PuestoDescripcionPanel'
 import { PuestoCompetenciasPanel } from './PuestoCompetenciasPanel'
 
 interface Props {
@@ -18,9 +19,11 @@ interface Props {
 }
 
 /**
- * El perfil del puesto: sus actividades esenciales y las competencias que
- * exige. Es lo que la evaluación del desempeño copia en el formato de
- * asignación de responsabilidades (FOR-02) de cada servidor.
+ * El perfil del puesto, en el orden de la ficha del Manual de Puestos: su
+ * descripción (misión, requisitos y capacitación), sus actividades esenciales
+ * y las competencias que exige. Las actividades y las competencias son lo que
+ * la evaluación del desempeño copia en el formato de asignación de
+ * responsabilidades (FOR-02) de cada servidor.
  */
 export function PuestoPerfilDrawer({ opened, onClose, puesto, soloLectura = false }: Props) {
   const puestoId = puesto?.id ? Number(puesto.id) : null
@@ -48,11 +51,15 @@ export function PuestoPerfilDrawer({ opened, onClose, puesto, soloLectura = fals
         </Card>
 
         {puestoId && (
-          <Tabs defaultValue="actividades" keepMounted={false}>
+          <Tabs defaultValue="descripcion" keepMounted={false}>
             <Tabs.List mb="md">
+              <Tabs.Tab value="descripcion" leftSection={<IconFileDescription size={16} />}>Descripción</Tabs.Tab>
               <Tabs.Tab value="actividades" leftSection={<IconList size={16} />}>Actividades</Tabs.Tab>
               <Tabs.Tab value="competencias" leftSection={<IconStars size={16} />}>Competencias</Tabs.Tab>
             </Tabs.List>
+            <Tabs.Panel value="descripcion">
+              <PuestoDescripcionPanel puestoId={puestoId} soloLectura={soloLectura} />
+            </Tabs.Panel>
             <Tabs.Panel value="actividades">
               <PuestoActividadesPanel puestoId={puestoId} soloLectura={soloLectura} />
             </Tabs.Panel>
