@@ -81,11 +81,16 @@ export function PuestoActividadModal({ opened, onClose, puestoId, actividad }: P
       submitting={crear.isPending || editar.isPending}
     >
       <Stack gap="sm">
-        <TextInput
+        {/* Textarea: las actividades del Manual de Puestos pasan de 200
+            caracteres (PR 12), y el FEMO toma los primeros 200. */}
+        <Textarea
           label="Actividad esencial"
           placeholder="Ej: Mantenimiento preventivo de servidores"
-          description="La matriz de riesgos del FEMO la muestra con este texto."
+          description="La matriz de riesgos del FEMO la muestra con este texto, hasta 200 caracteres."
           withAsterisk
+          autosize
+          minRows={1}
+          maxRows={8}
           {...contained}
           {...register('descripcion')}
           error={errors.descripcion?.message}

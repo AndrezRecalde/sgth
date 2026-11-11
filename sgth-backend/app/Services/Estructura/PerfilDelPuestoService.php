@@ -31,10 +31,11 @@ class PerfilDelPuestoService
      * propone desde la instrucción (`NivelDelPuesto::segunInstruccion`).
      *
      * @param array<string, mixed> $datos
+     * @param string $causa Lo que la bitácora dice que cambió el perfil.
      */
-    public function guardar(Puesto $puesto, array $datos): PuestoPerfil
+    public function guardar(Puesto $puesto, array $datos, string $causa = 'Perfil del puesto'): PuestoPerfil
     {
-        return DB::transaction(function () use ($puesto, $datos) {
+        return DB::transaction(function () use ($puesto, $datos, $causa) {
             $perfil = $puesto->perfil()->with('requisitos')->first() ?? new PuestoPerfil(['puesto_id' => $puesto->id]);
             $antes = $this->foto($perfil);
 
@@ -72,7 +73,7 @@ class PerfilDelPuestoService
                     ->withProperties([
                         'antes'   => array_diff_assoc($antes, $despues),
                         'despues' => array_diff_assoc($despues, $antes),
-                        'causa'   => 'Perfil del puesto',
+                        'causa'   => $causa,
                     ])
                     ->log('Perfil del puesto actualizado');
             }

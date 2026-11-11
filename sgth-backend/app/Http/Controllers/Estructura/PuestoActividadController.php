@@ -44,9 +44,9 @@ final class PuestoActividadController extends Controller
         $this->authorize('update', Puesto::findOrFail($puestoId));
 
         $request->validate([
-            'descripcion'   => ['required', 'string', 'max:200'],
+            'descripcion'   => ['required', 'string', 'max:3000'],
             'producto'      => ['nullable', 'string', 'max:300'],
-            'conocimientos' => ['nullable', 'string', 'max:500'],
+            'conocimientos' => ['nullable', 'string', 'max:1000'],
             'frecuencia'    => ['nullable', Rule::enum(FrecuenciaActividad::class)],
             'orden'         => ['nullable', 'integer', 'min:1'],
         ]);
@@ -77,9 +77,9 @@ final class PuestoActividadController extends Controller
         $this->authorize('update', Puesto::findOrFail($puestoId));
 
         $request->validate([
-            'descripcion'   => ['sometimes', 'string', 'max:200'],
+            'descripcion'   => ['sometimes', 'string', 'max:3000'],
             'producto'      => ['sometimes', 'nullable', 'string', 'max:300'],
-            'conocimientos' => ['sometimes', 'nullable', 'string', 'max:500'],
+            'conocimientos' => ['sometimes', 'nullable', 'string', 'max:1000'],
             'frecuencia'    => ['sometimes', 'nullable', Rule::enum(FrecuenciaActividad::class)],
             'orden'         => ['sometimes', 'integer', 'min:1'],
             'activo'        => ['sometimes', 'boolean'],
