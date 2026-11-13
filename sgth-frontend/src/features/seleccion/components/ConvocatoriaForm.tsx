@@ -73,7 +73,8 @@ export function ConvocatoriaForm({ valoresIniciales, onSubmit, enviando, textoEn
 
             <Textarea
               label="Descripción del proceso"
-              placeholder="Describa el proceso, los requisitos generales y el perfil del cargo"
+              description="La misión, los requisitos, las competencias y las actividades salen del perfil del puesto: no hace falta repetirlos aquí."
+              placeholder="Describa el proceso: sus etapas, dónde se reciben los documentos, a quién se dirige"
               required
               autosize
               minRows={3}

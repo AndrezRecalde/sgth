@@ -1,13 +1,14 @@
 'use client'
 
 import { Card, Stack, Tabs } from '@mantine/core'
-import { IconChartBar, IconClipboardList, IconUsers } from '@tabler/icons-react'
+import { IconChartBar, IconClipboardList, IconFileDescription, IconUsers } from '@tabler/icons-react'
 import { useRouter } from 'next/navigation'
 import { DataState, PageHeader, PageShell } from '@/components/ui'
 import { ROUTES } from '@/config/routes'
 import { useAuth } from '@/hooks/useAuth'
 import { useConvocatoriaDetalle, usePostulantes } from '@/features/seleccion/hooks/useConvocatoria'
 import { ConvocatoriaAcciones } from '@/features/seleccion/components/ConvocatoriaAcciones'
+import { ConvocatoriaPerfil } from '@/features/seleccion/components/ConvocatoriaPerfil'
 import { ConvocatoriaResumen } from '@/features/seleccion/components/ConvocatoriaResumen'
 import { TabCandidatos } from '@/features/seleccion/components/TabCandidatos'
 import { TabCriterios } from '@/features/seleccion/components/TabCriterios'
@@ -49,8 +50,12 @@ export function DetalleConvocatoriaView({ id }: { id: string }) {
           <Stack gap="md">
             <ConvocatoriaResumen convocatoria={convocatoria} />
 
-            <Tabs defaultValue="candidatos" radius="lg">
+            {/* En borrador no hay candidatos todavía: se abre en el perfil, que es lo que se revisa antes de publicar. */}
+            <Tabs defaultValue={convocatoria.estado === 'borrador' ? 'perfil' : 'candidatos'} radius="lg">
               <Tabs.List>
+                <Tabs.Tab value="perfil" leftSection={<IconFileDescription size={14} />}>
+                  Perfil del puesto
+                </Tabs.Tab>
                 <Tabs.Tab value="candidatos" leftSection={<IconUsers size={14} />}>
                   Candidatos ({postulantes.length})
                 </Tabs.Tab>
@@ -61,6 +66,12 @@ export function DetalleConvocatoriaView({ id }: { id: string }) {
                   Ranking
                 </Tabs.Tab>
               </Tabs.List>
+
+              <Tabs.Panel value="perfil" pt="sm">
+                <Card withBorder radius="lg">
+                  <ConvocatoriaPerfil perfil={convocatoria.perfil_del_puesto} borrador={convocatoria.estado === 'borrador'} />
+                </Card>
+              </Tabs.Panel>
 
               <Tabs.Panel value="candidatos" pt="sm">
                 <TabCandidatos

@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\Seleccion\Convocatoria;
 use App\Services\Seleccion\CalificacionService;
+use App\Services\Seleccion\PerfilDeLaConvocatoria;
 use App\Rules\PuestoAdmiteModalidad;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,7 +21,10 @@ use Illuminate\Validation\Rules\Enum;
 
 final class ConvocatoriaController extends Controller
 {
-    public function __construct(private readonly SeleccionServiceInterface $seleccionService) {}
+    public function __construct(
+        private readonly SeleccionServiceInterface $seleccionService,
+        private readonly PerfilDeLaConvocatoria $perfiles,
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -136,7 +140,12 @@ final class ConvocatoriaController extends Controller
             'postulantes.documentos',
         ])->findOrFail($id);
 
-        return ApiResponse::ok($convocatoria);
+        // El perfil del puesto (P7, PR 16): el vigente en borrador, el guardado
+        // al publicarla después.
+        return ApiResponse::ok([
+            ...$convocatoria->toArray(),
+            'perfil_del_puesto' => $this->perfiles->de($convocatoria),
+        ]);
     }
 
     /**
@@ -234,9 +243,12 @@ final class ConvocatoriaController extends Controller
         // 2026-10-05). Antes se publicaba con criterios que sumaban 40 o 160.
         CalificacionService::assertSuman100($criterios, 'publicar la convocatoria');
 
+        // Lo que se anuncia no cambia aunque después se edite el puesto: el
+        // perfil se guarda en las bases (P7, PR 16).
         $convocatoria->update([
-            'estado'     => 'publicada',
-            'updated_by' => $request->user()->id,
+            'estado'         => 'publicada',
+            'bases_concurso' => $this->perfiles->basesAlPublicar($convocatoria),
+            'updated_by'     => $request->user()->id,
         ]);
 
         return ApiResponse::ok($convocatoria, 'Convocatoria publicada.');
