@@ -161,6 +161,7 @@ describe('buildNav', () => {
       ROUTES.SGTH.EXPEDIENTE,
       ROUTES.SGTH.FORMACION_POR_VALIDAR,
       ROUTES.SGTH.CARGAS_POR_VALIDAR,
+      ROUTES.SGTH.BRECHAS_PERFIL,
     ]
 
     for (const rol of ROLES) {
