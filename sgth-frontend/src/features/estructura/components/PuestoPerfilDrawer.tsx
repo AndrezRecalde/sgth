@@ -1,20 +1,39 @@
 'use client'
 
+import { useState } from 'react'
 import { Button, Card, Group, Stack, Tabs } from '@mantine/core'
-import { IconFileDescription, IconList, IconPrinter, IconStars } from '@tabler/icons-react'
+import { IconCopy, IconFileDescription, IconList, IconPrinter, IconStars } from '@tabler/icons-react'
 import { SgthDrawer, StatusBadge } from '@/components/ui'
-import type { PuestoConRelaciones } from '@/types/api'
+import type { NivelCompetencia } from '@/types/api'
 import { REGIMEN_LABELS } from '@/lib/regimen'
 import { complejidadEnFemenino } from '../constants/perfilPuesto'
 import { PuestoActividadesPanel } from './PuestoActividadesPanel'
 import { PuestoDescripcionPanel } from './PuestoDescripcionPanel'
 import { useFichaDelPuestoPdf } from '../hooks/useDescripcionPuesto'
 import { PuestoCompetenciasPanel } from './PuestoCompetenciasPanel'
+import { CopiarPerfilModal } from './CopiarPerfilModal'
+
+/**
+ * Lo que el cajón muestra del puesto. Lo trae el listado de puestos y también
+ * el tablero de completitud (PR 15), que no carga el puesto entero.
+ */
+export interface PuestoDelPerfil {
+  id: number | string
+  cargo?: { nombre?: string } | null
+  unidad_administrativa?: { nombre?: string } | null
+  grupo_ocupacional?: {
+    grupo?: string | null
+    grado_codigo?: string | null
+    nivel_competencia_sugerido?: NivelCompetencia | null
+  } | null
+  regimen_laboral?: string | null
+  nivel_complejidad?: string | null
+}
 
 interface Props {
   opened:  boolean
   onClose: () => void
-  puesto:  PuestoConRelaciones | null
+  puesto:  PuestoDelPerfil | null
   /** Sin `gestionar-puestos`: el perfil se consulta, no se toca. */
   soloLectura?: boolean
 }
@@ -29,6 +48,7 @@ interface Props {
 export function PuestoPerfilDrawer({ opened, onClose, puesto, soloLectura = false }: Props) {
   const puestoId = puesto?.id ? Number(puesto.id) : null
   const ficha = useFichaDelPuestoPdf()
+  const [copiando, setCopiando] = useState(false)
 
   return (
     <SgthDrawer
@@ -51,12 +71,20 @@ export function PuestoPerfilDrawer({ opened, onClose, puesto, soloLectura = fals
               )}
               {puesto?.nivel_complejidad && <StatusBadge>Complejidad {complejidadEnFemenino(puesto.nivel_complejidad)}</StatusBadge>}
             </Group>
-            {/* La ficha «Descripción y perfil del puesto», como la del Manual de Puestos (P5). */}
             {puestoId && (
-              <Button size="xs" variant="light" leftSection={<IconPrinter size={14} />} loading={ficha.abriendo}
-                style={{ flexShrink: 0 }} onClick={() => ficha.abrir(puestoId, puesto?.cargo?.nombre ?? `puesto-${puestoId}`)}>
-                Imprimir ficha
-              </Button>
+              <Group gap="xs" wrap="nowrap" style={{ flexShrink: 0 }}>
+                {/* El perfil de un puesto parecido, para los que no tienen ficha en el manual (D10, PR 15). */}
+                {!soloLectura && (
+                  <Button size="xs" variant="default" leftSection={<IconCopy size={14} />} onClick={() => setCopiando(true)}>
+                    Copiar de otro puesto
+                  </Button>
+                )}
+                {/* La ficha «Descripción y perfil del puesto», como la del Manual de Puestos (P5). */}
+                <Button size="xs" variant="light" leftSection={<IconPrinter size={14} />} loading={ficha.abriendo}
+                  onClick={() => ficha.abrir(puestoId, puesto?.cargo?.nombre ?? `puesto-${puestoId}`)}>
+                  Imprimir ficha
+                </Button>
+              </Group>
             )}
           </Group>
         </Card>
@@ -86,6 +114,10 @@ export function PuestoPerfilDrawer({ opened, onClose, puesto, soloLectura = fals
           </Tabs>
         )}
       </Stack>
+
+      {puestoId && !soloLectura && (
+        <CopiarPerfilModal opened={copiando} onClose={() => setCopiando(false)} puestoId={puestoId} />
+      )}
     </SgthDrawer>
   )
 }

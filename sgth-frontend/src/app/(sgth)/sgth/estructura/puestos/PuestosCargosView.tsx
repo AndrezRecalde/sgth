@@ -1,7 +1,7 @@
 'use client'
 
 import { Tabs } from '@mantine/core'
-import { IconBook, IconBriefcase, IconClipboardCheck, IconId, IconScale, IconStars } from '@tabler/icons-react'
+import { IconBook, IconBriefcase, IconClipboardCheck, IconFileDescription, IconId, IconScale, IconStars } from '@tabler/icons-react'
 import { CountBadge, PageHeader, PageShell } from '@/components/ui'
 import { useAuth } from '@/hooks/useAuth'
 import { PuestosTab } from '@/features/estructura/components/PuestosTab'
@@ -10,8 +10,10 @@ import { GruposOcupacionalesTab } from '@/features/estructura/components/GruposO
 import { CompetenciasTab } from '@/features/estructura/components/CompetenciasTab'
 import { RegularizacionTipoTab } from '@/features/estructura/components/RegularizacionTipoTab'
 import { ManualPuestosTab } from '@/features/estructura/components/ManualPuestosTab'
+import { PerfilesCompletitudTab } from '@/features/estructura/components/PerfilesCompletitudTab'
 import { usePorRevisarTipo } from '@/features/estructura/hooks/useRegularizacionTipo'
 import { useFichasManual } from '@/features/estructura/hooks/useManualPuestos'
+import { useCompletitudPerfiles } from '@/features/estructura/hooks/usePerfilesPuestos'
 
 /**
  * Las tablas del catálogo de puestos, juntas y con pestañas.
@@ -33,6 +35,10 @@ export function PuestosCargosView() {
   // las que faltan por cargar.
   const { data: manual } = useFichasManual(puedeRevisar)
   const porCargar = manual ? manual.fichas.length - manual.resumen.cargada : 0
+  // «Perfiles», el tablero de completitud (P6, PR 15). El contador, los
+  // puestos ocupados con el perfil incompleto: los que ya tienen a quién evaluar.
+  const { data: completitud } = useCompletitudPerfiles(puedeRevisar)
+  const ocupadosIncompletos = completitud?.resumen.ocupados_incompletos ?? 0
 
   return (
     <PageShell>
@@ -73,6 +79,15 @@ export function PuestosCargosView() {
               Manual
             </Tabs.Tab>
           )}
+          {puedeRevisar && (
+            <Tabs.Tab
+              value="perfiles"
+              leftSection={<IconFileDescription size={16} />}
+              rightSection={ocupadosIncompletos > 0 ? <CountBadge tone="warning">{ocupadosIncompletos}</CountBadge> : undefined}
+            >
+              Perfiles
+            </Tabs.Tab>
+          )}
         </Tabs.List>
 
         <Tabs.Panel value="puestos">
@@ -100,6 +115,12 @@ export function PuestosCargosView() {
         {puedeRevisar && !!manual?.fichas.length && (
           <Tabs.Panel value="manual">
             <ManualPuestosTab />
+          </Tabs.Panel>
+        )}
+
+        {puedeRevisar && (
+          <Tabs.Panel value="perfiles">
+            <PerfilesCompletitudTab />
           </Tabs.Panel>
         )}
       </Tabs>
