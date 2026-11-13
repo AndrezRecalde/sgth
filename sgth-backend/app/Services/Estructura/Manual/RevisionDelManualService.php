@@ -73,7 +73,7 @@ class RevisionDelManualService
 
         $ids        = collect($analisis['candidatos'])->pluck('puesto_id')->push($analisis['sugerido'])->filter()->unique()->all();
         $puestos    = $this->puestos($ids);
-        $contenidos = $this->contenidos($ids);
+        $contenidos = $this->perfiles->contenidos($ids);
 
         return [
             ...$this->fila($ficha, $analisis, $puestos),
@@ -260,28 +260,6 @@ class RevisionDelManualService
             ->with(['cargo:id,nombre', 'unidadAdministrativa:id,nombre', 'grupoOcupacional:id,grado_numerico,grupo'])
             ->get()
             ->keyBy('id');
-    }
-
-    /**
-     * Lo que cada puesto ya tiene y se reemplazaría al cargar.
-     *
-     * @param  list<int>  $ids
-     * @return array<int, array{mision: bool, requisitos: int, actividades: int, competencias: int}>
-     */
-    private function contenidos(array $ids): array
-    {
-        return Puesto::withTrashed()
-            ->whereIn('id', $ids)
-            ->withCount(['actividades', 'competencias'])
-            ->with('perfil.requisitos')
-            ->get()
-            ->mapWithKeys(fn (Puesto $p) => [$p->id => [
-                'mision'       => filled($p->perfil?->mision),
-                'requisitos'   => $p->perfil?->requisitos->count() ?? 0,
-                'actividades'  => (int) $p->actividades_count,
-                'competencias' => (int) $p->competencias_count,
-            ]])
-            ->all();
     }
 
     /**

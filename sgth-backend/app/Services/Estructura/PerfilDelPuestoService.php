@@ -83,6 +83,30 @@ class PerfilDelPuestoService
     }
 
     /**
+     * Lo que cada puesto ya tiene y reemplazaría una carga del manual o una
+     * copia: si hay misión, y cuántas alternativas de instrucción, actividades
+     * y competencias.
+     *
+     * @param  list<int>  $ids
+     * @return array<int, array{mision: bool, requisitos: int, actividades: int, competencias: int}>
+     */
+    public function contenidos(array $ids): array
+    {
+        return Puesto::withTrashed()
+            ->whereIn('id', $ids)
+            ->withCount(['actividades', 'competencias'])
+            ->with('perfil.requisitos')
+            ->get()
+            ->mapWithKeys(fn (Puesto $p) => [$p->id => [
+                'mision'       => filled($p->perfil?->mision),
+                'requisitos'   => $p->perfil?->requisitos->count() ?? 0,
+                'actividades'  => (int) $p->actividades_count,
+                'competencias' => (int) $p->competencias_count,
+            ]])
+            ->all();
+    }
+
+    /**
      * Lo que la bitácora compara: los campos y las alternativas de
      * instrucción, como texto.
      *

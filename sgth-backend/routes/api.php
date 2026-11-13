@@ -74,6 +74,8 @@ use App\Http\Controllers\Dispensario\TriajeController;
 use App\Http\Controllers\Estructura\BuscarPuestoController;
 use App\Http\Controllers\Estructura\CargoController;
 use App\Http\Controllers\Estructura\CompetenciaController;
+use App\Http\Controllers\Estructura\CompletitudDePerfilesController;
+use App\Http\Controllers\Estructura\CopiaDelPerfilController;
 use App\Http\Controllers\Estructura\ExtensionTelefonicaController;
 use App\Http\Controllers\Estructura\EscalaRemuneracionController;
 use App\Http\Controllers\Estructura\GrupoOcupacionalController;
@@ -358,6 +360,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::put('equivalencias', [ManualDePuestosController::class, 'guardarEquivalencia'])
                 ->name('estructura.manual.equivalencias.guardar');
         });
+        // Qué le falta al perfil de cada puesto para quedar listo para evaluar
+        // (docs/diseno-manual-de-puestos.md, P6, PR 15): «Perfiles» en Puestos
+        // y cargos.
+        Route::get('completitud-de-perfiles', CompletitudDePerfilesController::class)
+            ->middleware('permission:gestionar-puestos')
+            ->name('estructura.perfiles.completitud');
         Route::get(
             'unidades-administrativas/todas',
             [UnidadAdministrativaController::class, 'todas']
@@ -394,6 +402,14 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::get('puestos/{puestoId}/perfil/pdf', [PuestoPerfilController::class, 'pdf'])
             ->whereNumber('puestoId')
             ->name('estructura.puestos.perfil.pdf');
+        // Copiar el perfil de otro puesto (P6, PR 15): la vista previa y la
+        // copia. El permiso, `update` del puesto, lo pide la petición.
+        Route::get('puestos/{puestoId}/perfil/copia', [CopiaDelPerfilController::class, 'show'])
+            ->whereNumber('puestoId')
+            ->name('estructura.puestos.perfil.copia');
+        Route::post('puestos/{puestoId}/perfil/copia', [CopiaDelPerfilController::class, 'store'])
+            ->whereNumber('puestoId')
+            ->name('estructura.puestos.perfil.copiar');
         // `whereNumber` en los dos ids, como en las competencias: los
         // controladores los reciben como `int`, y uno que no es número
         // reventaba con un 500 en vez de dar 404.
