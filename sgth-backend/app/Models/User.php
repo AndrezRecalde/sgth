@@ -12,6 +12,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Services\Estructura\JefaturaService;
 
 #[Fillable(['email', 'password', 'usuario_ti', 'primer_login', 'activo', 'servidor_id'])]
 #[Hidden(['password', 'remember_token'])]
@@ -21,6 +22,9 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     protected $guard_name = 'sanctum';
+
+    /** @var list<int>|null Ver `unidadesQueDirige()`. */
+    private ?array $unidadesQueDirige = null;
 
     /**
      * Espejo de los DEFAULT de la tabla. Sin esto, un User recién creado tiene
@@ -88,36 +92,18 @@ class User extends Authenticatable
         return $this->servidor_id !== null;
     }
 
-    public function esJefeDeServidor(int $servidorId): bool
+    /**
+     * Las unidades que dirige hoy por su puesto, según `JefaturaService`.
+     *
+     * Se calcula una vez por instancia: las políticas de Permisos y Vacaciones
+     * lo preguntan fila por fila. Aquí estaba `esJefeDeServidor()`, que no
+     * llamaba nadie.
+     *
+     * @return list<int>
+     */
+    public function unidadesQueDirige(): array
     {
-        $servidor = \App\Models\Expediente\Servidor::find($servidorId);
-        if (!$servidor) return false;
-
-        $mismaUnidad = $servidor->unidad_administrativa_id;
-        $miServidor  = $this->servidor;
-        if (!$miServidor) return false;
-
-        $esJefeTitular = \App\Models\Estructura\Puesto::where(
-            'unidad_administrativa_id', $mismaUnidad
-        )
-        ->where('es_jefe', true)
-        ->whereHas('contratosVigentes', fn($q) => $q
-            ->where('servidor_id', $miServidor->id)
-        )
-        ->exists();
-
-        if ($esJefeTitular) return true;
-
-        // Subrogacion — solo si el modelo existe
-        if (class_exists(\App\Models\Expediente\Subrogacion::class)) {
-            return \App\Models\Expediente\Subrogacion::where(
-                'servidor_subrogante_id', $miServidor->id
-            )
-            ->where('unidad_administrativa_id', $mismaUnidad)
-            ->activaEnFecha(now())
-            ->exists();
-        }
-
-        return false;
+        return $this->unidadesQueDirige ??= app(JefaturaService::class)
+            ->unidadesQueDirige($this->servidor_id);
     }
 }

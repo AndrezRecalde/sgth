@@ -6671,6 +6671,212 @@
                 }
             }
         },
+        "/v1/expediente/brechas-de-perfil": {
+            "get": {
+                "operationId": "expediente.brechas-de-perfil",
+                "tags": [
+                    "BrechasDePerfil"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Brechas de perfil."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "filas": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "servidor": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "cedula": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "nombre": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "id",
+                                                                    "cedula",
+                                                                    "nombre"
+                                                                ]
+                                                            },
+                                                            "puesto": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "cargo": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "unidad": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "grado": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "id",
+                                                                    "cargo",
+                                                                    "unidad",
+                                                                    "grado"
+                                                                ]
+                                                            },
+                                                            "instruccion": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "estado": {
+                                                                        "type": "string",
+                                                                        "enum": [
+                                                                            "cumple",
+                                                                            "por_revisar",
+                                                                            "no_cumple"
+                                                                        ]
+                                                                    },
+                                                                    "tiene": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "pide": {
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "por_validar": {
+                                                                        "type": "integer",
+                                                                        "minimum": 0
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "estado",
+                                                                    "tiene",
+                                                                    "pide",
+                                                                    "por_validar"
+                                                                ]
+                                                            },
+                                                            "capacitacion": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "tematicas": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "registradas": {
+                                                                        "type": "integer",
+                                                                        "minimum": 0
+                                                                    },
+                                                                    "relacionadas": {
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "type": "object",
+                                                                            "properties": {
+                                                                                "titulo": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "fecha": {
+                                                                                    "type": "string"
+                                                                                }
+                                                                            },
+                                                                            "required": [
+                                                                                "titulo",
+                                                                                "fecha"
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "tematicas",
+                                                                    "registradas",
+                                                                    "relacionadas"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "servidor",
+                                                            "puesto",
+                                                            "instruccion",
+                                                            "capacitacion"
+                                                        ]
+                                                    }
+                                                },
+                                                "resumen": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "filas",
+                                                "resumen"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/expediente/brechas-de-perfil/excel": {
+            "get": {
+                "operationId": "expediente.brechas-de-perfil.excel",
+                "tags": [
+                    "BrechasDePerfil"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/estructura/puestos/buscar": {
             "get": {
                 "operationId": "puestos.buscar",
@@ -13418,6 +13624,186 @@
                 }
             }
         },
+        "/v1/estructura/completitud-de-perfiles": {
+            "get": {
+                "operationId": "estructura.perfiles.completitud",
+                "tags": [
+                    "CompletitudDePerfiles"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Completitud de los perfiles."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "puestos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "tipo": {
+                                                                "type": "string"
+                                                            },
+                                                            "cargo": {
+                                                                "type": [
+                                                                    "object",
+                                                                    "null"
+                                                                ],
+                                                                "properties": {
+                                                                    "nombre": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "nombre"
+                                                                ]
+                                                            },
+                                                            "unidad_administrativa": {
+                                                                "type": [
+                                                                    "object",
+                                                                    "null"
+                                                                ],
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "nombre": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "id",
+                                                                    "nombre"
+                                                                ]
+                                                            },
+                                                            "grupo_ocupacional": {
+                                                                "type": [
+                                                                    "object",
+                                                                    "null"
+                                                                ],
+                                                                "description": "Lo que el caj\u00f3n del perfil muestra y propone (D5).",
+                                                                "properties": {
+                                                                    "grupo": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "grado_codigo": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "nivel_competencia_sugerido": {
+                                                                        "anyOf": [
+                                                                            {
+                                                                                "$ref": "#/components/schemas/NivelCompetencia"
+                                                                            },
+                                                                            {
+                                                                                "type": "null"
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "grupo",
+                                                                    "grado_codigo",
+                                                                    "nivel_competencia_sugerido"
+                                                                ]
+                                                            },
+                                                            "regimen_laboral": {
+                                                                "type": "string"
+                                                            },
+                                                            "nivel_complejidad": {
+                                                                "anyOf": [
+                                                                    {
+                                                                        "$ref": "#/components/schemas/NivelComplejidadPuesto"
+                                                                    },
+                                                                    {
+                                                                        "type": "null"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "ocupado": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "mision": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "requisitos": {
+                                                                "type": "integer"
+                                                            },
+                                                            "actividades": {
+                                                                "type": "integer"
+                                                            },
+                                                            "competencias": {
+                                                                "type": "integer"
+                                                            },
+                                                            "faltan": {
+                                                                "type": "array",
+                                                                "items": {}
+                                                            },
+                                                            "completo": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "tipo",
+                                                            "cargo",
+                                                            "unidad_administrativa",
+                                                            "grupo_ocupacional",
+                                                            "regimen_laboral",
+                                                            "nivel_complejidad",
+                                                            "ocupado",
+                                                            "mision",
+                                                            "requisitos",
+                                                            "actividades",
+                                                            "competencias",
+                                                            "faltan",
+                                                            "completo"
+                                                        ]
+                                                    }
+                                                },
+                                                "resumen": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "puestos",
+                                                "resumen"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/comunicados": {
             "get": {
                 "operationId": "comunicados.index",
@@ -18419,7 +18805,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "El perfil del puesto (P7, PR 16): el vigente en borrador, el guardado\nal publicarla despu\u00e9s.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -18433,7 +18819,152 @@
                                             "const": "Operaci\u00f3n exitosa."
                                         },
                                         "datos": {
-                                            "type": "string"
+                                            "type": "object",
+                                            "properties": {
+                                                "": {
+                                                    "type": "string"
+                                                },
+                                                "perfil_del_puesto": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "tomado_en": {
+                                                                    "type": "null"
+                                                                },
+                                                                "mision": {
+                                                                    "type": "string"
+                                                                },
+                                                                "area_conocimiento": {
+                                                                    "type": "string"
+                                                                },
+                                                                "especificidad_experiencia": {
+                                                                    "type": "string"
+                                                                },
+                                                                "capacitacion": {
+                                                                    "type": "string"
+                                                                },
+                                                                "requisitos": {
+                                                                    "anyOf": [
+                                                                        {
+                                                                            "type": "string"
+                                                                        },
+                                                                        {
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "type": "object",
+                                                                                "properties": {
+                                                                                    "nivel_instruccion": {
+                                                                                        "anyOf": [
+                                                                                            {
+                                                                                                "type": "string"
+                                                                                            },
+                                                                                            {
+                                                                                                "$ref": "#/components/schemas/NivelInstruccion"
+                                                                                            }
+                                                                                        ]
+                                                                                    },
+                                                                                    "instruccion": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "detalle": {
+                                                                                        "type": [
+                                                                                            "string",
+                                                                                            "null"
+                                                                                        ]
+                                                                                    },
+                                                                                    "meses_experiencia": {
+                                                                                        "type": "integer"
+                                                                                    }
+                                                                                },
+                                                                                "required": [
+                                                                                    "nivel_instruccion",
+                                                                                    "instruccion",
+                                                                                    "detalle",
+                                                                                    "meses_experiencia"
+                                                                                ]
+                                                                            }
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                "competencias": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "nombre": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "tipo": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "nivel": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "comportamiento": {}
+                                                                        },
+                                                                        "required": [
+                                                                            "nombre",
+                                                                            "tipo",
+                                                                            "nivel",
+                                                                            "comportamiento"
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "actividades": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "faltan": {
+                                                                    "type": "array",
+                                                                    "items": {}
+                                                                },
+                                                                "fuente": {
+                                                                    "type": "string",
+                                                                    "const": "puesto"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "tomado_en",
+                                                                "mision",
+                                                                "area_conocimiento",
+                                                                "especificidad_experiencia",
+                                                                "capacitacion",
+                                                                "requisitos",
+                                                                "competencias",
+                                                                "actividades",
+                                                                "faltan",
+                                                                "fuente"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "type": "null"
+                                                        },
+                                                        {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "": {
+                                                                    "type": "string"
+                                                                },
+                                                                "fuente": {
+                                                                    "type": "string",
+                                                                    "const": "convocatoria"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                null,
+                                                                "fuente"
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                null,
+                                                "perfil_del_puesto"
+                                            ]
                                         },
                                         "meta": {
                                             "type": "null"
@@ -18824,6 +19355,313 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/estructura/puestos/{puestoId}/perfil/copia": {
+            "get": {
+                "operationId": "estructura.puestos.perfil.copia",
+                "summary": "Lo que se copiar\u00eda y lo que se reemplaza, sin tocar nada",
+                "tags": [
+                    "CopiaDelPerfil"
+                ],
+                "parameters": [
+                    {
+                        "name": "puestoId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "origen_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Vista previa de la copia."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "origen": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "cargo": {
+                                                            "type": "string"
+                                                        },
+                                                        "unidad": {
+                                                            "type": "string"
+                                                        },
+                                                        "grado": {
+                                                            "type": "string"
+                                                        },
+                                                        "mision": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "cargo",
+                                                        "unidad",
+                                                        "grado",
+                                                        "mision"
+                                                    ]
+                                                },
+                                                "copia": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "mision": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "requisitos": {
+                                                            "anyOf": [
+                                                                {
+                                                                    "type": "string"
+                                                                },
+                                                                {
+                                                                    "type": "integer",
+                                                                    "enum": [
+                                                                        0
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        "actividades": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "competencias": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "mision",
+                                                        "requisitos",
+                                                        "actividades",
+                                                        "competencias"
+                                                    ]
+                                                },
+                                                "omitidas": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "actividades": {
+                                                            "type": "string"
+                                                        },
+                                                        "competencias": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "actividades",
+                                                        "competencias"
+                                                    ]
+                                                },
+                                                "ajuste_de_nivel": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "de": {
+                                                            "type": "string"
+                                                        },
+                                                        "a": {
+                                                            "type": "string"
+                                                        },
+                                                        "competencias": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "de",
+                                                        "a",
+                                                        "competencias"
+                                                    ]
+                                                },
+                                                "reemplaza": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "mision": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "requisitos": {
+                                                            "anyOf": [
+                                                                {
+                                                                    "type": "string"
+                                                                },
+                                                                {
+                                                                    "type": "integer",
+                                                                    "enum": [
+                                                                        0
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        "actividades": {
+                                                            "type": "integer"
+                                                        },
+                                                        "competencias": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "mision",
+                                                        "requisitos",
+                                                        "actividades",
+                                                        "competencias"
+                                                    ]
+                                                },
+                                                "impedimento": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "origen",
+                                                "copia",
+                                                "omitidas",
+                                                "ajuste_de_nivel",
+                                                "reemplaza",
+                                                "impedimento"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "estructura.puestos.perfil.copiar",
+                "tags": [
+                    "CopiaDelPerfil"
+                ],
+                "parameters": [
+                    {
+                        "name": "puestoId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CopiarPerfilPuestoRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string"
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "mision": {
+                                                    "type": "boolean"
+                                                },
+                                                "requisitos": {
+                                                    "type": "integer"
+                                                },
+                                                "actividades": {
+                                                    "type": "integer"
+                                                },
+                                                "competencias": {
+                                                    "type": "integer"
+                                                },
+                                                "ajuste_de_nivel": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "mision",
+                                                "requisitos",
+                                                "actividades",
+                                                "competencias",
+                                                "ajuste_de_nivel"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 }
             }
@@ -38677,6 +39515,1292 @@
                 }
             }
         },
+        "/v1/estructura/manual-de-puestos/fichas": {
+            "get": {
+                "operationId": "estructura.manual.fichas",
+                "summary": "Las fichas con su estado y el puesto sugerido o cargado",
+                "tags": [
+                    "ManualDePuestos"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Fichas del Manual de Puestos."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "fichas": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "archivo": {
+                                                                "type": "string"
+                                                            },
+                                                            "proceso": {
+                                                                "type": "string"
+                                                            },
+                                                            "denominacion": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "unidad": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "gestion": {
+                                                                "type": "string"
+                                                            },
+                                                            "subproceso": {},
+                                                            "grupo_ocupacional": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "grado": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "plazas": {
+                                                                "type": "integer"
+                                                            },
+                                                            "avisos_count": {
+                                                                "type": "integer"
+                                                            },
+                                                            "estado": {
+                                                                "type": "string"
+                                                            },
+                                                            "motivo": {
+                                                                "type": "string"
+                                                            },
+                                                            "unidad_sgth": {
+                                                                "type": "string"
+                                                            },
+                                                            "puesto": {
+                                                                "type": [
+                                                                    "object",
+                                                                    "null"
+                                                                ],
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "cargo": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "unidad": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "grado": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "eliminado": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "id",
+                                                                    "cargo",
+                                                                    "unidad",
+                                                                    "grado",
+                                                                    "eliminado"
+                                                                ]
+                                                            },
+                                                            "cargada_en": {
+                                                                "type": "string"
+                                                            },
+                                                            "cargada_por": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "archivo",
+                                                            "proceso",
+                                                            "denominacion",
+                                                            "unidad",
+                                                            "gestion",
+                                                            "subproceso",
+                                                            "grupo_ocupacional",
+                                                            "grado",
+                                                            "plazas",
+                                                            "avisos_count",
+                                                            "estado",
+                                                            "motivo",
+                                                            "unidad_sgth",
+                                                            "puesto",
+                                                            "cargada_en",
+                                                            "cargada_por"
+                                                        ]
+                                                    }
+                                                },
+                                                "resumen": {
+                                                    "type": "array",
+                                                    "items": {}
+                                                }
+                                            },
+                                            "required": [
+                                                "fichas",
+                                                "resumen"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/estructura/manual-de-puestos/fichas/{fichaId}": {
+            "get": {
+                "operationId": "estructura.manual.ficha",
+                "summary": "Una ficha con su propuesta de perfil y los puestos de su unidad",
+                "tags": [
+                    "ManualDePuestos"
+                ],
+                "parameters": [
+                    {
+                        "name": "fichaId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Ficha del Manual de Puestos."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "archivo": {
+                                                    "type": "string"
+                                                },
+                                                "proceso": {
+                                                    "type": "string"
+                                                },
+                                                "denominacion": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "unidad": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "gestion": {
+                                                    "type": "string"
+                                                },
+                                                "subproceso": {},
+                                                "grupo_ocupacional": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "grado": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "plazas": {
+                                                    "type": "integer"
+                                                },
+                                                "avisos_count": {
+                                                    "type": "integer"
+                                                },
+                                                "estado": {
+                                                    "type": "string"
+                                                },
+                                                "motivo": {
+                                                    "type": "string"
+                                                },
+                                                "unidad_sgth": {
+                                                    "type": "string"
+                                                },
+                                                "puesto": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "string"
+                                                        },
+                                                        "cargo": {
+                                                            "type": "string"
+                                                        },
+                                                        "unidad": {
+                                                            "type": "string"
+                                                        },
+                                                        "grado": {
+                                                            "type": "string"
+                                                        },
+                                                        "eliminado": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "cargo",
+                                                        "unidad",
+                                                        "grado",
+                                                        "eliminado"
+                                                    ]
+                                                },
+                                                "cargada_en": {
+                                                    "type": "string"
+                                                },
+                                                "cargada_por": {
+                                                    "type": "string"
+                                                },
+                                                "avisos": {
+                                                    "type": "string"
+                                                },
+                                                "propuesta": {
+                                                    "type": "string"
+                                                },
+                                                "ficha": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "nivel": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "rol": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "ambito": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "instruccion": {
+                                                            "anyOf": [
+                                                                {
+                                                                    "type": "string"
+                                                                },
+                                                                {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "minItems": 0,
+                                                                    "maxItems": 0,
+                                                                    "additionalItems": false
+                                                                }
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "nivel",
+                                                        "rol",
+                                                        "ambito",
+                                                        "instruccion"
+                                                    ]
+                                                },
+                                                "candidatos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "": {
+                                                                "type": "object",
+                                                                "additionalProperties": {}
+                                                            },
+                                                            "contenido": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "mision": {
+                                                                        "type": "boolean"
+                                                                    },
+                                                                    "requisitos": {
+                                                                        "anyOf": [
+                                                                            {
+                                                                                "type": "string"
+                                                                            },
+                                                                            {
+                                                                                "type": "integer",
+                                                                                "enum": [
+                                                                                    0
+                                                                                ]
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    "actividades": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "competencias": {
+                                                                        "type": "integer"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "mision",
+                                                                    "requisitos",
+                                                                    "actividades",
+                                                                    "competencias"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            null,
+                                                            "contenido"
+                                                        ]
+                                                    }
+                                                },
+                                                "contenido_cargado": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "mision": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "requisitos": {
+                                                            "anyOf": [
+                                                                {
+                                                                    "type": "string"
+                                                                },
+                                                                {
+                                                                    "type": "integer",
+                                                                    "enum": [
+                                                                        0
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        "actividades": {
+                                                            "type": "integer"
+                                                        },
+                                                        "competencias": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "mision",
+                                                        "requisitos",
+                                                        "actividades",
+                                                        "competencias"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "archivo",
+                                                "proceso",
+                                                "denominacion",
+                                                "unidad",
+                                                "gestion",
+                                                "subproceso",
+                                                "grupo_ocupacional",
+                                                "grado",
+                                                "plazas",
+                                                "avisos_count",
+                                                "estado",
+                                                "motivo",
+                                                "unidad_sgth",
+                                                "puesto",
+                                                "cargada_en",
+                                                "cargada_por",
+                                                "avisos",
+                                                "propuesta",
+                                                "ficha",
+                                                "candidatos",
+                                                "contenido_cargado"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/estructura/manual-de-puestos/fichas/{fichaId}/cargar": {
+            "post": {
+                "operationId": "estructura.manual.cargar",
+                "summary": "Carga la ficha como perfil del puesto: reemplaza lo que ten\u00eda",
+                "tags": [
+                    "ManualDePuestos"
+                ],
+                "parameters": [
+                    {
+                        "name": "fichaId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CargarFichaManualRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string"
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "archivo": {
+                                                    "type": "string"
+                                                },
+                                                "proceso": {
+                                                    "type": "string"
+                                                },
+                                                "denominacion": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "unidad": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "gestion": {
+                                                    "type": "string"
+                                                },
+                                                "subproceso": {},
+                                                "grupo_ocupacional": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "grado": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "plazas": {
+                                                    "type": "integer"
+                                                },
+                                                "avisos_count": {
+                                                    "type": "integer"
+                                                },
+                                                "estado": {
+                                                    "type": "string"
+                                                },
+                                                "motivo": {
+                                                    "type": "string"
+                                                },
+                                                "unidad_sgth": {
+                                                    "type": "string"
+                                                },
+                                                "puesto": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "string"
+                                                        },
+                                                        "cargo": {
+                                                            "type": "string"
+                                                        },
+                                                        "unidad": {
+                                                            "type": "string"
+                                                        },
+                                                        "grado": {
+                                                            "type": "string"
+                                                        },
+                                                        "eliminado": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "cargo",
+                                                        "unidad",
+                                                        "grado",
+                                                        "eliminado"
+                                                    ]
+                                                },
+                                                "cargada_en": {
+                                                    "type": "string"
+                                                },
+                                                "cargada_por": {
+                                                    "type": "string"
+                                                },
+                                                "avisos": {
+                                                    "type": "string"
+                                                },
+                                                "propuesta": {
+                                                    "type": "string"
+                                                },
+                                                "ficha": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "nivel": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "rol": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "ambito": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "instruccion": {
+                                                            "anyOf": [
+                                                                {
+                                                                    "type": "string"
+                                                                },
+                                                                {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "minItems": 0,
+                                                                    "maxItems": 0,
+                                                                    "additionalItems": false
+                                                                }
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "nivel",
+                                                        "rol",
+                                                        "ambito",
+                                                        "instruccion"
+                                                    ]
+                                                },
+                                                "candidatos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "": {
+                                                                "type": "object",
+                                                                "additionalProperties": {}
+                                                            },
+                                                            "contenido": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "mision": {
+                                                                        "type": "boolean"
+                                                                    },
+                                                                    "requisitos": {
+                                                                        "anyOf": [
+                                                                            {
+                                                                                "type": "string"
+                                                                            },
+                                                                            {
+                                                                                "type": "integer",
+                                                                                "enum": [
+                                                                                    0
+                                                                                ]
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    "actividades": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "competencias": {
+                                                                        "type": "integer"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "mision",
+                                                                    "requisitos",
+                                                                    "actividades",
+                                                                    "competencias"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            null,
+                                                            "contenido"
+                                                        ]
+                                                    }
+                                                },
+                                                "contenido_cargado": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "mision": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "requisitos": {
+                                                            "anyOf": [
+                                                                {
+                                                                    "type": "string"
+                                                                },
+                                                                {
+                                                                    "type": "integer",
+                                                                    "enum": [
+                                                                        0
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        "actividades": {
+                                                            "type": "integer"
+                                                        },
+                                                        "competencias": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "mision",
+                                                        "requisitos",
+                                                        "actividades",
+                                                        "competencias"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "archivo",
+                                                "proceso",
+                                                "denominacion",
+                                                "unidad",
+                                                "gestion",
+                                                "subproceso",
+                                                "grupo_ocupacional",
+                                                "grado",
+                                                "plazas",
+                                                "avisos_count",
+                                                "estado",
+                                                "motivo",
+                                                "unidad_sgth",
+                                                "puesto",
+                                                "cargada_en",
+                                                "cargada_por",
+                                                "avisos",
+                                                "propuesta",
+                                                "ficha",
+                                                "candidatos",
+                                                "contenido_cargado"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/estructura/manual-de-puestos/fichas/{fichaId}/puesto": {
+            "delete": {
+                "operationId": "estructura.manual.desvincular",
+                "summary": "Quita el emparejamiento; el perfil cargado se queda en el puesto",
+                "tags": [
+                    "ManualDePuestos"
+                ],
+                "parameters": [
+                    {
+                        "name": "fichaId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "La ficha qued\u00f3 sin puesto. El perfil que se carg\u00f3 sigue en el puesto."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "archivo": {
+                                                    "type": "string"
+                                                },
+                                                "proceso": {
+                                                    "type": "string"
+                                                },
+                                                "denominacion": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "unidad": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "gestion": {
+                                                    "type": "string"
+                                                },
+                                                "subproceso": {},
+                                                "grupo_ocupacional": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "grado": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "plazas": {
+                                                    "type": "integer"
+                                                },
+                                                "avisos_count": {
+                                                    "type": "integer"
+                                                },
+                                                "estado": {
+                                                    "type": "string"
+                                                },
+                                                "motivo": {
+                                                    "type": "string"
+                                                },
+                                                "unidad_sgth": {
+                                                    "type": "string"
+                                                },
+                                                "puesto": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "string"
+                                                        },
+                                                        "cargo": {
+                                                            "type": "string"
+                                                        },
+                                                        "unidad": {
+                                                            "type": "string"
+                                                        },
+                                                        "grado": {
+                                                            "type": "string"
+                                                        },
+                                                        "eliminado": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "cargo",
+                                                        "unidad",
+                                                        "grado",
+                                                        "eliminado"
+                                                    ]
+                                                },
+                                                "cargada_en": {
+                                                    "type": "string"
+                                                },
+                                                "cargada_por": {
+                                                    "type": "string"
+                                                },
+                                                "avisos": {
+                                                    "type": "string"
+                                                },
+                                                "propuesta": {
+                                                    "type": "string"
+                                                },
+                                                "ficha": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "nivel": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "rol": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "ambito": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "instruccion": {
+                                                            "anyOf": [
+                                                                {
+                                                                    "type": "string"
+                                                                },
+                                                                {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "minItems": 0,
+                                                                    "maxItems": 0,
+                                                                    "additionalItems": false
+                                                                }
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "nivel",
+                                                        "rol",
+                                                        "ambito",
+                                                        "instruccion"
+                                                    ]
+                                                },
+                                                "candidatos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "": {
+                                                                "type": "object",
+                                                                "additionalProperties": {}
+                                                            },
+                                                            "contenido": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "mision": {
+                                                                        "type": "boolean"
+                                                                    },
+                                                                    "requisitos": {
+                                                                        "anyOf": [
+                                                                            {
+                                                                                "type": "string"
+                                                                            },
+                                                                            {
+                                                                                "type": "integer",
+                                                                                "enum": [
+                                                                                    0
+                                                                                ]
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    "actividades": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "competencias": {
+                                                                        "type": "integer"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "mision",
+                                                                    "requisitos",
+                                                                    "actividades",
+                                                                    "competencias"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            null,
+                                                            "contenido"
+                                                        ]
+                                                    }
+                                                },
+                                                "contenido_cargado": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "mision": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "requisitos": {
+                                                            "anyOf": [
+                                                                {
+                                                                    "type": "string"
+                                                                },
+                                                                {
+                                                                    "type": "integer",
+                                                                    "enum": [
+                                                                        0
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        "actividades": {
+                                                            "type": "integer"
+                                                        },
+                                                        "competencias": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "mision",
+                                                        "requisitos",
+                                                        "actividades",
+                                                        "competencias"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "archivo",
+                                                "proceso",
+                                                "denominacion",
+                                                "unidad",
+                                                "gestion",
+                                                "subproceso",
+                                                "grupo_ocupacional",
+                                                "grado",
+                                                "plazas",
+                                                "avisos_count",
+                                                "estado",
+                                                "motivo",
+                                                "unidad_sgth",
+                                                "puesto",
+                                                "cargada_en",
+                                                "cargada_por",
+                                                "avisos",
+                                                "propuesta",
+                                                "ficha",
+                                                "candidatos",
+                                                "contenido_cargado"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/estructura/manual-de-puestos/equivalencias": {
+            "get": {
+                "operationId": "estructura.manual.equivalencias",
+                "summary": "Las gestiones del manual y la unidad de hoy de cada una",
+                "tags": [
+                    "ManualDePuestos"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Unidades del Manual de Puestos."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "gestion": {
+                                                        "type": "string"
+                                                    },
+                                                    "nombre": {
+                                                        "type": "string"
+                                                    },
+                                                    "fichas": {
+                                                        "type": "integer"
+                                                    },
+                                                    "unidad": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "gestion",
+                                                    "nombre",
+                                                    "fichas",
+                                                    "unidad"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "estructura.manual.equivalencias.guardar",
+                "tags": [
+                    "ManualDePuestos"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GuardarEquivalenciaManualRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "enum": [
+                                                "La gesti\u00f3n vuelve a la unidad sugerida.",
+                                                "Unidad guardada."
+                                            ]
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "gestion": {
+                                                        "type": "string"
+                                                    },
+                                                    "nombre": {
+                                                        "type": "string"
+                                                    },
+                                                    "fichas": {
+                                                        "type": "integer"
+                                                    },
+                                                    "unidad": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "gestion",
+                                                    "nombre",
+                                                    "fichas",
+                                                    "unidad"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/estructura/unidades-administrativas/{unidadId}/manual-de-puestos": {
+            "get": {
+                "operationId": "estructura.unidades.manual-de-puestos",
+                "tags": [
+                    "ManualPorGestion"
+                ],
+                "parameters": [
+                    {
+                        "name": "unidadId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/v1/asistencia/marcaciones": {
             "get": {
                 "operationId": "marcacion.index",
@@ -51853,7 +53977,7 @@
                                 "properties": {
                                     "descripcion": {
                                         "type": "string",
-                                        "maxLength": 200
+                                        "maxLength": 3000
                                     },
                                     "producto": {
                                         "type": [
@@ -51867,7 +53991,7 @@
                                             "string",
                                             "null"
                                         ],
-                                        "maxLength": 500
+                                        "maxLength": 1000
                                     },
                                     "frecuencia": {
                                         "$ref": "#/components/schemas/FrecuenciaActividad"
@@ -51963,7 +54087,7 @@
                                 "properties": {
                                     "descripcion": {
                                         "type": "string",
-                                        "maxLength": 200
+                                        "maxLength": 3000
                                     },
                                     "producto": {
                                         "type": [
@@ -51977,7 +54101,7 @@
                                             "string",
                                             "null"
                                         ],
-                                        "maxLength": 500
+                                        "maxLength": 1000
                                     },
                                     "frecuencia": {
                                         "$ref": "#/components/schemas/FrecuenciaActividad"
@@ -71545,6 +73669,19 @@
                 ],
                 "title": "CargaFamiliar"
             },
+            "CargarFichaManualRequest": {
+                "type": "object",
+                "description": "El puesto en que se carga una ficha del Manual de Puestos (P4, PR 12). El\npermiso, `gestionar-puestos`, lo pide la ruta.",
+                "properties": {
+                    "puesto_id": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "puesto_id"
+                ],
+                "title": "CargarFichaManualRequest"
+            },
             "CargarFotografiasRequest": {
                 "type": "object",
                 "description": "Una tanda de la carga masiva. Aqu\u00ed solo se exige que lleguen archivos: el\npeso y si se pueden leer se revisan foto por foto en el servicio, para que\nuna mala no tumbe la tanda entera y el informe diga cu\u00e1l fue.",
@@ -74191,6 +76328,19 @@
                     "motivo_cierre"
                 ],
                 "title": "Convocatoria"
+            },
+            "CopiarPerfilPuestoRequest": {
+                "type": "object",
+                "description": "El puesto del que se copia el perfil (docs/diseno-manual-de-puestos.md, P6,\nPR 15). Sirve a la vista previa y a la copia.",
+                "properties": {
+                    "origen_id": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "origen_id"
+                ],
+                "title": "CopiarPerfilPuestoRequest"
             },
             "CrearTicketRequest": {
                 "type": "object",
@@ -77601,6 +79751,27 @@
                     "vigencia_desde"
                 ],
                 "title": "GuardarContratoColectivoRequest"
+            },
+            "GuardarEquivalenciaManualRequest": {
+                "type": "object",
+                "description": "A qu\u00e9 unidad de hoy corresponde una gesti\u00f3n del Manual de Puestos (P4,\nPR 12). Sin unidad, vuelve a la sugerida. El permiso lo pide la ruta.",
+                "properties": {
+                    "gestion": {
+                        "type": "string",
+                        "maxLength": 300
+                    },
+                    "unidad_administrativa_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "gestion",
+                    "unidad_administrativa_id"
+                ],
+                "title": "GuardarEquivalenciaManualRequest"
             },
             "GuardarFaltaReglamentoRequest": {
                 "type": "object",
@@ -95692,6 +97863,32 @@
                                     "nombre"
                                 ]
                             },
+                            "jefaturas": {
+                                "type": "array",
+                                "description": "Las unidades que dirige hoy por su puesto, como titular, por\nsubrogaci\u00f3n o por encargo. El Portal le muestra su equipo con\nesto; el rol `jefe-unidad` deja de hacer falta.",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "unidad_id": {
+                                            "type": "integer"
+                                        },
+                                        "unidad": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        },
+                                        "como": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "unidad_id",
+                                        "unidad",
+                                        "como"
+                                    ]
+                                }
+                            },
                             "fotografia": {
                                 "type": [
                                     "object",
@@ -95724,6 +97921,7 @@
                             "unidad_administrativa_id",
                             "puesto",
                             "unidad_administrativa",
+                            "jefaturas",
                             "fotografia"
                         ]
                     }

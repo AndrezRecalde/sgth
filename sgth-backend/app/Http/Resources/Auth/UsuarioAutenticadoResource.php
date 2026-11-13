@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Auth;
 
+use App\Services\Estructura\JefaturaService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -61,6 +62,10 @@ final class UsuarioAutenticadoResource extends JsonResource
                     'id'     => $servidor->unidadAdministrativa->id,
                     'nombre' => $servidor->unidadAdministrativa->nombre,
                 ] : null,
+                // Las unidades que dirige hoy por su puesto, como titular, por
+                // subrogación o por encargo. El Portal le muestra su equipo con
+                // esto; el rol `jefe-unidad` deja de hacer falta.
+                'jefaturas'                => $this->jefaturas($servidor->id),
                 // La foto vigente, para el avatar del menú. La imagen se pide
                 // aparte por su id (Comunicación Social, fase 1.1).
                 'fotografia'               => $servidor->fotografiaVigente ? [
@@ -69,5 +74,16 @@ final class UsuarioAutenticadoResource extends JsonResource
                 ] : null,
             ] : null,
         ];
+    }
+
+    /**
+     * En un método con su tipo para que Scramble documente la forma: del
+     * arreglo del servicio solo deducía `string`.
+     *
+     * @return list<array{unidad_id: int, unidad: string|null, como: string}>
+     */
+    private function jefaturas(int $servidorId): array
+    {
+        return app(JefaturaService::class)->jefaturasDe($servidorId)->all();
     }
 }
