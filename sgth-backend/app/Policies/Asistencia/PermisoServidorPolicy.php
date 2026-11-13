@@ -93,7 +93,8 @@ class PermisoServidorPolicy
             return true;
         }
 
-        return $this->mandaEnLaUnidad($user, $permiso);
+        return $this->mandaEnLaUnidad($user, $permiso)
+            || $this->loNombraJefe($user, $permiso);
     }
 
     /**
@@ -236,33 +237,46 @@ class PermisoServidorPolicy
     }
 
     /**
-     * Jefe o director de la unidad donde se registró el permiso.
+     * Quien dirige la unidad donde se registró el permiso: por su puesto
+     * (`JefaturaService`) o, mientras exista el rol `jefe-unidad`, la suya por
+     * `ver-asistencia-unidad`. Es la regla del listado
+     * (`PermisoServidorController::aplicarAlcance()`).
      *
      * Se compara contra la unidad que quedó grabada en el permiso y no contra
      * la del servidor hoy: si alguien cambia de unidad, su historial sigue
-     * perteneciendo a quien era su jefe entonces. Solo se cae a la unidad
-     * actual del servidor cuando el permiso nació sin unidad.
+     * perteneciendo a quien la dirige. Solo se cae a la unidad actual del
+     * servidor cuando el permiso nació sin unidad.
      */
     private function mandaEnLaUnidad(User $user, PermisoServidor $permiso): bool
     {
-        $unidadDelUsuario = $user->servidor?->unidad_administrativa_id;
-
-        if (! $unidadDelUsuario) {
-            return false;
-        }
-
-        $esJefe = $user->can(Permiso::VER_ASISTENCIA_UNIDAD->value)
-            || (bool) ($user->servidor?->puesto?->es_jefe);
-
-        if (! $esJefe) {
-            return false;
-        }
-
         $unidadDelPermiso = $permiso->unidad_administrativa_id
             ?? $permiso->servidor?->unidad_administrativa_id;
 
-        return $unidadDelPermiso !== null
+        if ($unidadDelPermiso === null) {
+            return false;
+        }
+
+        if (in_array((int) $unidadDelPermiso, $user->unidadesQueDirige(), true)) {
+            return true;
+        }
+
+        $unidadDelUsuario = $user->servidor?->unidad_administrativa_id;
+
+        return $unidadDelUsuario !== null
+            && $user->can(Permiso::VER_ASISTENCIA_UNIDAD->value)
             && (int) $unidadDelPermiso === (int) $unidadDelUsuario;
+    }
+
+    /**
+     * El jefe inmediato que el permiso nombra, aunque sea de otra unidad: el
+     * formulario deja elegirlo entre los jefes de otras unidades, y es quien
+     * firma el papel.
+     */
+    private function loNombraJefe(User $user, PermisoServidor $permiso): bool
+    {
+        return $user->servidor_id !== null
+            && $permiso->jefe_id !== null
+            && (int) $permiso->jefe_id === (int) $user->servidor_id;
     }
 
     private function esDeTrabajoSocial(PermisoServidor $permiso): bool

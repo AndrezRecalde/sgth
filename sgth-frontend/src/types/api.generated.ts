@@ -1164,6 +1164,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/expediente/brechas-de-perfil": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["expediente.brechas-de-perfil"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/expediente/brechas-de-perfil/excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["expediente.brechas-de-perfil.excel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/estructura/puestos/buscar": {
         parameters: {
             query?: never;
@@ -2144,6 +2176,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/estructura/completitud-de-perfiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["estructura.perfiles.completitud"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/comunicados": {
         parameters: {
             query?: never;
@@ -2863,6 +2911,23 @@ export interface paths {
         put?: never;
         /** Declara desierto o cancela un concurso publicado, con su motivo */
         post: operations["convocatoria.cerrar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/estructura/puestos/{puestoId}/perfil/copia": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lo que se copiaría y lo que se reemplaza, sin tocar nada */
+        get: operations["estructura.puestos.perfil.copia"];
+        put?: never;
+        post: operations["estructura.puestos.perfil.copiar"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5737,6 +5802,107 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["mantenimientoBien.anular"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/estructura/manual-de-puestos/fichas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Las fichas con su estado y el puesto sugerido o cargado */
+        get: operations["estructura.manual.fichas"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/estructura/manual-de-puestos/fichas/{fichaId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Una ficha con su propuesta de perfil y los puestos de su unidad */
+        get: operations["estructura.manual.ficha"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/estructura/manual-de-puestos/fichas/{fichaId}/cargar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Carga la ficha como perfil del puesto: reemplaza lo que tenía */
+        post: operations["estructura.manual.cargar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/estructura/manual-de-puestos/fichas/{fichaId}/puesto": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Quita el emparejamiento; el perfil cargado se queda en el puesto */
+        delete: operations["estructura.manual.desvincular"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/estructura/manual-de-puestos/equivalencias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Las gestiones del manual y la unidad de hoy de cada una */
+        get: operations["estructura.manual.equivalencias"];
+        put: operations["estructura.manual.equivalencias.guardar"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/estructura/unidades-administrativas/{unidadId}/manual-de-puestos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["estructura.unidades.manual-de-puestos"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -11489,6 +11655,14 @@ export interface components {
             genero: string | null;
         };
         /**
+         * CargarFichaManualRequest
+         * @description El puesto en que se carga una ficha del Manual de Puestos (P4, PR 12). El
+         *     permiso, `gestionar-puestos`, lo pide la ruta.
+         */
+        CargarFichaManualRequest: {
+            puesto_id: number;
+        };
+        /**
          * CargarFotografiasRequest
          * @description Una tanda de la carga masiva. Aquí solo se exige que lleguen archivos: el
          *     peso y si se pueden leer se revisan foto por foto en el servicio, para que
@@ -12113,6 +12287,14 @@ export interface components {
             tipo_nombramiento_previsto: components["schemas"]["TipoNombramiento"] | null;
             es_contenedor_permanente: boolean;
             motivo_cierre: string | null;
+        };
+        /**
+         * CopiarPerfilPuestoRequest
+         * @description El puesto del que se copia el perfil (docs/diseno-manual-de-puestos.md, P6,
+         *     PR 15). Sirve a la vista previa y a la copia.
+         */
+        CopiarPerfilPuestoRequest: {
+            origen_id: number;
         };
         /**
          * CrearTicketRequest
@@ -13074,6 +13256,15 @@ export interface components {
             observacion?: string | null;
             /** Format: binary */
             archivo?: string | null;
+        };
+        /**
+         * GuardarEquivalenciaManualRequest
+         * @description A qué unidad de hoy corresponde una gestión del Manual de Puestos (P4,
+         *     PR 12). Sin unidad, vuelve a la sugerida. El permiso lo pide la ruta.
+         */
+        GuardarEquivalenciaManualRequest: {
+            gestion: string;
+            unidad_administrativa_id: number | null;
         };
         /**
          * GuardarFaltaReglamentoRequest
@@ -18057,6 +18248,16 @@ export interface components {
                     nombre: string;
                 } | null;
                 /**
+                 * @description Las unidades que dirige hoy por su puesto, como titular, por
+                 *     subrogación o por encargo. El Portal le muestra su equipo con
+                 *     esto; el rol `jefe-unidad` deja de hacer falta.
+                 */
+                jefaturas: {
+                    unidad_id: number;
+                    unidad: string | null;
+                    como: string;
+                }[];
+                /**
                  * @description La foto vigente, para el avatar del menú. La imagen se pide
                  *     aparte por su id (Comunicación Social, fase 1.1).
                  */
@@ -21330,6 +21531,83 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "expediente.brechas-de-perfil": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Brechas de perfil.";
+                        datos: {
+                            filas: {
+                                id: number;
+                                servidor: {
+                                    id: number;
+                                    cedula: string;
+                                    nombre: string;
+                                };
+                                puesto: {
+                                    id: number;
+                                    cargo: string;
+                                    unidad: string;
+                                    grado: string;
+                                };
+                                instruccion: {
+                                    /** @enum {string} */
+                                    estado: "cumple" | "por_revisar" | "no_cumple";
+                                    tiene: string;
+                                    pide: string[];
+                                    por_validar: number;
+                                };
+                                capacitacion: {
+                                    tematicas: string | null;
+                                    registradas: number;
+                                    relacionadas: {
+                                        titulo: string;
+                                        fecha: string;
+                                    }[];
+                                };
+                            }[];
+                            resumen: string;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "expediente.brechas-de-perfil.excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "puestos.buscar": {
         parameters: {
             query: {
@@ -24212,6 +24490,60 @@ export interface operations {
             };
         };
     };
+    "estructura.perfiles.completitud": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Completitud de los perfiles.";
+                        datos: {
+                            puestos: {
+                                id: number;
+                                tipo: string;
+                                cargo: {
+                                    nombre: string;
+                                } | null;
+                                unidad_administrativa: {
+                                    id: number;
+                                    nombre: string;
+                                } | null;
+                                /** @description Lo que el cajón del perfil muestra y propone (D5). */
+                                grupo_ocupacional: {
+                                    grupo: string;
+                                    grado_codigo: string;
+                                    nivel_competencia_sugerido: components["schemas"]["NivelCompetencia"] | null;
+                                } | null;
+                                regimen_laboral: string;
+                                nivel_complejidad: components["schemas"]["NivelComplejidadPuesto"] | null;
+                                ocupado: boolean;
+                                mision: boolean;
+                                requisitos: number;
+                                actividades: number;
+                                competencias: number;
+                                faltan: unknown[];
+                                completo: boolean;
+                            }[];
+                            resumen: string;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "comunicados.index": {
         parameters: {
             query?: {
@@ -26310,6 +26642,10 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /**
+             * @description El perfil del puesto (P7, PR 16): el vigente en borrador, el guardado
+             *     al publicarla después.
+             */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -26319,7 +26655,36 @@ export interface operations {
                         exito: boolean;
                         /** @constant */
                         mensaje: "Operación exitosa.";
-                        datos: string;
+                        datos: {
+                            ""?: string;
+                            perfil_del_puesto: {
+                                tomado_en: null;
+                                mision: string;
+                                area_conocimiento: string;
+                                especificidad_experiencia: string;
+                                capacitacion: string;
+                                requisitos: string | {
+                                    nivel_instruccion: string | components["schemas"]["NivelInstruccion"];
+                                    instruccion: string;
+                                    detalle: string | null;
+                                    meses_experiencia: number;
+                                }[];
+                                competencias: {
+                                    nombre: string;
+                                    tipo: string;
+                                    nivel: string;
+                                    comportamiento: unknown;
+                                }[];
+                                actividades: string[];
+                                faltan: unknown[];
+                                /** @constant */
+                                fuente: "puesto";
+                            } | null | {
+                                ""?: string;
+                                /** @constant */
+                                fuente: "convocatoria";
+                            };
+                        };
                         meta: null;
                     };
                 };
@@ -26491,6 +26856,107 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "estructura.puestos.perfil.copia": {
+        parameters: {
+            query: {
+                origen_id: number;
+            };
+            header?: never;
+            path: {
+                puestoId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Vista previa de la copia.";
+                        datos: {
+                            origen: {
+                                id: number;
+                                cargo: string;
+                                unidad: string;
+                                grado: string;
+                                mision: string;
+                            };
+                            copia: {
+                                mision: boolean;
+                                requisitos: string | 0;
+                                actividades: number;
+                                competencias: number;
+                            };
+                            omitidas: {
+                                actividades: string;
+                                competencias: string;
+                            };
+                            ajuste_de_nivel: {
+                                de: string;
+                                a: string;
+                                competencias: number;
+                            } | null;
+                            reemplaza: {
+                                mision: boolean;
+                                requisitos: string | 0;
+                                actividades: number;
+                                competencias: number;
+                            };
+                            impedimento: string | null;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "estructura.puestos.perfil.copiar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                puestoId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CopiarPerfilPuestoRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: {
+                            mision: boolean;
+                            requisitos: number;
+                            actividades: number;
+                            competencias: number;
+                            ajuste_de_nivel: string;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
         };
     };
@@ -34632,6 +35098,384 @@ export interface operations {
             401: components["responses"]["AuthenticationException"];
             404: components["responses"]["ModelNotFoundException"];
             422: components["responses"]["ValidationException"];
+        };
+    };
+    "estructura.manual.fichas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Fichas del Manual de Puestos.";
+                        datos: {
+                            fichas: {
+                                id: number;
+                                archivo: string;
+                                proceso: string;
+                                denominacion: string | null;
+                                unidad: string | null;
+                                gestion: string;
+                                subproceso: unknown;
+                                grupo_ocupacional: string | null;
+                                grado: number | null;
+                                plazas: number;
+                                avisos_count: number;
+                                estado: string;
+                                motivo: string;
+                                unidad_sgth: string;
+                                puesto: {
+                                    id: string;
+                                    cargo: string;
+                                    unidad: string;
+                                    grado: string;
+                                    eliminado: string;
+                                } | null;
+                                cargada_en: string;
+                                cargada_por: string;
+                            }[];
+                            resumen: unknown[];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "estructura.manual.ficha": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                fichaId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Ficha del Manual de Puestos.";
+                        datos: {
+                            id: number;
+                            archivo: string;
+                            proceso: string;
+                            denominacion: string | null;
+                            unidad: string | null;
+                            gestion: string;
+                            subproceso: unknown;
+                            grupo_ocupacional: string | null;
+                            grado: number | null;
+                            plazas: number;
+                            avisos_count: number;
+                            estado: string;
+                            motivo: string;
+                            unidad_sgth: string;
+                            puesto: {
+                                id: string;
+                                cargo: string;
+                                unidad: string;
+                                grado: string;
+                                eliminado: string;
+                            } | null;
+                            cargada_en: string;
+                            cargada_por: string;
+                            avisos: string;
+                            propuesta: string;
+                            ficha: {
+                                nivel: string | null;
+                                rol: string | null;
+                                ambito: string | null;
+                                instruccion: string | string[];
+                            };
+                            candidatos: {
+                                ""?: {
+                                    [key: string]: unknown;
+                                };
+                                contenido: {
+                                    mision: boolean;
+                                    requisitos: string | 0;
+                                    actividades: number;
+                                    competencias: number;
+                                };
+                            }[];
+                            contenido_cargado: {
+                                mision: boolean;
+                                requisitos: string | 0;
+                                actividades: number;
+                                competencias: number;
+                            } | null;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "estructura.manual.cargar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                fichaId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CargarFichaManualRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        mensaje: string;
+                        datos: {
+                            id: number;
+                            archivo: string;
+                            proceso: string;
+                            denominacion: string | null;
+                            unidad: string | null;
+                            gestion: string;
+                            subproceso: unknown;
+                            grupo_ocupacional: string | null;
+                            grado: number | null;
+                            plazas: number;
+                            avisos_count: number;
+                            estado: string;
+                            motivo: string;
+                            unidad_sgth: string;
+                            puesto: {
+                                id: string;
+                                cargo: string;
+                                unidad: string;
+                                grado: string;
+                                eliminado: string;
+                            } | null;
+                            cargada_en: string;
+                            cargada_por: string;
+                            avisos: string;
+                            propuesta: string;
+                            ficha: {
+                                nivel: string | null;
+                                rol: string | null;
+                                ambito: string | null;
+                                instruccion: string | string[];
+                            };
+                            candidatos: {
+                                ""?: {
+                                    [key: string]: unknown;
+                                };
+                                contenido: {
+                                    mision: boolean;
+                                    requisitos: string | 0;
+                                    actividades: number;
+                                    competencias: number;
+                                };
+                            }[];
+                            contenido_cargado: {
+                                mision: boolean;
+                                requisitos: string | 0;
+                                actividades: number;
+                                competencias: number;
+                            } | null;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "estructura.manual.desvincular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                fichaId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "La ficha quedó sin puesto. El perfil que se cargó sigue en el puesto.";
+                        datos: {
+                            id: number;
+                            archivo: string;
+                            proceso: string;
+                            denominacion: string | null;
+                            unidad: string | null;
+                            gestion: string;
+                            subproceso: unknown;
+                            grupo_ocupacional: string | null;
+                            grado: number | null;
+                            plazas: number;
+                            avisos_count: number;
+                            estado: string;
+                            motivo: string;
+                            unidad_sgth: string;
+                            puesto: {
+                                id: string;
+                                cargo: string;
+                                unidad: string;
+                                grado: string;
+                                eliminado: string;
+                            } | null;
+                            cargada_en: string;
+                            cargada_por: string;
+                            avisos: string;
+                            propuesta: string;
+                            ficha: {
+                                nivel: string | null;
+                                rol: string | null;
+                                ambito: string | null;
+                                instruccion: string | string[];
+                            };
+                            candidatos: {
+                                ""?: {
+                                    [key: string]: unknown;
+                                };
+                                contenido: {
+                                    mision: boolean;
+                                    requisitos: string | 0;
+                                    actividades: number;
+                                    competencias: number;
+                                };
+                            }[];
+                            contenido_cargado: {
+                                mision: boolean;
+                                requisitos: string | 0;
+                                actividades: number;
+                                competencias: number;
+                            } | null;
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "estructura.manual.equivalencias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Unidades del Manual de Puestos.";
+                        datos: {
+                            gestion: string;
+                            nombre: string;
+                            fichas: number;
+                            unidad: string;
+                        }[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "estructura.manual.equivalencias.guardar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuardarEquivalenciaManualRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @enum {string} */
+                        mensaje: "La gestión vuelve a la unidad sugerida." | "Unidad guardada.";
+                        datos: {
+                            gestion: string;
+                            nombre: string;
+                            fichas: number;
+                            unidad: string;
+                        }[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "estructura.unidades.manual-de-puestos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unidadId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
         };
     };
     "marcacion.index": {
