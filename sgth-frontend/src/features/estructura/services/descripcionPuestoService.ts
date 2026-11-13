@@ -35,4 +35,9 @@ export const descripcionPuestoService = {
   /** La ficha «Descripción y perfil del puesto» en PDF, con las diez secciones del manual. */
   pdf: (puestoId: number) =>
     api.get<Blob>(`${url(puestoId)}/pdf`, { responseType: 'blob' }).then((r) => r.data),
+
+  /** El manual de una gestión (P5, PR 14): portada, distribución de puestos y la ficha de cada uno. */
+  manualDeGestion: (unidadId: number) =>
+    api.get<Blob>(`/estructura/unidades-administrativas/${unidadId}/manual-de-puestos`, { responseType: 'blob' })
+      .then((r) => r.data),
 }
