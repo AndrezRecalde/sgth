@@ -40,6 +40,7 @@ export const ROUTES = {
     SUBROGACIONES:    '/sgth/expediente/subrogaciones',
     /** Los títulos y cursos que los servidores registran desde «Mi perfil». */
     FORMACION_POR_VALIDAR: '/sgth/expediente/formacion-por-validar',
+    BRECHAS_PERFIL: '/sgth/expediente/brechas-de-perfil',
     /** Las cargas familiares que los servidores piden desde «Mi perfil». */
     CARGAS_POR_VALIDAR: '/sgth/expediente/cargas-por-validar',
     /** La misma bandeja, solo con las de un servidor (el aviso del expediente). */

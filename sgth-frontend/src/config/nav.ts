@@ -97,6 +97,15 @@ export const NAV_SGTH: NavGroup[] = [
             permiso: 'gestionar-expediente',
           },
           {
+            // Cada servidor frente al perfil de su puesto, para el plan de
+            // capacitación (docs/diseno-manual-de-puestos.md, P7, PR 17).
+            // Muestra el historial académico de todos: el permiso del listado.
+            label:   'Brechas de perfil',
+            href:    ROUTES.SGTH.BRECHAS_PERFIL,
+            icon:    'IconTargetArrow',
+            permiso: 'ver-expediente-todos',
+          },
+          {
             // Las cargas familiares que los servidores piden desde «Mi
             // perfil» (docs/diseno-cargas-familiares-portal.md). El permiso
             // de `expediente/cargas-por-validar`.

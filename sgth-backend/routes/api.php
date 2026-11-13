@@ -108,6 +108,7 @@ use App\Http\Controllers\Expediente\DocumentoServidorController;
 use App\Http\Controllers\Expediente\EnfermedadCargaFamiliarController;
 use App\Http\Controllers\Expediente\EnfermedadCatastroficaServidorController;
 use App\Http\Controllers\Expediente\HistorialAcademicoController;
+use App\Http\Controllers\Expediente\BrechasDePerfilController;
 use App\Http\Controllers\Expediente\AusenciaTemporalController;
 use App\Http\Controllers\Expediente\CatalogoAccionesPersonalController;
 use App\Http\Controllers\Expediente\MovimientoPersonalController;
@@ -796,6 +797,16 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         // y esperan a Talento Humano. Mismo permiso que el historial académico.
         Route::get('formacion-por-validar', [HistorialAcademicoController::class, 'porValidar'])
             ->middleware('permission:gestionar-expediente');
+
+        // Las brechas de perfil (docs/diseno-manual-de-puestos.md, P7, PR 17):
+        // cada servidor frente al perfil de su puesto, para el plan de
+        // capacitación. Muestra el historial académico de todos.
+        Route::middleware('permission:ver-expediente-todos')->group(function () {
+            Route::get('brechas-de-perfil', [BrechasDePerfilController::class, 'index'])
+                ->name('expediente.brechas-de-perfil');
+            Route::get('brechas-de-perfil/excel', [BrechasDePerfilController::class, 'excel'])
+                ->name('expediente.brechas-de-perfil.excel');
+        });
 
         // Las cargas familiares que los servidores piden desde «Mi perfil»
         // (docs/diseno-cargas-familiares-portal.md, 6.2). El mismo permiso
