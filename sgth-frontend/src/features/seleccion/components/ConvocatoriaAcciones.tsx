@@ -7,6 +7,7 @@ import { confirmar } from '@/components/ui'
 import { ROUTES } from '@/config/routes'
 import { usePostulantes, usePublicarConvocatoria } from '../hooks/useConvocatoria'
 import type { Convocatoria } from '../services/convocatoriaService'
+import { faltaDelPerfil } from '../constants/perfilConvocatoria'
 import { CerrarConvocatoriaAcciones } from './CerrarConvocatoriaAcciones'
 
 /**
@@ -37,6 +38,9 @@ export function ConvocatoriaAcciones({ convocatoria }: { convocatoria: Convocato
 
   if (convocatoria.estado !== 'borrador') return null
 
+  // Al publicar, la convocatoria guarda el perfil del puesto tal como esté (P7, PR 16).
+  const falta = faltaDelPerfil(convocatoria.perfil_del_puesto)
+
   return (
     <Group gap="xs">
       <Button
@@ -51,7 +55,13 @@ export function ConvocatoriaAcciones({ convocatoria }: { convocatoria: Convocato
         loading={publicar.isPending}
         onClick={() => confirmar({
           title: 'Publicar convocatoria',
-          message: 'La convocatoria quedará visible para los postulantes.',
+          message: (
+            <>
+              La convocatoria quedará visible para los postulantes y guardará el perfil del puesto tal como está: lo
+              que cambie después en el puesto ya no la afecta.
+              {falta && <><br /><br /><b>El perfil del puesto no tiene {falta}.</b> Si publica ahora, la convocatoria se anuncia sin eso.</>}
+            </>
+          ),
           confirmLabel: 'Publicar',
           onConfirm: () => publicar.mutate(convocatoria.id),
         })}

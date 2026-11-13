@@ -1,5 +1,5 @@
 import api from '@/lib/axios'
-import type { ApiResponse, PaginatedResponse } from '@/types/api'
+import type { ApiResponse, NivelCompetencia, PaginatedResponse, TipoCompetencia } from '@/types/api'
 
 export interface Postulante {
   id:                      number
@@ -79,6 +79,28 @@ export interface Convocatoria {
     regimen_laboral?: string
   }
   postulantes?: Postulante[]
+  /** Solo en el detalle: el perfil del puesto que anuncia (P7, PR 16). */
+  perfil_del_puesto?: PerfilDeLaConvocatoria | null
+}
+
+/**
+ * El perfil del puesto en la convocatoria (docs/diseno-manual-de-puestos.md,
+ * P7, PR 16). `fuente`: el vigente del puesto, en borrador, o el que se guardó
+ * en la convocatoria al publicarla.
+ */
+export interface PerfilDeLaConvocatoria {
+  fuente:    'puesto' | 'convocatoria'
+  /** Cuándo se guardó; `null` si es el vigente. */
+  tomado_en: string | null
+  mision:                    string | null
+  area_conocimiento:         string | null
+  especificidad_experiencia: string | null
+  capacitacion:              string | null
+  requisitos: { nivel_instruccion: string; instruccion: string; detalle: string | null; meses_experiencia: number }[]
+  competencias: { nombre: string; tipo: TipoCompetencia; nivel: NivelCompetencia; comportamiento: string | null }[]
+  actividades: string[]
+  /** Lo que una convocatoria no debería anunciar sin tener. */
+  faltan: ('mision' | 'requisitos' | 'competencias')[]
 }
 
 export interface CrearConvocatoriaData {
