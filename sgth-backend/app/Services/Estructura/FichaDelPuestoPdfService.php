@@ -42,12 +42,27 @@ class FichaDelPuestoPdfService
     }
 
     /**
-     * Lo que imprime la ficha, ya en texto. Público para probar el contenido
-     * sin leer el PDF.
+     * Lo que imprime la ficha, ya en texto, con el membrete y la fecha.
+     * Público para probar el contenido sin leer el PDF.
      *
      * @return array<string, mixed>
      */
     public function datos(Puesto $puesto): array
+    {
+        return [
+            ...$this->contenido($puesto),
+            ...$this->identidad->paraDocumento(),
+            'fecha' => now(),
+        ];
+    }
+
+    /**
+     * Las diez secciones de la ficha, sin membrete: el manual por gestión
+     * (PR 14) las junta todas bajo el suyo.
+     *
+     * @return array<string, mixed>
+     */
+    public function contenido(Puesto $puesto): array
     {
         $puesto->loadMissing(['cargo:id,nombre', 'unidadAdministrativa:id,nombre', 'grupoOcupacional']);
         $perfil = $this->perfiles->obtener($puesto);
@@ -92,8 +107,6 @@ class FichaDelPuestoPdfService
                 ->values()->all(),
             'tecnicas'      => $competencias->where('tipo', TipoCompetencia::TECNICA)->values()->all(),
             'conductuales'  => $competencias->where('tipo', TipoCompetencia::CONDUCTUAL)->values()->all(),
-            ...$this->identidad->paraDocumento(),
-            'fecha'         => now(),
         ];
     }
 

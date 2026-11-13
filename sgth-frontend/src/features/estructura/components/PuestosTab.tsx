@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Button, Select, Stack } from '@mantine/core'
+import { Button, Group, Select, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconCubePlus } from '@tabler/icons-react'
+import { IconCubePlus, IconPrinter } from '@tabler/icons-react'
 import { DataState, PAGINACION_ES, SgthTable, Toolbar, confirmar } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { useAuth } from '@/hooks/useAuth'
@@ -17,6 +17,7 @@ import { PuestoModal } from './PuestoModal'
 import { PuestoPerfilDrawer } from './PuestoPerfilDrawer'
 import { TraspasoPuestoModal } from './TraspasoPuestoModal'
 import { RevisionClasificacionModal } from './RevisionClasificacionModal'
+import { ManualGestionModal } from './ManualGestionModal'
 
 const POR_PAGINA = 15
 
@@ -48,6 +49,7 @@ export function PuestosTab() {
   const [perfilAbierto, perfil] = useDisclosure(false)
   const [aTraspasar, setATraspasar] = useState<PuestoConRelaciones | null>(null)
   const [aRevisar, setARevisar] = useState<PuestoConRelaciones | null>(null)
+  const [manualAbierto, manual] = useDisclosure(false)
 
   const { eliminar } = usePuestoMutations()
   const { data: unidades = [] } = useTodasUnidades({ nivel: 2 })
@@ -83,7 +85,15 @@ export function PuestosTab() {
 
   return (
     <Stack gap="md">
-      <Toolbar actions={nuevoPuesto}>
+      {/* El manual de una gestión lo imprime quien ve los puestos (P5, PR 14). */}
+      <Toolbar actions={
+        <Group gap="xs">
+          <Button leftSection={<IconPrinter size={16} />} variant="default" onClick={manual.open}>
+            Imprimir manual
+          </Button>
+          {nuevoPuesto}
+        </Group>
+      }>
         <Select
           label="Unidad"
           placeholder="Todas las unidades"
@@ -169,6 +179,7 @@ export function PuestosTab() {
         puesto={enPerfil}
         soloLectura={!puedeGestionar}
       />
+      <ManualGestionModal opened={manualAbierto} onClose={manual.close} unidadId={unidadId ? Number(unidadId) : null} />
     </Stack>
   )
 }

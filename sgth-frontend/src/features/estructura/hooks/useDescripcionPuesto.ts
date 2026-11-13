@@ -49,3 +49,29 @@ export function useFichaDelPuestoPdf() {
 
   return { abrir, abriendo }
 }
+
+/**
+ * Abre el manual de una gestión en PDF (P5, PR 14). Devuelve si se generó: una
+ * gestión sin puestos de plantilla responde con su motivo.
+ */
+export function useManualDeGestionPdf() {
+  const [abriendo, setAbriendo] = useState(false)
+
+  const abrir = async (unidadId: number, nombre: string): Promise<boolean> => {
+    setAbriendo(true)
+    try {
+      const blob = await descripcionPuestoService.manualDeGestion(unidadId)
+      if (!abrirOGuardarArchivo(blob, `manual-de-puestos-${nombre}.pdf`)) {
+        notificar.aviso('El manual se descargó', 'El navegador bloqueó la pestaña; lo encontrará en Descargas.')
+      }
+      return true
+    } catch (error: unknown) {
+      notificar.error('No se pudo generar el manual', getApiErrorMessage(error))
+      return false
+    } finally {
+      setAbriendo(false)
+    }
+  }
+
+  return { abrir, abriendo }
+}

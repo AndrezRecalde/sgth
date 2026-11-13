@@ -84,6 +84,7 @@ use App\Http\Controllers\Estructura\OrganigramaPdfController;
 use App\Http\Controllers\Estructura\PartidaPresupuestariaController;
 use App\Http\Controllers\Estructura\PuestoActividadController;
 use App\Http\Controllers\Estructura\ManualDePuestosController;
+use App\Http\Controllers\Estructura\ManualPorGestionController;
 use App\Http\Controllers\Estructura\PuestoCompetenciaController;
 use App\Http\Controllers\Estructura\PlantillaController;
 use App\Http\Controllers\Estructura\PuestoController;
@@ -366,6 +367,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::get('completitud-de-perfiles', CompletitudDePerfilesController::class)
             ->middleware('permission:gestionar-puestos')
             ->name('estructura.perfiles.completitud');
+        // El Manual de Puestos de una gestión en PDF (docs/diseno-manual-de-
+        // puestos.md, P5, PR 14): portada, distribución y fichas.
+        Route::get('unidades-administrativas/{unidadId}/manual-de-puestos', ManualPorGestionController::class)
+            ->whereNumber('unidadId')
+            ->middleware('permission:ver-estructura')
+            ->name('estructura.unidades.manual-de-puestos');
         Route::get(
             'unidades-administrativas/todas',
             [UnidadAdministrativaController::class, 'todas']
