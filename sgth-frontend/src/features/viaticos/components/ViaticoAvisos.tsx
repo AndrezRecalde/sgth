@@ -3,11 +3,10 @@
 import { Alert, List, Stack, Text } from '@mantine/core'
 import { IconAlertTriangle, IconBan, IconInfoCircle, IconRoute } from '@tabler/icons-react'
 import { ESTADO_LABELS } from '../constants/viatico.constants'
+import { faltasDelItinerario } from '../utils/itinerario'
 import { resumenRevision } from '../utils/revisionComprobantes'
 import type { AccionesViatico } from '../hooks/useAccionesViatico'
 import type { ViaticoConRelaciones } from '@/types/api'
-
-const ITINERARIO_EDITABLE = ['solicitado', 'aprobado', 'con_anticipo']
 
 interface Props {
   viatico: ViaticoConRelaciones
@@ -32,7 +31,7 @@ export function ViaticoAvisos({ viatico: d, puede }: Props) {
   // Lo que le falta al itinerario: se avisa mientras se puede corregir.
   // Si cambian las fechas del viático, los tramos quedan desajustados y el
   // cambio no se bloquea (decisión del usuario, 2026-09-18).
-  const itinerario = ITINERARIO_EDITABLE.includes(estado) ? d.itinerario_problemas ?? [] : []
+  const itinerario = faltasDelItinerario(d)
 
   if (!apruebaOtro && !contabilizaOtro && !faltaRevisar && !terminado && itinerario.length === 0) return null
 

@@ -7,6 +7,7 @@ import {
 } from '@tabler/icons-react'
 import { confirmar, MotivoModal } from '@/components/ui'
 import { useViaticoMutations } from '../hooks/useViaticoMutations'
+import { faltasDelItinerario } from '../utils/itinerario'
 import { resumenRevision } from '../utils/revisionComprobantes'
 import { AprobarExteriorModal } from './AprobarExteriorModal'
 import { RespaldoContableModal } from './RespaldoContableModal'
@@ -39,6 +40,8 @@ export function ViaticoAcciones({ viatico: d, puede }: Props) {
 
   const revision = resumenRevision(d.liquidacion?.detalles_factura)
   const codigo = d.codigo_viatico ?? 'el viático'
+  // Con el itinerario incompleto el backend no aprueba: el aviso de abajo dice qué falta.
+  const itinerarioIncompleto = faltasDelItinerario(d).length > 0
 
   const aprobar = () => (d.zona === 'exterior' ? setExterior(true) : m.aprobar.mutate({ id: d.id }))
 
@@ -79,7 +82,10 @@ export function ViaticoAcciones({ viatico: d, puede }: Props) {
       )}
 
       {puede.aprobar(d) && (
-        <Button variant="light" leftSection={<IconCheck size={16} />} loading={m.aprobar.isPending} onClick={aprobar}>
+        <Button
+          variant="light" leftSection={<IconCheck size={16} />}
+          loading={m.aprobar.isPending} disabled={itinerarioIncompleto} onClick={aprobar}
+        >
           Aprobar viático
         </Button>
       )}

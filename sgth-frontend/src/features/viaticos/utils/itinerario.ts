@@ -1,5 +1,5 @@
 import { fromDateTimeValue } from '@/lib/fecha'
-import type { TramoViatico, Viatico } from '@/types/api'
+import type { TramoViatico, Viatico, ViaticoConRelaciones } from '@/types/api'
 import type { TramoFormData } from '../schemas/viatico.schema'
 
 /** De donde sale todo viático: la sede del GAD. */
@@ -91,4 +91,21 @@ export function desdeTramo(t: TramoViatico): TramoFormData {
     datetime_salida: fromDateTimeValue(t.datetime_salida),
     datetime_llegada: fromDateTimeValue(t.datetime_llegada),
   }
+}
+
+/** Hasta que el viático sale, el itinerario todavía se corrige. */
+const ITINERARIO_EDITABLE = ['solicitado', 'aprobado', 'con_anticipo']
+
+/**
+ * Lo que le falta al itinerario mientras todavía se puede corregir. Lo calcula
+ * el backend, que con algo aquí no deja aprobar el viático
+ * (`ItinerarioViaticoService::problemas`): el aviso lo cuenta y el botón de
+ * aprobar se deshabilita, en vez de ofrecer una acción que solo puede fallar.
+ */
+export function faltasDelItinerario(
+  viatico: Pick<ViaticoConRelaciones, 'estado' | 'itinerario_problemas'>,
+): string[] {
+  return ITINERARIO_EDITABLE.includes(String(viatico.estado ?? ''))
+    ? viatico.itinerario_problemas ?? []
+    : []
 }
