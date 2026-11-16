@@ -60,6 +60,7 @@ class PermisoServidorController extends Controller
             'fecha_desde'              => ['nullable', 'date'],
             'fecha_hasta'              => ['nullable', 'date', 'after_or_equal:fecha_desde'],
             'per_page'                 => ['nullable', 'integer'],
+            'equipo'                   => ['sometimes', 'boolean'],
         ]);
 
         $query = PermisoServidor::with(self::RELACIONES_LISTADO)
@@ -100,7 +101,13 @@ class PermisoServidorController extends Controller
             $query->whereDate('fecha', '<=', $request->fecha_hasta);
         }
 
-        $this->aplicarAlcance($query, $user);
+        // «Mi equipo» del Portal pide solo el equipo, aunque quien lo pide vea
+        // más (Talento Humano ve toda la institución).
+        if ($request->boolean('equipo')) {
+            $this->aplicarEquipo($query, $user);
+        } else {
+            $this->aplicarAlcance($query, $user);
+        }
 
         $perPage = min(max($request->integer('per_page', 20), 1), self::PER_PAGE_MAX);
         $permisos = $query->paginate($perPage);
@@ -357,6 +364,42 @@ class PermisoServidorController extends Controller
                 ]);
             }
         });
+    }
+
+    /**
+     * El equipo de quien dirige: lo de las unidades que dirige por su puesto
+     * y lo que lo nombra jefe inmediato, sin lo propio.
+     *
+     * Es un recorte de lo que ya puede ver (`PermisoServidorPolicy::ver()`),
+     * nunca una ampliación. No mira el rol `jefe-unidad`, que se retira, ni
+     * `ver-permisos-todos`, que haría de la institución entera su equipo.
+     */
+    private function aplicarEquipo(Builder $query, User $user): void
+    {
+        $servidorId = $user->servidor_id;
+
+        if (! $servidorId) {
+            $query->whereRaw('1 = 0');
+
+            return;
+        }
+
+        $unidades = $user->unidadesQueDirige();
+
+        $query->where('servidor_id', '!=', $servidorId)
+            ->where(function (Builder $q) use ($servidorId, $unidades) {
+                $q->where('jefe_id', $servidorId);
+
+                if ($unidades !== []) {
+                    $q->orWhereIn('unidad_administrativa_id', $unidades)
+                        ->orWhere(function (Builder $sinUnidad) use ($unidades) {
+                            $sinUnidad->whereNull('unidad_administrativa_id')
+                                ->whereHas('servidor', fn ($s) => $s->whereIn(
+                                    'unidad_administrativa_id', $unidades
+                                ));
+                        });
+                }
+            });
     }
 
     /**

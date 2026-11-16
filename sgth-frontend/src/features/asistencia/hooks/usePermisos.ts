@@ -11,6 +11,7 @@ interface FiltrosPermiso {
   fecha_desde?:              string
   fecha_hasta?:              string
   per_page?:                 number
+  equipo?:                   1
 }
 
 export function usePermisos(filtros?: FiltrosPermiso) {

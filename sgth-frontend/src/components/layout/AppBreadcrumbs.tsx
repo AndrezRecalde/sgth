@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { Anchor, Breadcrumbs, Text } from '@mantine/core'
 import { IconChevronRight } from '@tabler/icons-react'
 import { useAuth } from '@/hooks/useAuth'
-import { findNavTrail, inicioDelSubsistema } from '@/config/nav'
+import { findNavTrail, inicioDelSubsistema, rolesDelMenu } from '@/config/nav'
 import { SUBSISTEMAS } from '@/config/subsistemas'
 import type { Subsistema } from '@/config/routes'
 
@@ -30,7 +30,7 @@ export function AppBreadcrumbs({ subsistema }: Props) {
 
   const cfg = SUBSISTEMAS[subsistema]
   const permisos = usuario?.permisos ?? []
-  const roles = usuario?.roles ?? []
+  const roles = rolesDelMenu(usuario)
   const trail = findNavTrail(subsistema, permisos, roles, pathname)
 
   if (!trail) return null

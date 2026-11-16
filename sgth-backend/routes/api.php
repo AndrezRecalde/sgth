@@ -988,6 +988,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::get('/', [VacacionController::class, 'index']);
             Route::post('/', [VacacionController::class, 'store']);
             Route::get('saldo/{servidorId}', [VacacionController::class, 'saldo']);
+            // «Mi equipo» del Portal: el saldo de cada servidor de las unidades que dirige.
+            Route::get('saldos-del-equipo', [VacacionController::class, 'saldosDelEquipo'])
+                ->name('asistencia.vacaciones.saldos-del-equipo');
             // Lo que descontarían unas fechas, con el descanso que sigue (2026-10-20).
             Route::get('conteo', [VacacionController::class, 'conteo']);
             Route::get('{id}/exportar', [VacacionController::class, 'exportar'])

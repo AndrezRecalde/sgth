@@ -201,6 +201,8 @@ export const ROUTES = {
     MI_PERFIL:       '/portal/mi-perfil',
     MIS_PERMISOS:    '/portal/mis-permisos',
     MIS_VACACIONES:  '/portal/mis-vacaciones',
+    /** Los permisos y vacaciones de la unidad que dirige, para quien tiene una jefatura. */
+    MI_EQUIPO:       '/portal/mi-equipo',
     /** Renuncia, licencia sin remuneración y jubilación (fase 6.3b). */
     SOLICITUDES_LABORALES: '/portal/solicitudes-laborales',
     MIS_MARCACIONES: '/portal/mis-marcaciones',

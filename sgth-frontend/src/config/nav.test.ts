@@ -6,7 +6,9 @@ import {
   flattenNav,
   getSubsistemasDisponibles,
   inicioDelSubsistema,
+  JEFATURA,
   puedeAbrirPantalla,
+  rolesDelMenu,
 } from './nav'
 import { ROUTES, type Subsistema } from './routes'
 
@@ -374,5 +376,30 @@ describe('puedeAbrirPantalla', () => {
         expect(puedeAbrirPantalla(subsistema, href, ...sesion(rol)), href).toBe(true)
       }
     }
+  })
+})
+
+describe('la jefatura en el menú', () => {
+  const jefatura = { unidad_id: 7, unidad: 'Dirección A', como: 'titular' as const }
+
+  it('suma JEFATURA a los roles de quien dirige una unidad, y a nadie más', () => {
+    expect(rolesDelMenu({ roles: ['servidor'], servidor: { jefaturas: [jefatura] } }))
+      .toEqual(['servidor', JEFATURA])
+    expect(rolesDelMenu({ roles: ['servidor'], servidor: { jefaturas: [] } })).toEqual(['servidor'])
+    expect(rolesDelMenu({ roles: ['servidor'], servidor: null })).toEqual(['servidor'])
+    expect(rolesDelMenu(null)).toEqual([])
+  })
+
+  it('ofrece «Mi equipo» por la jefatura y no por ningún rol', () => {
+    const [permisos, roles] = sesion('servidor')
+
+    for (const rol of ROLES) {
+      expect(pantallas('portal', rol), rol).not.toContain(ROUTES.PORTAL.MI_EQUIPO)
+    }
+
+    expect(flattenNav('portal', permisos, [...roles, JEFATURA]).map((p) => p.href))
+      .toContain(ROUTES.PORTAL.MI_EQUIPO)
+    expect(puedeAbrirPantalla('portal', ROUTES.PORTAL.MI_EQUIPO, permisos, roles)).toBe(false)
+    expect(puedeAbrirPantalla('portal', ROUTES.PORTAL.MI_EQUIPO, permisos, [...roles, JEFATURA])).toBe(true)
   })
 })

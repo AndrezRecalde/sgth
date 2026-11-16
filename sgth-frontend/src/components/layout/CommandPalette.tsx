@@ -8,7 +8,7 @@ import {
 import { useHotkeys } from '@mantine/hooks'
 import { IconSearch } from '@tabler/icons-react'
 import { useAuth } from '@/hooks/useAuth'
-import { flattenNav, type NavLeaf } from '@/config/nav'
+import { flattenNav, rolesDelMenu, type NavLeaf } from '@/config/nav'
 import { getNavIcon } from '@/lib/tablerIcons'
 import { usePaletteStore } from '@/store/ui.palette.store'
 import type { Subsistema } from '@/config/routes'
@@ -51,7 +51,7 @@ export function CommandPalette({ subsistema }: Props) {
   // que es nuevo en cada render y invalidaría el memo siempre. Los roles
   // entran por lo mismo: hay pantallas que el backend protege por rol.
   const permisosKey = (usuario?.permisos ?? []).join(',')
-  const rolesKey    = (usuario?.roles ?? []).join(',')
+  const rolesKey    = rolesDelMenu(usuario).join(',')
 
   const destinos = useMemo(
     () => flattenNav(

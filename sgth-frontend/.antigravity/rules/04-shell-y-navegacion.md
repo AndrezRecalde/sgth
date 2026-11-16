@@ -124,6 +124,13 @@ vuelvas a introducir listas de ese tipo.**
   el mundo y quien la abría se encontraba un 403.
 - Se usa `roles` cuando el backend protege la ruta por rol y no por permiso,
   que es el caso de todo el Dispensario. Basta con tener uno de los listados.
+- La jefatura (`JEFATURA`) es la única guarda que no sale del seeder: la da el
+  puesto de la persona (`servidor.jefaturas` en la sesión, desde el
+  2026-11-13). `rolesDelMenu(usuario)` la suma a los roles, y **toda pieza del
+  shell que lea el menú toma los roles de ahí**, no de `usuario.roles`: si una
+  se salta, el lateral y la guarda dejan de coincidir. Se declara con
+  `roles: [JEFATURA]`, y el API de esa pantalla decide con la misma regla
+  (`JefaturaService` del backend).
 - Un ítem padre que se queda sin hijos visibles desaparece con ellos.
 - **Toda pantalla lleva guarda**, propia o de su padre, y es la misma que pide
   su API. Desde el 2026-10-26 (`docs/plan-roles-y-accesos.md`, PR 9) una

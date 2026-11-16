@@ -27,6 +27,8 @@ class VacacionController extends Controller
     {
         $this->authorize('verAny', Vacacion::class);
 
+        $request->validate(['equipo' => ['sometimes', 'boolean']]);
+
         $query = Vacacion::with(VacacionService::RELACIONES)
             // created_at es timestamp(0): sin desempate por id, dos páginas
             // del mismo resultado pueden solaparse.
@@ -65,12 +67,53 @@ class VacacionController extends Controller
             $query->whereDate('fecha_inicio', '<=', $request->fecha_hasta);
         }
 
-        $this->aplicarAlcance($query, $request->user());
+        // «Mi equipo» del Portal pide solo el equipo, aunque quien lo pide vea
+        // más (Talento Humano ve toda la institución).
+        if ($request->boolean('equipo')) {
+            $this->aplicarEquipo($query, $request->user());
+        } else {
+            $this->aplicarAlcance($query, $request->user());
+        }
 
         $perPage    = $request->integer('per_page', 20);
         $vacaciones = $query->paginate($perPage);
 
         return ApiResponse::ok($vacaciones, 'Listado de solicitudes de vacaciones');
+    }
+
+    /**
+     * El saldo de vacaciones de cada servidor de las unidades que dirige, para
+     * «Mi equipo» del Portal. Sin jefatura, la lista sale vacía.
+     *
+     * Solo lo que hace falta para planificar: nombre, unidad y saldo. Es lo
+     * mismo que `saldo()` le muestra al jefe servidor por servidor. A quien su
+     * régimen no le genera vacaciones —servicios profesionales— el saldo le va
+     * en null y no en 0: no es que no le queden días, es que no los tiene.
+     */
+    public function saldosDelEquipo(Request $request)
+    {
+        $user     = $request->user();
+        $unidades = $user->unidadesQueDirige();
+
+        $equipo = $unidades === [] ? collect() : Servidor::query()
+            ->whereIn('unidad_administrativa_id', $unidades)
+            ->where('estado', true)
+            ->whereKeyNot($user->servidor_id ?? 0)
+            ->with('unidadAdministrativa:id,nombre')
+            ->orderBy('apellido')
+            ->orderBy('nombre')
+            ->orderBy('id')
+            ->get(['id', 'nombre', 'apellido', 'unidad_administrativa_id', 'regimen_laboral']);
+
+        return ApiResponse::ok($equipo->map(fn (Servidor $servidor) => [
+            'servidor_id' => $servidor->id,
+            'apellido'    => $servidor->apellido,
+            'nombre'      => $servidor->nombre,
+            'unidad'      => $servidor->unidadAdministrativa?->nombre,
+            'saldo_dias'  => ($servidor->regimen_laboral?->generaVacaciones() ?? true)
+                ? $this->vacacionService->calcularSaldoActual($servidor->id)
+                : null,
+        ])->values(), 'Saldos de vacaciones del equipo.');
     }
 
     public function saldo(int $servidorId)
@@ -225,6 +268,40 @@ class VacacionController extends Controller
                 $q->orWhere('jefe_id', $servidorId);
             }
         });
+    }
+
+    /**
+     * El equipo de quien dirige: lo de las unidades que dirige por su puesto y
+     * lo que lo nombra jefe inmediato, sin lo propio. Es la regla de
+     * `PermisoServidorController::aplicarEquipo()`: un recorte de lo que ya
+     * puede ver, sin el rol ni el alcance institucional.
+     */
+    private function aplicarEquipo(Builder $query, User $user): void
+    {
+        $servidorId = $user->servidor_id;
+
+        if (! $servidorId) {
+            $query->whereRaw('1 = 0');
+
+            return;
+        }
+
+        $unidades = $user->unidadesQueDirige();
+
+        $query->where('servidor_id', '!=', $servidorId)
+            ->where(function (Builder $q) use ($servidorId, $unidades) {
+                $q->where('jefe_id', $servidorId);
+
+                if ($unidades !== []) {
+                    $q->orWhereIn('unidad_administrativa_id', $unidades)
+                        ->orWhere(function (Builder $sinUnidad) use ($unidades) {
+                            $sinUnidad->whereNull('unidad_administrativa_id')
+                                ->whereHas('servidor', fn ($s) => $s->whereIn(
+                                    'unidad_administrativa_id', $unidades
+                                ));
+                        });
+                }
+            });
     }
 
     /**
