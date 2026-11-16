@@ -17,6 +17,16 @@ export type ConteoVacaciones = {
   dias_del_rango: number
 }
 
+/** Una persona del equipo de quien dirige, con su saldo de vacaciones. */
+export type SaldoDelEquipo = {
+  servidor_id: number
+  apellido:    string | null
+  nombre:      string | null
+  unidad:      string | null
+  /** Null si su régimen no genera vacaciones (servicios profesionales). */
+  saldo_dias:  number | null
+}
+
 export const asistenciaService = {
   marcaciones: {
     listar: (params: {
@@ -54,6 +64,12 @@ export const asistenciaService = {
       fecha_desde?:              string
       fecha_hasta?:              string
       per_page?:                 number
+      /**
+       * Solo el equipo de quien dirige, sin lo propio («Mi equipo» del
+       * Portal). `1` y no `true`: axios manda la palabra «true», que la regla
+       * `boolean` de Laravel rechaza con un 422.
+       */
+      equipo?:                   1
     }) =>
       api.get<ApiResponse<PaginatedResponse<PermisoServidor>>>('/asistencia/permisos', { params })
         .then(r => r.data.datos),
@@ -218,6 +234,8 @@ export const asistenciaService = {
       fecha_desde?:              string
       fecha_hasta?:              string
       per_page?:                 number
+      /** Solo el equipo de quien dirige, sin lo propio («Mi equipo» del Portal). */
+      equipo?:                   1
     }) =>
       api.get<ApiResponse<PaginatedResponse<Vacacion>>>('/asistencia/vacaciones', { params })
         .then(r => r.data.datos),
@@ -226,6 +244,11 @@ export const asistenciaService = {
       api.get<ApiResponse<{ saldo_dias: number }>>(
         `/asistencia/vacaciones/saldo/${servidorId}`
       ).then(r => r.data.datos),
+
+    /** El saldo de cada servidor de las unidades que dirige («Mi equipo»). */
+    saldosDelEquipo: () =>
+      api.get<ApiResponse<SaldoDelEquipo[]>>('/asistencia/vacaciones/saldos-del-equipo')
+        .then(r => r.data.datos),
 
     // Lo cuenta el backend porque conoce los feriados. No guarda nada.
     conteo: (fecha_inicio: string, fecha_fin: string) =>

@@ -103,10 +103,10 @@ function jpSubrogacion(Servidor $subrogante, Puesto $puesto, Servidor $titular, 
 }
 
 /** Los folios que le devuelve el listado de permisos. */
-function jpFolios(User $usuario): array
+function jpFolios(User $usuario, string $consulta = ''): array
 {
     return collect(test()->actingAs($usuario, 'sanctum')
-        ->getJson('/api/v1/asistencia/permisos?per_page=50')
+        ->getJson('/api/v1/asistencia/permisos?per_page=50' . $consulta)
         ->assertOk()
         ->json('datos.data'))->pluck('folio')->sort()->values()->all();
 }
@@ -212,6 +212,71 @@ it('sin jefatura ni rol de jefe no hay listado de vacaciones', function () {
     $this->actingAs(jpUsuario($this->subordinadoA), 'sanctum')
         ->getJson('/api/v1/asistencia/vacaciones')
         ->assertForbidden();
+});
+
+// ── «Mi equipo» del Portal ───────────────────────────────────────────
+
+it('el filtro equipo deja lo de su unidad y lo que lo nombra jefe, sin lo propio', function () {
+    jpPermiso($this->jefeA, 'PER-JP-PROPIO');
+    jpPermiso($this->servidorB, 'PER-JP-NOMBRA', jefe: $this->jefeA);
+
+    expect(jpFolios($this->usuarioJefeA, '&equipo=1'))->toBe(['PER-JP-A', 'PER-JP-NOMBRA'])
+        ->and(jpFolios($this->usuarioJefeA))->toBe(['PER-JP-A', 'PER-JP-NOMBRA', 'PER-JP-PROPIO']);
+});
+
+it('el equipo de quien ve toda la institución es solo el suyo', function () {
+    $uathQueDirigeB = jpUsuario($this->jefeB);
+    $uathQueDirigeB->assignRole('admin-uath');
+    jpPermiso($this->jefeB, 'PER-JP-PROPIO-B');
+
+    expect(jpFolios($uathQueDirigeB, '&equipo=1'))->toBe(['PER-JP-B'])
+        ->and(jpFolios($uathQueDirigeB))->toBe(['PER-JP-A', 'PER-JP-B', 'PER-JP-PROPIO-B']);
+});
+
+it('sin jefatura el equipo sale vacío', function () {
+    jpPermiso($this->subordinadoA, 'PER-JP-SUYO');
+
+    expect(jpFolios(jpUsuario($this->subordinadoA), '&equipo=1'))->toBe([]);
+});
+
+it('las vacaciones del equipo no traen las propias', function () {
+    $deA = jpVacacion($this->subordinadoA);
+    jpVacacion($this->jefeA);
+    jpVacacion($this->servidorB);
+
+    $ids = collect($this->actingAs($this->usuarioJefeA, 'sanctum')
+        ->getJson('/api/v1/asistencia/vacaciones?per_page=50&equipo=1')
+        ->assertOk()
+        ->json('datos.data'))->pluck('id')->all();
+
+    expect($ids)->toBe([$deA->id]);
+});
+
+it('los saldos del equipo traen a su gente con lo justo, y a nadie si no dirige', function () {
+    $this->actingAs($this->usuarioJefeA, 'sanctum')
+        ->getJson('/api/v1/asistencia/vacaciones/saldos-del-equipo')
+        ->assertOk()
+        ->assertJsonCount(1, 'datos')
+        ->assertJsonPath('datos.0.servidor_id', $this->subordinadoA->id)
+        ->assertJsonPath('datos.0.unidad', 'Dirección A')
+        ->assertJsonMissingPath('datos.0.cedula');
+
+    $this->actingAs(jpUsuario($this->subordinadoA), 'sanctum')
+        ->getJson('/api/v1/asistencia/vacaciones/saldos-del-equipo')
+        ->assertOk()
+        ->assertJsonCount(0, 'datos');
+});
+
+it('a quien su régimen no le genera vacaciones el saldo le va vacío, no en cero', function () {
+    $profesional = jpServidor(puestoDePrueba($this->unidadA, 'Consultor'), '0816666666', 'Zúñiga');
+    $profesional->update(['regimen_laboral' => RegimenLaboral::SERVICIOS_PROFESIONALES]);
+
+    $this->actingAs($this->usuarioJefeA, 'sanctum')
+        ->getJson('/api/v1/asistencia/vacaciones/saldos-del-equipo')
+        ->assertOk()
+        ->assertJsonPath('datos.1.apellido', 'Zúñiga')
+        ->assertJsonPath('datos.1.saldo_dias', null)
+        ->assertJsonPath('datos.0.saldo_dias', fn ($saldo) => $saldo !== null);
 });
 
 // ── Sesión y revisión ────────────────────────────────────────────────

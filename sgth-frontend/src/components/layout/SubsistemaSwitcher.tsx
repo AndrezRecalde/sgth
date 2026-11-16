@@ -6,7 +6,7 @@ import {
 } from '@mantine/core'
 import { IconCheck, IconSelector } from '@tabler/icons-react'
 import { useAuth } from '@/hooks/useAuth'
-import { getSubsistemasDisponibles, inicioDelSubsistema } from '@/config/nav'
+import { getSubsistemasDisponibles, inicioDelSubsistema, rolesDelMenu } from '@/config/nav'
 import { SUBSISTEMAS } from '@/config/subsistemas'
 import type { Subsistema } from '@/config/routes'
 import classes from './Sidebar.module.css'
@@ -31,7 +31,7 @@ export function SubsistemaSwitcher({ actual, collapsed }: Props) {
   const router = useRouter()
   const { usuario } = useAuth()
   const permisos = usuario?.permisos ?? []
-  const roles = usuario?.roles ?? []
+  const roles = rolesDelMenu(usuario)
 
   const disponibles = getSubsistemasDisponibles(permisos, roles)
   const cfg = SUBSISTEMAS[actual]

@@ -7,7 +7,7 @@ import { PageShell } from '@/components/ui'
 import { useAuth } from '@/hooks/useAuth'
 import { PantallaSinAcceso } from './RequierePermiso'
 import {
-  getSubsistemasDisponibles, inicioDelSubsistema, puedeAbrirPantalla,
+  getSubsistemasDisponibles, inicioDelSubsistema, puedeAbrirPantalla, rolesDelMenu,
 } from '@/config/nav'
 import { SUBSISTEMAS } from '@/config/subsistemas'
 import { ROUTES, type Subsistema } from '@/config/routes'
@@ -39,7 +39,7 @@ export function GuardaDePantalla({ subsistema, children }: Props) {
   const router = useRouter()
   const { usuario } = useAuth()
   const permisos = usuario?.permisos ?? []
-  const roles = usuario?.roles ?? []
+  const roles = rolesDelMenu(usuario)
 
   const disponibles = getSubsistemasDisponibles(permisos, roles)
   const entra = disponibles.includes(subsistema)

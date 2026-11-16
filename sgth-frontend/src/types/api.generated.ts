@@ -10570,6 +10570,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/asistencia/vacaciones/saldos-del-equipo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * El saldo de vacaciones de cada servidor de las unidades que dirige, para
+         *     «Mi equipo» del Portal. Sin jefatura, la lista sale vacía
+         * @description Solo lo que hace falta para planificar: nombre, unidad y saldo. Es lo
+         *     mismo que `saldo()` le muestra al jefe servidor por servidor. A quien su
+         *     régimen no le genera vacaciones —servicios profesionales— el saldo le va
+         *     en null y no en 0: no es que no le queden días, es que no los tiene.
+         */
+        get: operations["asistencia.vacaciones.saldos-del-equipo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/asistencia/vacaciones/conteo": {
         parameters: {
             query?: never;
@@ -39027,6 +39051,7 @@ export interface operations {
                 fecha_desde?: string | null;
                 fecha_hasta?: string | null;
                 per_page?: number | null;
+                equipo?: boolean;
             };
             header?: never;
             path?: never;
@@ -47479,6 +47504,7 @@ export interface operations {
     "vacacion.index": {
         parameters: {
             query?: {
+                equipo?: boolean;
                 per_page?: number;
             };
             header?: never;
@@ -47526,6 +47552,7 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "vacacion.store": {
@@ -47589,6 +47616,38 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "asistencia.vacaciones.saldos-del-equipo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Saldos de vacaciones del equipo.";
+                        datos: {
+                            servidor_id: number;
+                            apellido: string;
+                            nombre: string;
+                            unidad: string;
+                            saldo_dias: number | null;
+                        }[];
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
         };
     };
     "vacacion.conteo": {

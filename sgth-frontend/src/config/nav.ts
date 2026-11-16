@@ -27,6 +27,27 @@ export interface NavGroup {
   items: NavItem[]
 }
 
+/**
+ * La jefatura, como guarda del menú. No es un rol que se asigne: sale del
+ * puesto de la persona (`servidor.jefaturas`, que trae la sesión desde #644).
+ * El menú la trata como un rol más para que las guardas sigan recibiendo
+ * permisos y roles. Ningún rol del sistema se llama así.
+ */
+export const JEFATURA = 'jefatura'
+
+/**
+ * Los roles con los que se arma el menú: los de la persona y, si dirige
+ * alguna unidad, `JEFATURA`. Lo usan todas las piezas del shell que leen el
+ * menú, para que el lateral, las migas, el buscador y la guarda coincidan.
+ */
+export function rolesDelMenu(
+  usuario: { roles?: string[]; servidor?: { jefaturas?: unknown[] } | null } | null,
+): string[] {
+  const roles = usuario?.roles ?? []
+
+  return usuario?.servidor?.jefaturas?.length ? [...roles, JEFATURA] : roles
+}
+
 // ── SGTH ─────────────────────────────
 // Toda entrada declara su guarda: el subsistema se ofrece a quien ve al menos
 // una, y una entrada sin guarda lo abría a cualquiera (docs/plan-roles-y-
@@ -755,6 +776,15 @@ export const NAV_PORTAL: NavGroup[] = [
         href:  ROUTES.PORTAL.MIS_VACACIONES,
         icon:  'IconBeach',
         permiso: 'acceso-autoservicio',
+      },
+      {
+        // Los permisos y vacaciones de la unidad que dirige, en consulta. La
+        // guarda es su puesto de jefatura, no un rol que TI asigne
+        // (decisión del 2026-11-13).
+        label: 'Mi equipo',
+        href:  ROUTES.PORTAL.MI_EQUIPO,
+        icon:  'IconUsersGroup',
+        roles: [JEFATURA],
       },
       {
         // Las solicitudes que se atienden con una acción de personal (fase 6.3b).

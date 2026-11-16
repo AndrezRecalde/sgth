@@ -11,7 +11,7 @@ import { SubsistemaSwitcher } from './SubsistemaSwitcher'
 import { useAuth } from '@/hooks/useAuth'
 import { useStockBajoCount } from '@/features/dispensario/hooks/useInventarioMedicina'
 import { useIdentidadPublica, useUrlVariante } from '@/features/comunicacion/hooks/useIdentidadPublica'
-import { buildNav, inicioDelSubsistema } from '@/config/nav'
+import { buildNav, inicioDelSubsistema, rolesDelMenu } from '@/config/nav'
 import { ROUTES, type Subsistema } from '@/config/routes'
 import classes from './Sidebar.module.css'
 
@@ -30,7 +30,7 @@ export function Sidebar({ subsistema, collapsed, onNavigate }: Props) {
   const { data: identidad } = useIdentidadPublica()
   const permisos = usuario?.permisos ?? []
   const permisosKey = permisos.join(',')
-  const roles = usuario?.roles ?? []
+  const roles = rolesDelMenu(usuario)
   const rolesKey = roles.join(',')
 
   // El contador se pedía en todas las cargas de todos los subsistemas, así que

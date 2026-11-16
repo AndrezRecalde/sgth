@@ -2,6 +2,13 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { borrarCookie, leerCookie } from '@/lib/cookies'
 
+/** Una unidad que la persona dirige hoy, y por qué (`JefaturaService`). */
+export interface Jefatura {
+  unidad_id: number
+  unidad:    string | null
+  como:      'titular' | 'subrogacion' | 'encargo'
+}
+
 export interface UsuarioAuth {
   id:               number
   nombre_completo?: string
@@ -33,6 +40,11 @@ export interface UsuarioAuth {
       id:          number
       activada_en: string | null
     } | null
+    /**
+     * Las unidades que dirige hoy por su puesto: como titular, por subrogación
+     * o por encargo. Con alguna, el Portal le ofrece «Mi equipo».
+     */
+    jefaturas?: Jefatura[]
   } | null
   roles:    string[]
   permisos: string[]

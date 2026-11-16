@@ -49024,6 +49024,13 @@
                                 "null"
                             ]
                         }
+                    },
+                    {
+                        "name": "equipo",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
                     }
                 ],
                 "responses": {
@@ -68587,6 +68594,13 @@
                 ],
                 "parameters": [
                     {
+                        "name": "equipo",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
                         "name": "per_page",
                         "in": "query",
                         "schema": {
@@ -68743,6 +68757,9 @@
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
                     },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -68865,6 +68882,82 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/asistencia/vacaciones/saldos-del-equipo": {
+            "get": {
+                "operationId": "asistencia.vacaciones.saldos-del-equipo",
+                "description": "Solo lo que hace falta para planificar: nombre, unidad y saldo. Es lo\nmismo que `saldo()` le muestra al jefe servidor por servidor. A quien su\nr\u00e9gimen no le genera vacaciones \u2014servicios profesionales\u2014 el saldo le va\nen null y no en 0: no es que no le queden d\u00edas, es que no los tiene.",
+                "summary": "El saldo de vacaciones de cada servidor de las unidades que dirige, para\n\u00abMi equipo\u00bb del Portal. Sin jefatura, la lista sale vac\u00eda",
+                "tags": [
+                    "Vacacion"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Saldos de vacaciones del equipo."
+                                        },
+                                        "datos": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "servidor_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "apellido": {
+                                                        "type": "string"
+                                                    },
+                                                    "nombre": {
+                                                        "type": "string"
+                                                    },
+                                                    "unidad": {
+                                                        "type": "string"
+                                                    },
+                                                    "saldo_dias": {
+                                                        "type": [
+                                                            "number",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "servidor_id",
+                                                    "apellido",
+                                                    "nombre",
+                                                    "unidad",
+                                                    "saldo_dias"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
