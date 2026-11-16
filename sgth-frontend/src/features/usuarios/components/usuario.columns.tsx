@@ -9,6 +9,11 @@ import { etiquetaRol } from '../constants/roles'
 import { StatusBadge } from '@/components/ui'
 
 type Handlers = {
+  /**
+   * Quien tiene la sesión. Sobre sí mismo el backend no deja desactivarse ni
+   * darse permisos directos: esas acciones no se le ofrecen en su fila.
+   */
+  usuarioActualId?:      number
   onEdit:                (u: Usuario) => void
   onToggleActivo:        (u: Usuario) => void
   onRestablecerPassword: (u: Usuario) => void
@@ -18,6 +23,7 @@ type Handlers = {
 }
 
 export const getUsuarioColumns = ({
+  usuarioActualId,
   onEdit,
   onToggleActivo,
   onRestablecerPassword,
@@ -90,12 +96,15 @@ export const getUsuarioColumns = ({
     width:    90,
     render: (usuario) => {
       const sinServidor = !usuario.servidor_id
+      const esPropio = usuario.id === usuarioActualId
       return (
         <Tooltip
           label={
-            sinServidor
-              ? 'Vincule un servidor para poder activarlo'
-              : usuario.activo ? 'Desactivar acceso' : 'Activar acceso'
+            esPropio
+              ? 'No puede desactivar su propio usuario'
+              : sinServidor
+                ? 'Vincule un servidor para poder activarlo'
+                : usuario.activo ? 'Desactivar acceso' : 'Activar acceso'
           }
           withArrow
         >
@@ -104,7 +113,7 @@ export const getUsuarioColumns = ({
             <Switch
               checked={!!usuario.activo}
               onChange={() => onToggleActivo(usuario)}
-              disabled={sinServidor}
+              disabled={sinServidor || esPropio}
               size="sm"
               aria-label={usuario.activo ? 'Desactivar usuario' : 'Activar usuario'}
             />
@@ -128,6 +137,8 @@ export const getUsuarioColumns = ({
           label:   'Asignar permisos',
           icon:    <IconShieldCheck size={14} />,
           onClick: () => onPermisos(usuario),
+          // Sus propios permisos se los da otro administrador.
+          hidden:  usuario.id === usuarioActualId,
         },
         {
           label:   'Restablecer contraseña',

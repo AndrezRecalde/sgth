@@ -1,6 +1,7 @@
 'use client'
 
 import { SgthTable } from '@/components/ui/SgthTable'
+import { useAuth } from '@/hooks/useAuth'
 import { getUsuarioColumns } from './usuario.columns'
 import type { Usuario } from '@/types/api'
 
@@ -24,10 +25,13 @@ export function UsuarioTable({
   onToggleActivo, onRestablecerPassword,
   onPermisos, onDesvincular, onAsignarServidor,
 }: Props) {
+  const { usuario } = useAuth()
+
   return (
     <SgthTable
       records={data}
       columns={getUsuarioColumns({
+        usuarioActualId: usuario?.id,
         onEdit,
         onToggleActivo,
         onRestablecerPassword,

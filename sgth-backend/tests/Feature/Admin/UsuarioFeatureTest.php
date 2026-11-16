@@ -192,6 +192,51 @@ test('un administrador no puede cambiar sus propios roles', function () {
     expect($this->admin->fresh()->hasRole('gestor-usuarios'))->toBeTrue();
 });
 
+test('un administrador corrige su propio correo: los mismos roles no cuentan como cambio', function () {
+    // El formulario de edición manda siempre los roles. Hasta el 2026-11-16
+    // eso hacía imposible editar la cuenta propia: se rechazaba aunque fueran
+    // los mismos.
+    $this->admin->createToken('auth_token');
+
+    $this->actingAs($this->admin, 'sanctum')
+        ->putJson("/api/v1/admin/usuarios/{$this->admin->id}", [
+            'email' => 'admin.nuevo@example.com',
+            'roles' => ['gestor-usuarios'],
+        ])
+        ->assertOk();
+
+    $admin = $this->admin->fresh();
+    expect($admin->email)->toBe('admin.nuevo@example.com')
+        ->and($admin->getRoleNames()->all())->toBe(['gestor-usuarios'])
+        ->and($admin->tokens()->count())->toBe(1);
+});
+
+test('editar el correo de otro no le cierra la sesión si sus roles no cambian', function () {
+    $objetivo = User::create([
+        'email' => 'objetivo@example.com', 'usuario_ti' => 'objetivo',
+        'password' => bcrypt('x'), 'primer_login' => false,
+    ]);
+    $objetivo->assignRole('servidor');
+    $objetivo->createToken('auth_token');
+
+    $this->actingAs($this->admin, 'sanctum')
+        ->putJson("/api/v1/admin/usuarios/{$objetivo->id}", [
+            'email' => 'objetivo.nuevo@example.com',
+            'roles' => ['servidor'],
+        ])
+        ->assertOk();
+
+    expect($objetivo->fresh()->tokens()->count())->toBe(1);
+
+    // Con un rol distinto, sí: arrastraba los permisos anteriores en caché.
+    $this->putJson("/api/v1/admin/usuarios/{$objetivo->id}", [
+        'roles' => ['gestor-usuarios'],
+    ])->assertOk();
+
+    expect($objetivo->fresh()->tokens()->count())->toBe(0)
+        ->and($objetivo->fresh()->getRoleNames()->all())->toBe(['gestor-usuarios']);
+});
+
 test('un administrador no puede otorgarse permisos directos', function () {
     $this->actingAs($this->admin, 'sanctum')
         ->postJson("/api/v1/admin/usuarios/{$this->admin->id}/permisos", [

@@ -112,7 +112,11 @@ final class UsuarioService implements UsuarioServiceInterface
                 $user->update($updateData);
             }
 
-            if (isset($datos['roles'])) {
+            // Solo si cambian: el formulario los manda siempre, y hasta el
+            // 2026-11-16 cada edición —del correo, por ejemplo— los volvía a
+            // sincronizar y cerraba la sesión de la persona; sobre uno mismo
+            // se rechazaba aunque fueran los mismos.
+            if (isset($datos['roles']) && $this->rolesCambian($user, $datos['roles'])) {
                 $this->garantizarQueNoEsUnoMismo(
                     $actor,
                     $user,
@@ -313,6 +317,15 @@ final class UsuarioService implements UsuarioServiceInterface
      * opera este módulo, la saltaba con el Gate::before que existió hasta el
      * 2026-10-26.
      */
+    /** @param  list<string>  $roles */
+    private function rolesCambian(User $user, array $roles): bool
+    {
+        $pedidos = collect($roles)->unique()->sort()->values()->all();
+        $actuales = $user->roles->pluck('name')->sort()->values()->all();
+
+        return $pedidos !== $actuales;
+    }
+
     private function garantizarQueNoEsUnoMismo(
         User $actor,
         User $objetivo,

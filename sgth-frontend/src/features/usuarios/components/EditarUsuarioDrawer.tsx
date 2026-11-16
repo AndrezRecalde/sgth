@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconUser, IconUserOff } from '@tabler/icons-react'
 import { ModalFooter, SgthDrawer } from '@/components/ui'
+import { useAuth } from '@/hooks/useAuth'
 import { useUsuarioMutations } from '../hooks/useUsuarioMutations'
 import { CamposAccesoUsuario } from './CamposAccesoUsuario'
 import { usuarioSchema, type UsuarioFormValues } from '../schemas/usuario.schema'
@@ -27,6 +28,9 @@ interface Props {
  */
 export function EditarUsuarioDrawer({ opened, onClose, usuario }: Props) {
   const { actualizar } = useUsuarioMutations()
+  const { usuario: actual } = useAuth()
+  // La cuenta propia: sus roles los cambia otro administrador.
+  const esPropio = usuario.id === actual?.id
 
   const {
     register,
@@ -62,7 +66,8 @@ export function EditarUsuarioDrawer({ opened, onClose, usuario }: Props) {
         data: {
           email: values.email,
           usuario_ti: values.usuario_ti,
-          roles: values.roles,
+          // Los propios no se mandan: el backend no deja cambiarlos.
+          ...(esPropio ? {} : { roles: values.roles }),
         },
       })
       onClose()
@@ -110,6 +115,7 @@ export function EditarUsuarioDrawer({ opened, onClose, usuario }: Props) {
               register={register}
               control={control}
               errors={errors}
+              rolesBloqueados={esPropio}
             />
 
           </Stack>
