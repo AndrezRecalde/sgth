@@ -29,11 +29,16 @@ class VacacionPolicy
 {
     /**
      * Entrar al listado. Qué filas se ven dentro lo recorta el controlador.
+     *
+     * Quien dirige una unidad entra por su puesto, sin rol. El jefe inmediato
+     * nombrado en una solicitud de otra unidad la abre por `ver()`, pero no
+     * tiene listado si no dirige ninguna.
      */
     public function verAny(User $user): bool
     {
         return $this->alcanceInstitucional($user)
-            || $user->can(Permiso::VER_VACACIONES_UNIDAD->value);
+            || $user->can(Permiso::VER_VACACIONES_UNIDAD->value)
+            || $user->unidadesQueDirige() !== [];
     }
 
     /**
@@ -56,7 +61,10 @@ class VacacionPolicy
         $unidad = $vacacion->unidad_administrativa_id
             ?? $vacacion->servidor?->unidad_administrativa_id;
 
-        return $this->veLaUnidad($user, $unidad);
+        return $this->veLaUnidad($user, $unidad)
+            || ($user->servidor_id !== null
+                && $vacacion->jefe_id !== null
+                && (int) $vacacion->jefe_id === (int) $user->servidor_id);
     }
 
     /**
@@ -131,12 +139,23 @@ class VacacionPolicy
             && (int) $user->servidor_id === (int) $servidorId;
     }
 
+    /**
+     * Quien dirige la unidad por su puesto (`JefaturaService`) o, mientras
+     * exista el rol `jefe-unidad`, la suya por `ver-vacaciones-unidad`.
+     */
     private function veLaUnidad(User $user, ?int $unidadId): bool
     {
+        if ($unidadId === null) {
+            return false;
+        }
+
+        if (in_array((int) $unidadId, $user->unidadesQueDirige(), true)) {
+            return true;
+        }
+
         $unidadDelUsuario = $user->servidor?->unidad_administrativa_id;
 
         return $unidadDelUsuario !== null
-            && $unidadId !== null
             && $user->can(Permiso::VER_VACACIONES_UNIDAD->value)
             && (int) $unidadDelUsuario === (int) $unidadId;
     }

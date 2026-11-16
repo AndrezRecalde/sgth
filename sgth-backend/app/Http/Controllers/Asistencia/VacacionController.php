@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\Asistencia;
 
 use App\Contracts\Asistencia\VacacionServiceInterface;
+use App\Enums\Permiso;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Asistencia\AnularVacacionRequest;
 use App\Http\Requests\Asistencia\StoreVacacionRequest;
@@ -194,9 +195,9 @@ class VacacionController extends Controller
     /**
      * Recorta el listado a lo que el usuario tiene derecho a ver.
      *
-     * Quien no tiene alcance institucional llegó hasta aquí con
-     * `ver-vacaciones-unidad`: ve las de su unidad y las propias. Es el mismo
-     * criterio que `PermisoServidorController::aplicarAlcance()`.
+     * Quien no tiene alcance institucional ve las propias, las de las unidades
+     * que dirige y las que lo nombran jefe inmediato. Es el mismo criterio que
+     * `PermisoServidorController::aplicarAlcance()`.
      */
     private function aplicarAlcance(Builder $query, User $user): void
     {
@@ -205,20 +206,43 @@ class VacacionController extends Controller
         }
 
         $servidorId = $user->servidor_id;
-        $unidadId   = $user->servidor?->unidad_administrativa_id;
+        $unidades   = $this->unidadesDelJefe($user);
 
-        $query->where(function (Builder $q) use ($servidorId, $unidadId) {
+        $query->where(function (Builder $q) use ($servidorId, $unidades) {
             $q->where('servidor_id', $servidorId ?? 0);
 
-            if ($unidadId) {
-                $q->orWhere('unidad_administrativa_id', $unidadId)
-                    ->orWhere(function (Builder $sinUnidad) use ($unidadId) {
+            if ($unidades !== []) {
+                $q->orWhereIn('unidad_administrativa_id', $unidades)
+                    ->orWhere(function (Builder $sinUnidad) use ($unidades) {
                         $sinUnidad->whereNull('unidad_administrativa_id')
-                            ->whereHas('servidor', fn ($s) => $s->where(
-                                'unidad_administrativa_id', $unidadId
+                            ->whereHas('servidor', fn ($s) => $s->whereIn(
+                                'unidad_administrativa_id', $unidades
                             ));
                     });
             }
+
+            if ($servidorId) {
+                $q->orWhere('jefe_id', $servidorId);
+            }
         });
+    }
+
+    /**
+     * Las que dirige por su puesto (`JefaturaService`) y, mientras exista el
+     * rol `jefe-unidad`, la suya por `ver-vacaciones-unidad`. Es la regla de
+     * `VacacionPolicy::veLaUnidad()`.
+     *
+     * @return list<int>
+     */
+    private function unidadesDelJefe(User $user): array
+    {
+        $unidades = $user->unidadesQueDirige();
+        $propia   = $user->servidor?->unidad_administrativa_id;
+
+        if ($propia && $user->can(Permiso::VER_VACACIONES_UNIDAD->value)) {
+            $unidades[] = (int) $propia;
+        }
+
+        return array_values(array_unique($unidades));
     }
 }

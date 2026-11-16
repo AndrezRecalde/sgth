@@ -319,27 +319,28 @@ class PermisoServidorController extends Controller
         }
 
         $servidorId = $user->servidor_id;
-        $unidadId   = $user->servidor?->unidad_administrativa_id;
+        $unidades   = $this->unidadesDelJefe($user);
 
-        $esJefe = $unidadId && (
-            $user->can(Permiso::VER_ASISTENCIA_UNIDAD->value)
-            || (bool) ($user->servidor?->puesto?->es_jefe)
-        );
-
-        $query->where(function (Builder $q) use ($user, $servidorId, $unidadId, $esJefe) {
+        $query->where(function (Builder $q) use ($user, $servidorId, $unidades) {
             // Lo propio, siempre.
             $q->where('servidor_id', $servidorId ?? 0);
 
-            if ($esJefe) {
-                $q->orWhere(function (Builder $sub) use ($unidadId) {
-                    $sub->where('unidad_administrativa_id', $unidadId)
-                        ->orWhere(function (Builder $sinUnidad) use ($unidadId) {
+            if ($unidades !== []) {
+                $q->orWhere(function (Builder $sub) use ($unidades) {
+                    $sub->whereIn('unidad_administrativa_id', $unidades)
+                        ->orWhere(function (Builder $sinUnidad) use ($unidades) {
                             $sinUnidad->whereNull('unidad_administrativa_id')
-                                ->whereHas('servidor', fn ($s) => $s->where(
-                                    'unidad_administrativa_id', $unidadId
+                                ->whereHas('servidor', fn ($s) => $s->whereIn(
+                                    'unidad_administrativa_id', $unidades
                                 ));
                         });
                 });
+            }
+
+            // El que lo nombra jefe inmediato, aunque venga de otra unidad: el
+            // formulario deja elegir jefes de otras unidades, y ese jefe firma.
+            if ($servidorId) {
+                $q->orWhere('jefe_id', $servidorId);
             }
 
             // Recepción trabaja contra el documento físico: necesita ver lo
@@ -356,6 +357,25 @@ class PermisoServidorController extends Controller
                 ]);
             }
         });
+    }
+
+    /**
+     * Las unidades cuyos permisos ve como jefe: las que dirige por su puesto
+     * (`JefaturaService`) y, mientras exista el rol `jefe-unidad`, la suya por
+     * `ver-asistencia-unidad`. Es la regla de `PermisoServidorPolicy::ver()`.
+     *
+     * @return list<int>
+     */
+    private function unidadesDelJefe(User $user): array
+    {
+        $unidades = $user->unidadesQueDirige();
+        $propia   = $user->servidor?->unidad_administrativa_id;
+
+        if ($propia && $user->can(Permiso::VER_ASISTENCIA_UNIDAD->value)) {
+            $unidades[] = (int) $propia;
+        }
+
+        return array_values(array_unique($unidades));
     }
 
     /**
