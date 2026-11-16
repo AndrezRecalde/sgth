@@ -3,6 +3,7 @@
 import { Grid } from '@mantine/core'
 import { IconAlarm, IconCash, IconReceipt2, IconWallet } from '@tabler/icons-react'
 import { StatCard } from '@/components/ui'
+import { plural } from '@/lib/plural'
 import { dolares } from '../../utils/monto'
 import type { BandejaResumen } from '@/types/api'
 
@@ -39,7 +40,7 @@ export function BandejaMontos({ resumen, loading }: Props) {
         <StatCard
           label="Por contabilizar"
           value={dolares(resumen?.montos.por_contabilizar ?? 0)}
-          hint={`${resumen?.conteos.por_revisar ?? 0} liquidación(es) por revisar`}
+          hint={`${plural(resumen?.conteos.por_revisar ?? 0, 'liquidación', 'liquidaciones')} por revisar`}
           icon={IconReceipt2}
           loading={loading}
         />
@@ -48,7 +49,7 @@ export function BandejaMontos({ resumen, loading }: Props) {
         <StatCard
           label="Liquidaciones vencidas"
           value={vencidas}
-          hint={`De ${resumen?.conteos.por_liquidar ?? 0} pendiente(s) de liquidar`}
+          hint={`De ${plural(resumen?.conteos.por_liquidar ?? 0, 'pendiente', 'pendientes')} de liquidar`}
           icon={IconAlarm}
           tone={vencidas > 0 ? 'danger' : undefined}
           loading={loading}
