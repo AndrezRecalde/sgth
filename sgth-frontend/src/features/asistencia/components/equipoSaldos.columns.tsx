@@ -3,13 +3,7 @@
 import { Text } from '@mantine/core'
 import type { DataTableColumn } from 'mantine-datatable'
 import type { SaldoDelEquipo } from '../services/asistenciaService'
-
-/**
- * «29,75 días»: con decimales solo si los tiene —los permisos por horas lo
- * dejan fraccionado— y con la coma de aquí.
- */
-const dias = (saldo: number) =>
-  `${saldo.toLocaleString('es-EC', { maximumFractionDigits: 2 })} ${saldo === 1 ? 'día' : 'días'}`
+import { diasDeSaldo } from '../utils/diasDeSaldo'
 
 export function getEquipoSaldosColumns(): DataTableColumn<SaldoDelEquipo>[] {
   return [
@@ -34,7 +28,7 @@ export function getEquipoSaldosColumns(): DataTableColumn<SaldoDelEquipo>[] {
       width: 180,
       render: ({ saldo_dias }) => saldo_dias === null
         ? <Text size="sm" c="dimmed">No genera vacaciones</Text>
-        : <Text size="sm" ff="monospace">{dias(saldo_dias)}</Text>,
+        : <Text size="sm" ff="monospace">{diasDeSaldo(saldo_dias)}</Text>,
     },
   ]
 }
