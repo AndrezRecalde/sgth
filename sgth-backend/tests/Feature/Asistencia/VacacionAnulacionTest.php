@@ -170,7 +170,7 @@ test('sin aprobar-vacaciones no se anula, y el motivo es obligatorio', function 
         'password'     => bcrypt('123456'),
         'primer_login' => false,
     ]);
-    $jefe->assignRole('jefe-unidad');
+    $jefe->assignRole('servidor');
 
     $this->actingAs($jefe, 'sanctum');
     ($this->anular)($vacacion)->assertForbidden();

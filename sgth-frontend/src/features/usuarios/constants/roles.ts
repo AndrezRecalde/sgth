@@ -12,7 +12,6 @@
 export const ROL_ETIQUETAS: Record<string, string> = {
   'admin-uath':        'Administrador UATH',
   'asistente-uath':    'Asistente UATH',
-  'jefe-unidad':       'Jefe de Unidad o Director',
   'servidor':          'Servidor Público',
   'recepcion':         'Recepción',
   'trabajo-social':    'Trabajo Social',

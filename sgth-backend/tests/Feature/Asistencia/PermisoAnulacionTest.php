@@ -72,7 +72,9 @@ beforeEach(function () {
     $this->jefeServidor    = $servidor(jefe: true);
 
     $this->titular = ($this->usuario)('servidor', $this->titularServidor);
-    $this->jefe    = ($this->usuario)('jefe-unidad', $this->jefeServidor);
+    // Dirige la unidad por su puesto: el rol `jefe-unidad` se retiró el 2026-11-13.
+    ocupaPuestoDePrueba($this->jefeServidor);
+    $this->jefe    = ($this->usuario)('servidor', $this->jefeServidor);
 
     $this->permiso = PermisoServidor::create([
         'servidor_id'              => $this->titularServidor->id,
@@ -163,6 +165,6 @@ test('la migración da el permiso a los roles de Talento Humano que ya existen, 
 
     expect($tiene('admin-uath'))->toBeTrue()
         ->and($tiene('asistente-uath'))->toBeTrue()
-        ->and($tiene('jefe-unidad'))->toBeFalse()
+        ->and($tiene('servidor'))->toBeFalse()
         ->and($tiene('recepcion'))->toBeFalse();
 });

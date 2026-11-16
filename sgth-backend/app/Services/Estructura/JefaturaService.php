@@ -13,7 +13,7 @@ use Illuminate\Support\Collection;
  * Es la regla de `FirmanteOrganigramaService` vista desde el otro lado: dirige
  * una unidad quien tiene contrato vigente en su puesto de jefatura, o quien lo
  * subroga o lo tiene encargado ese día. No la asigna nadie: cambia sola cuando
- * cambia el puesto. Reemplaza al rol `jefe-unidad`, que TI daba a mano y nada
+ * cambia el puesto. Reemplazó al rol `jefe-unidad`, que TI daba a mano y nada
  * retiraba cuando la persona dejaba la jefatura (decisión del 2026-11-13).
  *
  * El titular sigue dirigiendo mientras alguien lo subroga: la subrogación

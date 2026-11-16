@@ -109,7 +109,7 @@ test('un servidor no entra a la gestión', function (string $rol) {
     $this->actingAs($usuario, 'sanctum')->getJson('/api/v1/comunicados')->assertForbidden();
     $this->actingAs($usuario, 'sanctum')->getJson("/api/v1/comunicados/{$comunicado->id}")->assertForbidden();
     $this->actingAs($usuario, 'sanctum')->postJson('/api/v1/comunicados', datosDeComunicado())->assertForbidden();
-})->with(['servidor', 'jefe-unidad', 'comunicacion-social']);
+})->with(['servidor', 'comunicacion-social']);
 
 test('la migración da los permisos a los roles que ya existen, y publicar no va al asistente', function () {
     foreach (['admin-ti', 'admin-uath', 'asistente-uath', 'auditor'] as $rol) {
@@ -126,7 +126,7 @@ test('la migración da los permisos a los roles que ya existen, y publicar no va
         ->and(permisosDeComunicadosDelRol('admin-ti'))->toBe(PERMISOS_DE_COMUNICADOS)
         ->and(permisosDeComunicadosDelRol('asistente-uath'))->toBe(['redactar-comunicados', 'ver-lecturas-comunicados'])
         ->and(permisosDeComunicadosDelRol('auditor'))->toBe(['ver-lecturas-comunicados'])
-        ->and(permisosDeComunicadosDelRol('jefe-unidad'))->toBe([]);
+        ->and(permisosDeComunicadosDelRol('servidor'))->toBe([]);
 });
 
 test('la migración no le quita a nadie el permiso adicional que ya tenía', function () {

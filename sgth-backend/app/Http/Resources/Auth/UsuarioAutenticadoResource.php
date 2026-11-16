@@ -64,7 +64,7 @@ final class UsuarioAutenticadoResource extends JsonResource
                 ] : null,
                 // Las unidades que dirige hoy por su puesto, como titular, por
                 // subrogación o por encargo. El Portal le muestra su equipo con
-                // esto; el rol `jefe-unidad` deja de hacer falta.
+                // esto, y reemplaza al rol `jefe-unidad`, que se retiró.
                 'jefaturas'                => $this->jefaturas($servidor->id),
                 // La foto vigente, para el avatar del menú. La imagen se pide
                 // aparte por su id (Comunicación Social, fase 1.1).

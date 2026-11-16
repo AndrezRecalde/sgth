@@ -345,7 +345,7 @@ test('el Excel sale con una fila por servidor y su cabecera', function () {
 test('un rol ajeno al trámite no abre el tablero', function () {
     $usuario = User::factory()->create();
     $usuario->assignRole(
-        Role::firstOrCreate(['name' => 'jefe-unidad', 'guard_name' => 'sanctum'])
+        Role::firstOrCreate(['name' => 'servidor', 'guard_name' => 'sanctum'])
     );
 
     $this->actingAs($usuario, 'sanctum')

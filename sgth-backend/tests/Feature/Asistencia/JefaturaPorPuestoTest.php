@@ -5,11 +5,9 @@
 |
 | Dirige una unidad quien tiene contrato vigente en su puesto de jefatura, o
 | quien lo subroga o lo tiene encargado ese día: la misma regla con la que
-| `FirmanteOrganigramaService` decide quién firma. Hasta ahora lo decidía el
-| rol `jefe-unidad`, que TI daba a mano y nada retiraba cuando la persona
-| dejaba la jefatura.
-|
-| Aquí ningún jefe tiene ese rol: todos son `servidor`.
+| `FirmanteOrganigramaService` decide quién firma. Antes lo decidía el rol
+| `jefe-unidad`, que TI daba a mano y nada retiraba cuando la persona dejaba la
+| jefatura; se retiró el mismo día. Aquí todos son `servidor`.
 */
 
 use App\Enums\EstadoPermiso;
@@ -294,21 +292,15 @@ it('la sesión dice qué unidades dirige', function () {
         ->assertJsonPath('datos.servidor.jefaturas', []);
 });
 
-it('el comando lista lo que hay que corregir antes de retirar el rol', function () {
+it('el comando lista las unidades sin jefatura clara', function () {
     $sinJefatura = unidadDePrueba(['nombre' => 'Unidad sin jefatura']);
     puestoDePrueba($sinJefatura);
     $vacante = unidadDePrueba(['nombre' => 'Unidad vacante']);
     puestoJefeDePrueba($vacante);
 
-    $conRol = User::factory()->create(['usuario_ti' => 'jefe.sin.puesto', 'servidor_id' => $this->subordinadoA->id]);
-    $conRol->assignRole('jefe-unidad');
-    $this->usuarioJefeA->update(['usuario_ti' => 'jefe.bien.puesto']);
-    $this->usuarioJefeA->assignRole('jefe-unidad');
-
     $this->artisan('sgth:jefaturas:revisar')
         ->expectsOutputToContain('Unidad sin jefatura')
         ->expectsOutputToContain('Unidad vacante')
-        ->expectsOutputToContain('jefe.sin.puesto')
-        ->doesntExpectOutputToContain('jefe.bien.puesto')
+        ->doesntExpectOutputToContain('Dirección A')
         ->assertSuccessful();
 });

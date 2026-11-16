@@ -2,7 +2,6 @@
 namespace App\Http\Controllers\Asistencia;
 
 use App\Contracts\Asistencia\VacacionServiceInterface;
-use App\Enums\Permiso;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Asistencia\AnularVacacionRequest;
 use App\Http\Requests\Asistencia\StoreVacacionRequest;
@@ -249,7 +248,7 @@ class VacacionController extends Controller
         }
 
         $servidorId = $user->servidor_id;
-        $unidades   = $this->unidadesDelJefe($user);
+        $unidades   = $user->unidadesQueDirige();
 
         $query->where(function (Builder $q) use ($servidorId, $unidades) {
             $q->where('servidor_id', $servidorId ?? 0);
@@ -304,22 +303,4 @@ class VacacionController extends Controller
             });
     }
 
-    /**
-     * Las que dirige por su puesto (`JefaturaService`) y, mientras exista el
-     * rol `jefe-unidad`, la suya por `ver-vacaciones-unidad`. Es la regla de
-     * `VacacionPolicy::veLaUnidad()`.
-     *
-     * @return list<int>
-     */
-    private function unidadesDelJefe(User $user): array
-    {
-        $unidades = $user->unidadesQueDirige();
-        $propia   = $user->servidor?->unidad_administrativa_id;
-
-        if ($propia && $user->can(Permiso::VER_VACACIONES_UNIDAD->value)) {
-            $unidades[] = (int) $propia;
-        }
-
-        return array_values(array_unique($unidades));
-    }
 }

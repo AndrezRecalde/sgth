@@ -235,7 +235,7 @@ test('una evaluación en curso no tiene aptitud que certificar', function () {
 test('un rol ajeno al trámite no descarga el certificado', function () {
     ['solicitud' => $solicitud] = escenarioCertificado();
 
-    $this->actingAs(usuarioDeRolCertificado('jefe-unidad'), 'sanctum')
+    $this->actingAs(usuarioDeRolCertificado('servidor'), 'sanctum')
         ->getJson(rutaCertificado($solicitud->id))
         ->assertStatus(403);
 });

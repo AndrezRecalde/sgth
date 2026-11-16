@@ -24,7 +24,7 @@ uses(TestCase::class, RefreshDatabase::class);
 beforeEach(function () {
     foreach ([
         'admin-uath', 'asistente-uath', 'auditor',
-        'admin-ti', 'servidor', 'jefe-unidad',
+        'admin-ti', 'servidor',
     ] as $rol) {
         Role::firstOrCreate(['name' => $rol, 'guard_name' => 'sanctum']);
     }
@@ -103,12 +103,6 @@ beforeEach(function () {
 
 test('un servidor raso no lista las subrogaciones de la institución', function () {
     ($this->comoRol)('servidor');
-
-    $this->getJson('/api/v1/expediente/subrogaciones/vigentes')->assertForbidden();
-});
-
-test('un jefe de unidad tampoco: ver el módulo no viene con el subsistema', function () {
-    ($this->comoRol)('jefe-unidad');
 
     $this->getJson('/api/v1/expediente/subrogaciones/vigentes')->assertForbidden();
 });

@@ -129,7 +129,7 @@ test('Talento Humano no puede iniciar el FEMO', function () {
 });
 
 test('un rol ajeno al trámite no lee el listado', function () {
-    $usuario = usuarioDeRolCertificacion('jefe-unidad');
+    $usuario = usuarioDeRolCertificacion('servidor');
 
     $this->actingAs($usuario, 'sanctum')
         ->getJson('/api/v1/dispensario/solicitudes-certificacion')

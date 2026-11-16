@@ -73,7 +73,9 @@ beforeEach(function () {
     $this->userJefe->update(['servidor_id' => $this->servidorJefe->id]);
     $this->userSubordinado->update(['servidor_id' => $this->servidorSubordinado->id]);
 
-    $this->userJefe->assignRole('jefe-unidad');
+    // Dirige la unidad por su puesto: el rol `jefe-unidad` se retiró el 2026-11-13.
+    ocupaPuestoDePrueba($this->servidorJefe);
+    $this->userJefe->assignRole('servidor');
     $this->userSubordinado->assignRole('servidor');
 });
 

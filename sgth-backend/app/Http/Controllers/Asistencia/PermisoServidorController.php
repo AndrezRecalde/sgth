@@ -326,7 +326,7 @@ class PermisoServidorController extends Controller
         }
 
         $servidorId = $user->servidor_id;
-        $unidades   = $this->unidadesDelJefe($user);
+        $unidades   = $user->unidadesQueDirige();
 
         $query->where(function (Builder $q) use ($user, $servidorId, $unidades) {
             // Lo propio, siempre.
@@ -371,8 +371,8 @@ class PermisoServidorController extends Controller
      * y lo que lo nombra jefe inmediato, sin lo propio.
      *
      * Es un recorte de lo que ya puede ver (`PermisoServidorPolicy::ver()`),
-     * nunca una ampliación. No mira el rol `jefe-unidad`, que se retira, ni
-     * `ver-permisos-todos`, que haría de la institución entera su equipo.
+     * nunca una ampliación. No mira `ver-permisos-todos`, que haría de la
+     * institución entera su equipo.
      */
     private function aplicarEquipo(Builder $query, User $user): void
     {
@@ -400,25 +400,6 @@ class PermisoServidorController extends Controller
                         });
                 }
             });
-    }
-
-    /**
-     * Las unidades cuyos permisos ve como jefe: las que dirige por su puesto
-     * (`JefaturaService`) y, mientras exista el rol `jefe-unidad`, la suya por
-     * `ver-asistencia-unidad`. Es la regla de `PermisoServidorPolicy::ver()`.
-     *
-     * @return list<int>
-     */
-    private function unidadesDelJefe(User $user): array
-    {
-        $unidades = $user->unidadesQueDirige();
-        $propia   = $user->servidor?->unidad_administrativa_id;
-
-        if ($propia && $user->can(Permiso::VER_ASISTENCIA_UNIDAD->value)) {
-            $unidades[] = (int) $propia;
-        }
-
-        return array_values(array_unique($unidades));
     }
 
     /**

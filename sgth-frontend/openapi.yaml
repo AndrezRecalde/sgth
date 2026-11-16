@@ -97958,7 +97958,7 @@
                             },
                             "jefaturas": {
                                 "type": "array",
-                                "description": "Las unidades que dirige hoy por su puesto, como titular, por\nsubrogaci\u00f3n o por encargo. El Portal le muestra su equipo con\nesto; el rol `jefe-unidad` deja de hacer falta.",
+                                "description": "Las unidades que dirige hoy por su puesto, como titular, por\nsubrogaci\u00f3n o por encargo. El Portal le muestra su equipo con\nesto, y reemplaza al rol `jefe-unidad`, que se retir\u00f3.",
                                 "items": {
                                     "type": "object",
                                     "properties": {

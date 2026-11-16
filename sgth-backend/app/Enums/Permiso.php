@@ -88,6 +88,9 @@ enum Permiso: string
 
     // ── MÓDULO 04: Asistencia ────────────────────────────────────
     case VER_ASISTENCIA_PROPIA = 'ver-asistencia-propia';
+    // Desde el 2026-11-13 no da lo de la unidad: eso sale del puesto de
+    // jefatura (`JefaturaService`). Lo tienen solo roles que ya ven toda la
+    // institución, y en el frontend es guarda del menú de Talento Humano.
     case VER_ASISTENCIA_UNIDAD = 'ver-asistencia-unidad';
     case VER_ASISTENCIA_TODOS = 'ver-asistencia-todos';
     // Marcar asistencia desde el navegador, con ubicación. No va en ningún
@@ -116,6 +119,8 @@ enum Permiso: string
     case GESTIONAR_LICENCIAS = 'gestionar-licencias';
     case GESTIONAR_VACACIONES = 'gestionar-vacaciones';
     case APROBAR_VACACIONES = 'aprobar-vacaciones';
+    // Como `ver-asistencia-unidad`: desde el 2026-11-13 solo es guarda del
+    // menú de Talento Humano; lo de la unidad sale del puesto de jefatura.
     case VER_VACACIONES_UNIDAD = 'ver-vacaciones-unidad';
     // Aquí estaba `puede-marcar-online`, retirado el 2026-10-28
     // (docs/plan-roles-y-accesos.md, PR 16): no lo comprobaba nada y se

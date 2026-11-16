@@ -408,14 +408,9 @@ class RolPermisoSeeder extends Seeder
         // usuarios ni subsistema donde entrar. Su lectura la conservan
         // admin-uath, asistente-uath y el auditor.
 
-        // JEFE_UNIDAD: también el director de área. `director` se fundió aquí
-        // el 2026-11-06: veía lo mismo, y lo que tenía de más no lo usaba
-        // ninguna pantalla.
-        $this->crearRol(Rol::JEFE_UNIDAD, array_merge($permisosBase, [
-            Permiso::VER_ESTRUCTURA,
-            Permiso::VER_ASISTENCIA_UNIDAD,
-            Permiso::VER_VACACIONES_UNIDAD,
-        ]));
+        // Aquí estaba JEFE_UNIDAD, retirado el 2026-11-13 (antes se le había
+        // fundido `director`): el jefe ve los permisos y vacaciones de su
+        // equipo por su puesto de jefatura, en «Mi equipo» del Portal.
 
         // SERVIDOR: lo de todo servidor. La marcación en línea no va por rol:
         // `marcar-en-linea` se le da a la persona desde Usuarios.

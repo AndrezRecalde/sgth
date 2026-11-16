@@ -20,6 +20,11 @@ uses(Tests\TestCase::class, RefreshDatabase::class);
 beforeEach(function () {
     $this->seed(RolPermisoSeeder::class);
 
+    // `jefe-unidad` se retiró el 2026-11-13: aquí se recrea como estaba,
+    // para probar la fusión sobre una base de antes de ese retiro.
+    Role::firstOrCreate(['name' => 'jefe-unidad', 'guard_name' => 'sanctum'])
+        ->givePermissionTo(['ver-asistencia-unidad', 'ver-vacaciones-unidad']);
+
     // Una base de antes de la fusión: el rol existe, con un permiso.
     $this->rolViejo = function (): Role {
         $rol = Role::firstOrCreate(['name' => 'director', 'guard_name' => 'sanctum']);
@@ -32,12 +37,11 @@ beforeEach(function () {
     $this->migracion = fn () => require database_path('migrations/2026_12_21_000000_fundir_rol_director_en_jefe_unidad.php');
 });
 
-it('el seeder y el enum ya no lo tienen, y jefe-unidad dice que también es del director', function () {
+it('el seeder y el enum ya no lo tienen', function () {
     $valores = array_map(fn (Rol $r) => $r->value, Rol::cases());
 
     expect($valores)->not->toContain('director')
-        ->and(Role::where('name', 'director')->exists())->toBeFalse()
-        ->and(Rol::JEFE_UNIDAD->etiqueta())->toBe('Jefe de Unidad o Director');
+        ->and(Role::where('name', 'director')->exists())->toBeFalse();
 });
 
 it('la migración pasa a jefe-unidad a quien era director y borra el rol', function () {
