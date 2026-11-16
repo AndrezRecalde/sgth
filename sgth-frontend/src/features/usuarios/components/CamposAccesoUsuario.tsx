@@ -13,6 +13,8 @@ interface Props {
   errors:   FieldErrors<UsuarioFormValues>
   /** Muestra el spinner mientras se pide el usuario TI sugerido. */
   cargandoTi?: boolean
+  /** Los roles de la cuenta propia: se ven, pero los cambia otro administrador. */
+  rolesBloqueados?: boolean
 }
 
 /**
@@ -25,6 +27,7 @@ export function CamposAccesoUsuario({
   control,
   errors,
   cargandoTi = false,
+  rolesBloqueados = false,
 }: Props) {
   const contained = useContainedInput()
   const { data: roles = [] } = useRoles()
@@ -62,6 +65,8 @@ export function CamposAccesoUsuario({
             placeholder="Seleccione uno o más roles"
             data={opcionesRol}
             searchable
+            disabled={rolesBloqueados}
+            description={rolesBloqueados ? 'Sus propios roles los cambia otro administrador.' : undefined}
             {...contained}
             value={field.value}
             onChange={field.onChange}
