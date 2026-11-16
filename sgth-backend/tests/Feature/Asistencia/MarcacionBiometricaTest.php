@@ -153,11 +153,13 @@ describe('quién consulta', function () {
             ->assertForbidden();
     });
 
-    it('el jefe de unidad tampoco consulta las de otro', function () {
-        // Tiene ver-asistencia-unidad, no ver-asistencia-todos.
+    it('quien dirige la unidad tampoco consulta las de otro', function () {
+        // Dirigirla le da los permisos y vacaciones de su gente, no sus marcaciones.
+        $unidad = \App\Models\Estructura\Puesto::findOrFail($this->marca->puesto_id)->unidadAdministrativa;
+        ocupaPuestoDePrueba($this->otro, puestoJefeDePrueba($unidad));
         $this->mock(MarcacionBiometricaService::class)->shouldNotReceive('porCedula');
 
-        $this->actingAs(usuarioMarcaciones('jefe-unidad', $this->otro))
+        $this->actingAs(usuarioMarcaciones('servidor', $this->otro))
             ->getJson(($this->consulta)('0802704171'))
             ->assertForbidden();
     });
@@ -325,7 +327,7 @@ describe('marcación en línea', function () {
         $this->actingAs(usuarioMarcaciones($rol, $this->marca))
             ->postJson('/api/v1/asistencia/marcaciones/online', ($this->conUbicacion)('I'))
             ->assertForbidden();
-    })->with(['servidor', 'admin-uath', 'asistente-uath', 'jefe-unidad']);
+    })->with(['servidor', 'admin-uath', 'asistente-uath']);
 
     it('sin ubicación no se marca', function (array $ubicacion, string $campo) {
         $this->mock(MarcacionBiometricaService::class)->shouldNotReceive('registrarMarcacion');

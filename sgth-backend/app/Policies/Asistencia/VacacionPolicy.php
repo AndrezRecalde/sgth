@@ -15,7 +15,9 @@ use App\Models\User;
  * toda la institución y regeneraba los períodos de la plantilla entera. Los
  * permisos `gestionar-vacaciones`, `aprobar-vacaciones` y
  * `ver-vacaciones-unidad` ya estaban sembrados en `RolPermisoSeeder` y nada los
- * consultaba. Aquí se aplican tal como están en la matriz.
+ * consultaba. Aquí se aplican tal como están en la matriz. Desde el
+ * 2026-11-13 lo de la unidad no lo da `ver-vacaciones-unidad` sino el puesto
+ * de jefatura (`JefaturaService`).
  *
  * No existe un `ver-vacaciones-todas`. Ver toda la institución se decide con
  * `ver-asistencia-todos`: las vacaciones son parte de Asistencia, y los roles
@@ -37,7 +39,6 @@ class VacacionPolicy
     public function verAny(User $user): bool
     {
         return $this->alcanceInstitucional($user)
-            || $user->can(Permiso::VER_VACACIONES_UNIDAD->value)
             || $user->unidadesQueDirige() !== [];
     }
 
@@ -139,24 +140,10 @@ class VacacionPolicy
             && (int) $user->servidor_id === (int) $servidorId;
     }
 
-    /**
-     * Quien dirige la unidad por su puesto (`JefaturaService`) o, mientras
-     * exista el rol `jefe-unidad`, la suya por `ver-vacaciones-unidad`.
-     */
+    /** Quien dirige la unidad por su puesto (`JefaturaService`). */
     private function veLaUnidad(User $user, ?int $unidadId): bool
     {
-        if ($unidadId === null) {
-            return false;
-        }
-
-        if (in_array((int) $unidadId, $user->unidadesQueDirige(), true)) {
-            return true;
-        }
-
-        $unidadDelUsuario = $user->servidor?->unidad_administrativa_id;
-
-        return $unidadDelUsuario !== null
-            && $user->can(Permiso::VER_VACACIONES_UNIDAD->value)
-            && (int) $unidadDelUsuario === (int) $unidadId;
+        return $unidadId !== null
+            && in_array((int) $unidadId, $user->unidadesQueDirige(), true);
     }
 }

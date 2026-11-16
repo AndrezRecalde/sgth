@@ -122,8 +122,10 @@ test('un usuario sin rol no entra a nada del módulo', function () {
         ->and(Vacacion::count())->toBe(2);
 });
 
-test('el jefe de unidad ve y exporta solo lo de su unidad, y no resuelve', function () {
-    $jefe = ($this->usuario)('jefe-unidad', ($this->servidor)($this->unidadA, jefe: true));
+test('quien dirige la unidad ve y exporta solo lo de su unidad, y no resuelve', function () {
+    $servidorJefe = ($this->servidor)($this->unidadA, jefe: true);
+    ocupaPuestoDePrueba($servidorJefe);
+    $jefe = ($this->usuario)('servidor', $servidorJefe);
     $this->actingAs($jefe, 'sanctum');
 
     $ids = collect($this->getJson('/api/v1/asistencia/vacaciones')->assertOk()->json('datos.data'))->pluck('id');

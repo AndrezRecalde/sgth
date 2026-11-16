@@ -240,7 +240,9 @@ test('solo_quien_tiene_aprobar_vacaciones_resuelve_la_solicitud', function () {
     ]);
 
     $this->userJefe->update(['servidor_id' => $servidorJefe->id]);
-    $this->userJefe->assignRole('jefe-unidad');
+    // Dirige la unidad por su puesto: el rol `jefe-unidad` se retiró el 2026-11-13.
+    ocupaPuestoDePrueba($servidorJefe);
+    $this->userJefe->assignRole('servidor');
 
     $uath = User::create([
         'email' => 'uath_vac@example.com',

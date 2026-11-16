@@ -237,10 +237,10 @@ class PermisoServidorPolicy
     }
 
     /**
-     * Quien dirige la unidad donde se registró el permiso: por su puesto
-     * (`JefaturaService`) o, mientras exista el rol `jefe-unidad`, la suya por
-     * `ver-asistencia-unidad`. Es la regla del listado
-     * (`PermisoServidorController::aplicarAlcance()`).
+     * Quien dirige por su puesto la unidad donde se registró el permiso
+     * (`JefaturaService`). Es la regla del listado
+     * (`PermisoServidorController::aplicarAlcance()`). Hasta el 2026-11-13 la
+     * daba también el rol `jefe-unidad`, por `ver-asistencia-unidad`.
      *
      * Se compara contra la unidad que quedó grabada en el permiso y no contra
      * la del servidor hoy: si alguien cambia de unidad, su historial sigue
@@ -252,19 +252,8 @@ class PermisoServidorPolicy
         $unidadDelPermiso = $permiso->unidad_administrativa_id
             ?? $permiso->servidor?->unidad_administrativa_id;
 
-        if ($unidadDelPermiso === null) {
-            return false;
-        }
-
-        if (in_array((int) $unidadDelPermiso, $user->unidadesQueDirige(), true)) {
-            return true;
-        }
-
-        $unidadDelUsuario = $user->servidor?->unidad_administrativa_id;
-
-        return $unidadDelUsuario !== null
-            && $user->can(Permiso::VER_ASISTENCIA_UNIDAD->value)
-            && (int) $unidadDelPermiso === (int) $unidadDelUsuario;
+        return $unidadDelPermiso !== null
+            && in_array((int) $unidadDelPermiso, $user->unidadesQueDirige(), true);
     }
 
     /**

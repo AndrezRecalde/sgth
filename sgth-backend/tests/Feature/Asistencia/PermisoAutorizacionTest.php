@@ -40,7 +40,9 @@ beforeEach(function () {
 
     $this->ajeno = usuarioCon('ajeno', 'servidor', $this->servidorB);
     $this->titular = usuarioCon('titular', 'servidor', $this->servidorA);
-    $this->jefeA = usuarioCon('jefea', 'jefe-unidad', $this->servidorJefeA);
+    // Dirige la unidad A por su puesto: el rol `jefe-unidad` se retiró el 2026-11-13.
+    ocupaPuestoDePrueba($this->servidorJefeA);
+    $this->jefeA = usuarioCon('jefea', 'servidor', $this->servidorJefeA);
     $this->uath = usuarioCon('uath', 'admin-uath');
     $this->trabajoSocial = usuarioCon('ts', 'trabajo-social');
     $this->recepcion = usuarioCon('recep', 'recepcion');

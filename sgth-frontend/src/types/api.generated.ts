@@ -18274,7 +18274,7 @@ export interface components {
                 /**
                  * @description Las unidades que dirige hoy por su puesto, como titular, por
                  *     subrogación o por encargo. El Portal le muestra su equipo con
-                 *     esto; el rol `jefe-unidad` deja de hacer falta.
+                 *     esto, y reemplaza al rol `jefe-unidad`, que se retiró.
                  */
                 jefaturas: {
                     unidad_id: number;

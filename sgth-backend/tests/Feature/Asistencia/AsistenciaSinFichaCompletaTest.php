@@ -93,7 +93,9 @@ beforeEach(function () {
     $this->recepcion = usuarioAsistenciaSinFicha('recepcion');
     $this->trabajoSocial = usuarioAsistenciaSinFicha('trabajo-social');
     $this->delTitular = usuarioAsistenciaSinFicha('servidor', $this->titular);
-    $this->delJefe = usuarioAsistenciaSinFicha('jefe-unidad', $this->jefe);
+    // Dirige la unidad por su puesto: el rol `jefe-unidad` se retiró el 2026-11-13.
+    ocupaPuestoDePrueba($this->jefe);
+    $this->delJefe = usuarioAsistenciaSinFicha('servidor', $this->jefe);
 });
 
 // ── Permisos: listado y detalle ──────────────────────────────────────

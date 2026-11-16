@@ -120,3 +120,22 @@ function puestoParaLaModalidad(\App\Enums\TipoNombramiento|string $modalidad, Pu
 
     return $modalidad->admitePuesto(\App\Enums\TipoPuesto::PLANTILLA) ? $plantilla : $contrato;
 }
+
+/**
+ * El servidor ocupa el puesto con un contrato vigente. Si el puesto es de
+ * jefatura, así dirige su unidad (`JefaturaService`): desde el 2026-11-13 la
+ * jefatura sale del puesto y no del rol `jefe-unidad`, que se retiró.
+ */
+function ocupaPuestoDePrueba(\App\Models\Expediente\Servidor $servidor, ?Puesto $puesto = null): void
+{
+    $puesto ??= Puesto::findOrFail($servidor->puesto_id);
+
+    \App\Models\Expediente\ContratoServidor::create([
+        'servidor_id'              => $servidor->id,
+        'tipo_nombramiento'        => 'nombramiento_permanente',
+        'unidad_administrativa_id' => $puesto->unidad_administrativa_id,
+        'puesto_id'                => $puesto->id,
+        'fecha_inicio'             => '2020-01-02',
+        'estado'                   => 'vigente',
+    ]);
+}

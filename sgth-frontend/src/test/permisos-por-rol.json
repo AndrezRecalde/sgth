@@ -384,27 +384,6 @@
         "ver-ticket-propio",
         "ver-tickets-todos"
     ],
-    "jefe-unidad": [
-        "acceso-autoservicio",
-        "cambiar-contrasena",
-        "crear-permiso",
-        "crear-ticket",
-        "exportar-informe-actividades",
-        "inscribirse-curso",
-        "registrar-actividades",
-        "responder-encuesta-clima",
-        "solicitar-viatico",
-        "ver-asistencia-propia",
-        "ver-asistencia-unidad",
-        "ver-estructura",
-        "ver-evaluacion-propia",
-        "ver-expediente-propio",
-        "ver-historia-clinica-propia",
-        "ver-permisos",
-        "ver-plan-capacitacion",
-        "ver-ticket-propio",
-        "ver-vacaciones-unidad"
-    ],
     "medico": [
         "acceso-autoservicio",
         "cambiar-contrasena",

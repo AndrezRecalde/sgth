@@ -103,8 +103,10 @@ test('un servidor no registra un permiso a nombre de otro', function () {
     expect(PermisoServidor::where('servidor_id', $this->otro->id)->exists())->toBeFalse();
 });
 
-test('un jefe de unidad tampoco registra el de un subordinado', function () {
-    $jefe = ($this->usuario)('jefe-unidad', ($this->servidor)(jefe: true));
+test('quien dirige la unidad tampoco registra el de un subordinado', function () {
+    $servidorJefe = ($this->servidor)(jefe: true);
+    ocupaPuestoDePrueba($servidorJefe);
+    $jefe = ($this->usuario)('servidor', $servidorJefe);
 
     ($this->pedir)($jefe, ['servidor_id' => $this->otro->id])->assertForbidden();
 });
@@ -126,7 +128,7 @@ test('Talento Humano registra permisos a nombre de cualquier servidor', function
 })->with(['admin-uath', 'asistente-uath']);
 
 test('sin servidor vinculado ni permiso de Talento Humano no hay a nombre de quién registrar', function () {
-    $sinServidor = ($this->usuario)('jefe-unidad');
+    $sinServidor = ($this->usuario)('servidor');
 
     ($this->pedir)($sinServidor)->assertStatus(422);
 });
@@ -148,6 +150,6 @@ test('la migración da el permiso a los roles de Talento Humano que ya existen, 
 
     expect($tiene('admin-uath'))->toBeTrue()
         ->and($tiene('asistente-uath'))->toBeTrue()
-        ->and($tiene('jefe-unidad'))->toBeFalse()
+        ->and($tiene('servidor'))->toBeFalse()
         ->and($tiene('auditor'))->toBeFalse();
 });

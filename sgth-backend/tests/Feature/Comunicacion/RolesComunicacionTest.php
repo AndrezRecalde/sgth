@@ -56,8 +56,7 @@ test('admin-ti lo tiene todo y talento humano y el auditor solo consultan creden
         ->toBe(collect(PERMISOS_DE_COMUNICACION)->sort()->values()->all())
         ->and(permisosDeComunicacionDelRol('admin-uath'))->toBe(['ver-credenciales'])
         ->and(permisosDeComunicacionDelRol('auditor'))->toBe(['ver-credenciales'])
-        ->and(permisosDeComunicacionDelRol('servidor'))->toBe([])
-        ->and(permisosDeComunicacionDelRol('jefe-unidad'))->toBe([]);
+        ->and(permisosDeComunicacionDelRol('servidor'))->toBe([]);
 });
 
 test('los dos roles se suman en una misma persona', function () {
