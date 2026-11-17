@@ -144,9 +144,10 @@ final class MasaSalarialService
                 /** @var list<array{clave: string, etiqueta: string, personas: int, mensual: float, anual: float, porcentaje: float, promedio: float}> */
                 'regimen'           => $this->porCaso(RegimenLaboral::cases(), 'regimen', $suman, $total),
                 /**
-                 * Las hijas tienen la misma forma que su madre.
+                 * El árbol en una lista, en su orden: cada unidad seguida de sus
+                 * hijas, con su profundidad. Anidado, el tipo no se podía escribir.
                  *
-                 * @var list<array{id: int, nombre: string, nivel: int|null, personas: int, mensual: float, anual: float, porcentaje: float, promedio: float, propias: array{personas: int, mensual: float}, hijas: list<array<string, mixed>>}>
+                 * @var list<array{id: int, nombre: string, nivel: int|null, profundidad: int, padre_id: int|null, tiene_hijas: bool, personas: int, mensual: float, anual: float, porcentaje: float, promedio: float, propias: array{personas: int, mensual: float}}>
                  */
                 'unidad'            => $this->arbol($suman, $unidadId, $total),
             ],
@@ -294,10 +295,13 @@ final class MasaSalarialService
      * cuelga de ella, y lo suyo propio aparte. Las que no tienen a nadie no
      * salen. Con un filtro de unidad, el árbol empieza en ella.
      *
-     * @return list<array{
-     *   id: int, nombre: string, nivel: ?int, personas: int, mensual: float, anual: float, porcentaje: float, promedio: float,
-     *   propias: array{personas: int, mensual: float}, hijas: list<array<string, mixed>>
-     * }>
+     * Va en una lista, en el orden del árbol —cada unidad seguida de sus
+     * hijas— y con su profundidad: anidado, el tipo de las hijas no se podía
+     * escribir, y el frontend tenía que aplanarlo de todos modos para la tabla.
+     * Lo que cuelga de una unidad son las filas que la siguen con más
+     * profundidad.
+     *
+     * @return list<array{id: int, nombre: string, nivel: int|null, profundidad: int, padre_id: int|null, tiene_hijas: bool, personas: int, mensual: float, anual: float, porcentaje: float, promedio: float, propias: array{personas: int, mensual: float}}>
      */
     private function arbol(Collection $suman, ?int $unidadId, int $total): array
     {
@@ -354,7 +358,32 @@ final class MasaSalarialService
             ? [$unidadId]
             : $hijas->get(0, collect())->pluck('id')->map(fn ($id) => (int) $id)->all();
 
-        return $this->ordenar(array_values(array_filter(array_map(fn (int $id) => $nodo($id)[0], $raices))));
+        return $this->aplanar($this->ordenar(array_values(array_filter(array_map(fn (int $id) => $nodo($id)[0], $raices)))));
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $nodos
+     * @return list<array<string, mixed>>
+     */
+    private function aplanar(array $nodos, int $profundidad = 0, ?int $padreId = null): array
+    {
+        $filas = [];
+
+        foreach ($nodos as $nodo) {
+            $hijas = $nodo['hijas'];
+            unset($nodo['hijas']);
+
+            $filas[] = [
+                ...$nodo,
+                'profundidad' => $profundidad,
+                'padre_id'    => $padreId,
+                'tiene_hijas' => $hijas !== [],
+            ];
+
+            array_push($filas, ...$this->aplanar($hijas, $profundidad + 1, $nodo['id']));
+        }
+
+        return $filas;
     }
 
     /**

@@ -145,14 +145,24 @@ test('por tipo de nombramiento y por régimen salen todos los casos, también lo
 test('cada unidad suma lo que cuelga de ella, y lo que más pesa va primero', function () {
     ($this->institucion)();
 
-    [$raiz] = ($this->masa)()['vistas']['unidad'];
+    // El árbol va en una lista, en su orden: cada unidad seguida de sus hijas.
+    $unidades = ($this->masa)()['vistas']['unidad'];
 
-    expect($raiz)->toMatchArray(['nombre' => 'Prefectura', 'nivel' => 1, 'personas' => 5, 'mensual' => 8500])
+    expect(array_map(fn (array $u) => [$u['nombre'], $u['profundidad'], $u['tiene_hijas']], $unidades))->toBe([
+        ['Prefectura', 0, true],
+        ['Dirección Administrativa', 1, false],
+        ['Dirección de Obras', 1, true],
+        ['Jefatura de Vías', 2, false],
+    ]);
+
+    [$raiz, $administrativa, $obras, $vias] = $unidades;
+    expect($raiz)->toMatchArray(['nivel' => 1, 'padre_id' => null, 'personas' => 5, 'mensual' => 8500])
         ->and($raiz['propias'])->toMatchArray(['personas' => 1, 'mensual' => 4200])
-        ->and(array_column($raiz['hijas'], 'nombre'))->toBe(['Dirección Administrativa', 'Dirección de Obras'])
-        ->and($raiz['hijas'][1])->toMatchArray(['mensual' => 2100, 'personas' => 2])
-        ->and($raiz['hijas'][1]['propias']['mensual'])->toEqual(900)
-        ->and($raiz['hijas'][1]['hijas'][0])->toMatchArray(['nombre' => 'Jefatura de Vías', 'mensual' => 1200, 'hijas' => []]);
+        ->and($administrativa['mensual'])->toEqual(2200)
+        ->and($obras)->toMatchArray(['padre_id' => $raiz['id'], 'mensual' => 2100, 'personas' => 2])
+        ->and($obras['propias']['mensual'])->toEqual(900)
+        ->and($vias)->toMatchArray(['padre_id' => $obras['id'], 'mensual' => 1200])
+        ->and($vias)->not->toHaveKey('hijas');
 });
 
 test('los filtros: la unidad con sus dependencias, el régimen y el tipo', function () {
@@ -161,8 +171,8 @@ test('los filtros: la unidad con sus dependencias, el régimen y el tipo', funct
     $obras = ($this->masa)("unidad_id={$this->obras->id}");
     expect($obras['totales']['general']['mensual'])->toEqual(2100)
         ->and($obras['filtros'])->toMatchArray(['unidad_id' => $this->obras->id, 'unidad' => 'Dirección de Obras'])
-        ->and($obras['vistas']['unidad'])->toHaveCount(1)
-        ->and($obras['vistas']['unidad'][0]['nombre'])->toBe('Dirección de Obras');
+        ->and(array_column($obras['vistas']['unidad'], 'nombre'))->toBe(['Dirección de Obras', 'Jefatura de Vías'])
+        ->and($obras['vistas']['unidad'][0]['profundidad'])->toBe(0);
 
     $codigo = ($this->masa)('regimen=codigo_trabajo');
     expect($codigo['totales']['general'])->toMatchArray(['personas' => 1, 'mensual' => 600])
