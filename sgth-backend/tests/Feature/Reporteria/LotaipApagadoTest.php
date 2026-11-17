@@ -12,14 +12,15 @@ uses(Tests\TestCase::class);
  * Los reportes LOTAIP: la tarea apagada, y el fallo que ya no se pierde.
  *
  * Publicaban en `storage/app/public/lotaip/`, que se sirve por URL directa y
- * sin autenticación, y los tres reportes que arma el comando todavía no están
- * construidos: la nómina consolidada devuelve una lista vacía, la estructura
- * orgánica trae dos filas de ejemplo y el distributivo está limitado a diez
+ * sin autenticación, y los reportes que armaba el comando no estaban
+ * construidos: la nómina consolidada devolvía una lista vacía, la estructura
+ * orgánica trae dos filas de ejemplo y el distributivo estaba limitado a diez
  * servidores.
  *
- * Hoy no llega a publicar porque el distributivo consulta columnas que no
- * existen. El riesgo no era lo que publicaba, sino que arreglar esa consulta
- * —un cambio de una línea— la habría hecho empezar a publicar.
+ * El distributivo ya está hecho: desde el 2026-11-17 lee de la masa salarial,
+ * con la remuneración de cada vínculo. La estructura orgánica sigue de
+ * ejemplo. El riesgo nunca fue solo lo que publicaba, sino que arreglar un
+ * reporte la habría hecho empezar a publicar sin que nadie lo decidiera.
  */
 test('la_tarea_de_lotaip_no_esta_programada', function () {
     $programadas = collect(app(Schedule::class)->events())

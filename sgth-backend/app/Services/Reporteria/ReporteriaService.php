@@ -9,7 +9,9 @@ use App\Exceptions\ReporteNoDisponibleException;
 use App\Models\Dispensario\InventarioMedicina;
 use App\Models\Dispensario\LoteMedicina;
 use App\Models\Helpdesk\Ticket;
+use App\Services\Estructura\MasaSalarialService;
 use App\Services\Helpdesk\Tickets\MetricasTickets;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -162,48 +164,46 @@ class ReporteriaService implements ReporteriaServiceInterface
      *
      * Y traía `limit(10) // Simulado`. Un distributivo recortado a diez
      * servidores no es un distributivo: es la lista completa o no es nada.
+     *
+     * Desde el 2026-11-17 (docs/diseno-masa-salarial.md, D10) lee de la masa
+     * salarial: un renglón por vínculo vigente hoy, con la remuneración del
+     * vínculo y no la del grado del puesto —un ocasional, un obrero o una
+     * autoridad electa cobran distinto del grado, y en desarrollo 7 de 11
+     * vínculos lo hacían— y a partir de los contratos, no de
+     * `servidores.puesto_id`, que es una copia. Así el distributivo y la masa
+     * salarial no pueden decir cifras distintas.
      */
     public function generarDistributivoSueldos(array $filtros): array
     {
         return $this->cacheReporte('distributivo_sueldos', $filtros, function () {
-            $datos = DB::table('servidores')
-                ->join('unidades_administrativas', 'servidores.unidad_administrativa_id', '=', 'unidades_administrativas.id')
-                ->join('puestos', 'servidores.puesto_id', '=', 'puestos.id')
-                ->leftJoin('cargos', 'puestos.cargo_id', '=', 'cargos.id')
-                ->leftJoin('grupos_ocupacionales', 'puestos.grupo_ocupacional_id', '=', 'grupos_ocupacionales.id')
-                ->whereNull('servidores.deleted_at')
-                ->where('servidores.estado', true)
-                ->select(
-                    'servidores.cedula',
-                    'servidores.nombre',
-                    'servidores.apellido',
-                    'unidades_administrativas.nombre as unidad',
-                    'cargos.nombre as denominacion',
-                    'grupos_ocupacionales.grado_codigo as grado',
-                    'grupos_ocupacionales.rmu',
-                    'servidores.regimen_laboral',
-                )
-                ->orderBy('unidades_administrativas.nombre')
-                ->orderBy('servidores.apellido')
-                ->get();
+            $masa = app(MasaSalarialService::class)->al(CarbonImmutable::today());
 
-            // Un servidor sin puesto no sale en el distributivo —no ocupa
-            // ninguno—, pero que no salga no puede ser silencioso: si son
-            // muchos, lo que falla es la asignación de puestos, no el reporte.
-            $sinPuesto = DB::table('servidores')
-                ->whereNull('deleted_at')
-                ->where('estado', true)
-                ->whereNull('puesto_id')
-                ->count();
+            $datos = collect($masa['detalle'])
+                ->sortBy([['unidad', 'asc'], ['servidor', 'asc'], ['contrato_id', 'asc']])
+                ->map(fn (array $vinculo) => [
+                    'cedula'            => $vinculo['cedula'],
+                    'servidor'          => $vinculo['servidor'],
+                    'unidad'            => $vinculo['unidad'],
+                    'denominacion'      => $vinculo['puesto'],
+                    'grado'             => $vinculo['grado'],
+                    'regimen'           => $vinculo['regimen_etiqueta'],
+                    'tipo_nombramiento' => $vinculo['tipo_nombramiento_etiqueta'],
+                    'rmu'               => $vinculo['remuneracion'],
+                ])
+                ->values()
+                ->all();
 
             return [
                 'metadata' => [
                     'reporte' => 'Distributivo de Sueldos',
-                    'fecha'   => now()->toDateString(),
-                    'total_servidores' => $datos->count(),
-                    'servidores_sin_puesto' => $sinPuesto,
+                    'fecha'   => $masa['corte'],
+                    'total_servidores' => count($datos),
+                    // Que alguien no salga no puede ser silencioso: si son
+                    // muchos, lo que falla es la carga de los vínculos.
+                    'servidores_sin_vinculo'    => count($masa['por_completar']['servidores_sin_vinculo'] ?? []),
+                    'vinculos_sin_remuneracion' => $masa['por_completar']['vinculos_sin_remuneracion'],
                 ],
-                'datos' => $datos->toArray(),
+                'datos' => $datos,
             ];
         });
     }

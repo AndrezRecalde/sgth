@@ -5,6 +5,7 @@ use App\Enums\RegimenLaboral;
 use App\Exceptions\ReporteNoDisponibleException;
 use App\Models\Estructura\Puesto;
 use App\Models\Estructura\UnidadAdministrativa;
+use App\Models\Expediente\ContratoServidor;
 use App\Models\Expediente\Servidor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -38,54 +39,75 @@ beforeEach(function () {
     ]);
 
     $this->servicio = app(ReporteriaServiceInterface::class);
+
+    /** Un vínculo vigente: el distributivo sale de los contratos desde el 2026-11-17. */
+    $this->vinculo = fn (Servidor $servidor, array $datos = []) => ContratoServidor::create([
+        'servidor_id' => $servidor->id, 'tipo_nombramiento' => 'nombramiento_permanente',
+        'unidad_administrativa_id' => $this->unidad->id, 'puesto_id' => $this->puesto->id,
+        'fecha_inicio' => now()->subYear()->toDateString(), 'estado' => 'vigente', 'remuneracion' => 1000,
+        ...$datos,
+    ]);
 });
 
 // ── Los que sí salen de la base ────────────────────────────────────────────
 
-test('el_distributivo_trae_a_los_servidores_con_su_unidad_y_su_puesto', function () {
+test('el_distributivo_trae_cada_vinculo_con_la_remuneracion_de_su_contrato', function () {
     // Consultaba `servidores.nombres`, `apellidos` y `rmu`: ninguna de las tres
-    // existe, y reventaba con un error de Postgres.
+    // existe, y reventaba con un error de Postgres. Después tomaba la RMU del
+    // grado del puesto, 1000 aquí, aunque el ocasional cobre otra cosa
+    // (docs/diseno-masa-salarial.md, D10).
+    ($this->vinculo)($this->servidor, [
+        'tipo_nombramiento' => 'servicios_ocasionales', 'remuneracion' => 1250,
+        'fecha_fin' => now()->addMonths(3)->toDateString(),
+    ]);
+
     $reporte = $this->servicio->generarDistributivoSueldos([]);
 
-    expect($reporte['datos'])->toHaveCount(1);
-    expect($reporte['datos'][0]->cedula)->toBe('0801234595');
-    expect($reporte['datos'][0]->unidad)->toBe('Direccion Reportes');
-    expect($reporte['metadata']['total_servidores'])->toBe(1);
+    expect($reporte['datos'])->toHaveCount(1)
+        ->and($reporte['datos'][0])->toMatchArray([
+            'cedula' => '0801234595', 'servidor' => 'Gomez Pedro', 'unidad' => 'Direccion Reportes', 'grado' => 'SP10',
+            'regimen' => 'LOSEP', 'tipo_nombramiento' => 'Contrato de Servicios Ocasionales', 'rmu' => 1250,
+        ])
+        ->and($reporte['metadata']['total_servidores'])->toBe(1)
+        ->and($reporte['metadata']['fecha'])->toBe(now()->toDateString());
 });
 
-test('el_distributivo_no_esconde_a_quien_no_tiene_puesto', function () {
-    // Sin puesto no ocupa ninguna plaza y no sale en el distributivo, pero que
-    // no salga no puede ser silencioso: si son muchos, lo que falla es la
-    // asignación de puestos.
+test('el_distributivo_no_esconde_a_quien_no_tiene_vinculo', function () {
+    // Sin vínculo vigente no sale en el distributivo, aunque tenga un puesto
+    // anotado, pero que no salga no puede ser silencioso: si son muchos, lo
+    // que falla es la carga de los vínculos.
+    ($this->vinculo)($this->servidor);
     Servidor::create([
         'cedula' => '0801234596', 'nombre' => 'Ana', 'apellido' => 'Mora',
-        'unidad_administrativa_id' => $this->unidad->id,
+        'puesto_id' => $this->puesto->id, 'unidad_administrativa_id' => $this->unidad->id,
         'regimen_laboral' => RegimenLaboral::LOSEP,
         'fecha_ingreso_institucion' => now()->subYear(), 'estado' => true,
     ]);
 
     $reporte = $this->servicio->generarDistributivoSueldos([]);
 
-    expect($reporte['datos'])->toHaveCount(1);
-    expect($reporte['metadata']['servidores_sin_puesto'])->toBe(1);
+    expect($reporte['datos'])->toHaveCount(1)
+        ->and($reporte['metadata']['servidores_sin_vinculo'])->toBe(1)
+        ->and($reporte['metadata']['vinculos_sin_remuneracion'])->toBe(0);
 });
 
 test('el_distributivo_ya_no_se_corta_en_diez', function () {
     // Traía `limit(10) // Simulado`. Un distributivo recortado no es un
     // distributivo.
     foreach (range(1, 12) as $i) {
-        Servidor::create([
+        ($this->vinculo)(Servidor::create([
             'cedula' => '09000000' . str_pad((string) $i, 2, '0', STR_PAD_LEFT),
             'nombre' => 'Servidor', 'apellido' => 'Numero ' . $i,
             'puesto_id' => $this->puesto->id,
             'unidad_administrativa_id' => $this->unidad->id,
             'regimen_laboral' => RegimenLaboral::LOSEP,
             'fecha_ingreso_institucion' => now()->subYear(), 'estado' => true,
-        ]);
+        ]));
     }
 
+    // Los doce con vínculo; el de cada prueba no tiene.
     expect($this->servicio->generarDistributivoSueldos([])['datos'])
-        ->toHaveCount(13);
+        ->toHaveCount(12);
 });
 
 test('el_reporte_de_viaticos_suma_montos_y_deja_fuera_los_rechazados', function () {
