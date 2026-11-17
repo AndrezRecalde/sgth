@@ -15,25 +15,26 @@ const porcentaje = (p: number) => `${p.toFixed(1)}%`
 /** Las cifras de una fila: comunes a las vistas por caso y por unidad. */
 function columnasDeCifras<T extends BloqueMasaSalarial>(total?: BloqueMasaSalarial): DataTableColumn<T>[] {
   return [
-    { accessor: 'personas', title: 'Personas', width: 100, textAlign: 'right', footer: total?.personas },
+    { accessor: 'personas', title: 'Personas', width: 90, textAlign: 'right', footer: total?.personas },
     {
-      accessor: 'mensual', title: 'Mensual', width: 150, textAlign: 'right',
-      render: (f) => <Text size="sm" fw={600}>{dineroConMiles(f.mensual)}</Text>,
+      accessor: 'mensual', title: 'Mensual', width: 140, textAlign: 'right',
+      // Los casos en cero, apagados: están para decir que no hay nadie.
+      render: (f) => <Text size="sm" fw={600} c={f.mensual === 0 ? 'dimmed' : undefined}>{dineroConMiles(f.mensual)}</Text>,
       footer: total && dineroConMiles(total.mensual),
     },
     {
-      accessor: 'anual', title: 'Anual (× 12)', width: 160, textAlign: 'right',
-      render: (f) => dineroConMiles(f.anual),
+      accessor: 'anual', title: 'Anual (× 12)', width: 150, textAlign: 'right',
+      render: (f) => <Text size="sm" c={f.anual === 0 ? 'dimmed' : undefined}>{dineroConMiles(f.anual)}</Text>,
       footer: total && dineroConMiles(total.anual),
     },
     {
-      accessor: 'porcentaje', title: 'Del total', width: 100, textAlign: 'right',
+      accessor: 'porcentaje', title: 'Del total', width: 90, textAlign: 'right',
       render: (f) => porcentaje(f.porcentaje),
       footer: total && porcentaje(total.porcentaje),
     },
     {
-      accessor: 'promedio', title: 'Promedio', width: 130, textAlign: 'right',
-      render: (f) => dineroConMiles(f.promedio),
+      accessor: 'promedio', title: 'Promedio', width: 120, textAlign: 'right',
+      render: (f) => <Text size="sm" c={f.promedio === 0 ? 'dimmed' : undefined}>{dineroConMiles(f.promedio)}</Text>,
     },
   ]
 }
@@ -42,7 +43,7 @@ function columnasDeCifras<T extends BloqueMasaSalarial>(total?: BloqueMasaSalari
 export function columnasCasoMasa(titulo: string, total?: BloqueMasaSalarial): DataTableColumn<FilaMasaSalarial>[] {
   return [
     {
-      accessor: 'etiqueta', title: titulo,
+      accessor: 'etiqueta', title: titulo, width: 260,
       render: (f) => <Text size="sm" c={f.personas === 0 ? 'dimmed' : undefined}>{f.etiqueta}</Text>,
       footer: 'Total',
     },
@@ -59,7 +60,7 @@ interface ArbolProps {
 export function columnasUnidadMasa({ abiertas, alternar }: ArbolProps): DataTableColumn<UnidadMasaSalarial>[] {
   return [
     {
-      accessor: 'nombre', title: 'Unidad administrativa',
+      accessor: 'nombre', title: 'Unidad administrativa', width: 300,
       render: (u) => (
         <Group gap={6} wrap="nowrap" style={{ paddingLeft: u.profundidad * 20 }}>
           {u.tiene_hijas ? (
@@ -70,7 +71,7 @@ export function columnasUnidadMasa({ abiertas, alternar }: ArbolProps): DataTabl
             >
               {abiertas.has(u.id) ? <IconChevronDown size={14} /> : <IconChevronRight size={14} />}
             </ActionIcon>
-          ) : <Box w={22} />}
+          ) : <Box w={22} miw={22} />}
           <Stack gap={0}>
             <Text size="sm" fw={u.profundidad === 0 ? 600 : undefined}>{u.nombre}</Text>
             {u.tiene_hijas && u.propias.personas > 0 && (
