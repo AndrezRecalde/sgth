@@ -41063,6 +41063,617 @@
                 }
             }
         },
+        "/v1/estructura/masa-salarial": {
+            "get": {
+                "operationId": "estructura.masa-salarial",
+                "summary": "La masa salarial referencial a una fecha de corte (por omisi\u00f3n, hoy): la\nsuma de las remuneraciones registradas en los v\u00ednculos vigentes, por\ntipo de nombramiento, r\u00e9gimen y unidad, con su detalle. No es lo pagado",
+                "tags": [
+                    "MasaSalarial"
+                ],
+                "parameters": [
+                    {
+                        "name": "corte",
+                        "in": "query",
+                        "description": "Hasta hoy: un corte futuro ser\u00eda una proyecci\u00f3n, y la masa anual\nes la mensual por doce (D8).",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "regimen",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/RegimenLaboral"
+                        }
+                    },
+                    {
+                        "name": "tipo_nombramiento",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/TipoNombramiento"
+                        }
+                    },
+                    {
+                        "name": "unidad_id",
+                        "in": "query",
+                        "description": "Con todo lo que cuelga de ella.",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exito": {
+                                            "type": "boolean"
+                                        },
+                                        "mensaje": {
+                                            "type": "string",
+                                            "const": "Masa salarial referencial."
+                                        },
+                                        "datos": {
+                                            "type": "object",
+                                            "properties": {
+                                                "corte": {
+                                                    "type": "string"
+                                                },
+                                                "aviso": {
+                                                    "type": "string",
+                                                    "const": "Monto referencial: la suma de las remuneraciones mensuales registradas en el SGTH a la fecha de corte. No es lo pagado, que est\u00e1 en el sistema de Financiero, y no incluye aportes al IESS, d\u00e9cimos ni fondos de reserva."
+                                                },
+                                                "filtros": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "regimen": {
+                                                            "type": "string"
+                                                        },
+                                                        "tipo_nombramiento": {
+                                                            "type": "string"
+                                                        },
+                                                        "unidad_id": {
+                                                            "type": [
+                                                                "integer",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "unidad": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "regimen",
+                                                        "tipo_nombramiento",
+                                                        "unidad_id",
+                                                        "unidad"
+                                                    ]
+                                                },
+                                                "totales": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "dependencia": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "personas": {
+                                                                    "type": "integer",
+                                                                    "minimum": 0
+                                                                },
+                                                                "mensual": {
+                                                                    "type": "number"
+                                                                },
+                                                                "anual": {
+                                                                    "type": "number"
+                                                                },
+                                                                "porcentaje": {
+                                                                    "type": "number"
+                                                                },
+                                                                "promedio": {
+                                                                    "type": "number"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "personas",
+                                                                "mensual",
+                                                                "anual",
+                                                                "porcentaje",
+                                                                "promedio"
+                                                            ]
+                                                        },
+                                                        "servicios_profesionales": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "personas": {
+                                                                    "type": "integer",
+                                                                    "minimum": 0
+                                                                },
+                                                                "mensual": {
+                                                                    "type": "number"
+                                                                },
+                                                                "anual": {
+                                                                    "type": "number"
+                                                                },
+                                                                "porcentaje": {
+                                                                    "type": "number"
+                                                                },
+                                                                "promedio": {
+                                                                    "type": "number"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "personas",
+                                                                "mensual",
+                                                                "anual",
+                                                                "porcentaje",
+                                                                "promedio"
+                                                            ]
+                                                        },
+                                                        "general": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "personas": {
+                                                                    "type": "integer",
+                                                                    "minimum": 0
+                                                                },
+                                                                "mensual": {
+                                                                    "type": "number"
+                                                                },
+                                                                "anual": {
+                                                                    "type": "number"
+                                                                },
+                                                                "porcentaje": {
+                                                                    "type": "number"
+                                                                },
+                                                                "promedio": {
+                                                                    "type": "number"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "personas",
+                                                                "mensual",
+                                                                "anual",
+                                                                "porcentaje",
+                                                                "promedio"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "dependencia",
+                                                        "servicios_profesionales",
+                                                        "general"
+                                                    ]
+                                                },
+                                                "vistas": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "tipo_nombramiento": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "clave": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "etiqueta": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "personas": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "mensual": {
+                                                                        "type": "number"
+                                                                    },
+                                                                    "anual": {
+                                                                        "type": "number"
+                                                                    },
+                                                                    "porcentaje": {
+                                                                        "type": "number"
+                                                                    },
+                                                                    "promedio": {
+                                                                        "type": "number"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "clave",
+                                                                    "etiqueta",
+                                                                    "personas",
+                                                                    "mensual",
+                                                                    "anual",
+                                                                    "porcentaje",
+                                                                    "promedio"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "regimen": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "clave": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "etiqueta": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "personas": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "mensual": {
+                                                                        "type": "number"
+                                                                    },
+                                                                    "anual": {
+                                                                        "type": "number"
+                                                                    },
+                                                                    "porcentaje": {
+                                                                        "type": "number"
+                                                                    },
+                                                                    "promedio": {
+                                                                        "type": "number"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "clave",
+                                                                    "etiqueta",
+                                                                    "personas",
+                                                                    "mensual",
+                                                                    "anual",
+                                                                    "porcentaje",
+                                                                    "promedio"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "unidad": {
+                                                            "type": "array",
+                                                            "description": "El \u00e1rbol en una lista, en su orden: cada unidad seguida de sus\nhijas, con su profundidad. Anidado, el tipo no se pod\u00eda escribir.",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "nombre": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "nivel": {
+                                                                        "type": [
+                                                                            "integer",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "profundidad": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "padre_id": {
+                                                                        "type": [
+                                                                            "integer",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "tiene_hijas": {
+                                                                        "type": "boolean"
+                                                                    },
+                                                                    "personas": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "mensual": {
+                                                                        "type": "number"
+                                                                    },
+                                                                    "anual": {
+                                                                        "type": "number"
+                                                                    },
+                                                                    "porcentaje": {
+                                                                        "type": "number"
+                                                                    },
+                                                                    "promedio": {
+                                                                        "type": "number"
+                                                                    },
+                                                                    "propias": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "personas": {
+                                                                                "type": "integer"
+                                                                            },
+                                                                            "mensual": {
+                                                                                "type": "number"
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "personas",
+                                                                            "mensual"
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "id",
+                                                                    "nombre",
+                                                                    "nivel",
+                                                                    "profundidad",
+                                                                    "padre_id",
+                                                                    "tiene_hijas",
+                                                                    "personas",
+                                                                    "mensual",
+                                                                    "anual",
+                                                                    "porcentaje",
+                                                                    "promedio",
+                                                                    "propias"
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "tipo_nombramiento",
+                                                        "regimen",
+                                                        "unidad"
+                                                    ]
+                                                },
+                                                "aparte": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "sin_remuneracion_en_la_fecha": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "personas": {
+                                                                    "type": "integer",
+                                                                    "minimum": 0
+                                                                },
+                                                                "mensual": {
+                                                                    "type": "number"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "personas",
+                                                                "mensual"
+                                                            ]
+                                                        },
+                                                        "subrogaciones": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "casos": {
+                                                                    "type": "integer",
+                                                                    "minimum": 0
+                                                                },
+                                                                "mensual": {
+                                                                    "type": "number"
+                                                                },
+                                                                "detalle": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "subrogacion_id": {
+                                                                                "type": "integer"
+                                                                            },
+                                                                            "servidor_id": {
+                                                                                "type": "integer"
+                                                                            },
+                                                                            "servidor": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "tipo": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "puesto_del_que_asume": {
+                                                                                "type": "number"
+                                                                            },
+                                                                            "la_suya": {
+                                                                                "type": "number"
+                                                                            },
+                                                                            "diferencia": {
+                                                                                "type": "number"
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "subrogacion_id",
+                                                                            "servidor_id",
+                                                                            "servidor",
+                                                                            "tipo",
+                                                                            "puesto_del_que_asume",
+                                                                            "la_suya",
+                                                                            "diferencia"
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "casos",
+                                                                "mensual",
+                                                                "detalle"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "sin_remuneracion_en_la_fecha",
+                                                        "subrogaciones"
+                                                    ]
+                                                },
+                                                "por_completar": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "vinculos_sin_remuneracion": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "vinculos_sin_unidad": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "servidores_sin_vinculo": {
+                                                            "type": [
+                                                                "array",
+                                                                "null"
+                                                            ],
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "servidor": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "cedula": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "id",
+                                                                    "servidor",
+                                                                    "cedula"
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "vinculos_sin_remuneracion",
+                                                        "vinculos_sin_unidad",
+                                                        "servidores_sin_vinculo"
+                                                    ]
+                                                },
+                                                "detalle": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "contrato_id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "servidor_id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "servidor": {
+                                                                "type": "string"
+                                                            },
+                                                            "cedula": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "puesto": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "grado": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "tipo_nombramiento": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "tipo_nombramiento_etiqueta": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "regimen": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "regimen_etiqueta": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "unidad_id": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "unidad": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "remuneracion": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "situacion": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "contrato_id",
+                                                            "servidor_id",
+                                                            "servidor",
+                                                            "cedula",
+                                                            "puesto",
+                                                            "grado",
+                                                            "tipo_nombramiento",
+                                                            "tipo_nombramiento_etiqueta",
+                                                            "regimen",
+                                                            "regimen_etiqueta",
+                                                            "unidad_id",
+                                                            "unidad",
+                                                            "remuneracion",
+                                                            "situacion"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "corte",
+                                                "aviso",
+                                                "filtros",
+                                                "totales",
+                                                "vistas",
+                                                "aparte",
+                                                "por_completar",
+                                                "detalle"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "exito",
+                                        "mensaje",
+                                        "datos",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/v1/autoservicio/mi-credencial": {
             "get": {
                 "operationId": "miCredencial.show",

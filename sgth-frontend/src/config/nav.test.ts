@@ -127,6 +127,17 @@ describe('buildNav', () => {
     }
   })
 
+  it('la masa salarial la ven admin-uath, el auditor y Financiero, que no ve nada más del SGTH', () => {
+    // docs/diseno-masa-salarial.md, D2 (2026-11-17): con su propio permiso.
+    expect(pantallas('sgth', 'financiero')).toEqual([ROUTES.SGTH.ESTRUCTURA_MASA_SALARIAL])
+    expect(inicioDelSubsistema('sgth', ...sesion('financiero'))).toBe(ROUTES.SGTH.ESTRUCTURA_MASA_SALARIAL)
+
+    for (const rol of ['admin-uath', 'auditor'] as const) {
+      expect(pantallas('sgth', rol), rol).toContain(ROUTES.SGTH.ESTRUCTURA_MASA_SALARIAL)
+    }
+    expect(pantallas('sgth', 'asistente-uath')).not.toContain(ROUTES.SGTH.ESTRUCTURA_MASA_SALARIAL)
+  })
+
   it('al técnico de Asistencia le ofrece Asistencia entera y nada más del SGTH', () => {
     // Decisión del 2026-10-30: el módulo con sus acciones, sin el resto de TH.
     expect(pantallas('sgth', 'tecnico-asistencia')).toEqual([
@@ -259,7 +270,8 @@ describe('getSubsistemasDisponibles', () => {
     'comunicacion-social':   ['comunicacion', 'portal'],
     'coordinador-mesa-ayuda': ['tic', 'portal'],
     'enfermera':             ['salud', 'portal'],
-    'financiero':            ['portal'],
+    // Entra al SGTH solo por la masa salarial (2026-11-17).
+    'financiero':            ['sgth', 'portal'],
     'jefe-tic':              ['tic', 'portal'],
     'medico':                ['salud', 'portal'],
     // Complementario: solo, sin `medico`, ni siquiera trae el Portal. El

@@ -86,6 +86,15 @@ export const NAV_SGTH: NavGroup[] = [
             permiso: 'ver-estructura',
           },
           {
+            // La suma de las remuneraciones registradas (docs/diseno-masa-
+            // salarial.md). Con su permiso y no con `ver-estructura`: la ve
+            // Financiero, que no ve el resto de Estructura (D2).
+            label:   'Masa salarial',
+            href:    ROUTES.SGTH.ESTRUCTURA_MASA_SALARIAL,
+            icon:    'IconReportMoney',
+            permiso: 'ver-masa-salarial',
+          },
+          {
             label:   'Partidas presupuestarias',
             href:    ROUTES.SGTH.ESTRUCTURA_PARTIDAS,
             icon:    'IconReceipt2',

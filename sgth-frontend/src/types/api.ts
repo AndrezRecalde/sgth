@@ -12,7 +12,7 @@
 // npm run types:generate
 // ============================================
 
-import type { components } from './api.generated'
+import type { components, operations } from './api.generated'
 import type { RegimenServidor } from '@/lib/regimen'
 import type { UsuarioAuth } from '@/store/auth.store'
 
@@ -1407,6 +1407,30 @@ export type ResumenPlantilla = {
     porcentaje_ocasionales:  number
   }
 }
+
+// ── Masa salarial ────────────────────────────────
+/**
+ * La masa salarial referencial (docs/diseno-masa-salarial.md): la suma de las
+ * remuneraciones registradas en los vínculos vigentes a una fecha de corte. No
+ * es lo pagado. La respuesta no tiene esquema propio en el generado: sale de
+ * la operación.
+ */
+type OperacionMasaSalarial = operations['estructura.masa-salarial']
+
+export type MasaSalarial = OperacionMasaSalarial['responses'][200]['content']['application/json']['datos']
+export type MasaSalarialParams = NonNullable<OperacionMasaSalarial['parameters']['query']>
+/** Personas, mensual, anual (× 12), porcentaje del total general y promedio. */
+export type BloqueMasaSalarial = MasaSalarial['totales']['general']
+/** Una fila de la vista por tipo de nombramiento o por régimen. */
+export type FilaMasaSalarial = MasaSalarial['vistas']['tipo_nombramiento'][number]
+/**
+ * Una unidad con su subtotal. El árbol llega en una lista, en su orden: lo que
+ * cuelga de una unidad son las filas que la siguen con más profundidad.
+ */
+export type UnidadMasaSalarial = MasaSalarial['vistas']['unidad'][number]
+export type VinculoMasaSalarial = MasaSalarial['detalle'][number]
+export type SubrogacionMasaSalarial = MasaSalarial['aparte']['subrogaciones']['detalle'][number]
+export type ServidorSinVinculo = NonNullable<MasaSalarial['por_completar']['servidores_sin_vinculo']>[number]
 
 // ── Cargos ───────────────────────────────────────
 export type Cargo = {

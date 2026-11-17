@@ -5993,6 +5993,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/estructura/masa-salarial": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * La masa salarial referencial a una fecha de corte (por omisión, hoy): la
+         *     suma de las remuneraciones registradas en los vínculos vigentes, por
+         *     tipo de nombramiento, régimen y unidad, con su detalle. No es lo pagado
+         */
+        get: operations["estructura.masa-salarial"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/autoservicio/mi-credencial": {
         parameters: {
             query?: never;
@@ -35624,6 +35645,161 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "estructura.masa-salarial": {
+        parameters: {
+            query?: {
+                /**
+                 * @description Hasta hoy: un corte futuro sería una proyección, y la masa anual
+                 *     es la mensual por doce (D8).
+                 */
+                corte?: string | null;
+                regimen?: components["schemas"]["RegimenLaboral"];
+                tipo_nombramiento?: components["schemas"]["TipoNombramiento"];
+                /** @description Con todo lo que cuelga de ella. */
+                unidad_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exito: boolean;
+                        /** @constant */
+                        mensaje: "Masa salarial referencial.";
+                        datos: {
+                            corte: string;
+                            /** @constant */
+                            aviso: "Monto referencial: la suma de las remuneraciones mensuales registradas en el SGTH a la fecha de corte. No es lo pagado, que está en el sistema de Financiero, y no incluye aportes al IESS, décimos ni fondos de reserva.";
+                            filtros: {
+                                regimen: string;
+                                tipo_nombramiento: string;
+                                unidad_id: number | null;
+                                unidad: string | null;
+                            };
+                            totales: {
+                                dependencia: {
+                                    personas: number;
+                                    mensual: number;
+                                    anual: number;
+                                    porcentaje: number;
+                                    promedio: number;
+                                };
+                                servicios_profesionales: {
+                                    personas: number;
+                                    mensual: number;
+                                    anual: number;
+                                    porcentaje: number;
+                                    promedio: number;
+                                };
+                                general: {
+                                    personas: number;
+                                    mensual: number;
+                                    anual: number;
+                                    porcentaje: number;
+                                    promedio: number;
+                                };
+                            };
+                            vistas: {
+                                tipo_nombramiento: {
+                                    clave: string;
+                                    etiqueta: string;
+                                    personas: number;
+                                    mensual: number;
+                                    anual: number;
+                                    porcentaje: number;
+                                    promedio: number;
+                                }[];
+                                regimen: {
+                                    clave: string;
+                                    etiqueta: string;
+                                    personas: number;
+                                    mensual: number;
+                                    anual: number;
+                                    porcentaje: number;
+                                    promedio: number;
+                                }[];
+                                /**
+                                 * @description El árbol en una lista, en su orden: cada unidad seguida de sus
+                                 *     hijas, con su profundidad. Anidado, el tipo no se podía escribir.
+                                 */
+                                unidad: {
+                                    id: number;
+                                    nombre: string;
+                                    nivel: number | null;
+                                    profundidad: number;
+                                    padre_id: number | null;
+                                    tiene_hijas: boolean;
+                                    personas: number;
+                                    mensual: number;
+                                    anual: number;
+                                    porcentaje: number;
+                                    promedio: number;
+                                    propias: {
+                                        personas: number;
+                                        mensual: number;
+                                    };
+                                }[];
+                            };
+                            aparte: {
+                                sin_remuneracion_en_la_fecha: {
+                                    personas: number;
+                                    mensual: number;
+                                };
+                                subrogaciones: {
+                                    casos: number;
+                                    mensual: number;
+                                    detalle: {
+                                        subrogacion_id: number;
+                                        servidor_id: number;
+                                        servidor: string;
+                                        tipo: string;
+                                        puesto_del_que_asume: number;
+                                        la_suya: number;
+                                        diferencia: number;
+                                    }[];
+                                };
+                            };
+                            por_completar: {
+                                vinculos_sin_remuneracion: number;
+                                vinculos_sin_unidad: number;
+                                servidores_sin_vinculo: {
+                                    id: number;
+                                    servidor: string;
+                                    cedula: string;
+                                }[] | null;
+                            };
+                            detalle: {
+                                contrato_id: number;
+                                servidor_id: number;
+                                servidor: string;
+                                cedula: string | null;
+                                puesto: string | null;
+                                grado: string | null;
+                                tipo_nombramiento: string | null;
+                                tipo_nombramiento_etiqueta: string | null;
+                                regimen: string | null;
+                                regimen_etiqueta: string | null;
+                                unidad_id: number | null;
+                                unidad: string | null;
+                                remuneracion: number | null;
+                                situacion: string;
+                            }[];
+                        };
+                        meta: null;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "miCredencial.show": {
