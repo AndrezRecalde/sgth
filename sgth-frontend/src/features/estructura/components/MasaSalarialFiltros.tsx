@@ -26,17 +26,19 @@ interface Props {
   /** Los casos los da la respuesta, con sus etiquetas, también los que están en cero. */
   regimenes: FilaMasaSalarial[]
   tipos:     FilaMasaSalarial[]
+  /** A la derecha de los filtros: la descarga del Excel. */
+  acciones?: React.ReactNode
 }
 
 /** La fecha de corte y los filtros: régimen, tipo de nombramiento y unidad con lo que cuelga de ella. */
-export function MasaSalarialFiltros({ filtros, onCambiar, regimenes, tipos }: Props) {
+export function MasaSalarialFiltros({ filtros, onCambiar, regimenes, tipos, acciones }: Props) {
   const contained = useContainedInput('sm')
   // La lista pública: Financiero y el auditor no tienen `ver-estructura`.
   const { data: unidades = [] } = useTodasUnidades()
   const opciones = (filas: FilaMasaSalarial[]) => filas.map((f) => ({ value: f.clave, label: f.etiqueta }))
 
   return (
-    <Toolbar>
+    <Toolbar actions={acciones}>
       <DatePickerInput
         label="Fecha de corte"
         valueFormat="DD/MM/YYYY"

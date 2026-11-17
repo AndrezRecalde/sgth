@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Alert, Stack } from '@mantine/core'
-import { IconInfoCircle, IconReportMoney } from '@tabler/icons-react'
+import { Alert, Button, Stack } from '@mantine/core'
+import { IconDownload, IconInfoCircle, IconReportMoney } from '@tabler/icons-react'
 import { DataState, PageHeader, PageShell } from '@/components/ui'
 import { MasaSalarialAparte, type CajonAparte } from '@/features/estructura/components/MasaSalarialAparte'
 import { MasaSalarialCajon, type CajonMasa } from '@/features/estructura/components/MasaSalarialCajon'
@@ -11,7 +11,7 @@ import {
 } from '@/features/estructura/components/MasaSalarialFiltros'
 import { MasaSalarialTotales } from '@/features/estructura/components/MasaSalarialTotales'
 import { MasaSalarialVistas } from '@/features/estructura/components/MasaSalarialVistas'
-import { useMasaSalarial } from '@/features/estructura/hooks/useMasaSalarial'
+import { useDescargarMasaSalarial, useMasaSalarial } from '@/features/estructura/hooks/useMasaSalarial'
 import type { AgruparMasa } from '@/features/estructura/utils/masaSalarial'
 
 /** Lo que abre cada renglón de «Fuera del total» y «Datos por completar». */
@@ -36,12 +36,14 @@ export function MasaSalarialView() {
   const [agrupar, setAgrupar] = useState<AgruparMasa>('tipo_nombramiento')
   const [cajon, setCajon] = useState<CajonMasa | null>(null)
 
-  const { data, isLoading, error, refetch } = useMasaSalarial({
+  const params = {
     corte:             filtros.corte,
     regimen:           filtros.regimen ?? undefined,
     tipo_nombramiento: filtros.tipo ?? undefined,
     unidad_id:         filtros.unidadId ?? undefined,
-  })
+  }
+  const { data, isLoading, error, refetch } = useMasaSalarial(params)
+  const { descargar, descargando } = useDescargarMasaSalarial()
 
   return (
     <PageShell>
@@ -55,6 +57,17 @@ export function MasaSalarialView() {
         onCambiar={(cambio) => setFiltros((f) => ({ ...f, ...cambio }))}
         regimenes={data?.vistas.regimen ?? []}
         tipos={data?.vistas.tipo_nombramiento ?? []}
+        acciones={
+          <Button
+            variant="default"
+            leftSection={<IconDownload size={16} />}
+            loading={descargando}
+            disabled={!data}
+            onClick={() => descargar(params)}
+          >
+            Descargar Excel
+          </Button>
+        }
       />
 
       <Alert variant="light" color="ocean" icon={<IconInfoCircle size={16} />}>

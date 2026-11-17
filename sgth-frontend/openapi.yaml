@@ -41674,6 +41674,72 @@
                 }
             }
         },
+        "/v1/estructura/masa-salarial/excel": {
+            "get": {
+                "operationId": "estructura.masa-salarial.excel",
+                "summary": "Lo mismo en Excel: el resumen con el aviso y la fecha de corte, la\nmatriz de unidad por r\u00e9gimen y el detalle de cada v\u00ednculo",
+                "tags": [
+                    "MasaSalarial"
+                ],
+                "parameters": [
+                    {
+                        "name": "corte",
+                        "in": "query",
+                        "description": "Hasta hoy: un corte futuro ser\u00eda una proyecci\u00f3n, y la masa anual\nes la mensual por doce (D8).",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "regimen",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/RegimenLaboral"
+                        }
+                    },
+                    {
+                        "name": "tipo_nombramiento",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/TipoNombramiento"
+                        }
+                    },
+                    {
+                        "name": "unidad_id",
+                        "in": "query",
+                        "description": "Con todo lo que cuelga de ella.",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/v1/autoservicio/mi-credencial": {
             "get": {
                 "operationId": "miCredencial.show",
