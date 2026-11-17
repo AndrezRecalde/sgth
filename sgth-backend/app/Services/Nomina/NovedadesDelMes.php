@@ -6,7 +6,6 @@ use App\Enums\ConceptoNovedadNomina;
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\EstadoContrato;
 use App\Enums\EstadoSubrogacion;
-use App\Enums\SubtipoMovimientoPersonal;
 use App\Enums\TipoMovimientoPersonal;
 use App\Enums\TipoNombramiento;
 use App\Enums\TipoSancion;
@@ -50,6 +49,7 @@ class NovedadesDelMes
 
     public function __construct(
         private readonly RemuneracionDelVinculo $remuneracion,
+        private readonly AusenciasSinRemuneracion $ausencias,
     ) {
     }
 
@@ -62,8 +62,7 @@ class NovedadesDelMes
             ->merge($this->ingresosYSalidas($mes))
             ->merge($this->cambiosDeRemuneracion($mes))
             ->merge($this->escalas($mes))
-            ->merge($this->ausenciasSinRemuneracion($mes))
-            ->merge($this->suspensiones($mes))
+            ->merge($this->diasSinRemuneracion($mes))
             ->merge($this->subrogaciones($mes))
             ->merge($this->multas($mes))
             ->merge($this->remuneracionesPendientes($mes))
@@ -412,103 +411,40 @@ class NovedadesDelMes
     // ── Los días sin remuneración ───────────────────────────────────
 
     /**
-     * La licencia y la comisión sin remuneración (LOSEP Arts. 28 y 31), y la
-     * licencia del Consejo que no la conserva: hasta su fin, o hasta la víspera
-     * del reintegro, si volvió antes (fase 2.4).
+     * La licencia y la comisión sin remuneración, la licencia del Consejo que
+     * no la conserva y la suspensión temporal, con sus días en el mes. Quién
+     * estuvo sin remuneración lo responde `AusenciasSinRemuneracion`, que
+     * comparte con la masa salarial.
      *
      * @return list<Novedad>
      */
-    private function ausenciasSinRemuneracion(MesDeNomina $mes): array
+    private function diasSinRemuneracion(MesDeNomina $mes): array
     {
-        $actos = MovimientoPersonal::query()
-            ->esAusenciaTemporal()
-            ->whereIn('estado', array_map(fn ($e) => $e->value, self::EMITIDAS))
-            ->whereDate('fecha_inicio', '<=', $mes->fin->toDateString())
-            ->where(fn (Builder $q) => $q->whereNull('fecha_fin')->orWhereDate('fecha_fin', '>=', $mes->inicio->toDateString()))
-            ->with(['servidor:id,nombre,segundo_nombre,apellido,segundo_apellido,cedula', 'reintegro'])
-            ->orderBy('fecha_inicio')
-            ->orderBy('id')
-            ->get()
-            ->filter(fn (MovimientoPersonal $acto) => $this->esSinRemuneracion($acto));
-
         $novedades = [];
 
-        foreach ($actos as $acto) {
-            $hasta = $acto->finEfectivo();
-            $recorte = $mes->recorte($acto->fecha_inicio, $hasta);
+        foreach ($this->ausencias->entre($mes->inicio, $mes->fin) as $ausencia) {
+            $recorte = $mes->recorte($ausencia['desde'], $ausencia['hasta']);
 
             if (! $recorte) {
                 continue;
             }
 
-            $dias = $mes->dias($acto->fecha_inicio, $hasta);
+            $acto = $ausencia['acto'];
+            $dias = $mes->dias($ausencia['desde'], $ausencia['hasta']);
+            $periodo = "del {$recorte[0]->format('d/m/Y')} al {$recorte[1]->format('d/m/Y')}";
+
+            $detalle = $ausencia['tipo'] === 'suspension'
+                ? "Suspensión temporal sin goce de remuneración: {$periodo}, {$this->diasEnTexto($dias)} sin remuneración."
+                : "{$acto->etiquetaAusencia()}: {$periodo}"
+                    .($ausencia['hasta'] === null ? ' (sin fecha de fin)' : '')
+                    .", {$this->diasEnTexto($dias)} sin remuneración.";
 
             $novedades[] = $this->novedad(
                 $mes,
-                clave: "sin_remuneracion:movimiento:{$acto->id}",
+                clave: $ausencia['clave'],
                 concepto: ConceptoNovedadNomina::DIAS_SIN_REMUNERACION,
                 servidor: $acto->servidor,
-                detalle: "{$acto->etiquetaAusencia()}: del {$recorte[0]->format('d/m/Y')} al {$recorte[1]->format('d/m/Y')}"
-                    .($hasta === null ? ' (sin fecha de fin)' : '')
-                    .", {$this->diasEnTexto($dias)} sin remuneración.",
-                movimiento: $acto,
-                desde: $recorte[0],
-                hasta: $recorte[1],
-                dias: $dias,
-            );
-        }
-
-        return $novedades;
-    }
-
-    private function esSinRemuneracion(MovimientoPersonal $acto): bool
-    {
-        return match (true) {
-            $acto->tipo_movimiento === TipoMovimientoPersonal::LICENCIA_SIN_REMUNERACION => true,
-            $acto->tipo_movimiento === TipoMovimientoPersonal::LICENCIA_CONSEJO          => $acto->con_remuneracion === false,
-            default => $acto->subtipoEfectivo() === SubtipoMovimientoPersonal::COMISION_SIN_REMUNERACION
-                || ($acto->subtipo_movimiento === null && $acto->tipo_movimiento === TipoMovimientoPersonal::COMISION_SIN_REMUNERACION),
-        };
-    }
-
-    /**
-     * La suspensión temporal sin goce de remuneración (LOSEP Art. 43 c): los
-     * días calendario desde que rige, como el aviso que ya recibe Financiero
-     * (#344).
-     *
-     * @return list<Novedad>
-     */
-    private function suspensiones(MesDeNomina $mes): array
-    {
-        $novedades = [];
-
-        // La suspensión dura hasta treinta días (LOSEP Art. 43 c): la que rige
-        // hasta dos meses antes todavía puede tocar este.
-        foreach ($this->sanciones(TipoSancion::SUSPENSION, $mes->inicio->subMonths(2), $mes->fin) as $sancion) {
-            $acto = $sancion->movimientoPersonal;
-            $desde = $sancion->fecha_efectiva ?? $acto->fecha_efectiva;
-            $diasSancion = (int) $sancion->dias_suspension;
-
-            if (! $desde || $diasSancion < 1) {
-                continue;
-            }
-
-            $hasta = $desde->copy()->addDays($diasSancion - 1);
-            $recorte = $mes->recorte($desde, $hasta);
-
-            if (! $recorte) {
-                continue;
-            }
-
-            $dias = $mes->dias($desde, $hasta);
-
-            $novedades[] = $this->novedad(
-                $mes,
-                clave: "suspension:movimiento:{$acto->id}",
-                concepto: ConceptoNovedadNomina::DIAS_SIN_REMUNERACION,
-                servidor: $acto->servidor,
-                detalle: "Suspensión temporal sin goce de remuneración: del {$recorte[0]->format('d/m/Y')} al "
-                    ."{$recorte[1]->format('d/m/Y')}, {$this->diasEnTexto($dias)} sin remuneración.",
+                detalle: $detalle,
                 movimiento: $acto,
                 desde: $recorte[0],
                 hasta: $recorte[1],

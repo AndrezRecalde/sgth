@@ -29,6 +29,10 @@ enum Permiso: string
     // qué RMU ya se ve en Puestos con `ver-estructura`, y es público por la
     // LOTAIP.
     case GESTIONAR_DISTRIBUTIVO = 'gestionar-distributivo';
+    // La masa salarial referencial (docs/diseno-masa-salarial.md): la suma de
+    // las remuneraciones registradas. Aparte de `ver-estructura` para dársela
+    // a Financiero sin abrirle la Estructura (D2, 2026-11-17).
+    case VER_MASA_SALARIAL = 'ver-masa-salarial';
 
     // ── MÓDULO 02: Expediente ────────────────────────────────────
     case VER_EXPEDIENTE_PROPIO = 'ver-expediente-propio';

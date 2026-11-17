@@ -40,6 +40,7 @@ it('no entra a lo de Talento Humano', function (string $metodo, string $ruta) {
     'las licencias'                => ['GET', '/api/v1/asistencia/licencias'],
     'la bandeja de viáticos'       => ['GET', '/api/v1/viaticos/bandeja/resumen'],
     'las novedades del mes'        => ['GET', '/api/v1/nomina/novedades'],
+    'la masa salarial'             => ['GET', '/api/v1/estructura/masa-salarial'],
     'las convocatorias'            => ['GET', '/api/v1/seleccion/convocatorias'],
     'las subrogaciones'            => ['GET', '/api/v1/expediente/subrogaciones/vigentes'],
     'crear una partida'            => ['POST', '/api/v1/estructura/partidas-presupuestarias'],

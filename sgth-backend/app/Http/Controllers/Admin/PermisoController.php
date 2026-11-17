@@ -119,7 +119,8 @@ class PermisoController extends Controller
             str_contains($permiso, 'estructura') ||
             str_contains($permiso, 'puesto') ||
             str_contains($permiso, 'organigrama') ||
-            str_contains($permiso, 'distributivo')
+            str_contains($permiso, 'distributivo') ||
+            str_contains($permiso, 'masa-salarial')
                 => 'Estructura',
 
             str_contains($permiso, 'expediente') ||

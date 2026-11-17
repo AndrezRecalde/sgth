@@ -79,6 +79,7 @@ use App\Http\Controllers\Estructura\CopiaDelPerfilController;
 use App\Http\Controllers\Estructura\ExtensionTelefonicaController;
 use App\Http\Controllers\Estructura\EscalaRemuneracionController;
 use App\Http\Controllers\Estructura\GrupoOcupacionalController;
+use App\Http\Controllers\Estructura\MasaSalarialController;
 use App\Http\Controllers\Estructura\OrganigramaController;
 use App\Http\Controllers\Estructura\OrganigramaPdfController;
 use App\Http\Controllers\Estructura\PartidaPresupuestariaController;
@@ -327,6 +328,14 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::get('plantilla', [PlantillaController::class, 'resumen'])
             ->middleware('permission:ver-estructura')
             ->name('estructura.plantilla');
+
+        // La masa salarial referencial (docs/diseno-masa-salarial.md): con su
+        // propio permiso y no con `ver-estructura`, para dársela a Financiero
+        // sin abrirle la Estructura, y para que nadie empiece a ver montos sin
+        // que se decida (D2).
+        Route::get('masa-salarial', [MasaSalarialController::class, 'resumen'])
+            ->middleware('permission:ver-masa-salarial')
+            ->name('estructura.masa-salarial');
 
         // La regularización del tipo de puesto (docs/diseno-manual-de-puestos.md,
         // P9, PR 4): «Por revisar» en Puestos y cargos. Reubicar un contrato

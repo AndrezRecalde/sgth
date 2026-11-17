@@ -201,4 +201,18 @@ enum TipoNombramiento: string
     {
         return !in_array($this, [self::CODIGO_TRABAJO, self::SERVICIOS_PROFESIONALES], true);
     }
+
+    /**
+     * El régimen del vínculo, deducido de su tipo. `servidores.regimen_laboral`
+     * es una copia en el servidor que puede quedar desincronizada, como pasó
+     * con el puesto (`PlantillaService`): lo que manda es el contrato.
+     */
+    public function regimen(): RegimenLaboral
+    {
+        return match ($this) {
+            self::CODIGO_TRABAJO          => RegimenLaboral::CODIGO_TRABAJO,
+            self::SERVICIOS_PROFESIONALES => RegimenLaboral::SERVICIOS_PROFESIONALES,
+            default                       => RegimenLaboral::LOSEP,
+        };
+    }
 }
