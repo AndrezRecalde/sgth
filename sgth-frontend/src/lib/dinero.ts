@@ -9,3 +9,16 @@
 export function dinero(v?: string | number | null): string {
   return v != null ? `$ ${Number(v).toFixed(2)}` : '—'
 }
+
+const CON_MILES = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+/**
+ * Como `dinero`, con coma de miles: «$ 1,234,567.89». Para los montos de una
+ * institución entera, que pasan del millón y sin separador no se leen
+ * (docs/diseno-masa-salarial.md, D11). El decimal sigue siendo el punto, como
+ * en todo el sistema (2026-11-16), y por eso el formato es `en-US`: `es-EC`
+ * pondría coma decimal.
+ */
+export function dineroConMiles(v?: string | number | null): string {
+  return v != null ? `$ ${CON_MILES.format(Number(v))}` : '—'
+}

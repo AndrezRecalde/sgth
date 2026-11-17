@@ -32,6 +32,7 @@ export const ROUTES = {
     ESTRUCTURA_PUESTOS:    '/sgth/estructura/puestos',
     ESTRUCTURA_PARTIDAS:   '/sgth/estructura/partidas',
     ESTRUCTURA_PLANTILLA:  '/sgth/estructura/plantilla',
+    ESTRUCTURA_MASA_SALARIAL: '/sgth/estructura/masa-salarial',
     EXPEDIENTE:       '/sgth/expediente',
     // El id y no la cédula: la cédula se corrige cuando trae una errata, así
     // que un enlace guardado dejaría de funcionar, y es un dato personal que
