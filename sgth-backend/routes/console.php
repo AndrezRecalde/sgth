@@ -25,17 +25,17 @@ Schedule::command('sgth:helpdesk:seguimiento')
 // Generación automática de reportes LOTAIP Art. 7 — APAGADA a propósito.
 //
 // Publica en `storage/app/public/lotaip/`, que se sirve por URL directa y sin
-// autenticación, y los reportes que arma todavía no están construidos: la
-// estructura orgánica trae dos filas de ejemplo, y el distributivo de sueldos
-// está limitado a diez servidores. Publicar eso como información de
-// transparencia es peor que no publicar nada. La nómina consolidada ya no está
-// entre ellos: desde el 2026-10-20 el SGTH no calcula la nómina.
+// autenticación, y no todos los reportes que arma están construidos: la
+// estructura orgánica todavía trae dos filas de ejemplo. Publicar eso como
+// información de transparencia es peor que no publicar nada. La nómina
+// consolidada ya no está entre ellos: desde el 2026-10-20 el SGTH no calcula la
+// nómina.
 //
-// Hoy no llega a publicar porque el distributivo consulta columnas que no
-// existen y revienta, así que apagarla no cambia lo que hay: cambia que deje de
-// depender de una avería. El día que los reportes estén hechos, volver a
-// encenderla debe ser una decisión, no el efecto secundario de arreglar la
-// consulta.
+// El distributivo de sueldos sí está hecho: dejó de cortarse en diez y de
+// consultar columnas que no existen, y desde el 2026-11-17 lee de la masa
+// salarial, con la remuneración de cada vínculo (docs/diseno-masa-salarial.md,
+// D10). Eso no la enciende: volver a encenderla debe ser una decisión, no el
+// efecto secundario de arreglar un reporte.
 //
 // Schedule::command('lotaip:generar-reportes')->dailyAt('01:00');
 
