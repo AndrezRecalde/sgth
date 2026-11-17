@@ -140,27 +140,76 @@ class RemuneracionDelVinculo
         return $posterior ? ($posterior['anterior'] ?? $actual) : $actual;
     }
 
+    /**
+     * Lee de una vez los actos y las escalas de muchos vínculos. Sin esto,
+     * `al()` hace dos consultas por vínculo, y la masa salarial pregunta por
+     * todos los de la institución.
+     *
+     * @param  iterable<ContratoServidor>  $vinculos
+     */
+    public function precargar(iterable $vinculos): void
+    {
+        $vinculos = collect($vinculos);
+
+        $servidores = $vinculos->pluck('servidor_id')->unique()
+            ->reject(fn ($id) => isset($this->actosPorServidor[$id]))
+            ->values();
+
+        if ($servidores->isNotEmpty()) {
+            $actos = $this->consultaDeActos()->whereIn('servidor_id', $servidores->all())->get()->groupBy('servidor_id');
+
+            foreach ($servidores as $id) {
+                $this->actosPorServidor[$id] = $actos->get($id, collect())->values();
+            }
+        }
+
+        $contratos = $vinculos->pluck('id')->unique()
+            ->reject(fn ($id) => isset($this->escalasPorVinculo[$id]))
+            ->values();
+
+        if ($contratos->isNotEmpty()) {
+            $escalas = $this->consultaDeEscalas()->whereIn('contrato_id', $contratos->all())->get()->groupBy('contrato_id');
+
+            foreach ($contratos as $id) {
+                $this->escalasPorVinculo[$id] = $escalas->get($id, collect())->values();
+            }
+        }
+    }
+
     /** @return Collection<int, MovimientoPersonal> */
     private function actosDe(int $servidorId): Collection
     {
-        return $this->actosPorServidor[$servidorId] ??= MovimientoPersonal::query()
+        return $this->actosPorServidor[$servidorId] ??= $this->consultaDeActos()
             ->where('servidor_id', $servidorId)
-            ->whereIn('tipo_movimiento', array_map(fn ($t) => $t->value, self::CAMBIAN_LA_REMUNERACION))
-            ->whereIn('estado', array_map(fn ($e) => $e->value, self::EMITIDAS))
-            ->whereNotNull('fecha_efectiva')
-            ->with('movimientoRelacionado')
-            ->orderBy('fecha_efectiva')
-            ->orderBy('id')
             ->get();
     }
 
     /** @return Collection<int, EscalaRemuneracionVinculo> */
     private function escalasDe(int $contratoId): Collection
     {
-        return $this->escalasPorVinculo[$contratoId] ??= EscalaRemuneracionVinculo::query()
+        return $this->escalasPorVinculo[$contratoId] ??= $this->consultaDeEscalas()
             ->where('contrato_id', $contratoId)
+            ->get();
+    }
+
+    /** @return Builder<MovimientoPersonal> */
+    private function consultaDeActos(): Builder
+    {
+        return MovimientoPersonal::query()
+            ->whereIn('tipo_movimiento', array_map(fn ($t) => $t->value, self::CAMBIAN_LA_REMUNERACION))
+            ->whereIn('estado', array_map(fn ($e) => $e->value, self::EMITIDAS))
+            ->whereNotNull('fecha_efectiva')
+            ->with('movimientoRelacionado')
+            ->orderBy('fecha_efectiva')
+            ->orderBy('id');
+    }
+
+    /** @return Builder<EscalaRemuneracionVinculo> */
+    private function consultaDeEscalas(): Builder
+    {
+        return EscalaRemuneracionVinculo::query()
             ->whereHas('escala', fn (Builder $q) => $q->whereNull('revertida_en'))
             ->with('escala')
-            ->get();
+            ->orderBy('id');
     }
 }

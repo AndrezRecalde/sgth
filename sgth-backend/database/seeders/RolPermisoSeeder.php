@@ -307,6 +307,8 @@ class RolPermisoSeeder extends Seeder
             Permiso::GESTIONAR_PUESTOS,
             Permiso::GESTIONAR_ORGANIGRAMA,
             Permiso::GESTIONAR_DISTRIBUTIVO,
+            // La masa salarial referencial (D2 del 2026-11-17).
+            Permiso::VER_MASA_SALARIAL,
             ...self::PERMISOS_EXPEDIENTE_TH,
             Permiso::REGISTRAR_FICHA_SERVIDOR,
             Permiso::BUSCAR_SERVIDORES,
@@ -440,6 +442,8 @@ class RolPermisoSeeder extends Seeder
             Permiso::GESTIONAR_TARIFAS_VIATICO,
             // Las novedades del mes no: le llegan por correo, en Excel, cuando
             // Talento Humano entrega el mes (PR 8 del plan de roles).
+            // La masa salarial referencial sí (D2 del 2026-11-17).
+            Permiso::VER_MASA_SALARIAL,
         ]));
 
         // El Dispensario, de sus constantes.
@@ -474,6 +478,7 @@ class RolPermisoSeeder extends Seeder
         // AUDITOR
         $this->crearRol(Rol::AUDITOR, array_merge($permisosBase, [
             Permiso::VER_ESTRUCTURA,
+            Permiso::VER_MASA_SALARIAL,
             // Sin `ver-expediente-todos`: el Expediente lo abre Talento Humano
             // y el auditor nunca entró (docs/revision-permisos-sin-uso.md, D2).
             Permiso::VER_NOVEDADES_NOMINA,
