@@ -6014,6 +6014,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/estructura/masa-salarial/excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lo mismo en Excel: el resumen con el aviso y la fecha de corte, la
+         *     matriz de unidad por régimen y el detalle de cada vínculo
+         */
+        get: operations["estructura.masa-salarial.excel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/autoservicio/mi-credencial": {
         parameters: {
             query?: never;
@@ -35796,6 +35816,37 @@ export interface operations {
                         };
                         meta: null;
                     };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "estructura.masa-salarial.excel": {
+        parameters: {
+            query?: {
+                /**
+                 * @description Hasta hoy: un corte futuro sería una proyección, y la masa anual
+                 *     es la mensual por doce (D8).
+                 */
+                corte?: string | null;
+                regimen?: components["schemas"]["RegimenLaboral"];
+                tipo_nombramiento?: components["schemas"]["TipoNombramiento"];
+                /** @description Con todo lo que cuelga de ella. */
+                unidad_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
                 };
             };
             401: components["responses"]["AuthenticationException"];

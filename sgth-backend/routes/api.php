@@ -336,6 +336,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
         Route::get('masa-salarial', [MasaSalarialController::class, 'resumen'])
             ->middleware('permission:ver-masa-salarial')
             ->name('estructura.masa-salarial');
+        // El mismo resumen en Excel, con el detalle de cada vínculo (PR 3).
+        Route::get('masa-salarial/excel', [MasaSalarialController::class, 'excel'])
+            ->middleware('permission:ver-masa-salarial')
+            ->name('estructura.masa-salarial.excel');
 
         // La regularización del tipo de puesto (docs/diseno-manual-de-puestos.md,
         // P9, PR 4): «Por revisar» en Puestos y cargos. Reubicar un contrato
