@@ -22,15 +22,17 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
 
-/** Lo que no puede salir de la ficha en una pantalla de viáticos. */
-const DATOS_DE_LA_FICHA = [
-    'telefono_celular', 'correo_personal', 'direccion_domicilio', 'tipo_sangre',
-    'fecha_nacimiento', 'contacto_emergencia_nombre', 'contacto_emergencia_telefono',
-    'tiene_discapacidad', 'tiene_enfermedad_catastrofica', 'tipo_nombramiento',
-];
-
 beforeEach(function () {
     $this->seed(\Database\Seeders\RolPermisoSeeder::class);
+
+    // En `$this` y no en una constante del archivo: las constantes de un test
+    // son globales, y toda la suite corre en un proceso. Ya había una
+    // `DATOS_DE_LA_FICHA` en el Dispensario, y la primera en cargarse ganaba.
+    $this->sensibles = [
+        'telefono_celular', 'correo_personal', 'direccion_domicilio', 'tipo_sangre',
+        'fecha_nacimiento', 'contacto_emergencia_nombre', 'contacto_emergencia_telefono',
+        'tiene_discapacidad', 'tiene_enfermedad_catastrofica', 'tipo_nombramiento',
+    ];
 
     $unidad = unidadDePrueba(['codigo' => 'GFIC']);
     $this->viajero = Servidor::create([
@@ -71,7 +73,7 @@ it('el listado de todos no manda la ficha del viajero', function () {
         ->assertOk()
         ->assertJsonPath('datos.data.0.servidor.nombre', 'Ana');
 
-    foreach (DATOS_DE_LA_FICHA as $campo) {
+    foreach ($this->sensibles as $campo) {
         expect($respuesta->json('datos.data.0.servidor'))->not->toHaveKey($campo);
     }
 });
@@ -84,7 +86,7 @@ it('la ficha del viático tampoco, y trae lo que la pantalla muestra', function 
         ->assertJsonPath('datos.servidor.segundo_apellido', 'Mora')
         ->assertJsonStructure(['datos' => ['servidor' => ['puesto' => ['cargo', 'unidad_administrativa']]]]);
 
-    foreach (DATOS_DE_LA_FICHA as $campo) {
+    foreach ($this->sensibles as $campo) {
         expect($respuesta->json('datos.servidor'))->not->toHaveKey($campo);
     }
 });
@@ -112,7 +114,7 @@ it('el titular ve su propio viático sin que le devuelvan su ficha', function ()
         ->assertOk()
         ->assertJsonCount(1, 'datos.data');
 
-    foreach (DATOS_DE_LA_FICHA as $campo) {
+    foreach ($this->sensibles as $campo) {
         expect($respuesta->json('datos.data.0.servidor'))->not->toHaveKey($campo);
     }
 });
