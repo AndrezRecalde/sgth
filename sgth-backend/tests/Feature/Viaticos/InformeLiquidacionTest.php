@@ -13,6 +13,10 @@
 | - la tabla de gastos no traía la fecha del comprobante, que es lo que hay que
 |   verificar —solo valen los fechados dentro del viaje—, ni un total;
 | - las horas de las actividades salían como las guarda Postgres: «08:00:00».
+|
+| Lo que respondió Gestión Financiera (2026-11-18, D5): la cláusula que autoriza
+| el débito se firma en la solicitud, antes del anticipo. Aquí, que ya se conoce
+| el resultado, va con la cifra y solo cuando hay algo que devolver.
 */
 
 use App\Enums\EstadoViatico;
@@ -112,6 +116,22 @@ it('el resumen financiero sale aunque no se haya presentado ningun comprobante',
         // Sin comprobantes el servidor devuelve: la cifra que no se imprimía.
         ->toContain('A devolver a la institución')
         ->toContain('Total reconocido al servidor');
+});
+
+it('la clausula del debito lleva el valor que hay que devolver', function () {
+    // Sin comprobantes: se le reconocen los 48 del 30 % y devuelve 64.
+    $html = ($this->html)();
+
+    expect($html)->toContain('AUTORIZO QUE SE DEBITE')
+        ->toContain('EL VALOR NO JUSTIFICADO DE $ 64.00');
+});
+
+it('sin nada que devolver, la clausula del debito no sale', function () {
+    ($this->comprobar)(80, '2026-12-02');
+    ($this->comprobar)(32, '2026-12-03');
+
+    // Justifica los 112 del tope: se le reconocen 160 y le quedan 48 a favor.
+    expect(($this->html)())->not->toContain('AUTORIZO');
 });
 
 it('la tabla de gastos trae la fecha de cada comprobante y su total', function () {
