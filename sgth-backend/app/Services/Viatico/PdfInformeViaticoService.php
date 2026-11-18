@@ -12,6 +12,7 @@ class PdfInformeViaticoService
     public function __construct(
         private readonly CalculoViaticoService $calculo,
         private readonly FirmanteViaticoService $firmantes,
+        private readonly \App\Services\Estructura\FirmanteOrganigramaService $organigrama,
     ) {}
 
     /**
@@ -31,7 +32,7 @@ class PdfInformeViaticoService
             [
                 'viatico'        => $viatico,
                 'firmas'         => $this->firmantes->paraDocumento($viatico, FirmanteViaticoService::SOLICITUD),
-                ...$this->membrete($viatico),
+                ...$this->comunes($viatico),
                 'zonaLabel'      => $zonaLabel,
                 'modalidadLabel' => $modalidadLabel,
                 'modalidadValue' => $modalidadValue,
@@ -74,7 +75,7 @@ class PdfInformeViaticoService
             [
                 'viatico'        => $viatico,
                 'firmas'         => $this->firmantes->paraDocumento($viatico, FirmanteViaticoService::INFORME),
-                ...$this->membrete($viatico),
+                ...$this->comunes($viatico),
                 'zonaLabel'      => $zonaLabel,
                 'modalidadLabel' => $modalidadLabel,
                 'calculo'        => $this->calculo->resumen($viatico),
@@ -174,7 +175,7 @@ class PdfInformeViaticoService
             [
                 'viatico'             => $viatico,
                 'firmas'              => $this->firmantes->paraDocumento($viatico, FirmanteViaticoService::COMPROBANTE),
-                ...$this->membrete($viatico),
+                ...$this->comunes($viatico),
                 'totalLetras'         => $totalLetras,
                 'calculo'             => $calculo,
                 'facturasPorCategoria'=> $facturasPorCategoria,
@@ -223,6 +224,27 @@ class PdfInformeViaticoService
         }
 
         return $categorias;
+    }
+
+    /**
+     * Lo que los tres documentos dicen igual: el membrete, el nombre de quien
+     * viaja y a dónde fue.
+     *
+     * Cada plantilla armaba el nombre a su manera —la firma de la solicitud
+     * salía «RECALDE CRISTHIAN» mientras la cabecera del mismo papel decía
+     * «Recalde Solano Cristhian Andrés»— y cada una calculaba el destino por
+     * su cuenta. Se arma una vez y se reparte.
+     */
+    private function comunes(Viatico $viatico): array
+    {
+        $servidor = $viatico->servidor;
+
+        return [
+            ...$this->membrete($viatico),
+            'servidorNombre'  => $servidor ? $this->organigrama->nombreCompleto($servidor) : '—',
+            'destino'         => \App\Support\DestinoDelViatico::texto($viatico),
+            'destinoCiudades' => \App\Support\DestinoDelViatico::textoDeCiudades($viatico),
+        ];
     }
 
     /**

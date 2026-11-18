@@ -53,7 +53,8 @@ body {
 }
 .hdr-right {
   display: table-cell;
-  width: 130px;
+  /* 130px partía el código en dos líneas: «GADPE-15-2026-» / «00004». */
+  width: 150px;
   vertical-align: middle;
   padding-left: 10px;
 }
@@ -71,11 +72,11 @@ body {
   letter-spacing: 0.5px;
 }
 .code-val {
-  font-size: 11px;
+  font-size: 9.5px;
   font-weight: bold;
   color: #1a3a5c;
   margin: 2px 0;
-  word-break: break-all;
+  white-space: nowrap;
 }
 .code-date {
   font-size: 9px;
@@ -327,7 +328,7 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
   </div>
   <div class="hdr-right">
     <div class="code-box">
-      <div class="code-lbl">N° Solicitud</div>
+      <div class="code-lbl">N° de Viático</div>
       <div class="code-val">{{ $viatico->codigo_viatico }}</div>
       <div class="code-date-lbl">Fecha</div>
       <div class="code-date">
@@ -372,14 +373,7 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
   <tr>
     <th>Apellidos y Nombres</th>
     <td colspan="3">
-      <strong>
-      {{ collect([
-          $viatico->servidor?->apellido,
-          $viatico->servidor?->segundo_apellido,
-          $viatico->servidor?->nombre,
-          $viatico->servidor?->segundo_nombre,
-        ])->filter()->join(' ') ?: '—' }}
-      </strong>
+      <strong>{{ $servidorNombre }}</strong>
     </td>
   </tr>
   <tr>
@@ -391,46 +385,13 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
   <tr>
     <th>Zona del Viaje</th>
     <td>{{ $zonaLabel }}</td>
-    <th>Código de Solicitud</th>
+    <th>Código del Viático</th>
     <td><strong>{{ $viatico->codigo_viatico }}</strong></td>
   </tr>
   <tr>
     <th>Provincia / Ciudad Destino</th>
-    <td>
-      @php
-        $tramos = $viatico->tramos->sortBy('orden');
-
-        // Solo tramos tipo 'destino'
-        $tramosDestino = $tramos->where('tipo_tramo', 'destino');
-
-        // Si no hay destinos clasificados, usar tramo IDA
-        if ($tramosDestino->isEmpty()) {
-            $tramosDestino = $tramos->where('tipo_tramo', 'ida');
-        }
-
-        // Si aún está vacío, usar todos excepto el último
-        if ($tramosDestino->isEmpty()) {
-            $tramosDestino = $tramos->slice(0, -1);
-        }
-
-        $destinos = $tramosDestino->map(function($t) {
-            if ($t->destino_tipo === 'internacional') {
-                return collect([
-                    $t->destino_pais,
-                    $t->destino_ciudad,
-                ])->filter()->join('/');
-            }
-            return collect([
-                $t->destinoProvincia?->nombre,
-                $t->destinoCanton?->nombre ?: $t->destino_ciudad,
-            ])->filter()->unique()->join('/');
-        })->filter()->unique()->values();
-
-        echo $destinos->isNotEmpty()
-            ? $destinos->join(' • ')
-            : '—';
-      @endphp
-    </td>
+    {{-- Lo calcula `DestinoDelViatico`: los tres documentos dicen lo mismo. --}}
+    <td>{{ $destino }}</td>
     <th>Noches</th>
     <td><strong>{{ $calculo["noches"] }}</strong> noche(s)</td>
   </tr>
@@ -501,7 +462,7 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
         : collect([$tramo->destino_pais, $tramo->destino_ciudad])->filter()->join(' / ');
     @endphp
     <tr>
-      <td>{{ strtoupper($tramo->catalogo?->tipo_vehiculo ?? $tramo->empresa?->catalogo?->tipo_vehiculo ?? 'TERRESTRE') }}</td>
+      <td>{{ $tramo->tipo_transporte }}</td>
       {{-- Sin empresa (vehículo institucional, taxi…), el tipo de transporte. --}}
       <td class="tl">{{ $tramo->empresa?->nombre ?? $tramo->catalogo?->nombre ?? '—' }}</td>
       <td class="tl"><strong>{{ $orig }}</strong> → {{ $dest }}</td>
@@ -524,7 +485,7 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
 <div class="cuenta-wrap">
   <div class="cc" style="width:28%">
     <div class="cc-lbl">Tipo de Cuenta</div>
-    <div class="cc-val">{{ $cuenta?->tipo_cuenta ? strtoupper($cuenta->tipo_cuenta) : '—' }}</div>
+    <div class="cc-val">{{ $cuenta?->tipo_cuenta ? mb_strtoupper($cuenta->tipo_cuenta, 'UTF-8') : '—' }}</div>
   </div>
   <div class="cc" style="width:32%">
     <div class="cc-lbl">Número de Cuenta</div>
@@ -546,9 +507,7 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
 <div class="firmas">
   <div class="fc">
     <div class="fline"></div>
-    <div class="fn">
-      {{ collect([$viatico->servidor?->apellido, $viatico->servidor?->nombre])->filter()->join(' ') ?: '—' }}
-    </div>
+    <div class="fn">{{ $servidorNombre }}</div>
     <div class="fc-cargo">{{ $viatico->servidor?->puesto?->cargo?->nombre ?? '' }}</div>
     <div class="fc-rol">Servidor Solicitante</div>
   </div>

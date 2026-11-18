@@ -45,7 +45,8 @@ body {
 }
 .hdr-right {
   display: table-cell;
-  width: 130px;
+  /* 130px partía el código en dos líneas: «GADPE-15-2026-» / «00004». */
+  width: 150px;
   vertical-align: middle;
   padding-left: 10px;
 }
@@ -57,7 +58,7 @@ body {
   text-align: center;
 }
 .code-lbl { font-size: 7px; color: #4a5568; text-transform: uppercase; letter-spacing: 0.4px; }
-.code-val { font-size: 11px; font-weight: bold; color: #1a3a5c; margin: 2px 0; word-break: break-all; }
+.code-val { font-size: 9.5px; font-weight: bold; color: #1a3a5c; margin: 2px 0; white-space: nowrap; }
 .code-date { font-size: 9px; font-weight: bold; color: #2d3748; border-top: 1px solid #cbd5e0; padding-top: 3px; margin-top: 3px; }
 .hdr-bar {
   margin-left: 112px;
@@ -273,7 +274,7 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
   </div>
   <div class="hdr-right">
     <div class="code-box">
-      <div class="code-lbl">Código de Licencia</div>
+      <div class="code-lbl">N° de Viático</div>
       <div class="code-val">{{ $viatico->codigo_viatico }}</div>
       <div class="code-lbl" style="margin-top:3px;">Fecha</div>
       <div class="code-date">
@@ -304,12 +305,7 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
   <div class="benef-row">
     <div class="benef-lbl">A Favor de:</div>
     <div class="benef-val">
-      {{ collect([
-          $viatico->servidor?->apellido,
-          $viatico->servidor?->segundo_apellido,
-          $viatico->servidor?->nombre,
-          $viatico->servidor?->segundo_nombre,
-        ])->filter()->join(' ') ?: '—' }}
+      {{ $servidorNombre }}
     </div>
     <div class="benef-tipo">
       TIPO: <span class="tipo-badge">{{ $modalidadLabel }}</span>
@@ -341,36 +337,22 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
         ? \Carbon\Carbon::parse($viatico->datetime_llegada)
         : null;
 
-    $destino = '';
-    $ultimo  = $viatico->tramos->sortBy('orden')->last();
-    if ($viatico->zona === 'exterior') {
-        $destino = strtoupper($viatico->pais_destino ?? '');
-    } else {
-        $destino = strtoupper(collect([
-            $ultimo?->destinoProvincia?->nombre,
-            $ultimo?->destinoCanton?->nombre,
-        ])->filter()->join(' — '));
-    }
-
-    $servidor = collect([
-        $viatico->servidor?->apellido,
-        $viatico->servidor?->segundo_apellido,
-        $viatico->servidor?->nombre,
-        $viatico->servidor?->segundo_nombre,
-    ])->filter()->join(' ');
+    // El destino es a dónde fue, no el último tramo: ese es el regreso, y
+    // la frase decía que el servidor se trasladó a la ciudad de la que salió.
+    $destino = mb_strtoupper($destinoCiudades, 'UTF-8');
   @endphp
 
   Por
   <strong>{{ $calculo['noches'] }}</strong>
   noche(s) de viáticos a favor del señor(ra)
-  <strong>{{ $servidor }}</strong>,
+  <strong>{{ $servidorNombre }}</strong>,
   quién se trasladó a la ciudad de
-  <strong>{{ $destino ?: '—' }}</strong>
+  <strong>{{ $destino }}</strong>
   del
   {{ $salida ? $salida->format('d') : '—' }}
   al
   {{ $llegada ? $llegada->locale('es')->isoFormat('D [de] MMMM [del] YYYY') : '—' }},
-  para <strong>{{ strtoupper($viatico->justificacion ?? '—') }}</strong>
+  para <strong>{{ mb_strtoupper($viatico->justificacion ?? '—', 'UTF-8') }}</strong>
 </div>
 
 {{-- ══ VIÁTICOS ══ --}}
