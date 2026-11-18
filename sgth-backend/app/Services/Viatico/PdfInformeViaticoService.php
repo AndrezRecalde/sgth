@@ -138,6 +138,7 @@ class PdfInformeViaticoService
             'tramos.destinoProvincia',
             'tramos.destinoCanton',
             'liquidacion.actividades',
+            'liquidacion.contabilizadoPor.servidor.puesto.cargo',
             'liquidacion.detallesFactura.categoria',
             'partidaPresupuestaria',
         ]);
@@ -179,6 +180,7 @@ class PdfInformeViaticoService
                 'totalLetras'         => $totalLetras,
                 'calculo'             => $calculo,
                 'facturasPorCategoria'=> $facturasPorCategoria,
+                'elaborado'           => $this->elaboradoPor($viatico),
                 'modalidadLabel'      => match(
                     $viatico->modalidad_anticipo instanceof \BackedEnum
                         ? $viatico->modalidad_anticipo->value
@@ -197,33 +199,84 @@ class PdfInformeViaticoService
         ];
     }
 
+    /**
+     * Quién elaboró el comprobante: el de Financiero que lo contabilizó.
+     *
+     * La plantilla pedía `$liquidacion->createdBy->name`, y `users` no tiene
+     * columna `name`, así que la firma salía sin nombre; además `created_by`
+     * es quien creó la liquidación, que es el servidor que viajó. El
+     * comprobante lo produce Financiero al contabilizar, y eso sí está
+     * guardado en `contabilizado_por`.
+     *
+     * @return array{nombre: string, cargo: ?string}|null
+     */
+    private function elaboradoPor(Viatico $viatico): ?array
+    {
+        $servidor = $viatico->liquidacion?->contabilizadoPor?->servidor;
+
+        if (! $servidor) {
+            return null;
+        }
+
+        return [
+            'nombre' => $this->organigrama->nombreCompleto($servidor),
+            'cargo'  => $servidor->puesto?->cargo?->nombre,
+        ];
+    }
+
+    /**
+     * Lo justificado, por grupo y categoría, como se imprime.
+     *
+     * Antes la lista de categorías estaba escrita a mano con ocho ids fijos, y
+     * la plantilla solo imprimía seis de ellos: lo que caía en «Inscripción /
+     * Registro» o en «Otro» —y todo lo que no estuviera en la lista, que el
+     * catálogo tiene trece— se sumaba al TOTAL MOVILIZACIÓN sin fila propia.
+     * El bloque no cuadraba: cuatro ceros y un total de cien dólares.
+     *
+     * Ahora cada comprobante va al grupo de su categoría (`viatico` para
+     * hospedaje y alimentación, `movilizacion` para el resto) y cada categoría
+     * usada se imprime. Lo que suma, se ve.
+     *
+     * @return array<string, array{filas: list<array{nombre: string, total: float}>, total: float}>
+     */
     private function agruparFacturasPorCategoria(
         \App\Models\Viatico\Viatico $viatico
     ): array {
-        $categorias = [
-            1  => ['nombre' => 'Hospedaje',                   'total' => 0],
-            2  => ['nombre' => 'Alimentación',                'total' => 0],
-            3  => ['nombre' => 'Transporte terrestre',        'total' => 0],
-            4  => ['nombre' => 'Pasaje aéreo',                'total' => 0],
-            5  => ['nombre' => 'Combustible',                 'total' => 0],
-            6  => ['nombre' => 'Peaje',                       'total' => 0],
-            10 => ['nombre' => 'Inscripción / Registro',      'total' => 0],
-            13 => ['nombre' => 'Otro',                        'total' => 0],
+        $grupos = [
+            'viatico'      => ['filas' => [], 'total' => 0.0],
+            'movilizacion' => ['filas' => [], 'total' => 0.0],
         ];
 
-        foreach (
-            $viatico->liquidacion?->detallesFactura ?? []
-            as $factura
-        ) {
-            $catId = $factura->categoria_factura_id;
-            if (isset($categorias[$catId])) {
-                $categorias[$catId]['total'] += (float) $factura->monto;
-            } else {
-                $categorias[13]['total'] += (float) $factura->monto;
-            }
+        $porCategoria = [];
+
+        foreach ($viatico->liquidacion?->detallesFactura ?? [] as $factura) {
+            $categoria = $factura->categoria;
+
+            // Sin categoría —o con una borrada— va a movilización y con nombre
+            // propio: un monto sin fila es lo que se está arreglando.
+            $grupo = $categoria?->grupo === 'viatico' ? 'viatico' : 'movilizacion';
+            $clave = $grupo.'|'.($categoria?->id ?? 0);
+
+            $porCategoria[$clave] ??= [
+                'grupo'  => $grupo,
+                'orden'  => $categoria?->orden ?? PHP_INT_MAX,
+                'nombre' => $categoria?->nombre ?: 'Sin categoría',
+                'total'  => 0.0,
+            ];
+            $porCategoria[$clave]['total'] += (float) $factura->monto;
         }
 
-        return $categorias;
+        uasort($porCategoria, fn ($a, $b) => [$a['orden'], $a['nombre']] <=> [$b['orden'], $b['nombre']]);
+
+        foreach ($porCategoria as $fila) {
+            $grupos[$fila['grupo']]['filas'][] = [
+                'nombre' => $fila['nombre'],
+                'total'  => $fila['total'],
+            ];
+            $grupos[$fila['grupo']]['total'] += $fila['total'];
+        }
+
+        return $grupos;
     }
 
     /**
