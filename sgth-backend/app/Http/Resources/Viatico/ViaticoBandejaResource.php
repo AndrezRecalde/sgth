@@ -29,8 +29,12 @@ class ViaticoBandejaResource extends JsonResource
             'servidor_id'        => $this->servidor_id,
             'servidor'           => $this->whenLoaded('servidor', fn () => [
                 'id'       => $this->servidor->id,
+                // Los dos nombres y los dos apellidos, como en la solicitud
+                // en PDF: en una institución se repiten los primeros.
                 'nombre'   => $this->servidor->nombre,
+                'segundo_nombre'   => $this->servidor->segundo_nombre,
                 'apellido' => $this->servidor->apellido,
+                'segundo_apellido' => $this->servidor->segundo_apellido,
                 'cedula'   => $this->servidor->cedula,
                 'unidad'   => $this->servidor->unidadAdministrativa?->nombre,
             ]),

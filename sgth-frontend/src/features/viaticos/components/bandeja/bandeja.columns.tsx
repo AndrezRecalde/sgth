@@ -6,6 +6,7 @@ import type { DataTableColumn } from 'mantine-datatable'
 import { StatusBadge, TableActions } from '@/components/ui'
 import { formatFechaHora } from '@/lib/fecha'
 import { columnaCodigo, columnaEstado, columnaMonto, columnaPeriodo } from '../viatico.columns'
+import { nombreDelServidor } from '../../utils/servidor'
 import type { SemanticTone } from '@/config/design.tokens'
 import type { EtapaBandeja, ViaticoBandeja } from '@/types/api'
 
@@ -39,7 +40,7 @@ export function getBandejaColumns(
       title:    'Servidor',
       render:   (v) => (
         <Stack gap={0}>
-          <Text size="sm">{[v.servidor?.apellido, v.servidor?.nombre].filter(Boolean).join(' ') || '—'}</Text>
+          <Text size="sm">{nombreDelServidor(v.servidor)}</Text>
           <Text size="xs" c="dimmed">{v.servidor?.unidad ?? ''}</Text>
         </Stack>
       ),

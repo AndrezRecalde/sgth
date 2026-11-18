@@ -5,6 +5,7 @@ import { IconCheck, IconX } from '@tabler/icons-react'
 import type { DataTableColumn } from 'mantine-datatable'
 import { TableActions } from '@/components/ui'
 import { formatFechaHora } from '@/lib/fecha'
+import { nombreDelServidor } from '../utils/servidor'
 import type { AutorizacionVuelo } from '@/types/api'
 
 type Tramo = NonNullable<AutorizacionVuelo['tramo']>
@@ -55,7 +56,7 @@ export function getVuelosColumns({ decide, onAprobar, onRechazar }: Acciones): D
         if (!s) return <Text size="sm" c="dimmed">—</Text>
         return (
           <Stack gap={0}>
-            <Text size="sm">{[s.apellido, s.nombre].filter(Boolean).join(' ')}</Text>
+            <Text size="sm">{nombreDelServidor(s)}</Text>
             <Text size="xs" c="dimmed">{s.puesto?.cargo?.nombre ?? ''}</Text>
           </Stack>
         )

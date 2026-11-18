@@ -41,7 +41,9 @@ beforeEach(function () {
         return Servidor::create([
             'cedula'                   => '0'.(++$cedula),
             'nombre'                   => 'Vera',
+            'segundo_nombre'           => 'Lucía',
             'apellido'                 => 'Viaje',
+            'segundo_apellido'         => 'Andrade',
             'puesto_id'                => puestoDePrueba($unidad)->id,
             'unidad_administrativa_id' => $unidad->id,
             'regimen_laboral'          => RegimenLaboral::LOSEP,
@@ -351,7 +353,15 @@ it('las autorizaciones de vuelo las decide quien aprueba viáticos', function ()
         ->postJson("/api/v1/viaticos/vuelos/{$autorizacion->id}/documento")
         ->assertForbidden();
 
-    $this->actingAs($this->financiero, 'sanctum')->getJson('/api/v1/viaticos/vuelos')->assertOk()->assertJsonCount(1, 'datos');
+    // La fila lleva el nombre completo y el cargo: de la ficha del viajero no
+    // se cargan más columnas que esas, y `puesto_id` tiene que venir para que
+    // el cargo siga llegando.
+    $this->actingAs($this->financiero, 'sanctum')->getJson('/api/v1/viaticos/vuelos')
+        ->assertOk()
+        ->assertJsonCount(1, 'datos')
+        ->assertJsonPath('datos.0.viatico.servidor.apellido', $this->titular->apellido)
+        ->assertJsonPath('datos.0.viatico.servidor.segundo_apellido', $this->titular->segundo_apellido)
+        ->assertJsonPath('datos.0.viatico.servidor.puesto.cargo.nombre', fn ($n) => is_string($n) && $n !== '');
     // Sin el motivo no se rechaza.
     $this->actingAs($this->financiero, 'sanctum')
         ->postJson("/api/v1/viaticos/vuelos/{$autorizacion->id}/rechazar")

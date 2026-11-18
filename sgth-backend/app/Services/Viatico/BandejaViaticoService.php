@@ -103,7 +103,12 @@ final class BandejaViaticoService
     public function listar(string $etapa, array $filtros, int $porPagina, int $pagina): LengthAwarePaginator
     {
         $consulta = $this->consulta($etapa, $filtros)
-            ->with(['servidor:id,nombre,apellido,cedula,unidad_administrativa_id', 'servidor.unidadAdministrativa:id,nombre']);
+            ->with([
+                // Solo el nombre y su unidad: `Servidor` no oculta ningún
+                // campo, y la fila solo necesita saber de quién es el viático.
+                'servidor:id,nombre,segundo_nombre,apellido,segundo_apellido,cedula,unidad_administrativa_id',
+                'servidor.unidadAdministrativa:id,nombre',
+            ]);
 
         if ($etapa !== 'por_liquidar') {
             return $consulta->orderBy($etapa === 'cerrados' ? 'updated_at' : 'datetime_salida', $etapa === 'cerrados' ? 'desc' : 'asc')
