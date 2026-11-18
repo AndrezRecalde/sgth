@@ -1,8 +1,9 @@
 'use client'
 
 import { Alert, List, Stack, Text } from '@mantine/core'
-import { IconAlertTriangle, IconBan, IconInfoCircle, IconRoute } from '@tabler/icons-react'
+import { IconAlertTriangle, IconBan, IconBuildingBank, IconInfoCircle, IconRoute } from '@tabler/icons-react'
 import { ESTADO_LABELS } from '../constants/viatico.constants'
+import { faltaLaCuenta } from '../utils/cuenta'
 import { faltasDelItinerario } from '../utils/itinerario'
 import { resumenRevision } from '../utils/revisionComprobantes'
 import type { AccionesViatico } from '../hooks/useAccionesViatico'
@@ -32,8 +33,11 @@ export function ViaticoAvisos({ viatico: d, puede }: Props) {
   // Si cambian las fechas del viático, los tramos quedan desajustados y el
   // cambio no se bloquea (decisión del usuario, 2026-09-18).
   const itinerario = faltasDelItinerario(d)
+  // Sin cuenta principal de viáticos no hay a dónde transferir. Lo registra
+  // Talento Humano en el expediente; el servidor no puede hacerlo él mismo.
+  const sinCuenta = faltaLaCuenta(d)
 
-  if (!apruebaOtro && !contabilizaOtro && !faltaRevisar && !terminado && itinerario.length === 0) return null
+  if (!apruebaOtro && !contabilizaOtro && !faltaRevisar && !terminado && !sinCuenta && itinerario.length === 0) return null
 
   return (
     <Stack gap="xs">
@@ -46,6 +50,13 @@ export function ViaticoAvisos({ viatico: d, puede }: Props) {
         <Alert color="slate" variant="light" icon={<IconInfoCircle size={16} />}>
           Viaja en este viático: {apruebaOtro ? 'aprobarlo o rechazarlo' : 'contabilizarlo'} le
           corresponde a otra persona de Financiero.
+        </Alert>
+      )}
+      {sinCuenta && (
+        <Alert color="amber" variant="light" icon={<IconBuildingBank size={16} />} title="Falta la cuenta bancaria">
+          {puede.esTitular(d)
+            ? 'Su expediente no tiene una cuenta bancaria marcada como principal para viáticos. Sin ella, Gestión Financiera no tiene a dónde transferirle: pida a Talento Humano que la registre.'
+            : 'El servidor no tiene una cuenta bancaria marcada como principal para viáticos. Sin ella no hay a dónde transferirle: Talento Humano debe registrarla en su expediente.'}
         </Alert>
       )}
       {itinerario.length > 0 && (

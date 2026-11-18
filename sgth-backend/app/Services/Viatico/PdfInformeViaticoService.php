@@ -153,7 +153,7 @@ class PdfInformeViaticoService
             'servidor.puesto.cargo',
             'servidor.puesto.unidadAdministrativa',
             'servidor.cuentasBancarias' => fn($q) =>
-                $q->where('es_principal_viatico', true)
+                \App\Support\CuentaDeViatico::condicion($q)
                   ->with('entidadFinanciera')
                   ->limit(1),
             'tramos.catalogo', 'tramos.empresa.catalogo',
