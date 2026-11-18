@@ -540,10 +540,17 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
   </div>
 
 {{-- ══ CLÁUSULA ══ --}}
+{{-- La autorización general se firma en la solicitud, antes de recibir el
+     anticipo. Aquí, que ya se conoce el resultado, va con la cifra, y solo
+     cuando hay algo que devolver: un informe que pide autorizar un débito
+     inexistente hace dudar a quien firma.
+     Respondido por Gestión Financiera el 2026-11-18 (D5). --}}
+@if(($calculo['saldo'] ?? 0) < 0)
 <div class="clausula">
-  ★ AUTORIZO QUE LOS VALORES NO JUSTIFICADOS SEAN DEBITADOS
-  DE MI PRÓXIMA REMUNERACIÓN MENSUAL UNIFICADA.
+  ★ AUTORIZO QUE SE DEBITE DE MI PRÓXIMA REMUNERACIÓN MENSUAL UNIFICADA
+  EL VALOR NO JUSTIFICADO DE $ {{ number_format(abs($calculo['saldo']), 2) }}.
 </div>
+@endif
 
 {{-- ══ FIRMAS ══ --}}
 <div class="firmas">

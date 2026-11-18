@@ -12,6 +12,11 @@
 |   creó la liquidación, que es el servidor que viajó—;
 | - el detalle decía «del 01 al 3 de diciembre del 2026», y en un viaje que
 |   cruza de mes no nombraba el primero.
+|
+| Lo que respondió Gestión Financiera (2026-11-18, D3): la única cifra en letras
+| era la liquidada, de modo que el papel escribía ciento sesenta dólares mientras
+| se transferían cuarenta y ocho. Van las dos, y en un documento de pago la que
+| prevalece es la que está en letras.
 */
 
 use App\Enums\EstadoViatico;
@@ -161,6 +166,29 @@ it('el detalle fecha el viaje en español y nombra los dos meses si los cruza', 
 
     expect(($this->html)($cruzado))
         ->toContain('del 30 de noviembre de 2026 al 2 de diciembre de 2026');
+});
+
+it('dice en letras lo liquidado y, debajo, lo que se gira', function () {
+    $viatico = ($this->viatico)();
+    ($this->comprobar)($viatico, $this->hospedaje, 80);
+
+    $html = ($this->html)($viatico->fresh());
+
+    // Reconocido 128 = 80 justificados + los 48 del 30 % que no se justifica;
+    // el anticipo fue de 112, así que quedan 16 por pagarle.
+    expect($html)->toContain('Valor liquidado:')
+        ->toContain('CIENTO VEINTE Y OCHO DÓLARES')
+        ->toContain('A pagar:')
+        ->toContain('DIECISÉIS DÓLARES');
+});
+
+it('cuando el servidor tiene que devolver, lo dice en letras y con su rotulo', function () {
+    // Sin comprobantes: se le reconocen los 48 del 30 % y devuelve el resto.
+    $html = ($this->html)(($this->viatico)());
+
+    expect($html)->toContain('A devolver:')
+        ->toContain('SESENTA Y CUATRO DÓLARES')
+        ->not->toContain('A pagar:');
 });
 
 it('la fecha de la ciudad va en el orden del español', function () {

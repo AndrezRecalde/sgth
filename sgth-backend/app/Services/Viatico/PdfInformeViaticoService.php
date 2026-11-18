@@ -166,6 +166,12 @@ class PdfInformeViaticoService
         $calculo     = $this->calculo->resumen($viatico);
         $totalLetras = \App\Helpers\NumeroALetras::convertir($calculo['reconocido']);
 
+        // Y, debajo, lo que se gira. Hasta ahora la única cifra en letras era
+        // la liquidada —$160 escritos mientras se transfieren $48—, y en un
+        // documento de pago la cifra en letras es la que prevalece.
+        // Respondido por Gestión Financiera el 2026-11-18 (D3).
+        $saldoLetras = \App\Helpers\NumeroALetras::convertir(abs($calculo['saldo']));
+
         // Agrupar facturas por categoría
         $facturasPorCategoria = $this->agruparFacturasPorCategoria(
             $viatico
@@ -178,6 +184,7 @@ class PdfInformeViaticoService
                 'firmas'              => $this->firmantes->paraDocumento($viatico, FirmanteViaticoService::COMPROBANTE),
                 ...$this->comunes($viatico),
                 'totalLetras'         => $totalLetras,
+                'saldoLetras'         => $saldoLetras,
                 'calculo'             => $calculo,
                 'facturasPorCategoria'=> $facturasPorCategoria,
                 'elaborado'           => $this->elaboradoPor($viatico),

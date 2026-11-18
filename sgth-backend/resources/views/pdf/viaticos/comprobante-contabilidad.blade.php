@@ -9,7 +9,9 @@ body {
   font-size: 9px;
   color: #1a1a2e;
   line-height: 1.45;
-  padding: 24px 35px 18px;
+  /* El pie cabe en la misma hoja: la fila del valor que se gira (D3) se paga
+     con este margen y con los de los bloques de abajo. */
+  padding: 24px 35px 10px;
   background: #fff;
 }
 .hdr {
@@ -76,12 +78,12 @@ body {
 /* BENEFICIARIO */
 .benef-box {
   border: 1px solid #cbd5e0;
-  padding: 8px 12px;
-  margin-bottom: 10px;
+  padding: 6px 12px;
+  margin-bottom: 8px;
   border-radius: 3px;
   background: #f7fafc;
 }
-.benef-row { display: table; width: 100%; margin-bottom: 4px; }
+.benef-row { display: table; width: 100%; margin-bottom: 3px; }
 .benef-lbl {
   display: table-cell;
   font-size: 8px;
@@ -247,7 +249,7 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
 .fc-cargo { font-size: 7.5px; color: #4a5568; margin-top: 2px; }
 .fc-rol { font-size: 7px; color: #718096; margin-top: 1px; text-transform: uppercase; }
 .footer {
-  margin-top: 8px;
+  margin-top: 6px;
   padding-top: 5px;
   border-top: 1px solid #e2e8f0;
   display: table;
@@ -255,7 +257,7 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
 }
 .fl { display: table-cell; font-size: 7px; color: #b0bec5; vertical-align: middle; }
 .fr { display: table-cell; font-size: 7px; color: #b0bec5; text-align: right; vertical-align: middle; }
-.nota { font-size: 7.5px; color: #718096; font-style: italic; margin-top: 6px; line-height: 1.5; }
+.nota { font-size: 7.5px; color: #718096; font-style: italic; margin-top: 4px; line-height: 1.45; }
 </style>
 </head>
 <body>
@@ -313,8 +315,23 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
     </div>
   </div>
   <div class="benef-row">
-    <div class="benef-lbl">Valor:</div>
+    <div class="benef-lbl">Valor liquidado:</div>
     <div class="benef-val">{{ $totalLetras }}</div>
+    <div class="benef-tipo"></div>
+  </div>
+  {{-- Lo que se gira, también en letras: es la cifra que se transfiere o que
+       el servidor devuelve, y no tiene por qué deducirse del pie. --}}
+  @php
+    $saldo = (float) $calculo['saldo'];
+  @endphp
+  <div class="benef-row">
+    <div class="benef-lbl">
+      @if($saldo > 0) A pagar:
+      @elseif($saldo < 0) A devolver:
+      @else Saldo:
+      @endif
+    </div>
+    <div class="benef-val">{{ $saldoLetras }}</div>
     <div class="benef-tipo"></div>
   </div>
   {{-- El respaldo contable que asigna Financiero. --}}
