@@ -262,8 +262,16 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
     <div class="code-box">
       <div class="code-lbl">N° de Viático</div>
       <div class="code-val">{{ $viatico->codigo_viatico }}</div>
+      {{--
+      | La de la liquidación, no la de hoy: reimprimir un informe ya firmado le
+      | cambiaba la fecha. El día en que se imprimió va en el pie.
+      --}}
       <div class="code-date-lbl">Fecha del Informe</div>
-      <div class="code-date">{{ date('d/m/Y') }}</div>
+      <div class="code-date">
+        {{ $viatico->liquidacion?->fecha_liquidacion
+            ? \Carbon\Carbon::parse($viatico->liquidacion->fecha_liquidacion)->format('d/m/Y')
+            : '—' }}
+      </div>
     </div>
   </div>
 </div>
@@ -335,8 +343,9 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
             ? \Carbon\Carbon::parse($act->fecha)->format('d/m/Y')
             : '—' }}
       </td>
-      <td>{{ $act->hora_inicio ?? '—' }}</td>
-      <td>{{ $act->hora_fin ?? '—' }}</td>
+      {{-- `08:00:00` es como lo guarda Postgres; en el papel van las horas. --}}
+      <td>{{ $act->hora_inicio ? substr($act->hora_inicio, 0, 5) : '—' }}</td>
+      <td>{{ $act->hora_fin ? substr($act->hora_fin, 0, 5) : '—' }}</td>
       <td class="tl">{{ $act->lugar ?? '—' }}</td>
       <td class="tl">{{ $act->descripcion ?? '—' }}</td>
     </tr>
@@ -397,7 +406,8 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
 
 {{-- ══ GASTOS ══ --}}
 <div class="sec-hdr">Gastos — Comprobantes de Respaldo</div>
-@if($viatico->liquidacion?->detallesFactura?->count() > 0)
+@php $comprobantes = $viatico->liquidacion?->detallesFactura ?? collect(); @endphp
+@if($comprobantes->isNotEmpty())
 <table class="gt">
   <thead>
     <tr>
@@ -405,25 +415,47 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
       <th class="tl">Razón Social / Proveedor</th>
       <th>N° Comprobante</th>
       <th>Tipo</th>
+      {{--
+      | La fecha del comprobante: solo valen los fechados dentro del viaje
+      | (Gestión Financiera, 2026-09-15), y sin ella quien revisa el papel no
+      | podía comprobarlo.
+      --}}
+      <th>Fecha</th>
       <th class="tl">Categoría</th>
       <th>Total</th>
     </tr>
   </thead>
   <tbody>
-    @foreach($viatico->liquidacion->detallesFactura as $f)
+    @foreach($comprobantes as $f)
     <tr>
       <td class="tl">{{ $f->ruc_proveedor ?? '—' }}</td>
       <td class="tl">{{ $f->nombre_proveedor ?? '—' }}</td>
       <td>{{ $f->numero_factura ?? $f->numero_ticket ?? '—' }}</td>
       <td>{{ mb_strtoupper($f->tipo_comprobante ?? 'factura', 'UTF-8') }}</td>
+      <td>{{ $f->fecha_factura ? \Carbon\Carbon::parse($f->fecha_factura)->format('d/m/Y') : '—' }}</td>
       <td class="tl">{{ $f->categoria?->nombre ?? '—' }}</td>
       <td><strong>$ {{ number_format($f->monto ?? 0, 2) }}</strong></td>
     </tr>
     @endforeach
+    <tr>
+      <td colspan="6" class="tl"><strong>Total de comprobantes</strong></td>
+      <td><strong>$ {{ number_format($comprobantes->sum('monto'), 2) }}</strong></td>
+    </tr>
   </tbody>
 </table>
+@else
+<div class="tbox" style="color:#718096">
+  Sin comprobantes registrados en la liquidación.
+</div>
+@endif
 
-{{-- ══ RESUMEN FINANCIERO ══ --}}
+{{--
+| ══ RESUMEN FINANCIERO ══
+|
+| Siempre: el `@if` de los comprobantes se lo llevaba por delante, y el informe
+| de quien no justificó nada —justo el que termina en una devolución— salía sin
+| una sola cifra.
+--}}
 <div class="sec-hdr-alt">Resumen Financiero</div>
   <div class="resumen-wrap">
     <div class="res-row">
@@ -506,11 +538,6 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
       </div>
     </div>
   </div>
-@else
-<div class="tbox" style="color:#718096">
-  Sin comprobantes registrados en la liquidación.
-</div>
-@endif
 
 {{-- ══ CLÁUSULA ══ --}}
 <div class="clausula">
