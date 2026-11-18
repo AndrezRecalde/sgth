@@ -123,6 +123,30 @@ class PdfInformeViaticoService
         return [$zonaLabel, $modalidadLabel, $modalidad];
     }
 
+    /**
+     * El «TIPO» que el comprobante imprime en su badge, desde la modalidad de
+     * anticipo del viático.
+     *
+     * El `default` decía «DEFINITIVA», igual que un viático con anticipo. La
+     * columna admite además `parcial` —hoy no se puede elegir, ni en el
+     * formulario ni en la validación—, así que un viático parcial llegado de
+     * un seeder o de una corrección a mano se habría firmado con el tipo de
+     * otro. Lo que no se sabe traducir se imprime tal como está guardado.
+     */
+    private function tipoDePago(Viatico $viatico): string
+    {
+        $modalidad = $viatico->modalidad_anticipo instanceof \BackedEnum
+            ? $viatico->modalidad_anticipo->value
+            : (string) $viatico->modalidad_anticipo;
+
+        return match ($modalidad) {
+            'total'        => 'DEFINITIVA',
+            'sin_anticipo' => 'SIN ANTICIPO',
+            'parcial'      => 'ANTICIPO PARCIAL',
+            default        => mb_strtoupper(str_replace('_', ' ', $modalidad), 'UTF-8') ?: '—',
+        };
+    }
+
     private function cargarViatico(int|string $identificador): Viatico
     {
         $query = Viatico::with([
@@ -188,15 +212,7 @@ class PdfInformeViaticoService
                 'calculo'             => $calculo,
                 'facturasPorCategoria'=> $facturasPorCategoria,
                 'elaborado'           => $this->elaboradoPor($viatico),
-                'modalidadLabel'      => match(
-                    $viatico->modalidad_anticipo instanceof \BackedEnum
-                        ? $viatico->modalidad_anticipo->value
-                        : (string) $viatico->modalidad_anticipo
-                ) {
-                    'total'        => 'DEFINITIVA',
-                    'sin_anticipo' => 'SIN ANTICIPO',
-                    default        => 'DEFINITIVA',
-                },
+                'modalidadLabel'      => $this->tipoDePago($viatico),
             ]
         )->setPaper('a4', 'portrait');
 

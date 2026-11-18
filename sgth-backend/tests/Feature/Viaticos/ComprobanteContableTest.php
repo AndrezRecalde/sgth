@@ -191,6 +191,21 @@ it('cuando el servidor tiene que devolver, lo dice en letras y con su rotulo', f
         ->not->toContain('A pagar:');
 });
 
+it('el tipo de pago sale de la modalidad del viatico, y lo que no sabe traducir no lo inventa', function () {
+    expect(($this->html)(($this->viatico)()))->toContain('DEFINITIVA');
+
+    expect(($this->html)(($this->viatico)(['modalidad_anticipo' => 'sin_anticipo'])))
+        ->toContain('SIN ANTICIPO');
+
+    // `parcial` está en el enum de la columna pero no se puede elegir: ni el
+    // formulario lo ofrece ni la validación lo acepta. Si aparece —un seeder,
+    // una corrección a mano—, el comprobante lo decía «DEFINITIVA», que es el
+    // tipo de otro viático, y debajo iban tres firmas.
+    expect(($this->html)(($this->viatico)(['modalidad_anticipo' => 'parcial'])))
+        ->toContain('ANTICIPO PARCIAL')
+        ->not->toContain('DEFINITIVA');
+});
+
 it('la fecha de la ciudad va en el orden del español', function () {
     $html = ($this->html)(($this->viatico)());
 
