@@ -9,7 +9,7 @@ body {
   font-size: 9px;
   color: #1a1a2e;
   line-height: 1.45;
-  padding: 28px 35px;
+  padding: 24px 35px 18px;
   background: #fff;
 }
 .hdr {
@@ -227,7 +227,8 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
 .firmas {
   display: table;
   width: 100%;
-  margin-top: 35px;
+  /* 35px empujaban el bloque entero a una segunda página casi vacía. */
+  margin-top: 10px;
   page-break-inside: avoid;
 }
 .fc {
@@ -238,7 +239,7 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
   vertical-align: bottom;
 }
 .fline {
-  height: 38px;
+  height: 24px;
   border-bottom: 1.5px solid #1a3a5c;
   margin: 0 10px 5px;
 }
@@ -246,7 +247,7 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
 .fc-cargo { font-size: 7.5px; color: #4a5568; margin-top: 2px; }
 .fc-rol { font-size: 7px; color: #718096; margin-top: 1px; text-transform: uppercase; }
 .footer {
-  margin-top: 14px;
+  margin-top: 8px;
   padding-top: 5px;
   border-top: 1px solid #e2e8f0;
   display: table;
@@ -254,7 +255,7 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
 }
 .fl { display: table-cell; font-size: 7px; color: #b0bec5; vertical-align: middle; }
 .fr { display: table-cell; font-size: 7px; color: #b0bec5; text-align: right; vertical-align: middle; }
-.nota { font-size: 7.5px; color: #718096; font-style: italic; margin-top: 8px; }
+.nota { font-size: 7.5px; color: #718096; font-style: italic; margin-top: 6px; line-height: 1.5; }
 </style>
 </head>
 <body>
@@ -289,10 +290,10 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
   <div class="hdr-bar-inner">
     <div class="hdr-bar-l">
       Esmeraldas,
-      {{ $viatico->liquidacion?->fecha_contabilizacion
-          ? \Carbon\Carbon::parse($viatico->liquidacion->fecha_contabilizacion)
-              ->locale('es')->isoFormat('MMMM D, YYYY')
-          : now()->locale('es')->isoFormat('MMMM D, YYYY') }}
+      {{-- «18 de noviembre de 2026», no «noviembre 18, 2026». --}}
+      {{ ($viatico->liquidacion?->fecha_contabilizacion
+            ? \Carbon\Carbon::parse($viatico->liquidacion->fecha_contabilizacion)
+            : now())->locale('es')->isoFormat('D [de] MMMM [de] YYYY') }}
     </div>
     <div class="hdr-bar-r">
       TOTAL: $ {{ number_format($calculo['reconocido'], 2) }}
@@ -340,18 +341,30 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
     // El destino es a dónde fue, no el último tramo: ese es el regreso, y
     // la frase decía que el servidor se trasladó a la ciudad de la que salió.
     $destino = mb_strtoupper($destinoCiudades, 'UTF-8');
+
+    /*
+    | «del 1 al 3 de diciembre de 2026», y con el mes nombrado dos veces si el
+    | viaje lo cruza: antes salía «del 01 al 3 de diciembre del 2026», con el
+    | cero de más, el «del» por «de» y, en un viaje del 30 de noviembre al 2 de
+    | diciembre, sin noviembre por ningún lado.
+    */
+    $fechas = '—';
+    if ($salida && $llegada) {
+        $mismoMes = $salida->isSameMonth($llegada) && $salida->year === $llegada->year;
+        $fechas = $mismoMes
+            ? 'del '.$salida->day.' al '.$llegada->locale('es')->isoFormat('D [de] MMMM [de] YYYY')
+            : 'del '.$salida->locale('es')->isoFormat('D [de] MMMM [de] YYYY')
+              .' al '.$llegada->locale('es')->isoFormat('D [de] MMMM [de] YYYY');
+    }
   @endphp
 
   Por
   <strong>{{ $calculo['noches'] }}</strong>
   noche(s) de viáticos a favor del señor(ra)
   <strong>{{ $servidorNombre }}</strong>,
-  quién se trasladó a la ciudad de
+  quien se trasladó a la ciudad de
   <strong>{{ $destino }}</strong>
-  del
-  {{ $salida ? $salida->format('d') : '—' }}
-  al
-  {{ $llegada ? $llegada->locale('es')->isoFormat('D [de] MMMM [del] YYYY') : '—' }},
+  {{ $fechas }},
   para <strong>{{ mb_strtoupper($viatico->justificacion ?? '—', 'UTF-8') }}</strong>
 </div>
 
@@ -376,36 +389,6 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
 
 {{-- ══ VALORES A JUSTIFICAR ══ --}}
 <div class="sec-hdr">Valores a Justificar</div>
-@php
-  // Separar facturas por grupo
-  $hospedaje         = 0;
-  $alimentacion      = 0;
-  $transporteTerrestre = 0;
-  $pasajeAereo       = 0;
-  $combustible       = 0;
-  $peaje             = 0;
-  $inscripcion       = 0;
-  $otro              = 0;
-  $totalMovilizacion = 0;
-  $totalHospAli      = 0;
-
-  foreach ($facturasPorCategoria as $catId => $cat) {
-      if (in_array($catId, [1, 2])) {
-          if ($catId === 1) $hospedaje    = $cat['total'];
-          if ($catId === 2) $alimentacion = $cat['total'];
-          $totalHospAli += $cat['total'];
-      } else {
-          if ($catId === 3)  $transporteTerrestre = $cat['total'];
-          if ($catId === 4)  $pasajeAereo         = $cat['total'];
-          if ($catId === 5)  $combustible         = $cat['total'];
-          if ($catId === 6)  $peaje               = $cat['total'];
-          if ($catId === 10) $inscripcion         = $cat['total'];
-          if ($catId === 13) $otro                = $cat['total'];
-          $totalMovilizacion += $cat['total'];
-      }
-  }
-
-@endphp
 <table class="ft">
   <tr>
     <td class="lbl">Valor reconocido sin comprobante (30%)</td>
@@ -417,54 +400,39 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
   </tr>
 </table>
 
-{{-- ══ VALORES JUSTIFICADOS ══ --}}
-<div class="sec-hdr">
-  Valores Justificados — Viático Diario (H&A)
-</div>
-<table class="ft">
-  <tr>
-    <td class="lbl">Hospedaje</td>
-    <td class="val">$ {{ number_format($hospedaje, 2) }}</td>
-  </tr>
-  <tr>
-    <td class="lbl">Alimentación</td>
-    <td class="val">$ {{ number_format($alimentacion, 2) }}</td>
-  </tr>
-  <tr class="total-row">
-    <td class="lbl">TOTAL H&A:</td>
-    <td class="val">
-      $ {{ number_format($totalHospAli, 2) }}
-    </td>
-  </tr>
-</table>
-
-<div class="sec-hdr-alt">
-  Movilización
-</div>
-<table class="ft">
-  <tr>
-    <td class="lbl">Pasajes terrestres / fluviales</td>
-    <td class="val">$ {{ number_format($transporteTerrestre, 2) }}</td>
-  </tr>
-  <tr>
-    <td class="lbl">Pasajes aéreos</td>
-    <td class="val">$ {{ number_format($pasajeAereo, 2) }}</td>
-  </tr>
-  <tr>
-    <td class="lbl">Combustible</td>
-    <td class="val">$ {{ number_format($combustible, 2) }}</td>
-  </tr>
-  <tr>
-    <td class="lbl">Peajes</td>
-    <td class="val">$ {{ number_format($peaje, 2) }}</td>
-  </tr>
-  <tr class="total-row">
-    <td class="lbl">TOTAL MOVILIZACIÓN:</td>
-    <td class="val">
-      $ {{ number_format($totalMovilizacion, 2) }}
-    </td>
-  </tr>
-</table>
+{{--
+| ══ VALORES JUSTIFICADOS ══
+|
+| Las filas salen de las categorías que el servidor usó, no de una lista
+| escrita a mano: antes se imprimían seis y se sumaban ocho, así que el total
+| no coincidía con lo que se veía.
+--}}
+@php
+  $bloques = [
+    ['titulo' => 'Valores Justificados — Viático Diario (H&A)', 'clase' => 'sec-hdr',     'total' => 'TOTAL H&A:',            'datos' => $facturasPorCategoria['viatico']],
+    ['titulo' => 'Movilización',                                'clase' => 'sec-hdr-alt', 'total' => 'TOTAL MOVILIZACIÓN:',   'datos' => $facturasPorCategoria['movilizacion']],
+  ];
+@endphp
+@foreach($bloques as $bloque)
+  <div class="{{ $bloque['clase'] }}">{{ $bloque['titulo'] }}</div>
+  <table class="ft">
+    @forelse($bloque['datos']['filas'] as $fila)
+    <tr>
+      <td class="lbl">{{ $fila['nombre'] }}</td>
+      <td class="val">$ {{ number_format($fila['total'], 2) }}</td>
+    </tr>
+    @empty
+    <tr>
+      <td class="lbl" style="color:#718096">Sin comprobantes en este grupo</td>
+      <td class="val">$ 0.00</td>
+    </tr>
+    @endforelse
+    <tr class="total-row">
+      <td class="lbl">{{ $bloque['total'] }}</td>
+      <td class="val">$ {{ number_format($bloque['datos']['total'], 2) }}</td>
+    </tr>
+  </table>
+@endforeach
 
 {{-- ══ ANTICIPOS ══ --}}
 <div class="sec-hdr">Anticipos</div>
@@ -524,19 +492,16 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
 
 {{-- ══ FIRMAS ══ --}}
 <div class="firmas">
+  {{-- Quien contabilizó: lo resuelve el servicio, con su puesto. --}}
   <div class="fc">
     <div class="fline"></div>
-    @php
-      $elaborado = $viatico->liquidacion?->createdBy;
-    @endphp
     @if($elaborado)
-      <div class="fn">{{ $elaborado->name }}</div>
+      <div class="fn">{{ $elaborado['nombre'] }}</div>
+      <div class="fc-cargo">{{ $elaborado['cargo'] ?? 'Dirección Financiera' }}</div>
     @else
       <div class="fn" style="color:#a0aec0">___________________________</div>
+      <div class="fc-cargo" style="color:#a0aec0">Auxiliar de Contabilidad</div>
     @endif
-    <div class="fc-cargo">
-      {{ $viatico->liquidacion?->cargo_jefe_financiero ?? 'Auxiliar de Contabilidad' }}
-    </div>
     <div class="fc-rol">Elaborado por</div>
   </div>
   <div class="fc">
@@ -556,7 +521,7 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
 <div class="nota">
   * Anexo: Solicitud e informe de licencia con remuneración, facturas de respaldo adjuntas.<br>
   ** El valor de combustible lo justifica el chofer del vehículo institucional.<br>
-  *** Valores en USD. I.C.I: Índice de Cambio Internacional.
+  *** Valores en dólares de los Estados Unidos de América.
 </div>
 
 {{-- ══ PIE ══ --}}
