@@ -67,4 +67,29 @@ class TramoViatico extends Model
         return $this->hasOne(AutorizacionVuelo::class,
             'tramo_viatico_id');
     }
+
+    /**
+     * Cómo se viaja este tramo, escrito para leerse: «Aéreo», «Marítimo».
+     *
+     * Los PDF imprimían `tipo_vehiculo` en crudo y en mayúsculas, así que la
+     * columna del itinerario decía «AEREO» y «MARITIMO», sin tilde. El tipo lo
+     * trae el catálogo del tramo; los tramos viejos, guardados cuando el
+     * catálogo colgaba de la empresa, lo traen por ahí.
+     *
+     * No va en `$appends`: es para los documentos, no para la API.
+     */
+    public function getTipoTransporteAttribute(): string
+    {
+        $tipo = $this->catalogo?->tipo_vehiculo
+            ?? $this->empresa?->catalogo?->tipo_vehiculo
+            ?? 'terrestre';
+
+        return match ($tipo) {
+            'terrestre' => 'Terrestre',
+            'aereo'     => 'Aéreo',
+            'maritimo'  => 'Marítimo',
+            'otro'      => 'Otro',
+            default     => ucfirst($tipo),
+        };
+    }
 }

@@ -47,7 +47,8 @@ body {
 .hdr-sub { font-size: 8px; color: #c5daf0; margin-top: 3px; }
 .hdr-right {
   display: table-cell;
-  width: 130px;
+  /* 130px partía el código en dos líneas: «GADPE-15-2026-» / «00004». */
+  width: 150px;
   vertical-align: middle;
   padding-left: 10px;
 }
@@ -59,7 +60,7 @@ body {
   text-align: center;
 }
 .code-lbl { font-size: 7px; color: #4a5568; text-transform: uppercase; letter-spacing: 0.5px; }
-.code-val { font-size: 11px; font-weight: bold; color: #1a3a5c; margin: 2px 0; word-break: break-all; }
+.code-val { font-size: 9.5px; font-weight: bold; color: #1a3a5c; margin: 2px 0; white-space: nowrap; }
 .code-date { font-size: 9px; font-weight: bold; color: #2d3748; border-top: 1px solid #cbd5e0; padding-top: 4px; margin-top: 4px; }
 .code-date-lbl { font-size: 7px; color: #718096; text-transform: uppercase; }
 .hdr-bar {
@@ -259,7 +260,7 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
   </div>
   <div class="hdr-right">
     <div class="code-box">
-      <div class="code-lbl">N° Solicitud</div>
+      <div class="code-lbl">N° de Viático</div>
       <div class="code-val">{{ $viatico->codigo_viatico }}</div>
       <div class="code-date-lbl">Fecha del Informe</div>
       <div class="code-date">{{ date('d/m/Y') }}</div>
@@ -288,14 +289,7 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
   <tr>
     <th>Apellidos y Nombres</th>
     <td colspan="3">
-      <strong>
-      {{ collect([
-          $viatico->servidor?->apellido,
-          $viatico->servidor?->segundo_apellido,
-          $viatico->servidor?->nombre,
-          $viatico->servidor?->segundo_nombre,
-        ])->filter()->join(' ') ?: '—' }}
-      </strong>
+      <strong>{{ $servidorNombre }}</strong>
     </td>
   </tr>
   <tr>
@@ -386,7 +380,7 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
         : collect([$tramo->destino_pais, $tramo->destino_ciudad])->filter()->join(' / ');
     @endphp
     <tr>
-      <td>{{ strtoupper($tramo->catalogo?->tipo_vehiculo ?? $tramo->empresa?->catalogo?->tipo_vehiculo ?? 'TERRESTRE') }}</td>
+      <td>{{ $tramo->tipo_transporte }}</td>
       {{-- Sin empresa (vehículo institucional, taxi…), el tipo de transporte. --}}
       <td class="tl">{{ $tramo->empresa?->nombre ?? $tramo->catalogo?->nombre ?? '—' }}</td>
       <td class="tl"><strong>{{ $orig }}</strong> → {{ $dest }}</td>
@@ -421,7 +415,7 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
       <td class="tl">{{ $f->ruc_proveedor ?? '—' }}</td>
       <td class="tl">{{ $f->nombre_proveedor ?? '—' }}</td>
       <td>{{ $f->numero_factura ?? $f->numero_ticket ?? '—' }}</td>
-      <td>{{ strtoupper($f->tipo_comprobante ?? 'FACTURA') }}</td>
+      <td>{{ mb_strtoupper($f->tipo_comprobante ?? 'factura', 'UTF-8') }}</td>
       <td class="tl">{{ $f->categoria?->nombre ?? '—' }}</td>
       <td><strong>$ {{ number_format($f->monto ?? 0, 2) }}</strong></td>
     </tr>
@@ -528,9 +522,7 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
 <div class="firmas">
   <div class="fc">
     <div class="fline"></div>
-    <div class="fn">
-      {{ collect([$viatico->servidor?->apellido, $viatico->servidor?->nombre])->filter()->join(' ') ?: '—' }}
-    </div>
+    <div class="fn">{{ $servidorNombre }}</div>
     <div class="fc-cargo">{{ $viatico->servidor?->puesto?->cargo?->nombre ?? '' }}</div>
     <div class="fc-rol">Servidor Solicitante</div>
   </div>
