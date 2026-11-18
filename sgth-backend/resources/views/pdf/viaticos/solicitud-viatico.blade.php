@@ -100,51 +100,10 @@ body {
   padding: 5px 16px;
   margin-bottom: 12px;
 }
-.hdr-bar-inner {
-  display: table;
-  width: 100%;
-}
-.check-lbl {
-  display: table-cell;
+.hdr-bar-txt {
   font-size: 8px;
-  font-weight: bold;
   color: #e2edf7;
-  vertical-align: middle;
-  padding-right: 14px;
-  white-space: nowrap;
-}
-.check-items {
-  display: table-cell;
-  vertical-align: middle;
-}
-.chk {
-  display: inline-block;
-  margin-right: 14px;
-  vertical-align: middle;
-}
-.chk-box {
-  display: inline-block;
-  width: 11px;
-  height: 11px;
-  border: 1.5px solid #e2edf7;
-  border-radius: 2px;
-  text-align: center;
-  line-height: 10px;
-  font-size: 8px;
-  vertical-align: middle;
-  margin-right: 4px;
-  background: transparent;
-  color: white;
-}
-.chk-box.on {
-  background: #27ae60;
-  border-color: #27ae60;
-}
-.chk-txt {
-  font-size: 8px;
   font-weight: bold;
-  color: #e2edf7;
-  vertical-align: middle;
 }
 
 /* ══ SECTION ══ */
@@ -263,6 +222,15 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
   margin-top: 2px;
 }
 
+.sin-cuenta {
+  border: 1px solid #cbd5e0;
+  border-top: none;
+  padding: 8px 11px;
+  font-size: 8px;
+  color: #8a6d3b;
+  background: #fffbea;
+}
+
 /* ══ CLÁUSULA ══ */
 .clausula {
   margin-top: 10px;
@@ -342,28 +310,43 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
 
 {{-- ══ BARRA CHECKBOXES ══ --}}
 <div class="hdr-bar">
-  <div class="hdr-bar-inner">
-    <div class="check-lbl">A SOLICITAR:</div>
-    <div class="check-items">
-      <span class="chk">
-        <span class="chk-box on">✓</span>
-        <span class="chk-txt">VIÁTICOS</span>
-      </span>
-      <span class="chk">
-        <span class="chk-box on">✓</span>
-        <span class="chk-txt">MOVILIZACIONES</span>
-      </span>
-      <span class="chk">
-        <span class="chk-box {{ $viatico->zona === 'exterior' ? 'on' : '' }}">
-          {{ $viatico->zona === 'exterior' ? '✓' : '' }}
-        </span>
-        <span class="chk-txt">SUBSISTENCIAS</span>
-      </span>
-      <span class="chk">
-        <span class="chk-box"></span>
-        <span class="chk-txt">ALIMENTACIÓN</span>
-      </span>
-    </div>
+  {{--
+  | Antes aquí iban cuatro casillas —«viáticos», «movilizaciones»,
+  | «subsistencias», «alimentación»— que no miraban el viático: las dos
+  | primeras estaban marcadas a mano en la plantilla, la cuarta nunca se
+  | marcaba y la tercera dependía de `$viatico->zona === 'exterior'`, que
+  | compara un enum con un texto y nunca era cierto. El papel afirmaba cosas
+  | que nadie había pedido. Mientras Gestión Financiera dice qué marca cada
+  | una, la barra lleva lo mismo que la del informe: lo que sí se sabe.
+  --}}
+  <div class="hdr-bar-txt">
+    Período:
+    {{ $viatico->datetime_salida
+        ? \Carbon\Carbon::parse($viatico->datetime_salida)->format('d/m/Y H:i')
+        : '—' }}
+    →
+    {{ $viatico->datetime_llegada
+        ? \Carbon\Carbon::parse($viatico->datetime_llegada)->format('d/m/Y H:i')
+        : '—' }}
+    &nbsp;|&nbsp;
+    {{ $calculo['noches'] }} noche(s)
+    &nbsp;|&nbsp;
+    @if($modalidadValue === 'total')
+      @php
+        /*
+        | El anticipo es el 70 % del monto. `monto_anticipo` sigue en cero
+        | hasta que Financiero lo entrega, y la solicitud se imprime mucho
+        | antes: lo que aquí se anuncia es lo que se va a transferir.
+        */
+        $anticipoPrevisto = round(
+            (float) $viatico->monto_calculado * \App\Services\Viatico\CalculoViaticoService::PORCENTAJE_JUSTIFICABLE,
+            2
+        );
+      @endphp
+      Anticipo por entregar: $ {{ number_format($anticipoPrevisto, 2) }}
+    @else
+      Sin anticipo
+    @endif
   </div>
 </div>
 
@@ -479,23 +462,35 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
   </tbody>
 </table>
 
-{{-- ══ CUENTA BANCARIA ══ --}}
+{{--
+| ══ CUENTA BANCARIA ══
+|
+| Sin cuenta principal el bloque salía con tres rayas, se firmaba así y el
+| hueco solo aparecía el día de la transferencia. Ahora lo dice.
+--}}
 @php $cuenta = $viatico->servidor?->cuentasBancarias?->first(); @endphp
 <div class="sec-hdr">Datos para Transferencia Bancaria</div>
+@if($cuenta)
 <div class="cuenta-wrap">
   <div class="cc" style="width:28%">
     <div class="cc-lbl">Tipo de Cuenta</div>
-    <div class="cc-val">{{ $cuenta?->tipo_cuenta ? mb_strtoupper($cuenta->tipo_cuenta, 'UTF-8') : '—' }}</div>
+    <div class="cc-val">{{ $cuenta->tipo_cuenta ? mb_strtoupper($cuenta->tipo_cuenta, 'UTF-8') : '—' }}</div>
   </div>
   <div class="cc" style="width:32%">
     <div class="cc-lbl">Número de Cuenta</div>
-    <div class="cc-val">{{ $cuenta?->numero_cuenta ?? '—' }}</div>
+    <div class="cc-val">{{ $cuenta->numero_cuenta ?? '—' }}</div>
   </div>
   <div class="cc">
     <div class="cc-lbl">Institución Financiera</div>
-    <div class="cc-val">{{ $cuenta?->entidadFinanciera?->nombre ?? '—' }}</div>
+    <div class="cc-val">{{ $cuenta->entidadFinanciera?->nombre ?? '—' }}</div>
   </div>
 </div>
+@else
+<div class="sin-cuenta">
+  El servidor no tiene una cuenta bancaria principal registrada para viáticos.
+  Debe registrarla en su expediente antes de que Gestión Financiera entregue el anticipo.
+</div>
+@endif
 
 {{-- ══ CLÁUSULA ══ --}}
 <div class="clausula">
