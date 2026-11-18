@@ -371,7 +371,9 @@ export type ViaticoBandeja = {
   servidor?: {
     id:       number
     nombre:   string
+    segundo_nombre:   string | null
     apellido: string
+    segundo_apellido: string | null
     cedula:   string
     unidad:   string | null
   }

@@ -73182,7 +73182,13 @@
                                     "nombre": {
                                         "type": "string"
                                     },
+                                    "segundo_nombre": {
+                                        "type": "string"
+                                    },
                                     "apellido": {
+                                        "type": "string"
+                                    },
+                                    "segundo_apellido": {
                                         "type": "string"
                                     },
                                     "puesto": {
@@ -73210,7 +73216,9 @@
                                 },
                                 "required": [
                                     "nombre",
+                                    "segundo_nombre",
                                     "apellido",
+                                    "segundo_apellido",
                                     "puesto"
                                 ]
                             }

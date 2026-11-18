@@ -28,6 +28,9 @@ class AutorizacionVueloController extends Controller
         $this->authorize('autorizarVuelos', Viatico::class);
 
         $autorizaciones = AutorizacionVuelo::with([
+            // El recurso solo expone el nombre y el cargo; se cargan nada más
+            // esas columnas, porque `Servidor` no oculta ningún campo.
+            'viatico.servidor:id,nombre,segundo_nombre,apellido,segundo_apellido,puesto_id',
             'viatico.servidor.puesto.cargo',
             'tramo.empresa',
             'tramo.origenProvincia',

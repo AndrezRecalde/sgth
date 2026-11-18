@@ -19,6 +19,20 @@ use Illuminate\Support\Facades\DB;
 
 class ViaticoController extends Controller
 {
+    /**
+     * Del viajero se manda su nombre, nada más.
+     *
+     * `Servidor` no declara `$hidden`: cargar la relación sin lista de
+     * columnas serializa la ficha entera —cédula, fecha de nacimiento, tipo
+     * de sangre, teléfonos, correo personal, dirección, discapacidad y
+     * contacto de emergencia—. Es el mismo recorte que ya se hizo en
+     * adquisiciones, kárdex, la agenda del dispensario y Asistencia.
+     */
+    private const SERVIDOR = 'servidor:id,nombre,segundo_nombre,apellido,segundo_apellido';
+
+    /** En la ficha, además, el puesto y la unidad que se muestran. */
+    private const SERVIDOR_CON_PUESTO = self::SERVIDOR.',cedula,puesto_id,unidad_administrativa_id';
+
     public function __construct(
         private ViaticoServiceInterface $viaticoService,
         private ViaticoEstadoService $estados,
@@ -31,7 +45,11 @@ class ViaticoController extends Controller
     ): JsonResponse {
         $this->authorize('verAny', Viatico::class);
 
-        $query = Viatico::with(['servidor'])
+        // Solo el nombre: `Servidor` no oculta ningún campo, así que cargarlo
+        // entero mandaba en el JSON el teléfono, el correo personal, la
+        // dirección, el tipo de sangre y el contacto de emergencia de cada
+        // viajero, en un listado que solo pinta el código y el monto.
+        $query = Viatico::with([self::SERVIDOR])
             // created_at es timestamp(0): sin desempate por id, dos páginas
             // del mismo resultado pueden solaparse.
             ->orderByDesc('created_at')
@@ -89,6 +107,7 @@ class ViaticoController extends Controller
     {
         // Acepta tanto id numérico como codigo_viatico
         $query = Viatico::with([
+            self::SERVIDOR_CON_PUESTO,
             'servidor.puesto.cargo',
             'servidor.puesto.unidadAdministrativa',
             'tramos.catalogo', 'tramos.empresa.catalogo',

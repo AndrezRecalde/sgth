@@ -11417,7 +11417,9 @@ export interface components {
                 servidor_id: number;
                 servidor: {
                     nombre: string;
+                    segundo_nombre: string;
                     apellido: string;
+                    segundo_apellido: string;
                     puesto: {
                         cargo: {
                             nombre: string;

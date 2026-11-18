@@ -5,6 +5,7 @@ import { IconPencil } from '@tabler/icons-react'
 import { DetailList, SectionCard, type DetailItem } from '@/components/ui'
 import { formatFechaHora } from '@/lib/fecha'
 import { ZONA_LABELS } from '../constants/viatico.constants'
+import { nombreDelServidor } from '../utils/servidor'
 import type { ViaticoConRelaciones } from '@/types/api'
 
 interface Props {
@@ -25,7 +26,7 @@ export function ViaticoInfoCard({ viatico: d, puedeEditar, onEditar }: Props) {
   const noches = Number(d.noches ?? 0)
 
   const items: DetailItem[] = [
-    { label: 'Servidor', value: [s?.nombre, s?.apellido].filter(Boolean).join(' ') },
+    { label: 'Servidor', value: nombreDelServidor(s) },
     { label: 'Cargo', value: s?.puesto?.cargo?.nombre },
     { label: 'Unidad', value: s?.puesto?.unidad_administrativa?.nombre, ancho: true },
     { label: 'Zona', value: ZONA_LABELS[d.zona ?? ''] ?? d.zona },

@@ -22,6 +22,7 @@ import { ViaticoHistorialCard } from "./ViaticoHistorialCard";
 import { ViaticoEditModal } from "./ViaticoEditModal";
 import { CREAR_TRAMO, TRAMO_FORM_ID, TramoForm } from "./TramoForm";
 import { TramosList } from "./TramosList";
+import { nombreDelServidor } from "../utils/servidor";
 import type { TramoViatico } from "@/types/api";
 
 /*
@@ -86,7 +87,7 @@ export function ViaticoDetallePage({ identificador }: Props) {
 
   const estado = String(d.estado ?? "");
   const puedeEditar = puede.editar(d);
-  const servidor = [d.servidor?.nombre, d.servidor?.apellido].filter(Boolean).join(" ");
+  const servidor = nombreDelServidor(d.servidor);
   const conFirmas = (d.firmantes?.length ?? 0) > 0;
 
   const cerrarModalItinerario = () => {

@@ -32,7 +32,9 @@ class AutorizacionVueloResource extends JsonResource
                 'servidor' => $this->viatico->relationLoaded('servidor')
                     ? [
                         'nombre'   => $this->viatico->servidor?->nombre,
+                        'segundo_nombre'   => $this->viatico->servidor?->segundo_nombre,
                         'apellido' => $this->viatico->servidor?->apellido,
+                        'segundo_apellido' => $this->viatico->servidor?->segundo_apellido,
                         'puesto'   => $this->viatico->servidor?->relationLoaded('puesto')
                             ? [
                                 'cargo' => [
