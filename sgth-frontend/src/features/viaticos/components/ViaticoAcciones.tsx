@@ -52,7 +52,7 @@ export function ViaticoAcciones({ viatico: d, puede }: Props) {
 
   return (
     <>
-      <ViaticoDocumentosMenu viatico={d} />
+      <ViaticoDocumentosMenu viatico={d} puede={puede} />
 
       {puede.cancelar(d) && (
         <Button

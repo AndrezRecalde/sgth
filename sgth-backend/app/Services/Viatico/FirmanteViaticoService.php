@@ -33,6 +33,11 @@ final class FirmanteViaticoService
     public const SOLICITUD   = 'solicitud';
     public const INFORME     = 'informe';
     public const COMPROBANTE = 'comprobante';
+    /** La orden de pago del anticipo, que se sella al generarla. */
+    public const ORDEN       = 'orden_anticipo';
+
+    /** Quien prepara el pago del anticipo: no es un puesto del organigrama. */
+    public const ELABORA = 'elaborado';
 
     /** Qué firma cada quién, y con qué cargo cuando el puesto está vacante. */
     private const ROLES = [
@@ -63,25 +68,82 @@ final class FirmanteViaticoService
 
         $fecha = $fecha ?? now()->toDateString();
 
-        return collect(self::ROLES)->map(function (string $cargoPorDefecto, string $rol) use ($viatico, $documento, $fecha) {
-            $firma    = $this->organigrama->jefeDeUnidadEn($this->unidadDe($rol, $viatico), $fecha, $cargoPorDefecto);
-            $servidor = $firma['servidor'];
+        return collect(self::ROLES)
+            ->map(fn (string $cargoPorDefecto, string $rol) => $this->sellarDelOrganigrama(
+                $viatico, $documento, $rol, $cargoPorDefecto, $fecha
+            ))
+            ->values();
+    }
 
-            return ViaticoFirmante::create([
+    /**
+     * Los firmantes de la orden de pago del anticipo: el Director Financiero,
+     * que la ordena, y el funcionario de Financiero que prepara el pago
+     * (decidido con Gestión Financiera, 2026-11-23, S4).
+     *
+     * El segundo no sale del organigrama —ningún puesto es «quien elabora»—:
+     * es quien genera la orden. Se sella la primera vez, igual que los otros
+     * documentos, para que reimprimirla no le cambie el nombre a un papel que
+     * ya está firmado.
+     *
+     * @return Collection<int, ViaticoFirmante>
+     */
+    public function sellarOrdenDeAnticipo(Viatico $viatico, ?Servidor $elabora): Collection
+    {
+        $yaSellados = ViaticoFirmante::where('viatico_id', $viatico->id)
+            ->where('documento', self::ORDEN)
+            ->get();
+
+        if ($yaSellados->isNotEmpty()) {
+            return $yaSellados;
+        }
+
+        $fecha = now()->toDateString();
+
+        return collect([
+            $this->sellarDelOrganigrama(
+                $viatico, self::ORDEN, 'director_financiero',
+                self::ROLES['director_financiero'], $fecha
+            ),
+            ViaticoFirmante::create([
                 'viatico_id'  => $viatico->id,
-                'documento'   => $documento,
-                'rol'         => $rol,
-                'servidor_id' => $servidor?->id,
-                'nombre'      => $servidor ? $this->organigrama->nombreCompleto($servidor) : null,
-                'cedula'      => $servidor?->cedula,
-                // El cargo impreso es el del puesto; la (S) deja constancia de
-                // que quien firmó lo hacía por subrogación.
-                'cargo'       => ($firma['cargo'] ?? $cargoPorDefecto).($firma['subrogado'] ? ' (S)' : ''),
-                'subrogado'   => $firma['subrogado'],
-                'aviso'       => $this->aviso($servidor, $firma['subrogado'], $fecha),
+                'documento'   => self::ORDEN,
+                'rol'         => self::ELABORA,
+                'servidor_id' => $elabora?->id,
+                'nombre'      => $elabora ? $this->organigrama->nombreCompleto($elabora) : null,
+                'cedula'      => $elabora?->cedula,
+                'cargo'       => $elabora?->puesto?->cargo?->nombre ?? 'Gestión Financiera',
+                'subrogado'   => false,
+                'aviso'       => null,
                 'sellado_en'  => now(),
-            ]);
-        })->values();
+            ]),
+        ]);
+    }
+
+    /** Un firmante que sale del organigrama, con la subrogación de ese día. */
+    private function sellarDelOrganigrama(
+        Viatico $viatico,
+        string $documento,
+        string $rol,
+        string $cargoPorDefecto,
+        string $fecha
+    ): ViaticoFirmante {
+        $firma    = $this->organigrama->jefeDeUnidadEn($this->unidadDe($rol, $viatico), $fecha, $cargoPorDefecto);
+        $servidor = $firma['servidor'];
+
+        return ViaticoFirmante::create([
+            'viatico_id'  => $viatico->id,
+            'documento'   => $documento,
+            'rol'         => $rol,
+            'servidor_id' => $servidor?->id,
+            'nombre'      => $servidor ? $this->organigrama->nombreCompleto($servidor) : null,
+            'cedula'      => $servidor?->cedula,
+            // El cargo impreso es el del puesto; la (S) deja constancia de
+            // que quien firmó lo hacía por subrogación.
+            'cargo'       => ($firma['cargo'] ?? $cargoPorDefecto).($firma['subrogado'] ? ' (S)' : ''),
+            'subrogado'   => $firma['subrogado'],
+            'aviso'       => $this->aviso($servidor, $firma['subrogado'], $fecha),
+            'sellado_en'  => now(),
+        ]);
     }
 
     /**
@@ -101,13 +163,21 @@ final class FirmanteViaticoService
 
         $firmas = [];
 
-        foreach (self::ROLES as $rol => $cargoPorDefecto) {
+        foreach ($this->rolesDe($documento) as $rol => $cargoPorDefecto) {
             if ($firmante = $sellados->get($rol)) {
                 $firmas[$rol] = [
                     'nombre' => $firmante->nombre,
                     'cargo'  => $firmante->cargo,
                     'aviso'  => $firmante->aviso,
                 ];
+
+                continue;
+            }
+
+            // Quien elabora no se puede resolver al vuelo: no es un puesto,
+            // es quien generó la orden. Sin sellar, la línea sale en blanco.
+            if ($rol === self::ELABORA) {
+                $firmas[$rol] = ['nombre' => null, 'cargo' => $cargoPorDefecto, 'aviso' => null];
 
                 continue;
             }
@@ -123,6 +193,22 @@ final class FirmanteViaticoService
         }
 
         return $firmas;
+    }
+
+    /**
+     * Quién firma cada documento. La orden de pago del anticipo lleva dos
+     * firmas, no las tres del resto del trámite.
+     *
+     * @return array<string, string>
+     */
+    private function rolesDe(string $documento): array
+    {
+        return $documento === self::ORDEN
+            ? [
+                'director_financiero' => self::ROLES['director_financiero'],
+                self::ELABORA         => 'Gestión Financiera',
+            ]
+            : self::ROLES;
     }
 
     /** La unidad de la que sale cada firma. */

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Viatico;
 use App\Http\Controllers\Controller;
 use App\Models\Viatico\Viatico;
 use App\Services\Viatico\PdfInformeViaticoService;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class InformeViaticoController extends Controller
@@ -61,6 +62,33 @@ class InformeViaticoController extends Controller
     }
 
     /**
+     * La orden de pago del anticipo.
+     *
+     * A diferencia de los otros tres, este documento no lo abre cualquiera que
+     * vea el viático: lo firma quien lo genera, así que solo lo emite quien
+     * opera los viáticos. Si lo abriera el propio viajero, quedaría sellado
+     * como el funcionario que preparó su pago.
+     */
+    public function generarOrdenAnticipo(
+        string $identificador,
+        Request $request
+    ): Response {
+        $viatico = $this->buscar($identificador);
+        $this->authorize('operar', $viatico);
+
+        $result = $this->service->generarOrdenAnticipo(
+            $viatico->id,
+            $request->user()?->servidor
+        );
+
+        return response($result['content'], 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' .
+                $result['filename'] . '"',
+        ]);
+    }
+
+    /**
      * El id del viático, si el usuario puede verlo.
      *
      * Los PDF no comprobaban nada y el código es predecible (unidad, año y
@@ -69,12 +97,18 @@ class InformeViaticoController extends Controller
      */
     private function autorizar(string $identificador): int
     {
-        $viatico = is_numeric($identificador)
-            ? Viatico::findOrFail((int) $identificador)
-            : Viatico::where('codigo_viatico', $identificador)->firstOrFail();
+        $viatico = $this->buscar($identificador);
 
         $this->authorize('ver', $viatico);
 
         return $viatico->id;
+    }
+
+    /** El viático por id o por código, como lo trae el enlace. */
+    private function buscar(string $identificador): Viatico
+    {
+        return is_numeric($identificador)
+            ? Viatico::findOrFail((int) $identificador)
+            : Viatico::where('codigo_viatico', $identificador)->firstOrFail();
     }
 }
