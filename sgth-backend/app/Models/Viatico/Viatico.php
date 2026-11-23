@@ -36,9 +36,15 @@ class Viatico extends Model
         'estado',
         'monto_calculado',
         'monto_anticipo',
+        'fecha_anticipo',
         'modalidad_anticipo',
         'tipo_viaje',
         'pais_destino',
+        // Lo que Financiero escribe al entregar el anticipo —o al
+        // contabilizar, si el viático fue sin anticipo—. Confirmaron el
+        // 2026-11-23 (S1) que ahí anotan el número del comprobante de pago
+        // que emite su propio sistema; la columna conserva el nombre con que
+        // nació para no arrastrar una migración de renombrado.
         'numero_resolucion',
         'partida_presupuestaria_id',
         'created_by',
@@ -55,6 +61,7 @@ class Viatico extends Model
             'noches'           => 'integer',
             'monto_calculado'  => 'decimal:2',
             'monto_anticipo'   => 'decimal:2',
+            'fecha_anticipo'   => 'date',
         ];
     }
 

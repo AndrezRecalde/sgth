@@ -519,7 +519,7 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
     @if($calculo['anticipo'] > 0)
     <div class="res-row">
       <div class="res-lbl">
-        Anticipo entregado:
+        Anticipo entregado{{ $anticipoDetalle }}:
       </div>
       <div class="res-val">
         $ {{ number_format($calculo['anticipo'], 2) }}

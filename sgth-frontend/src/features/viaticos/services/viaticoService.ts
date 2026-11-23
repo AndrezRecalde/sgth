@@ -11,11 +11,19 @@ import { liquidacionService }    from './liquidacionService'
 
 export type { CrearTramoData } from './tramoService'
 
-/** Lo que asigna Financiero para respaldar el pago. */
+/**
+ * Lo que asigna Financiero para respaldar el pago.
+ *
+ * `numero_resolucion` es el número del comprobante de pago que emite el
+ * sistema de Gestión Financiera: confirmaron el 2026-11-23 que es ahí donde lo
+ * anotan. La columna conserva el nombre con que nació.
+ */
 export type RespaldoContable = {
   numero_resolucion:         string
   /** Del catálogo de partidas de Estructura. */
   partida_presupuestaria_id: number
+  /** Solo al entregar el anticipo: el día en que sale el dinero. */
+  fecha_anticipo?:           string
 }
 
 export const viaticoService = {
