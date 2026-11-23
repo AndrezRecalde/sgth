@@ -147,6 +147,14 @@ class ViaticoController extends Controller
         // se bloquea el cambio (decisión del usuario, 2026-09-18).
         $viatico->setAttribute('itinerario_problemas', $this->itinerario->problemas($viatico));
 
+        // Si al servidor le falta la cuenta con la que se le paga. Hasta ahora
+        // solo se enteraba quien abría el PDF de la solicitud, que es el día
+        // de la transferencia. Viaja el sí o el no, nunca el número.
+        $viatico->setAttribute(
+            'sin_cuenta_bancaria',
+            \App\Support\CuentaDeViatico::falta($viatico->servidor)
+        );
+
         return ApiResponse::ok(
             $viatico,
             'Detalle del viático.'

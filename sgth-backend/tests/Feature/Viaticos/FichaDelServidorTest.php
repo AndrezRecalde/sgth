@@ -15,6 +15,8 @@
 
 use App\Enums\EstadoViatico;
 use App\Enums\RegimenLaboral;
+use App\Models\Catalogo\EntidadFinanciera;
+use App\Models\Expediente\CuentaBancariaServidor;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
 use App\Models\Viatico\Viatico;
@@ -117,4 +119,45 @@ it('el titular ve su propio viático sin que le devuelvan su ficha', function ()
     foreach ($this->sensibles as $campo) {
         expect($respuesta->json('datos.data.0.servidor'))->not->toHaveKey($campo);
     }
+});
+
+/*
+| El aviso de que falta la cuenta bancaria (2026-11-18).
+|
+| Sin cuenta principal de viáticos, Gestión Financiera no tiene a dónde
+| transferir. Hasta ahora solo se enteraba quien abría el PDF de la solicitud,
+| que es el día del pago. La ficha lo dice antes, y dice solo eso: el número de
+| cuenta no viaja a esta pantalla.
+*/
+it('la ficha avisa de que falta la cuenta bancaria, y no manda el numero', function () {
+    $ficha = fn () => $this->actingAs($this->financiero, 'sanctum')
+        ->getJson("/api/v1/viaticos/{$this->viatico->id}")
+        ->assertOk();
+
+    $respuesta = $ficha()->assertJsonPath('datos.sin_cuenta_bancaria', true);
+    expect($respuesta->json('datos.servidor'))->not->toHaveKey('cuentas_bancarias');
+
+    $banco = EntidadFinanciera::query()->first() ?? EntidadFinanciera::forceCreate([
+        'nombre' => 'Banco de Prueba', 'tipo' => 'banco', 'codigo_bce' => '999', 'estado' => true,
+    ]);
+
+    $cuenta = fn (bool $paraViatico) => CuentaBancariaServidor::forceCreate([
+        'servidor_id'           => $this->viajero->id,
+        'entidad_financiera_id' => $banco->id,
+        'tipo_cuenta'           => 'ahorros',
+        'numero_cuenta'         => $paraViatico ? '2200334455' : '1100223344',
+        'proposito'             => $paraViatico ? 'ambos' : 'sueldo',
+        'es_principal_sueldo'   => ! $paraViatico,
+        'es_principal_viatico'  => $paraViatico,
+        'estado'                => true,
+    ]);
+
+    // La del sueldo no sirve: el viático se paga a la que está marcada para
+    // viáticos, que es la que imprime la solicitud.
+    $cuenta(false);
+    $ficha()->assertJsonPath('datos.sin_cuenta_bancaria', true);
+
+    $cuenta(true);
+    $respuesta = $ficha()->assertJsonPath('datos.sin_cuenta_bancaria', false);
+    expect($respuesta->json('datos'))->not->toContain('2200334455');
 });
