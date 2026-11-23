@@ -7,6 +7,7 @@ export function usePdfViatico() {
   const [loadingSolicitud,   setLoadingSolicitud]   = useState(false)
   const [loadingInforme,     setLoadingInforme]     = useState(false)
   const [loadingComprobante, setLoadingComprobante] = useState(false)
+  const [loadingOrden,       setLoadingOrden]       = useState(false)
 
   const abrirPdf = async (
     url: string,
@@ -95,12 +96,40 @@ export function usePdfViatico() {
     }
   }
 
+  /*
+  | La orden con la que Gestión Financiera pide el egreso del anticipo. La
+  | emite solo quien opera los viáticos: el documento se sella con el nombre de
+  | quien lo genera (2026-11-23, S4).
+  */
+  const descargarOrdenAnticipo = async (
+    identificador: string | number
+  ) => {
+    setLoadingOrden(true)
+    const progreso = notificar.proceso('Generando orden de pago', 'Por favor espere...')
+    try {
+      await abrirPdf(
+        `/viaticos/${identificador}/orden-anticipo/generar`,
+        `orden-anticipo-${identificador}.pdf`
+      )
+      progreso.exito('Orden generada', 'La orden de pago del anticipo se abrió correctamente.')
+    } catch {
+      progreso.error(
+        'No se pudo generar la orden de pago',
+        'El viático debe estar aprobado y haberse solicitado con anticipo.'
+      )
+    } finally {
+      setLoadingOrden(false)
+    }
+  }
+
   return {
     descargarSolicitud,
     descargarInforme,
     descargarComprobante,
+    descargarOrdenAnticipo,
     loadingSolicitud,
     loadingInforme,
     loadingComprobante,
+    loadingOrden,
   }
 }

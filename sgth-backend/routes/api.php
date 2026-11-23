@@ -1839,6 +1839,14 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
                 'generarComprobanteContabilidad']
         )->name('viaticos.comprobante.generar');
 
+        // La orden con la que Financiero pide el egreso del anticipo. Solo
+        // quien opera: el documento se sella con el nombre de quien lo genera.
+        Route::get(
+            '{identificador}/orden-anticipo/generar',
+            [InformeViaticoController::class,
+                'generarOrdenAnticipo']
+        )->name('viaticos.orden-anticipo.generar');
+
         // Tramos del itinerario
         Route::get('{viaticoId}/tramos',
             [TramoViaticoController::class, 'index']);

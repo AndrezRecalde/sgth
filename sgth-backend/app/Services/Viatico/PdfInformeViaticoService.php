@@ -242,6 +242,78 @@ class PdfInformeViaticoService
      *
      * @return array<string, array{filas: list<array{nombre: string, total: float}>, total: float}>
      */
+    /**
+     * La orden de pago del anticipo.
+     *
+     * Se imprime desde que el viático está aprobado, antes de que el dinero
+     * salga: es el papel con el que Financiero pide el egreso (S3). Por eso no
+     * es un segundo comprobante contable y lleva el tipo PREVIA.
+     *
+     * `$elabora` es quien la genera —el funcionario de Financiero que prepara
+     * el pago—, y se sella la primera vez: reimprimirla no le cambia el nombre
+     * a un papel ya firmado (S4).
+     */
+    public function generarOrdenAnticipo(
+        int|string $identificador,
+        ?Servidor $elabora = null
+    ): array {
+        $viatico = $this->cargarViatico($identificador);
+
+        if ($this->valorDe($viatico->modalidad_anticipo) === 'sin_anticipo') {
+            throw new ReglaNegocioException(
+                'El viático se solicitó sin anticipo: no hay pago que ordenar.'
+            );
+        }
+
+        $sinOrden = [
+            EstadoViatico::SOLICITADO->value,
+            EstadoViatico::CANCELADO->value,
+            EstadoViatico::RECHAZADO->value,
+        ];
+
+        if (in_array($viatico->estado->value, $sinOrden, true)) {
+            throw new ReglaNegocioException(
+                'La orden de pago del anticipo se emite desde que el viático está aprobado.'
+            );
+        }
+
+        $this->firmantes->sellarOrdenDeAnticipo($viatico, $elabora);
+
+        // Antes de entregarlo no hay monto guardado —`monto_anticipo` queda en
+        // cero hasta ese momento—, así que se anuncia el previsto, que es con
+        // lo que se ordena el pago.
+        $anticipo = (float) ($viatico->monto_anticipo ?? 0) > 0
+            ? (float) $viatico->monto_anticipo
+            : round((float) $viatico->monto_calculado * CalculoViaticoService::PORCENTAJE_JUSTIFICABLE, 2);
+
+        $pdf = Pdf::loadView(
+            'pdf.viaticos.orden-pago-anticipo',
+            [
+                'viatico'        => $viatico,
+                'firmas'         => $this->firmantes->paraDocumento($viatico, FirmanteViaticoService::ORDEN),
+                ...$this->comunes($viatico),
+                'anticipo'       => $anticipo,
+                'anticipoLetras' => \App\Helpers\NumeroALetras::convertir($anticipo),
+                'porcentaje'     => CalculoViaticoService::PORCENTAJE_JUSTIFICABLE * 100,
+                'cuenta'         => \App\Support\CuentaDeViatico::de($viatico->servidor),
+                'fechaOrden'     => $viatico->fecha_anticipo
+                    ? \Illuminate\Support\Carbon::parse($viatico->fecha_anticipo)
+                    : now(),
+            ]
+        )->setPaper('a4', 'portrait');
+
+        return [
+            'content'  => $pdf->output(),
+            'filename' => "orden_anticipo_{$viatico->codigo_viatico}.pdf",
+        ];
+    }
+
+    /** El valor de un enum que el modelo puede devolver ya casteado. */
+    private function valorDe(mixed $valor): string
+    {
+        return $valor instanceof \BackedEnum ? (string) $valor->value : (string) $valor;
+    }
+
     private function agruparFacturasPorCategoria(
         \App\Models\Viatico\Viatico $viatico
     ): array {
