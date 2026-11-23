@@ -2,6 +2,7 @@
 
 import { Text } from '@mantine/core'
 import { DetailList, SectionCard, type DetailItem } from '@/components/ui'
+import { formatFecha } from '@/lib/fecha'
 import { MODALIDAD_LABELS } from '../constants/viatico.constants'
 import { dolares } from '../utils/monto'
 import type { ViaticoConRelaciones } from '@/types/api'
@@ -32,8 +33,10 @@ export function ViaticoAnticipoCard({ viatico: d }: Props) {
           ? dolares(d.monto_anticipo)
           : TERMINADOS.includes(String(d.estado)) ? 'No se entregó' : 'Por entregar',
     },
-    // El respaldo que asigna Financiero; se imprime en el comprobante.
-    { label: 'Resolución', value: d.numero_resolucion },
+    // El respaldo que asigna Financiero; se imprime en el comprobante. El
+    // número es el del comprobante de pago de su sistema (2026-11-23).
+    { label: 'Comprobante de pago', value: d.numero_resolucion },
+    { label: 'Fecha de entrega', value: formatFecha(d.fecha_anticipo) },
     { label: 'Partida presupuestaria', value: d.partida_presupuestaria?.codigo },
   ]
 

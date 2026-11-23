@@ -317,12 +317,17 @@ class ViaticoController extends Controller
     {
         $this->authorize('operar', Viatico::findOrFail($id));
 
-        // Financiero asigna la resolución y la partida al entregar el dinero
+        // Financiero asigna el respaldo y la partida al entregar el dinero
         // (decidido con ellos): sin eso no hay con qué respaldar el pago. La
         // partida sale del catálogo de Estructura, no de un campo de texto.
+        //
+        // La fecha es la del día en que sale el dinero, y por eso no puede ser
+        // futura. El comprobante y el informe la imprimen junto al anticipo,
+        // que hasta ahora se descontaba sin decir cuándo salió (A2).
         $datos = $request->validate([
             'numero_resolucion'         => ['required', 'string', 'max:100'],
             'partida_presupuestaria_id' => ['required', 'integer', $this->partidaVigente()],
+            'fecha_anticipo'            => ['required', 'date', 'before_or_equal:today'],
         ], $this->mensajesDelRespaldo());
 
         $viatico = $this->estados->entregarAnticipo($id, $request->user(), $datos);
@@ -425,9 +430,11 @@ class ViaticoController extends Controller
     private function mensajesDelRespaldo(): array
     {
         return [
-            'numero_resolucion.required'         => 'Indique el número de resolución.',
+            'numero_resolucion.required'         => 'Indique el número del comprobante de pago.',
             'partida_presupuestaria_id.required' => 'Elija la partida presupuestaria.',
             'partida_presupuestaria_id.exists'   => 'Esa partida presupuestaria no está vigente.',
+            'fecha_anticipo.required'            => 'Indique la fecha en que se entregó el anticipo.',
+            'fecha_anticipo.before_or_equal'     => 'La fecha de entrega no puede ser futura.',
         ];
     }
 

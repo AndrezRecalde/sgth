@@ -118,6 +118,16 @@ it('el resumen financiero sale aunque no se haya presentado ningun comprobante',
         ->toContain('Total reconocido al servidor');
 });
 
+it('el informe tambien fecha el anticipo y nombra su comprobante', function () {
+    $this->viatico->update([
+        'fecha_anticipo'    => '2026-11-20',
+        'numero_resolucion' => 'CP-2026-00987',
+    ]);
+
+    expect(($this->html)())
+        ->toContain('Anticipo entregado el 20/11/2026, comprobante N.° CP-2026-00987');
+});
+
 it('la clausula del debito lleva el valor que hay que devolver', function () {
     // Sin comprobantes: se le reconocen los 48 del 30 % y devuelve 64.
     $html = ($this->html)();

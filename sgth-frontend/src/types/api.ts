@@ -282,6 +282,8 @@ export type ViaticoConRelaciones = Viatico & {
    * Gestión Financiera transfiere. Viaja el sí o el no, nunca el número.
    */
   sin_cuenta_bancaria?: boolean;
+  /** El día en que Financiero entregó el anticipo; vacío si todavía no salió. */
+  fecha_anticipo?: string | null;
   /** La imputación del gasto, del catálogo de Estructura. */
   partida_presupuestaria?: { id: number; codigo?: string; descripcion?: string } | null;
   calculo?: CalculoViatico

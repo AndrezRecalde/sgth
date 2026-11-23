@@ -334,9 +334,11 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
     <div class="benef-val">{{ $saldoLetras }}</div>
     <div class="benef-tipo"></div>
   </div>
-  {{-- El respaldo contable que asigna Financiero. --}}
+  {{-- El respaldo que asigna Financiero: el número del comprobante de pago
+       que emite su propio sistema, confirmado el 2026-11-23 (S1). Es el único
+       sitio donde aparece cuando el viático se tramitó sin anticipo. --}}
   <div class="benef-row">
-    <div class="benef-lbl">Resolución:</div>
+    <div class="benef-lbl">Comprobante de pago:</div>
     <div class="benef-val">{{ $viatico->numero_resolucion ?: '—' }}</div>
     <div class="benef-tipo">
       PARTIDA: <span class="tipo-badge">{{ $viatico->partidaPresupuestaria?->codigo ?: '—' }}</span>
@@ -461,7 +463,7 @@ table.ft tr.total-row td.val { color: #1a3a5c; font-size: 10px; }
       @else
         @php $mod = (string) $viatico->modalidad_anticipo; @endphp
       @endif
-      {{ $mod === 'sin_anticipo' ? 'Sin anticipo' : 'Anticipo entregado' }}
+      {{ $mod === 'sin_anticipo' ? 'Sin anticipo' : 'Anticipo entregado'.$anticipoDetalle }}
     </td>
     <td class="val">
       $ {{ number_format($calculo['anticipo'], 2) }} (c)

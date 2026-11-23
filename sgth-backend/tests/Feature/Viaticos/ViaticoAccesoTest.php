@@ -303,8 +303,12 @@ it('el anticipo, la comisión y la liquidación pendiente los marca quien opera'
         'marcar-pendiente-liquidacion' => EstadoViatico::EN_COMISION,
     ];
 
-    // Entregar el anticipo pide además la resolución y la partida.
-    $respaldo = ['numero_resolucion' => 'RES-2026-001', 'partida_presupuestaria_id' => partidaDeViatico()->id];
+    // Entregar el anticipo pide además el respaldo, la partida y la fecha.
+    $respaldo = [
+        'numero_resolucion'         => 'RES-2026-001',
+        'partida_presupuestaria_id' => partidaDeViatico()->id,
+        'fecha_anticipo'            => now()->toDateString(),
+    ];
 
     foreach ($pasos as $accion => $estado) {
         ($this->en)($estado);

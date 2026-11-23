@@ -2,25 +2,30 @@
 
 import { useEffect } from 'react'
 import { Alert, Stack, TextInput } from '@mantine/core'
+import { DatePickerInput } from '@mantine/dates'
 import { IconInfoCircle } from '@tabler/icons-react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller, useForm, type DefaultValues } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormModal } from '@/components/ui'
 import { useContainedInput } from '@/hooks/useContainedInput'
+import { fromDateValue, hoyIso, toDateValue } from '@/lib/fecha'
 import { SelectPartidaPresupuestaria } from '@/features/estructura/components/SelectPartidaPresupuestaria'
-import { respaldoContableSchema } from '../schemas/aprobacion.schema'
+import { respaldoContableSchema, respaldoDelAnticipoSchema } from '../schemas/aprobacion.schema'
 import type { RespaldoContable } from '../services/viaticoService'
 
 /** Las partidas del gasto de viáticos, confirmadas con Gestión Financiera. */
 const PARTIDAS_DE_VIATICO = ['530303', '530304']
 
 /*
-| El número de resolución y la partida presupuestaria que asigna Gestión
-| Financiera (2026-09-15): al entregar el anticipo, y al contabilizar cuando el
-| viático se tramitó sin anticipo.
+| El respaldo del pago que asigna Gestión Financiera (2026-09-15): al entregar
+| el anticipo, y al contabilizar cuando el viático se tramitó sin anticipo.
 |
 | Las dos columnas existían desde el principio y ningún formulario las pedía:
 | el comprobante contable salía sin respaldo.
+|
+| Al entregar el anticipo se pide además la fecha (`conFecha`), que es cuando
+| sale el dinero: hasta ahora el comprobante lo descontaba sin decir cuándo
+| salió ni con qué documento (Gestión Financiera, 2026-11-23).
 */
 
 interface Props {
@@ -30,6 +35,8 @@ interface Props {
   descripcion: React.ReactNode
   confirmLabel: string
   cargando?: boolean
+  /** Entregando el anticipo: se pide también la fecha en que salió. */
+  conFecha?: boolean
   onConfirm: (datos: RespaldoContable) => void
 }
 
@@ -40,9 +47,17 @@ export function RespaldoContableModal({
   descripcion,
   confirmLabel,
   cargando = false,
+  conFecha = false,
   onConfirm,
 }: Props) {
   const contained = useContainedInput()
+
+  // La partida se omite: la elige quien abre el modal, y el valor en tiempo de
+  // ejecución es el mismo `undefined`.
+  const iniciales = (): DefaultValues<RespaldoContable> => ({
+    numero_resolucion: '',
+    ...(conFecha ? { fecha_anticipo: hoyIso() } : {}),
+  })
 
   const {
     control,
@@ -51,14 +66,16 @@ export function RespaldoContableModal({
     reset,
     formState: { errors },
   } = useForm<RespaldoContable>({
-    resolver: zodResolver(respaldoContableSchema),
-    defaultValues: { numero_resolucion: '', partida_presupuestaria_id: undefined },
+    resolver: zodResolver(conFecha ? respaldoDelAnticipoSchema : respaldoContableSchema),
+    defaultValues: iniciales(),
   })
 
   // El modal vive montado: sin esto conserva lo escrito la vez anterior.
   useEffect(() => {
-    if (opened) reset({ numero_resolucion: '', partida_presupuestaria_id: undefined })
-  }, [opened, reset])
+    if (opened) reset(iniciales())
+    // `iniciales` se rehace en cada render; lo que importa es abrir y el modo.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [opened, conFecha, reset])
 
   const cerrar = () => {
     reset()
@@ -82,12 +99,32 @@ export function RespaldoContableModal({
         </Alert>
 
         <TextInput
-          label="Número de resolución"
-          placeholder="Ej: RES-GADPE-2026-0123"
+          label="Número del comprobante de pago"
+          placeholder="El que emite el sistema de Gestión Financiera"
           {...contained}
           {...register('numero_resolucion')}
           error={errors.numero_resolucion?.message}
         />
+
+        {conFecha && (
+          <Controller
+            name="fecha_anticipo"
+            control={control}
+            render={({ field }) => (
+              <DatePickerInput
+                label="Fecha de entrega"
+                placeholder="Seleccionar fecha"
+                valueFormat="DD/MM/YYYY"
+                // Es el día en que sale el dinero: no puede ser futuro.
+                maxDate={new Date()}
+                {...contained}
+                value={toDateValue(field.value)}
+                onChange={(d) => field.onChange(fromDateValue(d ?? null))}
+                error={errors.fecha_anticipo?.message}
+              />
+            )}
+          />
+        )}
 
         <Controller
           name="partida_presupuestaria_id"

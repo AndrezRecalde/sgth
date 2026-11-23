@@ -123,30 +123,6 @@ class PdfInformeViaticoService
         return [$zonaLabel, $modalidadLabel, $modalidad];
     }
 
-    /**
-     * El «TIPO» que el comprobante imprime en su badge, desde la modalidad de
-     * anticipo del viático.
-     *
-     * El `default` decía «DEFINITIVA», igual que un viático con anticipo. La
-     * columna admite además `parcial` —hoy no se puede elegir, ni en el
-     * formulario ni en la validación—, así que un viático parcial llegado de
-     * un seeder o de una corrección a mano se habría firmado con el tipo de
-     * otro. Lo que no se sabe traducir se imprime tal como está guardado.
-     */
-    private function tipoDePago(Viatico $viatico): string
-    {
-        $modalidad = $viatico->modalidad_anticipo instanceof \BackedEnum
-            ? $viatico->modalidad_anticipo->value
-            : (string) $viatico->modalidad_anticipo;
-
-        return match ($modalidad) {
-            'total'        => 'DEFINITIVA',
-            'sin_anticipo' => 'SIN ANTICIPO',
-            'parcial'      => 'ANTICIPO PARCIAL',
-            default        => mb_strtoupper(str_replace('_', ' ', $modalidad), 'UTF-8') ?: '—',
-        };
-    }
-
     private function cargarViatico(int|string $identificador): Viatico
     {
         $query = Viatico::with([
@@ -212,7 +188,11 @@ class PdfInformeViaticoService
                 'calculo'             => $calculo,
                 'facturasPorCategoria'=> $facturasPorCategoria,
                 'elaborado'           => $this->elaboradoPor($viatico),
-                'modalidadLabel'      => $this->tipoDePago($viatico),
+                // El «TIPO» es la etapa del pago, no la modalidad del anticipo:
+                // definida por Gestión Financiera el 2026-11-23 (S2). Este
+                // documento es siempre el definitivo, también cuando el viático
+                // se tramitó sin anticipo; la orden del anticipo es la previa.
+                'modalidadLabel'      => 'DEFINITIVA',
             ]
         )->setPaper('a4', 'portrait');
 
@@ -320,7 +300,40 @@ class PdfInformeViaticoService
             'servidorNombre'  => $servidor ? $this->organigrama->nombreCompleto($servidor) : '—',
             'destino'         => \App\Support\DestinoDelViatico::texto($viatico),
             'destinoCiudades' => \App\Support\DestinoDelViatico::textoDeCiudades($viatico),
+            'anticipoDetalle' => $this->detalleDelAnticipo($viatico),
         ];
+    }
+
+    /**
+     * Cuándo salió el anticipo y con qué documento, para la línea que lo
+     * descuenta.
+     *
+     * El comprobante y el informe lo restaban a secas —«Anticipo entregado:
+     * $ 112.00»—, sin fecha ni respaldo, y había que buscarlo en otra parte.
+     * Pedido por Gestión Financiera (2026-11-23, A2). El número es el que
+     * escriben al entregarlo: confirmaron (S1) que ahí anotan el comprobante
+     * de pago que emite su propio sistema.
+     *
+     * Devuelve cadena vacía mientras no haya nada que decir, para que un
+     * viático de antes de este cambio salga como salía.
+     */
+    private function detalleDelAnticipo(Viatico $viatico): string
+    {
+        if ((float) ($viatico->monto_anticipo ?? 0) <= 0) {
+            return '';
+        }
+
+        $partes = [];
+
+        if ($viatico->fecha_anticipo) {
+            $partes[] = 'el '.\Illuminate\Support\Carbon::parse($viatico->fecha_anticipo)->format('d/m/Y');
+        }
+
+        if ($viatico->numero_resolucion) {
+            $partes[] = 'comprobante N.° '.$viatico->numero_resolucion;
+        }
+
+        return $partes ? ' '.implode(', ', $partes) : '';
     }
 
     /**

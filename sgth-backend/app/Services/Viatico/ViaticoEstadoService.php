@@ -136,7 +136,7 @@ final class ViaticoEstadoService
     }
 
     /**
-     * @param array{numero_resolucion?: string, partida_presupuestaria_id?: int} $datos
+     * @param array{numero_resolucion?: string, partida_presupuestaria_id?: int, fecha_anticipo?: string} $datos
      */
     public function entregarAnticipo(int $viaticoId, User $user, array $datos = []): Viatico
     {
@@ -155,6 +155,13 @@ final class ViaticoEstadoService
                 (float) $viatico->monto_calculado * CalculoViaticoService::PORCENTAJE_JUSTIFICABLE,
                 2
             );
+
+            // Cuándo salió el dinero. Se guarda aquí y no en `anotarRespaldo`
+            // porque un viático sin anticipo no tiene fecha de entrega que
+            // registrar, y ese método lo comparte con `contabilizar`.
+            if (! empty($datos['fecha_anticipo'])) {
+                $viatico->fecha_anticipo = $datos['fecha_anticipo'];
+            }
         }, 'Solo se entrega el anticipo de un viático aprobado.');
     }
 

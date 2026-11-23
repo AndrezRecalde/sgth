@@ -191,19 +191,46 @@ it('cuando el servidor tiene que devolver, lo dice en letras y con su rotulo', f
         ->not->toContain('A pagar:');
 });
 
-it('el tipo de pago sale de la modalidad del viatico, y lo que no sabe traducir no lo inventa', function () {
+/*
+| El «TIPO» del comprobante es la etapa del pago, no la modalidad del anticipo.
+| Lo definió Gestión Financiera el 2026-11-23: previa el anticipo, definitiva el
+| viático completo. Antes salía de `modalidad_anticipo`, de modo que un viático
+| tramitado sin anticipo decía «SIN ANTICIPO» en vez de decir que su pago es el
+| definitivo.
+*/
+it('el tipo es la etapa del pago: el comprobante es siempre el definitivo', function () {
     expect(($this->html)(($this->viatico)()))->toContain('DEFINITIVA');
 
-    expect(($this->html)(($this->viatico)(['modalidad_anticipo' => 'sin_anticipo'])))
-        ->toContain('SIN ANTICIPO');
+    $sinAnticipo = ($this->viatico)([
+        'modalidad_anticipo' => 'sin_anticipo',
+        'monto_anticipo'     => 0,
+    ]);
 
-    // `parcial` está en el enum de la columna pero no se puede elegir: ni el
-    // formulario lo ofrece ni la validación lo acepta. Si aparece —un seeder,
-    // una corrección a mano—, el comprobante lo decía «DEFINITIVA», que es el
-    // tipo de otro viático, y debajo iban tres firmas.
-    expect(($this->html)(($this->viatico)(['modalidad_anticipo' => 'parcial'])))
-        ->toContain('ANTICIPO PARCIAL')
-        ->not->toContain('DEFINITIVA');
+    expect(($this->html)($sinAnticipo))
+        ->toContain('DEFINITIVA')
+        ->not->toContain('SIN ANTICIPO');
+});
+
+it('la linea del anticipo dice cuando salio y con que comprobante', function () {
+    $viatico = ($this->viatico)([
+        'fecha_anticipo'    => '2026-11-20',
+        'numero_resolucion' => 'CP-2026-00987',
+    ]);
+
+    expect(($this->html)($viatico))
+        ->toContain('Anticipo entregado el 20/11/2026, comprobante N.° CP-2026-00987');
+});
+
+it('un viatico sin anticipo no inventa fecha ni comprobante', function () {
+    $viatico = ($this->viatico)([
+        'modalidad_anticipo' => 'sin_anticipo',
+        'monto_anticipo'     => 0,
+        'numero_resolucion'  => 'CP-2026-00987',
+    ]);
+
+    expect(($this->html)($viatico))
+        ->toContain('Sin anticipo')
+        ->not->toContain('comprobante N.°');
 });
 
 it('la fecha de la ciudad va en el orden del español', function () {

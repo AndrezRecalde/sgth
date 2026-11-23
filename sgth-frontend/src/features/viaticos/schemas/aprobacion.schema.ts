@@ -1,8 +1,9 @@
 import { z } from 'zod/v4'
+import { noEsFutura } from '@/lib/fecha'
 
 /*
 | Lo que decide Financiero: el coeficiente de un viaje al exterior al
-| aprobarlo, y la resolución y la partida que respaldan el pago.
+| aprobarlo, y el respaldo y la partida con los que se paga.
 */
 
 export const aprobarExteriorSchema = z.object({
@@ -19,7 +20,7 @@ export const respaldoContableSchema = z.object({
   numero_resolucion: z
     .string()
     .trim()
-    .min(1, 'Indique el número de resolución')
+    .min(1, 'Indique el número del comprobante de pago')
     .max(100, 'Máximo 100 caracteres'),
   // Del catálogo de Estructura, el mismo que usan Puestos y las acciones de
   // personal: la partida se elige, no se escribe.
@@ -30,3 +31,18 @@ export const respaldoContableSchema = z.object({
 })
 
 export type RespaldoContableFormData = z.infer<typeof respaldoContableSchema>
+
+/*
+| Al entregar el anticipo se pide además la fecha, que es cuando sale el
+| dinero: el comprobante y el informe la imprimen junto a la línea que lo
+| descuenta (Gestión Financiera, 2026-11-23). Al contabilizar un viático sin
+| anticipo no hay entrega que fechar, y por eso son dos esquemas.
+*/
+export const respaldoDelAnticipoSchema = respaldoContableSchema.extend({
+  fecha_anticipo: z
+    .string({ error: 'Indique la fecha de entrega' })
+    .min(1, 'Indique la fecha de entrega')
+    .refine(noEsFutura, 'La fecha de entrega no puede ser futura'),
+})
+
+export type RespaldoDelAnticipoFormData = z.infer<typeof respaldoDelAnticipoSchema>

@@ -110,7 +110,12 @@ beforeEach(function () {
     $this->motivo = ['motivo' => 'La documentación no corresponde'];
 
     // Entregar el anticipo y contabilizar piden el respaldo contable.
-    $this->respaldo = ['numero_resolucion' => 'RES-2026-001', 'partida_presupuestaria_id' => partidaDeViatico()->id];
+    $this->respaldo = [
+        'numero_resolucion'         => 'RES-2026-001',
+        'partida_presupuestaria_id' => partidaDeViatico()->id,
+        // Solo la mira `entregar-anticipo`; `contabilizar` la ignora.
+        'fecha_anticipo'            => now()->toDateString(),
+    ];
 });
 
 // ── Grafo de estados ─────────────────────────────────────────────────
@@ -359,19 +364,23 @@ it('un viático sin anticipo no recibe anticipo', function () {
 // ── Respaldo contable ────────────────────────────────────────────────
 
 /*
-| Gestión Financiera asigna el número de resolución y la partida al entregar el
-| anticipo (2026-09-15). Las dos columnas existían desde el principio y nadie
-| las llenaba nunca.
+| Gestión Financiera asigna el respaldo y la partida al entregar el anticipo
+| (2026-09-15). Las dos columnas existían desde el principio y nadie las
+| llenaba nunca.
+|
+| Desde el 2026-11-23 pide además la fecha de entrega: el comprobante
+| descontaba el anticipo sin decir cuándo había salido.
 */
 
-it('sin resolución ni partida no se entrega el anticipo', function () {
+it('sin respaldo, partida ni fecha no se entrega el anticipo', function () {
     $viatico = ($this->viaticoDe)($this->titular, EstadoViatico::APROBADO);
 
     $errores = ($this->post)($this->financiero, $viatico, 'entregar-anticipo')
         ->assertStatus(422)
         ->json('errores');
 
-    expect(array_keys($errores))->toBe(['numero_resolucion', 'partida_presupuestaria_id'])
+    expect(array_keys($errores))
+        ->toBe(['numero_resolucion', 'partida_presupuestaria_id', 'fecha_anticipo'])
         ->and($viatico->fresh()->estado)->toBe(EstadoViatico::APROBADO);
 
     ($this->post)($this->financiero, $viatico, 'entregar-anticipo', $this->respaldo)->assertOk();
@@ -379,7 +388,21 @@ it('sin resolución ni partida no se entrega el anticipo', function () {
     expect($viatico->fresh())
         ->estado->toBe(EstadoViatico::CON_ANTICIPO)
         ->numero_resolucion->toBe('RES-2026-001')
-        ->partida_presupuestaria_id->toBe(partidaDeViatico()->id);
+        ->partida_presupuestaria_id->toBe(partidaDeViatico()->id)
+        ->and($viatico->fresh()->fecha_anticipo->toDateString())->toBe(now()->toDateString());
+});
+
+it('la fecha de entrega del anticipo no puede ser futura', function () {
+    $viatico = ($this->viaticoDe)($this->titular, EstadoViatico::APROBADO);
+
+    // El dinero no sale mañana: la fecha es la del día en que se entrega.
+    $errores = ($this->post)($this->financiero, $viatico, 'entregar-anticipo', [
+        ...$this->respaldo,
+        'fecha_anticipo' => now()->addDay()->toDateString(),
+    ])->assertStatus(422)->json('errores');
+
+    expect(array_keys($errores))->toBe(['fecha_anticipo'])
+        ->and($viatico->fresh()->estado)->toBe(EstadoViatico::APROBADO);
 });
 
 it('el viático sin anticipo las pide al contabilizar, y el que ya las tiene no', function () {

@@ -131,9 +131,10 @@ export function ViaticoAcciones({ viatico: d, puede }: Props) {
         title={conRespaldo === 'anticipo' ? 'Entregar anticipo' : 'Contabilizar viático'}
         confirmLabel={conRespaldo === 'anticipo' ? 'Entregar anticipo' : 'Contabilizar'}
         cargando={m.entregarAnticipo.isPending || m.contabilizar.isPending}
+        conFecha={conRespaldo === 'anticipo'}
         descripcion={
           conRespaldo === 'anticipo'
-            ? `Con qué se respalda el anticipo de ${codigo}. Los dos datos se imprimen en el comprobante contable.`
+            ? `Con qué se respalda el anticipo de ${codigo} y cuándo sale el dinero. Se imprime todo en el comprobante contable.`
             : `${codigo} se tramitó sin anticipo: asigne el respaldo antes de contabilizarlo.`
         }
         onConfirm={(datos) => {
