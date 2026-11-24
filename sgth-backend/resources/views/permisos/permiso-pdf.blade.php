@@ -10,6 +10,11 @@
   | propia paleta, recuadros redondeados, una marca de agua y el nombre de la
   | institución escrito a mano. Ningún encabezado dice «Asistencia» (pedido de
   | Talento Humano).
+  |
+  | Con bordes, como un formulario (pedido del usuario, 2026-11-24): cada copia
+  | enmarcada en el verde institucional, el motivo en una caja y las firmas en
+  | una cuadrícula con los rótulos arriba. Al cortar la hoja, cada mitad queda
+  | completa dentro de su marco.
   */
   $tipoVal = $permiso->tipo instanceof \App\Enums\TipoPermiso
     ? $permiso->tipo->value : (string) $permiso->tipo;
@@ -97,7 +102,9 @@
   body { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 10px; line-height: 1.4; color: #1c2321; margin: 0; }
 
   .mitad-superior { position: relative; height: 148.5mm; }
-  .copia { padding: 9mm 14mm 0 14mm; }
+  .copia { padding: 8mm 12mm 0 12mm; }
+  /* El marco de la copia: del membrete al pie. */
+  .marco { border: 1px solid #17593f; padding: 4mm 5mm 2.5mm 5mm; }
 
   .membrete { margin-bottom: 7px; }
   .membrete table { width: 100%; border-collapse: collapse; }
@@ -126,21 +133,24 @@
   .qr img { width: 21mm; height: 21mm; }
   .qr .ayuda { font-size: 7px; color: #5b6b63; margin-top: 2px; line-height: 1.25; }
 
-  .bloque-titulo { font-size: 8px; font-weight: bold; letter-spacing: 1.4px; text-transform: uppercase; color: #17593f; border-bottom: 0.7px solid #cfdad4; padding-bottom: 2px; margin: 8px 0 4px 0; }
-  .motivo { min-height: 9mm; text-align: justify; }
+  table.caja { width: 100%; border-collapse: collapse; margin-top: 7px; }
+  table.caja th { border: 0.7px solid #c6d2cc; background: #f2f6f4; text-align: left; padding: 3px 7px; font-size: 7.5px; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase; color: #3d4d46; }
+  table.caja td { border: 0.7px solid #c6d2cc; padding: 4px 7px; vertical-align: top; }
+  .motivo { min-height: 8mm; text-align: justify; }
   .reservado { color: #5b6b63; font-style: italic; }
 
-  /* El rótulo va arriba: el espacio para firmar queda antes de la línea, y las
-     tres líneas caen a la misma altura aunque un nombre ocupe dos renglones. */
-  .firmas { width: 100%; border-collapse: collapse; margin-top: 16px; }
-  .firmas td { width: 33.3%; text-align: center; vertical-align: top; border: none; padding: 0 7px; }
-  .firma-rotulo { font-size: 7.5px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; color: #6b7c74; margin-bottom: 34px; }
+  /* Los rótulos van en la fila de arriba: el espacio para firmar queda antes
+     de la línea, y las tres líneas caen a la misma altura aunque un nombre
+     ocupe dos renglones. */
+  .firmas { width: 100%; border-collapse: collapse; margin-top: 7px; }
+  .firmas th { width: 33.3%; border: 0.7px solid #c6d2cc; background: #f2f6f4; padding: 3px 4px; font-size: 7.5px; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase; color: #3d4d46; text-align: center; }
+  .firmas td { width: 33.3%; text-align: center; vertical-align: top; border: 0.7px solid #c6d2cc; padding: 30px 7px 4px 7px; }
   .firma-linea { border-top: 0.9px solid #1c2321; width: 92%; margin: 0 auto 3px auto; }
   .firma-nombre { font-weight: bold; font-size: 8.5px; }
   .firma-cargo { font-size: 8px; color: #3d4d46; margin-top: 1px; }
   .firma-vacia { font-size: 8px; color: #9aa8a1; }
 
-  .pie { margin-top: 8px; border-top: 0.7px solid #cfdad4; padding-top: 3px; font-size: 7.5px; color: #5b6b63; }
+  .pie { margin-top: 6px; border-top: 0.7px solid #cfdad4; padding-top: 3px; font-size: 7.5px; color: #5b6b63; }
   .pie table { width: 100%; border-collapse: collapse; }
   .pie td { border: none; padding: 0; }
   .pie .copia-de { text-align: right; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; color: #17593f; }
@@ -155,6 +165,7 @@
 @foreach($copias as $copia)
 @if($loop->first)<div class="mitad-superior">@endif
 <div class="copia">
+<div class="marco">
 
   @include('pdf._membrete-institucional', ['dependencia' => 'Dirección de Talento Humano'])
 
@@ -201,17 +212,25 @@
     </tr>
   </table>
 
-  <div class="bloque-titulo">Motivo</div>
-  @if($observacion !== null)
-    <div class="motivo" style="font-size: {{ $tamObs }}px;">{{ $observacion }}</div>
-  @else
-    <div class="motivo reservado">Reservado: es un dato privado del servidor. Talento Humano lo consulta en el sistema.</div>
-  @endif
+  <table class="caja">
+    <tr><th>Motivo</th></tr>
+    <tr><td>
+      @if($observacion !== null)
+        <div class="motivo" style="font-size: {{ $tamObs }}px;">{{ $observacion }}</div>
+      @else
+        <div class="motivo reservado">Reservado: es un dato privado del servidor. Talento Humano lo consulta en el sistema.</div>
+      @endif
+    </td></tr>
+  </table>
 
   <table class="firmas">
     <tr>
+      <th>Autoriza · {{ $rotuloJefe }}</th>
+      <th>Solicita · Servidor</th>
+      <th>Recibe · Talento Humano</th>
+    </tr>
+    <tr>
       <td>
-        <div class="firma-rotulo">Autoriza · {{ $rotuloJefe }}</div>
         <div class="firma-linea"></div>
         {{-- Sin jefe asignado queda el espacio, para que las tres firmas no se
              descuadren, y el cargo dice quién debe firmar. --}}
@@ -219,7 +238,6 @@
         <div class="firma-cargo">{{ $cargoJefe }}</div>
       </td>
       <td>
-        <div class="firma-rotulo">Solicita · Servidor</div>
         <div class="firma-linea"></div>
         <div class="firma-nombre">{{ $nombreServidor }}</div>
         <div class="firma-cargo">{{ $cargoServidor ?? 'Servidor' }}</div>
@@ -227,7 +245,6 @@
       <td>
         {{-- Los papeles los recibe Talento Humano (el rol de Recepción ya no se
              asigna): quien lo reciba escribe su nombre y la fecha. --}}
-        <div class="firma-rotulo">Recibe · Talento Humano</div>
         <div class="firma-linea"></div>
         <div class="firma-vacia">Nombre, firma y fecha de recepción</div>
       </td>
@@ -246,6 +263,7 @@
       </tr>
     </table>
   </div>
+</div>
 </div>
 @if($loop->first)
   <div class="corte"></div>
