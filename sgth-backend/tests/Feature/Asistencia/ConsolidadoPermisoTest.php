@@ -190,25 +190,67 @@ test('un tipo inventado se rechaza en vez de devolver un informe vacío', functi
         ->assertJsonStructure(['errores' => ['tipo']]);
 });
 
-test('la exportación a CSV trae encabezados y una fila por servidor', function () {
+test('el Excel lleva título, período, encabezados, una fila por servidor y totales', function () {
     permisoConcedido($this->ana,  'PER-2026-C0040', '08:00', '10:00');
     permisoConcedido($this->beto, 'PER-2026-C0041', '08:00', '09:00');
 
-    $params = http_build_query([
-        'fecha_inicio' => Carbon::today()->subDays(5)->toDateString(),
-        'fecha_fin'    => Carbon::today()->addDays(5)->toDateString(),
-    ]);
-
     $respuesta = $this->actingAs($this->uath, 'sanctum')
-        ->get("/api/v1/asistencia/consolidado-permisos/exportar-excel?{$params}")
+        ->get('/api/v1/asistencia/consolidado-permisos/exportar-excel?' . http_build_query([
+            'fecha_inicio' => Carbon::today()->subDays(5)->toDateString(),
+            'fecha_fin'    => Carbon::today()->addDays(5)->toDateString(),
+        ]))
         ->assertStatus(200);
 
-    $csv = $respuesta->streamedContent();
+    expect($respuesta->headers->get('content-type'))->toContain('spreadsheetml');
 
-    expect($csv)->toContain('Cedula;Servidor;Unidad')
-        ->and($csv)->toContain('0808888881')
-        ->and($csv)->toContain('ALFA BETA ANA MARÍA')
-        ->and($csv)->toContain('0808888882');
+    $hoja = hojaDelExcelDelConsolidado($respuesta);
+
+    expect($hoja->getTitle())->toBe('Consolidado')
+        ->and($hoja->getCell('A1')->getValue())->toBe('Consolidado de permisos — Personal')
+        ->and($hoja->getCell('A2')->getValue())->toStartWith('Del ')->toContain('Toda la institución')
+        ->and($hoja->rangeToArray('A4:H4')[0])->toBe(['N.º', 'Cédula', 'Servidor', 'Unidad administrativa', 'Permisos', 'Minutos', 'Horas', 'Días'])
+        // La cédula como texto: como número, Excel se comía el cero.
+        ->and($hoja->getCell('B5')->getValue())->toBe('0808888881')
+        ->and($hoja->getCell('B5')->getDataType())->toBe(PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING)
+        ->and($hoja->getCell('C5')->getValue())->toBe('ALFA BETA ANA MARÍA')
+        ->and($hoja->getCell('F5')->getValue())->toBe(120)
+        // Horas y días salen de los minutos, y los totales se suman en Excel.
+        ->and($hoja->getStyle('G5')->getNumberFormat()->getFormatCode())->toBe('[h]:mm')
+        ->and($hoja->getCell('H5')->getCalculatedValue())->toEqual(0.25)
+        ->and($hoja->getCell('A7')->getValue())->toBe('Total')
+        ->and($hoja->getCell('F7')->getValue())->toBe('=SUM(F5:F6)')
+        ->and($hoja->getCell('F7')->getCalculatedValue())->toEqual(180);
+});
+
+test('en enfermedad la cuenta del Excel se llama «Ausencias»', function () {
+    permisoConcedido($this->ana, 'PER-2026-C0042', '08:00', '10:00', tipo: TipoPermiso::ENFERMEDAD);
+
+    $hoja = hojaDelExcelDelConsolidado($this->actingAs($this->uath, 'sanctum')
+        ->get('/api/v1/asistencia/consolidado-permisos/exportar-excel?' . http_build_query([
+            'fecha_inicio' => Carbon::today()->subDays(5)->toDateString(),
+            'fecha_fin'    => Carbon::today()->addDays(5)->toDateString(),
+            'tipo'         => 'enfermedad',
+        ]))->assertStatus(200));
+
+    expect($hoja->getCell('E4')->getValue())->toBe('Ausencias');
+});
+
+test('el PDF sale a nombre de Talento Humano, sin «Asistencia», con minutos y sin firmas', function () {
+    permisoConcedido($this->ana, 'PER-2026-C0043', '08:00', '10:00');
+
+    $html = htmlDelPdfDelConsolidado($this->uath, '/api/v1/asistencia/consolidado-permisos/exportar-pdf', [
+        'fecha_inicio' => '2026-11-01', 'fecha_fin' => '2026-11-30',
+    ]);
+
+    expect($html)->toContain('Dirección de Talento Humano')
+        ->toContain('<h1>Consolidado de permisos</h1>')
+        ->toContain('Personal · Del 1 al 30 de noviembre de 2026')
+        ->toContain('Toda la institución')
+        ->toContain('>Minutos</th>')
+        ->not->toContain('Asistencia')
+        // Sin firmas (decidido con el usuario). El CSS de casa trae las
+        // clases, así que se busca el bloque.
+        ->not->toContain('<div class="firmas">');
 });
 
 test('la exportación a PDF se genera', function () {
@@ -379,13 +421,12 @@ test('la exportación respeta el filtro, para que el archivo diga lo que la pant
         'servidor_id'  => $this->ana->id,
     ]);
 
-    $csv = $this->actingAs($this->uath, 'sanctum')
+    $excel = textoDelExcelDelConsolidado($this->actingAs($this->uath, 'sanctum')
         ->get("/api/v1/asistencia/consolidado-permisos/exportar-excel?{$params}")
-        ->assertStatus(200)
-        ->streamedContent();
+        ->assertStatus(200));
 
-    expect($csv)->toContain('0808888881')
-        ->and($csv)->not->toContain('0808888882');
+    expect($excel)->toContain('0808888881')
+        ->and($excel)->not->toContain('0808888882');
 });
 
 test('el PDF filtrado se genera', function () {
@@ -511,13 +552,12 @@ test('la exportación respeta el filtro por unidad', function () {
         'unidad_administrativa_id' => $this->unidad->id,
     ]);
 
-    $csv = $this->actingAs($this->uath, 'sanctum')
+    $excel = textoDelExcelDelConsolidado($this->actingAs($this->uath, 'sanctum')
         ->get("/api/v1/asistencia/consolidado-permisos/exportar-excel?{$params}")
-        ->assertStatus(200)
-        ->streamedContent();
+        ->assertStatus(200));
 
-    expect($csv)->toContain('0808888881')
-        ->and($csv)->not->toContain('0808888885');
+    expect($excel)->toContain('0808888881')
+        ->and($excel)->not->toContain('0808888885');
 });
 
 // ── El filtro por marcación ──────────────────────────────────────
@@ -595,11 +635,40 @@ test('y la exportación respeta el filtro de marcación', function () {
         'fecha_fin'    => Carbon::today()->addDays(5)->toDateString(),
     ]);
 
-    $csv = $this->actingAs($this->uath, 'sanctum')
+    $excel = textoDelExcelDelConsolidado($this->actingAs($this->uath, 'sanctum')
         ->get("/api/v1/asistencia/consolidado-permisos/exportar-excel?{$params}")
-        ->assertStatus(200)
-        ->streamedContent();
+        ->assertStatus(200));
 
-    expect($csv)->toContain('0808888882')
-        ->and($csv)->not->toContain('0808888881');
+    expect($excel)->toContain('0808888882')
+        ->and($excel)->not->toContain('0808888881');
 });
+
+/** La hoja del Excel descargado, abierta del archivo y no del arreglo. */
+function hojaDelExcelDelConsolidado(\Illuminate\Testing\TestResponse $respuesta): PhpOffice\PhpSpreadsheet\Worksheet\Worksheet
+{
+    return PhpOffice\PhpSpreadsheet\IOFactory::load($respuesta->getFile()->getPathname())->getActiveSheet();
+}
+
+/** Todo el texto de la hoja, para buscar quién sale y quién no. */
+function textoDelExcelDelConsolidado(\Illuminate\Testing\TestResponse $respuesta): string
+{
+    return collect(hojaDelExcelDelConsolidado($respuesta)->toArray(null, false, false))
+        ->flatten()->filter()->implode("\n");
+}
+
+/**
+ * El HTML del PDF con los mismos datos que le pasa el controlador: se capturan
+ * al generarlo. Así la prueba falla también si el controlador deja de mandar
+ * algo que la vista usa.
+ */
+function htmlDelPdfDelConsolidado(\App\Models\User $quien, string $ruta, array $params): string
+{
+    $datos = null;
+    \Illuminate\Support\Facades\View::composer('permisos.consolidado-pdf', function ($vista) use (&$datos) {
+        $datos = $vista->getData();
+    });
+
+    test()->actingAs($quien, 'sanctum')->get($ruta . '?' . http_build_query($params))->assertStatus(200);
+
+    return view('permisos.consolidado-pdf', $datos)->render();
+}

@@ -126,15 +126,39 @@ test('el ausentismo solo trae los permisos por enfermedad aunque se pida otro ti
         ->and($respuesta->json('datos.consolidado.0.total_permisos'))->toBe(1);
 });
 
-test('el ausentismo se exporta en csv', function () {
+test('el ausentismo se exporta en Excel con su propio título', function () {
     permisoDeAusentismo($this->servidor, 'PER-2026-S0003', TipoPermiso::ENFERMEDAD);
 
     $respuesta = $this->actingAs($this->tecnico, 'sanctum')
         ->get('/api/v1/sso/ausentismo/exportar-excel?' . http_build_query($this->periodo))
         ->assertOk();
 
-    expect($respuesta->headers->get('Content-Type'))->toContain('text/csv')
-        ->and($respuesta->streamedContent())->toContain('0808777771');
+    $hoja = PhpOffice\PhpSpreadsheet\IOFactory::load($respuesta->getFile()->getPathname())->getActiveSheet();
+
+    expect($respuesta->headers->get('Content-Type'))->toContain('spreadsheetml')
+        ->and($hoja->getTitle())->toBe('Ausentismo')
+        ->and($hoja->getCell('A1')->getValue())->toBe('Ausentismo por enfermedad')
+        ->and($hoja->getCell('E4')->getValue())->toBe('Ausencias')
+        ->and($hoja->getCell('B5')->getValue())->toBe('0808777771');
+});
+
+test('el PDF del ausentismo sale a nombre de Seguridad y Salud Ocupacional', function () {
+    permisoDeAusentismo($this->servidor, 'PER-2026-S0004', TipoPermiso::ENFERMEDAD);
+
+    $datos = null;
+    Illuminate\Support\Facades\View::composer('permisos.consolidado-pdf', function ($vista) use (&$datos) {
+        $datos = $vista->getData();
+    });
+
+    $this->actingAs($this->tecnico, 'sanctum')
+        ->get('/api/v1/sso/ausentismo/exportar-pdf?' . http_build_query($this->periodo))
+        ->assertOk();
+
+    expect(view('permisos.consolidado-pdf', $datos)->render())
+        ->toContain('Seguridad y Salud Ocupacional')
+        ->toContain('<div class="supra">Riesgos laborales</div>')
+        ->toContain('<h1>Ausentismo por enfermedad</h1>')
+        ->not->toContain('Asistencia');
 });
 
 test('el tecnico de sso no abre el consolidado de asistencia', function () {

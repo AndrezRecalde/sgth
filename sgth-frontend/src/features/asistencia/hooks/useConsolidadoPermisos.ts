@@ -39,21 +39,25 @@ export function useConsolidadoPermisos(params: ParamsConsolidado | null) {
   })
 }
 
-/** Descarga el consolidado en CSV o PDF, avisando mientras se genera. */
+/**
+ * Descarga el consolidado en Excel o PDF, avisando mientras se genera. El
+ * Excel es un .xlsx desde el 2026-11-24: antes era un CSV sin título ni período.
+ */
 export function useExportarConsolidado() {
   const [exportando, setExportando] = useState<Formato | null>(null)
 
   const exportar = async (formato: Formato, params: ParamsConsolidado) => {
     setExportando(formato)
 
-    const progreso = notificar.proceso(`Exportando ${formato.toUpperCase()}...`, 'Generando el archivo, espere un momento.')
+    const nombre = formato === 'excel' ? 'Excel' : 'PDF'
+    const progreso = notificar.proceso(`Exportando ${nombre}...`, 'Generando el archivo, espere un momento.')
 
     try {
       const blob = formato === 'excel'
         ? await asistenciaService.consolidado.exportarExcel(params)
         : await asistenciaService.consolidado.exportarPdf(params)
 
-      const ext = formato === 'excel' ? 'csv' : 'pdf'
+      const ext = formato === 'excel' ? 'xlsx' : 'pdf'
 
       // `guardarArchivo` y no las mismas líneas a mano: aquí se revocaba la
       // URL del blob en el acto, justo después del `click()`, y en Firefox eso
@@ -69,7 +73,7 @@ export function useExportarConsolidado() {
         `consolidado_permisos_${params.tipo}${sufijo}_${params.fecha_inicio}.${ext}`,
       )
 
-      progreso.exito('Archivo descargado', `Consolidado exportado como ${ext.toUpperCase()}.`)
+      progreso.exito('Archivo descargado', `Consolidado exportado en ${nombre}.`)
     } catch {
       progreso.error('No se pudo exportar el consolidado de permisos', 'Inténtelo de nuevo en unos segundos.')
     } finally {

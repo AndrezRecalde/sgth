@@ -2,16 +2,20 @@
 namespace App\Http\Controllers\Asistencia;
 
 use App\Enums\TipoPermiso;
+use App\Exports\ConsolidadoPermisosExport;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\Estructura\UnidadAdministrativa;
 use App\Models\Expediente\Servidor;
 use App\Services\Asistencia\ConsolidadoPermisoService;
+use App\Support\NombreDelServidor;
+use App\Support\PeriodoEnLetras;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ConsolidadoPermisoController extends Controller
 {
@@ -46,67 +50,108 @@ class ConsolidadoPermisoController extends Controller
         );
     }
 
+    /**
+     * El consolidado en Excel. Era un CSV sin título ni período y con la
+     * cédula expuesta a perder el cero; ver `ConsolidadoPermisosExport`.
+     */
     public function exportarExcel(Request $request): mixed
     {
-        ['inicio' => $inicio, 'fin' => $fin, 'tipo' => $tipo,
-         'servidor' => $servidor, 'unidad' => $unidad] = $this->filtros($request);
+        $doc = $this->documento($request);
 
-        $filas = $this->servicio->paraExcel(
-            $this->servicio->generar($inicio, $fin, $tipo, $servidor?->id, $unidad?->id)['consolidado']
+        return Excel::download(
+            new ConsolidadoPermisosExport(
+                titulo: $doc['titulo'],
+                subtitulo: "{$doc['periodo']} · {$doc['alcance']} · Generado el " . now()->format('d/m/Y H:i'),
+                rotuloCuenta: $doc['rotuloCuenta'],
+                hoja: $doc['encabezado']['hoja'],
+                filas: $doc['consolidado']->all(),
+            ),
+            "{$doc['archivo']}.xlsx",
         );
-
-        $headers = [
-            'Content-Type'        => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="consolidado_permisos_' .
-                now()->format('Y-m-d') . '.csv"',
-        ];
-
-        return response()->stream(function () use ($filas) {
-            $handle = fopen('php://output', 'w');
-
-            // BOM para que Excel reconozca el UTF-8
-            fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
-
-            if (!empty($filas)) {
-                fputcsv($handle, array_keys($filas[0]), ';');
-
-                foreach ($filas as $fila) {
-                    fputcsv($handle, $fila, ';');
-                }
-            }
-
-            fclose($handle);
-        }, 200, $headers);
     }
 
+    /**
+     * El consolidado en PDF, en el estilo de los documentos institucionales
+     * (2026-11-24): A4 apaisado como los demás listados, membrete y pie fijos
+     * en cada hoja y los títulos de columna repetidos si pasa a otra.
+     */
     public function exportarPdf(Request $request): mixed
+    {
+        $doc = $this->documento($request);
+
+        // Con subconjunto de fuentes: con DejaVu Sans entera el PDF pasaba de
+        // ~110 KB a ~1 MB.
+        $pdf = app('dompdf.wrapper')
+            ->setOption('enable_font_subsetting', true)
+            ->setPaper('a4', 'landscape')
+            ->loadView('permisos.consolidado-pdf', [
+                ...$doc,
+                // Un informe se arma con los datos de hoy: lleva el logo de hoy.
+                ...app(\App\Contracts\Comunicacion\IdentidadInstitucionalServiceInterface::class)->paraDocumento(),
+            ]);
+
+        return $pdf->download("{$doc['archivo']}.pdf");
+    }
+
+    /**
+     * El encabezado del informe. Ningún encabezado dice «Asistencia» (pedido
+     * de Talento Humano, 2026-11-24): el de Asistencia va sin supra y sale a
+     * nombre de la Dirección de Talento Humano. `AusentismoSsoController` lo
+     * cambia por el suyo.
+     *
+     * @return array{supra: ?string, titulo: string, dependencia: string, conTipo: bool, archivo: string, hoja: string}
+     */
+    protected function encabezado(): array
+    {
+        return [
+            'supra'       => null,
+            'titulo'      => 'Consolidado de permisos',
+            'dependencia' => 'Dirección de Talento Humano',
+            'conTipo'     => true,
+            'archivo'     => 'consolidado_permisos',
+            'hoja'        => 'Consolidado',
+        ];
+    }
+
+    /**
+     * Lo que comparten el PDF y el Excel: las filas, los totales y cómo se
+     * nombran el período, el alcance y la cuenta.
+     *
+     * @return array<string, mixed>
+     */
+    private function documento(Request $request): array
     {
         ['inicio' => $inicio, 'fin' => $fin, 'tipo' => $tipo,
          'servidor' => $servidor, 'unidad' => $unidad] = $this->filtros($request);
 
         $datos = $this->servicio->generar($inicio, $fin, $tipo, $servidor?->id, $unidad?->id);
+        $encabezado = $this->encabezado();
+        $etiquetaTipo = TipoPermiso::from($tipo)->etiqueta();
+        $esEnfermedad = $tipo === TipoPermiso::ENFERMEDAD->value;
 
-        $pdf = app('dompdf.wrapper')
-            ->setPaper('letter', 'landscape')
-            ->loadView('permisos.consolidado-pdf', [
-                'consolidado' => $this->servicio->paraPdf($datos['consolidado']),
-                // Un informe se arma con los datos de hoy: lleva el logo de hoy.
-                ...app(\App\Contracts\Comunicacion\IdentidadInstitucionalServiceInterface::class)->paraDocumento(),
-                'totales'     => $datos['totales'],
-                'fechaInicio' => Carbon::parse($inicio)->format('d/m/Y'),
-                'fechaFin'    => Carbon::parse($fin)->format('d/m/Y'),
-                'tipo'        => TipoPermiso::from($tipo)->etiqueta(),
-                // Un informe de una sola persona tiene que decir de quién es:
-                // si no, son tres filas sueltas sin dueño.
-                'servidor'    => $servidor
-                    ? mb_strtoupper(trim("{$servidor->apellido} {$servidor->segundo_apellido} {$servidor->nombre} {$servidor->segundo_nombre}"), 'UTF-8')
-                    : null,
-                'unidad'      => $unidad?->nombre,
-            ]);
+        // Un informe de una sola persona tiene que decir de quién es: si no,
+        // son tres filas sueltas sin dueño. La unidad incluye las que cuelgan
+        // de ella, así que también se dice.
+        $alcance = match (true) {
+            $servidor !== null => 'Servidor: ' . mb_strtoupper(NombreDelServidor::de($servidor), 'UTF-8'),
+            $unidad !== null   => "Unidad: {$unidad->nombre}, con las que dependen de ella",
+            default            => 'Toda la institución',
+        };
 
-        return $pdf->download(
-            "consolidado_permisos_{$tipo}_" . now()->format('Y-m-d') . '.pdf'
-        );
+        return [
+            'encabezado'   => $encabezado,
+            'titulo'       => $encabezado['conTipo'] ? "{$encabezado['titulo']} — {$etiquetaTipo}" : $encabezado['titulo'],
+            'subtipo'      => $encabezado['conTipo'] ? $etiquetaTipo : null,
+            'periodo'      => ucfirst(PeriodoEnLetras::de(Carbon::parse($inicio), Carbon::parse($fin))),
+            'alcance'      => $alcance,
+            // En enfermedad entran también los reposos médicos aprobados:
+            // «permisos» se queda corto.
+            'rotuloCuenta' => $esEnfermedad ? 'Ausencias' : 'Permisos',
+            'esEnfermedad' => $esEnfermedad,
+            'consolidado'  => $this->servicio->paraPdf($datos['consolidado']),
+            'totales'      => $datos['totales'],
+            'archivo'      => "{$encabezado['archivo']}_{$tipo}_{$inicio}_{$fin}",
+        ];
     }
 
     /**

@@ -27,6 +27,22 @@ class AusentismoSsoController extends ConsolidadoPermisoController
     }
 
     /**
+     * El PDF y el Excel salen a nombre de Seguridad y Salud Ocupacional y con
+     * el título del indicador, no como el consolidado de Talento Humano.
+     */
+    protected function encabezado(): array
+    {
+        return [
+            'supra'       => 'Riesgos laborales',
+            'titulo'      => 'Ausentismo por enfermedad',
+            'dependencia' => 'Seguridad y Salud Ocupacional',
+            'conTipo'     => false,
+            'archivo'     => 'ausentismo',
+            'hoja'        => 'Ausentismo',
+        ];
+    }
+
+    /**
      * El tipo no lo elige quien pide: con otro, este endpoint serviría
      * cualquier consolidado a quien no tiene `ver-permisos-todos`.
      */

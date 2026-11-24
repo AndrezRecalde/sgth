@@ -1,181 +1,124 @@
-@php
-  // El logo lo manda el controlador: el vigente hoy (fase 2.2).
-  $logoPath = $logo ?? '';
-  $logoSrc  = $logoPath !== '' && file_exists($logoPath)
-    ? 'data:'.(mime_content_type($logoPath) ?: 'image/png').';base64,'.base64_encode(file_get_contents($logoPath))
-    : null;
-@endphp
+{{--
+| El consolidado de permisos por servidor en un período, y el ausentismo por
+| enfermedad de Riesgos Laborales, que es el mismo informe con el tipo fijo
+| (`AusentismoSsoController`). El encabezado lo decide cada controlador.
+|
+| Desde el 2026-11-24 en el estilo de los documentos institucionales, como los
+| reportes de TIC: el CSS de casa del inventario, A4 apaisado, membrete y pie
+| fijos en cada hoja y los títulos de columna repetidos si pasa a otra. Antes
+| llevaba una cabecera de recuadro negro, otro verde y el nombre de la
+| institución escrito a mano. Sin firmas (decidido con el usuario).
+--}}
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<title>{{ $encabezado['titulo'] }}</title>
+@include('pdf.inventario._estilos')
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    font-family: Arial, sans-serif;
-    font-size: 11px;
-    color: #000;
-    margin: 20px 25px;
-  }
-  .header-table {
-    width: 100%;
-    border-collapse: collapse;
-    border: 2px solid #000;
-    margin-bottom: 8px;
-  }
-  .logo-cell {
-    width: 100px;
-    border-right: 2px solid #000;
-    text-align: center;
-    padding: 4px;
-    vertical-align: middle;
-  }
-  .logo-cell img { width: 88px; height: auto; }
-  .title-cell {
-    text-align: center;
-    vertical-align: middle;
-    padding: 5px 10px;
-  }
-  .inst { font-size:11px; font-weight:bold; text-transform:uppercase; }
-  .doc-title {
-    font-size: 13px;
-    font-weight: bold;
-    text-transform: uppercase;
-    margin-top: 3px;
-  }
-  .filtros {
-    font-size: 10px;
-    margin-bottom: 8px;
-    color: #444;
-  }
-  .filtros span { font-weight: bold; color: #000; }
-  table.data {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 8px;
-  }
-  table.data th {
-    background: #1a5c38;
-    color: #fff;
-    padding: 5px 6px;
-    font-size: 10px;
-    text-align: left;
-    border: 1px solid #fff;
-  }
-  table.data th.right { text-align: right; }
-  table.data td {
-    border: 1px solid #ddd;
+  .titulo { margin-bottom: 10px; }
+  .titulo .subtipo { font-size: 11px; color: #3d4d46; margin-top: 1px; }
+  .titulo .regla { border-bottom: 1.6px solid #17593f; width: 56px; margin: 5px auto 0 auto; }
+
+  .alcance { font-size: 9.5px; color: #3d4d46; margin: 0 0 6px 0; }
+  .alcance strong { color: #1c2321; }
+
+  .resumen { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+  .resumen td { border: 0.7px solid #cfdad4; padding: 5px 8px; text-align: center; width: 25%; }
+  .resumen .cifra { font-size: 15px; font-weight: bold; color: #17593f; }
+  .resumen .rotulo { font-size: 8px; text-transform: uppercase; letter-spacing: 0.4px; color: #5b6b63; }
+
+  table.listado { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+  /* Repite los títulos de columna si el listado pasa a la hoja siguiente. */
+  table.listado thead { display: table-header-group; }
+  table.listado th {
+    background: #f2f6f4;
+    border: 0.7px solid #c6d2cc;
     padding: 4px 6px;
-    font-size: 10px;
-  }
-  table.data tr:nth-child(even) td { background: #f5f5f5; }
-  table.data td.right { text-align: right; }
-  table.data td.center { text-align: center; }
-  .totales-row td {
-    background: #e8f5e9 !important;
-    font-weight: bold;
-    border-top: 2px solid #1a5c38;
-  }
-  .pie {
-    text-align: right;
     font-size: 8px;
-    color: #aaa;
-    margin-top: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #3d4d46;
+    text-align: left;
   }
+  table.listado td { border: 0.7px solid #c6d2cc; padding: 3px 6px; font-size: 9.5px; vertical-align: top; }
+  table.listado tr { page-break-inside: avoid; }
+  table.listado .num { text-align: right; white-space: nowrap; }
+  table.listado td.n { color: #6b7c74; }
+  table.listado td.cedula { white-space: nowrap; }
+  table.listado tr.total td { font-weight: bold; background: #f2f6f4; }
+  .vacio { color: #5b6b63; font-style: italic; text-align: center; padding: 12px; }
+
+  .nota { font-size: 8.5px; color: #5b6b63; margin: 0; }
 </style>
 </head>
 <body>
+@include('pdf._membrete-institucional', ['dependencia' => $encabezado['dependencia']])
+@include('pdf._pie-institucional')
 
-<table class="header-table">
+<div class="titulo">
+  @if($encabezado['supra'])<div class="supra">{{ $encabezado['supra'] }}</div>@endif
+  <h1>{{ $encabezado['titulo'] }}</h1>
+  <div class="subtipo">@if($subtipo){{ $subtipo }} · @endif{{ $periodo }}</div>
+  <div class="regla"></div>
+</div>
+
+<p class="alcance">
+  <strong>{{ $alcance }}</strong>
+  @if($esEnfermedad)
+    · Incluye los permisos por enfermedad y los reposos médicos aprobados, en días calendario.
+  @endif
+</p>
+
+<table class="resumen">
   <tr>
-    <td class="logo-cell">
-      @if($logoSrc)
-        <img src="{{ $logoSrc }}" alt="Logo GADPE">
-      @else
-        <div style="font-size:9px;font-weight:bold;color:#1a5c38;">GADPE</div>
-      @endif
-    </td>
-    <td class="title-cell">
-      <div class="inst">
-        Gobierno Autónomo Descentralizado de la Provincia de Esmeraldas
-      </div>
-      <div class="doc-title">
-        Consolidado de Permisos — Tipo: {{ $tipo }}
-      </div>
-    </td>
+    <td><div class="cifra">{{ count($consolidado) }}</div><div class="rotulo">Servidores</div></td>
+    <td><div class="cifra">{{ $totales['total_permisos'] }}</div><div class="rotulo">{{ $rotuloCuenta }}</div></td>
+    <td><div class="cifra">{{ $totales['tiempo_total'] }}</div><div class="rotulo">Horas</div></td>
+    <td><div class="cifra">{{ number_format($totales['total_dias'], 2) }}</div><div class="rotulo">Días de jornada</div></td>
   </tr>
 </table>
 
-<div class="filtros">
-  Período: <span>{{ $fechaInicio }}</span>
-  al <span>{{ $fechaFin }}</span>
-  &nbsp;|&nbsp;
-  Generado: <span>{{ now()->format('d/m/Y H:i') }}</span>
-  &nbsp;|&nbsp;
-  @if($servidor ?? null)
-    {{-- Filtrado por una persona: el informe tiene que decir de quién es, y
-         «Total servidores: 1» no lo dice. --}}
-    Servidor: <span>{{ $servidor }}</span>
-  @else
-    @if($unidad ?? null)
-      {{-- Incluye las unidades que cuelgan de ella, así que el total de
-           servidores sigue importando. --}}
-      Unidad: <span>{{ $unidad }}</span>
-      &nbsp;|&nbsp;
-    @endif
-    Total servidores: <span>{{ count($consolidado) }}</span>
-  @endif
-</div>
-
-<table class="data">
+<table class="listado">
   <thead>
     <tr>
-      <th width="10%">Cédula</th>
-      <th width="28%">Servidor</th>
-      <th width="28%">Unidad Administrativa</th>
-      <th class="right" width="10%">Permisos</th>
-      <th class="right" width="10%">Minutos</th>
-      <th class="right" width="7%">Tiempo</th>
-      <th class="right" width="7%">Días</th>
+      <th class="num" style="width: 4%;">N.º</th>
+      <th style="width: 9%;">Cédula</th>
+      <th style="width: 27%;">Servidor</th>
+      <th style="width: 36%;">Unidad administrativa</th>
+      <th class="num" style="width: 7%;">{{ $rotuloCuenta }}</th>
+      <th class="num" style="width: 6%;">Minutos</th>
+      <th class="num" style="width: 6%;">Horas</th>
+      <th class="num" style="width: 5%;">Días</th>
     </tr>
   </thead>
   <tbody>
     @forelse($consolidado as $fila)
-    <tr>
-      <td>{{ $fila['cedula'] }}</td>
-      <td>{{ mb_strtoupper($fila['nombre'], 'UTF-8') }}</td>
-      <td>{{ $fila['unidad'] }}</td>
-      <td class="right">{{ $fila['total_permisos'] }}</td>
-      <td class="right">{{ $fila['total_minutos'] }}</td>
-      <td class="right">{{ $fila['tiempo_total'] }}</td>
-      <td class="right">{{ number_format($fila['total_dias'], 2) }}</td>
-    </tr>
+      <tr>
+        <td class="num n">{{ $loop->iteration }}</td>
+        <td class="cedula">{{ $fila['cedula'] }}</td>
+        <td>{{ $fila['nombre'] }}</td>
+        <td>{{ $fila['unidad'] }}</td>
+        <td class="num">{{ $fila['total_permisos'] }}</td>
+        <td class="num">{{ $fila['total_minutos'] }}</td>
+        <td class="num">{{ $fila['tiempo_total'] }}</td>
+        <td class="num">{{ number_format($fila['total_dias'], 2) }}</td>
+      </tr>
     @empty
-    <tr>
-      <td colspan="7" style="text-align:center; color:#999; padding:15px;">
-        Sin registros en el período seleccionado.
-      </td>
-    </tr>
+      <tr><td colspan="8" class="vacio">Sin registros en el período.</td></tr>
     @endforelse
-    {{-- Fila totales --}}
-    @if(count($consolidado) > 0)
-    <tr class="totales-row">
-      <td colspan="3" style="text-align:right;">
-        TOTALES:
-      </td>
-      <td class="right">{{ $totales['total_permisos'] }}</td>
-      <td class="right">{{ $totales['total_minutos'] }}</td>
-      <td class="right">{{ $totales['tiempo_total'] }}</td>
-      <td class="right">{{ number_format($totales['total_dias'], 2) }}</td>
-    </tr>
+    @if(count($consolidado))
+      <tr class="total">
+        <td colspan="4" class="num">Total</td>
+        <td class="num">{{ $totales['total_permisos'] }}</td>
+        <td class="num">{{ $totales['total_minutos'] }}</td>
+        <td class="num">{{ $totales['tiempo_total'] }}</td>
+        <td class="num">{{ number_format($totales['total_dias'], 2) }}</td>
+      </tr>
     @endif
   </tbody>
 </table>
 
-<div class="pie">
-  SGTH GADPE &nbsp;|&nbsp;
-  Consolidado generado: {{ now()->format('d/m/Y H:i') }}
-</div>
-
+<p class="nota">Horas y días de jornada: una jornada son 8 horas. Generado el {{ now()->format('d/m/Y') }} a las {{ now()->format('H:i') }}.</p>
 </body>
 </html>

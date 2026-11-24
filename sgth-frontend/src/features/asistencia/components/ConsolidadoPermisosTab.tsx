@@ -6,7 +6,7 @@ import {
   IconCalendarSearch,
   IconClipboardList,
   IconFileDownload,
-  IconFileTypeCsv,
+  IconFileSpreadsheet,
 } from "@tabler/icons-react";
 import { DataState, EmptyState, SgthTable } from "@/components/ui";
 import {
@@ -101,11 +101,11 @@ export function ConsolidadoPermisosTab() {
             <>
               <Button
                 variant="light"
-                leftSection={<IconFileTypeCsv size={16} />}
+                leftSection={<IconFileSpreadsheet size={16} />}
                 loading={exportando === "excel"}
                 onClick={() => exportar("excel", consultados)}
               >
-                Exportar CSV
+                Exportar Excel
               </Button>
               <Button
                 variant="light"
