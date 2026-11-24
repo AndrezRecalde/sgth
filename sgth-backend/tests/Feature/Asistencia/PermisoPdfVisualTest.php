@@ -1,13 +1,14 @@
 <?php
 
 /*
-| El PDF del permiso, tal como lo imprime Recepción.
+| El PDF del permiso, tal como lo imprime Talento Humano.
 |
 | Cada test es un defecto que se veía en el papel: el corte salía como
-| «? CORTAR AQUÍ ?», la marca de agua asomaba a trozos entre las celdas, la
-| firma sin jefe llevaba dos líneas, «Departamento» salía vacío y las horas
-| iban con segundos. Después, las fechas en año-mes-día y la hoja: ahora partida
-| en dos mitades, con la primera de altura fija.
+| «? CORTAR AQUÍ ?», la firma sin jefe llevaba dos líneas, la unidad salía
+| vacía y las horas iban con segundos. Después, las fechas en año-mes-día y la
+| hoja: partida en dos mitades, con la primera de altura fija. Desde el
+| 2026-11-24 en el estilo de los demás documentos institucionales, sin marca de
+| agua y sin «Asistencia» en el encabezado.
 */
 
 use App\Enums\RegimenLaboral;
@@ -56,7 +57,7 @@ beforeEach(function () {
 /** El HTML de la vista, con lo mismo que carga `exportar()`. */
 function htmlDelPdfDePermiso(PermisoServidor $permiso): string
 {
-    $permiso->load(['servidor.puesto.cargo', 'jefe', 'unidadAdministrativa', 'creadoPor']);
+    $permiso->load(['servidor.puesto.cargo', 'servidor.unidadAdministrativa', 'jefe.puesto.cargo', 'unidadAdministrativa']);
 
     return view('permisos.permiso-pdf', [
         'permiso'            => $permiso,
@@ -64,8 +65,8 @@ function htmlDelPdfDePermiso(PermisoServidor $permiso): string
     ])->render();
 }
 
-test('sin unidad propia, el departamento sale de la unidad del servidor', function () {
-    expect(htmlDelPdfDePermiso($this->permiso))->toContain('GESTIÓN ADMINISTRATIVA');
+test('sin unidad propia, la unidad sale de la del servidor', function () {
+    expect(htmlDelPdfDePermiso($this->permiso))->toContain('Gestión Administrativa');
 });
 
 test('sin jefe asignado, la firma lleva una sola línea', function () {
@@ -85,12 +86,16 @@ test('el corte no usa un símbolo que la fuente no tiene', function () {
         ->not->toContain('✂');
 });
 
-test('las fechas salen día/mes/año, como en la pantalla', function () {
+test('la fecha del permiso, la de creación con su hora y las horas pedidas van cada una en su celda', function () {
     $this->permiso->forceFill(['created_at' => '2026-09-08 13:06:06'])->save();
 
     expect(htmlDelPdfDePermiso($this->permiso))
+        ->toContain('<td class="label">Fecha del permiso</td>')
         ->toContain('11/09/2026')
+        ->toContain('<td class="label">Fecha de creación</td>')
         ->toContain('08/09/2026 13:06')
+        ->toContain('<td class="label">Hora de inicio</td>')
+        ->toContain('<td class="label">Hora de fin</td>')
         ->not->toContain('2026-09-11')
         ->not->toContain('13:06:06');
 });
@@ -106,18 +111,37 @@ test('las dos copias caben en una sola hoja, aun con la observación más larga 
     $this->permiso->update(['observacion' => $larga]);
 
     $html = htmlDelPdfDePermiso($this->permiso);
-    $pdf  = app('dompdf.wrapper')->setPaper('a4', 'portrait')->loadHTML($html)->output();
+    $pdf  = app('dompdf.wrapper')->setOption('enable_font_subsetting', true)
+        ->setPaper('a4', 'portrait')->loadHTML($html)->output();
 
     expect(preg_match_all('#/Type\s*/Page(?![a-zA-Z])#', $pdf))->toBe(1)
         // Entera: se achica la letra, no se recorta el texto.
-        ->and($html)->toContain(e(mb_strtoupper($larga, 'UTF-8')));
+        ->and($html)->toContain(e($larga));
 });
 
-test('cada copia lleva una marca de agua que coincide con su pie', function () {
+test('cada copia dice en su pie de quién es, sin marca de agua', function () {
     expect(htmlDelPdfDePermiso($this->permiso))
-        ->toContain('<div class="marca-agua">SERVIDOR</div>')
-        ->toContain('<div class="marca-agua">TALENTO HUMANO</div>')
-        ->toContain('COPIA TALENTO HUMANO')
-        // La imagen de fondo decía RECEPCIÓN y quedaba tapada por las celdas.
-        ->not->toContain('recepcion-bg.png');
+        ->toContain('<td class="copia-de">Copia del servidor</td>')
+        ->toContain('<td class="copia-de">Copia de Talento Humano</td>')
+        ->not->toContain('marca-agua');
+});
+
+test('ningún encabezado dice «Asistencia» y lo recibe Talento Humano', function () {
+    $html = htmlDelPdfDePermiso($this->permiso);
+
+    expect($html)->toContain('<h1>Concesión de permiso</h1>')
+        ->toContain('<div class="subtipo">Oficial</div>')
+        ->toContain('Recibe · Talento Humano')
+        ->not->toContain('Asistencia')
+        // El rol de Recepción ya no se asigna.
+        ->not->toContain('PERSONAL TTHH');
+});
+
+test('sin poder leer el motivo, la copia lo reserva', function () {
+    $this->permiso->load(['servidor.puesto.cargo', 'servidor.unidadAdministrativa', 'jefe.puesto.cargo', 'unidadAdministrativa']);
+
+    $html = view('permisos.permiso-pdf', ['permiso' => $this->permiso, 'mostrarObservacion' => false])->render();
+
+    expect($html)->toContain('Reservado: es un dato privado del servidor.')
+        ->not->toContain('Comisión de servicios');
 });

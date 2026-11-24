@@ -279,9 +279,9 @@ class PermisoServidorController extends Controller
     {
         $permiso = PermisoServidor::with([
             'servidor.puesto.cargo',
-            'jefe',
+            'servidor.unidadAdministrativa',
+            'jefe.puesto.cargo',
             'unidadAdministrativa',
-            'creadoPor',
         ])->findOrFail($id);
 
         $this->authorize('exportar', $permiso);
@@ -292,7 +292,12 @@ class PermisoServidorController extends Controller
         //
         // A4 explícito: la vista parte la hoja en dos mitades medidas en
         // milímetros de A4, y no debe depender del papel por defecto.
+        //
+        // Con subconjunto de fuentes: la vista usa DejaVu Sans, como los demás
+        // documentos institucionales, y entera la fuente pasaba el PDF de
+        // ~130 KB a ~1 MB. Así se incrustan solo las letras que se usan.
         $pdf = app('dompdf.wrapper')
+            ->setOption('enable_font_subsetting', true)
             ->setPaper('a4', 'portrait')
             ->loadView('permisos.permiso-pdf', [
                 'permiso' => $permiso,

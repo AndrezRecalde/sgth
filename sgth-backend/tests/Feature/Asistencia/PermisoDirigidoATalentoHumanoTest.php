@@ -113,7 +113,7 @@ function pedirPermisoDirigido(Servidor $servidor, array $extra = [], ?User $como
 function pdfDelUltimoPermiso(): string
 {
     $permiso = PermisoServidor::with([
-        'servidor.puesto.cargo', 'jefe', 'unidadAdministrativa', 'creadoPor',
+        'servidor.puesto.cargo', 'servidor.unidadAdministrativa', 'jefe.puesto.cargo', 'unidadAdministrativa',
     ])->latest('id')->firstOrFail();
 
     return view('permisos.permiso-pdf', [
@@ -176,10 +176,10 @@ test('el PDF rotula la firma como del jefe de Talento Humano', function () {
         ->assertCreated();
 
     expect(pdfDelUltimoPermiso())
-        ->toContain('Firma: Jefe de Talento Humano')
+        ->toContain('Autoriza · Jefe de Talento Humano')
         ->toContain('DIRECTOR/A DE TALENTO HUMANO')
         ->toContain('VALENCIA RODRIGO')
-        ->not->toContain('JEFE INMEDIATO');
+        ->not->toContain('Jefe inmediato');
 });
 
 test('sin la opción, el PDF sigue rotulando al jefe inmediato', function () {
@@ -187,10 +187,9 @@ test('sin la opción, el PDF sigue rotulando al jefe inmediato', function () {
         ->assertCreated();
 
     expect(pdfDelUltimoPermiso())
-        ->toContain('Firma: Jefe Inmediato')
-        ->toContain('JEFE INMEDIATO')
+        ->toContain('Autoriza · Jefe inmediato')
         ->toContain('INMEDIATA CARLA')
-        ->not->toContain('Firma: Jefe de Talento Humano');
+        ->not->toContain('Autoriza · Jefe de Talento Humano');
 });
 
 /*

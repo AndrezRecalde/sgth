@@ -1,381 +1,257 @@
 @php
-  // El logo lo manda el controlador, vigente a la fecha del permiso (fase 2.2).
-  $logoPath  = $logo ?? '';
-
-  $tipoLabels = [
-    'personal'   => 'PERSONAL',
-    'oficial'    => 'OFICIAL',
-    'enfermedad' => 'ENFERMEDAD',
-    'calamidad'  => 'CALAMIDAD DOMESTICA',
-  ];
-
+  /*
+  | El permiso impreso: dos copias de media hoja A4, una para el servidor y otra
+  | para Talento Humano, que se separan por el corte.
+  |
+  | Desde el 2026-11-24 en el estilo de los demás documentos institucionales
+  | (la acción de personal, las actas del inventario, los de viáticos): el verde
+  | institucional, el membrete de Comunicación Social a nombre de la Dirección
+  | de Talento Humano y el pie con la dirección y el teléfono. Antes llevaba su
+  | propia paleta, recuadros redondeados, una marca de agua y el nombre de la
+  | institución escrito a mano. Ningún encabezado dice «Asistencia» (pedido de
+  | Talento Humano).
+  */
   $tipoVal = $permiso->tipo instanceof \App\Enums\TipoPermiso
-    ? $permiso->tipo->value : (string)$permiso->tipo;
+    ? $permiso->tipo->value : (string) $permiso->tipo;
 
-  $nombreServidor = mb_strtoupper(implode(' ', array_filter([
-    $permiso->servidor->apellido         ?? null,
-    $permiso->servidor->segundo_apellido ?? null,
-    $permiso->servidor->nombre           ?? null,
-    $permiso->servidor->segundo_nombre   ?? null,
-  ])), 'UTF-8');
+  $subtipo = [
+    'personal'   => 'Personal · hasta 4 horas',
+    'oficial'    => 'Oficial',
+    'enfermedad' => 'Por enfermedad',
+    'calamidad'  => 'Calamidad doméstica',
+  ][$tipoVal] ?? $tipoVal;
 
-  $nombreJefe = $permiso->jefe
-    ? mb_strtoupper(implode(' ', array_filter([
-        $permiso->jefe->apellido         ?? null,
-        $permiso->jefe->segundo_apellido ?? null,
-        $permiso->jefe->nombre           ?? null,
-        $permiso->jefe->segundo_nombre   ?? null,
-      ])), 'UTF-8')
+  $nombreDe = fn ($s) => $s
+    ? mb_strtoupper(implode(' ', array_filter([$s->apellido, $s->segundo_apellido, $s->nombre, $s->segundo_nombre])), 'UTF-8')
     : '';
+  $nombreServidor = $nombreDe($permiso->servidor);
+  $nombreJefe     = $nombreDe($permiso->jefe);
+  $cargoServidor  = $permiso->servidor?->puesto?->cargo?->nombre;
 
   // Cuando el permiso se dirige a Talento Humano firma su jefe, no el
   // inmediato. Se lee de la columna y no comparando ids: el jefe de Talento
   // Humano es también el inmediato de quienes trabajan en esa unidad.
   $dirigidoATh = (bool) ($permiso->dirigido_a_talento_humano ?? false);
-  $rotuloJefe  = $dirigidoATh ? 'Jefe de Talento Humano' : 'Jefe Inmediato';
+  $rotuloJefe  = $dirigidoATh ? 'Jefe de Talento Humano' : 'Jefe inmediato';
   $cargoJefe   = $dirigidoATh
     ? \App\Enums\RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO->cargoPorDefecto()
-    : 'JEFE INMEDIATO';
+    : ($permiso->jefe?->puesto?->cargo?->nombre ?? 'Jefe inmediato');
 
-  // Los permisos antiguos no guardaban unidad y el campo salía vacío. El
-  // servicio ya rellena la del servidor al crear; aquí se hace lo mismo al
-  // imprimir los que quedaron sin ella.
-  $unidad = mb_strtoupper(
-    $permiso->unidadAdministrativa->nombre
-      ?? $permiso->servidor->unidadAdministrativa->nombre
-      ?? '',
-    'UTF-8'
-  );
+  // Los permisos antiguos no guardaban unidad: se toma la del servidor.
+  $unidad = $permiso->unidadAdministrativa->nombre
+    ?? $permiso->servidor->unidadAdministrativa->nombre
+    ?? '—';
 
-  // Día/mes/año, como en la pantalla y en los demás PDF del sistema. La
-  // creación va sin segundos, igual que las horas.
+  // Día/mes/año, como en la pantalla. Talento Humano quiere ver la fecha del
+  // permiso, la de creación con su hora y, aparte, las horas pedidas.
   $fechaPermiso  = \Carbon\Carbon::parse($permiso->fecha)->format('d/m/Y');
   $fechaCreacion = \Carbon\Carbon::parse($permiso->created_at ?? now())->format('d/m/Y H:i');
-
-  $horaInicio = \Carbon\Carbon::parse($permiso->hora_inicio)->format('H:i');
-  $horaFin    = \Carbon\Carbon::parse($permiso->hora_fin)->format('H:i');
+  $horaInicio    = \Carbon\Carbon::parse($permiso->hora_inicio)->format('H:i');
+  $horaFin       = \Carbon\Carbon::parse($permiso->hora_fin)->format('H:i');
 
   // Quien imprime no siempre puede leer el motivo: un permiso por enfermedad
   // lleva un dato de salud y uno personal, un asunto privado. La decisión la
-  // toma la policy y llega resuelta desde el controlador; aquí no se razona.
-  // Por si alguien renderiza esta vista sin pasarla, el valor seguro es callar.
-  $puedeVerObservacion = $mostrarObservacion ?? false;
+  // toma la policy (`verObservacion`) y llega resuelta desde el controlador;
+  // aquí no se razona. Si alguien renderiza la vista sin pasarla, se calla.
+  $observacion = ($mostrarObservacion ?? false)
+    ? ($permiso->observacion ?: 'Sin observaciones.')
+    : null;
 
-  $observacion = $puedeVerObservacion
-    ? mb_strtoupper($permiso->observacion ?: 'SIN OBSERVACIONES', 'UTF-8')
-    : 'RESERVADO';
-
-  // La observación admite hasta 1000 caracteres y cada copia tiene media hoja:
-  // si el recuadro creciera, empujaría la segunda copia a otra página. Lo que
-  // se ajusta es la letra. Lo habitual —una o dos líneas— sale al tamaño de
-  // siempre, y los 1000 caracteres caben enteros a 7 px.
-  $largoObs = mb_strlen($observacion, 'UTF-8');
+  // El motivo admite hasta 1000 caracteres y cada copia tiene media hoja: si
+  // creciera, empujaría la segunda copia a otra página. Lo que se ajusta es la
+  // letra: lo habitual sale al tamaño de siempre y los 1000 caben a 7 px.
+  $largoObs = mb_strlen((string) $observacion, 'UTF-8');
   $tamObs   = $largoObs <= 220 ? 10 : ($largoObs <= 500 ? 8.5 : 7);
 
   $folio = $permiso->folio ?? 'S/N';
 
-  $tituloDoc = $tipoVal === 'personal'
-    ? 'CONCESIÓN DE PERMISO HASTA 4 HORAS'
-    : 'CONCESIÓN DE PERMISO - ' . ($tipoLabels[$tipoVal] ?? mb_strtoupper($tipoVal, 'UTF-8'));
-
-  // QR en formato SVG para evitar fallos si no hay Imagick
+  // El QR es la herramienta de Talento Humano: se escanea el papel firmado y se
+  // confirma o se rechaza ahí mismo. Lleva a la pantalla del permiso, no a la
+  // API: quien escanea es una persona y necesita botones, no JSON. En SVG para
+  // no depender de Imagick.
   $qrSrc = null;
   try {
-    // El QR es la herramienta de Talento Humano: se escanea el papel firmado y
-    // se confirma o se rechaza ahí mismo, sin buscar el folio a mano en el
-    // listado. Por eso lleva a la pantalla del permiso dentro del sistema y no
-    // a un endpoint de la API — quien escanea es una persona con un documento
-    // en la mano, y necesita botones, no JSON.
-    //
-    // Apuntaba a `/api/v1/asistencia/permisos/verificar/{folio}`, una ruta que
-    // nunca existió: todo QR impreso hasta ahora daba 404.
     $urlQr = rtrim(config('app.frontend_url'), '/') . "/sgth/asistencia/permisos/{$folio}";
-    $qrSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
-      ->size(100)->margin(1)->generate($urlQr);
-    if (!empty($qrSvg)) {
-      $qrSrc = 'data:image/svg+xml;base64,' . base64_encode($qrSvg);
-    }
-  } catch(\Exception $e) {
+    $qrSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(100)->margin(0)->generate($urlQr);
+    $qrSrc = $qrSvg ? 'data:image/svg+xml;base64,' . base64_encode($qrSvg) : null;
+  } catch (\Exception $e) {
     $qrSrc = null;
   }
 
-  // Logo base64
-  $logoSrc = $logoPath !== '' && file_exists($logoPath) ? 'data:'.(mime_content_type($logoPath) ?: 'image/png').';base64,'.base64_encode(file_get_contents($logoPath)) : null;
-
-  $copies = [
-    ['marca' => 'SERVIDOR',       'label' => 'COPIA SERVIDOR'],
-    ['marca' => 'TALENTO HUMANO', 'label' => 'COPIA TALENTO HUMANO'],
-  ];
+  // Sin marca de agua: cada copia dice de quién es en su pie.
+  $copias = ['Copia del servidor', 'Copia de Talento Humano'];
 @endphp
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<title>Permiso {{ $folio }}</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    font-size: 10px;
-    color: #1e293b;
-    margin: 0;
-    line-height: 1.2;
-  }
-
-  .text-brand { color: #15803d; }
-  
-  /* La hoja, partida en dos mitades exactas.
-
-     Antes cada copia ocupaba lo que su contenido y la línea de corte caía
-     donde tocaba: las dos juntas llenaban unos tres cuartos del A4 y, al
-     cortar, salían dos trozos de distinto tamaño. Ahora la mitad de arriba
-     mide justo medio A4 y la línea va en su borde: se dobla la hoja por la
-     mitad y se corta por el doblez. La de abajo no lleva altura fija a
-     propósito — dos mitades de 148,5 mm exactos pueden desbordar por redondeo
-     y sacar una segunda página en blanco. */
+  /* La hoja, partida en dos mitades exactas: la de arriba mide medio A4 y el
+     corte va en su borde, así que se dobla la hoja y se corta por el doblez.
+     La página no lleva margen (cada copia mide el suyo) y la de abajo no tiene
+     altura fija: dos mitades de 148,5 mm exactos pueden desbordar por redondeo
+     y sacar una hoja en blanco. Por lo mismo el membrete no va fijo, como en
+     los otros documentos: hay uno por copia. */
   @page { margin: 0; }
+  body { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 10px; line-height: 1.4; color: #1c2321; margin: 0; }
 
-  .mitad-superior {
-    position: relative;
-    height: 148.5mm;
-  }
+  .mitad-superior { position: relative; height: 148.5mm; }
+  .copia { padding: 9mm 14mm 0 14mm; }
 
-  .copia {
-    position: relative;
-    padding: 7mm 9mm 0;
-  }
+  .membrete { margin-bottom: 7px; }
+  .membrete table { width: 100%; border-collapse: collapse; }
+  .membrete td { border: none; padding: 0; vertical-align: middle; }
+  .membrete img { max-height: 12mm; }
+  .membrete .institucion { text-align: right; font-size: 8.5px; color: #5b6b63; text-transform: uppercase; letter-spacing: 0.3px; }
+  .membrete .institucion strong { display: block; font-size: 10px; color: #17593f; letter-spacing: 0; margin-bottom: 1px; }
 
-  .corte {
-    position: absolute;
-    top: 148.5mm;
-    left: 0;
-    width: 100%;
-    border-top: 1px dashed #94a3b8;
-  }
-  /* El rótulo, centrado sobre la línea: su fondo blanco la interrumpe. */
-  .corte-texto {
-    position: absolute;
-    top: 147.2mm;
-    left: 0;
-    width: 100%;
-    text-align: center;
-    font-size: 8px;
-    color: #64748b;
-    letter-spacing: 2px;
-  }
+  .titulo { text-align: center; margin: 0 0 7px 0; }
+  .titulo h1 { font-size: 13.5px; font-weight: bold; letter-spacing: 1.2px; text-transform: uppercase; margin: 0; color: #17593f; }
+  .titulo .subtipo { font-size: 10px; color: #3d4d46; margin-top: 1px; }
+  .titulo .regla { border-bottom: 1.6px solid #17593f; width: 48px; margin: 4px auto 0 auto; }
+
+  .cintillo { margin-bottom: 7px; }
+  .cintillo .codigo { border: 1px solid #17593f; border-radius: 2px; padding: 3px 8px; font-weight: bold; font-size: 10.5px; color: #17593f; letter-spacing: 0.5px; }
+
+  .cuerpo { width: 100%; border-collapse: collapse; }
+  .cuerpo > tbody > tr > td { border: none; padding: 0; vertical-align: top; }
+
+  table.datos { width: 100%; border-collapse: collapse; }
+  table.datos td { border: 0.7px solid #c6d2cc; padding: 3.5px 7px; font-size: 9.5px; vertical-align: middle; }
+  table.datos td.label { font-weight: bold; font-size: 7.5px; letter-spacing: 0.5px; text-transform: uppercase; color: #3d4d46; background: #f2f6f4; width: 21%; white-space: nowrap; }
+  table.datos td.fuerte { font-weight: bold; }
+
+  .qr { text-align: center; padding-left: 8px; }
+  .qr img { width: 21mm; height: 21mm; }
+  .qr .ayuda { font-size: 7px; color: #5b6b63; margin-top: 2px; line-height: 1.25; }
+
+  .bloque-titulo { font-size: 8px; font-weight: bold; letter-spacing: 1.4px; text-transform: uppercase; color: #17593f; border-bottom: 0.7px solid #cfdad4; padding-bottom: 2px; margin: 8px 0 4px 0; }
+  .motivo { min-height: 9mm; text-align: justify; }
+  .reservado { color: #5b6b63; font-style: italic; }
+
+  /* El rótulo va arriba: el espacio para firmar queda antes de la línea, y las
+     tres líneas caen a la misma altura aunque un nombre ocupe dos renglones. */
+  .firmas { width: 100%; border-collapse: collapse; margin-top: 16px; }
+  .firmas td { width: 33.3%; text-align: center; vertical-align: top; border: none; padding: 0 7px; }
+  .firma-rotulo { font-size: 7.5px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; color: #6b7c74; margin-bottom: 34px; }
+  .firma-linea { border-top: 0.9px solid #1c2321; width: 92%; margin: 0 auto 3px auto; }
+  .firma-nombre { font-weight: bold; font-size: 8.5px; }
+  .firma-cargo { font-size: 8px; color: #3d4d46; margin-top: 1px; }
+  .firma-vacia { font-size: 8px; color: #9aa8a1; }
+
+  .pie { margin-top: 8px; border-top: 0.7px solid #cfdad4; padding-top: 3px; font-size: 7.5px; color: #5b6b63; }
+  .pie table { width: 100%; border-collapse: collapse; }
+  .pie td { border: none; padding: 0; }
+  .pie .copia-de { text-align: right; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; color: #17593f; }
+
+  /* Sin tijeras: el símbolo no está en todas las fuentes y salía «?». */
+  .corte { position: absolute; top: 148.5mm; left: 0; width: 100%; border-top: 0.8px dashed #9aa8a1; }
+  .corte-texto { position: absolute; top: 147.3mm; left: 0; width: 100%; text-align: center; font-size: 7px; color: #6b7c74; letter-spacing: 2px; }
   .corte-texto span { background: #fff; padding: 0 8px; }
-
-  /* Marca de agua: a qué copia pertenece el papel.
-
-     Era una imagen de fondo, y las celdas de la tabla y los recuadros de firma
-     —con su propio fondo— la tapaban: solo asomaban trozos entre ellos. Ahora
-     es texto dibujado ENCIMA del contenido y casi transparente, así que se ve
-     entera sin estorbar la lectura. Y dice lo mismo que el pie de la copia:
-     la imagen de la segunda decía RECEPCIÓN mientras el pie decía TALENTO
-     HUMANO. */
-  .marca-agua {
-    position: absolute;
-    top: 205px;
-    left: 0;
-    width: 100%;
-    text-align: center;
-    font-size: 56px;
-    font-weight: bold;
-    color: #64748b;
-    opacity: 0.10;
-    transform: rotate(-24deg);
-  }
-
-  /* ── HEADER ── */
-  .header-table {
-    width: 100%;
-    margin-bottom: 8px;
-    border-bottom: 1.5px solid #15803d;
-    padding-bottom: 8px;
-  }
-  .logo-cell { width: 120px; vertical-align: middle; }
-  .logo-cell img { width: 100px; height: auto; }
-  .title-wrap { text-align: right; vertical-align: middle; }
-  .inst-name { font-size: 12px; font-weight: bold; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; }
-  .doc-title { font-size: 10px; color: #64748b; text-transform: uppercase; margin-top: 4px; letter-spacing: 1px; }
-
-  /* ── INFO BOXES ── */
-  .info-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 8px;
-  }
-  .info-table td {
-    border: 1px solid #cbd5e1;
-    padding: 6px 8px;
-    vertical-align: middle;
-  }
-  .t-lbl { font-weight: bold; background: #f8fafc; color: #475569; font-size: 9px; text-transform: uppercase; width: 22%; }
-  .t-val { color: #0f172a; font-size: 11px; }
-  .t-val-bold { font-weight: bold; color: #0f172a; font-size: 11px; }
-  .t-val-upper { font-weight: bold; color: #0f172a; font-size: 11px; text-transform: uppercase; }
-
-  .obs-box {
-    border: 1px solid #cbd5e1;
-    padding: 8px;
-    height: 80px;
-    font-size: 10px;
-    color: #334155;
-    background: #fff;
-    margin-bottom: 12px;
-  }
-  .obs-lbl {
-    font-size: 9px;
-    font-weight: bold;
-    color: #64748b;
-    margin-bottom: 4px;
-    text-transform: uppercase;
-  }
-
-  /* ── FIRMAS ── */
-  .firmas-table { width: 100%; border-collapse: collapse; margin-bottom: 5px; }
-  .firmas-table td { width: 25%; vertical-align: top; padding: 0 4px; text-align: center; }
-  
-  .firma-box { border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 6px; padding: 8px; text-align: center; height: 135px; }
-  .firma-line { border-top: 1px solid #64748b; margin: 0 auto; width: 85%; }
-  .f-lbl { font-size: 8px; font-weight: bold; color: #475569; text-transform: uppercase; margin-bottom: 4px; border-bottom: 1px solid #cbd5e1; padding-bottom: 2px; }
-  .f-name { font-size: 9px; font-weight: bold; color: #0f172a; text-transform: uppercase; margin-top: 4px; line-height: 1.1; }
-  .f-cargo { font-size: 8px; color: #64748b; margin-top: 2px; }
-
-  .qr-box { border: 1px solid #cbd5e1; background: #fff; border-radius: 6px; padding: 8px; text-align: center; height: 135px; }
-  .qr-img { border: 1px solid #e2e8f0; padding: 2px; background: #fff; border-radius: 4px; margin: 0 auto; }
-  .qr-folio { font-size: 9px; color: #0f172a; margin-top: 6px; font-family: monospace; font-weight: bold; }
-
-  .copy-label { text-align: right; font-size: 8px; color: #94a3b8; margin-top: 4px; }
 </style>
 </head>
 <body>
-
-@foreach($copies as $i => $copy)
-
+@foreach($copias as $copia)
 @if($loop->first)<div class="mitad-superior">@endif
 <div class="copia">
 
-  {{-- ══ HEADER ══ --}}
-  <table class="header-table">
-    <tr>
-      <td class="logo-cell">
-        @if($logoSrc)
-          <img src="{{ $logoSrc }}" alt="Logo GADPE">
-        @else
-          <div style="font-size:16px;font-weight:bold;color:#15803d;">GADPE</div>
-        @endif
-      </td>
-      <td class="title-wrap">
-        <div class="inst-name">
-          Gobierno Autónomo Descentralizado de la Provincia de Esmeraldas
-        </div>
-        <div class="doc-title">{{ $tituloDoc }}</div>
-      </td>
-    </tr>
-  </table>
+  @include('pdf._membrete-institucional', ['dependencia' => 'Dirección de Talento Humano'])
 
-  {{-- ══ DATOS ══ --}}
-  <table class="info-table">
-    <tr>
-      <td class="t-lbl">Departamento</td>
-      <td class="t-val-upper" colspan="3">{{ $unidad }}</td>
-    </tr>
-    <tr>
-      <td class="t-lbl">Servidor</td>
-      <td class="t-val-bold" colspan="3">{{ $nombreServidor }}</td>
-    </tr>
-    <tr>
-      <td class="t-lbl">Motivo del Permiso</td>
-      <td class="t-val-bold" colspan="3">{{ $tipoLabels[$tipoVal] ?? mb_strtoupper($tipoVal, 'UTF-8') }}</td>
-    </tr>
-    <tr>
-      <td class="t-lbl">Fecha del Permiso</td>
-      <td class="t-val-bold" width="30%">{{ $fechaPermiso }}</td>
-      <td class="t-lbl" width="22%">Fecha de Creación</td>
-      <td class="t-val-bold">{{ $fechaCreacion }}</td>
-    </tr>
-    <tr>
-      <td class="t-lbl" style="color: #15803d;">Hora de Inicio</td>
-      <td class="t-val-bold" style="color: #15803d;">{{ $horaInicio }}</td>
-      <td class="t-lbl" style="color: #15803d;">Hora de Fin</td>
-      <td class="t-val-bold" style="color: #15803d;">{{ $horaFin }}</td>
-    </tr>
-  </table>
-
-  {{-- ══ OBSERVACIÓN ══ --}}
-  <div class="obs-box">
-    <div class="obs-lbl">Observaciones</div>
-    <div style="font-size: {{ $tamObs }}px;">{{ $observacion }}</div>
+  <div class="titulo">
+    <h1>Concesión de permiso</h1>
+    <div class="subtipo">{{ $subtipo }}</div>
+    <div class="regla"></div>
   </div>
 
-  {{-- ══ FIRMAS ══ --}}
-  <table class="firmas-table">
+  <div class="cintillo"><span class="codigo">{{ $folio }}</span></div>
+
+  <table class="cuerpo">
     <tr>
       <td>
-        <div class="firma-box">
-          <div class="f-lbl">Firma: {{ $rotuloJefe }}</div>
-          <div style="height: 65px;"></div>
-          <div class="firma-line"></div>
-          {{-- Sin jefe asignado no se imprimen guiones: debajo de la línea de
-               firma quedaba una segunda línea más corta, como un error. El
-               espacio conserva la altura para que los recuadros no se
-               descuadren. --}}
-          <div class="f-name">@if($nombreJefe){{ $nombreJefe }}@else&nbsp;@endif</div>
-          <div class="f-cargo">{{ $cargoJefe }}</div>
-        </div>
+        <table class="datos">
+          <tr>
+            <td class="label">Servidor</td>
+            <td class="fuerte" colspan="3">{{ $nombreServidor }}</td>
+          </tr>
+          <tr>
+            <td class="label">Unidad</td>
+            <td colspan="3">{{ $unidad }}</td>
+          </tr>
+          <tr>
+            <td class="label">Fecha del permiso</td>
+            <td class="fuerte" style="width: 30%;">{{ $fechaPermiso }}</td>
+            <td class="label">Fecha de creación</td>
+            <td>{{ $fechaCreacion }}</td>
+          </tr>
+          <tr>
+            <td class="label">Hora de inicio</td>
+            <td class="fuerte">{{ $horaInicio }}</td>
+            <td class="label">Hora de fin</td>
+            <td class="fuerte">{{ $horaFin }}</td>
+          </tr>
+        </table>
       </td>
-      <td>
-        <div class="firma-box">
-          <div class="f-lbl">Firma: Servidor</div>
-          <div style="height: 65px;"></div>
-          <div class="firma-line"></div>
-          <div class="f-name">{{ $nombreServidor }}</div>
-          <div class="f-cargo">SERVIDOR</div>
-        </div>
-      </td>
-      <td>
-        <div class="firma-box">
-          <div class="f-lbl">Talento Humano</div>
-          <div style="height: 65px;"></div>
-          <div class="firma-line"></div>
-          <div class="f-name">PERSONAL TTHH</div>
-          <div class="f-cargo">RECIBIDO POR</div>
-        </div>
-      </td>
-      <td>
-        <div class="qr-box">
-          <div class="f-lbl" style="border:none;">Código QR</div>
-          @if($qrSrc)
-            <img src="{{ $qrSrc }}" width="70" height="70" class="qr-img" alt="QR {{ $folio }}">
-            <div class="qr-folio">{{ $folio }}</div>
-          @else
-            <div style="font-size:10px; font-weight:bold; margin-top:20px;">{{ $folio }}</div>
-          @endif
-        </div>
+      <td class="qr" style="width: 25mm;">
+        @if($qrSrc)
+          <img src="{{ $qrSrc }}" alt="QR {{ $folio }}">
+          <div class="ayuda">Escanee para abrir el permiso en el SGTH</div>
+        @endif
       </td>
     </tr>
   </table>
 
-  <div class="copy-label">{{ $copy['label'] }} — SGTH GADPE</div>
+  <div class="bloque-titulo">Motivo</div>
+  @if($observacion !== null)
+    <div class="motivo" style="font-size: {{ $tamObs }}px;">{{ $observacion }}</div>
+  @else
+    <div class="motivo reservado">Reservado: es un dato privado del servidor. Talento Humano lo consulta en el sistema.</div>
+  @endif
 
-  {{-- Al final a propósito: lo que va después se pinta encima. --}}
-  <div class="marca-agua">{{ $copy['marca'] }}</div>
+  <table class="firmas">
+    <tr>
+      <td>
+        <div class="firma-rotulo">Autoriza · {{ $rotuloJefe }}</div>
+        <div class="firma-linea"></div>
+        {{-- Sin jefe asignado queda el espacio, para que las tres firmas no se
+             descuadren, y el cargo dice quién debe firmar. --}}
+        <div class="firma-nombre">@if($nombreJefe !== ''){{ $nombreJefe }}@else&nbsp;@endif</div>
+        <div class="firma-cargo">{{ $cargoJefe }}</div>
+      </td>
+      <td>
+        <div class="firma-rotulo">Solicita · Servidor</div>
+        <div class="firma-linea"></div>
+        <div class="firma-nombre">{{ $nombreServidor }}</div>
+        <div class="firma-cargo">{{ $cargoServidor ?? 'Servidor' }}</div>
+      </td>
+      <td>
+        {{-- Los papeles los recibe Talento Humano (el rol de Recepción ya no se
+             asigna): quien lo reciba escribe su nombre y la fecha. --}}
+        <div class="firma-rotulo">Recibe · Talento Humano</div>
+        <div class="firma-linea"></div>
+        <div class="firma-vacia">Nombre, firma y fecha de recepción</div>
+      </td>
+    </tr>
+  </table>
 
+  <div class="pie">
+    <table>
+      <tr>
+        <td>
+          @if(($identidad['direccion'] ?? '') !== '')
+            {{ rtrim($identidad['direccion'], '.') }} · Teléfono {{ $identidad['telefono'] ?? '' }}
+          @endif
+        </td>
+        <td class="copia-de">{{ $copia }}</td>
+      </tr>
+    </table>
+  </div>
 </div>
-
 @if($loop->first)
-  {{--
-    Sin tijeras: Helvetica no tiene ese símbolo y salía «? CORTAR AQUÍ ?».
-    DejaVu Sans sí lo dibuja, pero dompdf incrusta la fuente entera y el PDF
-    pasaba de ~160 KB a más del doble por dos caracteres. La línea discontinua
-    ya marca el corte.
-  --}}
   <div class="corte"></div>
   <div class="corte-texto"><span>CORTAR AQUÍ</span></div>
 </div>
 @endif
-
 @endforeach
-
 </body>
 </html>
