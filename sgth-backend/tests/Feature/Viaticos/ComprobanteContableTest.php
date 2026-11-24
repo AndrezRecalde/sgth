@@ -130,8 +130,8 @@ it('imprime todas las categorias que suman al total, no solo las de una lista fi
         ->and($html)->toContain('Hospedaje');
 
     // Lo que suma, se ve: cada total es el de las filas impresas.
-    expect(montoTrasEtiquetaDelComprobante($html, 'TOTAL H&amp;A:'))->toBe('80.00')
-        ->and(montoTrasEtiquetaDelComprobante($html, 'TOTAL MOVILIZACIÓN:'))->toBe('25.00');
+    expect(montoTrasEtiquetaDelComprobante($html, 'Viáticos (hospedaje y alimentación)'))->toBe('80.00')
+        ->and(montoTrasEtiquetaDelComprobante($html, 'Movilización'))->toBe('25.00');
 });
 
 it('sin comprobantes de un grupo lo dice, en vez de dejar filas en cero', function () {
@@ -176,9 +176,9 @@ it('dice en letras lo liquidado y, debajo, lo que se gira', function () {
 
     // Reconocido 128 = 80 justificados + los 48 del 30 % que no se justifica;
     // el anticipo fue de 112, así que quedan 16 por pagarle.
-    expect($html)->toContain('Valor liquidado:')
+    expect($html)->toContain('Valor liquidado')
         ->toContain('CIENTO VEINTE Y OCHO DÓLARES')
-        ->toContain('A pagar:')
+        ->toContain('A pagar')
         ->toContain('DIECISÉIS DÓLARES');
 });
 
@@ -186,9 +186,11 @@ it('cuando el servidor tiene que devolver, lo dice en letras y con su rotulo', f
     // Sin comprobantes: se le reconocen los 48 del 30 % y devuelve el resto.
     $html = ($this->html)(($this->viatico)());
 
-    expect($html)->toContain('A devolver:')
+    expect($html)->toContain('A devolver')
         ->toContain('SESENTA Y CUATRO DÓLARES')
-        ->not->toContain('A pagar:');
+        // Las dos líneas que hablan del saldo cambian juntas: la del
+        // beneficiario y la que cierra la liquidación.
+        ->not->toContain('A pagar');
 });
 
 /*

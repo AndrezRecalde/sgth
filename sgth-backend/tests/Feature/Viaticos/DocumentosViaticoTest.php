@@ -205,7 +205,9 @@ it('los tres documentos dicen igual quien viaja, a donde fue y como se llama el 
 
     foreach ($documentos as $html) {
         expect($html)->toContain('Recalde Solano Cristhian Andrés')
-            ->and($html)->toContain('N° de Viático');
+            // El código, no la etiqueta: desde el rediseño del 2026-11-24 va
+            // en el cintillo, que lo rotula con su propio recuadro.
+            ->and($html)->toContain($this->viatico->codigo_viatico);
     }
 
     // La firma de la solicitud era la que imprimía medio nombre: ahora el

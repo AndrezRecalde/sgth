@@ -188,6 +188,9 @@ class PdfInformeViaticoService
                 'calculo'             => $calculo,
                 'facturasPorCategoria'=> $facturasPorCategoria,
                 'elaborado'           => $this->elaboradoPor($viatico),
+                // La modalidad sigue haciendo falta para la línea del anticipo:
+                // un viático sin anticipo dice «Sin anticipo», no «(c)».
+                'modalidadValue'      => $this->valorDe($viatico->modalidad_anticipo),
                 // El «TIPO» es la etapa del pago, no la modalidad del anticipo:
                 // definida por Gestión Financiera el 2026-11-23 (S2). Este
                 // documento es siempre el definitivo, también cuando el viático
@@ -395,17 +398,21 @@ class PdfInformeViaticoService
             return '';
         }
 
-        $partes = [];
+        $fecha  = $viatico->fecha_anticipo
+            ? 'el '.\Illuminate\Support\Carbon::parse($viatico->fecha_anticipo)->format('d/m/Y')
+            : null;
+        $numero = $viatico->numero_resolucion
+            ? 'comprobante N.° '.$viatico->numero_resolucion
+            : null;
 
-        if ($viatico->fecha_anticipo) {
-            $partes[] = 'el '.\Illuminate\Support\Carbon::parse($viatico->fecha_anticipo)->format('d/m/Y');
-        }
-
-        if ($viatico->numero_resolucion) {
-            $partes[] = 'comprobante N.° '.$viatico->numero_resolucion;
-        }
-
-        return $partes ? ' '.implode(', ', $partes) : '';
+        // Sin fecha, el número necesita su preposición: «Anticipo entregado
+        // comprobante N.° X» no es una frase.
+        return match (true) {
+            $fecha && $numero => ' '.$fecha.', '.$numero,
+            (bool) $fecha     => ' '.$fecha,
+            (bool) $numero    => ' con '.$numero,
+            default           => '',
+        };
     }
 
     /**

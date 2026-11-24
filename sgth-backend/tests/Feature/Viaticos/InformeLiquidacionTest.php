@@ -132,8 +132,8 @@ it('la clausula del debito lleva el valor que hay que devolver', function () {
     // Sin comprobantes: se le reconocen los 48 del 30 % y devuelve 64.
     $html = ($this->html)();
 
-    expect($html)->toContain('AUTORIZO QUE SE DEBITE')
-        ->toContain('EL VALOR NO JUSTIFICADO DE $ 64.00');
+    expect($html)->toContain('Autorizo que se debite')
+        ->toContain('no justificado de $ 64.00');
 });
 
 it('sin nada que devolver, la clausula del debito no sale', function () {
@@ -141,7 +141,7 @@ it('sin nada que devolver, la clausula del debito no sale', function () {
     ($this->comprobar)(32, '2026-12-03');
 
     // Justifica los 112 del tope: se le reconocen 160 y le quedan 48 a favor.
-    expect(($this->html)())->not->toContain('AUTORIZO');
+    expect(($this->html)())->not->toContain('Autorizo que se debite');
 });
 
 it('la tabla de gastos trae la fecha de cada comprobante y su total', function () {
@@ -160,13 +160,15 @@ it('la tabla de gastos trae la fecha de cada comprobante y su total', function (
 it('la fecha del informe es la de la liquidacion, no la del dia en que se imprime', function () {
     $html = ($this->html)();
 
-    expect($html)->toContain('04/12/2026');
+    expect($html)->toContain('Esmeraldas, 4 de diciembre de 2026');
 
-    // Reimprimirlo mañana no puede cambiarle la fecha al papel firmado.
+    // Reimprimirlo mañana no puede cambiarle la fecha al papel firmado. El
+    // día de impresión ya no sale en ninguna parte: el pie institucional
+    // lleva la dirección y el teléfono, no un sello de hora.
     $this->travel(40)->days();
 
-    expect(($this->html)())->toContain('04/12/2026')
-        ->not->toContain('<div class="code-date">'.now()->format('d/m/Y'));
+    expect(($this->html)())->toContain('Esmeraldas, 4 de diciembre de 2026')
+        ->not->toContain(now()->locale('es')->isoFormat('D [de] MMMM [de] YYYY'));
 });
 
 it('las horas de las actividades van sin segundos', function () {
