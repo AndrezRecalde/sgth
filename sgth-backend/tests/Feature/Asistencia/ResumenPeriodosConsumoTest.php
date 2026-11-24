@@ -225,12 +225,12 @@ test('las vacaciones aprobadas siguen contándose por el período del que salier
         'fecha_fin'        => $inicio->copy()->addDays(2)->toDateString(),
         'dias_solicitados' => 3,
         'tipo_dias'        => 'habiles',
-        'estado'           => 'pendiente',
+        'estado'           => 'autorizada',
         'motivo'           => 'vacaciones_anuales',
     ]);
 
     $this->actingAs($this->uath, 'sanctum')
-        ->putJson("/api/v1/asistencia/vacaciones/{$vacacion->id}", ['estado' => 'aprobada'])
+        ->postJson("/api/v1/asistencia/vacaciones/{$vacacion->id}/registrar")
         ->assertOk();
 
     $porAnio = collect(($this->resumen)($this->servidor)['periodos'])->keyBy('anio');

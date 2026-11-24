@@ -1008,8 +1008,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'usuario-activo', 'primer-login
             Route::get('conteo', [VacacionController::class, 'conteo']);
             Route::get('{id}/exportar', [VacacionController::class, 'exportar'])
                 ->name('asistencia.vacaciones.exportar');
-            Route::put('{id}', [VacacionController::class, 'update']);
-            // Pendiente o aprobada sin comenzar; la aprobada devuelve sus días.
+            // Talento Humano la registra al recibirla firmada. Ruta propia y no
+            // un PUT con el estado en el cuerpo: ya no hay estado que elegir.
+            Route::post('{id}/registrar', [VacacionController::class, 'registrar'])
+                ->whereNumber('id')
+                ->name('asistencia.vacaciones.registrar');
+            // Autorizada, o registrada sin comenzar; la registrada devuelve sus días.
             Route::post('{id}/anular', [VacacionController::class, 'anular'])
                 ->whereNumber('id')
                 ->name('asistencia.vacaciones.anular');

@@ -5,6 +5,7 @@ namespace App\Services\Asistencia;
 use App\Enums\CausaLicencia;
 use App\Enums\EstadoAccionPersonal;
 use App\Enums\EstadoPermiso;
+use App\Enums\EstadoVacacion;
 use App\Enums\TipoAusenciaTitular;
 use App\Enums\TipoNombramiento;
 use App\Exceptions\ReglaNegocioException;
@@ -308,7 +309,7 @@ class LicenciaService
         }
 
         $vacacion = Vacacion::where('servidor_id', $servidorId)
-            ->whereIn('estado', ['pendiente', 'aprobada', 'gozada'])
+            ->whereIn('estado', EstadoVacacion::vigentes())
             ->whereDate('fecha_inicio', '<=', $hasta)
             ->whereDate('fecha_fin', '>=', $desde)
             ->orderBy('fecha_inicio')

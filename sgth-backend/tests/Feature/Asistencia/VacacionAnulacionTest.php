@@ -3,12 +3,11 @@
 /*
 | Anular una solicitud de vacaciones.
 |
-| Hasta ahora una aprobación no tenía vuelta atrás: rechazar solo se admite
-| desde pendiente, y los días quedaban descontados aunque la aprobación fuera
-| un error o la unidad pidiera postergar las vacaciones.
+| Es la única salida hacia atrás, y desde el 2026-11-24 también la única manera
+| de que Talento Humano rechace una solicitud: siempre con motivo.
 |
-| Se anula una pendiente, o una aprobada que todavía no comenzó. La aprobada
-| devuelve cada día al período del que salió.
+| Se anula una autorizada, o una registrada que todavía no comenzó. La
+| registrada devuelve cada día al período del que salió.
 */
 
 use App\Enums\RegimenLaboral;
@@ -76,7 +75,7 @@ beforeEach(function () {
         'estado'               => 'abierto',
     ]);
 
-    $this->vacacion = fn (float $dias, string $estado = 'pendiente', string $motivo = 'vacaciones_anuales', ?Carbon $inicio = null) => Vacacion::create([
+    $this->vacacion = fn (float $dias, string $estado = 'autorizada', string $motivo = 'vacaciones_anuales', ?Carbon $inicio = null) => Vacacion::create([
         'servidor_id'      => $this->servidor->id,
         'fecha_inicio'     => ($inicio ?? $this->inicio)->toDateString(),
         'fecha_fin'        => ($inicio ?? $this->inicio)->copy()->addDays((int) $dias - 1)->toDateString(),
@@ -90,12 +89,12 @@ beforeEach(function () {
         $this->postJson("/api/v1/asistencia/vacaciones/{$v->id}/anular", array_filter(['motivo' => $motivo]));
 });
 
-test('anular una aprobada devuelve los días a los períodos de donde salieron', function () {
+test('anular una registrada devuelve los días a los períodos de donde salieron', function () {
     $anterior = ($this->periodo)($this->anio - 1, 20, 10);
     $actual   = ($this->periodo)($this->anio, 15, 0);
     $vacacion = ($this->vacacion)(12);
 
-    $this->putJson("/api/v1/asistencia/vacaciones/{$vacacion->id}", ['estado' => 'aprobada'])->assertOk();
+    $this->postJson("/api/v1/asistencia/vacaciones/{$vacacion->id}/registrar")->assertOk();
 
     $respuesta = ($this->anular)($vacacion);
 
@@ -117,7 +116,7 @@ test('anular una aprobada devuelve los días a los períodos de donde salieron',
         ->and(VacacionDescuento::whereNull('devuelto_en')->count())->toBe(0);
 });
 
-test('anular una pendiente no toca el saldo', function () {
+test('anular una autorizada no toca el saldo', function () {
     $periodo  = ($this->periodo)($this->anio, 15, 0);
     $vacacion = ($this->vacacion)(5);
 
@@ -129,22 +128,21 @@ test('anular una pendiente no toca el saldo', function () {
         ->and($vacacion->fresh()->estado)->toBe('anulada');
 });
 
-test('una aprobada que ya comenzó no se anula', function () {
-    $vacacion = ($this->vacacion)(5, 'aprobada', inicio: Carbon::yesterday());
+test('una registrada que ya comenzó no se anula', function () {
+    $vacacion = ($this->vacacion)(5, 'registrada', inicio: Carbon::yesterday());
 
     $respuesta = ($this->anular)($vacacion);
 
     $respuesta->assertStatus(422);
     expect($respuesta->json('mensaje'))->toContain('comenzó')
-        ->and($vacacion->fresh()->estado)->toBe('aprobada');
+        ->and($vacacion->fresh()->estado)->toBe('registrada');
 });
 
-test('ni una rechazada ni una ya anulada', function () {
-    ($this->anular)(($this->vacacion)(3, 'rechazada'))->assertStatus(422);
+test('una ya anulada no se vuelve a anular', function () {
+    $autorizada = ($this->vacacion)(3);
 
-    $pendiente = ($this->vacacion)(3);
-    ($this->anular)($pendiente)->assertOk();
-    ($this->anular)($pendiente)->assertStatus(422);
+    ($this->anular)($autorizada)->assertOk();
+    ($this->anular)($autorizada)->assertStatus(422);
 });
 
 test('una anulada libera sus fechas', function () {
@@ -158,7 +156,7 @@ test('una anulada libera sus fechas', function () {
     $primera = $servicio->solicitar($datos, $this->servidor->id);
     ($this->anular)($primera)->assertOk();
 
-    expect($servicio->solicitar($datos, $this->servidor->id)->estado)->toBe('pendiente');
+    expect($servicio->solicitar($datos, $this->servidor->id)->estado)->toBe('autorizada');
 });
 
 test('sin aprobar-vacaciones no se anula, y el motivo es obligatorio', function () {
@@ -178,14 +176,14 @@ test('sin aprobar-vacaciones no se anula, y el motivo es obligatorio', function 
     $this->actingAs($this->uath, 'sanctum');
     ($this->anular)($vacacion, null)->assertStatus(422);
 
-    expect($vacacion->fresh()->estado)->toBe('pendiente');
+    expect($vacacion->fresh()->estado)->toBe('autorizada');
 });
 
-test('una aprobada antes del registro de descuentos devuelve al período de su año', function () {
+test('una registrada antes del registro de descuentos devuelve al período de su año', function () {
     // Así quedaban las aprobadas hasta ahora: descontadas del período de su
     // año, sin tramos anotados.
     $periodo  = ($this->periodo)($this->anio, 15, 5);
-    $vacacion = ($this->vacacion)(5, 'aprobada');
+    $vacacion = ($this->vacacion)(5, 'registrada');
 
     $respuesta = ($this->anular)($vacacion);
 
@@ -197,7 +195,7 @@ test('una aprobada antes del registro de descuentos devuelve al período de su a
 
 test('un motivo que no descuenta no devuelve nada', function () {
     $periodo  = ($this->periodo)($this->anio, 15, 5);
-    $vacacion = ($this->vacacion)(3, 'aprobada', 'matrimonio');
+    $vacacion = ($this->vacacion)(3, 'registrada', 'matrimonio');
 
     ($this->anular)($vacacion)->assertOk();
 

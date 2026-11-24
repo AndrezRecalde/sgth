@@ -258,20 +258,20 @@ test('solo_quien_tiene_aprobar_vacaciones_resuelve_la_solicitud', function () {
         'fecha_fin' => now()->addDays(10)->format('Y-m-d'),
         'dias_solicitados' => 4,
         'tipo_dias' => 'habiles',
-        'estado' => 'pendiente',
+        'estado' => 'autorizada',
     ]);
 
     $this->actingAs($this->userJefe, 'sanctum')
-        ->putJson("/api/v1/asistencia/vacaciones/{$vacacion->id}", ['estado' => 'aprobada'])
+        ->postJson("/api/v1/asistencia/vacaciones/{$vacacion->id}/registrar")
         ->assertForbidden();
 
-    expect($vacacion->fresh()->estado)->toBe('pendiente');
+    expect($vacacion->fresh()->estado)->toBe('autorizada');
 
     $this->actingAs($uath, 'sanctum')
-        ->putJson("/api/v1/asistencia/vacaciones/{$vacacion->id}", ['estado' => 'aprobada'])
+        ->postJson("/api/v1/asistencia/vacaciones/{$vacacion->id}/registrar")
         ->assertOk();
 
     $vacacion->refresh();
-    expect($vacacion->estado)->toBe('aprobada');
+    expect($vacacion->estado)->toBe('registrada');
     expect($vacacion->aprobado_por)->toBe($uath->id);
 });

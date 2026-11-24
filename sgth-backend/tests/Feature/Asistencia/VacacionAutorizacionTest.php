@@ -76,7 +76,7 @@ beforeEach(function () {
         'fecha_fin'                => now()->addDays(9)->toDateString(),
         'dias_solicitados'         => 3,
         'tipo_dias'                => 'habiles',
-        'estado'                   => 'pendiente',
+        'estado'                   => 'autorizada',
         'motivo'                   => 'vacaciones_anuales',
     ]);
 
@@ -104,7 +104,7 @@ test('un usuario sin rol no entra a nada del módulo', function () {
     $a = $this->servidorA->id;
 
     $this->getJson('/api/v1/asistencia/vacaciones')->assertForbidden();
-    $this->putJson("/api/v1/asistencia/vacaciones/{$this->vacacionA->id}", ['estado' => 'aprobada'])->assertForbidden();
+    $this->postJson("/api/v1/asistencia/vacaciones/{$this->vacacionA->id}/registrar")->assertForbidden();
     $this->get("/api/v1/asistencia/vacaciones/{$this->vacacionA->id}/exportar")->assertForbidden();
     $this->getJson("/api/v1/asistencia/vacaciones/saldo/{$a}")->assertForbidden();
     $this->postJson('/api/v1/asistencia/vacaciones', $this->solicitud + ['servidor_id' => $a])->assertForbidden();
@@ -117,7 +117,7 @@ test('un usuario sin rol no entra a nada del módulo', function () {
     $this->postJson("{$base}/generar-todos", ['anio' => now()->year])->assertForbidden();
 
     // Que el 403 no llegue después de haber hecho el daño.
-    expect($this->vacacionA->fresh()->estado)->toBe('pendiente')
+    expect($this->vacacionA->fresh()->estado)->toBe('autorizada')
         ->and(PeriodoVacacion::count())->toBe(0)
         ->and(Vacacion::count())->toBe(2);
 });
@@ -138,7 +138,7 @@ test('quien dirige la unidad ve y exporta solo lo de su unidad, y no resuelve', 
     $this->getJson("/api/v1/asistencia/vacaciones/saldo/{$this->servidorA->id}")->assertOk();
     $this->getJson("/api/v1/asistencia/vacaciones/saldo/{$this->servidorB->id}")->assertForbidden();
 
-    $this->putJson("/api/v1/asistencia/vacaciones/{$this->vacacionA->id}", ['estado' => 'aprobada'])
+    $this->postJson("/api/v1/asistencia/vacaciones/{$this->vacacionA->id}/registrar")
         ->assertForbidden();
 });
 
@@ -150,7 +150,7 @@ test('asistente de Talento Humano ve toda la institución pero no resuelve ni ge
     $ids = collect($this->getJson('/api/v1/asistencia/vacaciones')->assertOk()->json('datos.data'))->pluck('id');
     expect($ids)->toContain($this->vacacionA->id)->toContain($this->vacacionB->id);
 
-    $this->putJson("/api/v1/asistencia/vacaciones/{$this->vacacionA->id}", ['estado' => 'aprobada'])->assertForbidden();
+    $this->postJson("/api/v1/asistencia/vacaciones/{$this->vacacionA->id}/registrar")->assertForbidden();
     $this->postJson('/api/v1/asistencia/periodos-vacaciones/generar-todos', ['anio' => now()->year])->assertForbidden();
 });
 
@@ -162,14 +162,14 @@ test('Talento Humano aprueba y genera períodos, pero no resuelve su propia soli
     // sin período abierto del año no hay de dónde descontarlos.
     $anio = $this->vacacionA->fecha_inicio->year;
     $this->postJson('/api/v1/asistencia/periodos-vacaciones/generar-todos', ['anio' => $anio])->assertOk();
-    $this->putJson("/api/v1/asistencia/vacaciones/{$this->vacacionA->id}", ['estado' => 'aprobada'])->assertOk();
+    $this->postJson("/api/v1/asistencia/vacaciones/{$this->vacacionA->id}/registrar")->assertOk();
 
     $propia = ($this->vacacion)($servidorUath);
-    $respuesta = $this->putJson("/api/v1/asistencia/vacaciones/{$propia->id}", ['estado' => 'aprobada']);
+    $respuesta = $this->postJson("/api/v1/asistencia/vacaciones/{$propia->id}/registrar");
 
     $respuesta->assertStatus(422);
     expect($respuesta->json('mensaje'))->toContain('propia solicitud')
-        ->and($propia->fresh()->estado)->toBe('pendiente');
+        ->and($propia->fresh()->estado)->toBe('autorizada');
 });
 
 test('un servidor registra la suya y consulta su saldo, pero no la de otros', function () {

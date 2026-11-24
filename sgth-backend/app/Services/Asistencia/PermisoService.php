@@ -479,13 +479,13 @@ class PermisoService implements PermisoServiceInterface
      *
      * Ese día no tiene jornada: pedir permiso sobre él no ampara nada, y si es
      * personal descuenta el saldo dos veces, por las vacaciones y por el
-     * permiso. Cuentan las pendientes, aprobadas y gozadas —la misma regla que
-     * usa el cruce entre vacaciones—; una rechazada deja las fechas libres.
+     * permiso. Cuentan todas las vigentes —la misma regla que usa el cruce
+     * entre vacaciones—; una anulada deja las fechas libres.
      */
     private function validarCruceConVacaciones(int $servidorId, Carbon $fecha): void
     {
         $vacacion = \App\Models\Asistencia\Vacacion::where('servidor_id', $servidorId)
-            ->whereIn('estado', ['pendiente', 'aprobada', 'gozada'])
+            ->whereIn('estado', \App\Enums\EstadoVacacion::vigentes())
             ->whereDate('fecha_inicio', '<=', $fecha->toDateString())
             ->whereDate('fecha_fin', '>=', $fecha->toDateString())
             ->orderBy('fecha_inicio')

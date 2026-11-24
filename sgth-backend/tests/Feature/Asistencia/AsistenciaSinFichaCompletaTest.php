@@ -16,6 +16,7 @@
 use App\Enums\EstadoPermiso;
 use App\Enums\RegimenLaboral;
 use App\Enums\TipoPermiso;
+use App\Models\Asistencia\PeriodoVacacion;
 use App\Models\Asistencia\PermisoServidor;
 use App\Models\Asistencia\Vacacion;
 use App\Models\Estructura\UnidadAdministrativa;
@@ -249,7 +250,7 @@ function vacacionAsistenciaSinFicha(Servidor $titular, Servidor $jefe, Servidor 
         'fecha_emision'            => now()->toDateString(),
         'dias_solicitados'         => 3,
         'tipo_dias'                => 'habiles',
-        'estado'                   => 'pendiente',
+        'estado'                   => 'autorizada',
         'folio'                    => 'VAC-2026-80001',
     ]);
 }
@@ -267,11 +268,28 @@ test('el listado de vacaciones lleva solo el nombre del servidor', function (str
         ->and($fila['creado_por'])->toBe($this->uath->id);
 })->with(['uath', 'delJefe']);
 
-test('resolver y anular una solicitud no devuelven la ficha', function () {
-    $rechazada = vacacionAsistenciaSinFicha($this->titular, $this->jefe, $this->reemplazo, $this->uath);
+test('registrar y anular una solicitud no devuelven la ficha', function () {
+    $porRegistrar = vacacionAsistenciaSinFicha($this->titular, $this->jefe, $this->reemplazo, $this->uath);
+
+    // Registrar descuenta los días, así que hace falta un período abierto: lo
+    // que se comprueba aquí es la forma de la respuesta, no el saldo.
+    $anio = Carbon::parse($porRegistrar->fecha_inicio)->year;
+    PeriodoVacacion::create([
+        'servidor_id'          => $this->titular->id,
+        'anio'                 => $anio,
+        'fecha_inicio_periodo' => Carbon::create($anio, 1, 1),
+        'fecha_fin_periodo'    => Carbon::create($anio, 12, 31),
+        'regimen'              => 'losep',
+        'anios_antiguedad'     => 5,
+        'dias_generados'       => 30,
+        'dias_utilizados'      => 0,
+        'dias_saldo'           => 30,
+        'saldo_acumulado'      => 30,
+        'estado'               => 'abierto',
+    ]);
 
     $resuelta = $this->actingAs($this->uath, 'sanctum')
-        ->putJson("/api/v1/asistencia/vacaciones/{$rechazada->id}", ['estado' => 'rechazada'])
+        ->postJson("/api/v1/asistencia/vacaciones/{$porRegistrar->id}/registrar")
         ->assertOk()
         ->json('datos');
 
@@ -279,13 +297,13 @@ test('resolver y anular una solicitud no devuelven la ficha', function () {
         ->and($resuelta)->not->toHaveKey('jefe');
 
     $pendiente = Vacacion::create([
-        ...$rechazada->only([
+        ...$porRegistrar->only([
             'servidor_id', 'jefe_id', 'persona_reemplaza_id', 'creado_por', 'unidad_administrativa_id',
             'motivo', 'fecha_emision', 'dias_solicitados', 'tipo_dias',
         ]),
         'fecha_inicio' => now()->addWeeks(5)->toDateString(),
         'fecha_fin'    => now()->addWeeks(5)->addDays(2)->toDateString(),
-        'estado'       => 'pendiente',
+        'estado'       => 'autorizada',
         'folio'        => 'VAC-2026-80002',
     ]);
 

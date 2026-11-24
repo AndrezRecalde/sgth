@@ -86,7 +86,7 @@ function jpVacacion(Servidor $servidor): Vacacion
     return Vacacion::create([
         'servidor_id' => $servidor->id, 'unidad_administrativa_id' => $servidor->unidad_administrativa_id,
         'fecha_inicio' => now()->addDays(7)->toDateString(), 'fecha_fin' => now()->addDays(9)->toDateString(),
-        'dias_solicitados' => 3, 'tipo_dias' => 'habiles', 'estado' => 'pendiente', 'motivo' => 'vacaciones_anuales',
+        'dias_solicitados' => 3, 'tipo_dias' => 'habiles', 'estado' => 'autorizada', 'motivo' => 'vacaciones_anuales',
     ]);
 }
 

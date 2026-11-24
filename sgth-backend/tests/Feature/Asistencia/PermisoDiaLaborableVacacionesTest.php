@@ -178,16 +178,16 @@ test('ningún permiso cae dentro de unas vacaciones vigentes', function (string 
     }
 
     expect(PermisoServidor::count())->toBe(0);
-})->with(['pendiente', 'aprobada', 'gozada']);
+})->with(['autorizada', 'registrada', 'gozada']);
 
-test('una vacación rechazada deja la fecha libre', function () {
-    ($this->vacacion)('rechazada', $this->lunes, $this->lunes->copy()->addDays(4));
+test('una vacación anulada deja la fecha libre', function () {
+    ($this->vacacion)('anulada', $this->lunes, $this->lunes->copy()->addDays(4));
 
     ($this->crear)(['fecha' => $this->lunes->copy()->addDays(2)->toDateString()])->assertCreated();
 });
 
 test('el día siguiente a las vacaciones sí se admite', function () {
-    ($this->vacacion)('aprobada', $this->lunes, $this->lunes->copy()->addDays(2));
+    ($this->vacacion)('registrada', $this->lunes, $this->lunes->copy()->addDays(2));
 
     ($this->crear)(['fecha' => $this->lunes->copy()->addDays(3)->toDateString()])->assertCreated();
 });

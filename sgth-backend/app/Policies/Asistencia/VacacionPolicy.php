@@ -2,6 +2,7 @@
 
 namespace App\Policies\Asistencia;
 
+use App\Enums\EstadoVacacion;
 use App\Enums\Permiso;
 use App\Models\Asistencia\Vacacion;
 use App\Models\Expediente\Servidor;
@@ -69,11 +70,22 @@ class VacacionPolicy
     }
 
     /**
-     * El PDF es la solicitud completa: se imprime bajo la regla con la que se lee.
+     * El impreso es la hoja que el servidor hace firmar por su jefe inmediato y
+     * baja a ventanilla: solo tiene sentido mientras está AUTORIZADA.
+     *
+     * Una vez registrada, esa hoja ya está firmada y archivada en Talento
+     * Humano, así que el servidor no la vuelve a sacar. Talento Humano sí,
+     * porque es quien responde a una auditoría (decisión del usuario,
+     * 2026-11-24). Lo mismo con una anulada.
      */
     public function exportar(User $user, Vacacion $vacacion): bool
     {
-        return $this->ver($user, $vacacion);
+        if (! $this->ver($user, $vacacion)) {
+            return false;
+        }
+
+        return (string) $vacacion->estado === EstadoVacacion::AUTORIZADA->value
+            || $this->alcanceInstitucional($user);
     }
 
     /**
@@ -87,10 +99,10 @@ class VacacionPolicy
     }
 
     /**
-     * Aprobar o rechazar. Aprobar descuenta días del saldo: no es algo que se
-     * pueda conceder por estar en la misma unidad.
+     * Registrar la solicitud en ventanilla. Descuenta días del saldo: no es
+     * algo que se pueda hacer por estar en la misma unidad.
      */
-    public function resolver(User $user, Vacacion $vacacion): bool
+    public function registrar(User $user, Vacacion $vacacion): bool
     {
         return $user->can(Permiso::APROBAR_VACACIONES->value);
     }

@@ -87,13 +87,13 @@ beforeEach(function () {
             'fecha_fin'        => $this->inicio->copy()->addDays((int) $dias - 1)->toDateString(),
             'dias_solicitados' => $dias,
             'tipo_dias'        => 'habiles',
-            'estado'           => 'pendiente',
+            'estado'           => 'autorizada',
             'motivo'           => 'vacaciones_anuales',
         ]);
 
         return [
             $vacacion,
-            $this->putJson("/api/v1/asistencia/vacaciones/{$vacacion->id}", ['estado' => 'aprobada']),
+            $this->postJson("/api/v1/asistencia/vacaciones/{$vacacion->id}/registrar"),
         ];
     };
 });
@@ -154,7 +154,7 @@ test('no se toman días de un año posterior al de la vacación', function () {
     expect($respuesta->json('mensaje'))->toContain('Saldo insuficiente')
         ->and((float) $actual->fresh()->dias_utilizados)->toBe(17.0)
         ->and((float) $siguiente->fresh()->dias_utilizados)->toBe(0.0)
-        ->and($vacacion->fresh()->estado)->toBe('pendiente');
+        ->and($vacacion->fresh()->estado)->toBe('autorizada');
 });
 
 test('el acumulado de cada período queda al día tras repartir', function () {

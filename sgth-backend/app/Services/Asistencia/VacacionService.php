@@ -5,6 +5,7 @@ namespace App\Services\Asistencia;
 use App\Contracts\Asistencia\VacacionMotorInterface;
 use App\Contracts\Asistencia\VacacionServiceInterface;
 use App\Enums\EstadoPermiso;
+use App\Enums\EstadoVacacion;
 use App\Enums\MotivoVacacion;
 use App\Enums\RegimenLaboral;
 use App\Enums\TipoAusenciaTitular;
@@ -211,7 +212,10 @@ class VacacionService implements VacacionServiceInterface
                 'dias_solicitados' => $diasADescontar,
                 'tipo_dias'        => $tipoDias,
                 'observacion'      => filled($datos['observacion'] ?? null) ? trim($datos['observacion']) : null,
-                'estado'           => 'pendiente',
+                // Nace autorizada: el jefe inmediato ya dio el visto bueno de
+                // palabra y lo confirmará firmando el impreso. Los días no se
+                // descuentan hasta que Talento Humano la registre.
+                'estado'           => EstadoVacacion::AUTORIZADA->value,
                 'creado_por'       => $datos['creado_por'] ?? null,
                 'folio'            => $folio,
                 'codigo_qr'        => Vacacion::urlVerificacion($folio),
@@ -222,7 +226,13 @@ class VacacionService implements VacacionServiceInterface
     }
 
     /**
-     * Aprueba o rechaza una solicitud. Solo desde PENDIENTE, y una sola vez.
+     * Talento Humano registra en ventanilla la solicitud que le llega firmada.
+     * Solo desde AUTORIZADA, y una sola vez.
+     *
+     * Este es el momento en que los días salen del saldo. El jefe inmediato ya
+     * autorizó —de palabra primero y con su firma en el impreso después—, pero
+     * hasta que el papel no llega aquí el sistema no descuenta nada ni da por
+     * ausente a nadie.
      *
      * Antes esto vivía en el controlador y aceptaba cualquier cambio de estado.
      * La única defensa contra el doble descuento era «el estado anterior no era
@@ -230,53 +240,50 @@ class VacacionService implements VacacionServiceInterface
      * dos veces, y rechazar una ya aprobada no devolvía nada. Sin transacción ni
      * bloqueo, además, un doble clic podía descontar dos veces directamente.
      *
-     * Deshacer una aprobada —devolviendo sus días— no es «rechazarla»: es una
-     * anulación, con su propio motivo y su propio registro. Ver `anular()`.
+     * Ya no existe «rechazar»: si el papel llega mal, se anula con motivo, que
+     * además devuelve los días si hiciera falta. Ver `anular()`.
      */
-    public function resolver(int $vacacionId, string $nuevoEstado, User $resolutor): Vacacion
+    public function registrar(int $vacacionId, User $resolutor): Vacacion
     {
-        return DB::transaction(function () use ($vacacionId, $nuevoEstado, $resolutor) {
+        return DB::transaction(function () use ($vacacionId, $resolutor) {
             // Bloquea la fila: la segunda de dos peticiones simultáneas espera
-            // aquí y, cuando entra, ya la encuentra resuelta.
+            // aquí y, cuando entra, ya la encuentra registrada.
             $vacacion = Vacacion::lockForUpdate()->findOrFail($vacacionId);
 
-            $this->rechazarSiEsPropia($resolutor, $vacacion, 'aprobar ni rechazar');
+            $this->rechazarSiEsPropia($resolutor, $vacacion, 'registrar');
 
             $estadoActual = (string) $vacacion->estado;
 
-            if ($estadoActual !== 'pendiente') {
+            if ($estadoActual !== EstadoVacacion::AUTORIZADA->value) {
                 throw new ReglaNegocioException(sprintf(
-                    'La solicitud %s ya fue resuelta como %s: solo se aprueba o rechaza una solicitud pendiente.',
+                    'La solicitud %s está %s: solo se registra una que el jefe inmediato haya autorizado.',
                     $vacacion->folio ?? "#{$vacacion->id}",
                     $estadoActual
                 ));
             }
 
-            if ($nuevoEstado === 'aprobada') {
-                // Entre la solicitud y la aprobación alguien pudo registrar un
-                // permiso en esas fechas: se vuelve a mirar, igual que el saldo.
-                $this->rechazarSiHayPermisos(
-                    (int) $vacacion->servidor_id,
-                    Carbon::parse($vacacion->fecha_inicio),
-                    Carbon::parse($vacacion->fecha_fin)
+            // Entre la solicitud y el registro alguien pudo anotar un permiso
+            // en esas fechas: se vuelve a mirar, igual que el saldo.
+            $this->rechazarSiHayPermisos(
+                (int) $vacacion->servidor_id,
+                Carbon::parse($vacacion->fecha_inicio),
+                Carbon::parse($vacacion->fecha_fin)
+            );
+
+            if ($this->descuenta($vacacion)) {
+                // Reparte entre los períodos abiertos, del más antiguo al más
+                // nuevo, y comprueba el saldo con esos períodos bloqueados: una
+                // autorizada no reserva días, y dos que pasaron el control por
+                // separado pueden juntas superarlo.
+                app(PeriodoVacacionService::class)->consumirParaVacacion(
+                    $vacacion,
+                    (float) $vacacion->dias_solicitados,
+                    Carbon::parse($vacacion->fecha_inicio)->year
                 );
-
-                if ($this->descuenta($vacacion)) {
-                    // Reparte entre los períodos abiertos, del más antiguo al
-                    // más nuevo, y comprueba el saldo con esos períodos
-                    // bloqueados: una pendiente no reserva días, y dos que
-                    // pasaron el control por separado pueden juntas superarlo.
-                    app(PeriodoVacacionService::class)->consumirParaVacacion(
-                        $vacacion,
-                        (float) $vacacion->dias_solicitados,
-                        Carbon::parse($vacacion->fecha_inicio)->year
-                    );
-                }
-
-                $vacacion->aprobado_por = $resolutor->id;
             }
 
-            $vacacion->estado = $nuevoEstado;
+            $vacacion->aprobado_por = $resolutor->id;
+            $vacacion->estado       = EstadoVacacion::REGISTRADA->value;
             $vacacion->save();
 
             return $vacacion->fresh(self::RELACIONES);
@@ -309,15 +316,15 @@ class VacacionService implements VacacionServiceInterface
             $estado = (string) $vacacion->estado;
             $folio  = $vacacion->folio ?? "#{$vacacion->id}";
 
-            if (! in_array($estado, ['pendiente', 'aprobada'], true)) {
+            if (! in_array($estado, [EstadoVacacion::AUTORIZADA->value, EstadoVacacion::REGISTRADA->value], true)) {
                 throw new ReglaNegocioException(
-                    "La solicitud {$folio} está {$estado}: solo se anula una solicitud pendiente o aprobada."
+                    "La solicitud {$folio} está {$estado}: solo se anula una autorizada o una registrada."
                 );
             }
 
             $inicio = Carbon::parse($vacacion->fecha_inicio)->startOfDay();
 
-            if ($estado === 'aprobada' && $inicio->lessThan(Carbon::today())) {
+            if ($estado === EstadoVacacion::REGISTRADA->value && $inicio->lessThan(Carbon::today())) {
                 throw new ReglaNegocioException(
                     "La solicitud {$folio} comenzó el {$inicio->format('d/m/Y')}: anularla devolvería días "
                     .'que ya se están gozando. Una vacación en curso no se interrumpe anulándola.'
@@ -326,11 +333,11 @@ class VacacionService implements VacacionServiceInterface
 
             $devueltos = 0.0;
 
-            if ($estado === 'aprobada' && $this->descuenta($vacacion)) {
+            if ($estado === EstadoVacacion::REGISTRADA->value && $this->descuenta($vacacion)) {
                 $devueltos = app(PeriodoVacacionService::class)->devolverDeVacacion($vacacion);
             }
 
-            $vacacion->estado           = 'anulada';
+            $vacacion->estado           = EstadoVacacion::ANULADA->value;
             $vacacion->anulado_por      = $usuario->id;
             $vacacion->anulado_en       = now();
             $vacacion->motivo_anulacion = $motivo;
@@ -364,9 +371,9 @@ class VacacionService implements VacacionServiceInterface
     {
         $corte = $fecha ? Carbon::parse($fecha)->startOfDay() : Carbon::today();
 
-        $marcadas = Vacacion::where('estado', 'aprobada')
+        $marcadas = Vacacion::where('estado', EstadoVacacion::REGISTRADA->value)
             ->whereDate('fecha_fin', '<', $corte->toDateString())
-            ->update(['estado' => 'gozada']);
+            ->update(['estado' => EstadoVacacion::GOZADA->value]);
 
         return ['marcadas' => $marcadas, 'fecha' => $corte->toDateString()];
     }
@@ -529,7 +536,7 @@ class VacacionService implements VacacionServiceInterface
     private function cruceCon(int $servidorId, Carbon $inicio, Carbon $fin): ?Vacacion
     {
         return Vacacion::where('servidor_id', $servidorId)
-            ->whereIn('estado', ['pendiente', 'aprobada', 'gozada'])
+            ->whereIn('estado', EstadoVacacion::vigentes())
             ->whereDate('fecha_inicio', '<=', $fin->toDateString())
             ->whereDate('fecha_fin', '>=', $inicio->toDateString())
             ->orderBy('fecha_inicio')

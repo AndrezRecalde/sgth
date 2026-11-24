@@ -80,7 +80,7 @@ beforeEach(function () {
     $this->titular = ($this->servidor)(true);
     $this->service = app(SubrogacionService::class);
 
-    $this->vacaciones = fn (string $estado = 'aprobada') => Vacacion::create([
+    $this->vacaciones = fn (string $estado = 'registrada') => Vacacion::create([
         'servidor_id' => $this->titular->id, 'folio' => 'VAC-2026-0'.(++$this->contador), 'motivo' => 'vacaciones_anuales',
         'fecha_inicio' => '2026-10-19', 'fecha_fin' => '2026-11-02', 'dias_solicitados' => 15,
         'tipo_dias' => 'calendario', 'estado' => $estado,
@@ -106,7 +106,7 @@ beforeEach(function () {
 
 test('lista las ausencias del titular que pueden motivarla', function () {
     $vacaciones = ($this->vacaciones)();
-    ($this->vacaciones)('pendiente');
+    ($this->vacaciones)('autorizada');
     $comision = ($this->comision)();
 
     $lista = $this->getJson("/api/v1/expediente/subrogaciones/ausencias-del-titular?servidor_id={$this->titular->id}")
@@ -141,7 +141,7 @@ test('sin ausencia no se subroga, y la que no estÃ¡ en el SGTH pide la resoluciÃ
     $ajenas = Vacacion::create([
         'servidor_id' => ($this->servidor)()->id, 'folio' => 'VAC-2026-0999', 'motivo' => 'vacaciones_anuales',
         'fecha_inicio' => '2026-10-19', 'fecha_fin' => '2026-11-02', 'dias_solicitados' => 15,
-        'tipo_dias' => 'calendario', 'estado' => 'aprobada',
+        'tipo_dias' => 'calendario', 'estado' => 'registrada',
     ]);
     expect(fn () => ($this->subrogar)(['ausencia_tipo' => 'vacacion', 'ausencia_id' => $ajenas->id], ['fecha_inicio' => '2026-11-20', 'fecha_fin' => '2026-11-25']))
         ->toThrow(ReglaNegocioException::class, 'no es del titular');

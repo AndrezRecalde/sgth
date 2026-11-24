@@ -2,6 +2,7 @@
 namespace App\Services\Asistencia;
 
 use App\Enums\EstadoPermiso;
+use App\Enums\EstadoVacacion;
 use App\Enums\RegimenLaboral;
 use App\Enums\TipoPermiso;
 use App\Exceptions\ReglaNegocioException;
@@ -481,7 +482,7 @@ class PeriodoVacacionService
         if ($periodos->isEmpty()) {
             throw new ReglaNegocioException(
                 "El servidor no tiene un período de vacaciones abierto hasta {$anio}: "
-                .'aprobarla no descontaría los días de ningún saldo. Genere el período antes de aprobar.'
+                .'registrarla no descontaría los días de ningún saldo. Genere el período antes de registrarla.'
             );
         }
 
@@ -814,7 +815,7 @@ class PeriodoVacacionService
             'dias_derecho' => $diasDerecho === null ? null : (float) $diasDerecho,
             'tramos'       => $tramos,
             'sin_registro' => $tramos === []
-                && in_array((string) $vacacion->estado, ['aprobada', 'gozada'], true),
+                && in_array((string) $vacacion->estado, EstadoVacacion::confirmadas(), true),
         ];
     }
 
@@ -958,7 +959,7 @@ class PeriodoVacacionService
     private function vacacionesSinRegistro(int $servidorId): Collection
     {
         return Vacacion::where('servidor_id', $servidorId)
-            ->whereIn('estado', ['aprobada', 'gozada'])
+            ->whereIn('estado', EstadoVacacion::confirmadas())
             ->whereIn('motivo', ['vacaciones_anuales', 'permiso_cargo_vacaciones'])
             ->whereDoesntHave('descuentos')
             ->get(['fecha_inicio', 'dias_solicitados'])

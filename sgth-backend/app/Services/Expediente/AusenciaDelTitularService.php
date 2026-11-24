@@ -3,6 +3,7 @@
 namespace App\Services\Expediente;
 
 use App\Enums\EstadoAccionPersonal;
+use App\Enums\EstadoVacacion;
 use App\Enums\MotivoSubrogacion;
 use App\Enums\TipoAusenciaTitular;
 use App\Exceptions\ReglaNegocioException;
@@ -24,8 +25,12 @@ use Carbon\Carbon;
  */
 class AusenciaDelTitularService
 {
-    /** Los estados de las vacaciones que ausentan de verdad al titular. */
-    private const VACACIONES_VIGENTES = ['aprobada', 'gozada'];
+    /*
+     * Las vacaciones que ausentan de verdad al titular son las que Talento
+     * Humano ya registró. Una que el jefe autorizó pero que todavía no pasó
+     * por ventanilla no subroga a nadie: hasta entonces el sistema no tiene
+     * más respaldo que la palabra de quien la pidió.
+     */
 
     /**
      * Las ausencias del titular que tocan esas fechas; sin fechas, las que no
@@ -39,7 +44,7 @@ class AusenciaDelTitularService
         $tope = $hasta ? Carbon::parse($hasta)->toDateString() : '9999-12-31';
 
         $vacaciones = Vacacion::where('servidor_id', $servidorId)
-            ->whereIn('estado', self::VACACIONES_VIGENTES)
+            ->whereIn('estado', EstadoVacacion::confirmadas())
             ->whereDate('fecha_fin', '>=', $desde)
             ->whereDate('fecha_inicio', '<=', $tope)
             ->get()
@@ -84,7 +89,7 @@ class AusenciaDelTitularService
     {
         $ausencia = match ($tipo) {
             TipoAusenciaTitular::VACACION => ($v = Vacacion::find($id))
-                && $v->servidor_id === $servidorId && in_array($v->estado, self::VACACIONES_VIGENTES, true)
+                && $v->servidor_id === $servidorId && in_array($v->estado, EstadoVacacion::confirmadas(), true)
                 ? $this->deVacacion($v) : null,
             TipoAusenciaTitular::LICENCIA => ($l = Licencia::find($id))
                 && $l->servidor_id === $servidorId && $l->anulado_en === null

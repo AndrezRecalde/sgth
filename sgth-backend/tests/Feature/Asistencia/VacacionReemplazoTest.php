@@ -109,14 +109,14 @@ test('un servidor inactivo no reemplaza', function () {
     expect($respuesta->json('mensaje'))->toContain('no está activo');
 });
 
-test('quien reemplaza no puede estar de vacaciones esas fechas; si se las rechazaron, sí puede', function () {
+test('quien reemplaza no puede estar de vacaciones esas fechas; si se las anularon, sí puede', function () {
     $suyas = Vacacion::create([
         'servidor_id'      => $this->reemplazo->id,
         'fecha_inicio'     => $this->lunes->copy()->addDay()->toDateString(),
         'fecha_fin'        => $this->lunes->copy()->addDays(4)->toDateString(),
         'dias_solicitados' => 4,
         'tipo_dias'        => 'habiles',
-        'estado'           => 'aprobada',
+        'estado'           => 'registrada',
         'motivo'           => 'vacaciones_anuales',
         'folio'            => 'VAC-2099-00001',
     ]);
@@ -127,7 +127,7 @@ test('quien reemplaza no puede estar de vacaciones esas fechas; si se las rechaz
     expect($respuesta->json('mensaje'))->toContain('VAC-2099-00001')
         ->and(Vacacion::where('servidor_id', $this->titular->id)->count())->toBe(0);
 
-    $suyas->update(['estado' => 'rechazada']);
+    $suyas->update(['estado' => 'anulada']);
 
     ($this->pedir)(['persona_reemplaza_id' => $this->reemplazo->id])->assertCreated();
 });

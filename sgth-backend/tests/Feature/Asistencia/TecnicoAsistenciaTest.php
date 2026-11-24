@@ -12,10 +12,12 @@
 use App\Enums\EstadoPermiso;
 use App\Enums\RegimenLaboral;
 use App\Enums\TipoPermiso;
+use App\Models\Asistencia\PeriodoVacacion;
 use App\Models\Asistencia\PermisoServidor;
 use App\Models\Asistencia\Vacacion;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
+use Carbon\Carbon;
 use Database\Seeders\RolPermisoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
@@ -54,8 +56,27 @@ function vacacionTecnicoAsistencia(Servidor $servidor): Vacacion
         'fecha_emision'            => now()->toDateString(),
         'dias_solicitados'         => 3,
         'tipo_dias'                => 'habiles',
-        'estado'                   => 'pendiente',
+        'estado'                   => 'autorizada',
         'folio'                    => 'VAC-2026-81001',
+    ]);
+}
+
+function periodoAbiertoTecnicoAsistencia(Servidor $servidor, mixed $fechaInicio): PeriodoVacacion
+{
+    $anio = Carbon::parse($fechaInicio)->year;
+
+    return PeriodoVacacion::create([
+        'servidor_id'          => $servidor->id,
+        'anio'                 => $anio,
+        'fecha_inicio_periodo' => Carbon::create($anio, 1, 1),
+        'fecha_fin_periodo'    => Carbon::create($anio, 12, 31),
+        'regimen'              => 'losep',
+        'anios_antiguedad'     => 5,
+        'dias_generados'       => 30,
+        'dias_utilizados'      => 0,
+        'dias_saldo'           => 30,
+        'saldo_acumulado'      => 30,
+        'estado'               => 'abierto',
     ]);
 }
 
@@ -199,13 +220,16 @@ test('registra vacaciones a nombre de otro y gestiona los períodos', function (
         ->and($this->tecnico->can('gestionarPeriodos', Vacacion::class))->toBeTrue();
 });
 
-test('resuelve una solicitud de vacaciones', function () {
+test('registra una solicitud de vacaciones', function () {
     $vacacion = vacacionTecnicoAsistencia($this->servidor);
+    // Registrar descuenta los días: sin período abierto se rechaza, y lo que
+    // se comprueba aquí es que el rol pueda hacerlo.
+    periodoAbiertoTecnicoAsistencia($this->servidor, $vacacion->fecha_inicio);
 
     $this->actingAs($this->tecnico, 'sanctum')
-        ->putJson("/api/v1/asistencia/vacaciones/{$vacacion->id}", ['estado' => 'rechazada'])
+        ->postJson("/api/v1/asistencia/vacaciones/{$vacacion->id}/registrar")
         ->assertOk()
-        ->assertJsonPath('datos.estado', 'rechazada');
+        ->assertJsonPath('datos.estado', 'registrada');
 });
 
 test('anula una solicitud de vacaciones', function () {

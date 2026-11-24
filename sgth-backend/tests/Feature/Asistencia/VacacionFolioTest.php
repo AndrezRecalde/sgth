@@ -91,16 +91,16 @@ test('no se aceptan dos solicitudes que se cruzan', function () {
     expect(Vacacion::count())->toBe(1);
 });
 
-test('una solicitud rechazada no ocupa las fechas', function () {
-    $rechazada = ($this->pedir)(0, 1);
-    $rechazada->update(['estado' => 'rechazada']);
+test('una solicitud anulada no ocupa las fechas', function () {
+    $anulada = ($this->pedir)(0, 1);
+    $anulada->update(['estado' => 'anulada']);
 
-    expect(($this->pedir)(0, 1)->estado)->toBe('pendiente');
+    expect(($this->pedir)(0, 1)->estado)->toBe('autorizada');
 });
 
 test('fechas contiguas no son un cruce, y otro servidor puede usar las mismas', function () {
     ($this->pedir)(0, 1);
 
-    expect(($this->pedir)(2, 3)->estado)->toBe('pendiente')
-        ->and(($this->pedir)(0, 1, ($this->nuevoServidor)('0800000502'))->estado)->toBe('pendiente');
+    expect(($this->pedir)(2, 3)->estado)->toBe('autorizada')
+        ->and(($this->pedir)(0, 1, ($this->nuevoServidor)('0800000502'))->estado)->toBe('autorizada');
 });

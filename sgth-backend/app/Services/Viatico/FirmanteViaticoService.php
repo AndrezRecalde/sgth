@@ -2,6 +2,7 @@
 
 namespace App\Services\Viatico;
 
+use App\Enums\EstadoVacacion;
 use App\Models\Asistencia\Vacacion;
 use App\Models\Expediente\Servidor;
 use App\Models\Viatico\Viatico;
@@ -232,14 +233,16 @@ final class FirmanteViaticoService
             return null;
         }
 
+        // Las que Talento Humano ya registró, y las ya gozadas: una que el jefe
+        // autorizó pero que no pasó por ventanilla no prueba que faltara.
         $enVacaciones = Vacacion::where('servidor_id', $servidor->id)
-            ->where('estado', 'aprobada')
+            ->whereIn('estado', EstadoVacacion::confirmadas())
             ->whereDate('fecha_inicio', '<=', $fecha)
             ->whereDate('fecha_fin', '>=', $fecha)
             ->exists();
 
         return $enVacaciones
-            ? 'Tenía vacaciones aprobadas el '.Carbon::parse($fecha)->format('d/m/Y')
+            ? 'Tenía vacaciones el '.Carbon::parse($fecha)->format('d/m/Y')
                 .' y no había subrogación registrada: confirme quién firma.'
             : null;
     }
