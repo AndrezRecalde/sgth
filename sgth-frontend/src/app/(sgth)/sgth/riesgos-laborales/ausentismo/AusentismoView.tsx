@@ -6,7 +6,7 @@ import { DatePickerInput } from '@mantine/dates'
 import {
   IconSearch,
   IconFileDownload,
-  IconFileTypeCsv,
+  IconFileSpreadsheet,
   IconClipboardList,
   IconInfoCircle,
 } from '@tabler/icons-react'
@@ -72,21 +72,22 @@ export function AusentismoView() {
   const handleExportar = async (formato: 'excel' | 'pdf', periodo: PeriodoAusentismo) => {
     setExportando(formato)
 
-    const progreso = notificar.proceso(`Exportando ${formato.toUpperCase()}...`, 'Generando el archivo, espere un momento.')
+    const nombre = formato === 'excel' ? 'Excel' : 'PDF'
+    const progreso = notificar.proceso(`Exportando ${nombre}...`, 'Generando el archivo, espere un momento.')
 
     try {
       const blob = formato === 'excel'
         ? await ausentismoService.exportarExcel(periodo)
         : await ausentismoService.exportarPdf(periodo)
 
-      const ext = formato === 'excel' ? 'csv' : 'pdf'
+      const ext = formato === 'excel' ? 'xlsx' : 'pdf'
 
       // `guardarArchivo` y no las mismas líneas a mano: aquí se revocaba la URL
       // del blob en el acto, justo después del `click()`, y en Firefox eso
       // cancela la descarga.
       guardarArchivo(blob, `ausentismo_enfermedad_${periodo.fecha_inicio}.${ext}`)
 
-      progreso.exito('Archivo descargado', `Consolidado exportado como ${ext.toUpperCase()}.`)
+      progreso.exito('Archivo descargado', `Ausentismo exportado en ${nombre}.`)
     } catch {
       progreso.error('No se pudo exportar el consolidado de ausentismo', 'Inténtelo de nuevo en unos segundos.')
     } finally {
@@ -142,11 +143,11 @@ export function AusentismoView() {
           <Button
             variant="light"
             size="xs"
-            leftSection={<IconFileTypeCsv size={14} />}
+            leftSection={<IconFileSpreadsheet size={14} />}
             loading={exportando === 'excel'}
             onClick={() => handleExportar('excel', consultado)}
           >
-            Exportar Excel (CSV)
+            Exportar Excel
           </Button>
           <Button
             variant="light"

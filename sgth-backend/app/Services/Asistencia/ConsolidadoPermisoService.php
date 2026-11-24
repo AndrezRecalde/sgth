@@ -203,27 +203,8 @@ class ConsolidadoPermisoService
     }
 
     /**
-     * Las mismas filas con los encabezados que espera la hoja de cálculo.
-     *
-     * @param  Collection<int, array<string, mixed>>  $consolidado
-     * @return list<array<string, mixed>>
-     */
-    public function paraExcel(Collection $consolidado): array
-    {
-        return $consolidado->map(fn (array $fila) => [
-            'Cedula'         => $fila['cedula'],
-            'Servidor'       => $fila['servidor_nombre'],
-            'Unidad'         => $fila['unidad'],
-            'Total Permisos' => $fila['total_permisos'],
-            'Total Minutos'  => $fila['total_minutos'],
-            'Tiempo Total'   => $fila['tiempo_total'],
-            'Total Dias'     => $fila['total_dias'],
-        ])->values()->all();
-    }
-
-    /**
-     * Y con las que espera la plantilla del PDF, que llama `nombre` a lo que
-     * en el JSON es `servidor_nombre`.
+     * Las filas como las esperan el PDF y el Excel, que llaman `nombre` a lo
+     * que en el JSON es `servidor_nombre`.
      *
      * @param  Collection<int, array<string, mixed>>  $consolidado
      * @return Collection<int, array<string, mixed>>
