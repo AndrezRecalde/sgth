@@ -85,7 +85,9 @@ beforeEach(function () {
 it('es previa, anuncia el 70 % y la firman dos, sin la maxima autoridad', function () {
     $html = ($this->html)(($this->viatico)(), $this->prepara);
 
-    expect($html)->toContain('Orden de Pago de Anticipo de Viático')
+    // El título es el h1; «Viático de comisión de servicios» va de subtítulo
+    // desde el rediseño del 2026-11-24.
+    expect($html)->toContain('Orden de Pago de Anticipo')
         ->toContain('PREVIA')
         ->not->toContain('DEFINITIVA')
         // El 70 % de $160, que es lo que se ordena pagar.

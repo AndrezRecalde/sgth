@@ -2,376 +2,103 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body {
-  font-family: 'DejaVu Sans', Arial, sans-serif;
-  font-size: 9px;
-  color: #1a1a2e;
-  line-height: 1.45;
-  padding: 30px 38px;
-  background: #fff;
-}
-.hdr {
-  display: table;
-  width: 100%;
-  margin-bottom: 0;
-}
-.hdr-logo {
-  display: table-cell;
-  width: 105px;
-  vertical-align: middle;
-  padding-right: 14px;
-}
-.hdr-logo img { width: 95px; height: auto; }
-.hdr-body {
-  display: table-cell;
-  vertical-align: middle;
-  background: #1a3a5c;
-  padding: 12px 16px;
-  border-radius: 4px 4px 0 0;
-}
-.hdr-inst {
-  font-size: 8px;
-  color: #a8c4e0;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  margin-bottom: 3px;
-}
-.hdr-title {
-  font-size: 15px;
-  font-weight: bold;
-  color: #ffffff;
-  letter-spacing: 0.3px;
-}
-.hdr-sub { font-size: 8px; color: #c5daf0; margin-top: 3px; }
-.hdr-right {
-  display: table-cell;
-  /* 130px partía el código en dos líneas: «GADPE-15-2026-» / «00004». */
-  width: 150px;
-  vertical-align: middle;
-  padding-left: 10px;
-}
-.code-box {
-  border: 2px solid #1a3a5c;
-  border-radius: 5px;
-  padding: 8px 10px;
-  background: #f0f5fb;
-  text-align: center;
-}
-.code-lbl { font-size: 7px; color: #4a5568; text-transform: uppercase; letter-spacing: 0.5px; }
-.code-val { font-size: 9.5px; font-weight: bold; color: #1a3a5c; margin: 2px 0; white-space: nowrap; }
-.code-date { font-size: 9px; font-weight: bold; color: #2d3748; border-top: 1px solid #cbd5e0; padding-top: 4px; margin-top: 4px; }
-.code-date-lbl { font-size: 7px; color: #718096; text-transform: uppercase; }
-.hdr-bar {
-  margin-left: 119px;
-  background: #2d6a9f;
-  border-radius: 0 0 4px 0;
-  padding: 5px 16px;
-  margin-bottom: 12px;
-}
-.hdr-bar-txt {
-  font-size: 8px;
-  color: #e2edf7;
-  font-weight: bold;
-}
-.sec-hdr {
-  background: #1a3a5c;
-  color: white;
-  font-size: 8px;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  padding: 4px 10px;
-  margin-top: 10px;
-  border-radius: 3px 3px 0 0;
-}
-.sec-hdr-alt {
-  background: #2d6a9f;
-  color: white;
-  font-size: 8px;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  padding: 4px 10px;
-  margin-top: 10px;
-  border-radius: 3px 3px 0 0;
-}
-table.dt {
-  width: 100%;
-  border-collapse: collapse;
-  border: 1px solid #cbd5e0;
-  border-top: none;
-}
-table.dt th {
-  background: #edf2f7;
-  font-size: 8px;
-  font-weight: bold;
-  padding: 4px 8px;
-  border: 1px solid #cbd5e0;
-  color: #2d3748;
-  text-align: left;
-  white-space: nowrap;
-  width: 22%;
-}
-table.dt td {
-  font-size: 8.5px;
-  padding: 4px 8px;
-  border: 1px solid #cbd5e0;
-  color: #1a1a2e;
-  background: white;
-}
-table.dt tr:nth-child(even) td { background: #f7fafc; }
-table.gt {
-  width: 100%;
-  border-collapse: collapse;
-  border: 1px solid #cbd5e0;
-  border-top: none;
-}
-table.gt th {
-  background: #2d6a9f;
-  color: white;
-  font-size: 7.5px;
-  padding: 4px 6px;
-  border: 1px solid #2d6a9f;
-  text-align: center;
-  font-weight: bold;
-}
-table.gt td {
-  font-size: 8px;
-  padding: 4px 6px;
-  border: 1px solid #cbd5e0;
-  color: #1a1a2e;
-  text-align: center;
-}
-table.gt .tl { text-align: left; }
-table.gt tr:nth-child(even) td { background: #f0f5fb; }
-.tbox {
-  border: 1px solid #cbd5e0;
-  border-top: none;
-  padding: 9px 11px;
-  font-size: 8.5px;
-  line-height: 1.6;
-  color: #2d3748;
-  background: white;
-  min-height: 45px;
-}
-.resumen-wrap {
-  border: 1px solid #cbd5e0;
-  border-top: none;
-  background: white;
-}
-.res-row {
-  display: table;
-  width: 100%;
-  border-bottom: 1px solid #e2e8f0;
-}
-.res-row:last-child { border-bottom: none; }
-.res-lbl {
-  display: table-cell;
-  padding: 5px 10px;
-  font-size: 8.5px;
-  color: #4a5568;
-  width: 65%;
-}
-.res-val {
-  display: table-cell;
-  padding: 5px 10px;
-  font-size: 9.5px;
-  font-weight: bold;
-  text-align: right;
-  color: #2d3748;
-}
-.res-total-lbl {
-  display: table-cell;
-  padding: 7px 10px;
-  font-size: 9.5px;
-  font-weight: bold;
-  color: #1a3a5c;
-  width: 65%;
-  background: #edf2f7;
-}
-.res-total-val {
-  display: table-cell;
-  padding: 7px 10px;
-  font-size: 12px;
-  font-weight: bold;
-  text-align: right;
-  color: #1a3a5c;
-  background: #edf2f7;
-}
-.clausula {
-  margin-top: 10px;
-  border-left: 3px solid #c0392b;
-  padding: 6px 10px;
-  font-size: 8px;
-  color: #742a2a;
-  background: #fff5f5;
-  border-radius: 0 3px 3px 0;
-  font-style: italic;
-}
-.firmas {
-  display: table;
-  width: 100%;
-  margin-top: 38px;
-  page-break-inside: avoid;
-}
-.fc {
-  display: table-cell;
-  width: 33.33%;
-  text-align: center;
-  padding: 0 10px;
-  vertical-align: bottom;
-}
-.fline {
-  height: 38px;
-  border-bottom: 1.5px solid #1a3a5c;
-  margin: 0 8px 5px;
-}
-.fn { font-size: 8.5px; font-weight: bold; color: #1a3a5c; text-transform: uppercase; }
-.fc-cargo { font-size: 7.5px; color: #4a5568; margin-top: 2px; }
-.fc-rol { font-size: 7px; color: #718096; margin-top: 1px; text-transform: uppercase; letter-spacing: 0.3px; }
-.footer {
-  margin-top: 16px;
-  padding-top: 5px;
-  border-top: 1px solid #e2e8f0;
-  display: table;
-  width: 100%;
-}
-.fl { display: table-cell; font-size: 7px; color: #b0bec5; vertical-align: middle; }
-.fr { display: table-cell; font-size: 7px; color: #b0bec5; text-align: right; vertical-align: middle; }
-</style>
+<title>Informe de Liquidación</title>
+@include('pdf.viaticos._estilos')
 </head>
 <body>
 
-{{-- ══ HEADER ══ --}}
-<div class="hdr">
-  <div class="hdr-logo">
-    @if(file_exists($logo))
-      <img src="{{ $logo }}" alt="GADPE">
-    @else
-      <div style="font-size:10px;font-weight:bold;color:#1a3a5c;">GADPE</div>
-    @endif
-  </div>
-  <div class="hdr-body">
-    <div class="hdr-inst">{{ $identidad['nombre_oficial'] ?? '' }}</div>
-    <div class="hdr-title">Informe de Licencia con Remuneración</div>
-    <div class="hdr-sub">Comisión de Servicios — Liquidación de Viático</div>
-  </div>
-  <div class="hdr-right">
-    <div class="code-box">
-      <div class="code-lbl">N° de Viático</div>
-      <div class="code-val">{{ $viatico->codigo_viatico }}</div>
-      {{--
-      | La de la liquidación, no la de hoy: reimprimir un informe ya firmado le
-      | cambiaba la fecha. El día en que se imprimió va en el pie.
-      --}}
-      <div class="code-date-lbl">Fecha del Informe</div>
-      <div class="code-date">
-        {{ $viatico->liquidacion?->fecha_liquidacion
-            ? \Carbon\Carbon::parse($viatico->liquidacion->fecha_liquidacion)->format('d/m/Y')
-            : '—' }}
-      </div>
-    </div>
-  </div>
-</div>
-<div class="hdr-bar">
-  <div class="hdr-bar-txt">
-    Período de Comisión:
-    {{ $viatico->datetime_salida
-        ? \Carbon\Carbon::parse($viatico->datetime_salida)->format('d/m/Y H:i')
-        : '—' }}
-    →
-    {{ $viatico->datetime_llegada
-        ? \Carbon\Carbon::parse($viatico->datetime_llegada)->format('d/m/Y H:i')
-        : '—' }}
-    &nbsp;|&nbsp;
-    {{ $calculo["noches"] }} noche(s) &nbsp;|&nbsp;
-    Anticipo: $ {{ number_format($viatico->monto_anticipo ?? 0, 2) }}
-  </div>
+@include('pdf.viaticos._membrete')
+
+<div class="titulo">
+  <div class="supra">Licencia con remuneración</div>
+  <h1>Informe de Liquidación</h1>
+  <div class="subtipo">Comisión de servicios institucionales</div>
+  <div class="regla"></div>
 </div>
 
-{{-- ══ DATOS GENERALES ══ --}}
-<div class="sec-hdr">Datos Generales del Servidor</div>
-<table class="dt">
+<table class="cintillo">
   <tr>
-    <th>Apellidos y Nombres</th>
-    <td colspan="3">
-      <strong>{{ $servidorNombre }}</strong>
-    </td>
+    <td><span class="codigo">{{ $viatico->codigo_viatico }}</span></td>
+    {{--
+    | La fecha de la liquidación, no la de hoy: reimprimir un informe ya
+    | firmado le cambiaba la fecha.
+    --}}
+    @php
+      $fechaInforme = $viatico->liquidacion?->fecha_liquidacion
+          ? 'Esmeraldas, '.\Illuminate\Support\Carbon::parse($viatico->liquidacion->fecha_liquidacion)
+                ->locale('es')->isoFormat('D [de] MMMM [de] YYYY')
+          : 'Esmeraldas';
+    @endphp
+    <td class="lugar-fecha">{{ $fechaInforme }}</td>
+  </tr>
+</table>
+
+{{-- ══ SERVIDOR Y COMISIÓN ══ --}}
+<div class="bloque-titulo">Servidor y comisión</div>
+<table class="datos">
+  <tr>
+    <td class="label">Apellidos y nombres</td>
+    <td class="mayus fuerte" colspan="3">{{ $servidorNombre }}</td>
   </tr>
   <tr>
-    <th>Cargo / Puesto</th>
+    <td class="label">Cargo</td>
     <td>{{ $viatico->servidor?->puesto?->cargo?->nombre ?? '—' }}</td>
-    <th>Unidad Administrativa</th>
+    <td class="label">Unidad</td>
     <td>{{ $viatico->servidor?->puesto?->unidadAdministrativa?->nombre ?? '—' }}</td>
   </tr>
   <tr>
-    <th>Fecha / Hora de Salida</th>
+    <td class="label">Destino</td>
+    <td class="fuerte">{{ $destino }}</td>
+    <td class="label">Período</td>
     <td>
       {{ $viatico->datetime_salida
           ? \Carbon\Carbon::parse($viatico->datetime_salida)->format('d/m/Y H:i')
           : '—' }}
-    </td>
-    <th>Fecha / Hora de Regreso</th>
-    <td>
+      →
       {{ $viatico->datetime_llegada
           ? \Carbon\Carbon::parse($viatico->datetime_llegada)->format('d/m/Y H:i')
           : '—' }}
+      · {{ $calculo['noches'] }} noche(s)
     </td>
   </tr>
 </table>
 
 {{-- ══ ACTIVIDADES ══ --}}
-<div class="sec-hdr">Informe de Actividades o Productos Alcanzados</div>
+<div class="bloque-titulo">Actividades o productos alcanzados</div>
 @if($viatico->liquidacion?->actividades?->count() > 0)
-<table class="gt">
+<table class="listado">
   <thead>
     <tr>
       <th style="width:12%">Fecha</th>
-      <th style="width:9%">H. Inicio</th>
-      <th style="width:9%">H. Fin</th>
-      <th style="width:22%" class="tl">Lugar</th>
-      <th class="tl">Descripción de la Actividad</th>
+      <th style="width:9%">Desde</th>
+      <th style="width:9%">Hasta</th>
+      <th style="width:22%">Lugar</th>
+      <th>Descripción</th>
     </tr>
   </thead>
   <tbody>
     @foreach($viatico->liquidacion->actividades->sortBy('orden') as $act)
     <tr>
-      <td>
-        {{ $act->fecha
-            ? \Carbon\Carbon::parse($act->fecha)->format('d/m/Y')
-            : '—' }}
-      </td>
+      <td>{{ $act->fecha ? \Carbon\Carbon::parse($act->fecha)->format('d/m/Y') : '—' }}</td>
       {{-- `08:00:00` es como lo guarda Postgres; en el papel van las horas. --}}
       <td>{{ $act->hora_inicio ? substr($act->hora_inicio, 0, 5) : '—' }}</td>
       <td>{{ $act->hora_fin ? substr($act->hora_fin, 0, 5) : '—' }}</td>
-      <td class="tl">{{ $act->lugar ?? '—' }}</td>
-      <td class="tl">{{ $act->descripcion ?? '—' }}</td>
+      <td>{{ $act->lugar ?? '—' }}</td>
+      <td>{{ $act->descripcion ?? '—' }}</td>
     </tr>
     @endforeach
   </tbody>
 </table>
 @else
-<div class="tbox">
-  {{ $viatico->justificacion ?? 'Sin descripción de actividades.' }}
-</div>
+<p class="parrafo">{{ $viatico->justificacion ?? 'Sin descripción de actividades.' }}</p>
 @endif
 
-{{-- ══ TRANSPORTE ══ --}}
-<div class="sec-hdr-alt">Itinerario de Transporte</div>
-<table class="gt">
-  <thead>
-    <tr>
-      <th>Tipo</th>
-      <th class="tl">Empresa</th>
-      <th class="tl">Ruta</th>
-      <th>F. Salida</th>
-      <th>Hora</th>
-      <th>F. Llegada</th>
-      <th>Hora</th>
-    </tr>
-  </thead>
+{{-- ══ ITINERARIO ══ --}}
+{{-- Un renglón por tramo, no una tabla: el itinerario completo ya va en la
+     solicitud, que se anexa a este informe, y en tabla empujaba las firmas a
+     una segunda hoja. --}}
+<div class="bloque-titulo">Itinerario de transporte</div>
+<table class="listado">
   <tbody>
     @forelse($viatico->tramos->sortBy('orden') as $tramo)
     @php
@@ -389,64 +116,63 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
         : collect([$tramo->destino_pais, $tramo->destino_ciudad])->filter()->join(' / ');
     @endphp
     <tr>
-      <td>{{ $tramo->tipo_transporte }}</td>
-      {{-- Sin empresa (vehículo institucional, taxi…), el tipo de transporte. --}}
-      <td class="tl">{{ $tramo->empresa?->nombre ?? $tramo->catalogo?->nombre ?? '—' }}</td>
-      <td class="tl"><strong>{{ $orig }}</strong> → {{ $dest }}</td>
-      <td>{{ $tramo->datetime_salida ? \Carbon\Carbon::parse($tramo->datetime_salida)->format('d/m/Y') : '—' }}</td>
-      <td>{{ $tramo->datetime_salida ? \Carbon\Carbon::parse($tramo->datetime_salida)->format('H:i') : '—' }}</td>
-      <td>{{ $tramo->datetime_llegada ? \Carbon\Carbon::parse($tramo->datetime_llegada)->format('d/m/Y') : '—' }}</td>
-      <td>{{ $tramo->datetime_llegada ? \Carbon\Carbon::parse($tramo->datetime_llegada)->format('H:i') : '—' }}</td>
+      {{-- El accesor pone la tilde: la columna guarda «aereo». --}}
+      <td style="width:12%">{{ $tramo->tipo_transporte }}</td>
+      <td style="width:24%">{{ $tramo->empresa?->nombre ?? $tramo->catalogo?->nombre ?? '—' }}</td>
+      <td><strong>{{ $orig }}</strong> → {{ $dest }}</td>
+      <td class="num" style="width:30%">
+        {{ $tramo->datetime_salida ? \Carbon\Carbon::parse($tramo->datetime_salida)->format('d/m/Y H:i') : '—' }}
+        →
+        {{ $tramo->datetime_llegada ? \Carbon\Carbon::parse($tramo->datetime_llegada)->format('H:i') : '—' }}
+      </td>
     </tr>
     @empty
-    <tr><td colspan="7" style="color:#718096">Sin tramos registrados.</td></tr>
+    <tr><td class="vacio">Sin tramos registrados.</td></tr>
     @endforelse
   </tbody>
 </table>
 
-{{-- ══ GASTOS ══ --}}
-<div class="sec-hdr">Gastos — Comprobantes de Respaldo</div>
+{{-- ══ COMPROBANTES ══ --}}
+<div class="bloque-titulo">Comprobantes de respaldo</div>
 @php $comprobantes = $viatico->liquidacion?->detallesFactura ?? collect(); @endphp
 @if($comprobantes->isNotEmpty())
-<table class="gt">
+<table class="listado">
   <thead>
     <tr>
-      <th class="tl">RUC</th>
-      <th class="tl">Razón Social / Proveedor</th>
-      <th>N° Comprobante</th>
-      <th>Tipo</th>
+      <th style="width:15%">RUC</th>
+      <th style="width:21%">Proveedor</th>
+      <th style="width:16%">Comprobante</th>
+      <th style="width:9%">Tipo</th>
       {{--
       | La fecha del comprobante: solo valen los fechados dentro del viaje
       | (Gestión Financiera, 2026-09-15), y sin ella quien revisa el papel no
       | podía comprobarlo.
       --}}
-      <th>Fecha</th>
-      <th class="tl">Categoría</th>
-      <th>Total</th>
+      <th style="width:11%">Fecha</th>
+      <th>Categoría</th>
+      <th class="num" style="width:12%">Valor</th>
     </tr>
   </thead>
   <tbody>
     @foreach($comprobantes as $f)
     <tr>
-      <td class="tl">{{ $f->ruc_proveedor ?? '—' }}</td>
-      <td class="tl">{{ $f->nombre_proveedor ?? '—' }}</td>
+      <td>{{ $f->ruc_proveedor ?? '—' }}</td>
+      <td>{{ $f->nombre_proveedor ?? '—' }}</td>
       <td>{{ $f->numero_factura ?? $f->numero_ticket ?? '—' }}</td>
       <td>{{ mb_strtoupper($f->tipo_comprobante ?? 'factura', 'UTF-8') }}</td>
       <td>{{ $f->fecha_factura ? \Carbon\Carbon::parse($f->fecha_factura)->format('d/m/Y') : '—' }}</td>
-      <td class="tl">{{ $f->categoria?->nombre ?? '—' }}</td>
-      <td><strong>$ {{ number_format($f->monto ?? 0, 2) }}</strong></td>
+      <td>{{ $f->categoria?->nombre ?? '—' }}</td>
+      <td class="num">$ {{ number_format($f->monto ?? 0, 2) }}</td>
     </tr>
     @endforeach
-    <tr>
-      <td colspan="6" class="tl"><strong>Total de comprobantes</strong></td>
-      <td><strong>$ {{ number_format($comprobantes->sum('monto'), 2) }}</strong></td>
+    <tr class="total">
+      <td colspan="6">Total de comprobantes</td>
+      <td class="num">$ {{ number_format($comprobantes->sum('monto'), 2) }}</td>
     </tr>
   </tbody>
 </table>
 @else
-<div class="tbox" style="color:#718096">
-  Sin comprobantes registrados en la liquidación.
-</div>
+<p class="parrafo vacio">Sin comprobantes registrados en la liquidación.</p>
 @endif
 
 {{--
@@ -456,88 +182,49 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
 | de quien no justificó nada —justo el que termina en una devolución— salía sin
 | una sola cifra.
 --}}
-<div class="sec-hdr-alt">Resumen Financiero</div>
-  <div class="resumen-wrap">
-    <div class="res-row">
-      <div class="res-lbl">
-        Viático por {{ $calculo['noches'] }} noche(s):
-      </div>
-      <div class="res-val">
-        $ {{ number_format($calculo['derecho'], 2) }}
-      </div>
-    </div>
-    <div class="res-row">
-      <div class="res-lbl">
-        70% a justificar con comprobantes:
-      </div>
-      <div class="res-val">
-        $ {{ number_format($calculo['tope_justificable'], 2) }}
-      </div>
-    </div>
-    <div class="res-row">
-      <div class="res-lbl">
-        Comprobantes presentados:
-      </div>
-      <div class="res-val">
-        $ {{ number_format($calculo['total_comprobantes'], 2) }}
-      </div>
-    </div>
-    <div class="res-row">
-      <div class="res-lbl">
-        Justificado (hasta el 70%):
-      </div>
-      <div class="res-val">
-        $ {{ number_format($calculo['justificado'], 2) }}
-      </div>
-    </div>
-    @if($calculo['excedente'] > 0)
-    <div class="res-row">
-      <div class="res-lbl">
-        Excedente a cargo del servidor:
-      </div>
-      <div class="res-val">
-        $ {{ number_format($calculo['excedente'], 2) }}
-      </div>
-    </div>
-    @endif
-    <div class="res-row">
-      <div class="res-lbl">
-        30% reconocido sin comprobante:
-      </div>
-      <div class="res-val">
-        $ {{ number_format($calculo['reconocido_sin_comprobante'], 2) }}
-      </div>
-    </div>
-    <div class="res-row">
-      <div class="res-lbl">
-        Total reconocido al servidor:
-      </div>
-      <div class="res-val">
-        $ {{ number_format($calculo['reconocido'], 2) }}
-      </div>
-    </div>
-    @if($calculo['anticipo'] > 0)
-    <div class="res-row">
-      <div class="res-lbl">
-        Anticipo entregado{{ $anticipoDetalle }}:
-      </div>
-      <div class="res-val">
-        $ {{ number_format($calculo['anticipo'], 2) }}
-      </div>
-    </div>
-    @endif
-    <div class="res-row"
-      style="background:{{ $calculo['saldo'] < 0 ? '#fff0f0' : '#f2f8f4' }};">
-      <div class="res-total-lbl"
-        style="color:{{ $calculo['saldo'] < 0 ? '#c0392b' : '#2d6a4f' }};">
-        ★ {{ $calculo['saldo'] < 0 ? 'A devolver a la institución:' : 'A pagar al servidor:' }}
-      </div>
-      <div class="res-total-val"
-        style="color:{{ $calculo['saldo'] < 0 ? '#c0392b' : '#2d6a4f' }};">
-        $ {{ number_format(abs($calculo['saldo']), 2) }}
-      </div>
-    </div>
-  </div>
+<div class="bloque-titulo">Resumen Financiero</div>
+<table class="cifras">
+  <tr>
+    <td>Viático por {{ $calculo['noches'] }} noche(s)</td>
+    <td class="val">$ {{ number_format($calculo['derecho'], 2) }}</td>
+  </tr>
+  <tr>
+    <td>70 % a justificar con comprobantes</td>
+    <td class="val">$ {{ number_format($calculo['tope_justificable'], 2) }}</td>
+  </tr>
+  <tr>
+    <td>Comprobantes presentados</td>
+    <td class="val">$ {{ number_format($calculo['total_comprobantes'], 2) }}</td>
+  </tr>
+  <tr>
+    <td>Justificado (hasta el 70 %)</td>
+    <td class="val">$ {{ number_format($calculo['justificado'], 2) }}</td>
+  </tr>
+  @if($calculo['excedente'] > 0)
+  <tr>
+    <td>Excedente a cargo del servidor</td>
+    <td class="val">$ {{ number_format($calculo['excedente'], 2) }}</td>
+  </tr>
+  @endif
+  <tr>
+    <td>30 % reconocido sin comprobante</td>
+    <td class="val">$ {{ number_format($calculo['reconocido_sin_comprobante'], 2) }}</td>
+  </tr>
+  <tr class="total">
+    <td>Total reconocido al servidor</td>
+    <td class="val">$ {{ number_format($calculo['reconocido'], 2) }}</td>
+  </tr>
+  @if($calculo['anticipo'] > 0)
+  <tr>
+    <td>Anticipo entregado{{ $anticipoDetalle }}</td>
+    <td class="val">$ {{ number_format($calculo['anticipo'], 2) }}</td>
+  </tr>
+  @endif
+  <tr class="cierre">
+    <td>{{ $calculo['saldo'] < 0 ? 'A devolver a la institución' : 'A pagar al servidor' }}</td>
+    <td class="val">$ {{ number_format(abs($calculo['saldo']), 2) }}</td>
+  </tr>
+</table>
 
 {{-- ══ CLÁUSULA ══ --}}
 {{-- La autorización general se firma en la solicitud, antes de recibir el
@@ -547,50 +234,41 @@ table.gt tr:nth-child(even) td { background: #f0f5fb; }
      Respondido por Gestión Financiera el 2026-11-18 (D5). --}}
 @if(($calculo['saldo'] ?? 0) < 0)
 <div class="clausula">
-  ★ AUTORIZO QUE SE DEBITE DE MI PRÓXIMA REMUNERACIÓN MENSUAL UNIFICADA
-  EL VALOR NO JUSTIFICADO DE $ {{ number_format(abs($calculo['saldo']), 2) }}.
+  Autorizo que se debite de mi próxima remuneración mensual unificada el valor
+  no justificado de $ {{ number_format(abs($calculo['saldo']), 2) }}.
 </div>
 @endif
 
 {{-- ══ FIRMAS ══ --}}
 <div class="firmas">
-  <div class="fc">
-    <div class="fline"></div>
-    <div class="fn">{{ $servidorNombre }}</div>
-    <div class="fc-cargo">{{ $viatico->servidor?->puesto?->cargo?->nombre ?? '' }}</div>
-    <div class="fc-rol">Servidor Solicitante</div>
-  </div>
-  <div class="fc">
-    <div class="fline"></div>
-    @if($firmas['jefe_unidad']['nombre'] ?? null)
-      <div class="fn">{{ $firmas['jefe_unidad']['nombre'] }}</div>
-      <div class="fc-cargo">{{ $firmas['jefe_unidad']['cargo'] }}</div>
-    @else
-      <div class="fn" style="color:#a0aec0">___________________________</div>
-      <div class="fc-cargo" style="color:#a0aec0">Director/a de Unidad</div>
-    @endif
-    <div class="fc-rol">Responsable de Unidad Solicitante</div>
-  </div>
-  <div class="fc">
-    <div class="fline"></div>
-    @if($firmas['maxima_autoridad']['nombre'] ?? null)
-      <div class="fn">{{ $firmas['maxima_autoridad']['nombre'] }}</div>
-      <div class="fc-cargo">{{ $firmas['maxima_autoridad']['cargo'] }}</div>
-    @else
-      <div class="fn" style="color:#a0aec0">___________________________</div>
-      <div class="fc-cargo">Prefecto/a Provincial</div>
-    @endif
-    <div class="fc-rol">Máxima Autoridad o Delegado</div>
-  </div>
-</div>
-
-{{-- ══ PIE ══ --}}
-<div class="footer">
-  <div class="fl">SGTH — GAD Provincial de Esmeraldas</div>
-  <div class="fr">
-    Generado el {{ date('d/m/Y H:i') }} •
-    Documento oficial — No requiere sello húmedo
-  </div>
+  <table>
+    <tr>
+      <td style="width:33%">
+        <div class="firma-rotulo">Servidor comisionado</div>
+        <div class="firma-linea"></div>
+        <p class="firma-nombre">{{ $servidorNombre }}</p>
+        <p class="firma-cargo">{{ $viatico->servidor?->puesto?->cargo?->nombre ?? '' }}</p>
+      </td>
+      <td style="width:33%">
+        <div class="firma-rotulo">Responsable de la unidad</div>
+        <div class="firma-linea"></div>
+        <p class="firma-nombre">{{ $firmas['jefe_unidad']['nombre'] ?? '' }}</p>
+        <p class="firma-cargo">{{ $firmas['jefe_unidad']['cargo'] ?? 'Director/a de Unidad' }}</p>
+        @if($firmas['jefe_unidad']['aviso'] ?? null)
+          <p class="firma-aviso">{{ $firmas['jefe_unidad']['aviso'] }}</p>
+        @endif
+      </td>
+      <td style="width:34%">
+        <div class="firma-rotulo">Máxima autoridad o delegado</div>
+        <div class="firma-linea"></div>
+        <p class="firma-nombre">{{ $firmas['maxima_autoridad']['nombre'] ?? '' }}</p>
+        <p class="firma-cargo">{{ $firmas['maxima_autoridad']['cargo'] ?? 'Prefecto/a Provincial' }}</p>
+        @if($firmas['maxima_autoridad']['aviso'] ?? null)
+          <p class="firma-aviso">{{ $firmas['maxima_autoridad']['aviso'] }}</p>
+        @endif
+      </td>
+    </tr>
+  </table>
 </div>
 
 </body>
