@@ -145,11 +145,17 @@ export function VacacionFechasCampos({ form, conteo = null }: Props) {
         </Alert>
       )}
 
+      {/* `autosize` y no un alto fijo: con `rows={2}`, un texto de más de dos
+          renglones se desplazaba hacia arriba POR DETRÁS de la etiqueta —que
+          en la variante `contained` vive dentro de la caja— y tapaba la
+          palabra «Observación». Crecer es seguro porque el tope lo acota: 300
+          caracteres no pasan de cuatro o cinco renglones. */}
       <Textarea
         label="Observación"
         placeholder="Observaciones adicionales (opcional)"
         description="Se imprime en la solicitud, en un recuadro de tres renglones."
-        rows={2}
+        autosize
+        minRows={2}
         maxLength={OBSERVACION_MAX}
         {...contained}
         {...register('observacion')}
