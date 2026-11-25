@@ -123,6 +123,10 @@ enum Permiso: string
     case GESTIONAR_LICENCIAS = 'gestionar-licencias';
     case GESTIONAR_VACACIONES = 'gestionar-vacaciones';
     case APROBAR_VACACIONES = 'aprobar-vacaciones';
+    // Volver a sacar el impreso de una solicitud que ya no está autorizada.
+    // Es un acto de ventanilla, no de lectura: por eso no cuelga de
+    // `ver-asistencia-todos`, que también tiene auditoría.
+    case REIMPRIMIR_VACACION = 'reimprimir-vacacion';
     // Como `ver-asistencia-unidad`: desde el 2026-11-13 solo es guarda del
     // menú de Talento Humano; lo de la unidad sale del puesto de jefatura.
     case VER_VACACIONES_UNIDAD = 'ver-vacaciones-unidad';

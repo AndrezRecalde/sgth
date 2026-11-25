@@ -35,10 +35,11 @@ export function EquipoVacacionesTab() {
 
   const columns = getVacacionesColumns({
     exportandoId,
-    puedeResolver: false,
-    onExportar:    (id) => exportar(id),
-    onRegistrar:   SIN_ACCION,
-    onAnular:      SIN_ACCION,
+    puedeResolver:   false,
+    puedeReimprimir: false,
+    onExportar:      (id) => exportar(id),
+    onRegistrar:     SIN_ACCION,
+    onAnular:        SIN_ACCION,
   })
 
   return (

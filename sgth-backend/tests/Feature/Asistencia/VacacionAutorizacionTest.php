@@ -188,3 +188,30 @@ test('un servidor registra la suya y consulta su saldo, pero no la de otros', fu
     $this->getJson('/api/v1/asistencia/vacaciones')->assertForbidden();
     $this->get("/api/v1/asistencia/vacaciones/{$this->vacacionA->id}/exportar")->assertOk();
 });
+
+test('el impreso solo se saca estando autorizada; ya registrada, lo reimprime Talento Humano', function () {
+    // El impreso es la hoja que el servidor hace firmar y baja a ventanilla:
+    // una vez registrada, el papel firmado lo archiva Talento Humano, que es
+    // además quien responde a una auditoría.
+    $ruta = "/api/v1/asistencia/vacaciones/{$this->vacacionA->id}/exportar";
+
+    $this->actingAs(($this->usuario)('servidor', $this->servidorA), 'sanctum');
+    $this->get($ruta)->assertOk();
+
+    $this->vacacionA->update(['estado' => 'registrada']);
+    $this->get($ruta)->assertForbidden();
+
+    // Auditoría ve toda la asistencia, así que la solicitud la abre; pero
+    // reimprimir no le toca (2026-11-25): el papel es de ventanilla. Antes la
+    // reimpresión colgaba del alcance institucional y el auditor la sacaba.
+    $this->actingAs(($this->usuario)('auditor'), 'sanctum');
+    $this->getJson('/api/v1/asistencia/vacaciones')->assertOk();
+    $this->get($ruta)->assertForbidden();
+
+    // Ventanilla: asistente-uath, que no aprueba ni gestiona vacaciones.
+    $this->actingAs(($this->usuario)('asistente-uath'), 'sanctum');
+    $this->get($ruta)->assertOk();
+
+    $this->actingAs(($this->usuario)('admin-uath'), 'sanctum');
+    $this->get($ruta)->assertOk();
+});

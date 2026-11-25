@@ -8,9 +8,11 @@ import { IconBeach } from "@tabler/icons-react";
 import {
   DataState,
   MotivoModal,
+  notificar,
   PAGINACION_ES,
   SgthTable,
 } from "@/components/ui";
+import { AnotarEnElPapelModal } from "./AnotarEnElPapelModal";
 import { VacacionModal } from "./VacacionModal";
 import {
   FILTROS_INICIALES,
@@ -23,6 +25,7 @@ import { useVacaciones } from "../hooks/useVacaciones";
 import { useVacacionMutations } from "../hooks/useVacacionMutations";
 import { useExportarVacacion } from "../hooks/useExportarVacacion";
 import { useAuth } from "@/hooks/useAuth";
+import type { AnotarEnElPapel } from "../services/asistenciaService";
 import type { Vacacion } from "@/types/api";
 
 // El folio escrito entraba directo en la clave de consulta: cada tecla pediría
@@ -57,6 +60,8 @@ function consecuenciaDeAnular(v: Vacacion) {
 export function VacacionesTab() {
   const [opened, { open, close }] = useDisclosure(false);
   const [anulando, setAnulando] = useState<Vacacion | null>(null);
+  // Lo que hay que escribir en el impreso, recién registrado.
+  const [anotar, setAnotar] = useState<AnotarEnElPapel | null>(null);
 
   // El QR impreso en la solicitud trae `?folio=`: quien lo escanea tiene que
   // encontrar esa solicitud, esté en el estado que esté. Por eso el filtro de
@@ -76,6 +81,9 @@ export function VacacionesTab() {
   const { hasPermiso } = useAuth();
   const puedeRegistrar = hasPermiso("gestionar-vacaciones");
   const puedeResolver = hasPermiso("aprobar-vacaciones");
+  // Volver a sacar el papel de una ya registrada es de ventanilla, no de quien
+  // solo consulta la institución entera: auditoría no reimprime.
+  const puedeReimprimir = hasPermiso("reimprimir-vacacion");
 
   const [folioConRetardo] = useDebouncedValue(
     filtros.folio,
@@ -110,8 +118,16 @@ export function VacacionesTab() {
   const columns = getVacacionesColumns({
     exportandoId,
     puedeResolver,
+    puedeReimprimir,
     onExportar: (id) => exportar(id),
-    onRegistrar: (id) => registrar.mutate(id),
+    onRegistrar: (id) =>
+      registrar.mutate(id, {
+        // `meta.anotar` trae las dos casillas que el papel dejó en blanco.
+        onSuccess: ({ mensaje, meta }) =>
+          meta?.anotar
+            ? setAnotar(meta.anotar)
+            : notificar.exito("Solicitud registrada", mensaje),
+      }),
     onAnular: setAnulando,
   });
 
@@ -149,6 +165,8 @@ export function VacacionesTab() {
       </DataState>
 
       {puedeRegistrar && <VacacionModal opened={opened} onClose={close} />}
+
+      <AnotarEnElPapelModal anotar={anotar} onClose={() => setAnotar(null)} />
 
       {/* El modal de motivo es el de permisos: sus props ya son genéricas. */}
       <MotivoModal

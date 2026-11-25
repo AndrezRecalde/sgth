@@ -40,6 +40,10 @@ return new class extends Migration
         'ver-asistencia-todos', 'ver-permisos-todos', 'registrar-permisos-servidores',
         'confirmar-recepcion', 'anular-permiso-pendiente', 'anular-permiso', 'aprobar-permiso-sirha7',
         'ver-vacaciones-unidad', 'gestionar-vacaciones', 'aprobar-vacaciones',
+        // Agregado el 2026-11-25 con la migración 2027_01_02, que es la que lo
+        // reparte en una base ya migrada; aquí está para que una base nueva
+        // levante el rol completo y los dos caminos den lo mismo.
+        'reimprimir-vacacion',
         'gestionar-licencias', 'buscar-servidores',
     ];
 

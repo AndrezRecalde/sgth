@@ -12,6 +12,8 @@ interface ColumnActions {
   exportandoId:  number | null
   /** `aprobar-vacaciones`: sin él, Registrar y Anular no se ofrecen. */
   puedeResolver: boolean
+  /** `reimprimir-vacacion`: sin él, una ya registrada no se vuelve a imprimir. */
+  puedeReimprimir: boolean
   onExportar:    (id: number) => void
   onRegistrar:   (id: number) => void
   onAnular:      (vacacion: Vacacion) => void
@@ -32,9 +34,13 @@ function sePuedeAnular(v: Vacacion): boolean {
  * Talento Humano, que es quien responde a una auditoría; es la misma regla de
  * `VacacionPolicy::exportar`, y sin ella el botón ofrecía una descarga que el
  * backend iba a rechazar.
+ *
+ * La reimpresión pide `reimprimir-vacacion` y no `aprobar-vacaciones`: así se
+ * decide en la policy, y con el permiso de aprobar el botón se le ofrecía
+ * también a quien el backend iba a rechazar.
  */
-function sePuedeImprimir(v: Vacacion, puedeResolver: boolean): boolean {
-  return v.estado === 'autorizada' || puedeResolver
+function sePuedeImprimir(v: Vacacion, puedeReimprimir: boolean): boolean {
+  return v.estado === 'autorizada' || puedeReimprimir
 }
 
 export function getVacacionesColumns(
@@ -121,7 +127,7 @@ export function getVacacionesColumns(
                 : 'Imprimir solicitud',
               icon: <IconPrinter size={14} />,
               onClick: () => actions.onExportar(v.id),
-              hidden: !sePuedeImprimir(v, actions.puedeResolver),
+              hidden: !sePuedeImprimir(v, actions.puedeReimprimir),
             },
             {
               label: 'Registrar',

@@ -17,6 +17,19 @@ export type ConteoVacaciones = {
   dias_del_rango: number
 }
 
+/**
+ * Las dos casillas que el impreso de vacaciones trae en blanco.
+ *
+ * El servidor baja la hoja firmada a ventanilla y ahí todavía no se sabe de qué
+ * períodos van a salir los días: eso lo decide el registro. Quien atiende las
+ * escribe a mano, y el sistema le dice qué escribir al terminar.
+ */
+export type AnotarEnElPapel = {
+  /** «2026: 10 días  ·  2027: 2 días», o que el motivo no descuenta. */
+  se_descuenta_de: string
+  saldo_restante:  number
+}
+
 /** Una persona del equipo de quien dirige, con su saldo de vacaciones. */
 export type SaldoDelEquipo = {
   servidor_id: number
@@ -278,11 +291,14 @@ export const asistenciaService = {
      *
      * Sin cuerpo: ya no se manda un estado a elegir. El único camino hacia
      * adelante es registrarla, y el único hacia atrás, anularla con motivo.
+     *
+     * Devuelve la respuesta completa: en `meta.anotar` vienen las dos casillas
+     * que hay que escribir en el papel, y quedarse solo con `datos` las perdía.
      */
     registrar: (id: number) =>
-      api.post<ApiResponse<Vacacion>>(
+      api.post<ApiResponse<Vacacion, { anotar: AnotarEnElPapel }>>(
         `/asistencia/vacaciones/${id}/registrar`
-      ).then(r => r.data.datos),
+      ).then(r => r.data),
 
     /**
      * Anula una autorizada, o una registrada que aún no comienza.
