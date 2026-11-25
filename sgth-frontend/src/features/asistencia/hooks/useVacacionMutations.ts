@@ -23,15 +23,12 @@ export function useVacacionMutations() {
     onError: notificar.alFallar('No se pudo registrar la solicitud de vacaciones'),
   })
 
+  // Sin aviso flotante: lo que confirma el registro es el panel con lo que hay
+  // que escribir en el papel, que la pantalla abre con `meta.anotar`. Un aviso
+  // que se va solo encima de un panel que hay que leer es ruido.
   const registrar = useMutation({
     mutationFn: (id: number) => asistenciaService.vacaciones.registrar(id),
-    onSuccess: () => {
-      notificar.exito(
-        'Solicitud registrada',
-        'Quedó registrada y los días salieron del saldo del servidor.',
-      )
-      invalidar()
-    },
+    onSuccess: invalidar,
     onError: notificar.alFallar('No se pudo registrar la solicitud de vacaciones'),
   })
 

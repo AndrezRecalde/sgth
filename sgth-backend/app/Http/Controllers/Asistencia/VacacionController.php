@@ -3,6 +3,7 @@ namespace App\Http\Controllers\Asistencia;
 
 use App\Contracts\Asistencia\VacacionServiceInterface;
 use App\Enums\EstadoVacacion;
+use App\Enums\RolFirmaAccionPersonal;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Asistencia\AnularVacacionRequest;
 use App\Http\Requests\Asistencia\StoreVacacionRequest;
@@ -11,7 +12,10 @@ use App\Models\Asistencia\Vacacion;
 use App\Models\Expediente\Servidor;
 use App\Models\User;
 use App\Services\Asistencia\ConteoDeVacaciones;
+use App\Services\Asistencia\PeriodoVacacionService;
 use App\Services\Asistencia\VacacionService;
+use App\Services\Expediente\FirmanteAccionPersonalService;
+use App\Support\NombreDelServidor;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -184,7 +188,41 @@ class VacacionController extends Controller
 
         $vacacion = $this->vacacionService->registrar($id, $request->user());
 
-        return ApiResponse::ok($vacacion, 'Solicitud registrada por Talento Humano.');
+        // El impreso llega con esas dos casillas en blanco: se llenan a mano
+        // aquí, en la ventanilla. Viajan en `meta` para que quien atiende no
+        // tenga que ir a buscarlas a otra pantalla con el papel en la mano.
+        return ApiResponse::ok(
+            $vacacion,
+            'Solicitud registrada por Talento Humano.',
+            200,
+            ['anotar' => $this->loQueSeAnotaEnElPapel($vacacion)],
+        );
+    }
+
+    /**
+     * Lo que Talento Humano escribe en el documento después de registrarlo.
+     *
+     * Son las dos casillas que el papel trae en blanco: de qué períodos
+     * salieron los días y con cuánto queda el servidor. Antes esto alimentaba
+     * el PDF; se imprimía al sacar la hoja, cuando todavía no había nada que
+     * imprimir.
+     *
+     * @return array{se_descuenta_de: string, saldo_restante: float}
+     */
+    private function loQueSeAnotaEnElPapel(Vacacion $vacacion): array
+    {
+        $tramos   = app(PeriodoVacacionService::class)->paraImpresion($vacacion)['tramos'];
+        $sinCeros = fn (float $n) => rtrim(rtrim(number_format($n, 2, '.', ''), '0'), '.');
+
+        return [
+            'se_descuenta_de' => $tramos === []
+                ? 'No descuenta del saldo de vacaciones'
+                : implode('  ·  ', array_map(
+                    fn (array $t) => $t['anio'].': '.$sinCeros($t['dias']).' días',
+                    $tramos,
+                )),
+            'saldo_restante' => $this->vacacionService->calcularSaldoActual((int) $vacacion->servidor_id),
+        ];
     }
 
     /**
@@ -213,12 +251,10 @@ class VacacionController extends Controller
     {
         $vacacion = Vacacion::with([
             'servidor.puesto.cargo',
-            'servidor',
-            'jefe',
+            'servidor.unidadAdministrativa',
+            'jefe.puesto.cargo',
             'personaReemplaza',
             'unidadAdministrativa',
-            'creadoPor',
-            'aprobadoPor',
         ])->findOrFail($id);
 
         $this->authorize('exportar', $vacacion);
@@ -226,18 +262,57 @@ class VacacionController extends Controller
         // La vista recibe los datos ya calculados y no consulta nada: antes
         // leía campos que la solicitud no tiene y armaba el QR por su cuenta.
         $pdf = app('dompdf.wrapper')
-            ->setPaper('letter', 'portrait')
+            // A4, como los otros treinta exportables del sistema. Era el único
+            // en carta.
+            ->setPaper('a4', 'portrait')
             ->loadView('vacaciones.vacacion-pdf', [
                 'vacacion'  => $vacacion,
-                'impresion' => app(\App\Services\Asistencia\PeriodoVacacionService::class)
-                    ->paraImpresion($vacacion),
                 'urlQr'     => Vacacion::urlVerificacion($vacacion->folio ?? (string) $vacacion->id),
+                ...$this->firmantesDelDocumento(),
                 // El logo vigente el día que se emitió la solicitud (D3).
                 ...app(\App\Contracts\Comunicacion\IdentidadInstitucionalServiceInterface::class)->paraDocumento($vacacion->fecha_emision),
             ]);
 
+        // Sin esto, DejaVu entera pesa cerca de 1 MB por PDF; con el
+        // subconjunto queda en unos 135 KB y se ve igual. `config/dompdf.php`
+        // lo tiene apagado para todo el sistema (hallazgo del PR #665).
+        $pdf->getDomPDF()->getOptions()->setIsFontSubsettingEnabled(true);
+
         $folio = $vacacion->folio ?? $vacacion->id;
+
         return $pdf->download("vacacion_{$folio}.pdf");
+    }
+
+    /**
+     * Quién firma por Talento Humano y por Prefectura.
+     *
+     * El jefe vigente de la unidad anclada en el organigrama, o quien lo
+     * subrogue hoy: la misma vía de las acciones de personal, para que no haya
+     * dos maneras de saber quién dirige. Se resuelve a la fecha de impresión y
+     * no a la de la solicitud, porque el papel lo firma quien ocupe el cargo
+     * cuando se lo lleven. Con la jefatura vacante sale el cargo sin nombre,
+     * que es preferible a imprimir a alguien que no va a firmar.
+     *
+     * @return array{firmanteTh: string, cargoTh: string, firmanteAutoridad: string, cargoAutoridad: string}
+     */
+    private function firmantesDelDocumento(): array
+    {
+        $firmantes = app(FirmanteAccionPersonalService::class);
+
+        $resolver = function (RolFirmaAccionPersonal $rol) use ($firmantes): array {
+            $firma    = $firmantes->resolver($rol, now()->toDateString());
+            $servidor = $firma['servidor'];
+
+            return [
+                $servidor ? NombreDelServidor::de($servidor) : '',
+                $firma['cargo'] ?: $rol->cargoPorDefecto(),
+            ];
+        };
+
+        [$firmanteTh, $cargoTh] = $resolver(RolFirmaAccionPersonal::RESPONSABLE_TALENTO_HUMANO);
+        [$firmanteAutoridad, $cargoAutoridad] = $resolver(RolFirmaAccionPersonal::AUTORIDAD_NOMINADORA);
+
+        return compact('firmanteTh', 'cargoTh', 'firmanteAutoridad', 'cargoAutoridad');
     }
 
     // ── Apoyos ───────────────────────────────────────────────────────

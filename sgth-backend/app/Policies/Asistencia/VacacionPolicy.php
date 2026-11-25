@@ -75,8 +75,12 @@ class VacacionPolicy
      *
      * Una vez registrada, esa hoja ya está firmada y archivada en Talento
      * Humano, así que el servidor no la vuelve a sacar. Talento Humano sí,
-     * porque es quien responde a una auditoría (decisión del usuario,
-     * 2026-11-24). Lo mismo con una anulada.
+     * porque es quien responde a una auditoría.
+     *
+     * La reimpresión pide `reimprimir-vacacion` y no el alcance institucional,
+     * que es de donde colgaba: ese alcance lo da también `ver-asistencia-todos`,
+     * que tiene auditoría, y el usuario decidió (2026-11-25) que a auditoría no
+     * le corresponde sacar el papel.
      */
     public function exportar(User $user, Vacacion $vacacion): bool
     {
@@ -85,7 +89,7 @@ class VacacionPolicy
         }
 
         return (string) $vacacion->estado === EstadoVacacion::AUTORIZADA->value
-            || $this->alcanceInstitucional($user);
+            || $user->can(Permiso::REIMPRIMIR_VACACION->value);
     }
 
     /**

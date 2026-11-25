@@ -103,6 +103,7 @@ class RolPermisoSeeder extends Seeder
         Permiso::VER_VACACIONES_UNIDAD,
         Permiso::GESTIONAR_VACACIONES,
         Permiso::APROBAR_VACACIONES,
+        Permiso::REIMPRIMIR_VACACION,
         Permiso::GESTIONAR_LICENCIAS,
         Permiso::BUSCAR_SERVIDORES,
     ];
@@ -330,6 +331,9 @@ class RolPermisoSeeder extends Seeder
             Permiso::ANULAR_PERMISO,
             Permiso::GESTIONAR_VACACIONES,
             Permiso::APROBAR_VACACIONES,
+            // Vuelve a sacar el impreso de una solicitud ya registrada: es
+            // quien responde cuando una auditoría pide el papel firmado.
+            Permiso::REIMPRIMIR_VACACION,
             Permiso::VER_VACACIONES_UNIDAD,
             Permiso::GESTIONAR_TRAMITES,
             Permiso::GESTIONAR_CONVOCATORIAS,
@@ -385,6 +389,10 @@ class RolPermisoSeeder extends Seeder
             Permiso::VER_PERMISOS_TODOS,
             Permiso::REGISTRAR_PERMISOS_SERVIDORES,
             Permiso::VER_VACACIONES_UNIDAD,
+            // Atiende la ventanilla: recibe el impreso firmado y lo vuelve a
+            // sacar cuando hace falta. No aprueba ni gestiona vacaciones, así
+            // que la reimpresión no le puede colgar de esos permisos.
+            Permiso::REIMPRIMIR_VACACION,
             Permiso::GENERAR_REPORTES,
             Permiso::SOLICITAR_CERTIFICACION_MEDICA,
             Permiso::VER_CERTIFICACIONES_MEDICAS,
