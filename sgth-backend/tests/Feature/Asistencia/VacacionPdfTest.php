@@ -194,6 +194,25 @@ test('el papel no lleva el estado del sistema, y sí la fecha en que se imprimi�
         ->not->toContain('Registrada por Talento Humano');
 });
 
+test('el pie dice el circuito como un hecho, y no envejece al reimprimirla', function () {
+    // En imperativo («Entregue este documento… para su registro») solo valía
+    // para la primera impresión: en una reimpresión, que saca Talento Humano
+    // de una ya registrada, mandaba a hacer algo que ya ocurrió. Dicho como
+    // un hecho es cierto en los dos momentos, y el papel sigue sin tener que
+    // saber en qué estado está.
+    ($this->periodo)($this->anio, 20, 0);
+    $vacacion = ($this->vacacion)();
+    $frase    = 'Este documento se entrega firmado por el servidor y su jefe inmediato';
+
+    expect(htmlDelPdfDeVacacion($vacacion))
+        ->toContain($frase)
+        ->not->toContain('Entregue este documento');
+
+    app(VacacionService::class)->registrar($vacacion->id, $this->usuario);
+
+    expect(htmlDelPdfDeVacacion($vacacion->fresh()))->toContain($frase);
+});
+
 test('las cuatro firmas del circuito, con el cargo aunque no haya quién firme', function () {
     // El servidor la hace firmar por su jefe, la baja a ventanilla y ahí la
     // firman la Dirección de Talento Humano y Prefectura.

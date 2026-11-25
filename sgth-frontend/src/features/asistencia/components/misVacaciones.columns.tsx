@@ -60,7 +60,12 @@ export function getMisVacacionesColumns(
     {
       accessor: 'estado',
       title: 'Estado',
-      width: 180,
+      // La etiqueta más larga, «Registrada por Talento Humano», mide 209 px y
+      // la celda lleva 32 de relleno. Con los 140 que bastaban para
+      // «RECHAZADA» se perdían 48 px y se leía «APROBADA POR EL JE…»: los
+      // estados pasaron a decir quién aprobó, y eso ya no cabe en una
+      // pastilla corta.
+      width: 241,
       // El motivo de la anulación, debajo: es lo primero que se pregunta quien
       // ve su solicitud anulada.
       render: ({ estado, motivo_anulacion }) => (
