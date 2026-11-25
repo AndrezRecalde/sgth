@@ -1975,8 +1975,15 @@ export type MotivoVacacion =
   | 'calamidad_domestica'
   | 'licencia_con_goce'
 
+/**
+ * Los estados de una solicitud de vacaciones (`App\Enums\EstadoVacacion`).
+ *
+ * `autorizada` es donde nace: el jefe inmediato ya dio el visto bueno y lo
+ * confirma firmando el impreso. `registrada` la pone Talento Humano al recibir
+ * ese papel en ventanilla, y es cuando salen los días del saldo.
+ */
 export type EstadoVacacion =
-  'pendiente' | 'aprobada' | 'rechazada' | 'gozada' | 'anulada'
+  'autorizada' | 'registrada' | 'gozada' | 'anulada'
 
 export type Vacacion = {
   id:               number

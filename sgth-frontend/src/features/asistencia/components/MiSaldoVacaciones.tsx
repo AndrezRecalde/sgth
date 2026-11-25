@@ -13,9 +13,12 @@ import { usePeriodosVacaciones } from '../hooks/usePeriodosVacaciones'
 import { getPeriodosVacacionesColumns } from './periodosVacaciones.columns'
 
 interface Props {
-  servidorId:     number
-  /** Días de las solicitudes pendientes: todavía no salen del saldo. */
-  diasPorAprobar: number
+  servidorId: number
+  /**
+   * Días de las solicitudes que el jefe autorizó y Talento Humano todavía no
+   * registra: hasta la ventanilla no salen del saldo.
+   */
+  diasPorRegistrar: number
 }
 
 /**
@@ -25,7 +28,7 @@ interface Props {
  * (`VacacionPolicy::verSaldo` deja ver el propio), sin recalcular: eso es de
  * quien gestiona las vacaciones.
  */
-export function MiSaldoVacaciones({ servidorId, diasPorAprobar }: Props) {
+export function MiSaldoVacaciones({ servidorId, diasPorRegistrar }: Props) {
   const { data: resumen, isLoading, error, refetch } = usePeriodosVacaciones(servidorId)
 
   const periodos = resumen?.periodos ?? []
@@ -51,8 +54,8 @@ export function MiSaldoVacaciones({ servidorId, diasPorAprobar }: Props) {
           loading={isLoading}
         />
         <StatCard
-          label="Por aprobar"
-          value={diasPorAprobar}
+          label="Por registrar"
+          value={diasPorRegistrar}
           icon={IconHourglassHigh}
           hint="días que aún no se descuentan del saldo"
         />
