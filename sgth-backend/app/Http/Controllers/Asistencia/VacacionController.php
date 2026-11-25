@@ -2,10 +2,10 @@
 namespace App\Http\Controllers\Asistencia;
 
 use App\Contracts\Asistencia\VacacionServiceInterface;
+use App\Enums\EstadoVacacion;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Asistencia\AnularVacacionRequest;
 use App\Http\Requests\Asistencia\StoreVacacionRequest;
-use App\Http\Requests\Asistencia\UpdateVacacionRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\Asistencia\Vacacion;
 use App\Models\Expediente\Servidor;
@@ -15,6 +15,7 @@ use App\Services\Asistencia\VacacionService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class VacacionController extends Controller
 {
@@ -26,7 +27,12 @@ class VacacionController extends Controller
     {
         $this->authorize('verAny', Vacacion::class);
 
-        $request->validate(['equipo' => ['sometimes', 'boolean']]);
+        // El filtro de estado no se validaba: cualquier cadena entraba a la
+        // consulta y volvía una lista vacía sin decir por qué.
+        $request->validate([
+            'equipo' => ['sometimes', 'boolean'],
+            'estado' => ['sometimes', Rule::in(EstadoVacacion::valores())],
+        ]);
 
         $query = Vacacion::with(VacacionService::RELACIONES)
             // created_at es timestamp(0): sin desempate por id, dos páginas
@@ -166,21 +172,23 @@ class VacacionController extends Controller
         return ApiResponse::created($vacacion, 'Solicitud de vacaciones generada.');
     }
 
-    public function update(UpdateVacacionRequest $request, int $id)
+    /**
+     * Talento Humano registra la solicitud que recibe firmada en ventanilla.
+     *
+     * Sin cuerpo: ya no se manda un estado a elegir. El único camino hacia
+     * adelante es registrarla, y el único hacia atrás, anularla con motivo.
+     */
+    public function registrar(Request $request, int $id)
     {
-        $this->authorize('resolver', Vacacion::findOrFail($id));
+        $this->authorize('registrar', Vacacion::findOrFail($id));
 
-        $nuevoEstado = $request->validated('estado');
+        $vacacion = $this->vacacionService->registrar($id, $request->user());
 
-        $vacacion = $this->vacacionService->resolver(
-            $id, $nuevoEstado, $request->user()
-        );
-
-        return ApiResponse::ok($vacacion, "Solicitud resuelta como {$nuevoEstado}.");
+        return ApiResponse::ok($vacacion, 'Solicitud registrada por Talento Humano.');
     }
 
     /**
-     * Anula una pendiente, o una aprobada que aún no comienza.
+     * Anula una autorizada, o una registrada que aún no comienza.
      *
      * El mensaje dice cuántos días volvieron al saldo: es lo que quien anula
      * necesita comprobar, y no se ve en la fila de la solicitud.

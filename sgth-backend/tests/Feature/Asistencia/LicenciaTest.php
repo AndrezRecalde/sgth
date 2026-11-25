@@ -174,7 +174,7 @@ test('no cabe sobre vacaciones, permisos, otra licencia ni una ausencia de acciÃ
     $vacacion = Vacacion::create([
         'servidor_id' => $this->servidor->id, 'folio' => 'VAC-2026-00009', 'motivo' => 'vacaciones_anuales',
         'fecha_inicio' => '2026-10-20', 'fecha_fin' => '2026-10-23', 'dias_solicitados' => 4,
-        'tipo_dias' => 'calendario', 'estado' => 'pendiente',
+        'tipo_dias' => 'calendario', 'estado' => 'autorizada',
     ]);
     ($this->registrar)()
         ->assertStatus(422)

@@ -106,7 +106,7 @@ test('un motivo que no descuenta no necesita período', function () {
         $this->servidor->id
     );
 
-    expect($vacacion->estado)->toBe('pendiente');
+    expect($vacacion->estado)->toBe('autorizada');
 });
 
 test('el saldo insuficiente llega como 422 con el motivo, no como 500', function () {

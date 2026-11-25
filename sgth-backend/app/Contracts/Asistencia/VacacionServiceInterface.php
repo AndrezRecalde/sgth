@@ -24,22 +24,21 @@ interface VacacionServiceInterface
     public function solicitar(array $datos, int $servidorId): Vacacion;
 
     /**
-     * Aprueba o rechaza una solicitud PENDIENTE; aprobar descuenta los días.
-     *
-     * @param  'aprobada'|'rechazada'  $nuevoEstado
+     * Talento Humano registra en ventanilla una solicitud AUTORIZADA, y ahí se
+     * descuentan los días.
      */
-    public function resolver(int $vacacionId, string $nuevoEstado, User $resolutor): Vacacion;
+    public function registrar(int $vacacionId, User $resolutor): Vacacion;
 
     /**
-     * Anula una solicitud pendiente, o una aprobada que todavía no comenzó;
-     * la aprobada devuelve sus días a los períodos de donde salieron.
+     * Anula una solicitud autorizada, o una registrada que todavía no comenzó;
+     * la registrada devuelve sus días a los períodos de donde salieron.
      *
      * @return array{vacacion: Vacacion, dias_devueltos: float}
      */
     public function anular(int $vacacionId, string $motivo, User $usuario): array;
 
     /**
-     * Pasa a gozada las aprobadas que terminaron antes de la fecha de corte.
+     * Pasa a gozada las registradas que terminaron antes de la fecha de corte.
      *
      * @return array{marcadas: int, fecha: string}
      */

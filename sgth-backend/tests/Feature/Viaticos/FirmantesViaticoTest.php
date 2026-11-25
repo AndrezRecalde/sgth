@@ -155,7 +155,7 @@ it('avisa cuando el titular estaba de vacaciones y nadie registr√≥ la subrogaci√
         'fecha_fin'        => '2026-10-10',
         'dias_solicitados' => 8,
         'tipo_dias'        => 'habiles',
-        'estado'           => 'aprobada',
+        'estado'           => 'registrada',
     ]);
 
     ($this->sellar)(($this->viatico)(), FirmanteViaticoService::SOLICITUD, '2026-10-05');
@@ -163,7 +163,7 @@ it('avisa cuando el titular estaba de vacaciones y nadie registr√≥ la subrogaci√
     $firma = ViaticoFirmante::where('rol', 'maxima_autoridad')->sole();
 
     expect($firma->servidor_id)->toBe($this->prefecto->id)
-        ->and($firma->aviso)->toContain('vacaciones aprobadas el 05/10/2026');
+        ->and($firma->aviso)->toContain('Ten√≠a vacaciones el 05/10/2026');
 });
 
 it('cada documento se sella en su fecha, y lo sellado no se reescribe', function () {

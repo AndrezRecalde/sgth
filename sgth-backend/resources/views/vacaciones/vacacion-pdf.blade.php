@@ -107,17 +107,17 @@
         ));
     } elseif ($impresion['sin_registro']) {
         $periodo = "PERÍODO {$anioVacacion}";
-    } elseif ($estadoVal === 'pendiente') {
-        $periodo = 'SE ASIGNA AL APROBAR LA SOLICITUD';
+    } elseif ($estadoVal === \App\Enums\EstadoVacacion::AUTORIZADA->value) {
+        $periodo = 'SE ASIGNA AL REGISTRARLA EN TALENTO HUMANO';
     } else {
         $periodo = '';
     }
 
     $observacion = mb_strtoupper($vacacion->observacion ?? '', 'UTF-8');
 
-    // Una solicitud anulada o rechazada no sirve como autorización, pero el
-    // papel era idéntico al de una aprobada.
-    $sinValidez = in_array($estadoVal, ['anulada', 'rechazada'], true);
+    // Una solicitud anulada no sirve como autorización, pero el papel era
+    // idéntico al de una registrada.
+    $sinValidez = $estadoVal === \App\Enums\EstadoVacacion::ANULADA->value;
     $detalleAnulacion = $estadoVal === 'anulada' && $vacacion->anulado_en
         ? 'ANULADA EL ' . \Carbon\Carbon::parse($vacacion->anulado_en)->format('d/m/Y')
             . ($vacacion->motivo_anulacion ? ': ' . mb_strtoupper($vacacion->motivo_anulacion, 'UTF-8') : '')

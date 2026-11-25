@@ -67,7 +67,7 @@ beforeEach(function () {
         'fecha_fin'                => $inicio,
         'dias_solicitados'         => 1,
         'tipo_dias'                => 'calendario',
-        'estado'                   => 'pendiente',
+        'estado'                   => 'autorizada',
         'motivo'                   => 'vacaciones_anuales',
     ]);
 });

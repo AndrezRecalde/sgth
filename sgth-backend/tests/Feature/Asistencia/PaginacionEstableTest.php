@@ -122,7 +122,7 @@ test('el_listado_de_vacaciones_no_repite_filas_entre_páginas', function () {
             'fecha_fin'        => now()->addDays(10)->format('Y-m-d'),
             'dias_solicitados' => 4,
             'tipo_dias'        => 'habiles',
-            'estado'           => 'pendiente',
+            'estado'           => 'autorizada',
         ]);
     }
 
@@ -143,7 +143,7 @@ test('el_orden_entre_empatados_se_mantiene_entre_dos_peticiones_idénticas', fun
             'fecha_fin'        => now()->addDays(10)->format('Y-m-d'),
             'dias_solicitados' => 4,
             'tipo_dias'        => 'habiles',
-            'estado'           => 'pendiente',
+            'estado'           => 'autorizada',
         ]);
     }
 

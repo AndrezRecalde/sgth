@@ -137,25 +137,27 @@ test('un permiso justo antes o justo después de las fechas no se cruza', functi
     ($this->pedir)()->assertCreated();
 });
 
-test('al aprobar se vuelve a mirar: un permiso registrado después impide aprobar', function () {
+test('al registrar se vuelve a mirar: un permiso anotado después lo impide', function () {
     $id = ($this->pedir)()->assertCreated()->json('datos.id');
 
-    // Entre la solicitud y la aprobación alguien registra un permiso esos días.
+    // Entre la solicitud y la ventanilla alguien anota un permiso esos días.
     ($this->permiso)($this->lunes->copy()->addDays(2), TipoPermiso::ENFERMEDAD);
 
-    $respuesta = $this->putJson("/api/v1/asistencia/vacaciones/{$id}", ['estado' => 'aprobada']);
+    $respuesta = $this->postJson("/api/v1/asistencia/vacaciones/{$id}/registrar");
 
     $respuesta->assertStatus(422);
     expect($respuesta->json('mensaje'))->toContain('PER-2026-00901')
-        ->and(Vacacion::find($id)->getRawOriginal('estado'))->toBe('pendiente');
+        ->and(Vacacion::find($id)->getRawOriginal('estado'))->toBe('autorizada');
 });
 
-test('rechazar la solicitud sí se puede aunque haya un permiso esos días', function () {
+test('anular la solicitud sí se puede aunque haya un permiso esos días', function () {
     $id = ($this->pedir)()->assertCreated()->json('datos.id');
 
     ($this->permiso)($this->lunes->copy()->addDays(2));
 
-    $this->putJson("/api/v1/asistencia/vacaciones/{$id}", ['estado' => 'rechazada'])->assertOk();
+    $this->postJson("/api/v1/asistencia/vacaciones/{$id}/anular", [
+        'motivo' => 'El permiso por enfermedad cubre esos días.',
+    ])->assertOk();
 
-    expect(Vacacion::find($id)->getRawOriginal('estado'))->toBe('rechazada');
+    expect(Vacacion::find($id)->getRawOriginal('estado'))->toBe('anulada');
 });

@@ -83,7 +83,7 @@ beforeEach(function () {
         'fecha_fin'        => $this->inicio->copy()->addDays(11)->toDateString(),
         'dias_solicitados' => 12,
         'tipo_dias'        => 'habiles',
-        'estado'           => 'pendiente',
+        'estado'           => 'autorizada',
         'motivo'           => 'vacaciones_anuales',
         'folio'            => 'VAC-2099-00077',
     ], $atributos));
@@ -118,20 +118,20 @@ test('la observación y la persona que reemplaza salen en el papel', function ()
         ->toContain('CUBRE LA VENTANILLA DE ATENCIÓN');
 });
 
-test('pendiente: los días de derecho salen del período, y el período se asigna al aprobar', function () {
+test('autorizada: los días de derecho salen del período, y el período se asigna al registrarla', function () {
     ($this->periodo)($this->anio, 20, 0);
 
     expect(htmlDelPdfDeVacacion(($this->vacacion)()))
         ->toContain("20 DÍAS (PERÍODO {$this->anio})")
-        ->toContain('SE ASIGNA AL APROBAR LA SOLICITUD');
+        ->toContain('SE ASIGNA AL REGISTRARLA EN TALENTO HUMANO');
 });
 
-test('aprobada: el período dice de qué años salieron los días', function () {
+test('registrada: el período dice de qué años salieron los días', function () {
     ($this->periodo)($this->anio - 1, 20, 10);
     ($this->periodo)($this->anio, 20, 0);
     $vacacion = ($this->vacacion)();
 
-    app(VacacionService::class)->resolver($vacacion->id, 'aprobada', $this->usuario);
+    app(VacacionService::class)->registrar($vacacion->id, $this->usuario);
 
     $anterior = $this->anio - 1;
     expect(htmlDelPdfDeVacacion($vacacion->fresh()))
@@ -163,9 +163,4 @@ test('el pie queda dentro de la hoja', function () {
 
     expect($html)->toContain('Folio: VAC-2099-00077')
         ->toMatch('/\.pie\s*\{[^}]*bottom:\s*\d/');
-});
-
-test('una rechazada también sale sin validez', function () {
-    expect(htmlDelPdfDeVacacion(($this->vacacion)(['estado' => 'rechazada'])))
-        ->toContain('SOLICITUD RECHAZADA — SIN VALIDEZ');
 });

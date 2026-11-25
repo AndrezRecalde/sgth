@@ -1,7 +1,9 @@
 <?php
 
 /*
-| Aprobar o rechazar una solicitud: una sola vez, y solo si está pendiente.
+| Talento Humano registra en ventanilla la solicitud que le llega firmada: una
+| sola vez, y solo si está AUTORIZADA. Es el momento en que los días salen del
+| saldo.
 |
 | `update()` aceptaba cualquier cambio de estado sobre cualquier solicitud. La
 | única defensa contra el doble descuento era «el estado anterior no era
@@ -10,9 +12,8 @@
 | transacción ni bloqueo, así que un doble clic podía descontar dos veces sin
 | pasar siquiera por el rechazo.
 |
-| Ahora una solicitud se resuelve desde PENDIENTE y en ningún otro caso. Deshacer
-| una aprobada —con la devolución de sus días— es otra operación, la anulación,
-| y todavía no existe.
+| Desde el 2026-11-24 ya no hay «rechazar»: la única salida hacia atrás es
+| anular, siempre con motivo, y devolviendo los días si hiciera falta.
 */
 
 use App\Enums\RegimenLaboral;
@@ -83,81 +84,88 @@ beforeEach(function () {
         'fecha_fin'        => $this->inicio->copy()->addDays((int) $dias - 1)->toDateString(),
         'dias_solicitados' => $dias,
         'tipo_dias'        => 'habiles',
-        'estado'           => 'pendiente',
+        'estado'           => 'autorizada',
         'motivo'           => $motivo,
     ]);
 
-    $this->resolver = fn (Vacacion $v, string $estado) =>
-        $this->putJson("/api/v1/asistencia/vacaciones/{$v->id}", ['estado' => $estado]);
+    $this->registrar = fn (Vacacion $v) =>
+        $this->postJson("/api/v1/asistencia/vacaciones/{$v->id}/registrar");
+
+    $this->anular = fn (Vacacion $v) => $this->postJson(
+        "/api/v1/asistencia/vacaciones/{$v->id}/anular",
+        ['motivo' => 'El papel llegó sin la firma del jefe inmediato.'],
+    );
 });
 
-test('aprobar, rechazar y volver a aprobar ya no descuenta dos veces', function () {
+test('registrar dos veces no descuenta dos veces', function () {
     $periodo = ($this->periodo)(30, 0);
     $vacacion = ($this->vacacion)(5);
 
-    ($this->resolver)($vacacion, 'aprobada')->assertOk();
-    ($this->resolver)($vacacion, 'rechazada')->assertStatus(422);
-    ($this->resolver)($vacacion, 'aprobada')->assertStatus(422);
+    ($this->registrar)($vacacion)->assertOk();
+    ($this->registrar)($vacacion)->assertStatus(422);
 
     $periodo->refresh();
     expect((float) $periodo->dias_utilizados)->toBe(5.0)
         ->and((float) $periodo->dias_saldo)->toBe(25.0)
-        ->and($vacacion->fresh()->estado)->toBe('aprobada');
+        ->and($vacacion->fresh()->estado)->toBe('registrada');
 });
 
-test('una aprobación repetida se rechaza con el motivo', function () {
+test('un registro repetido se rechaza diciendo en qué estado está', function () {
     ($this->periodo)(30, 0);
     $vacacion = ($this->vacacion)(5);
 
-    ($this->resolver)($vacacion, 'aprobada')->assertOk();
-    $respuesta = ($this->resolver)($vacacion, 'aprobada');
+    ($this->registrar)($vacacion)->assertOk();
+    $respuesta = ($this->registrar)($vacacion);
 
     $respuesta->assertStatus(422);
-    expect($respuesta->json('mensaje'))->toContain('ya fue resuelta');
+    expect($respuesta->json('mensaje'))->toContain('registrada');
 });
 
-test('rechazar no descuenta y cierra la solicitud', function () {
+test('una anulada ya no se registra', function () {
+    // Anular es la única salida hacia atrás: sustituye al rechazo, y una
+    // solicitud anulada no vuelve a entrar al circuito.
     $periodo = ($this->periodo)(30, 0);
     $vacacion = ($this->vacacion)(5);
 
-    ($this->resolver)($vacacion, 'rechazada')->assertOk();
-    ($this->resolver)($vacacion, 'aprobada')->assertStatus(422);
+    ($this->anular)($vacacion)->assertOk();
+    ($this->registrar)($vacacion)->assertStatus(422);
 
     expect((float) $periodo->fresh()->dias_utilizados)->toBe(0.0)
-        ->and($vacacion->fresh()->estado)->toBe('rechazada');
+        ->and($vacacion->fresh()->estado)->toBe('anulada');
 });
 
-test('sin ningún período abierto, aprobar se rechaza en vez de aprobar sin descontar', function () {
+test('sin ningún período abierto se rechaza, en vez de registrar sin descontar', function () {
     $vacacion = ($this->vacacion)(5);
 
-    $respuesta = ($this->resolver)($vacacion, 'aprobada');
+    $respuesta = ($this->registrar)($vacacion);
 
     $respuesta->assertStatus(422);
     expect($respuesta->json('mensaje'))->toContain('período de vacaciones abierto')
-        ->and($vacacion->fresh()->estado)->toBe('pendiente');
+        ->and($vacacion->fresh()->estado)->toBe('autorizada');
 });
 
-test('dos pendientes que juntas superan el saldo: la segunda no se aprueba', function () {
-    // Una pendiente no reserva días. Las dos pasaron el control de saldo al
-    // registrarse, cada una por su lado; el saldo se vuelve a mirar al aprobar.
+test('dos autorizadas que juntas superan el saldo: la segunda no se registra', function () {
+    // Una autorizada no reserva días: el jefe las concedió, pero hasta la
+    // ventanilla no sale nada del saldo. Las dos pasaron el control al
+    // registrarse la solicitud, cada una por su lado; se vuelve a mirar aquí.
     $periodo = ($this->periodo)(30, 22);
     $primera = ($this->vacacion)(5);
     $segunda = ($this->vacacion)(5);
 
-    ($this->resolver)($primera, 'aprobada')->assertOk();
-    $respuesta = ($this->resolver)($segunda, 'aprobada');
+    ($this->registrar)($primera)->assertOk();
+    $respuesta = ($this->registrar)($segunda);
 
     $respuesta->assertStatus(422);
     expect($respuesta->json('mensaje'))->toContain('Saldo insuficiente')
         ->and((float) $periodo->fresh()->dias_utilizados)->toBe(27.0)
-        ->and($segunda->fresh()->estado)->toBe('pendiente');
+        ->and($segunda->fresh()->estado)->toBe('autorizada');
 });
 
-test('un motivo que no descuenta se aprueba sin período', function () {
+test('un motivo que no descuenta se registra sin período', function () {
     $vacacion = ($this->vacacion)(3, 'matrimonio');
 
-    ($this->resolver)($vacacion, 'aprobada')->assertOk();
+    ($this->registrar)($vacacion)->assertOk();
 
-    expect($vacacion->fresh()->estado)->toBe('aprobada')
+    expect($vacacion->fresh()->estado)->toBe('registrada')
         ->and(PeriodoVacacion::count())->toBe(0);
 });

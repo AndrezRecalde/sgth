@@ -52,26 +52,26 @@ beforeEach(function () {
 });
 
 test('las aprobadas que ya terminaron pasan a gozada, y nada más', function () {
-    $terminada   = ($this->vacacion)('aprobada', Carbon::yesterday());
+    $terminada   = ($this->vacacion)('registrada', Carbon::yesterday());
     // El último día todavía se está gozando.
-    $terminaHoy  = ($this->vacacion)('aprobada', Carbon::today());
-    $futura      = ($this->vacacion)('aprobada', Carbon::tomorrow());
-    $pendiente   = ($this->vacacion)('pendiente', Carbon::yesterday());
-    $rechazada   = ($this->vacacion)('rechazada', Carbon::yesterday());
+    $terminaHoy  = ($this->vacacion)('registrada', Carbon::today());
+    $futura      = ($this->vacacion)('registrada', Carbon::tomorrow());
+    $autorizada  = ($this->vacacion)('autorizada', Carbon::yesterday());
+    $anulada     = ($this->vacacion)('anulada', Carbon::yesterday());
 
     $this->artisan('sgth:vacaciones:marcar-gozadas')
         ->expectsOutputToContain('1 solicitud(es)')
         ->assertSuccessful();
 
     expect($terminada->fresh()->estado)->toBe('gozada')
-        ->and($terminaHoy->fresh()->estado)->toBe('aprobada')
-        ->and($futura->fresh()->estado)->toBe('aprobada')
-        ->and($pendiente->fresh()->estado)->toBe('pendiente')
-        ->and($rechazada->fresh()->estado)->toBe('rechazada');
+        ->and($terminaHoy->fresh()->estado)->toBe('registrada')
+        ->and($futura->fresh()->estado)->toBe('registrada')
+        ->and($autorizada->fresh()->estado)->toBe('autorizada')
+        ->and($anulada->fresh()->estado)->toBe('anulada');
 });
 
 test('la fecha de corte se puede fijar', function () {
-    $vacacion = ($this->vacacion)('aprobada', Carbon::today()->addDays(5));
+    $vacacion = ($this->vacacion)('registrada', Carbon::today()->addDays(5));
 
     $this->artisan('sgth:vacaciones:marcar-gozadas', [
         '--fecha' => Carbon::today()->addDays(10)->toDateString(),
@@ -81,7 +81,7 @@ test('la fecha de corte se puede fijar', function () {
 });
 
 test('una gozada ya no se anula', function () {
-    $vacacion = ($this->vacacion)('aprobada', Carbon::yesterday());
+    $vacacion = ($this->vacacion)('registrada', Carbon::yesterday());
     $this->artisan('sgth:vacaciones:marcar-gozadas')->assertSuccessful();
 
     $usuario = User::create([
