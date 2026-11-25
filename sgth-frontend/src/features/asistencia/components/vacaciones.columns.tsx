@@ -1,7 +1,7 @@
 'use client'
 
 import { Stack, Text } from '@mantine/core'
-import { IconBan, IconCheck, IconPrinter, IconX } from '@tabler/icons-react'
+import { IconBan, IconCheck, IconPrinter } from '@tabler/icons-react'
 import { StatusBadge, TableActions, confirmar } from '@/components/ui'
 import { formatFecha, hoyIso } from '@/lib/fecha'
 import { ESTADO_LABELS, MOTIVO_LABELS, TONO_ESTADO } from './vacaciones.constants'
