@@ -8,7 +8,8 @@
 | vacía y las horas iban con segundos. Después, las fechas en año-mes-día y la
 | hoja: partida en dos mitades, con la primera de altura fija. Desde el
 | 2026-11-24 en el estilo de los demás documentos institucionales, sin marca de
-| agua y sin «Asistencia» en el encabezado.
+| agua y sin «Asistencia» en el encabezado; y con bordes: cada copia en su
+| marco, el motivo en una caja y las firmas en una cuadrícula.
 */
 
 use App\Enums\RegimenLaboral;
@@ -144,4 +145,16 @@ test('sin poder leer el motivo, la copia lo reserva', function () {
 
     expect($html)->toContain('Reservado: es un dato privado del servidor.')
         ->not->toContain('Comisión de servicios');
+});
+
+test('cada copia va en su marco, con el motivo en una caja y las firmas en cuadrícula', function () {
+    $html = htmlDelPdfDePermiso($this->permiso);
+
+    expect(substr_count($html, '<div class="marco">'))->toBe(2)
+        ->and(substr_count($html, '<table class="caja">'))->toBe(2)
+        ->and($html)->toContain('<tr><th>Motivo</th></tr>')
+        // Los tres rótulos en la fila de arriba de la cuadrícula.
+        ->toContain('<th>Autoriza · Jefe inmediato</th>')
+        ->toContain('<th>Solicita · Servidor</th>')
+        ->toContain('<th>Recibe · Talento Humano</th>');
 });
