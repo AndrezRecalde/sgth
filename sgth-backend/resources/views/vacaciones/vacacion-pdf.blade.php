@@ -279,11 +279,17 @@
   </table>
 </div>
 
-{{-- Qué hacer con la hoja. No narra el estado del trámite: dice el paso
-     siguiente, que es lo que el servidor necesita saber. --}}
+{{-- El circuito de la hoja, dicho como un hecho y no como una orden.
+     En imperativo («Entregue este documento… para su registro») solo valía
+     para la primera impresión: en una reimpresión, que saca Talento Humano
+     de una solicitud YA registrada, mandaba a hacer algo que ya ocurrió. Y
+     condicionarlo al estado sería volver a meter el estado en el papel por
+     la puerta de atrás, que es justo lo que este documento evita. Así es
+     cierto antes y después, y sigue explicando el trámite a quien lo ve por
+     primera vez. --}}
 <p class="nota">
-  Entregue este documento, con las firmas del servidor y del jefe inmediato, en
-  la ventanilla de Talento Humano para su registro.
+  Este documento se entrega firmado por el servidor y su jefe inmediato en la
+  ventanilla de Talento Humano, que lo registra en el sistema.
 </p>
 
 </body>

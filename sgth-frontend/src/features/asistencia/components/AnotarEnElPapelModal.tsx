@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { Alert, Stack, Text } from '@mantine/core'
 import { IconPencil } from '@tabler/icons-react'
 import { DetailList, ModalFooter, SgthModal } from '@/components/ui'
@@ -29,6 +30,14 @@ function dias(n: number): string {
  * entrar al detalle de la solicitud a buscar el dato otra vez.
  */
 export function AnotarEnElPapelModal({ anotar, onClose }: Props) {
+  // Lo último que hubo que anotar, que se conserva mientras el modal se
+  // cierra: al pulsar «Listo» la pantalla pone `anotar` en null y las dos
+  // casillas se iban antes que la ventana, así que el último fotograma era un
+  // panel vacío. Se ajusta durante el renderizado y no en un efecto, para que
+  // al abrirlo no haya un primer fotograma sin valores.
+  const [mostrado, setMostrado] = useState(anotar)
+  if (anotar !== null && anotar !== mostrado) setMostrado(anotar)
+
   return (
     <SgthModal
       opened={anotar !== null}
@@ -43,17 +52,17 @@ export function AnotarEnElPapelModal({ anotar, onClose }: Props) {
           escríbalas a mano antes de archivarlo.
         </Alert>
 
-        {anotar && (
+        {mostrado && (
           <DetailList
             columnas={1}
             items={[
               {
                 label: 'Se descuenta de',
-                value: <Text size="lg" fw={700}>{anotar.se_descuenta_de}</Text>,
+                value: <Text size="lg" fw={700}>{mostrado.se_descuenta_de}</Text>,
               },
               {
                 label: 'Saldo restante',
-                value: <Text size="lg" fw={700}>{dias(anotar.saldo_restante)}</Text>,
+                value: <Text size="lg" fw={700}>{dias(mostrado.saldo_restante)}</Text>,
               },
             ]}
           />

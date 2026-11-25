@@ -105,9 +105,12 @@ export function getVacacionesColumns(
     {
       accessor: 'estado',
       title: 'Estado',
-      // «RECHAZADA» mide 83 px y la celda lleva 32 de relleno: con 110 se
-      // salía 5, y APROBADA y PENDIENTE quedaban a uno o dos píxeles.
-      width: 140,
+      // La etiqueta más larga, «Registrada por Talento Humano», mide 209 px y
+      // la celda lleva 32 de relleno. Con los 140 que bastaban para
+      // «RECHAZADA» se perdían 48 px y se leía «APROBADA POR EL JE…»: los
+      // estados pasaron a decir quién aprobó, y eso ya no cabe en una
+      // pastilla corta.
+      width: 241,
       render: ({ estado }) => (
         <StatusBadge tone={TONO_ESTADO[estado] ?? 'neutral'}>
           {ESTADO_LABELS[estado] ?? estado}
