@@ -34,7 +34,8 @@ export interface FiltrosVacacion {
 }
 
 export const FILTROS_INICIALES: FiltrosVacacion = {
-  estado: 'pendiente',
+  // Las que esperan ventanilla: es la bandeja de trabajo de Talento Humano.
+  estado: 'autorizada',
   motivo: null,
   unidadId: null,
   fechaDesde: null,

@@ -273,16 +273,19 @@ export const asistenciaService = {
         '/asistencia/vacaciones', data
       ).then(r => r.data.datos),
 
-    actualizar: (id: number, data: {
-      estado: string
-      aprobado_por?: number | null
-    }) =>
-      api.put<ApiResponse<Vacacion>>(
-        `/asistencia/vacaciones/${id}`, data
+    /**
+     * Talento Humano registra la solicitud que recibe firmada en ventanilla.
+     *
+     * Sin cuerpo: ya no se manda un estado a elegir. El único camino hacia
+     * adelante es registrarla, y el único hacia atrás, anularla con motivo.
+     */
+    registrar: (id: number) =>
+      api.post<ApiResponse<Vacacion>>(
+        `/asistencia/vacaciones/${id}/registrar`
       ).then(r => r.data.datos),
 
     /**
-     * Anula una pendiente, o una aprobada que aún no comienza.
+     * Anula una autorizada, o una registrada que aún no comienza.
      *
      * Devuelve la respuesta completa: el mensaje del backend dice cuántos días
      * volvieron al saldo, y eso es lo que quien anula necesita ver.

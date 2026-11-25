@@ -10,21 +10,31 @@ import type { Vacacion } from '@/types/api'
 
 interface ColumnActions {
   exportandoId:  number | null
-  /** `aprobar-vacaciones`: sin él, Aprobar, Rechazar y Anular no se ofrecen. */
+  /** `aprobar-vacaciones`: sin él, Registrar y Anular no se ofrecen. */
   puedeResolver: boolean
   onExportar:    (id: number) => void
-  onAprobar:     (id: number) => void
-  onRechazar:    (id: number) => void
+  onRegistrar:   (id: number) => void
   onAnular:      (vacacion: Vacacion) => void
 }
 
 /**
- * La misma regla que el backend: una pendiente siempre, una aprobada solo si
- * todavía no comenzó.
+ * La misma regla que el backend: una autorizada siempre, una registrada solo
+ * si todavía no comenzó.
  */
 function sePuedeAnular(v: Vacacion): boolean {
-  if (v.estado === 'pendiente') return true
-  return v.estado === 'aprobada' && v.fecha_inicio.substring(0, 10) >= hoyIso()
+  if (v.estado === 'autorizada') return true
+  return v.estado === 'registrada' && v.fecha_inicio.substring(0, 10) >= hoyIso()
+}
+
+/**
+ * El impreso es la hoja que el servidor hace firmar y baja a ventanilla: solo
+ * tiene sentido mientras está autorizada. Una ya registrada la reimprime
+ * Talento Humano, que es quien responde a una auditoría; es la misma regla de
+ * `VacacionPolicy::exportar`, y sin ella el botón ofrecía una descarga que el
+ * backend iba a rechazar.
+ */
+function sePuedeImprimir(v: Vacacion, puedeResolver: boolean): boolean {
+  return v.estado === 'autorizada' || puedeResolver
 }
 
 export function getVacacionesColumns(
@@ -111,27 +121,21 @@ export function getVacacionesColumns(
                 : 'Imprimir solicitud',
               icon: <IconPrinter size={14} />,
               onClick: () => actions.onExportar(v.id),
+              hidden: !sePuedeImprimir(v, actions.puedeResolver),
             },
             {
-              label: 'Aprobar',
+              label: 'Registrar',
               icon: <IconCheck size={14} />,
-              onClick: () => actions.onAprobar(v.id),
-              hidden: !actions.puedeResolver || v.estado !== 'pendiente',
-            },
-            {
-              label: 'Rechazar',
-              icon: <IconX size={14} />,
-              color: 'red',
               onClick: () =>
                 confirmar({
-                  title: 'Rechazar solicitud',
+                  title: 'Registrar solicitud',
                   message:
-                    'Se rechazará esta solicitud de vacaciones y el servidor será notificado.',
-                  destructiva: true,
-                  confirmLabel: 'Rechazar',
-                  onConfirm: () => actions.onRechazar(v.id),
+                    'Se registrará la solicitud y los días saldrán del saldo de vacaciones '
+                    + 'del servidor. Hágalo con el impreso firmado a la vista.',
+                  confirmLabel: 'Registrar',
+                  onConfirm: () => actions.onRegistrar(v.id),
                 }),
-              hidden: !actions.puedeResolver || v.estado !== 'pendiente',
+              hidden: !actions.puedeResolver || v.estado !== 'autorizada',
             },
             {
               label: 'Anular',

@@ -16,7 +16,7 @@ interface ColumnActions {
 /**
  * Las solicitudes propias en «Mis vacaciones». Las de Talento Humano llevan
  * además al servidor y las acciones de resolver, que aquí no aplican: quien
- * aprueba y anula es Talento Humano (`aprobar-vacaciones`).
+ * registra y anula es Talento Humano (`aprobar-vacaciones`).
  */
 export function getMisVacacionesColumns(
   { exportandoId, onExportar }: ColumnActions,
@@ -87,6 +87,10 @@ export function getMisVacacionesColumns(
               label: exportandoId === v.id ? 'Exportando...' : 'Imprimir solicitud',
               icon: <IconPrinter size={14} />,
               onClick: () => onExportar(v),
+              // El impreso es la hoja que se lleva a firmar: una vez
+              // registrada, el papel firmado lo archiva Talento Humano y el
+              // servidor ya no lo saca. Lo mismo dice la policy.
+              hidden: v.estado !== 'autorizada',
             },
           ]}
         />

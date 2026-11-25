@@ -16,7 +16,7 @@ const POR_PAGINA = 15
 const SIN_ACCION = () => {}
 
 /**
- * Las vacaciones del equipo, en consulta. Aprobar, rechazar y anular siguen
+ * Las vacaciones del equipo, en consulta. Registrar y anular siguen
  * siendo de Talento Humano: aquí no se ofrecen ni a quien además lo es.
  */
 export function EquipoVacacionesTab() {
@@ -37,8 +37,7 @@ export function EquipoVacacionesTab() {
     exportandoId,
     puedeResolver: false,
     onExportar:    (id) => exportar(id),
-    onAprobar:     SIN_ACCION,
-    onRechazar:    SIN_ACCION,
+    onRegistrar:   SIN_ACCION,
     onAnular:      SIN_ACCION,
   })
 

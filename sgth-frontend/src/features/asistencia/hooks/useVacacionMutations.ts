@@ -5,7 +5,7 @@ import { notificar } from '@/components/ui'
 export function useVacacionMutations() {
   const qc = useQueryClient()
 
-  // Aprobar y anular mueven días entre los períodos: lo que muestre el saldo
+  // Registrar y anular mueven días entre los períodos: lo que muestre el saldo
   // tiene que releerlo, no solo el listado.
   const invalidar = () => {
     qc.invalidateQueries({ queryKey: ['vacaciones'] })
@@ -23,17 +23,16 @@ export function useVacacionMutations() {
     onError: notificar.alFallar('No se pudo registrar la solicitud de vacaciones'),
   })
 
-  const actualizar = useMutation({
-    mutationFn: ({ id, data }: {
-      id:   number
-      data: Parameters<typeof asistenciaService.vacaciones.actualizar>[1]
-    }) =>
-      asistenciaService.vacaciones.actualizar(id, data),
+  const registrar = useMutation({
+    mutationFn: (id: number) => asistenciaService.vacaciones.registrar(id),
     onSuccess: () => {
-      notificar.exito('Solicitud actualizada', 'La solicitud fue procesada correctamente.')
+      notificar.exito(
+        'Solicitud registrada',
+        'Quedó registrada y los días salieron del saldo del servidor.',
+      )
       invalidar()
     },
-    onError: notificar.alFallar('No se pudo actualizar la solicitud de vacaciones'),
+    onError: notificar.alFallar('No se pudo registrar la solicitud de vacaciones'),
   })
 
   const anular = useMutation({
@@ -46,5 +45,5 @@ export function useVacacionMutations() {
     onError: notificar.alFallar('No se pudo anular la solicitud de vacaciones'),
   })
 
-  return { crear, actualizar, anular }
+  return { crear, registrar, anular }
 }

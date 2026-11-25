@@ -3,19 +3,23 @@ import type { SemanticTone } from '@/config/design.tokens'
 
 /** Etiquetas y tonos de los estados de una solicitud de vacaciones. */
 export const TONO_ESTADO: Record<EstadoVacacion, SemanticTone> = {
-  pendiente: 'warning',
-  aprobada:  'success',
-  rechazada: 'danger',
-  gozada:    'neutral',
-  anulada:   'neutral',
+  // Autorizada no es un aviso: el jefe ya la concedió y el papel va camino de
+  // ventanilla. Lo que falta es el trámite, no una decisión.
+  autorizada: 'info',
+  registrada: 'success',
+  gozada:     'neutral',
+  anulada:    'neutral',
 }
 
+/**
+ * La etiqueta dice quién concedió qué, que es lo que no se entendía: «aprobada»
+ * a secas significaba cosas distintas para el servidor y para Talento Humano.
+ */
 export const ESTADO_LABELS: Record<EstadoVacacion, string> = {
-  pendiente: 'Pendiente',
-  aprobada:  'Aprobada',
-  rechazada: 'Rechazada',
-  gozada:    'Gozada',
-  anulada:   'Anulada',
+  autorizada: 'Aprobada por el jefe inmediato',
+  registrada: 'Registrada por Talento Humano',
+  gozada:     'Gozada',
+  anulada:    'Anulada',
 }
 
 export const MOTIVO_LABELS: Record<MotivoVacacion, string> = {
@@ -53,9 +57,8 @@ export const MOTIVOS_QUE_DESCUENTAN: readonly MotivoVacacion[] = [
 /** Los estados por los que se filtra, en el orden del flujo. */
 export const FILTROS_ESTADO = [
   'todos',
-  'pendiente',
-  'aprobada',
-  'rechazada',
+  'autorizada',
+  'registrada',
   'gozada',
   'anulada',
 ] as const

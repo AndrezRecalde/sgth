@@ -36,10 +36,10 @@ const POR_PAGINA = 15;
 function consecuenciaDeAnular(v: Vacacion) {
   const folio = v.folio ?? `#${v.id}`;
 
-  if (v.estado === "aprobada" && MOTIVOS_QUE_DESCUENTAN.includes(v.motivo)) {
+  if (v.estado === "registrada" && MOTIVOS_QUE_DESCUENTAN.includes(v.motivo)) {
     return (
       <>
-        Se anulará la solicitud aprobada <b>{folio}</b> y sus{" "}
+        Se anulará la solicitud registrada <b>{folio}</b> y sus{" "}
         <b>{v.dias_solicitados} días</b> volverán al saldo del servidor, a los
         mismos períodos de donde salieron.
       </>
@@ -105,14 +105,13 @@ export function VacacionesTab() {
 
   const lista = (data?.data ?? []) as Vacacion[];
 
-  const { actualizar, anular } = useVacacionMutations();
+  const { registrar, anular } = useVacacionMutations();
 
   const columns = getVacacionesColumns({
     exportandoId,
     puedeResolver,
     onExportar: (id) => exportar(id),
-    onAprobar: (id) => actualizar.mutate({ id, data: { estado: "aprobada" } }),
-    onRechazar: (id) => actualizar.mutate({ id, data: { estado: "rechazada" } }),
+    onRegistrar: (id) => registrar.mutate(id),
     onAnular: setAnulando,
   });
 

@@ -62,8 +62,10 @@ export function MisVacacionesView() {
   }
 
   const solicitudes = data?.historial_solicitudes ?? []
-  const diasPorAprobar = solicitudes
-    .filter(s => s.estado === 'pendiente')
+  // Las que el jefe ya autorizó pero Talento Humano aún no registra: esos días
+  // todavía no salieron del saldo.
+  const diasPorRegistrar = solicitudes
+    .filter(s => s.estado === 'autorizada')
     .reduce((total, s) => total + Number(s.dias_solicitados), 0)
   const nombrePropio = usuario?.nombre_completo
     || [servidor.nombre, servidor.apellido].filter(Boolean).join(' ')
@@ -83,11 +85,11 @@ export function MisVacacionesView() {
     <PageShell>
       <PageHeader title={TITULO} description={DESCRIPCION} actions={botonSolicitar} />
 
-      <MiSaldoVacaciones servidorId={servidor.id} diasPorAprobar={diasPorAprobar} />
+      <MiSaldoVacaciones servidorId={servidor.id} diasPorRegistrar={diasPorRegistrar} />
 
       <SectionCard
         title="Mis solicitudes"
-        description="Talento Humano aprueba o rechaza cada una; la aprobada descuenta los días de su saldo."
+        description="Imprima la solicitud, hágala firmar por su jefe inmediato y entréguela en Talento Humano: al registrarla se descuentan los días de su saldo."
       >
         <DataState
           loading={isLoading}
