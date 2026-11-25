@@ -16,6 +16,12 @@
   | sacó. El aviso de abajo no narra el trámite: impide que una hoja sin valor
   | circule como buena.
   |
+  | Lleva marco desde el 2026-11-25 (segunda vuelta): encierra el cuerpo y deja
+  | fuera el membrete y el pie, que hacen de cabecera y pie de página. Con él,
+  | las secciones pasaron de rótulo subrayado a banda con caja y las cuatro
+  | firmas y la nota final entraron en recuadro; sueltos dentro del marco se
+  | leían como un descuido.
+  |
   | Cambió el 2026-11-25. Antes era carta —el único exportable del sistema que
   | no era A4—, con el nombre institucional escrito a mano y equivocado, una
   | grilla de once motivos con casillas de los que solo dos se pueden pedir
@@ -91,6 +97,61 @@
 
   .cintillo .impreso { font-size: 8px; color: #6b7c74; margin-top: 1px; }
 
+  /* El marco de la hoja. Encierra solo el cuerpo: uno que abarcara también
+     el membrete tendría que rodear el logo, que arranca a 5 mm del borde del
+     papel, y su raya de arriba caería en el milímetro 4 —hay impresoras de
+     oficina que no imprimen los primeros 5 y se la comerían por un lado sí y
+     por otro no.
+
+     Las medidas salen de la hoja, no del ojo: A4 es 210×297 mm y los márgenes
+     de `@page` son 26/14/20/14, así que la caja de contenido va de x=14 a
+     x=196 y de y=26 a y=277. El marco se sitúa respecto de ella con
+     desplazamientos negativos y queda de y=24 —2 mm por debajo del membrete—
+     a y=273, y de x=8 a x=202. Ojo con el filete del pie: `bottom: -14mm` no
+     lo baja 14 mm por debajo de la caja de contenido, lo deja justo en su
+     borde inferior, y un marco calculado sin mirar el PDF le cruza el renglón
+     de la dirección.
+
+     Va `position: fixed` porque es lo que dompdf repite en todas las hojas,
+     igual que el membrete y el pie. */
+  .marco {
+    position: fixed;
+    top: -2mm;
+    left: -6mm;
+    width: 193.6mm;
+    height: 249mm;
+    border: 1.1px solid #17593f;
+  }
+
+  /* Las secciones, en banda pegada a su tabla. El borde inferior lo pone la
+     banda y no la tabla de abajo porque en «Vacaciones solicitadas» la tabla
+     ocupa solo el 73 % del ancho —el resto es el QR— y sin él la banda quedaba
+     abierta por ese lado. */
+  .bloque-titulo {
+    border: 0.7px solid #c6d2cc;
+    background: #eaf1ee;
+    padding: 4px 8px;
+    margin: 9px 0 0 0;
+  }
+  table.datos { margin-bottom: 0; }
+
+  /* El QR se queda sin caja a propósito: su columna mide unos 8 mm más que la
+     tabla de al lado —24 de imagen más el pie «Escanee para…»— y como las dos
+     celdas de una fila comparten alto, el recuadro colgaba por debajo de la
+     tabla y rompía la retícula. */
+
+  /* La observación, en caja de alto fijo, y el alto se reserva entero escriba
+     el servidor una línea o las tres: así la hoja con observación es siempre
+     la misma hoja. Importa más con marco que sin él, porque el marco no crece
+     con el texto —es un elemento fijo— y un cuerpo que se pase se le sale por
+     abajo.
+
+     14 mm y 300 caracteres son la misma decisión tomada dos veces: medido
+     sobre el PDF, en esta caja entran unos 100 caracteres por renglón, así que
+     300 son tres renglones y tres renglones son 14 mm. El tope vive en
+     `StoreVacacionRequest`; si se mueve uno hay que mover el otro. */
+  table.datos td.obs { height: 14mm; vertical-align: top; }
+
   /* El QR al costado de las fechas: se escanea el papel y se abre la
      solicitud en el sistema. */
   .cuerpo { width: 100%; border-collapse: collapse; }
@@ -105,23 +166,47 @@
 
   .aviso.invalida { border-left-color: #8f2f2f; background: #fdf2f2; color: #7a2727; }
 
+  /* La nota del circuito, también en caja: suelta bajo los recuadros de firma
+     y dentro del marco, parecía un pie de página perdido. */
+  .nota {
+    border: 0.7px solid #c6d2cc;
+    background: #f8fbf9;
+    padding: 6px 9px;
+    margin-top: 9px;
+  }
+
   /* `table-layout: fixed`: sin él las columnas se reparten por el contenido, y
      un cargo largo en la primera estruja a la otra hasta partirle el rótulo en
      dos líneas, con su raya más abajo. */
   /* Las firmas se despegan del último bloque: pegadas a la casilla que Talento
      Humano llena a mano, el rótulo de la primera parecía parte de esa tabla. */
-  .firmas { margin-top: 26px; }
+  .firmas { margin-top: 10px; }
   .firmas table { table-layout: fixed; }
-  .firmas td { width: 50%; }
-  /* Son cuatro firmas de puño y letra y la hoja sobra: más aire que los 24 px
-     de los documentos de tres. */
-  .firmas .firma-rotulo { margin-bottom: 34px; }
-  /* Aire entre las dos filas: sin él, el nombre de la primera queda pegado al
-     rótulo de la segunda. */
-  .firmas tr.segunda-fila td { padding-top: 26px; }
+  /* Cada firma en su recuadro: en un papel cuyo oficio es recoger cuatro
+     firmas de puño y letra, la caja dice dónde firmar. El recuadro sustituye
+     al aire que antes separaba las dos filas (`padding-top: 26px`), que ahora
+     sería un hueco entre cajas. */
+  .firmas td {
+    width: 50%;
+    border: 0.7px solid #c6d2cc;
+    padding: 6px 8px 8px 8px;
+  }
+  .firmas tr.segunda-fila td { padding-top: 6px; }
+  /* El hueco entre el rótulo y la raya es donde se firma y se sella. Con los
+     34 px de antes quedaban 9 mm: dan para una rúbrica, no para un sello
+     encima. Con 60 son 16.
+
+     No más, y el motivo es que el hueco se paga cuatro veces —dos filas— y la
+     hoja no da para tanto. El peor caso es una solicitud anulada, que añade el
+     aviso rojo de arriba, con la observación al tope: con 76 px el cuerpo se
+     salía del marco y la segunda fila de firmas se iba a una segunda hoja. */
+  .firmas .firma-rotulo { margin-bottom: 60px; }
 </style>
 </head>
 <body>
+
+{{-- El marco va el primero: es fijo y no participa del flujo. --}}
+<div class="marco"></div>
 
 @include('pdf._membrete-institucional', ['dependencia' => 'Dirección de Talento Humano'])
 @include('pdf._pie-institucional')
@@ -213,7 +298,7 @@
 @if(trim((string) $vacacion->observacion) !== '')
   <div class="bloque-titulo">Observación</div>
   <table class="datos">
-    <tr><td style="text-align: justify;">{{ $vacacion->observacion }}</td></tr>
+    <tr><td class="obs" style="text-align: justify;">{{ $vacacion->observacion }}</td></tr>
   </table>
 @endif
 

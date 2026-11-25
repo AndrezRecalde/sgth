@@ -22,7 +22,11 @@ class StoreVacacionRequest extends FormRequest
             'fecha_retorno'    => 'nullable|date|after:fecha_fin',
             'dias_solicitados' => 'required|integer|min:1',
             'tipo_dias'        => 'required|in:habiles,calendario',
-            'observacion'      => 'nullable|string|max:500',
+            // 300 y no 500: es lo que entra en la caja de alto fijo de la
+            // solicitud impresa —unos 100 caracteres por renglón, tres
+            // renglones, 14 mm— sin que la hoja cambie de forma. Si se mueve
+            // este tope hay que mover el alto en `vacacion-pdf.blade.php`.
+            'observacion'      => 'nullable|string|max:300',
             // Sin `unidad_administrativa_id`: la solicitud lleva siempre la
             // unidad del servidor (`VacacionService::solicitar()`).
             'persona_reemplaza_id' => 'nullable|exists:servidores,id',
