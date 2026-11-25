@@ -7,7 +7,7 @@ import { Controller, type UseFormReturn } from 'react-hook-form'
 import { useContainedInput } from '@/hooks/useContainedInput'
 import { fromDateValue, toDateValue } from '@/lib/fecha'
 import type { ConteoVacaciones } from '../services/asistenciaService'
-import type { VacacionFormData } from './vacacion.schema'
+import { OBSERVACION_MAX, type VacacionFormData } from './vacacion.schema'
 import classes from './VacacionFechasCampos.module.css'
 import { SectionHeading } from '@/components/ui'
 
@@ -148,7 +148,9 @@ export function VacacionFechasCampos({ form, conteo = null }: Props) {
       <Textarea
         label="Observación"
         placeholder="Observaciones adicionales (opcional)"
+        description="Se imprime en la solicitud, en un recuadro de tres renglones."
         rows={2}
+        maxLength={OBSERVACION_MAX}
         {...contained}
         {...register('observacion')}
       />

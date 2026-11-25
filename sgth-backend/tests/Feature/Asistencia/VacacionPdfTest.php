@@ -12,6 +12,8 @@
 | - Desde el 2026-11-25, en el estilo de casa: no imprimía la cédula, el cargo
 |   ni la unidad, que el controlador ya cargaba, y el nombre institucional
 |   estaba escrito a mano y no coincidía con el oficial.
+| - Y desde el marco, la hoja tiene un alto que no se puede pasar. El último
+|   test de este archivo es el que vigila eso.
 |
 | Como en `PermisoPdfVisualTest`, se comprueba el HTML de la vista con lo mismo
 | que le pasa `exportar()`.
@@ -232,4 +234,40 @@ test('el membrete y el pie son los institucionales, no texto escrito a mano', fu
     expect($html)->toContain('class="membrete"')
         ->toContain('class="footer"')
         ->not->toContain('Gobierno Autónomo Descentralizado de la Provincia de Esmeraldas');
+});
+
+/*
+| El tope de `observacion` en `StoreVacacionRequest` y el alto de su caja en la
+| plantilla son la misma decisión tomada dos veces: en esa caja entran unos 100
+| caracteres por renglón y la caja mide tres renglones. Este test lee el tope
+| del propio request en vez de repetirlo, así que subirlo sin agrandar la caja
+| —o sin recortar aire en otro sitio— falla aquí y no en la impresora.
+|
+| El caso es el peor que se imprime de verdad: anulada, que añade el aviso rojo
+| de arriba, con la observación al tope. Importa desde que la hoja lleva marco:
+| el marco es un elemento fijo, no crece con el texto, y lo que se pasa se le
+| sale por abajo o se va a una segunda hoja. Pasó de verdad mientras se
+| ajustaba el espacio para firmar: con 20 mm por firma en vez de 16, esta misma
+| solicitud mandaba la nota del pie a una segunda hoja.
+*/
+test('la hoja aguanta en una sola con la observación al tope y el aviso de anulada', function () {
+    preg_match('/max:(\d+)/', (new App\Http\Requests\Asistencia\StoreVacacionRequest)->rules()['observacion'], $m);
+    $tope = (int) ($m[1] ?? 0);
+
+    $relleno = str_repeat('Cubre la ventanilla de atención y deja el archivador ordenado por unidad. ', 10);
+
+    $vacacion = ($this->vacacion)([
+        'estado'               => 'anulada',
+        'anulado_en'           => now(),
+        'motivo_anulacion'     => 'El servidor desistió del período solicitado.',
+        'observacion'          => mb_substr($relleno, 0, $tope),
+        'persona_reemplaza_id' => $this->reemplazo->id,
+    ]);
+
+    $pdf = app('dompdf.wrapper')->setPaper('a4', 'portrait')->loadHTML(htmlDelPdfDeVacacion($vacacion));
+    $pdf->getDomPDF()->render();
+
+    expect($tope)->toBeGreaterThan(0)
+        ->and(mb_strlen((string) $vacacion->observacion))->toBe($tope)
+        ->and($pdf->getDomPDF()->getCanvas()->get_page_count())->toBe(1);
 });
