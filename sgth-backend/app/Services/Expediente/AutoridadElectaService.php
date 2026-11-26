@@ -824,6 +824,15 @@ class AutoridadElectaService
                 'remuneracion_propuesta'    => $cese->remuneracion_origen ?? $puesto?->rmu,
                 'partida_presupuestaria_id' => $cese->partida_origen_id,
                 'movimiento_relacionado_id' => $cese->id,
+                // El documento del cese es el de la asunción [TH, 2026-11-26]:
+                // la renuncia aceptada, la partida de defunción, la resolución
+                // de revocatoria o de remoción. La asunción no la decide
+                // nadie, la manda el Art. 51; sin heredarlo se quedaba en
+                // borrador para siempre, porque `exigirDocumentoDeOrigen()` lo
+                // pide al suscribir y ninguna pantalla lo dejaba escribir
+                // (hallazgo H15). Sigue siendo editable en el modal de
+                // suscripción, por si el Consejo emite una resolución aparte.
+                'resolucion_numero'         => $cese->resolucion_numero,
             ]);
         } catch (ReglaNegocioException) {
             return null;

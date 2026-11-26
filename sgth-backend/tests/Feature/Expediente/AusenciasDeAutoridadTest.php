@@ -254,9 +254,13 @@ test('el cese anticipado del Prefecto prepara la asunción definitiva del Vicepr
     expect($asuncion->servidor_id)->toBe($this->vice->id)
         ->and($asuncion->puesto_destino_id)->toBe($this->puestoPrefecto->id)
         ->and($asuncion->fecha_efectiva->toDateString())->toBe(now()->addDay()->toDateString())
-        ->and($asuncion->instrumento)->toBe(InstrumentoActo::ACTO_AUTORIDAD);
+        ->and($asuncion->instrumento)->toBe(InstrumentoActo::ACTO_AUTORIDAD)
+        // Nace con el documento del cese [TH, 2026-11-26]: sin él se quedaba
+        // en borrador para siempre, porque al suscribir se exige y ninguna
+        // pantalla lo dejaba escribir (hallazgo H15).
+        ->and($asuncion->resolucion_numero)->toBe('RES-CP-2026-020');
 
-    // Talento Humano completa la resolución del Consejo y lo registra.
+    // Talento Humano cambia la resolución del Consejo y lo registra.
     $this->servicio->actualizarBorrador($asuncion, ['resolucion_numero' => 'RES-CP-2026-021', 'fecha_efectiva' => $this->hoy]);
     ($this->registrar)($asuncion->id);
 
@@ -279,6 +283,30 @@ test('el cese anticipado del Prefecto prepara la asunción definitiva del Vicepr
 
     expect($this->vice->fresh('contratoVigente')->contratoVigente->puesto_id)->toBe($this->puestoVice->id)
         ->and((float) $this->vice->fresh('contratoVigente')->contratoVigente->remuneracion)->toBe(4048.0);
+});
+
+test('la asunción se suscribe con el documento que heredó, sin tocar nada más', function () {
+    $cese = ($this->registrar)($this->servicio->registrar($this->prefecto->id, [
+        'tipo_movimiento'    => TipoMovimientoPersonal::CESACION_FUNCIONES->value,
+        'subtipo_movimiento' => SubtipoMovimientoPersonal::FALLECIMIENTO->value,
+        'descripcion'        => 'Fallecimiento del Prefecto Provincial',
+        'fecha_efectiva'     => $this->hoy,
+        'resolucion_numero'  => 'PARTIDA-DEF-2026-0007',
+    ])->id);
+
+    $asuncion = MovimientoPersonal::where('movimiento_relacionado_id', $cese->id)
+        ->where('tipo_movimiento', TipoMovimientoPersonal::ASUNCION_DEFINITIVA->value)
+        ->firstOrFail();
+
+    // Lo que importa: pasa a suscrita tal como nació. Antes reventaba aquí con
+    // «no se puede suscribir sin el documento de origen» y no había dónde
+    // ponerlo, así que la institución se quedaba sin Prefecto en funciones
+    // —el que firma las acciones de personal de todos los demás— hasta que
+    // alguien lo arreglara por base de datos.
+    $suscrita = $this->estados->transicionar($asuncion, EstadoAccionPersonal::SUSCRITA);
+
+    expect($suscrita->estado)->toBe(EstadoAccionPersonal::SUSCRITA)
+        ->and($suscrita->resolucion_numero)->toBe('PARTIDA-DEF-2026-0007');
 });
 
 test('el fin del período no prepara asunción: termina también el del Viceprefecto', function () {

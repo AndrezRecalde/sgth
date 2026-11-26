@@ -14,6 +14,7 @@ import {
 import type { MovimientoPersonal } from '@/types/api'
 import { abrirOGuardarArchivo, guardarArchivo } from '@/lib/archivo'
 import { NotificarAccionModal } from './NotificarAccionModal'
+import { DocumentoDeOrigenModal } from './DocumentoDeOrigenModal'
 
 interface Props {
   m: MovimientoPersonal
@@ -44,6 +45,7 @@ export function AccionPersonalPie({ m, onClose, onCompletarVinculo, onPedirDicta
   const [previsualizando, setPrevisualizando] = useState(false)
   const [anularOpened, { open: abrirAnular, close: cerrarAnular }] = useDisclosure(false)
   const [notificarOpened, { open: abrirNotificar, close: cerrarNotificar }] = useDisclosure(false)
+  const [documentoOpened, { open: abrirDocumento, close: cerrarDocumento }] = useDisclosure(false)
 
   const estado = m.estado
   const posibles = m.transiciones_permitidas ?? []
@@ -96,6 +98,14 @@ export function AccionPersonalPie({ m, onClose, onCompletarVinculo, onPedirDicta
     // falle.
     if (siguiente === 'suscrita' && m.tiene_efecto_economico) {
       onPedirDictamen()
+      return
+    }
+    // Y la asunción definitiva, su documento de origen: nace fuera del
+    // formulario —la prepara el cese del Prefecto— y su cajón no edita, así
+    // que este es el único sitio donde se puede ver y corregir antes de
+    // suscribirla (fase 4.1b).
+    if (siguiente === 'suscrita' && m.clase === 'asuncion_definitiva') {
+      abrirDocumento()
       return
     }
     // Notificar pide cómo: por el portal y el correo, o en persona con el
@@ -172,6 +182,8 @@ export function AccionPersonalPie({ m, onClose, onCompletarVinculo, onPedirDicta
       {pie}
 
       <NotificarAccionModal opened={notificarOpened} movimiento={m} onClose={cerrarNotificar} />
+
+      <DocumentoDeOrigenModal opened={documentoOpened} movimiento={m} onClose={cerrarDocumento} />
 
       <MotivoModal
         opened={anularOpened}
