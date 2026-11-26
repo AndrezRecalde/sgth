@@ -274,9 +274,7 @@ function FormularioAccion({
                     contratoCivilPara={claseElegida?.contrato_civil_para}
                     notaRmu={claseElegida?.codigo === 'ascenso'
                       ? 'La de la escala del puesto ganado; si hoy cobra más, conserva la suya (LOSEP, transitoria tercera).'
-                      : claseElegida?.pide_datos_del_periodo
-                        ? 'La de la escala del puesto de la dignidad.'
-                        : undefined}
+                      : undefined}
                   />
                 </Grid.Col>
               </Grid>

@@ -54,9 +54,6 @@ const camposDelFormulario = z.object({
   dias_para_presentarse: z.number().int().min(3).max(5).optional().nullable(),
   razon_dias_adicionales: z.string().max(255, 'Máximo 255 caracteres').optional().nullable(),
   // El inicio del período de una autoridad electa (fase 4.1).
-  credencial_cne_numero: z.string().max(100).optional().nullable(),
-  credencial_cne_fecha: z.string().optional().nullable(),
-  acta_posesion_numero: z.string().max(100).optional().nullable(),
   // El consentimiento escrito del cambio de ocupación de un obrero (CT 192;
   // fase 4.3).
   fecha_consentimiento: z.string().optional().nullable(),
@@ -64,8 +61,6 @@ const camposDelFormulario = z.object({
   // (CT 184; fase 4.5).
   fecha_presentacion_renuncia: z.string().optional().nullable(),
   // La licencia del Consejo: con o sin remuneración y su prórroga (fase 4.1b).
-  con_remuneracion: z.boolean().optional().nullable(),
-  prorroga_causa: z.string().optional().nullable(),
   numero_contrato: z.string().max(100).optional().nullable(),
   fecha_fin_propuesta: z.string().optional().nullable(),
   puede_marcar: z.boolean().optional().nullable(),
@@ -153,30 +148,17 @@ export function crearMovimientoSchema(
       }
     }
 
-    // La autoridad electa empieza con la credencial del CNE, y el período
-    // termina en su fecha (fase 4.1). Que no pase de cuatro años lo dice el
-    // backend. La que designa el Consejo, con su resolución, y termina con el
-    // Prefecto: el fin lo pone el backend (2026-10-20).
-    if (clase.pide_datos_del_periodo && data.causal === 'designacion_del_consejo') {
-      if (!data.acto_origen_numero?.trim()) {
-        ctx.addIssue({ path: ['acto_origen_numero'], code: 'custom', message: 'Indique el número de la resolución del Consejo' })
-      }
-      if (!data.acto_origen_fecha) {
-        ctx.addIssue({ path: ['acto_origen_fecha'], code: 'custom', message: 'Indique la fecha de la resolución' })
-      }
-    } else if (clase.pide_datos_del_periodo) {
-      if (!data.credencial_cne_numero?.trim()) {
-        ctx.addIssue({ path: ['credencial_cne_numero'], code: 'custom', message: 'Indique el número de la credencial del CNE' })
-      }
-      if (!data.credencial_cne_fecha) {
-        ctx.addIssue({ path: ['credencial_cne_fecha'], code: 'custom', message: 'Indique la fecha de la credencial' })
-      }
-      if (!data.fecha_fin_propuesta) {
-        ctx.addIssue({ path: ['fecha_fin_propuesta'], code: 'custom', message: 'Indique cuándo termina el período' })
-      } else if (data.fecha_efectiva && data.fecha_fin_propuesta <= data.fecha_efectiva) {
-        ctx.addIssue({ path: ['fecha_fin_propuesta'], code: 'custom', message: 'El período termina después de empezar' })
-      }
-    }
+    /*
+    | Aquí vivían las reglas del inicio del período —la credencial del CNE, la
+    | resolución del Consejo, el fin del período— y se fueron con sus campos a
+    | «Autoridades electas» (fase 4.1).
+    |
+    | Dejarlas sería repetir H4: exigir un dato que este formulario ya no
+    | enseña es lo que dejaba el botón sin hacer nada y sin decir por qué. La
+    | excepción de la designación, que se añadió el 2026-11-25 para salir de
+    | ese callejón, se fue con ellas: en la pantalla nueva no hace falta porque
+    | el campo del tipo de acto no existe.
+    */
 
     // El acto de una autoridad lleva su documento de origen (fases 4.1 y
     // 4.1b), salvo el inicio del período, que tiene la credencial.
@@ -276,14 +258,6 @@ export function crearMovimientoSchema(
           message: 'La renuncia se presenta antes de que rija la terminación',
         })
       }
-    }
-
-    // La licencia del Consejo dice si es con o sin remuneración (fase 4.1b).
-    if (clase.pide_datos_de_licencia_del_consejo && data.con_remuneracion == null) {
-      ctx.addIssue({
-        path: ['con_remuneracion'], code: 'custom',
-        message: 'Indique si es con o sin remuneración, como dice la resolución',
-      })
     }
 
     // El ascenso se gana en concurso: trae el acta (LOSEP Art. 68; fase 3.3).
@@ -422,17 +396,16 @@ export function esActoDeAutoridad(
   tipoNombramiento?: string | null,
 ): boolean {
   if (!clase) return false
-  if (clase.pide_datos_del_periodo) return true
 
   return !!tipoNombramiento && clase.acto_de_autoridad_para.some((n) => n === tipoNombramiento)
 }
 
-/** El acto de autoridad lleva su documento de origen; el inicio del período, la credencial. */
+/** El acto de autoridad lleva su documento de origen. */
 export function pideDocumentoDeOrigen(
   clase: ClaseDelCatalogo | undefined,
   tipoNombramiento?: string | null,
 ): boolean {
-  return esActoDeAutoridad(clase, tipoNombramiento) && !clase?.pide_datos_del_periodo
+  return esActoDeAutoridad(clase, tipoNombramiento)
 }
 
 /**

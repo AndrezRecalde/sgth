@@ -49,6 +49,18 @@ export function buscarClase(
 export function claseDisponible(clase: ClaseDelCatalogo, vinculo: VinculoDelServidor): boolean {
   if (!clase.se_crea_desde_formulario) return false
 
+  /*
+  | A una autoridad electa este formulario no le ofrece nada (fase 4.1): su
+  | inicio del período, su licencia del Consejo y su cesación se registran en
+  | «Autoridades electas», con su documento de origen y su numeración AU.
+  |
+  | La cesación hay que descartarla aquí y no en el catálogo porque es la única
+  | de sus clases que comparte figura con el resto del personal: la misma cesa
+  | a un permanente y a una Prefecta, y solo cambian las causales. Al servidor
+  | le sigue llegando igual desde la otra pantalla.
+  */
+  if (vinculo.tipoNombramiento === 'eleccion_popular') return false
+
   // Sin vínculo cabe lo que no lo requiere. Con él, de esas clases solo la que
   // el catálogo admite para su nombramiento: el inicio del período de la
   // autoridad reelegida (fase 4.1).
